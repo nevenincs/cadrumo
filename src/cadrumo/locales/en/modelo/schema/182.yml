@@ -11,33 +11,34 @@ modelo:
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Tax year the return refers to
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Type of return (original / replacement / supplementary)
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Donor's NIF (individual, legal entity, or the reference non-profit
                 donee entity)
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Donor's surname and first name, or company name
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Amount of the donation or contribution received in the tax year
                 (unsigned, in euros)
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 182.
               label: Deduction percentage applicable to the donation (donor's tax
                 regime, art. 68.3 LIRPF / special regime Ley 49/2002)
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
-              help: null
+              help: Tax information for casilla recurrencia of Modelo 182.
               label: Recurring donation indicator (multi-year donation to the same
                 donee entity, two or more consecutive tax years)
           construct:
             modelo-182-informative:
               field:
-                title: null
+                title: Modelo 182 informative declaration of donativos, donations
+                  and contributions recibidas
           field:
-            label: null
+            label: Casilla — tax field

@@ -52,14 +52,14 @@ modelo:
               label: Fogyatékossággal élő, nem különélő házastárs utáni korrekció.
                 A levonás összege
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 122 . casilla adóügyi adatai: adóév.'
               label: A korrekció vonatkozási éve
             x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
               help: C jelölés, ha az oldal egy korábban benyújtott oldalt egészít
                 ki; egyébként üresen marad.
               label: Kiegészítő oldal jelölése
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: A Modelo 122 . casilla adóügyi adatai.
               label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Az adómegállapítási időszakban ténylegesen felvett levonási előleg
@@ -116,6 +116,6 @@ modelo:
           construct:
             modelo-122-regularizacion:
               field:
-                title: null
+                title: Modelo 122 — adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

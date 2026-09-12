@@ -9,23 +9,25 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Tax information for casilla 01 of Modelo 115.
               label: Number of recipients
             '02':
-              help: null
+              help: Tax information about tax information in casilla 02 of Modelo
+                115.
               label: Base of withholdings and payments on account
             '03':
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account.'
               label: Withholdings and payments on account
             '04':
-              help: null
+              help: Tax information about tax information in casilla 04 of Modelo
+                115.
               label: Result of previous returns
             '05':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
             modelo-115-quarterly-rental-withholding:
               field:
-                title: null
+                title: Modelo 115 — tax information
           field:
-            label: null
+            label: Casilla— tax information

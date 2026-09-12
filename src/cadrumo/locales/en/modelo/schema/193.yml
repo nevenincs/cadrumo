@@ -1,6 +1,177 @@
 modelo:
   schema:
     '193':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 145-159: base withholdings payments
+              on account.'
+            label: 'Casilla 145-159: base withholdings payments on account'
+          declaracion-anterior-numero:
+            help: Tax information for casilla 123-135 of Modelo 193.
+            label: Casilla 123-135 — tax field
+          declaracion-complementaria:
+            help: 'Casilla information: Casilla 121: return supplementary.'
+            label: 'Casilla 121: return supplementary'
+          declaracion-numero-identificativo:
+            help: Tax information for casilla 108-120 of Modelo 193.
+            label: Casilla 108-120 — tax field
+          declaracion-sustitutiva:
+            help: Tax information for casilla 122 of Modelo 193.
+            label: Casilla 122 — tax field
+          declarante-contacto-nombre:
+            help: Tax information for casilla 68-107 of Modelo 193.
+            label: Casilla 68-107 — tax field
+          declarante-contacto-telefono:
+            help: Tax information for casilla 59-67 of Modelo 193.
+            label: Casilla 59-67 — tax field
+          declarante-naturaleza:
+            help: Tax information for casilla 235 of Modelo 193.
+            label: Casilla 235 — tax field
+          devengo-year:
+            help: Tax information for casilla 118-121 of Modelo 193.
+            label: Casilla 118-121 — tax field
+          gasto-contributor-nif:
+            help: 'Casilla information: Casilla 18-26: gasto contributor nif.'
+            label: 'Casilla 18-26: gasto contributor nif'
+          gasto-contributor-nombre:
+            help: 'Casilla information: Casilla 36-75: gasto contributor name.'
+            label: 'Casilla 36-75: gasto contributor name'
+          gasto-importe-anual:
+            help: 'Casilla information: Casilla 195-207: gasto amount annual.'
+            label: 'Casilla 195-207: gasto amount annual'
+          gastos-total-declarante:
+            help: Tax information for casilla 220-234 of Modelo 193.
+            label: Casilla 220-234 — tax field
+          payee-base-retenciones-193:
+            help: 'Casilla information: Casilla 152-164: payee base withholdings 193.'
+            label: 'Casilla 152-164: payee base withholdings 193'
+          payee-ceuta-melilla-clave:
+            help: 'Casilla information: Casilla 314: payee ceuta melilla clave.'
+            label: 'Casilla 314: payee ceuta melilla clave'
+          payee-clave-codigo:
+            help: Tax information for casilla 79 of Modelo 193.
+            label: Casilla 79 — tax field
+          payee-clave-mercado:
+            help: Tax information about tax information in casilla 339 of Modelo 193.
+            label: Casilla 339 — tax information
+          payee-clave-percepcion:
+            help: Tax information about tax information in casilla 92 of Modelo 193.
+            label: Casilla 92 — tax information
+          payee-codigo-cuenta:
+            help: Tax information for casilla 97-116 of Modelo 193.
+            label: Casilla 97-116 — tax field
+          payee-codigo-emisor:
+            help: Tax information for casilla 80-91 of Modelo 193.
+            label: Casilla 80-91 — tax field
+          payee-compensaciones:
+            help: 'Casilla information: Casilla 225-236: payee compensaciones.'
+            label: 'Casilla 225-236: payee compensaciones'
+          payee-fecha-devengo:
+            help: 'Casilla information: Casilla 331-338: payee date accrual.'
+            label: 'Casilla 331-338: payee date accrual'
+          payee-fecha-inicio-prestamo:
+            help: 'Casilla information: Casilla 209-216: payee date inicio prestamo.'
+            label: 'Casilla 209-216: payee date inicio prestamo'
+          payee-fecha-vencimiento-prestamo:
+            help: 'Casilla information: Casilla 217-224: payee date vencimiento prestamo.'
+            label: 'Casilla 217-224: payee date vencimiento prestamo'
+          payee-garantias:
+            help: 'Casilla information: Casilla 237-248: payee garantias.'
+            label: 'Casilla 237-248: payee garantias'
+          payee-mediador-flag:
+            help: Tax information about tax information in casilla 76 of Modelo 193.
+            label: Casilla 76 — tax information
+          payee-name:
+            help: 'Casilla information: Casilla 36-75: payee name.'
+            label: 'Casilla 36-75: payee name'
+          payee-naturaleza-declarante:
+            help: Tax information for casilla 208 of Modelo 193.
+            label: Casilla 208 — tax field
+          payee-naturaleza-percepcion:
+            help: Tax information about tax information in casilla 93-94 of Modelo
+              193.
+            label: Casilla 93-94 — tax information
+          payee-nif:
+            help: 'Casilla information: Casilla 18-26: payee nif.'
+            label: 'Casilla 18-26: payee nif'
+          payee-nif-pagador-anterior:
+            help: 'Casilla information: Casilla 322-330: payee nif pagador previous.'
+            label: 'Casilla 322-330: payee nif pagador previous'
+          payee-numero-orden-193:
+            help: Tax information for casilla 315-321 of Modelo 193.
+            label: Casilla 315-321 — tax field
+          payee-pago:
+            help: Tax information about tax information in casilla 95 of Modelo 193.
+            label: Casilla 95 — tax information
+          payee-penalizaciones:
+            help: Tax information about tax information in casilla 182-192 of Modelo
+              193.
+            label: Casilla 182-192 — tax information
+          payee-pendiente-flag:
+            help: Tax information for casilla 117 of Modelo 193.
+            label: Casilla 117 — tax field
+          payee-percepciones-193:
+            help: Tax information about tax information in casilla 123-135 of Modelo
+              193.
+            label: Casilla 123-135 — tax information
+          payee-porcentaje-retencion:
+            help: 'Casilla information: Casilla 165-168: payee percentage retencion.'
+            label: 'Casilla 165-168: payee percentage retencion'
+          payee-province:
+            help: 'Casilla information: Casilla 77-78: payee province.'
+            label: 'Casilla 77-78: payee province'
+          payee-reducciones-193:
+            help: 'Casilla information: Casilla 139-151: payee reducciones 193.'
+            label: 'Casilla 139-151: payee reducciones 193'
+          payee-retenciones-193:
+            help: 'Casilla information: Casilla 169-181: payee withholdings 193.'
+            label: 'Casilla 169-181: payee withholdings 193'
+          payee-retenciones-forales-araba:
+            help: Tax information about tax information in casilla 275-287 of Modelo
+              193.
+            label: Casilla 275-287 — tax information
+          payee-retenciones-forales-bizkaia:
+            help: Tax information about tax information in casilla 301-313 of Modelo
+              193.
+            label: Casilla 301-313 — tax information
+          payee-retenciones-forales-estatal:
+            help: Tax information about tax information in casilla 249-261 of Modelo
+              193.
+            label: Casilla 249-261 — tax information
+          payee-retenciones-forales-gipuzkoa:
+            help: Tax information about tax information in casilla 288-300 of Modelo
+              193.
+            label: Casilla 288-300 — tax information
+          payee-retenciones-forales-navarra:
+            help: Tax information about tax information in casilla 262-274 of Modelo
+              193.
+            label: Casilla 262-274 — tax information
+          payee-tipo-codigo:
+            help: Tax information for casilla 96 of Modelo 193.
+            label: Casilla 96 — tax field
+          payee-tipo-percepcion:
+            help: Tax information about tax information in casilla 122 of Modelo 193.
+            label: Casilla 122 — tax information
+          perc-nif-representante:
+            help: Tax information about tax information in casilla 27-35 of Modelo
+              193.
+            label: Casilla 27-35 — tax information
+          representante-legal-nif:
+            help: Tax information about tax information in casilla 27-35 of Modelo
+              193.
+            label: Casilla 27-35 — tax information
+          retenciones-ingresadas-total:
+            help: 'Casilla information: Casilla 175-189: withholdings ingresadas total.'
+            label: 'Casilla 175-189: withholdings ingresadas total'
+          retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 160-174: withholdings payments on
+              account.'
+            label: 'Casilla 160-174: withholdings payments on account'
+          total-perceptores-count:
+            help: Tax information about tax information in casilla 136-144 of Modelo
+              193.
+            label: Casilla 136-144 — tax information
       field:
         official_name: Modelo 193. Informative return. Withholdings and payments on
           account on certain income from movable capital and certain income. Annual

@@ -10,81 +10,89 @@ modelo:
         '2026':
           casilla:
             '01':
-              help: null
+              help: 'Consulteu la informació de la casella: Import del premio obtenido
+                per el boleto, cupon o apuesta premiado.'
               label: Import del premi obtingut pel bitllet, cupó o aposta premiada
             '02':
-              help: null
+              help: Informació fiscal de la casella 02 del Modelo 136.
               label: Import o valor del premi que correspon individualment al declarant
             '03':
-              help: null
+              help: 'Consulteu la informació de la casella: Cuantia exempta del gravamen
+                especial.'
               label: Quantia exempta del gravamen especial
             '04':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 04 del
+                Modelo 136.
               label: Base imposable
             '05':
-              help: null
+              help: 'Consulteu la informació de la casella: Quota del gravamen especial.'
               label: Quota del gravamen especial
             '06':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 06 del
+                Modelo 136.
               label: Resultats a ingressar d'autoliquidacions anteriors pel mateix
                 concepte i corresponents al mateix premi
             '07':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
             09:
-              help: null
+              help: 'Consulteu la informació de la casella: Import ingresado a favor
+                del Tesoro Publico.'
               label: Import ingressat a favor del Tresor Públic
             autoliquidacion-complementaria:
-              help: null
+              help: 'Consulteu la informació de la casella: Autoliquidació complementària.'
               label: Autoliquidació complementària
             declarante-nif:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Número d'identificació fiscal (NIF)
             declarante-nombre:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Cognoms i nom o raó social
             ejercicio-declaracion:
-              help: null
+              help: 'Consulteu la informació de la casella: Exercici.'
               label: Exercici
             fecha-celebracion:
-              help: null
+              help: 'Consulteu la informació de la casella: Data de celebracion.'
               label: Data de celebració
             fecha-cobro-premio:
-              help: null
+              help: 'Consulteu la informació de la casella: Data de cobro del premio.'
               label: Data de cobrament del premi
             forma-pago:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                136.
               label: Forma de pagament
             iban:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Codi IBAN
             justificante-anterior:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Número de justificant identificatiu de l'autoliquidació anterior
             loteria-apuesta-denominacion:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Denominació de la loteria o aposta
             organizador-codigo-pais:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Codi de país de l'organisme o entitat organitzadora
             organizador-denominacion:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Denominació o raó social de l'organisme o entitat organitzadora
             organizador-pais:
-              help: null
+              help: 'Consulteu la informació de la casella: Pais del organismo o entitat
+                organizadora.'
               label: País de l'organisme o entitat organitzadora
             periodo-declaracion:
-              help: null
+              help: 'Consulteu la informació de la casella: Període.'
               label: Període
             precio-unitario:
-              help: null
+              help: 'Consulteu la informació de la casella: Precio unitario.'
               label: Preu unitari
             provincia-residencia-irpf:
-              help: null
+              help: Informació fiscal de la casella del Modelo 136.
               label: Codi de la província de residència habitual del contribuent IRPF
           construct:
             modelo-136-calculation-construct:
               field:
-                title: null
+                title: Construcció de càlcul del gravamen especial sobre premis del
+                  Model 136
           field:
-            label: null
+            label: Casella— informació fiscal

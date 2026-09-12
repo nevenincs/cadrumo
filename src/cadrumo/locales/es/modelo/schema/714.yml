@@ -1,6 +1,85 @@
 modelo:
   schema:
     '714':
+      casilla:
+        continuidad:
+          filing-period:
+            help: 'Consulte la información correspondiente a la casilla: Período de
+              la declaración.'
+            label: Casilla— período de liquidación
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          patrimonio-base-ahorro-excluida:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Parte de la base imponible del ahorro del IRPF.'
+            label: 'Casilla 32: patrimonio base ahorro excluida'
+          patrimonio-base-imponible:
+            help: 'Consulte la información correspondiente a la casilla: Resumen patrimonio
+              neto: base liquidable - Base Imponible.'
+            label: 'Casilla 25: patrimonio base imponible'
+          patrimonio-base-liquidable:
+            help: 'Consulte la información correspondiente a la casilla: Resumen patrimonio
+              neto: base liquidable - Base liquidable.'
+            label: 'Casilla 27: patrimonio base liquidable'
+          patrimonio-cuota-a-ingresar:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Cuota a ingresar - Cuota a ingresar.'
+            label: 'Casilla 55: patrimonio cuota a ingresar'
+          patrimonio-cuota-integra:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Cuota íntegra - Cuota íntegra.'
+            label: 'Casilla 29: patrimonio cuota integra'
+          patrimonio-cuota-integra-susceptible-limitacion:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el Patrimonio
+              susceptible de limitación.'
+            label: 'Casilla 36: patrimonio cuota integra susceptible limitacion'
+          patrimonio-cuota-minorada:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Cuota minorada - Cuota minorada.'
+            label: 'Casilla 45: patrimonio cuota minorada'
+          patrimonio-dividendos-no-irpf:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+              no integrados en el IRPF.'
+            label: 'Casilla 31: patrimonio dividendos no irpf'
+          patrimonio-exceso-limite-conjunto:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - a) Exceso.'
+            label: 'Casilla 38: patrimonio exceso limite conjunto'
+          patrimonio-irpf-bases-imponibles:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
+            label: 'Casilla 30: patrimonio irpf bases imponibles'
+          patrimonio-irpf-cuotas-excluidas-base-ahorro:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+              ganancias y pérdidas patrimoniales.'
+            label: 'Casilla 35: patrimonio irpf cuotas excluidas base ahorro'
+          patrimonio-irpf-cuotas-integras:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Cuotas íntegras del IRPF.'
+            label: 'Casilla 34: patrimonio irpf cuotas integras'
+          patrimonio-limite-conjunto:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+              el Patrimonio y del IRPF.'
+            label: 'Casilla 33: patrimonio limite conjunto'
+          patrimonio-reduccion-limite-ochenta:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+              el Patrimonio.'
+            label: 'Casilla 39: patrimonio reduccion limite ochenta'
+          patrimonio-suma-cuotas-limite:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
+            label: 'Casilla 37: patrimonio suma cuotas limite'
+          patrimonio-total-cuota-integra:
+            help: 'Consulte la información correspondiente a la casilla: Liquidación
+              - Total cuota íntegra - Total cuota íntegra.'
+            label: 'Casilla 40: patrimonio total cuota integra'
       field:
         official_name: Impuesto sobre el Patrimonio. Declaración
         title: Modelo 714
@@ -8,395 +87,549 @@ modelo:
         '2021':
           casilla:
             declaracion-01:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total bienes inmuebles naturaleza urbana.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total bienes inmuebles naturaleza urbana
             declaracion-02:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - B. Bienes inmuebles naturaleza rústica - Total.'
               label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
                 Total
             declaracion-03:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C. Bienes y derechos no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
                 empres. y profes. - Total
             declaracion-04:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - D. Bienes y derechos exentos afectos activ. empres. y
+                profes. - Total (neto de deudas).'
               label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
                 empres. y profes. - Total (neto de deudas)
             declaracion-05:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones...
+                - Total.'
               label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
                 imposiciones... - Total
             declaracion-06:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones,
+                bonos... - Total.'
               label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
                 obligaciones, bonos... - Total
             declaracion-07:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados,
+                pagarés...- Total.'
               label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
                 bonos, certificados, pagarés...- Total
             declaracion-08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva negociadas - Total.'
               label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva negociadas - Total
             declaracion-09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G2. Valores no exentos - Acciones y particip. fondos
+                otras entidades - Total.'
               label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
                 fondos otras entidades - Total
             declaracion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva no negociadas.- Total.'
               label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva no negociadas.- Total
             declaracion-11:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G4.Valores no exentos - Acciones y particip. otras entidades
+                jurídicas no negociadas - Total.'
               label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
                 otras entidades jurídicas no negociadas - Total
             declaracion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H1. Valores exentos - Acciones y particip. entidades
+                jurídicas negociadas - Total (neto deudas).'
               label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
                 entidades jurídicas negociadas - Total (neto deudas)
             declaracion-13:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H2. Valores exentos - Acciones y particip. exentas entidades
+                jurídicas no negociadas - Total (neto deudas).'
               label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
                 exentas entidades jurídicas no negociadas - Total (neto deudas)
             declaracion-14:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - I. Seguros de vida - Total.'
               label: Bienes y derechos - I. Seguros de vida - Total
             declaracion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - J. Rentas temporales y vitalicias - Total.'
               label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
             declaracion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones
+                y aeronaves - Total.'
               label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
                 embarcaciones y aeronaves - Total
             declaracion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - L. Objetos de arte y antigüedades - Total.'
               label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
             declaracion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda
+                habitual) - Total.'
               label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
                 vivienda habitual) - Total
             declaracion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - N. Concesiones administrativas - Total.'
               label: Bienes y derechos - N. Concesiones administrativas - Total
             declaracion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - O. Derechos derivados de la propiedad intelectual o industrial
+                - Total.'
               label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
                 o industrial - Total
             declaracion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - P. Opciones contractuales - Total.'
               label: Bienes y derechos - P. Opciones contractuales - Total
             declaracion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - R. Demás bienes y derechos de contenido económico - Total.'
               label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
                 - Total
             declaracion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Total bienes y derechos no exentos.'
               label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
                 no exentos'
             declaracion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deudas
+                deducibles - Total.'
               label: Deudas deducibles - Total
             declaracion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Reducción en concepto de mínimo
+                exento.'
               label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
                 de mínimo exento'
             declaracion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Patrimonio
+                exento con progresividad - Bienes y derechos exentos, excepto determinar
+                tipo gravamen aplicable resto.'
               label: Patrimonio exento con progresividad - Bienes y derechos exentos,
                 excepto determinar tipo gravamen aplicable resto
             declaracion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción impuestos extranjero - Importe de la deducción.'
               label: Liquidación - Deducción impuestos extranjero - Importe de la
                 deducción
             declaracion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes
+                y derechos en Ceuta y Melilla.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
                 de los bienes y derechos en Ceuta y Melilla
             declaracion-43:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional.
+                corresponde dichos bienes y derechos.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
                 proporcional. corresponde dichos bienes y derechos
             declaracion-44:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
                 de la bonificación
             declaracion-46:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - Q. Saldos en monedas virtuales - Total.'
               label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
             declaracion-48:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe total con derecho a deducción.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe total con derecho a deducción
             declaracion-49:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe aplicado
             declaracion-50:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Bonificación autonómica
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
                 autonómica - Importe aplicado
             declaracion-56:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización
+                declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones.'
               label: Regularización declaración complementaria - Cuota ingresar anteriores
                 autoliquidaciones/liquidaciones
             declaracion-57:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 57 del
+                Modelo 714.
               label: Regularización declaración complementaria - Diferencia a ingresar
                 resultado declaración complementaria
             declaracion-60:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total
+                vivienda habitual susceptible exención.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor total vivienda habitual susceptible exención
             declaracion-61:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor exento
             declaracion-62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor no exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor no exento
             declaracion-63:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
             declaracion-a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Impuestos
+                efectivamente satisfechos en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Impuestos efectivamente satisfechos en el extranjero
             declaracion-b:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Parte de
+                la base liquidable gravada en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Parte de la base liquidable gravada en el extranjero
             declaracion-i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Importe del ingreso.'
               label: Ingreso - Importe del ingreso
             declaracion-negativa:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                negativa.'
               label: Declaración negativa
             identificacion-1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2020 ha tenido su residencia habitual
+                fuera del territorio español y tributa por obligación real.'
               label: Modalidades especiales de tributación - En 2020 ha tenido su
                 residencia habitual fuera del territorio español y tributa por obligación
                 real
             identificacion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                Complementaria.'
               label: Declaración Complementaria
             identificacion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Si ha consignado
+                la modalidad de la casilla 4 y desea optar por la aplicación de la
+                normativa autonómica.'
               label: Si ha consignado la modalidad de la casilla 4 y desea optar por
                 la aplicación de la normativa autonómica
             identificacion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de Vía.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
             identificacion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre de la Vía Pública.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
             identificacion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de numeración.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
             identificacion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Número de Casa.'
               label: Sujeto Pasivo - Domicilio habitual - Número de Casa
             identificacion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Calificador del número.'
               label: Sujeto Pasivo - Domicilio habitual - Calificador del número
             identificacion-2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2020 ha dejado de ser residente en
+                territorio español pero sigue tributando por obligación personal.'
               label: Modalidades especiales de tributación - En 2020 ha dejado de
                 ser residente en territorio español pero sigue tributando por obligación
                 personal
             identificacion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Bloque.'
               label: Sujeto Pasivo - Domicilio habitual - Bloque
             identificacion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Portal.'
               label: Sujeto Pasivo - Domicilio habitual - Portal
             identificacion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Escalera.'
               label: Sujeto Pasivo - Domicilio habitual - Escalera
             identificacion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Planta.'
               label: Sujeto Pasivo - Domicilio habitual - Planta
             identificacion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Puerta.'
               label: Sujeto Pasivo - Domicilio habitual - Puerta
             identificacion-25:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
                 domicilio
             identificacion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Localidad / Población (si es distinta
+                del municipio).'
               label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
                 es distinta del municipio)
             identificacion-27:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Código Postal.'
               label: Sujeto Pasivo - Domicilio habitual - Código Postal
             identificacion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre del Municipio.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
             identificacion-29:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Provincia.'
               label: Sujeto Pasivo - Domicilio habitual - Provincia
             identificacion-3:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - Comunidad Autónoma donde radique el mayor
+                de los bienes o derechos.'
               label: Modalidades especiales de tributación - Comunidad Autónoma donde
                 radique el mayor de los bienes o derechos
             identificacion-35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Domicilio / Address.'
               label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
             identificacion-36:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
                 del domicilio
             identificacion-37:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Población / Ciudad.'
               label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
             identificacion-39:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código Postal [ZIP].'
               label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
             identificacion-4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2020 ha tenido su residencia fiscal
+                en España, pero está sujeto por obligación real al Impuesto sobre
+                el Patrimonio por haber optado por el régimen especial, artículo 93
+                Ley 35/2006, IRPF.'
               label: Modalidades especiales de tributación - En 2020 ha tenido su
                 residencia fiscal en España, pero está sujeto por obligación real
                 al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
                 artículo 93 Ley 35/2006, IRPF
             identificacion-40:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Provincia / Región / Estado.'
               label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
             identificacion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - País.'
               label: Sujeto Pasivo - Domicilio extranjero - País
             identificacion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código País.'
               label: Sujeto Pasivo - Domicilio extranjero - Código País
             identificacion-8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Comunidad
+                o Ciudad Autónoma de residencia en 2020.'
               label: Comunidad o Ciudad Autónoma de residencia en 2020
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C1. No exentos afectos activ. empres. y profes. (no inmuebles)
+                - Total.'
               label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
                 (no inmuebles) - Total
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C2. Bienes inmuebles no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
                 empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Idioma
+                de la declaración.'
               label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                (anual, 0A).'
               label: Periodo (anual, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Domicilio habitual - Código de provincia.'
               label: Sujeto pasivo - Domicilio habitual - Código de provincia
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria - Cuotas a ingresar de anteriores autoliquidaciones
+                o liquidaciones administrativas.'
               label: Declaración complementaria - Cuotas a ingresar de anteriores
                 autoliquidaciones o liquidaciones administrativas
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Clase de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Clase de discapacidad
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Porcentaje de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Estado civil.'
               label: Sujeto pasivo - Estado civil
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Año.'
               label: Fecha de la declaración - Año
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Día.'
               label: Fecha de la declaración - Día
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Localidad.'
               label: Fecha de la declaración - Localidad
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Mes.'
               label: Fecha de la declaración - Mes
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Fecha de nacimiento.'
               label: Sujeto pasivo - Fecha de nacimiento
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Nacionalidad.'
               label: Sujeto pasivo - Nacionalidad
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Régimen
+                económico del matrimonio.'
               label: Régimen económico del matrimonio
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - NIF.'
               label: Representante - NIF
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - Apellidos y nombre o razón social.'
               label: Representante - Apellidos y nombre o razón social
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Sexo.'
               label: Sujeto pasivo - Sexo
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración.'
               label: Tipo de declaración
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Forma de pago.'
               label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte de la base imponible del ahorro del
+                IRPF.'
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
                 del ahorro del IRPF
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base Imponible.'
               label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base liquidable.'
               label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota a ingresar - Cuota a ingresar.'
               label: Liquidación - Cuota a ingresar - Cuota a ingresar
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota íntegra - Cuota íntegra.'
               label: Liquidación - Cuota íntegra - Cuota íntegra
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el
+                Patrimonio susceptible de limitación.'
               label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
                 Impuesto sobre el Patrimonio susceptible de limitación
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota minorada - Cuota minorada.'
               label: Liquidación - Cuota minorada - Cuota minorada
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+                no integrados en el IRPF.'
               label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
                 en beneficios, no integrados en el IRPF
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - a) Exceso.'
               label: Liquidación - Límite cuota íntegra - a) Exceso
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
               label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
                 del IRPF
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+                ganancias y pérdidas patrimoniales.'
               label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
                 saldo positivo ganancias y pérdidas patrimoniales...
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Cuotas íntegras del IRPF.'
               label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+                el Patrimonio y del IRPF.'
               label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
                 del Impuesto sobre el Patrimonio y del IRPF
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+                el Patrimonio.'
               label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
                 del Impuesto sobre el Patrimonio
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
               label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
                 del límite conjunto
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Total cuota íntegra - Total cuota íntegra.'
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
           construct:
             m714-patrimonio-calculation:
@@ -407,395 +640,549 @@ modelo:
         '2022':
           casilla:
             declaracion-01:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total bienes inmuebles naturaleza urbana.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total bienes inmuebles naturaleza urbana
             declaracion-02:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - B. Bienes inmuebles naturaleza rústica - Total.'
               label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
                 Total
             declaracion-03:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C. Bienes y derechos no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
                 empres. y profes. - Total
             declaracion-04:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - D. Bienes y derechos exentos afectos activ. empres. y
+                profes. - Total (neto de deudas).'
               label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
                 empres. y profes. - Total (neto de deudas)
             declaracion-05:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones...
+                - Total.'
               label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
                 imposiciones... - Total
             declaracion-06:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones,
+                bonos... - Total.'
               label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
                 obligaciones, bonos... - Total
             declaracion-07:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados,
+                pagarés...- Total.'
               label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
                 bonos, certificados, pagarés...- Total
             declaracion-08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva negociadas - Total.'
               label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva negociadas - Total
             declaracion-09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G2. Valores no exentos - Acciones y particip. fondos
+                otras entidades - Total.'
               label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
                 fondos otras entidades - Total
             declaracion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva no negociadas.- Total.'
               label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva no negociadas.- Total
             declaracion-11:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G4.Valores no exentos - Acciones y particip. otras entidades
+                jurídicas no negociadas - Total.'
               label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
                 otras entidades jurídicas no negociadas - Total
             declaracion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H1. Valores exentos - Acciones y particip. entidades
+                jurídicas negociadas - Total (neto deudas).'
               label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
                 entidades jurídicas negociadas - Total (neto deudas)
             declaracion-13:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H2. Valores exentos - Acciones y particip. exentas entidades
+                jurídicas no negociadas - Total (neto deudas).'
               label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
                 exentas entidades jurídicas no negociadas - Total (neto deudas)
             declaracion-14:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - I. Seguros de vida - Total.'
               label: Bienes y derechos - I. Seguros de vida - Total
             declaracion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - J. Rentas temporales y vitalicias - Total.'
               label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
             declaracion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones
+                y aeronaves - Total.'
               label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
                 embarcaciones y aeronaves - Total
             declaracion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - L. Objetos de arte y antigüedades - Total.'
               label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
             declaracion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda
+                habitual) - Total.'
               label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
                 vivienda habitual) - Total
             declaracion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - N. Concesiones administrativas - Total.'
               label: Bienes y derechos - N. Concesiones administrativas - Total
             declaracion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - O. Derechos derivados de la propiedad intelectual o industrial
+                - Total.'
               label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
                 o industrial - Total
             declaracion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - P. Opciones contractuales - Total.'
               label: Bienes y derechos - P. Opciones contractuales - Total
             declaracion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - R. Demás bienes y derechos de contenido económico - Total.'
               label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
                 - Total
             declaracion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Total bienes y derechos no exentos.'
               label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
                 no exentos'
             declaracion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deudas
+                deducibles - Total.'
               label: Deudas deducibles - Total
             declaracion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Reducción en concepto de mínimo
+                exento.'
               label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
                 de mínimo exento'
             declaracion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Patrimonio
+                exento con progresividad - Bienes y derechos exentos, excepto determinar
+                tipo gravamen aplicable resto.'
               label: Patrimonio exento con progresividad - Bienes y derechos exentos,
                 excepto determinar tipo gravamen aplicable resto
             declaracion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción impuestos extranjero - Importe de la deducción.'
               label: Liquidación - Deducción impuestos extranjero - Importe de la
                 deducción
             declaracion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes
+                y derechos en Ceuta y Melilla.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
                 de los bienes y derechos en Ceuta y Melilla
             declaracion-43:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional.
+                corresponde dichos bienes y derechos.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
                 proporcional. corresponde dichos bienes y derechos
             declaracion-44:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
                 de la bonificación
             declaracion-46:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - Q. Saldos en monedas virtuales - Total.'
               label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
             declaracion-48:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe total con derecho a deducción.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe total con derecho a deducción
             declaracion-49:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe aplicado
             declaracion-50:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Bonificación autonómica
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
                 autonómica - Importe aplicado
             declaracion-56:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización
+                declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones.'
               label: Regularización declaración complementaria - Cuota ingresar anteriores
                 autoliquidaciones/liquidaciones
             declaracion-57:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 57 del
+                Modelo 714.
               label: Regularización declaración complementaria - Diferencia a ingresar
                 resultado declaración complementaria
             declaracion-60:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total
+                vivienda habitual susceptible exención.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor total vivienda habitual susceptible exención
             declaracion-61:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor exento
             declaracion-62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor no exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor no exento
             declaracion-63:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
             declaracion-a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Impuestos
+                efectivamente satisfechos en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Impuestos efectivamente satisfechos en el extranjero
             declaracion-b:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Parte de
+                la base liquidable gravada en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Parte de la base liquidable gravada en el extranjero
             declaracion-i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Importe del ingreso.'
               label: Ingreso - Importe del ingreso
             declaracion-negativa:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                negativa.'
               label: Declaración negativa
             identificacion-1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2022 ha tenido su residencia habitual
+                fuera del territorio español y tributa por obligación real.'
               label: Modalidades especiales de tributación - En 2022 ha tenido su
                 residencia habitual fuera del territorio español y tributa por obligación
                 real
             identificacion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                Complementaria.'
               label: Declaración Complementaria
             identificacion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Si ha consignado
+                la modalidad de la casilla 4 y desea optar por la aplicación de la
+                normativa autonómica.'
               label: Si ha consignado la modalidad de la casilla 4 y desea optar por
                 la aplicación de la normativa autonómica
             identificacion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de Vía.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
             identificacion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre de la Vía Pública.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
             identificacion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de numeración.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
             identificacion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Número de Casa.'
               label: Sujeto Pasivo - Domicilio habitual - Número de Casa
             identificacion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Calificador del número.'
               label: Sujeto Pasivo - Domicilio habitual - Calificador del número
             identificacion-2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2022 ha dejado de ser residente en
+                territorio español pero sigue tributando por obligación personal.'
               label: Modalidades especiales de tributación - En 2022 ha dejado de
                 ser residente en territorio español pero sigue tributando por obligación
                 personal
             identificacion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Bloque.'
               label: Sujeto Pasivo - Domicilio habitual - Bloque
             identificacion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Portal.'
               label: Sujeto Pasivo - Domicilio habitual - Portal
             identificacion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Escalera.'
               label: Sujeto Pasivo - Domicilio habitual - Escalera
             identificacion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Planta.'
               label: Sujeto Pasivo - Domicilio habitual - Planta
             identificacion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Puerta.'
               label: Sujeto Pasivo - Domicilio habitual - Puerta
             identificacion-25:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
                 domicilio
             identificacion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Localidad / Población (si es distinta
+                del municipio).'
               label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
                 es distinta del municipio)
             identificacion-27:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Código Postal.'
               label: Sujeto Pasivo - Domicilio habitual - Código Postal
             identificacion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre del Municipio.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
             identificacion-29:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Provincia.'
               label: Sujeto Pasivo - Domicilio habitual - Provincia
             identificacion-3:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - Comunidad Autónoma donde radique el mayor
+                de los bienes o derechos.'
               label: Modalidades especiales de tributación - Comunidad Autónoma donde
                 radique el mayor de los bienes o derechos
             identificacion-35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Domicilio / Address.'
               label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
             identificacion-36:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
                 del domicilio
             identificacion-37:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Población / Ciudad.'
               label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
             identificacion-39:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código Postal [ZIP].'
               label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
             identificacion-4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2022 ha tenido su residencia fiscal
+                en España, pero está sujeto por obligación real al Impuesto sobre
+                el Patrimonio por haber optado por el régimen especial, artículo 93
+                Ley 35/2006, IRPF.'
               label: Modalidades especiales de tributación - En 2022 ha tenido su
                 residencia fiscal en España, pero está sujeto por obligación real
                 al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
                 artículo 93 Ley 35/2006, IRPF
             identificacion-40:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Provincia / Región / Estado.'
               label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
             identificacion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - País.'
               label: Sujeto Pasivo - Domicilio extranjero - País
             identificacion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código País.'
               label: Sujeto Pasivo - Domicilio extranjero - Código País
             identificacion-8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Comunidad
+                o Ciudad Autónoma de residencia en 2022.'
               label: Comunidad o Ciudad Autónoma de residencia en 2022
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C1. No exentos afectos activ. empres. y profes. (no inmuebles)
+                - Total.'
               label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
                 (no inmuebles) - Total
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C2. Bienes inmuebles no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
                 empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Idioma
+                de la declaración.'
               label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                (anual, 0A).'
               label: Periodo (anual, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Domicilio habitual - Código de provincia.'
               label: Sujeto pasivo - Domicilio habitual - Código de provincia
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria - Cuotas a ingresar de anteriores autoliquidaciones
+                o liquidaciones administrativas.'
               label: Declaración complementaria - Cuotas a ingresar de anteriores
                 autoliquidaciones o liquidaciones administrativas
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Clase de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Clase de discapacidad
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Porcentaje de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Estado civil.'
               label: Sujeto pasivo - Estado civil
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Año.'
               label: Fecha de la declaración - Año
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Día.'
               label: Fecha de la declaración - Día
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Localidad.'
               label: Fecha de la declaración - Localidad
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Mes.'
               label: Fecha de la declaración - Mes
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Fecha de nacimiento.'
               label: Sujeto pasivo - Fecha de nacimiento
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Nacionalidad.'
               label: Sujeto pasivo - Nacionalidad
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Régimen
+                económico del matrimonio.'
               label: Régimen económico del matrimonio
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - NIF.'
               label: Representante - NIF
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - Apellidos y nombre o razón social.'
               label: Representante - Apellidos y nombre o razón social
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Sexo.'
               label: Sujeto pasivo - Sexo
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración.'
               label: Tipo de declaración
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Forma de pago.'
               label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte de la base imponible del ahorro del
+                IRPF.'
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
                 del ahorro del IRPF
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base Imponible.'
               label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base liquidable.'
               label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota a ingresar - Cuota a ingresar.'
               label: Liquidación - Cuota a ingresar - Cuota a ingresar
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota íntegra - Cuota íntegra.'
               label: Liquidación - Cuota íntegra - Cuota íntegra
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el
+                Patrimonio susceptible de limitación.'
               label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
                 Impuesto sobre el Patrimonio susceptible de limitación
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota minorada - Cuota minorada.'
               label: Liquidación - Cuota minorada - Cuota minorada
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+                no integrados en el IRPF.'
               label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
                 en beneficios, no integrados en el IRPF
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - a) Exceso.'
               label: Liquidación - Límite cuota íntegra - a) Exceso
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
               label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
                 del IRPF
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+                ganancias y pérdidas patrimoniales.'
               label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
                 saldo positivo ganancias y pérdidas patrimoniales...
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Cuotas íntegras del IRPF.'
               label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+                el Patrimonio y del IRPF.'
               label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
                 del Impuesto sobre el Patrimonio y del IRPF
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+                el Patrimonio.'
               label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
                 del Impuesto sobre el Patrimonio
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
               label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
                 del límite conjunto
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Total cuota íntegra - Total cuota íntegra.'
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
           construct:
             m714-patrimonio-calculation:
@@ -806,395 +1193,549 @@ modelo:
         '2023':
           casilla:
             declaracion-01:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total bienes inmuebles naturaleza urbana.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total bienes inmuebles naturaleza urbana
             declaracion-02:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - B. Bienes inmuebles naturaleza rústica - Total.'
               label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
                 Total
             declaracion-03:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C. Bienes y derechos no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
                 empres. y profes. - Total
             declaracion-04:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - D. Bienes y derechos exentos afectos activ. empres. y
+                profes. - Total (neto de deudas).'
               label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
                 empres. y profes. - Total (neto de deudas)
             declaracion-05:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones...
+                - Total.'
               label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
                 imposiciones... - Total
             declaracion-06:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones,
+                bonos... - Total.'
               label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
                 obligaciones, bonos... - Total
             declaracion-07:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados,
+                pagarés...- Total.'
               label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
                 bonos, certificados, pagarés...- Total
             declaracion-08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva negociadas - Total.'
               label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva negociadas - Total
             declaracion-09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G2. Valores no exentos - Acciones y particip. fondos
+                otras entidades - Total.'
               label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
                 fondos otras entidades - Total
             declaracion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva no negociadas.- Total.'
               label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva no negociadas.- Total
             declaracion-11:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G4.Valores no exentos - Acciones y particip. otras entidades
+                jurídicas no negociadas - Total.'
               label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
                 otras entidades jurídicas no negociadas - Total
             declaracion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H1. Valores exentos - Acciones y particip. entidades
+                jurídicas negociadas - Total (neto deudas).'
               label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
                 entidades jurídicas negociadas - Total (neto deudas)
             declaracion-13:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H2. Valores exentos - Acciones y particip. exentas entidades
+                jurídicas no negociadas - Total (neto deudas).'
               label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
                 exentas entidades jurídicas no negociadas - Total (neto deudas)
             declaracion-14:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - I. Seguros de vida - Total.'
               label: Bienes y derechos - I. Seguros de vida - Total
             declaracion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - J. Rentas temporales y vitalicias - Total.'
               label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
             declaracion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones
+                y aeronaves - Total.'
               label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
                 embarcaciones y aeronaves - Total
             declaracion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - L. Objetos de arte y antigüedades - Total.'
               label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
             declaracion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda
+                habitual) - Total.'
               label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
                 vivienda habitual) - Total
             declaracion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - N. Concesiones administrativas - Total.'
               label: Bienes y derechos - N. Concesiones administrativas - Total
             declaracion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - O. Derechos derivados de la propiedad intelectual o industrial
+                - Total.'
               label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
                 o industrial - Total
             declaracion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - P. Opciones contractuales - Total.'
               label: Bienes y derechos - P. Opciones contractuales - Total
             declaracion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - R. Demás bienes y derechos de contenido económico - Total.'
               label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
                 - Total
             declaracion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Total bienes y derechos no exentos.'
               label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
                 no exentos'
             declaracion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deudas
+                deducibles - Total.'
               label: Deudas deducibles - Total
             declaracion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Reducción en concepto de mínimo
+                exento.'
               label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
                 de mínimo exento'
             declaracion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Patrimonio
+                exento con progresividad - Bienes y derechos exentos, excepto determinar
+                tipo gravamen aplicable resto.'
               label: Patrimonio exento con progresividad - Bienes y derechos exentos,
                 excepto determinar tipo gravamen aplicable resto
             declaracion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción impuestos extranjero - Importe de la deducción.'
               label: Liquidación - Deducción impuestos extranjero - Importe de la
                 deducción
             declaracion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes
+                y derechos en Ceuta y Melilla.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
                 de los bienes y derechos en Ceuta y Melilla
             declaracion-43:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional.
+                corresponde dichos bienes y derechos.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
                 proporcional. corresponde dichos bienes y derechos
             declaracion-44:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
                 de la bonificación
             declaracion-46:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - Q. Saldos en monedas virtuales - Total.'
               label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
             declaracion-48:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe total con derecho a deducción.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe total con derecho a deducción
             declaracion-49:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe aplicado
             declaracion-50:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Bonificación autonómica
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
                 autonómica - Importe aplicado
             declaracion-56:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización
+                declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones.'
               label: Regularización declaración complementaria - Cuota ingresar anteriores
                 autoliquidaciones/liquidaciones
             declaracion-57:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 57 del
+                Modelo 714.
               label: Regularización declaración complementaria - Diferencia a ingresar
                 resultado declaración complementaria
             declaracion-60:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total
+                vivienda habitual susceptible exención.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor total vivienda habitual susceptible exención
             declaracion-61:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor exento
             declaracion-62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor no exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor no exento
             declaracion-63:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
             declaracion-a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Impuestos
+                efectivamente satisfechos en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Impuestos efectivamente satisfechos en el extranjero
             declaracion-b:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Parte de
+                la base liquidable gravada en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Parte de la base liquidable gravada en el extranjero
             declaracion-i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Importe del ingreso.'
               label: Ingreso - Importe del ingreso
             declaracion-negativa:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                negativa.'
               label: Declaración negativa
             identificacion-1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2023 ha tenido su residencia habitual
+                fuera del territorio español y tributa por obligación real.'
               label: Modalidades especiales de tributación - En 2023 ha tenido su
                 residencia habitual fuera del territorio español y tributa por obligación
                 real
             identificacion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                Complementaria.'
               label: Declaración Complementaria
             identificacion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Si ha consignado
+                la modalidad de la casilla 4 y desea optar por la aplicación de la
+                normativa autonómica.'
               label: Si ha consignado la modalidad de la casilla 4 y desea optar por
                 la aplicación de la normativa autonómica
             identificacion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de Vía.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
             identificacion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre de la Vía Pública.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
             identificacion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de numeración.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
             identificacion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Número de Casa.'
               label: Sujeto Pasivo - Domicilio habitual - Número de Casa
             identificacion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Calificador del número.'
               label: Sujeto Pasivo - Domicilio habitual - Calificador del número
             identificacion-2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2023 ha dejado de ser residente en
+                territorio español pero sigue tributando por obligación personal.'
               label: Modalidades especiales de tributación - En 2023 ha dejado de
                 ser residente en territorio español pero sigue tributando por obligación
                 personal
             identificacion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Bloque.'
               label: Sujeto Pasivo - Domicilio habitual - Bloque
             identificacion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Portal.'
               label: Sujeto Pasivo - Domicilio habitual - Portal
             identificacion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Escalera.'
               label: Sujeto Pasivo - Domicilio habitual - Escalera
             identificacion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Planta.'
               label: Sujeto Pasivo - Domicilio habitual - Planta
             identificacion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Puerta.'
               label: Sujeto Pasivo - Domicilio habitual - Puerta
             identificacion-25:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
                 domicilio
             identificacion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Localidad / Población (si es distinta
+                del municipio).'
               label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
                 es distinta del municipio)
             identificacion-27:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Código Postal.'
               label: Sujeto Pasivo - Domicilio habitual - Código Postal
             identificacion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre del Municipio.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
             identificacion-29:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Provincia.'
               label: Sujeto Pasivo - Domicilio habitual - Provincia
             identificacion-3:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - Comunidad Autónoma donde radique el mayor
+                de los bienes o derechos.'
               label: Modalidades especiales de tributación - Comunidad Autónoma donde
                 radique el mayor de los bienes o derechos
             identificacion-35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Domicilio / Address.'
               label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
             identificacion-36:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
                 del domicilio
             identificacion-37:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Población / Ciudad.'
               label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
             identificacion-39:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código Postal [ZIP].'
               label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
             identificacion-4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2023 ha tenido su residencia fiscal
+                en España, pero está sujeto por obligación real al Impuesto sobre
+                el Patrimonio por haber optado por el régimen especial, artículo 93
+                Ley 35/2006, IRPF.'
               label: Modalidades especiales de tributación - En 2023 ha tenido su
                 residencia fiscal en España, pero está sujeto por obligación real
                 al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
                 artículo 93 Ley 35/2006, IRPF
             identificacion-40:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Provincia / Región / Estado.'
               label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
             identificacion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - País.'
               label: Sujeto Pasivo - Domicilio extranjero - País
             identificacion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código País.'
               label: Sujeto Pasivo - Domicilio extranjero - Código País
             identificacion-8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Comunidad
+                o Ciudad Autónoma de residencia en 2023.'
               label: Comunidad o Ciudad Autónoma de residencia en 2023
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C1. No exentos afectos activ. empres. y profes. (no inmuebles)
+                - Total.'
               label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
                 (no inmuebles) - Total
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C2. Bienes inmuebles no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
                 empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Idioma
+                de la declaración.'
               label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                (anual, 0A).'
               label: Periodo (anual, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Domicilio habitual - Código de provincia.'
               label: Sujeto pasivo - Domicilio habitual - Código de provincia
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria - Cuotas a ingresar de anteriores autoliquidaciones
+                o liquidaciones administrativas.'
               label: Declaración complementaria - Cuotas a ingresar de anteriores
                 autoliquidaciones o liquidaciones administrativas
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Clase de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Clase de discapacidad
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Porcentaje de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Estado civil.'
               label: Sujeto pasivo - Estado civil
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Año.'
               label: Fecha de la declaración - Año
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Día.'
               label: Fecha de la declaración - Día
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Localidad.'
               label: Fecha de la declaración - Localidad
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Mes.'
               label: Fecha de la declaración - Mes
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Fecha de nacimiento.'
               label: Sujeto pasivo - Fecha de nacimiento
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Nacionalidad.'
               label: Sujeto pasivo - Nacionalidad
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Régimen
+                económico del matrimonio.'
               label: Régimen económico del matrimonio
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - NIF.'
               label: Representante - NIF
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - Apellidos y nombre o razón social.'
               label: Representante - Apellidos y nombre o razón social
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Sexo.'
               label: Sujeto pasivo - Sexo
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración.'
               label: Tipo de declaración
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Forma de pago.'
               label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte de la base imponible del ahorro del
+                IRPF.'
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
                 del ahorro del IRPF
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base Imponible.'
               label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base liquidable.'
               label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota a ingresar - Cuota a ingresar.'
               label: Liquidación - Cuota a ingresar - Cuota a ingresar
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota íntegra - Cuota íntegra.'
               label: Liquidación - Cuota íntegra - Cuota íntegra
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el
+                Patrimonio susceptible de limitación.'
               label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
                 Impuesto sobre el Patrimonio susceptible de limitación
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota minorada - Cuota minorada.'
               label: Liquidación - Cuota minorada - Cuota minorada
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+                no integrados en el IRPF.'
               label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
                 en beneficios, no integrados en el IRPF
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - a) Exceso.'
               label: Liquidación - Límite cuota íntegra - a) Exceso
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
               label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
                 del IRPF
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+                ganancias y pérdidas patrimoniales.'
               label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
                 saldo positivo ganancias y pérdidas patrimoniales...
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Cuotas íntegras del IRPF.'
               label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+                el Patrimonio y del IRPF.'
               label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
                 del Impuesto sobre el Patrimonio y del IRPF
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+                el Patrimonio.'
               label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
                 del Impuesto sobre el Patrimonio
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
               label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
                 del límite conjunto
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Total cuota íntegra - Total cuota íntegra.'
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
           construct:
             m714-patrimonio-calculation:
@@ -1205,395 +1746,549 @@ modelo:
         '2024':
           casilla:
             declaracion-01:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total bienes inmuebles naturaleza urbana.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total bienes inmuebles naturaleza urbana
             declaracion-02:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - B. Bienes inmuebles naturaleza rústica - Total.'
               label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
                 Total
             declaracion-03:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C. Bienes y derechos no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
                 empres. y profes. - Total
             declaracion-04:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - D. Bienes y derechos exentos afectos activ. empres. y
+                profes. - Total (neto de deudas).'
               label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
                 empres. y profes. - Total (neto de deudas)
             declaracion-05:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones...
+                - Total.'
               label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
                 imposiciones... - Total
             declaracion-06:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones,
+                bonos... - Total.'
               label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
                 obligaciones, bonos... - Total
             declaracion-07:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados,
+                pagarés...- Total.'
               label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
                 bonos, certificados, pagarés...- Total
             declaracion-08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva negociadas - Total.'
               label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva negociadas - Total
             declaracion-09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G2. Valores no exentos - Acciones y particip. fondos
+                otras entidades - Total.'
               label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
                 fondos otras entidades - Total
             declaracion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva no negociadas.- Total.'
               label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva no negociadas.- Total
             declaracion-11:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G4.Valores no exentos - Acciones y particip. otras entidades
+                jurídicas no negociadas - Total.'
               label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
                 otras entidades jurídicas no negociadas - Total
             declaracion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H1. Valores exentos - Acciones y particip. entidades
+                jurídicas negociadas - Total (neto deudas).'
               label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
                 entidades jurídicas negociadas - Total (neto deudas)
             declaracion-13:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H2. Valores exentos - Acciones y particip. exentas entidades
+                jurídicas no negociadas - Total (neto deudas).'
               label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
                 exentas entidades jurídicas no negociadas - Total (neto deudas)
             declaracion-14:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - I. Seguros de vida - Total.'
               label: Bienes y derechos - I. Seguros de vida - Total
             declaracion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - J. Rentas temporales y vitalicias - Total.'
               label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
             declaracion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones
+                y aeronaves - Total.'
               label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
                 embarcaciones y aeronaves - Total
             declaracion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - L. Objetos de arte y antigüedades - Total.'
               label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
             declaracion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda
+                habitual) - Total.'
               label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
                 vivienda habitual) - Total
             declaracion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - N. Concesiones administrativas - Total.'
               label: Bienes y derechos - N. Concesiones administrativas - Total
             declaracion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - O. Derechos derivados de la propiedad intelectual o industrial
+                - Total.'
               label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
                 o industrial - Total
             declaracion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - P. Opciones contractuales - Total.'
               label: Bienes y derechos - P. Opciones contractuales - Total
             declaracion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - R. Demás bienes y derechos de contenido económico - Total.'
               label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
                 - Total
             declaracion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Total bienes y derechos no exentos.'
               label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
                 no exentos'
             declaracion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deudas
+                deducibles - Total.'
               label: Deudas deducibles - Total
             declaracion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Reducción en concepto de mínimo
+                exento.'
               label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
                 de mínimo exento'
             declaracion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Patrimonio
+                exento con progresividad - Bienes y derechos exentos, excepto determinar
+                tipo gravamen aplicable resto.'
               label: Patrimonio exento con progresividad - Bienes y derechos exentos,
                 excepto determinar tipo gravamen aplicable resto
             declaracion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción impuestos extranjero - Importe de la deducción.'
               label: Liquidación - Deducción impuestos extranjero - Importe de la
                 deducción
             declaracion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes
+                y derechos en Ceuta y Melilla.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
                 de los bienes y derechos en Ceuta y Melilla
             declaracion-43:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional.
+                corresponde dichos bienes y derechos.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
                 proporcional. corresponde dichos bienes y derechos
             declaracion-44:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
                 de la bonificación
             declaracion-46:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - Q. Saldos en monedas virtuales - Total.'
               label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
             declaracion-48:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe total con derecho a deducción.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe total con derecho a deducción
             declaracion-49:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe aplicado
             declaracion-50:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Bonificación autonómica
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
                 autonómica - Importe aplicado
             declaracion-56:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización
+                declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones.'
               label: Regularización declaración complementaria - Cuota ingresar anteriores
                 autoliquidaciones/liquidaciones
             declaracion-57:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 57 del
+                Modelo 714.
               label: Regularización declaración complementaria - Diferencia a ingresar
                 resultado declaración complementaria
             declaracion-60:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total
+                vivienda habitual susceptible exención.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor total vivienda habitual susceptible exención
             declaracion-61:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor exento
             declaracion-62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor no exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor no exento
             declaracion-63:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
             declaracion-a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Impuestos
+                efectivamente satisfechos en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Impuestos efectivamente satisfechos en el extranjero
             declaracion-b:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Parte de
+                la base liquidable gravada en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Parte de la base liquidable gravada en el extranjero
             declaracion-i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Importe del ingreso.'
               label: Ingreso - Importe del ingreso
             declaracion-negativa:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                negativa.'
               label: Declaración negativa
             identificacion-1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2024 ha tenido su residencia habitual
+                fuera del territorio español y tributa por obligación real.'
               label: Modalidades especiales de tributación - En 2024 ha tenido su
                 residencia habitual fuera del territorio español y tributa por obligación
                 real
             identificacion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                Complementaria.'
               label: Declaración Complementaria
             identificacion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Si ha consignado
+                la modalidad de la casilla 4 y desea optar por la aplicación de la
+                normativa autonómica.'
               label: Si ha consignado la modalidad de la casilla 4 y desea optar por
                 la aplicación de la normativa autonómica
             identificacion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de Vía.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
             identificacion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre de la Vía Pública.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
             identificacion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de numeración.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
             identificacion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Número de Casa.'
               label: Sujeto Pasivo - Domicilio habitual - Número de Casa
             identificacion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Calificador del número.'
               label: Sujeto Pasivo - Domicilio habitual - Calificador del número
             identificacion-2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2024 ha dejado de ser residente en
+                territorio español pero sigue tributando por obligación personal.'
               label: Modalidades especiales de tributación - En 2024 ha dejado de
                 ser residente en territorio español pero sigue tributando por obligación
                 personal
             identificacion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Bloque.'
               label: Sujeto Pasivo - Domicilio habitual - Bloque
             identificacion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Portal.'
               label: Sujeto Pasivo - Domicilio habitual - Portal
             identificacion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Escalera.'
               label: Sujeto Pasivo - Domicilio habitual - Escalera
             identificacion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Planta.'
               label: Sujeto Pasivo - Domicilio habitual - Planta
             identificacion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Puerta.'
               label: Sujeto Pasivo - Domicilio habitual - Puerta
             identificacion-25:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
                 domicilio
             identificacion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Localidad / Población (si es distinta
+                del municipio).'
               label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
                 es distinta del municipio)
             identificacion-27:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Código Postal.'
               label: Sujeto Pasivo - Domicilio habitual - Código Postal
             identificacion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre del Municipio.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
             identificacion-29:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Provincia.'
               label: Sujeto Pasivo - Domicilio habitual - Provincia
             identificacion-3:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - Comunidad Autónoma donde radique el mayor
+                de los bienes o derechos.'
               label: Modalidades especiales de tributación - Comunidad Autónoma donde
                 radique el mayor de los bienes o derechos
             identificacion-35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Domicilio / Address.'
               label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
             identificacion-36:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
                 del domicilio
             identificacion-37:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Población / Ciudad.'
               label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
             identificacion-39:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código Postal [ZIP].'
               label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
             identificacion-4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2024 ha tenido su residencia fiscal
+                en España, pero está sujeto por obligación real al Impuesto sobre
+                el Patrimonio por haber optado por el régimen especial, artículo 93
+                Ley 35/2006, IRPF.'
               label: Modalidades especiales de tributación - En 2024 ha tenido su
                 residencia fiscal en España, pero está sujeto por obligación real
                 al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
                 artículo 93 Ley 35/2006, IRPF
             identificacion-40:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Provincia / Región / Estado.'
               label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
             identificacion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - País.'
               label: Sujeto Pasivo - Domicilio extranjero - País
             identificacion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código País.'
               label: Sujeto Pasivo - Domicilio extranjero - Código País
             identificacion-8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Comunidad
+                o Ciudad Autónoma de residencia en 2024.'
               label: Comunidad o Ciudad Autónoma de residencia en 2024
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C1. No exentos afectos activ. empres. y profes. (no inmuebles)
+                - Total.'
               label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
                 (no inmuebles) - Total
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C2. Bienes inmuebles no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
                 empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Idioma
+                de la declaración.'
               label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                (anual, 0A).'
               label: Periodo (anual, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Domicilio habitual - Código de provincia.'
               label: Sujeto pasivo - Domicilio habitual - Código de provincia
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria - Cuotas a ingresar de anteriores autoliquidaciones
+                o liquidaciones administrativas.'
               label: Declaración complementaria - Cuotas a ingresar de anteriores
                 autoliquidaciones o liquidaciones administrativas
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Clase de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Clase de discapacidad
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Porcentaje de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Estado civil.'
               label: Sujeto pasivo - Estado civil
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Año.'
               label: Fecha de la declaración - Año
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Día.'
               label: Fecha de la declaración - Día
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Localidad.'
               label: Fecha de la declaración - Localidad
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Mes.'
               label: Fecha de la declaración - Mes
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Fecha de nacimiento.'
               label: Sujeto pasivo - Fecha de nacimiento
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Nacionalidad.'
               label: Sujeto pasivo - Nacionalidad
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Régimen
+                económico del matrimonio.'
               label: Régimen económico del matrimonio
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - NIF.'
               label: Representante - NIF
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - Apellidos y nombre o razón social.'
               label: Representante - Apellidos y nombre o razón social
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Sexo.'
               label: Sujeto pasivo - Sexo
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración.'
               label: Tipo de declaración
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Forma de pago.'
               label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte de la base imponible del ahorro del
+                IRPF.'
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
                 del ahorro del IRPF
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base Imponible.'
               label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base liquidable.'
               label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota a ingresar - Cuota a ingresar.'
               label: Liquidación - Cuota a ingresar - Cuota a ingresar
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota íntegra - Cuota íntegra.'
               label: Liquidación - Cuota íntegra - Cuota íntegra
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el
+                Patrimonio susceptible de limitación.'
               label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
                 Impuesto sobre el Patrimonio susceptible de limitación
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota minorada - Cuota minorada.'
               label: Liquidación - Cuota minorada - Cuota minorada
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+                no integrados en el IRPF.'
               label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
                 en beneficios, no integrados en el IRPF
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - a) Exceso.'
               label: Liquidación - Límite cuota íntegra - a) Exceso
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
               label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
                 del IRPF
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+                ganancias y pérdidas patrimoniales.'
               label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
                 saldo positivo ganancias y pérdidas patrimoniales...
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Cuotas íntegras del IRPF.'
               label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+                el Patrimonio y del IRPF.'
               label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
                 del Impuesto sobre el Patrimonio y del IRPF
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+                el Patrimonio.'
               label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
                 del Impuesto sobre el Patrimonio
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
               label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
                 del límite conjunto
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Total cuota íntegra - Total cuota íntegra.'
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
           construct:
             m714-patrimonio-calculation:
@@ -1604,395 +2299,549 @@ modelo:
         '2025':
           casilla:
             declaracion-01:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total bienes inmuebles naturaleza urbana.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total bienes inmuebles naturaleza urbana
             declaracion-02:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - B. Bienes inmuebles naturaleza rústica - Total.'
               label: Bienes y derechos - B. Bienes inmuebles naturaleza rústica -
                 Total
             declaracion-03:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C. Bienes y derechos no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C. Bienes y derechos no exentos afectos activ.
                 empres. y profes. - Total
             declaracion-04:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - D. Bienes y derechos exentos afectos activ. empres. y
+                profes. - Total (neto de deudas).'
               label: Bienes y derechos - D. Bienes y derechos exentos afectos activ.
                 empres. y profes. - Total (neto de deudas)
             declaracion-05:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - E. Depósitos cuenta corriente, ahorro, financieras, imposiciones...
+                - Total.'
               label: Bienes y derechos - E. Depósitos cuenta corriente, ahorro, financieras,
                 imposiciones... - Total
             declaracion-06:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F1. Valores cesión terceros - Deuda pública, obligaciones,
+                bonos... - Total.'
               label: Bienes y derechos - F1. Valores cesión terceros - Deuda pública,
                 obligaciones, bonos... - Total
             declaracion-07:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - F2. Valores cesión terceros - Obligaciones, bonos, certificados,
+                pagarés...- Total.'
               label: Bienes y derechos - F2. Valores cesión terceros - Obligaciones,
                 bonos, certificados, pagarés...- Total
             declaracion-08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G1. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva negociadas - Total.'
               label: Bienes y derechos - G1. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva negociadas - Total
             declaracion-09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G2. Valores no exentos - Acciones y particip. fondos
+                otras entidades - Total.'
               label: Bienes y derechos - G2. Valores no exentos - Acciones y particip.
                 fondos otras entidades - Total
             declaracion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G3. Valores no exentos - Acciones y particip. Inst. Invers.
+                Colectiva no negociadas.- Total.'
               label: Bienes y derechos - G3. Valores no exentos - Acciones y particip.
                 Inst. Invers. Colectiva no negociadas.- Total
             declaracion-11:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - G4.Valores no exentos - Acciones y particip. otras entidades
+                jurídicas no negociadas - Total.'
               label: Bienes y derechos - G4.Valores no exentos - Acciones y particip.
                 otras entidades jurídicas no negociadas - Total
             declaracion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H1. Valores exentos - Acciones y particip. entidades
+                jurídicas negociadas - Total (neto deudas).'
               label: Bienes y derechos - H1. Valores exentos - Acciones y particip.
                 entidades jurídicas negociadas - Total (neto deudas)
             declaracion-13:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - H2. Valores exentos - Acciones y particip. exentas entidades
+                jurídicas no negociadas - Total (neto deudas).'
               label: Bienes y derechos - H2. Valores exentos - Acciones y particip.
                 exentas entidades jurídicas no negociadas - Total (neto deudas)
             declaracion-14:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - I. Seguros de vida - Total.'
               label: Bienes y derechos - I. Seguros de vida - Total
             declaracion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - J. Rentas temporales y vitalicias - Total.'
               label: Bienes y derechos - J. Rentas temporales y vitalicias - Total
             declaracion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - K. Vehículos, joyas, pieles de caracter suntuario, embarcaciones
+                y aeronaves - Total.'
               label: Bienes y derechos - K. Vehículos, joyas, pieles de caracter suntuario,
                 embarcaciones y aeronaves - Total
             declaracion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - L. Objetos de arte y antigüedades - Total.'
               label: Bienes y derechos - L. Objetos de arte y antigüedades - Total
             declaracion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - M. Derechos reales de uso y disfrute (excluidos vivienda
+                habitual) - Total.'
               label: Bienes y derechos - M. Derechos reales de uso y disfrute (excluidos
                 vivienda habitual) - Total
             declaracion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - N. Concesiones administrativas - Total.'
               label: Bienes y derechos - N. Concesiones administrativas - Total
             declaracion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - O. Derechos derivados de la propiedad intelectual o industrial
+                - Total.'
               label: Bienes y derechos - O. Derechos derivados de la propiedad intelectual
                 o industrial - Total
             declaracion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - P. Opciones contractuales - Total.'
               label: Bienes y derechos - P. Opciones contractuales - Total
             declaracion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - R. Demás bienes y derechos de contenido económico - Total.'
               label: Bienes y derechos - R. Demás bienes y derechos de contenido económico
                 - Total
             declaracion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Total bienes y derechos no exentos.'
               label: 'Resumen patrimonio neto: base liquidable - Total bienes y derechos
                 no exentos'
             declaracion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Deudas
+                deducibles - Total.'
               label: Deudas deducibles - Total
             declaracion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Reducción en concepto de mínimo
+                exento.'
               label: 'Resumen patrimonio neto: base liquidable - Reducción en concepto
                 de mínimo exento'
             declaracion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Patrimonio
+                exento con progresividad - Bienes y derechos exentos, excepto determinar
+                tipo gravamen aplicable resto.'
               label: Patrimonio exento con progresividad - Bienes y derechos exentos,
                 excepto determinar tipo gravamen aplicable resto
             declaracion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción impuestos extranjero - Importe de la deducción.'
               label: Liquidación - Deducción impuestos extranjero - Importe de la
                 deducción
             declaracion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Valor neto de los bienes
+                y derechos en Ceuta y Melilla.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Valor neto
                 de los bienes y derechos en Ceuta y Melilla
             declaracion-43:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Parte cuota proporcional.
+                corresponde dichos bienes y derechos.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Parte cuota
                 proporcional. corresponde dichos bienes y derechos
             declaracion-44:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Bonificación cuota en Ceuta y Melilla - Importe de la bonificación.'
               label: Liquidación - Bonificación cuota en Ceuta y Melilla - Importe
                 de la bonificación
             declaracion-46:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - Q. Saldos en monedas virtuales - Total.'
               label: Bienes y derechos - Q. Saldos en monedas virtuales - Total
             declaracion-48:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe total con derecho a deducción.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe total con derecho a deducción
             declaracion-49:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Deducciones autonómicas
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Deducciones
                 autonómicas - Importe aplicado
             declaracion-50:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducciones y bonificaciones autonómicas - Bonificación autonómica
+                - Importe aplicado.'
               label: Liquidación - Deducciones y bonificaciones autonómicas - Bonificación
                 autonómica - Importe aplicado
             declaracion-56:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regularización
+                declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones.'
               label: Regularización declaración complementaria - Cuota ingresar anteriores
                 autoliquidaciones/liquidaciones
             declaracion-57:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 57 del
+                Modelo 714.
               label: Regularización declaración complementaria - Diferencia a ingresar
                 resultado declaración complementaria
             declaracion-60:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total
+                vivienda habitual susceptible exención.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor total vivienda habitual susceptible exención
             declaracion-61:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor exento
             declaracion-62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A1. Bienes inmuebles naturaleza urbana - Valor no exento.'
               label: Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -
                 Valor no exento
             declaracion-63:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles
+                - Total.'
               label: Bienes y derechos - A2. Bienes inmuebles naturaleza urbana -
                 Otros inmuebles - Total
             declaracion-a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Impuestos
+                efectivamente satisfechos en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Impuestos efectivamente satisfechos en el extranjero
             declaracion-b:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Deducción por impuestos satisfechos en el extranjero - Parte de
+                la base liquidable gravada en el extranjero.'
               label: Liquidación - Deducción por impuestos satisfechos en el extranjero
                 - Parte de la base liquidable gravada en el extranjero
             declaracion-i:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Importe del ingreso.'
               label: Ingreso - Importe del ingreso
             declaracion-negativa:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                negativa.'
               label: Declaración negativa
             identificacion-1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2025 ha tenido su residencia habitual
+                fuera del territorio español y tributa por obligación real.'
               label: Modalidades especiales de tributación - En 2025 ha tenido su
                 residencia habitual fuera del territorio español y tributa por obligación
                 real
             identificacion-10:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                Complementaria.'
               label: Declaración Complementaria
             identificacion-12:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Si ha consignado
+                la modalidad de la casilla 4 y desea optar por la aplicación de la
+                normativa autonómica.'
               label: Si ha consignado la modalidad de la casilla 4 y desea optar por
                 la aplicación de la normativa autonómica
             identificacion-15:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de Vía.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de Vía
             identificacion-16:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre de la Vía Pública.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública
             identificacion-17:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Tipo de numeración.'
               label: Sujeto Pasivo - Domicilio habitual - Tipo de numeración
             identificacion-18:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Número de Casa.'
               label: Sujeto Pasivo - Domicilio habitual - Número de Casa
             identificacion-19:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Calificador del número.'
               label: Sujeto Pasivo - Domicilio habitual - Calificador del número
             identificacion-2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2025 o anterior ha dejado de ser residente
+                en territorio español pero sigue tributando por obligación personal.'
               label: Modalidades especiales de tributación - En 2025 o anterior ha
                 dejado de ser residente en territorio español pero sigue tributando
                 por obligación personal
             identificacion-20:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Bloque.'
               label: Sujeto Pasivo - Domicilio habitual - Bloque
             identificacion-21:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Portal.'
               label: Sujeto Pasivo - Domicilio habitual - Portal
             identificacion-22:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Escalera.'
               label: Sujeto Pasivo - Domicilio habitual - Escalera
             identificacion-23:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Planta.'
               label: Sujeto Pasivo - Domicilio habitual - Planta
             identificacion-24:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Puerta.'
               label: Sujeto Pasivo - Domicilio habitual - Puerta
             identificacion-25:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio habitual - Datos complementarios del
                 domicilio
             identificacion-26:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Localidad / Población (si es distinta
+                del municipio).'
               label: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si
                 es distinta del municipio)
             identificacion-27:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Código Postal.'
               label: Sujeto Pasivo - Domicilio habitual - Código Postal
             identificacion-28:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Nombre del Municipio.'
               label: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio
             identificacion-29:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio habitual - Provincia.'
               label: Sujeto Pasivo - Domicilio habitual - Provincia
             identificacion-3:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - Comunidad Autónoma donde radique el mayor
+                de los bienes o derechos.'
               label: Modalidades especiales de tributación - Comunidad Autónoma donde
                 radique el mayor de los bienes o derechos
             identificacion-35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Domicilio / Address.'
               label: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address
             identificacion-36:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Datos complementarios del domicilio.'
               label: Sujeto Pasivo - Domicilio extranjero - Datos complementarios
                 del domicilio
             identificacion-37:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Población / Ciudad.'
               label: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad
             identificacion-39:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código Postal [ZIP].'
               label: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP]
             identificacion-4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Modalidades
+                especiales de tributación - En 2025 ha tenido su residencia fiscal
+                en España, pero está sujeto por obligación real al Impuesto sobre
+                el Patrimonio por haber optado por el régimen especial, artículo 93
+                Ley 35/2006, IRPF.'
               label: Modalidades especiales de tributación - En 2025 ha tenido su
                 residencia fiscal en España, pero está sujeto por obligación real
                 al Impuesto sobre el Patrimonio por haber optado por el régimen especial,
                 artículo 93 Ley 35/2006, IRPF
             identificacion-40:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Provincia / Región / Estado.'
               label: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado
             identificacion-41:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - País.'
               label: Sujeto Pasivo - Domicilio extranjero - País
             identificacion-42:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                Pasivo - Domicilio extranjero - Código País.'
               label: Sujeto Pasivo - Domicilio extranjero - Código País
             identificacion-8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Comunidad
+                o Ciudad Autónoma de residencia en 2025.'
               label: Comunidad o Ciudad Autónoma de residencia en 2025
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C1. No exentos afectos activ. empres. y profes. (no inmuebles)
+                - Total.'
               label: Bienes y derechos - C1. No exentos afectos activ. empres. y profes.
                 (no inmuebles) - Total
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Bienes
+                y derechos - C2. Bienes inmuebles no exentos afectos activ. empres.
+                y profes. - Total.'
               label: Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ.
                 empres. y profes. - Total
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Idioma
+                de la declaración.'
               label: Idioma de la declaración
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                (anual, 0A).'
               label: Periodo (anual, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Domicilio habitual - Código de provincia.'
               label: Sujeto pasivo - Domicilio habitual - Código de provincia
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria - Cuotas a ingresar de anteriores autoliquidaciones
+                o liquidaciones administrativas.'
               label: Declaración complementaria - Cuotas a ingresar de anteriores
                 autoliquidaciones o liquidaciones administrativas
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Clase de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Clase de discapacidad
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Discapacidad - Porcentaje de discapacidad.'
               label: Sujeto pasivo - Discapacidad - Porcentaje de discapacidad
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Estado civil.'
               label: Sujeto pasivo - Estado civil
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Año.'
               label: Fecha de la declaración - Año
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Día.'
               label: Fecha de la declaración - Día
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Localidad.'
               label: Fecha de la declaración - Localidad
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la declaración - Mes.'
               label: Fecha de la declaración - Mes
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Fecha de nacimiento.'
               label: Sujeto pasivo - Fecha de nacimiento
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Nacionalidad.'
               label: Sujeto pasivo - Nacionalidad
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Régimen
+                económico del matrimonio.'
               label: Régimen económico del matrimonio
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - NIF.'
               label: Representante - NIF
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Representante
+                - Apellidos y nombre o razón social.'
               label: Representante - Apellidos y nombre o razón social
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sujeto
+                pasivo - Sexo.'
               label: Sujeto pasivo - Sexo
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración.'
               label: Tipo de declaración
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ingreso
+                - Forma de pago.'
               label: Ingreso - Forma de pago
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte de la base imponible del ahorro del
+                IRPF.'
               label: Liquidación - Límite cuota íntegra - Parte de la base imponible
                 del ahorro del IRPF
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base Imponible.'
               label: 'Resumen patrimonio neto: base liquidable - Base Imponible'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resumen
+                patrimonio neto: base liquidable - Base liquidable.'
               label: 'Resumen patrimonio neto: base liquidable - Base liquidable'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota a ingresar - Cuota a ingresar.'
               label: Liquidación - Cuota a ingresar - Cuota a ingresar
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota íntegra - Cuota íntegra.'
               label: Liquidación - Cuota íntegra - Cuota íntegra
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuota íntegra del Impuesto sobre el
+                Patrimonio susceptible de limitación.'
               label: Liquidación - Límite cuota íntegra - Parte cuota íntegra del
                 Impuesto sobre el Patrimonio susceptible de limitación
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Cuota minorada - Cuota minorada.'
               label: Liquidación - Cuota minorada - Cuota minorada
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Dividendos y participaciones en beneficios,
+                no integrados en el IRPF.'
               label: Liquidación - Límite cuota íntegra - Dividendos y participaciones
                 en beneficios, no integrados en el IRPF
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - a) Exceso.'
               label: Liquidación - Límite cuota íntegra - a) Exceso
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de las bases imponibles del IRPF.'
               label: Liquidación - Límite cuota íntegra - Suma de las bases imponibles
                 del IRPF
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Parte cuotas íntegras IRPF, saldo positivo
+                ganancias y pérdidas patrimoniales.'
               label: Liquidación - Límite cuota íntegra - Parte cuotas íntegras IRPF,
                 saldo positivo ganancias y pérdidas patrimoniales...
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Cuotas íntegras del IRPF.'
               label: Liquidación - Límite cuota íntegra - Cuotas íntegras del IRPF
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Límite conjunto de cuotas del Impuesto sobre
+                el Patrimonio y del IRPF.'
               label: Liquidación - Límite cuota íntegra - Límite conjunto de cuotas
                 del Impuesto sobre el Patrimonio y del IRPF
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - b) 80% de la cuota íntegra del Impuesto sobre
+                el Patrimonio.'
               label: Liquidación - Límite cuota íntegra - b) 80% de la cuota íntegra
                 del Impuesto sobre el Patrimonio
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Límite cuota íntegra - Suma de cuotas a efectos del límite conjunto.'
               label: Liquidación - Límite cuota íntegra - Suma de cuotas a efectos
                 del límite conjunto
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Liquidación
+                - Total cuota íntegra - Total cuota íntegra.'
               label: Liquidación - Total cuota íntegra - Total cuota íntegra
           construct:
             m714-patrimonio-calculation:

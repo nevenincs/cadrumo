@@ -1,6 +1,149 @@
 modelo:
   schema:
     '309':
+      casilla:
+        continuidad:
+          a-deducir-23:
+            help: 'A casilla adatai: Casilla 23: a levonni 23.'
+            label: 'Casilla 23: a levonni 23'
+          adjudicatario-apellidos:
+            help: 'A casilla adatai: Casilla 1049-1108: adjudicatario vezetéknév.'
+            label: 'Casilla 1049-1108: adjudicatario vezetéknév'
+          adjudicatario-nif:
+            help: 'A casilla adatai: Casilla 1040-1048: adjudicatario nif.'
+            label: 'Casilla 1040-1048: adjudicatario nif'
+          adjudicatario-nombre:
+            help: 'A casilla adatai: Casilla 1109-1128: adjudicatario név.'
+            label: 'Casilla 1109-1128: adjudicatario név'
+          aeronave-ano:
+            help: A Modelo 309 546. casilla adóügyi adatai.
+            label: Casilla 546 — adóügyi mező
+          aeronave-fabricante:
+            help: 'A casilla adatai: Casilla 426: aeronave fabricante.'
+            label: 'Casilla 426: aeronave fabricante'
+          aeronave-marca:
+            help: 'A casilla adatai: Casilla 466: aeronave marca.'
+            label: 'Casilla 466: aeronave marca'
+          aeronave-peso:
+            help: 'A casilla adatai: Casilla 550: aeronave peso.'
+            label: 'Casilla 550: aeronave peso'
+          aeronave-serie:
+            help: 'A casilla adatai: Casilla 506: aeronave serie.'
+            label: 'Casilla 506: aeronave serie'
+          cuota-devengada-22:
+            help: 'A casilla adatai: Casilla 22: adóösszeg felszámított 22.'
+            label: 'Casilla 22: adóösszeg felszámított 22'
+          declaracion-complementaria:
+            help: 'A casilla adatai: Casilla 1016: bevallás kiegészítő.'
+            label: 'Casilla 1016: bevallás kiegészítő'
+          declaracion-periodo-309:
+            help: 'A casilla adatai: Casilla 7: bevallás időszak 309.'
+            label: 'Casilla 7: bevallás időszak 309'
+          devolucion-iban-309:
+            help: A Modelo 309 1030-1063. casilla adóügyi adatai.
+            label: Casilla 1030-1063 — adóügyi mező
+          embarcacion-eslora:
+            help: 'A casilla adatai: Casilla 420: embarcacion eslora.'
+            label: 'Casilla 420: embarcacion eslora'
+          embarcacion-fabricante:
+            help: 'A casilla adatai: Casilla 300: embarcacion fabricante.'
+            label: 'Casilla 300: embarcacion fabricante'
+          embarcacion-tipo:
+            help: 'A casilla adatai: Casilla 340: embarcacion kulcs.'
+            label: 'Casilla 340: embarcacion kulcs'
+          justificante-anterior:
+            help: 'A casilla adatai: Casilla 61: igazolás korábbi.'
+            label: 'Casilla 61: igazolás korábbi'
+          mtn-embarcacion-identificacion:
+            help: A Modelo 309 380. casilla adóügyi adatai.
+            label: Casilla 380 — adóügyi mező
+          re-base-10:
+            help: 'A Modelo 309 10. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 10 — adóügyi információ
+          re-base-13:
+            help: 'A Modelo 309 13. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 13 — adóügyi információ
+          re-base-16:
+            help: 'A Modelo 309 16. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 16 — adóügyi információ
+          re-base-19:
+            help: 'A Modelo 309 19. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 19 — adóügyi információ
+          re-cuota-12:
+            help: 'A casilla adatai: Casilla 12: re adóösszeg 12.'
+            label: 'Casilla 12: re adóösszeg 12'
+          re-cuota-15:
+            help: 'A casilla adatai: Casilla 15: re adóösszeg 15.'
+            label: 'Casilla 15: re adóösszeg 15'
+          re-cuota-18:
+            help: 'A casilla adatai: Casilla 18: re adóösszeg 18.'
+            label: 'Casilla 18: re adóösszeg 18'
+          re-cuota-21:
+            help: 'A casilla adatai: Casilla 21: re adóösszeg 21.'
+            label: 'Casilla 21: re adóösszeg 21'
+          re-tipo-11:
+            help: 'A casilla adatai: Casilla 11: re kulcs 11.'
+            label: 'Casilla 11: re kulcs 11'
+          re-tipo-14:
+            help: 'A casilla adatai: Casilla 14: re kulcs 14.'
+            label: 'Casilla 14: re kulcs 14'
+          re-tipo-17:
+            help: 'A casilla adatai: Casilla 17: re kulcs 17.'
+            label: 'Casilla 17: re kulcs 17'
+          re-tipo-20:
+            help: 'A casilla adatai: Casilla 20: re kulcs 20.'
+            label: 'Casilla 20: re kulcs 20'
+          resultado-24:
+            help: 'A casilla adatai: Casilla 24: eredmény 24.'
+            label: 'Casilla 24: eredmény 24'
+          rg-base-01:
+            help: 'A Modelo 309 01. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 01 — adóügyi információ
+          rg-base-04:
+            help: 'A Modelo 309 04. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 04 — adóügyi információ
+          rg-base-07:
+            help: 'A Modelo 309 07. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 07 — adóügyi információ
+          rg-cuota-03:
+            help: 'A casilla adatai: Casilla 03: rg adóösszeg 03.'
+            label: 'Casilla 03: rg adóösszeg 03'
+          rg-cuota-06:
+            help: 'A casilla adatai: Casilla 06: rg adóösszeg 06.'
+            label: 'Casilla 06: rg adóösszeg 06'
+          rg-cuota-09:
+            help: 'A casilla adatai: Casilla 09: rg adóösszeg 09.'
+            label: 'Casilla 09: rg adóösszeg 09'
+          rg-tipo-02:
+            help: 'A casilla adatai: Casilla 02: rg kulcs 02.'
+            label: 'Casilla 02: rg kulcs 02'
+          rg-tipo-05:
+            help: 'A casilla adatai: Casilla 05: rg kulcs 05.'
+            label: 'Casilla 05: rg kulcs 05'
+          rg-tipo-08:
+            help: 'A casilla adatai: Casilla 08: rg kulcs 08.'
+            label: 'Casilla 08: rg kulcs 08'
+          transmitente-nif:
+            help: 'A casilla adatai: Casilla 25: transmitente nif.'
+            label: 'Casilla 25: transmitente nif'
+          transmitente-nif-iva:
+            help: 'A casilla adatai: Casilla 1025-1039: transmitente nif iva.'
+            label: 'Casilla 1025-1039: transmitente nif iva'
+          vehiculo-bastidor:
+            help: 'A casilla adatai: Casilla 220: vehiculo bastidor.'
+            label: 'Casilla 220: vehiculo bastidor'
+          vehiculo-clasificacion:
+            help: 'A casilla adatai: Casilla 260: vehiculo clasificacion.'
+            label: 'Casilla 260: vehiculo clasificacion'
+          vehiculo-marca:
+            help: 'A casilla adatai: Casilla 100: vehiculo marca.'
+            label: 'Casilla 100: vehiculo marca'
+          vehiculo-modelo:
+            help: 'A casilla adatai: Casilla 180: vehiculo modelo.'
+            label: 'Casilla 180: vehiculo modelo'
+          vehiculo-tipo:
+            help: 'A casilla adatai: Casilla 140: vehiculo kulcs.'
+            label: 'Casilla 140: vehiculo kulcs'
       field:
         official_name: Modelo 309. Hozzáadottérték-adó. Nem rendszeres bevallás-elszámolás.
         title: IVA. Nem rendszeres bevallás-elszámolás
@@ -32,7 +175,7 @@ modelo:
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 420-425. mezője, 2004-2015. adóév.
@@ -198,7 +341,7 @@ modelo:
               field:
                 title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
           field:
-            label: null
+            label: Casilla — adóügyi mező
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -229,7 +372,7 @@ modelo:
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2016-2017. adóév.
@@ -333,7 +476,7 @@ modelo:
               help: A 309-es modell 13-13. mezője, 2016-2017. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -365,23 +508,24 @@ modelo:
               help: A 309-es modell 242-281. mezője, 2016-2017. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
                 (új közlekedési eszközök stb.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: A Modelo 309 . casilla adóügyi adatai.
               label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
                 előzetesen felszámított)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
+                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
               label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
                 felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — adóügyi információ
           field:
-            label: null
+            label: Casilla — adóügyi mező
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -421,7 +565,7 @@ modelo:
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2018-2022. adóév.
@@ -525,7 +669,7 @@ modelo:
               help: A 309-es modell 13-13. mezője, 2018-2022. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -560,23 +704,24 @@ modelo:
               help: A 309-es modell 242-281. mezője, 2018-2022. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
                 (új közlekedési eszközök stb.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: A Modelo 309 . casilla adóügyi adatai.
               label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
                 előzetesen felszámított)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
+                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
               label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
                 felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — adóügyi információ
           field:
-            label: null
+            label: Casilla — adóügyi mező
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -616,7 +761,7 @@ modelo:
               label: Elszámolás (8) - Összes felszámított adó ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: A 309-es modell 492-496. mezője, 2023 y siguientes. adóév.
@@ -729,7 +874,7 @@ modelo:
               help: A 309-es modell 13-13. mezője, 2023 y siguientes. adóév.
               label: Bevallás típusa
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
                 szabályozás / egyenértékűségi felár / végrehajtási eljárás)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -764,20 +909,21 @@ modelo:
               help: A 309-es modell 242-281. mezője, 2023 y siguientes. adóév.
               label: Jellemzők és műszaki adatok (7) - Járművek - Típus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'A Modelo 309 . casilla adóügyi adatai: adóügyi információ.'
               label: Önmagával szemben áthárított HÉA közösségi beszerzések esetén
                 (új közlekedési eszközök stb.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: A Modelo 309 . casilla adóügyi adatai.
               label: Nem időszakos HÉA összesen (önmagával szemben áthárított + felár
                 előzetesen felszámított)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa szerinti
+                minoristas en egyenértékűségi felár (visszatérítés a viajeros).'
               label: Kiskereskedők által viselt előzetesen felszámított HÉA az egyenértékűségi
                 felár keretében (utasoknak járó visszatérítés)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — adóügyi információ
           field:
-            label: null
+            label: Casilla — adóügyi mező

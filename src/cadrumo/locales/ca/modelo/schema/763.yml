@@ -1,6 +1,14 @@
 modelo:
   schema:
     '763':
+      casilla:
+        continuidad:
+          filing-period:
+            help: Informació fiscal de la casella del Modelo 763.
+            label: Casella — informació fiscal
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 763.
+            label: Casella — informació fiscal
       field:
         official_name: Modelo 763. Impost sobre activitats de joc en els supòsits
           d'activitats anuals o pluriennals. Autoliquidació.
@@ -9,84 +17,96 @@ modelo:
         2012-2t-3t:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Modelo 763, exercici 2012 (2.º i 3.º trimestre)
         2013-2014:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Casella— informació fiscal
         2015-2017:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Casella— informació fiscal
         2018-1t-3t:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Modelo 763, exercici 2018 (1.º a 3.º trimestre)
         2018-4t:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Modelo 763, exercici 2018 (4.º trimestre)
         2019-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                763.
               label: Exercici a què es refereix l'autoliquidació
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulteu la informació de la casella: Període (trimestre natural).'
               label: Període (trimestre natural)
           construct:
             modelo-763-autoliquidacion:
               field:
-                title: null
+                title: Modelo 763 autoliquidació del Impuesto sobre activitats de
+                  juego
           field:
-            label: null
+            label: Casella— informació fiscal

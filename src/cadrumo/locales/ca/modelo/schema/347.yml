@@ -1,6 +1,161 @@
 modelo:
   schema:
     '347':
+      casilla:
+        continuidad:
+          arrendamiento-local-negocio:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          arrendatario-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          arrendatario-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          arrendatario-representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          complementaria-sustitutiva:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          contraparte-clave-operacion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-importe-q1:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-importe-q2:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-importe-q3:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-importe-q4:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          contraparte-pais-codigo:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          contraparte-provincia-codigo:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          declarante-representante-legal-nif:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          direccion-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          ejercicio-operacion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          importe-anual-operaciones:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-operacion-arrendamiento:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-percibido-metalico:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-total-anual-operaciones:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-total-arrendamiento-locales:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-transmisiones-inmuebles:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-transmisiones-q1:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-transmisiones-q2:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-transmisiones-q3:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          importe-transmisiones-q4:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          nif-operador-comunitario:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          numero-justificante:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
+          operacion-seguro:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          persona-con-quien-relacionarse:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          persona-con-quien-relacionarse-telefono:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          referencia-catastral:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          situacion-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          tipo-soporte:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          total-inmuebles:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              347.
+            label: Casella— informació fiscal
+          total-personas-entidades:
+            help: Informació fiscal de la casella del Modelo 347.
+            label: Casella — informació fiscal
       field:
         official_name: Modelo 347. Declaració anual d'operacions amb terceres persones.
         title: Operacions amb terceres persones (informativa anual)
@@ -83,8 +238,8 @@ modelo:
               label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
                 contraparts nacionals)
             x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
-              help: Casella contraparte.provincia-codigo del model 347.
-              label: Codi de provincia de la contrapart (dos digits)
+              help: Casella contraparte.província-codigo del model 347.
+              label: Codi de província de la contrapart (dos digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.
@@ -269,8 +424,8 @@ modelo:
               label: Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a
                 contraparts nacionals)
             x-cdnmst3ic5o62sjkckn70sjfepkmsor9c4mm6rr4d5jmu:
-              help: Casella contraparte.provincia-codigo del model 347.
-              label: Codi de provincia de la contrapart (dos digits)
+              help: Casella contraparte.província-codigo del model 347.
+              label: Codi de província de la contrapart (dos digits)
             x-cdnmst3ic5o62sjkckn74pbge9in6pbeehgmst355lm6apr1dgmmsqb6:
               help: Dada declarada al model 347, declaració anual d'operacions amb
                 terceres persones.

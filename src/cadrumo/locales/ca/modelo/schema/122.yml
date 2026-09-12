@@ -52,14 +52,15 @@ modelo:
               label: Regularització cònjuge no separat amb discapacitat. Import de
                 la deducció
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                122.
               label: Exercici a què es refereix la regularització
             x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
               help: Es consigna una C quan la pàgina és complementària d'una altra
                 presentada anteriorment; en altre cas es deixa en blanc.
               label: Indicador de pàgina complementària
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 122.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Import de l'abonament anticipat de la deducció efectivament percebut
@@ -117,6 +118,6 @@ modelo:
           construct:
             modelo-122-regularizacion:
               field:
-                title: null
+                title: Modelo 122 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal

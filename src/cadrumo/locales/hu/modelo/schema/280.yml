@@ -9,85 +9,86 @@ modelo:
         '2025':
           casilla:
             aportaciones-ejercicio:
-              help: null
+              help: 'Tekintse át a casilla adatait: Hozzájárulások efectuadas -ban
+                adóév.'
               label: Az év során teljesített befizetések
             base-retencion-practicada:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A levont forrásadó alapja
             base-retenciones:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A forrásadó alapja
             clave-alta:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: Nyitási kulcs
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             declarado-nif:
-              help: null
+              help: 'Tekintse át a casilla adatait: NIF - declarado.'
               label: A bevallott személy adóazonosító száma (NIF)
             declarado-nombre:
-              help: null
+              help: 'Tekintse át a casilla adatait: Vezetéknév és név - declarado.'
               label: A bevallott személy vezeték- és keresztneve
             declarante-nif:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: A bevalló adóazonosító száma (NIF)
             declarante-razon-social:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: A bejelentő cégneve
             ejercicio-declaracion:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóév.'
               label: A bevallás éve
             extincion-plan:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A hosszú távú megtakarítási terv megszűnése
             fecha-apertura:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A megnyitás dátuma
             fecha-extincion:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A megszűnés dátuma
             identificador-producto:
-              help: null
+              help: 'Tekintse át a casilla adatait: Identificador - producto contratado.'
               label: A szerződött termék azonosítója
             importe-total-aportaciones:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A befizetések teljes összege
             numero-identificativo-anterior:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: A korábbi bevallás azonosító száma
             numero-identificativo-declaracion:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: A bevallás azonosító száma
             numero-total-declarados:
-              help: null
+              help: A Modelo 280 . casilla adóügyi adatai.
               label: A bejelentett személyek száma összesen
             persona-relacion:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: Kapcsolattartó személy
             rendimientos-negativos-acumulados:
-              help: null
+              help: 'Tekintse át a casilla adatait: Jövedelmek negativos acumulados.'
               label: Halmozott negatív hozamok
             rendimientos-negativos-ejercicio:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során elért negatív hozamok
             rendimientos-negativos-imputables:
-              help: null
+              help: 'Tekintse át a casilla adatait: Jövedelmek negativos imputables.'
               label: Betudható negatív hozamok
             rendimientos-positivos-acumulados:
-              help: null
+              help: 'Tekintse át a casilla adatait: Jövedelmek positivos acumulados.'
               label: Halmozott pozitív hozamok
             rendimientos-positivos-ejercicio:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: Az év során elért pozitív hozamok
             representante-legal-nif:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A törvényes képviselő adószáma
             tipo-identificador:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: Az azonosító típusa
             tipo-plan-ahorro:
-              help: null
+              help: 'A Modelo 280 . casilla adóügyi adatai: adóügyi információ.'
               label: A hosszú távú megtakarítási terv típusa
           field:
-            label: null
+            label: Casilla— adóügyi információ

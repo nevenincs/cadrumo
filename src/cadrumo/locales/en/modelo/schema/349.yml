@@ -9,71 +9,82 @@ modelo:
         2020-y-siguientes:
           casilla:
             x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
-              help: null
+              help: Tax information about tax information in casilla 186 of Modelo
+                349.
               label: Indicator of a change in filing periodicity
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: Tax information for casilla 121-122 of Modelo 349.
               label: Supplementary or replacement declaration
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
-              help: null
+              help: Tax information about tax information in casilla 147-161 of Modelo
+                349.
               label: Amount of intra-Community transactions
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: null
+              help: Tax information about tax information in casilla 171-185 of Modelo
+                349.
               label: Amount of the corrections
             x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: Tax information for casilla 391-399 of Modelo 349.
               label: NIF of the declarant's legal representative
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return.'
               label: Declaration identification number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return previous.'
               label: Identification number of the previous declaration
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
-              help: null
+              help: Tax information for casilla 138-146 of Modelo 349.
               label: Total number of intra-Community operators
             x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
-              help: null
+              help: Tax information for casilla 162-170 of Modelo 349.
               label: Total number of intra-Community operators with corrections
             x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 93-132 of Modelo 349.
               label: Surname and first name or company name of the intra-Community
                 operator
             x-dto2soj1ediiqqbde1nmsqb2dhig:
-              help: null
+              help: Tax information about tax information in casilla 134-146 of Modelo
+                349.
               label: Taxable base or amount of the intra-Community transaction
             x-dto2sorcc5r6abbfe1in4ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 133 of Modelo
+                349.
               label: Intra-Community transaction code
             x-dto2sorfchkmerpde1gmiso:
-              help: null
+              help: Tax information for casilla 76-77 of Modelo 349.
               label: Country code of the Community operator
             x-dto2srj9comm6rrdeln6it31e9kmu:
-              help: null
+              help: Tax information about tax information in casilla 78-92 of Modelo
+                349.
               label: VAT number of the Community operator
             x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
-              help: null
+              help: 'Review the casilla information: Tax base declared anteriormente.'
               label: Taxable base previously declared
             x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
-              help: null
+              help: Tax information about tax information in casilla 153-165 of Modelo
+                349.
               label: Taxable base or amounts corrected
             x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
-              help: null
+              help: Tax information for casilla 147-150 of Modelo 349.
               label: Corrected tax year
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
-              help: null
+              help: Tax information for casilla 151-152 of Modelo 349.
               label: Corrected period
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Tax information about tax information in casilla 196-235 of Modelo
+                349.
               label: Surname and forename, or company name, of the substitute taxable
                 person
             x-edqn6t39ehqn8rpedpkmc:
-              help: null
+              help: Tax information about tax information in casilla 179-195 of Modelo
+                349.
               label: Tax identification number (NIF) of the substitute final-recipient
                 trader or professional
           construct:
             modelo-349-informative:
               field:
-                title: null
+                title: Modelo 349 informative declaration of intra-community transactions
           field:
-            label: null
+            label: Casilla — tax field

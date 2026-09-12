@@ -1,6 +1,111 @@
 modelo:
   schema:
     '270':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 164-180: base withholdings payments
+              on account.'
+            label: 'Casilla 164-180: base withholdings payments on account'
+          filing-year:
+            help: Tax information for casilla of Modelo 270.
+            label: Casilla — tax field
+          m270-clave-personalidad:
+            help: Tax information about tax information in casilla 117 of Modelo 270.
+            label: Casilla 117 — tax information
+          m270-declaracion-complementaria:
+            help: Tax information about tax information in casilla 121 of Modelo 270.
+            label: Casilla 121 — tax information
+          m270-declaracion-sustitutiva:
+            help: Tax information for casilla 122 of Modelo 270.
+            label: Casilla 122 — tax field
+          m270-fecha-nacimiento:
+            help: Tax information about tax information in casilla 453-460 of Modelo
+              270.
+            label: Casilla 453-460 — tax information
+          m270-fecha-pago-premio:
+            help: Tax information about tax information in casilla 128-135 of Modelo
+              270.
+            label: Casilla 128-135 — tax information
+          m270-fecha-sorteo:
+            help: Tax information about tax information in casilla 120-127 of Modelo
+              270.
+            label: Casilla 120-127 — tax information
+          m270-gestor-cobro:
+            help: Tax information about tax information in casilla 181 of Modelo 270.
+            label: Casilla 181 — tax information
+          m270-importe-premio:
+            help: Tax information about tax information in casilla 136-150 of Modelo
+              270.
+            label: Casilla 136-150 — tax information
+          m270-lugar-nacimiento:
+            help: Tax information about tax information in casilla 461-497 of Modelo
+              270.
+            label: Casilla 461-497 — tax information
+          m270-nif-pais-residencia:
+            help: Tax information about tax information in casilla 433-452 of Modelo
+              270.
+            label: Casilla 433-452 — tax information
+          m270-numero-identificativo:
+            help: Tax information for casilla 108-120 of Modelo 270.
+            label: Casilla 108-120 — tax field
+          m270-numero-identificativo-anterior:
+            help: Tax information for casilla 123-135 of Modelo 270.
+            label: Casilla 123-135 — tax field
+          m270-pais-residencia:
+            help: Tax information about tax information in casilla 498-499 of Modelo
+              270.
+            label: Casilla 498-499 — tax information
+          m270-persona-contacto-nombre:
+            help: Tax information about tax information in casilla 68-107 of Modelo
+              270.
+            label: Casilla 68-107 — tax information
+          m270-persona-contacto-telefono:
+            help: Tax information about tax information in casilla 59-67 of Modelo
+              270.
+            label: Casilla 59-67 — tax information
+          m270-representante-nombre:
+            help: Tax information about tax information in casilla 76-115 of Modelo
+              270.
+            label: Casilla 76-115 — tax information
+          m270-tipo-perceptor:
+            help: Tax information about tax information in casilla 116 of Modelo 270.
+            label: Casilla 116 — tax information
+          m270-total-importe-premios:
+            help: Tax information about tax information in casilla 147-163 of Modelo
+              270.
+            label: Casilla 147-163 — tax information
+          payee-name:
+            help: 'Casilla information: Casilla 36-75: payee name.'
+            label: 'Casilla 36-75: payee name'
+          payee-nif:
+            help: 'Casilla information: Casilla 18-26: payee nif.'
+            label: 'Casilla 18-26: payee nif'
+          payee-province:
+            help: 'Casilla information: Casilla 118-119: payee province.'
+            label: 'Casilla 118-119: payee province'
+          payee-representative-nif:
+            help: 'Casilla information: Casilla 27-35: payee representative nif.'
+            label: 'Casilla 27-35: payee representative nif'
+          perc-base-retencion:
+            help: 'Casilla information: Casilla 151-165: base withholdings payments
+              on account.'
+            label: 'Casilla 151-165: base withholdings payments on account'
+          perc-retencion:
+            help: 'Casilla information: Casilla 166-180: withholdings payments on
+              account.'
+            label: 'Casilla 166-180: withholdings payments on account'
+          retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 181-197: withholdings payments on
+              account.'
+            label: 'Casilla 181-197: withholdings payments on account'
+          tipo-declaracion:
+            help: 'Casilla information: Casilla rate-return: rate return.'
+            label: 'Casilla rate-return: rate return'
+          total-perceptores-count:
+            help: Tax information about tax information in casilla 138-146 of Modelo
+              270.
+            label: Casilla 138-146 — tax information
       field:
         official_name: Modelo 270. Annual summary of withholdings and payments on
           account. Special levy on prizes from certain lotteries and betting.
@@ -13,7 +118,7 @@ modelo:
                 an earlier return for the same year.
               label: Supplementary return
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 270.
               label: Filing year to which the return relates
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Thirteen-position sequential number whose first three digits are
@@ -36,7 +141,7 @@ modelo:
                 single earlier return for the same year.
               label: Replacement return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 270.
               label: Return type (original / substitute / supplementary)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Sum of the withholding or payment-on-account bases recorded in
@@ -140,9 +245,9 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 return informative
           field:
-            label: null
+            label: Casilla— tax information
         2023-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
@@ -150,7 +255,7 @@ modelo:
                 an earlier return for the same year.
               label: Supplementary return
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 270.
               label: Filing year to which the return relates
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
               help: Thirteen-position sequential number whose first three digits are
@@ -173,7 +278,7 @@ modelo:
                 single earlier return for the same year.
               label: Replacement return
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 270.
               label: Return type (original / substitute / supplementary)
             x-chim6r1eehnn8obc5lh62sr55lp6at35dphmirre:
               help: Sum of the withholding or payment-on-account bases recorded in
@@ -277,6 +382,6 @@ modelo:
           construct:
             modelo-270-informative:
               field:
-                title: null
+                title: Modelo 270 return informative
           field:
-            label: null
+            label: Casilla— tax information

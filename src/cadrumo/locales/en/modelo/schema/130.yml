@@ -88,6 +88,6 @@ modelo:
           construct:
             modelo-130-direct-estimation-instalment:
               field:
-                title: null
+                title: Modelo 130 — tax information
           field:
-            label: null
+            label: Casilla— tax information

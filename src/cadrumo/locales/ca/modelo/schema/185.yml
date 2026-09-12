@@ -1,6 +1,15 @@
 modelo:
   schema:
     '185':
+      casilla:
+        continuidad:
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 185.
+            label: Casella — informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              185.
+            label: Casella— informació fiscal
       field:
         official_name: Modelo 185. Declaració informativa mensual de cotitzacions
           d'afiliats i mutualistes.
@@ -21,7 +30,8 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                185.
               label: Exercici a què es refereix la declaració
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Número identificatiu seqüencial d'aquesta declaració, de 13 posicions
@@ -32,7 +42,7 @@ modelo:
                 desembre.
               label: PERÍODE
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 185.
               label: Tipus de declaració (originària / substitutiva / complementària)
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Nombre total de declarats inclosos per a aquest declarant, és
@@ -100,6 +110,6 @@ modelo:
           construct:
             modelo-185-informative:
               field:
-                title: null
+                title: Modelo 185 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal

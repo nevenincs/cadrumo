@@ -9,79 +9,104 @@ modelo:
         '2025':
           casilla:
             clave-identificacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                identificacion.'
               label: Clave de identificacion
             clave-mercado:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                mercado.'
               label: Clave de mercado
             clave-representacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Clave de representacion
             clave-titularidad:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                titularidad.'
               label: Clave de titularidad
             clave-valor:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                valor.'
               label: Clave de valor
             codigo-pais:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Codigo pais
             codigo-provincia:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Codigo provincia
             declaracion-complementaria-sustitutiva:
-              help: null
-              label: Declaracion complementaria o sustitutiva
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
+              label: Declaración complementaria o sustitutiva
             declarado-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                declarado.'
               label: NIF del declarado
             declarado-nombre:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Apellidos y nombre, razon social o denominacion del declarado
             declarante-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                declarante.'
               label: NIF del declarante
             declarante-razon-social:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Razon social del declarante
             ejercicio-declaracion:
-              help: null
-              label: Ejercicio de declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                de declaración.'
+              label: Ejercicio de declaración
             identificacion-valores:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Identificacion
+                de los valores.'
               label: Identificacion de los valores
             nominal-unitario-valores:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Nominal
+                unitario de los valores.'
               label: Nominal unitario de los valores
             numero-identificativo-anterior:
-              help: null
-              label: Numero identificativo de la declaracion anterior
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
+              label: Número identificativo de la declaración anterior
             numero-justificante:
-              help: null
-              label: Numero de justificante de la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de justificante de la declaración.'
+              label: Número de justificante de la declaración
             numero-total-declarados:
-              help: null
-              label: Numero total de declarados
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de declarados.'
+              label: Número total de declarados
             numero-valores:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de valores.'
               label: Numero de valores
             persona-relacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Persona
+                con quien relacionarse.'
               label: Persona con quien relacionarse
             porcentaje-participacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de participacion.'
               label: Porcentaje de participacion
             representante-legal-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal.'
               label: NIF del representante legal
             tipo-soporte:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                soporte.'
               label: Tipo de soporte
             valoracion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Valoracion
             valoracion-total:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 189.
               label: Valoracion total
           field:
             label: Modelo 189 ejercicio 2025 (Orden EHA/3481/2008; Ordenes HFP/1180/2023,

@@ -10,70 +10,80 @@ modelo:
         2024-y-siguientes:
           casilla:
             '05':
-              help: null
+              help: Tax information for casilla 05 of Modelo 216.
               label: Number of income items. Dividends and other income from holdings
                 in the equity of entities
             '06':
-              help: null
+              help: Tax information about tax information in casilla 06 of Modelo
+                216.
               label: Number of income items. Other income
             '07':
-              help: null
+              help: Tax information about tax information in casilla 07 of Modelo
+                216.
               label: Number of income items. Total
             08:
-              help: null
+              help: Tax information for casilla 08 of Modelo 216.
               label: Withholding and advance payment tax base. Dividends and other
                 income from holdings in the equity of entities
             09:
-              help: null
+              help: Tax information about tax information in casilla 09 of Modelo
+                216.
               label: Withholding and advance payment tax base. Other income
             '10':
-              help: null
+              help: Tax information about tax information in casilla 10 of Modelo
+                216.
               label: Withholding and advance payment tax base. Total
             '11':
-              help: null
+              help: Tax information for casilla 11 of Modelo 216.
               label: Withholdings and advance payments. Dividends and other income
                 from holdings in the equity of entities
             '12':
-              help: null
+              help: Tax information about tax information in casilla 12 of Modelo
+                216.
               label: Withholdings and advance payments. Other income
             '13':
-              help: null
+              help: 'Review the casilla information: Withholdings e payments on account.
+                Total.'
               label: Withholdings and advance payments. Total
             '14':
-              help: null
+              help: Tax information for casilla 14 of Modelo 216.
               label: Income not subject to withholding or advance payment. Number
                 of income items. Dividends and other income from holdings in the equity
                 of entities
             '15':
-              help: null
+              help: Tax information about tax information in casilla 15 of Modelo
+                216.
               label: Income not subject to withholding or advance payment. Number
                 of income items. Other income
             '16':
-              help: null
+              help: Tax information about tax information in casilla 16 of Modelo
+                216.
               label: Income not subject to withholding or advance payment. Number
                 of income items. Total
             '17':
-              help: null
+              help: Tax information for casilla 17 of Modelo 216.
               label: Income not subject to withholding or advance payment. Tax base.
                 Dividends and other income from holdings in the equity of entities
             '18':
-              help: null
+              help: Tax information about tax information in casilla 18 of Modelo
+                216.
               label: Income not subject to withholding or advance payment. Tax base.
                 Other income
             '19':
-              help: null
+              help: Tax information about tax information in casilla 19 of Modelo
+                216.
               label: Income not subject to withholding or advance payment. Tax base.
                 Total
             '20':
-              help: null
+              help: Tax information for casilla 20 of Modelo 216.
               label: Amounts payable from prior returns for the same item, year and
                 period
             '21':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
             modelo-216-calculation-construct:
               field:
-                title: null
+                title: Modelo 216 calculation construct
           field:
-            label: null
+            label: Casilla— tax information

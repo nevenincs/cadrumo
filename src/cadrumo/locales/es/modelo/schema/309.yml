@@ -1,6 +1,150 @@
 modelo:
   schema:
     '309':
+      casilla:
+        continuidad:
+          a-deducir-23:
+            help: 'Información de la casilla: Casilla 23: a deducir 23.'
+            label: 'Casilla 23: a deducir 23'
+          adjudicatario-apellidos:
+            help: 'Información de la casilla: Casilla 1049-1108: adjudicatario apellidos.'
+            label: 'Casilla 1049-1108: adjudicatario apellidos'
+          adjudicatario-nif:
+            help: 'Información de la casilla: Casilla 1040-1048: adjudicatario nif.'
+            label: 'Casilla 1040-1048: adjudicatario nif'
+          adjudicatario-nombre:
+            help: 'Información de la casilla: Casilla 1109-1128: adjudicatario nombre.'
+            label: 'Casilla 1109-1128: adjudicatario nombre'
+          aeronave-ano:
+            help: 'Información de la casilla: Casilla 546: aeronave año.'
+            label: 'Casilla 546: aeronave año'
+          aeronave-fabricante:
+            help: 'Información de la casilla: Casilla 426: aeronave fabricante.'
+            label: 'Casilla 426: aeronave fabricante'
+          aeronave-marca:
+            help: 'Información de la casilla: Casilla 466: aeronave marca.'
+            label: 'Casilla 466: aeronave marca'
+          aeronave-peso:
+            help: 'Información de la casilla: Casilla 550: aeronave peso.'
+            label: 'Casilla 550: aeronave peso'
+          aeronave-serie:
+            help: 'Información de la casilla: Casilla 506: aeronave serie.'
+            label: 'Casilla 506: aeronave serie'
+          cuota-devengada-22:
+            help: 'Información de la casilla: Casilla 22: cuota devengada 22.'
+            label: 'Casilla 22: cuota devengada 22'
+          declaracion-complementaria:
+            help: 'Información de la casilla: Casilla 1016: declaración complementaria.'
+            label: 'Casilla 1016: declaración complementaria'
+          declaracion-periodo-309:
+            help: 'Información de la casilla: Casilla 7: declaración período 309.'
+            label: 'Casilla 7: declaración período 309'
+          devolucion-iban-309:
+            help: 'Información de la casilla: Casilla 1030-1063: devolucion iban 309.'
+            label: 'Casilla 1030-1063: devolucion iban 309'
+          embarcacion-eslora:
+            help: 'Información de la casilla: Casilla 420: embarcacion eslora.'
+            label: 'Casilla 420: embarcacion eslora'
+          embarcacion-fabricante:
+            help: 'Información de la casilla: Casilla 300: embarcacion fabricante.'
+            label: 'Casilla 300: embarcacion fabricante'
+          embarcacion-tipo:
+            help: 'Información de la casilla: Casilla 340: embarcacion tipo.'
+            label: 'Casilla 340: embarcacion tipo'
+          justificante-anterior:
+            help: 'Información de la casilla: Casilla 61: justificante anterior.'
+            label: 'Casilla 61: justificante anterior'
+          mtn-embarcacion-identificacion:
+            help: 'Información de la casilla: Casilla 380: mtn embarcacion identificacion.'
+            label: 'Casilla 380: mtn embarcacion identificacion'
+          re-base-10:
+            help: 'Información de la casilla: Casilla 10: re base 10.'
+            label: 'Casilla 10: re base 10'
+          re-base-13:
+            help: 'Información de la casilla: Casilla 13: re base 13.'
+            label: 'Casilla 13: re base 13'
+          re-base-16:
+            help: 'Información de la casilla: Casilla 16: re base 16.'
+            label: 'Casilla 16: re base 16'
+          re-base-19:
+            help: 'Información de la casilla: Casilla 19: re base 19.'
+            label: 'Casilla 19: re base 19'
+          re-cuota-12:
+            help: 'Información de la casilla: Casilla 12: re cuota 12.'
+            label: 'Casilla 12: re cuota 12'
+          re-cuota-15:
+            help: 'Información de la casilla: Casilla 15: re cuota 15.'
+            label: 'Casilla 15: re cuota 15'
+          re-cuota-18:
+            help: 'Información de la casilla: Casilla 18: re cuota 18.'
+            label: 'Casilla 18: re cuota 18'
+          re-cuota-21:
+            help: 'Información de la casilla: Casilla 21: re cuota 21.'
+            label: 'Casilla 21: re cuota 21'
+          re-tipo-11:
+            help: 'Información de la casilla: Casilla 11: re tipo 11.'
+            label: 'Casilla 11: re tipo 11'
+          re-tipo-14:
+            help: 'Información de la casilla: Casilla 14: re tipo 14.'
+            label: 'Casilla 14: re tipo 14'
+          re-tipo-17:
+            help: 'Información de la casilla: Casilla 17: re tipo 17.'
+            label: 'Casilla 17: re tipo 17'
+          re-tipo-20:
+            help: 'Información de la casilla: Casilla 20: re tipo 20.'
+            label: 'Casilla 20: re tipo 20'
+          resultado-24:
+            help: 'Información de la casilla: Casilla 24: resultado 24.'
+            label: 'Casilla 24: resultado 24'
+          rg-base-01:
+            help: 'Información de la casilla: Casilla 01: rg base 01.'
+            label: 'Casilla 01: rg base 01'
+          rg-base-04:
+            help: 'Información de la casilla: Casilla 04: rg base 04.'
+            label: 'Casilla 04: rg base 04'
+          rg-base-07:
+            help: 'Información de la casilla: Casilla 07: rg base 07.'
+            label: 'Casilla 07: rg base 07'
+          rg-cuota-03:
+            help: 'Información de la casilla: Casilla 03: rg cuota 03.'
+            label: 'Casilla 03: rg cuota 03'
+          rg-cuota-06:
+            help: 'Información de la casilla: Casilla 06: rg cuota 06.'
+            label: 'Casilla 06: rg cuota 06'
+          rg-cuota-09:
+            help: 'Información de la casilla: Casilla 09: rg cuota 09.'
+            label: 'Casilla 09: rg cuota 09'
+          rg-tipo-02:
+            help: 'Información de la casilla: Casilla 02: rg tipo 02.'
+            label: 'Casilla 02: rg tipo 02'
+          rg-tipo-05:
+            help: 'Información de la casilla: Casilla 05: rg tipo 05.'
+            label: 'Casilla 05: rg tipo 05'
+          rg-tipo-08:
+            help: 'Información de la casilla: Casilla 08: rg tipo 08.'
+            label: 'Casilla 08: rg tipo 08'
+          transmitente-nif:
+            help: 'Información de la casilla: Casilla 25: transmitente nif.'
+            label: 'Casilla 25: transmitente nif'
+          transmitente-nif-iva:
+            help: 'Información de la casilla: Casilla 1025-1039: transmitente nif
+              iva.'
+            label: 'Casilla 1025-1039: transmitente nif iva'
+          vehiculo-bastidor:
+            help: 'Información de la casilla: Casilla 220: vehiculo bastidor.'
+            label: 'Casilla 220: vehiculo bastidor'
+          vehiculo-clasificacion:
+            help: 'Información de la casilla: Casilla 260: vehiculo clasificacion.'
+            label: 'Casilla 260: vehiculo clasificacion'
+          vehiculo-marca:
+            help: 'Información de la casilla: Casilla 100: vehiculo marca.'
+            label: 'Casilla 100: vehiculo marca'
+          vehiculo-modelo:
+            help: 'Información de la casilla: Casilla 180: vehiculo modelo.'
+            label: 'Casilla 180: vehiculo modelo'
+          vehiculo-tipo:
+            help: 'Información de la casilla: Casilla 140: vehiculo tipo.'
+            label: 'Casilla 140: vehiculo tipo'
       field:
         official_name: Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación
           no periódica.
@@ -33,7 +177,8 @@ modelo:
               label: Liquidación (8) - Total cuota devengada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casilla 420-425 del modelo 309, ejercicio 2004-2015.
@@ -234,7 +379,8 @@ modelo:
               label: Liquidación (8) - Total cuota devengada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casilla 492-496 del modelo 309, ejercicio 2016-2017.
@@ -338,7 +484,9 @@ modelo:
               help: Casilla 13-13 del modelo 309, ejercicio 2016-2017.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                trigger (medios de transporte nuevos / régimen agricola / recargo
+                de equivalencia / ejecucion forzosa).'
               label: Tipo de trigger (medios de transporte nuevos / régimen agricola
                 / recargo de equivalencia / ejecucion forzosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -371,20 +519,25 @@ modelo:
               help: Casilla 242-281 del modelo 309, ejercicio 2016-2017.
               label: Características y datos técnicos (7) - Vehículos - Tipo
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                autorepercutida en adquisiciones intracomunitarias (medios de transporte
+                nuevos, etc.).'
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
                 (medios de transporte nuevos, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA no periódica (autorepercutido + soportado-recargo).'
               label: Total cuota IVA no periódica (autorepercutido + soportado-recargo)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                soportado por minoristas en recargo de equivalencia (devolución a
+                viajeros).'
               label: Cuota IVA soportado por minoristas en recargo de equivalencia
                 (devolución a viajeros)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaracion-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidacion no periodica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.
@@ -427,7 +580,8 @@ modelo:
               label: Liquidación (8) - Total cuota devengada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casilla 492-496 del modelo 309, ejercicio 2018-2022.
@@ -531,7 +685,9 @@ modelo:
               help: Casilla 13-13 del modelo 309, ejercicio 2018-2022.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                trigger (medios de transporte nuevos / régimen agricola / recargo
+                de equivalencia / ejecucion forzosa).'
               label: Tipo de trigger (medios de transporte nuevos / régimen agricola
                 / recargo de equivalencia / ejecucion forzosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -567,20 +723,25 @@ modelo:
               help: Casilla 242-281 del modelo 309, ejercicio 2018-2022.
               label: Características y datos técnicos (7) - Vehículos - Tipo
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                autorepercutida en adquisiciones intracomunitarias (medios de transporte
+                nuevos, etc.).'
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
                 (medios de transporte nuevos, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA no periódica (autorepercutido + soportado-recargo).'
               label: Total cuota IVA no periódica (autorepercutido + soportado-recargo)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                soportado por minoristas en recargo de equivalencia (devolución a
+                viajeros).'
               label: Cuota IVA soportado por minoristas en recargo de equivalencia
                 (devolución a viajeros)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaracion-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidacion no periodica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.
@@ -623,7 +784,8 @@ modelo:
               label: Liquidación (8) - Total cuota devengada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casilla 492-496 del modelo 309, ejercicio 2023 y siguientes.
@@ -736,7 +898,9 @@ modelo:
               help: Casilla 13-13 del modelo 309, ejercicio 2023 y siguientes.
               label: Tipo de declaración
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                trigger (medios de transporte nuevos / régimen agricola / recargo
+                de equivalencia / ejecucion forzosa).'
               label: Tipo de trigger (medios de transporte nuevos / régimen agricola
                 / recargo de equivalencia / ejecucion forzosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -772,20 +936,25 @@ modelo:
               help: Casilla 242-281 del modelo 309, ejercicio 2023 y siguientes.
               label: Características y datos técnicos (7) - Vehículos - Tipo
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                autorepercutida en adquisiciones intracomunitarias (medios de transporte
+                nuevos, etc.).'
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
                 (medios de transporte nuevos, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA no periódica (autorepercutido + soportado-recargo).'
               label: Total cuota IVA no periódica (autorepercutido + soportado-recargo)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                soportado por minoristas en recargo de equivalencia (devolución a
+                viajeros).'
               label: Cuota IVA soportado por minoristas en recargo de equivalencia
                 (devolución a viajeros)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: Modelo 309 IVA declaracion-liquidacion no periodica
+                title: Modelo 309 IVA declaración-liquidacion no periodica
           field:
             label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
               primero y tercero). Ad-hoc por trigger de obligacion no periodica.

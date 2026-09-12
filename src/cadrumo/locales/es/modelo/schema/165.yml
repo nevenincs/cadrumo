@@ -1,6 +1,16 @@
 modelo:
   schema:
     '165':
+      casilla:
+        continuidad:
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: 'Casilla tipo-declaración: tipo declaración'
       field:
         official_name: Modelo 165. Declaración informativa de certificaciones individuales
           emitidas a los socios o partícipes de entidades de nueva o reciente creación.
@@ -10,65 +20,84 @@ modelo:
         2013-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2016-2022:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: null
-              label: Declaracion complementaria o sustitutiva
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
+              label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 165.
               label: Denominacion o razon social del declarante
             fecha-adquisicion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                adquisición de las acciones o participaciones.'
               label: Fecha de adquisicion de las acciones o participaciones
             fecha-constitucion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                constitucion.'
               label: Fecha de constitucion
             importe-fondos-propios:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de los fondos propios.'
               label: Importe de los fondos propios
             importe-suscripcion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la suscripcion o adquisición.'
               label: Importe de la suscripcion o adquisicion
             importe-total-suscripciones:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de las suscripciones o adquisiciones.'
               label: Importe total de las suscripciones o adquisiciones
             numero-identificativo-anterior:
-              help: null
-              label: Numero identificativo de la declaracion anterior
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
+              label: Número identificativo de la declaración anterior
             numero-identificativo-declaracion:
-              help: null
-              label: Numero identificativo de la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
+              label: Número identificativo de la declaración
             numero-total-declarados:
-              help: null
-              label: Numero total de declarados
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de declarados.'
+              label: Número total de declarados
             persona-relacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Persona
+                con quien relacionarse.'
               label: Persona con quien relacionarse
             porcentaje-participacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de participacion.'
               label: Porcentaje de participacion
             representante-legal-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal.'
               label: NIF del representante legal
             socio-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                socio o participe.'
               label: NIF del socio o participe
             socio-nombre:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre del socio o participe.'
               label: Apellidos y nombre del socio o participe
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-165-informative:
@@ -79,68 +108,88 @@ modelo:
         2023-2025:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           field:
             label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
         2026-y-siguientes:
           casilla:
             declaracion-complementaria-sustitutiva:
-              help: null
-              label: Declaracion complementaria o sustitutiva
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
+              label: Declaración complementaria o sustitutiva
             declarante-razon-social:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 165.
               label: Denominacion o razon social del declarante
             empresa-emergente:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Empresa
+                emergente.'
               label: Empresa emergente
             fecha-adquisicion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                adquisición de las acciones o participaciones.'
               label: Fecha de adquisicion de las acciones o participaciones
             fecha-constitucion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                constitucion.'
               label: Fecha de constitucion
             importe-fondos-propios:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de los fondos propios.'
               label: Importe de los fondos propios
             importe-suscripcion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la suscripcion o adquisición.'
               label: Importe de la suscripcion o adquisicion
             importe-total-suscripciones:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de las suscripciones o adquisiciones.'
               label: Importe total de las suscripciones o adquisiciones
             numero-identificativo-anterior:
-              help: null
-              label: Numero identificativo de la declaracion anterior
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
+              label: Número identificativo de la declaración anterior
             numero-identificativo-declaracion:
-              help: null
-              label: Numero identificativo de la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
+              label: Número identificativo de la declaración
             numero-total-declarados:
-              help: null
-              label: Numero total de declarados
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de declarados.'
+              label: Número total de declarados
             persona-relacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Persona
+                con quien relacionarse.'
               label: Persona con quien relacionarse
             porcentaje-participacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de participacion.'
               label: Porcentaje de participacion
             representante-legal-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal.'
               label: NIF del representante legal
             socio-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                socio o participe.'
               label: NIF del socio o participe
             socio-nombre:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre del socio o participe.'
               label: Apellidos y nombre del socio o participe
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-165-informative:

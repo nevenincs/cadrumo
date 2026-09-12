@@ -1,6 +1,11 @@
 modelo:
   schema:
     '576':
+      casilla:
+        continuidad:
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 576.
+            label: Casella — informació fiscal
       field:
         official_name: Modelo 576. Impost Especial sobre Determinats Mitjans de Transport.
           Autoliquidació.
@@ -9,139 +14,165 @@ modelo:
         '2007':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulteu la informació de la casella: Exercici de meritació.'
               label: Exercici de meritació
           field:
             label: Ordre EHA/1981/2005, exercici 2007
         2008-y-siguientes:
           casilla:
             x-cdmn8bj1clp6urj1epiiqobedsmmcob2e9km6ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella 29 del Modelo 576.
               label: C.M.T. Aeronaus. Any de fabricació
             x-cdmn8bj1clp6urj1epiiqpj1c9p6ior1dpq6a:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Aeronaves. Fabricante.'
               label: C.M.T. Aeronaus. Fabricant
             x-cdmn8bj1clp6urj1epiiqrbfchimoro:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Aeronaves. Modelo.'
               label: C.M.T. Aeronaus. Model
             x-cdmn8bj1clp6urj1epiiqs35edniqrb1f1kmqrpdchin6s35ctqma:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Aeronaves. Peso
+                máximo de despegue (en kg).'
               label: C.M.T. Aeronaus. Pes màxim d'enlairament (en kg)
             x-cdmn8bj1clp6urj1epiiqsr5e9kma:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Aeronaves. Nº de
+                serie.'
               label: C.M.T. Aeronaus. Núm. de sèrie
             x-cdmn8bj5dlh62sj3c5hmirre5lin6r3fe9gg:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Embarcaciones.
+                Eslora máxima (en metros).'
               label: C.M.T. Embarcacions. Eslora màxima (en metres)
             x-cdmn8bj5dlh62sj3c5hmirre5lj62ojid5hm2rjkck:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Embarcaciones.
+                Fabricante o importador.'
               label: C.M.T. Embarcacions. Fabricant o importador
             x-cdmn8bj5dlh62sj3c5hmirre5lkm8pbeehkmcqb3c5hmirre:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Embarcaciones.
+                Identificació (nº de construcción).'
               label: C.M.T. Embarcacions. Identificació (núm. de construcció)
             x-cdmn8bj5dlh62sj3c5hmirre5lmmup35dhng:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Embarcaciones.
+                Modelo.'
               label: C.M.T. Embarcacions. Model
             x-cdmn8bj5dlh62sj3c5hmirre5lnm4sr5e9r62or9dtn6aso:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Embarcaciones.
+                Observaciones.'
               label: C.M.T. Embarcacions. Observacions
             x-cdmn8bj6clhmgo9de1p6irb5e9giqrb1ehp6iorldhgm6qbfdo:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Data de primera
+                matriculación del medio de transporte usado.'
               label: C.M.T. Data de primera matriculació del mitjà de transport usat
             x-cdmn8bjbd5m6urb5ehp6uspdd1nn4obj5lqn6ro:
-              help: null
+              help: 'Consulteu la informació de la casella: Kilómetros o nº de horas
+                de uso.'
               label: Quilòmetres o núm. d'hores d'ús
             x-cdmn8bjceljm2shdc5i72tb9edkm6qbfdo:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Adquirido en España
+                o en un Estat distinto de España.'
               label: C.M.T. Adquirit a Espanya o en un Estat diferent d'Espanya
             x-cdmn8bjeelincrpdelpm2p3f:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Medio de transporte
+                nuevo o usado.'
               label: C.M.T. Mitjà de transport nou o usat
             x-cdmn8bjmclk6iorldhniqoj1edq6ip3fe8:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Nº de
+                identificació (bastidor).'
               label: C.M.T. Vehicles. Núm. d'identificació (bastidor)
             x-cdmn8bjmclk6iorldhniqor1ehimerrid5giqor5:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Clasificación
+                segons Directiva 70/156/CEE.'
               label: C.M.T. Vehicles. Classificació segons la Directiva 70/156/CEE
             x-cdmn8bjmclk6iorldhniqor9dhkmsp3ic5i62:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Cilindrada
+                (c.c.).'
               label: C.M.T. Vehicles. Cilindrada (cc)
             x-cdmn8bjmclk6iorldhniqorcc5pmipj9cdgm6qbfdo:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Clasificación
+                per criterio de construcción i de utilización (RD 2822/1998).'
               label: C.M.T. Vehicles. Classificació per criteri de construcció i d'utilització
                 (RD 2822/1998)
             x-cdmn8bjmclk6iorldhniqorfchkmerpdd5q7c:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Codi
+                ITV.'
               label: C.M.T. Vehicles. Codi ITV
             x-cdmn8bjmclk6iorldhniqpbdd5pmirreclpiqorf68:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Emisiones
+                de CO2.'
               label: C.M.T. Vehicles. Emissions de CO2
             x-cdmn8bjmclk6iorldhniqpbgd5jn4ob6ck:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Epígrafe.'
               label: C.M.T. Vehicles. Epígraf
             x-cdmn8bjmclk6iorldhniqqbkeomn6pbid5ig:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Nº de
+                serie de la tarjeta ITV.'
               label: C.M.T. Vehicles. Núm. de sèrie de la targeta ITV
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Tipus
+                de tarjeta ITV.'
               label: C.M.T. Vehicles. Tipus de targeta ITV
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Marca.'
               label: C.M.T. Vehicles. Marca
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Modelo-Tipus.'
               label: C.M.T. Vehicles. Model-Tipus
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 20 del
+                Modelo 576.
               label: C.M.T. Vehicles. Motor de gasolina, dièsel o altres
             x-cdmn8bjmclk6iorldhniqrr2edin4tj1cdkmurj5ec:
-              help: null
+              help: 'Consulteu la informació de la casella: C.M.T. Vehículos. Observaciones.'
               label: C.M.T. Vehicles. Observacions
             x-chim6r1ecdgnasr15lk6aor8dsmmirbgdtn6iojcck:
-              help: null
+              help: Informació fiscal de la casella 45 del Modelo 576.
               label: Causa del fet imposable
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulteu la informació de la casella: Exercici de meritació.'
               label: Exercici de meritació
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: null
+              help: Informació fiscal de la casella 41 del Modelo 576.
               label: Declaració complementària. Número de justificant de la declaració
                 anterior
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de declaració.'
               label: Tipus de declaració
             x-chim6r1eehkn0rpdehp62rjje1nn4t35:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de transporte (V:
+                vehículos, E: embarcaciones, A: aeronaves).'
               label: 'Tipus de transport (V: vehicles, E: embarcacions, A: aeronaus)'
             x-d5n78sjfchqm6t3fe8n6sqb6:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 47 del
+                Modelo 576.
               label: NIF de la persona que ha introduït el mitjà de transport a Espanya
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
-              help: null
+              help: 'Consulteu la informació de la casella: Cognoms i nom o raó social
+                del introductor en España.'
               label: Cognoms i nom o raó social de qui l'introdueix a Espanya
             x-dhkn2bj15li6ap3lcdkn4:
-              help: null
+              help: 'Consulteu la informació de la casella: Liquidació. A deduir.'
               label: Liquidació. A deduir
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 33 del
+                Modelo 576.
               label: Liquidació. Base imposable
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 34 del
+                Modelo 576.
               label: Liquidació. Base imposable reduïda
             x-dhkn2bj3elnn8o8:
-              help: null
+              help: 'Consulteu la informació de la casella: Liquidació. Quota.'
               label: Liquidació. Quota
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
-              help: null
+              help: 'Consulteu la informació de la casella: Liquidació. Quota a ingresar.'
               label: Liquidació. Quota a ingressar
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
-              help: null
+              help: Informació fiscal de la casella 37 del Modelo 576.
               label: Liquidació. Deducció lineal
             x-dhkn2bjiclpnar3kc5i6u:
-              help: null
+              help: 'Consulteu la informació de la casella: Liquidació. Resultat de
+                la liquidació.'
               label: Liquidació. Resultat de la liquidació
             x-dhkn2bjkd5o6u:
-              help: null
+              help: 'Consulteu la informació de la casella: Liquidació. Tipus %.'
               label: Liquidació. Tipus %
           construct:
             modelo-576-autoliquidacion:

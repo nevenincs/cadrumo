@@ -201,7 +201,6 @@ msgstr ""
 "adat, leíróütközés vagy I/O-hiba nem hagy hátra profilt."
 
 #: ../../how-to/protect-data-access.md:68
-#, fuzzy
 msgid ""
 "The CLI does not currently export a recovery artifact, so do not treat "
 "the phrase as a complete operator recovery path. Where an external "
@@ -211,14 +210,14 @@ msgid ""
 "reset the passphrase, enroll recovery in the restored profile, or travel "
 "inside a normal backup archive."
 msgstr ""
-"A CLI jelenleg nem exportál helyreállítási artefaktumot, ezért ne "
-"tekintse a kifejezést teljes körű kezelői helyreállítási útnak. Ha egy "
-"külső kiépítési munkafolyamat biztosítja az egyező artefaktumot, csak a "
-"kifejezett, artefaktum-alapú profil-helyreállítási paranccsal és egy "
-"forráskapszulával használja. Az artefaktum és a kifejezés helyreállítást "
-"igazol; nem jelentkezik be, nem állítja vissza a jelmondatot, nem irat be"
-" helyreállítást a helyreállított profilba, és nem kerül normál biztonsági"
-" mentési archívumba."
+"A CLI jelenleg nem exportál helyreállítási artefaktumot, ezért ne tekintse a "
+"jelmondatot teljes kezelői helyreállítási útnak. Ha egy külső kiépítési "
+"folyamat biztosítja a megfelelő artefaktumot, azt csak a kifejezett, "
+"artefaktum-alapú `profile archive import` paranccsal és egy "
+"forráskapszulával használja. Az artefaktum és a jelmondat helyreállítást "
+"igazol; nem biztosítanak bejelentkezést, nem állítják vissza a jelmondatot, "
+"nem iratnak be helyreállítást a helyreállított profilba, és nem kerülnek "
+"normál biztonsági mentési archívumba."
 
 #: ../../how-to/protect-data-access.md:75
 msgid "Change your passphrase"
@@ -393,14 +392,12 @@ msgstr ""
 "\"new_passphrase_confirmation\": \"...\"}`"
 
 #: ../../how-to/protect-data-access.md:97
-#, fuzzy
 msgid "`aeat config profile archive import` without `--artifact`"
-msgstr "`aeat config profile restore` `--artifact` nélkül"
+msgstr "`aeat config profile archive import` `--artifact` nélkül"
 
 #: ../../how-to/protect-data-access.md:97
-#, fuzzy
 msgid "`aeat config profile archive import` with `--artifact`"
-msgstr "`aeat config profile restore` `--artifact`-vel"
+msgstr "`aeat config profile archive import` `--artifact` használatával"
 
 #: ../../how-to/protect-data-access.md:97
 #, python-brace-format

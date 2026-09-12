@@ -1,6 +1,59 @@
 modelo:
   schema:
     '341':
+      casilla:
+        continuidad:
+          '02':
+            help: 'Información de la casilla: Casilla 02: reagp importe operaciones.'
+            label: 'Casilla 02: reagp importe operaciones'
+          '03':
+            help: 'Información de la casilla: Casilla 03: reagp importe operaciones.'
+            label: 'Casilla 03: reagp importe operaciones'
+          '05':
+            help: 'Información de la casilla: Casilla 05: reagp porcentaje compensación.'
+            label: 'Casilla 05: reagp porcentaje compensación'
+          '06':
+            help: 'Información de la casilla: Casilla 06: reagp porcentaje compensación.'
+            label: 'Casilla 06: reagp porcentaje compensación'
+          08:
+            help: 'Información de la casilla: Casilla 08: reagp importe compensación.'
+            label: 'Casilla 08: reagp importe compensación'
+          09:
+            help: 'Información de la casilla: Casilla 09: reagp importe compensación.'
+            label: 'Casilla 09: reagp importe compensación'
+          codigo-cuenta-cliente:
+            help: Información fiscal sobre información fiscal de la casilla  del Modelo
+              341.
+            label: Casilla— información fiscal
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          letras-etiqueta-persona-fisica:
+            help: 'Información de la casilla: Casilla letras-etiqueta: letras etiqueta
+              persona fisica.'
+            label: 'Casilla letras-etiqueta: letras etiqueta persona fisica'
+          observaciones-presentacion:
+            help: 'Información de la casilla: Casilla observaciones: observaciones
+              presentacion.'
+            label: 'Casilla observaciones: observaciones presentacion'
+          reagp-importe-compensacion:
+            help: 'Información de la casilla: Casilla 07: reagp importe compensación.'
+            label: 'Casilla 07: reagp importe compensación'
+          reagp-importe-compensacion-total:
+            help: 'Información de la casilla: Casilla 10: reagp importe compensación
+              total.'
+            label: 'Casilla 10: reagp importe compensación total'
+          reagp-importe-operaciones:
+            help: 'Información de la casilla: Casilla 01: reagp importe operaciones.'
+            label: 'Casilla 01: reagp importe operaciones'
+          reagp-porcentaje-compensacion:
+            help: 'Información de la casilla: Casilla 04: reagp porcentaje compensación.'
+            label: 'Casilla 04: reagp porcentaje compensación'
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: 'Casilla período: tipo declaración'
       field:
         official_name: Modelo 341. Solicitud de reintegro de compensaciones en el
           régimen especial de la agricultura, ganadería y pesca.
@@ -10,49 +63,63 @@ modelo:
         2005-2015:
           casilla:
             '01':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [01].'
               label: Importe de las operaciones [01]
             '02':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [02].'
               label: Importe de las operaciones [02]
             '03':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [03].'
               label: Importe de las operaciones [03]
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [04].'
               label: Porcentaje de compensación [04]
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [05].'
               label: Porcentaje de compensación [05]
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [06].'
               label: Porcentaje de compensación [06]
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [07].'
               label: Importe de la compensación [07]
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [08].'
               label: Importe de la compensación [08]
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [09].'
               label: Importe de la compensación [09]
             '10':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de las compensaciones [10].'
               label: Importe total de las compensaciones [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                de liquidación al que se refiere la autoliquidación.'
               label: Periodo de liquidación al que se refiere la autoliquidación
             x-etkn4p9ecdnm8qb7dsmm6tb5dpq62bb3dhkmarjkck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de cuenta cliente (C.C.C.).'
               label: Código de cuenta cliente (C.C.C.)
             x-etkn4p9edhin8sj1ecmmat39e5qmat31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Letras
+                de la etiqueta identificativa.'
               label: Letras de la etiqueta identificativa
             x-etkn4p9edth76pbiepgm6qbfdpin6:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Observaciones.'
               label: Observaciones
           construct:
             modelo-341-autoliquidacion:
@@ -63,40 +130,52 @@ modelo:
         2016-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [01].'
               label: Importe de las operaciones [01]
             '02':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [02].'
               label: Importe de las operaciones [02]
             '03':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de las operaciones [03].'
               label: Importe de las operaciones [03]
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [04].'
               label: Porcentaje de compensación [04]
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [05].'
               label: Porcentaje de compensación [05]
             '06':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de compensación [06].'
               label: Porcentaje de compensación [06]
             '07':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [07].'
               label: Importe de la compensación [07]
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [08].'
               label: Importe de la compensación [08]
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la compensación [09].'
               label: Importe de la compensación [09]
             '10':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de las compensaciones [10].'
               label: Importe total de las compensaciones [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
               label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                de liquidación al que se refiere la autoliquidación.'
               label: Periodo de liquidación al que se refiere la autoliquidación
           construct:
             modelo-341-autoliquidacion:

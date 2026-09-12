@@ -52,14 +52,14 @@ modelo:
               label: Regularisation for a non-separated spouse with a disability.
                 Deduction amount
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 122.
               label: Filing year to which the adjustment relates
             x-chim6r1ee1gmeqbec4mm6rrde1m6arb5dpq62sj9c4:
               help: Marked C where the page supplements one filed earlier; left blank
                 otherwise.
               label: Supplementary page indicator
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 122.
               label: Return type (original / substitute / supplementary)
             x-chin6or5dpi6ipbeehin6bj1c9nmsrpdc5n78qb3d5o62p3f:
               help: Amount of the advance payment of the deduction actually received
@@ -116,6 +116,6 @@ modelo:
           construct:
             modelo-122-regularizacion:
               field:
-                title: null
+                title: Modelo 122 — tax information
           field:
-            label: null
+            label: Casilla— tax information

@@ -10,133 +10,175 @@ modelo:
         2022-y-siguientes:
           casilla:
             cantidades-minorar-principal:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Cantidades destinadas a minorar el principal del prestamo
             clave-intervencion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                intervencion en la operación.'
               label: Clave de intervencion en la operacion
             clave-tipo-identificacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clave tipo
+                de identificacion.'
               label: Clave tipo de identificacion
             codigo-provincia:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Codigo provincia
             declaracion-complementaria-sustitutiva:
-              help: null
-              label: Declaracion complementaria o sustitutiva
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
+              label: Declaración complementaria o sustitutiva
             declarado-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                declarado.'
               label: NIF del declarado
             declarado-nombre:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Apellidos y nombre o razon social del declarado
             declarante-razon-social:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Razon social del declarante
             direccion-inmueble:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Direccion
+                del inmueble.'
               label: Direccion del inmueble
             duracion-operacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Duracion
+                de la operación en meses.'
               label: Duracion de la operacion en meses
             fecha-operacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la operación.'
               label: Fecha de la operacion
             identificacion-operacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Identificacion del prestamo, credito u otra operacion financiera
             importe-amortizacion-capital:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                abonado en el ejercicio en concepto de amortizacion de capital.'
               label: Importe abonado en el ejercicio en concepto de amortizacion de
                 capital
             importe-gastos-financiacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Importe abonado en el ejercicio en concepto de gastos derivados
                 de la financiacion ajena
             importe-intereses:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                abonado en el ejercicio en concepto de intereses.'
               label: Importe abonado en el ejercicio en concepto de intereses
             importe-operacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Importe del prestamo, credito u otra operacion financiera
             importe-reintegro-intereses:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                devengado en el ejercicio en concepto de reintegro de intereses.'
               label: Importe devengado en el ejercicio en concepto de reintegro de
                 intereses
             importe-total-capital-amortizado:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total del capital amortizado.'
               label: Importe total del capital amortizado
             importe-total-gastos-financiacion:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Importe total de los gastos derivados de la financiacion ajena
             importe-total-intereses:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de los intereses abonados en el ejercicio.'
               label: Importe total de los intereses abonados en el ejercicio
             importe-total-saldos-pendientes:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de los saldos pendientes a 31 de diciembre.'
               label: Importe total de los saldos pendientes a 31 de diciembre
             intereses-indemnizatorios:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Intereses
+                indemnizatorios.'
               label: Intereses indemnizatorios
             numero-identificativo-anterior:
-              help: null
-              label: Numero identificativo de la declaracion anterior
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
+              label: Número identificativo de la declaración anterior
             numero-identificativo-declaracion:
-              help: null
-              label: Numero identificativo de la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
+              label: Número identificativo de la declaración
             numero-total-declarados:
-              help: null
-              label: Numero total de registros declarados
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de registros declarados.'
+              label: Número total de registros declarados
             origen-operacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Origen
+                de la operación.'
               label: Origen de la operacion
             otras-cantidades-indemnizatorias:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Otras cantidades
+                indemnizatorias.'
               label: Otras cantidades indemnizatorias
             persona-relacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Persona
+                con quien relacionarse.'
               label: Persona con quien relacionarse
             porcentaje-financiacion-vivienda-habitual:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Porcentaje de la financiacion destinado a la vivienda habitual
             porcentaje-participacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de participacion.'
               label: Porcentaje de participacion
             prefijo-codigo-iban:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Prefijo del codigo IBAN
             prestamista-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                prestamista.'
               label: NIF del prestamista
             prestamista-nombre:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Apellidos y nombre o razon social del prestamista
             referencia-catastral:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Referencia
+                catastral.'
               label: Referencia catastral
             representante-legal-nif:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal.'
               label: NIF del representante legal
             saldo-pendiente:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Saldo pendiente
+                a 31 de diciembre.'
               label: Saldo pendiente a 31 de diciembre
             situacion-inmueble:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 181.
               label: Situacion del inmueble
             subclave-operacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Subclave
+                de operación.'
               label: Subclave de operacion
             tipo-operacion:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                operación.'
               label: Tipo de operacion
             valor-tasacion-inmueble:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Valor de
+                tasacion del inmueble objeto de garantia.'
               label: Valor de tasacion del inmueble objeto de garantia
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
           construct:
             modelo-181-informative:

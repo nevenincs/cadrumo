@@ -9,98 +9,116 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Tax information for casilla 01 of Modelo 111.
               label: Employment income in cash, number of recipients
             '02':
-              help: null
+              help: Tax information about tax information in casilla 02 of Modelo
+                111.
               label: Employment income in cash, amount received
             '03':
-              help: null
+              help: Tax information about tax information in casilla 03 of Modelo
+                111.
               label: Employment income in cash, amount withheld
             '04':
-              help: null
+              help: Tax information for casilla 04 of Modelo 111.
               label: Employment income in kind, number of recipients
             '05':
-              help: null
+              help: Tax information about tax information in casilla 05 of Modelo
+                111.
               label: Employment income in kind, value received
             '06':
-              help: null
+              help: Tax information about tax information in casilla 06 of Modelo
+                111.
               label: Employment income in kind, payment on account
             '07':
-              help: null
+              help: Tax information for casilla 07 of Modelo 111.
               label: Business/professional income in cash, number of recipients
             08:
-              help: null
+              help: Tax information about tax information in casilla 08 of Modelo
+                111.
               label: Business/professional income in cash, amount received
             09:
-              help: null
+              help: Tax information about tax information in casilla 09 of Modelo
+                111.
               label: Business/professional income in cash, amount withheld
             '10':
-              help: null
+              help: Tax information for casilla 10 of Modelo 111.
               label: Business/professional income in kind, number of recipients
             '11':
-              help: null
+              help: Tax information about tax information in casilla 11 of Modelo
+                111.
               label: Business/professional income in kind, value received
             '12':
-              help: null
+              help: Tax information about tax information in casilla 12 of Modelo
+                111.
               label: Business/professional income in kind, payment on account
             '13':
-              help: null
+              help: Tax information for casilla 13 of Modelo 111.
               label: Prizes in cash, number of recipients
             '14':
-              help: null
+              help: Tax information about tax information in casilla 14 of Modelo
+                111.
               label: Prizes in cash, amount received
             '15':
-              help: null
+              help: Tax information about tax information in casilla 15 of Modelo
+                111.
               label: Prizes in cash, amount withheld
             '16':
-              help: null
+              help: Tax information for casilla 16 of Modelo 111.
               label: Prizes in kind, number of recipients
             '17':
-              help: null
+              help: Tax information about tax information in casilla 17 of Modelo
+                111.
               label: Prizes in kind, value received
             '18':
-              help: null
+              help: Tax information about tax information in casilla 18 of Modelo
+                111.
               label: Prizes in kind, payment on account
             '19':
-              help: null
+              help: Tax information for casilla 19 of Modelo 111.
               label: Forestry capital gains in cash, number of recipients
             '20':
-              help: null
+              help: Tax information about tax information in casilla 20 of Modelo
+                111.
               label: Forestry capital gains in cash, amount received
             '21':
-              help: null
+              help: Tax information about tax information in casilla 21 of Modelo
+                111.
               label: Forestry capital gains in cash, amount withheld
             '22':
-              help: null
+              help: Tax information for casilla 22 of Modelo 111.
               label: Forestry capital gains in kind, number of recipients
             '23':
-              help: null
+              help: Tax information about tax information in casilla 23 of Modelo
+                111.
               label: Forestry capital gains in kind, value received
             '24':
-              help: null
+              help: Tax information about tax information in casilla 24 of Modelo
+                111.
               label: Forestry capital gains in kind, payment on account
             '25':
-              help: null
+              help: Tax information for casilla 25 of Modelo 111.
               label: Image rights assignment, number of recipients
             '26':
-              help: null
+              help: Tax information for casilla 26 of Modelo 111.
               label: Image rights assignment, consideration paid
             '27':
-              help: null
+              help: Tax information for casilla 27 of Modelo 111.
               label: Image rights assignment, payment on account
             '28':
-              help: null
+              help: 'Review the casilla information: Total withholdings e payments
+                on account.'
               label: Total withholdings and payments on account
             '29':
-              help: null
+              help: Tax information about tax information in casilla 29 of Modelo
+                111.
               label: Result of previous self-assessments
             '30':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
             modelo-111-withholding-workflow:
               field:
-                title: null
+                title: Modelo 111 — tax information
           field:
-            label: null
+            label: Casilla— tax information

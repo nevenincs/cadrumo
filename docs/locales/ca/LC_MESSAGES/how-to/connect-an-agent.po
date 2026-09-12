@@ -43,18 +43,16 @@ msgid "What the agent connection is"
 msgstr "Què és la connexió de l'agent"
 
 #: ../../how-to/connect-an-agent.md:12
-#, fuzzy
 msgid ""
 "Installing Cadrumo installs two commands: `aeat`, the application, and "
 "`cadrumo-mcp`, an MCP (Model Context Protocol) server that exposes it. "
 "MCP is an open standard that lets assistants call tools. Any MCP-capable "
 "client can connect; Claude is one such client."
 msgstr ""
-"La distribució independent `cadrumo-harness` inclou un servidor MCP "
-"(Model Context Protocol), `cadrumo-mcp`, per a l'ordre `aeat`. L'MCP és "
-"un estàndard obert que permet als assistents cridar eines. Qualsevol "
-"client amb capacitat MCP s'hi pot connectar; Claude és un d'aquests "
-"clients."
+"En instal·lar Cadrumo s'instal·len dues ordres: `aeat`, l'aplicació, i "
+"`cadrumo-mcp`, un servidor MCP (Model Context Protocol) que l'exposa. L'MCP "
+"és un estàndard obert que permet als assistents cridar eines. Qualsevol "
+"client compatible amb MCP s'hi pot connectar; Claude n'és un exemple."
 
 #: ../../how-to/connect-an-agent.md:17
 msgid ""
@@ -69,28 +67,27 @@ msgstr ""
 
 #: ../../how-to/connect-an-agent.md:21
 msgid "Check the server is installed"
-msgstr ""
+msgstr "Comprova que el servidor estigui instal·lat"
 
 #: ../../how-to/connect-an-agent.md:27
 msgid ""
 "If the command is not found, install Cadrumo first — see [Get "
 "Cadrumo](../download.md)."
 msgstr ""
+"Si no es troba l'ordre, instal·la primer Cadrumo — consulta [Obtén "
+"Cadrumo](../download.md)."
 
 #: ../../how-to/connect-an-agent.md:30
-#, fuzzy
 msgid "Register the server"
-msgstr "Registra el servidor de codi font"
+msgstr "Registra el servidor"
 
 #: ../../how-to/connect-an-agent.md:32
-#, fuzzy
 msgid ""
 "Register `cadrumo-mcp` as a stdio server. In clients that accept a JSON "
 "server definition:"
 msgstr ""
-"Registra `uv run --package cadrumo-harness cadrumo-mcp` com a servidor "
-"stdio i estableix la còpia del repositori com a directori de treball. En "
-"els clients que accepten una definició de servidor en JSON:"
+"Registra `cadrumo-mcp` com a servidor stdio. En els clients que accepten una "
+"definició de servidor JSON:"
 
 #: ../../how-to/connect-an-agent.md:45
 msgid ""
@@ -98,6 +95,9 @@ msgid ""
 "installation, and it finds your profile the same way `aeat` does, so it "
 "needs no working directory and no path of its own."
 msgstr ""
+"Aquesta és tota la configuració. Després de la instal·lació, l'ordre és al "
+"teu `PATH` i troba el teu perfil de la mateixa manera que `aeat`, de manera "
+"que no necessita cap directori de treball ni cap camí propi."
 
 #: ../../how-to/connect-an-agent.md:49
 msgid "Before the first agent session"

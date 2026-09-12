@@ -11,30 +11,30 @@ modelo:
         2019-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: A Modelo 128 01. casilla adóügyi adatai.
               label: Kedvezményezettek száma
             '02':
-              help: null
+              help: 'A Modelo 128 02. casilla adóügyi adatai: adóügyi információ.'
               label: Visszatartások és előlegfizetések alapja
             '03':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések.'
               label: Visszatartások és előlegfizetések
             '04':
-              help: null
+              help: A Modelo 128 04. casilla adóügyi adatai.
               label: Kedvezményezettek száma (kiegészítő blokk)
             '05':
-              help: null
+              help: 'A Modelo 128 05. casilla adóügyi adatai: adóügyi információ.'
               label: Visszatartások és előlegfizetések alapja (kiegészítő blokk)
             '06':
-              help: null
+              help: 'A Modelo 128 06. casilla adóügyi adatai: adóügyi információ.'
               label: Korábbi, azonos tárgyú, adóévre és időszakra vonatkozó bevallások
                 befizetendő összege
             '07':
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény a ingresar.'
               label: Befizetendő összeg
           construct:
             modelo-128-calculation-construct:
               field:
-                title: null
+                title: Modelo 128 calculation construct
           field:
-            label: null
+            label: Casilla— adóügyi információ

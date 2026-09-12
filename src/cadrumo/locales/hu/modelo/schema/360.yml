@@ -94,10 +94,10 @@ modelo:
               help: A 360-es modelo 25-25. rovata, 2010. adóév.
               label: 1. A benyújtás oka. Visszatérítési kérelem vagy annak módosítása
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 360 . casilla adóügyi adatai: adóév.'
               label: A kérelem vonatkozási éve
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
-              help: null
+              help: 'A Modelo 360 . casilla adóügyi adatai: adóügyi információ.'
               label: A visszatérítés szerinti tagállam, ahol az adót megfizették
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
               help: A 360-es modelo 27-42. rovata, 2010. adóév.
@@ -682,36 +682,39 @@ modelo:
               help: A 360-es modelo 1060-1061. rovata, 2010. adóév.
               label: 2. Kérelmező. Tevékenységek. 9. NACE-kód. leírás. Nyelv
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
-              help: null
+              help: 'A Modelo 360 1902. casilla adóügyi adatai: adóügyi információ.'
               label: 4. Igényelt visszatérítés. Nyilatkozat termékértékesítés és szolgáltatásnyújtás
                 hiányáról
             x-chincrrcelhmirre5pi6itj9edgg:
-              help: null
+              help: 'Tekintse át a casilla adatait: 4. Visszatérítés solicitada. Divisa.'
               label: 4. Igényelt visszatérítés. Pénznem
             x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: 4. Visszatérítés solicitada. Összeg
+                solicitado.'
               label: 4. Igényelt visszatérítés. Igényelt összeg
             x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
-              help: null
+              help: 'A Modelo 360 1876-1880. casilla adóügyi adatai: adóügyi információ.'
               label: 4. Igényelt visszatérítés. Importokmányok száma
             x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
-              help: null
+              help: 'A Modelo 360 1871-1875. casilla adóügyi adatai: adóügyi információ.'
               label: 4. Igényelt visszatérítés. Számlák száma
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
-              help: null
+              help: 'Tekintse át a casilla adatait: 4. Visszatérítés solicitada. Időszak.
+                Dátum fin - időszak.'
               label: 4. Igényelt visszatérítés. Időszak. Az időszak vége
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
-              help: null
+              help: 'Tekintse át a casilla adatait: 4. Visszatérítés solicitada. Időszak.
+                Dátum inicio - időszak.'
               label: 4. Igényelt visszatérítés. Időszak. Az időszak kezdete
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
-              help: null
+              help: A Modelo 360 1907-1911. casilla adóügyi adatai.
               label: 5. Az előző évi arányosítás módosítása. Végleges arányosítás
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
-              help: null
+              help: A Modelo 360 1903-1906. casilla adóügyi adatai.
               label: 5. Az előző évi arányosítás módosítása. Adóév
           construct:
             modelo-360-iva-devolucion-ue:
               field:
-                title: null
+                title: Modelo 360 — adóügyi információ
           field:
-            label: null
+            label: Casilla — adóügyi mező

@@ -1,6 +1,164 @@
 modelo:
   schema:
     '193':
+      casilla:
+        continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'A Modelo 193 145-159. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 145-159 — adóügyi információ
+          declaracion-anterior-numero:
+            help: A Modelo 193 123-135. casilla adóügyi adatai.
+            label: Casilla 123-135 — adóügyi mező
+          declaracion-complementaria:
+            help: 'A casilla adatai: Casilla 121: bevallás kiegészítő.'
+            label: 'Casilla 121: bevallás kiegészítő'
+          declaracion-numero-identificativo:
+            help: A Modelo 193 108-120. casilla adóügyi adatai.
+            label: Casilla 108-120 — adóügyi mező
+          declaracion-sustitutiva:
+            help: A Modelo 193 122. casilla adóügyi adatai.
+            label: Casilla 122 — adóügyi mező
+          declarante-contacto-nombre:
+            help: A Modelo 193 68-107. casilla adóügyi adatai.
+            label: Casilla 68-107 — adóügyi mező
+          declarante-contacto-telefono:
+            help: A Modelo 193 59-67. casilla adóügyi adatai.
+            label: Casilla 59-67 — adóügyi mező
+          declarante-naturaleza:
+            help: A Modelo 193 235. casilla adóügyi adatai.
+            label: Casilla 235 — adóügyi mező
+          devengo-year:
+            help: A Modelo 193 118-121. casilla adóügyi adatai.
+            label: Casilla 118-121 — adóügyi mező
+          gasto-contributor-nif:
+            help: 'A casilla adatai: Casilla 18-26: gasto contributor nif.'
+            label: 'Casilla 18-26: gasto contributor nif'
+          gasto-contributor-nombre:
+            help: 'A casilla adatai: Casilla 36-75: gasto contributor név.'
+            label: 'Casilla 36-75: gasto contributor név'
+          gasto-importe-anual:
+            help: 'A casilla adatai: Casilla 195-207: gasto összeg éves.'
+            label: 'Casilla 195-207: gasto összeg éves'
+          gastos-total-declarante:
+            help: A Modelo 193 220-234. casilla adóügyi adatai.
+            label: Casilla 220-234 — adóügyi mező
+          payee-base-retenciones-193:
+            help: 'A Modelo 193 152-164. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 152-164 — adóügyi információ
+          payee-ceuta-melilla-clave:
+            help: 'A Modelo 193 314. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 314 — adóügyi információ
+          payee-clave-codigo:
+            help: A Modelo 193 79. casilla adóügyi adatai.
+            label: Casilla 79 — adóügyi mező
+          payee-clave-mercado:
+            help: 'A Modelo 193 339. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 339 — adóügyi információ
+          payee-clave-percepcion:
+            help: 'A Modelo 193 92. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 92 — adóügyi információ
+          payee-codigo-cuenta:
+            help: A Modelo 193 97-116. casilla adóügyi adatai.
+            label: Casilla 97-116 — adóügyi mező
+          payee-codigo-emisor:
+            help: A Modelo 193 80-91. casilla adóügyi adatai.
+            label: Casilla 80-91 — adóügyi mező
+          payee-compensaciones:
+            help: 'A Modelo 193 225-236. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 225-236 — adóügyi információ
+          payee-fecha-devengo:
+            help: 'A Modelo 193 331-338. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 331-338 — adóügyi információ
+          payee-fecha-inicio-prestamo:
+            help: 'A Modelo 193 209-216. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 209-216 — adóügyi információ
+          payee-fecha-vencimiento-prestamo:
+            help: 'A Modelo 193 217-224. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 217-224 — adóügyi információ
+          payee-garantias:
+            help: 'A Modelo 193 237-248. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 237-248 — adóügyi információ
+          payee-mediador-flag:
+            help: 'A Modelo 193 76. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 76 — adóügyi információ
+          payee-name:
+            help: 'A Modelo 193 36-75. casilla adóügyi adatai: a kedvezményezett neve.'
+            label: Casilla 36-75 — a kedvezményezett neve
+          payee-naturaleza-declarante:
+            help: A Modelo 193 208. casilla adóügyi adatai.
+            label: Casilla 208 — adóügyi mező
+          payee-naturaleza-percepcion:
+            help: 'A Modelo 193 93-94. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 93-94 — adóügyi információ
+          payee-nif:
+            help: 'A Modelo 193 18-26. casilla adóügyi adatai: a kedvezményezett NIF-je.'
+            label: Casilla 18-26 — a kedvezményezett NIF-je
+          payee-nif-pagador-anterior:
+            help: 'A Modelo 193 322-330. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 322-330 — adóügyi információ
+          payee-numero-orden-193:
+            help: A Modelo 193 315-321. casilla adóügyi adatai.
+            label: Casilla 315-321 — adóügyi mező
+          payee-pago:
+            help: 'A Modelo 193 95. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 95 — adóügyi információ
+          payee-penalizaciones:
+            help: 'A Modelo 193 182-192. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 182-192 — adóügyi információ
+          payee-pendiente-flag:
+            help: A Modelo 193 117. casilla adóügyi adatai.
+            label: Casilla 117 — adóügyi mező
+          payee-percepciones-193:
+            help: 'A Modelo 193 123-135. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 123-135 — adóügyi információ
+          payee-porcentaje-retencion:
+            help: 'A Modelo 193 165-168. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 165-168 — adóügyi információ
+          payee-province:
+            help: 'A Modelo 193 77-78. casilla adóügyi adatai: a kedvezményezett tartománya.'
+            label: Casilla 77-78 — a kedvezményezett tartománya
+          payee-reducciones-193:
+            help: 'A Modelo 193 139-151. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 139-151 — adóügyi információ
+          payee-retenciones-193:
+            help: 'A Modelo 193 169-181. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 169-181 — adóügyi információ
+          payee-retenciones-forales-araba:
+            help: 'A Modelo 193 275-287. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 275-287 — adóügyi információ
+          payee-retenciones-forales-bizkaia:
+            help: 'A Modelo 193 301-313. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 301-313 — adóügyi információ
+          payee-retenciones-forales-estatal:
+            help: 'A Modelo 193 249-261. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 249-261 — adóügyi információ
+          payee-retenciones-forales-gipuzkoa:
+            help: 'A Modelo 193 288-300. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 288-300 — adóügyi információ
+          payee-retenciones-forales-navarra:
+            help: 'A Modelo 193 262-274. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 262-274 — adóügyi információ
+          payee-tipo-codigo:
+            help: A Modelo 193 96. casilla adóügyi adatai.
+            label: Casilla 96 — adóügyi mező
+          payee-tipo-percepcion:
+            help: 'A Modelo 193 122. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 122 — adóügyi információ
+          perc-nif-representante:
+            help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 27-35 — adóügyi információ
+          representante-legal-nif:
+            help: 'A Modelo 193 27-35. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 27-35 — adóügyi információ
+          retenciones-ingresadas-total:
+            help: 'A casilla adatai: Casilla 175-189: adólevonások ingresadas total.'
+            label: 'Casilla 175-189: adólevonások ingresadas total'
+          retenciones-ingresos-a-cuenta:
+            help: 'A casilla adatai: Casilla 160-174: adólevonások előlegfizetések.'
+            label: 'Casilla 160-174: adólevonások előlegfizetések'
+          total-perceptores-count:
+            help: 'A Modelo 193 136-144. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 136-144 — adóügyi információ
       field:
         official_name: Modelo 193. Adatszolgáltatási bevallás. Egyes tőkejövedelmekre
           és egyes jövedelmekre vonatkozó adóelőleg-levonások és -befizetések. Éves

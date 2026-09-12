@@ -13,9 +13,6 @@ aggregation:
         vagy hibákat hordozhat, sosem mindkettőt és sosem egyiket sem.
   irnr_income_ledger:
     diagnostics:
-      foreign_source_out_of_scope: A source_jurisdiction %{source_jurisdiction} külföldi
-        forrást jelöl; a TRLIRNR 13. cikke kizárja az M210-es modell spanyol forrású
-        bruttó jövedelem-projekciójából.
       incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
         kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
         hivatalos tipo-renta kódra az irpf_category mezőből.
@@ -25,9 +22,6 @@ aggregation:
       tipo_renta_code_not_declared: Az M210-es modell %{tipo_renta_code} hivatalos
         tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
         és benyújtási időszakhoz.
-    errors:
-      official_tipo_renta_parameter_count: Az M210-es modell %{revision_id} felülvizsgálatának
-        pontosan egy hivatalos tipo-renta kódparamétert kell deklarálnia.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -797,11 +791,13 @@ sheets:
       clave_codigo: Kódkulcs
       clave_declarado: Az ingatlan tulajdonjogi kódja
       clave_mercado: Piackulcs
+      closing_minus_opening_positive: Pozitív záró mínusz nyitó különbözet
       codigo_cuenta: Értékpapírszámla / kölcsönügylet száma
       codigo_emisor: Kibocsátó kódja
       codigo_provincia: Tartomány kódja
       compensaciones: Kompenzációk
       complemento_infancia_clave: Gyermeknevelési kiegészítés
+      complete_acquisition_cost: Teljes beszerzési költség
       contract_relation_clave: Szerződés vagy jogviszony
       contributor_legal_name: Az adóalany neve
       contributor_tax_id: Az adóalany adóazonosítója
@@ -843,6 +839,11 @@ sheets:
       geographic_mobility_clave: Földrajzi mobilitás
       housing_loan_communication_clave: Lakáshitel-bevallás
       importe_gastos: Költség összege
+      importe_q1: 1. negyedévi összeg
+      importe_q2: 2. negyedévi összeg
+      importe_q3: 3. negyedévi összeg
+      importe_q4: 4. negyedévi összeg
+      importe_total: Teljes összeg
       incapacity_cash_perception: Munkaképtelenségi készpénzes bevétel
       incapacity_cash_withholding: Munkaképtelenségi ellátás visszatartása
       incapacity_kind_ingreso_a_cuenta: Munkaképtelenségi természetbeni ellátás előlege
@@ -861,6 +862,7 @@ sheets:
       naturaleza_inmueble: Az ingatlan jellege
       nif_pagador_anterior: Előző kifizető adóazonosítója
       numero_orden: Sorszám
+      opening_minus_closing_positive: Pozitív nyitó mínusz záró különbözet
       operation_date: Művelet dátuma
       operation_kind_code: Művelettípus
       pago: Kifizetés

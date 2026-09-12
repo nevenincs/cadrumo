@@ -1,6 +1,53 @@
 modelo:
   schema:
     '341':
+      casilla:
+        continuidad:
+          '02':
+            help: 'A casilla adatai: Casilla 02: reagp összeg ügyletek.'
+            label: 'Casilla 02: reagp összeg ügyletek'
+          '03':
+            help: 'A casilla adatai: Casilla 03: reagp összeg ügyletek.'
+            label: 'Casilla 03: reagp összeg ügyletek'
+          '05':
+            help: 'A casilla adatai: Casilla 05: reagp százalék beszámítás.'
+            label: 'Casilla 05: reagp százalék beszámítás'
+          '06':
+            help: 'A casilla adatai: Casilla 06: reagp százalék beszámítás.'
+            label: 'Casilla 06: reagp százalék beszámítás'
+          08:
+            help: 'A casilla adatai: Casilla 08: reagp összeg beszámítás.'
+            label: 'Casilla 08: reagp összeg beszámítás'
+          09:
+            help: 'A casilla adatai: Casilla 09: reagp összeg beszámítás.'
+            label: 'Casilla 09: reagp összeg beszámítás'
+          codigo-cuenta-cliente:
+            help: A Modelo 341 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          filing-year:
+            help: A Modelo 341 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          letras-etiqueta-persona-fisica:
+            help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla— adóügyi információ
+          observaciones-presentacion:
+            help: 'A casilla adatai: Casilla observaciones: observaciones presentacion.'
+            label: 'observaciones mező: benyújtási megjegyzések'
+          reagp-importe-compensacion:
+            help: 'A casilla adatai: Casilla 07: reagp összeg beszámítás.'
+            label: 'Casilla 07: reagp összeg beszámítás'
+          reagp-importe-compensacion-total:
+            help: 'A casilla adatai: Casilla 10: reagp összeg beszámítás total.'
+            label: 'Casilla 10: reagp összeg beszámítás total'
+          reagp-importe-operaciones:
+            help: 'A casilla adatai: Casilla 01: reagp összeg ügyletek.'
+            label: 'Casilla 01: reagp összeg ügyletek'
+          reagp-porcentaje-compensacion:
+            help: 'A casilla adatai: Casilla 04: reagp százalék beszámítás.'
+            label: 'Casilla 04: reagp százalék beszámítás'
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla időszak: kulcs bevallás.'
+            label: 'Casilla időszak: kulcs bevallás'
       field:
         official_name: Modelo 341. Kompenzációk visszatérítésére vonatkozó kérelem
           a mezőgazdasági, állattenyésztési és halászati különleges szabályozás keretében.
@@ -10,97 +57,111 @@ modelo:
         2005-2015:
           casilla:
             '01':
-              help: null
+              help: 'A Modelo 341 01. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [01].'
               label: Az ügyletek összege [01]
             '02':
-              help: null
+              help: 'A Modelo 341 02. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [02].'
               label: Az ügyletek összege [02]
             '03':
-              help: null
+              help: 'A Modelo 341 03. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [03].'
               label: Az ügyletek összege [03]
             '04':
-              help: null
+              help: 'A Modelo 341 04. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [04].'
               label: Kompenzációs százalék [04]
             '05':
-              help: null
+              help: 'A Modelo 341 05. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [05].'
               label: Kompenzációs százalék [05]
             '06':
-              help: null
+              help: 'A Modelo 341 06. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [06].'
               label: Kompenzációs százalék [06]
             '07':
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [07].'
               label: A kompenzáció összege [07]
             08:
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [08].'
               label: A kompenzáció összege [08]
             09:
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [09].'
               label: A kompenzáció összege [09]
             '10':
-              help: null
+              help: 'A Modelo 341 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [10].'
               label: A kompenzációk teljes összege [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 341 . casilla adóügyi adatai: adóév.'
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
               label: Az önadózás elszámolási időszaka
             x-etkn4p9ecdnm8qb7dsmm6tb5dpq62bb3dhkmarjkck:
-              help: null
+              help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
               label: Ügyfélszámla kódja (C.C.C.)
             x-etkn4p9edhin8sj1ecmmat39e5qmat31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Letras - etiqueta identificativa.'
               label: Azonosító címke betűi
             x-etkn4p9edth76pbiepgm6qbfdpin6:
-              help: null
+              help: 'Tekintse át a casilla adatait: Observaciones.'
               label: Megjegyzések
           construct:
             modelo-341-autoliquidacion:
               field:
-                title: null
+                title: Modelo 341 önadózási bevallás - IVA
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2016-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: 'A Modelo 341 01. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [01].'
               label: Az ügyletek összege [01]
             '02':
-              help: null
+              help: 'A Modelo 341 02. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [02].'
               label: Az ügyletek összege [02]
             '03':
-              help: null
+              help: 'A Modelo 341 03. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [03].'
               label: Az ügyletek összege [03]
             '04':
-              help: null
+              help: 'A Modelo 341 04. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [04].'
               label: Kompenzációs százalék [04]
             '05':
-              help: null
+              help: 'A Modelo 341 05. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [05].'
               label: Kompenzációs százalék [05]
             '06':
-              help: null
+              help: 'A Modelo 341 06. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [06].'
               label: Kompenzációs százalék [06]
             '07':
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [07].'
               label: A kompenzáció összege [07]
             08:
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [08].'
               label: A kompenzáció összege [08]
             09:
-              help: null
+              help: 'Tekintse át a casilla adatait: Összeg - beszámítás [09].'
               label: A kompenzáció összege [09]
             '10':
-              help: null
+              help: 'A Modelo 341 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [10].'
               label: A kompenzációk teljes összege [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 341 . casilla adóügyi adatai: adóév.'
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'A Modelo 341 . casilla adóügyi adatai: adóügyi információ.'
               label: Az önadózás elszámolási időszaka
           construct:
             modelo-341-autoliquidacion:
               field:
-                title: null
+                title: Modelo 341 önadózási bevallás - IVA
           field:
-            label: null
+            label: Casilla— adóügyi információ

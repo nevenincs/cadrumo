@@ -320,7 +320,6 @@ msgid "Step 5: reconcile the justificante against your local record"
 msgstr "Pas 5: reconcilia el justificante amb el teu registre local"
 
 #: ../../how-to/file-at-aeat.md:119
-#, fuzzy
 msgid ""
 "Compare AEAT's receipt against the figures you recorded locally with the "
 "`reconcile import` command shown as the final frame above. Run "
@@ -329,13 +328,13 @@ msgid ""
 "refuses a PDF it cannot read as invalid evidence. For reading verdicts "
 "and handling mismatches, see [reconcile a filing](reconcile.md)."
 msgstr ""
-"Compara el rebut de l'AEAT amb les xifres que has registrat localment amb"
-" l'ordre `reconcile file` mostrada com a marc final més amunt. Executa la"
-" reconciliació després del pas 4 perquè la comparació sigui contra el teu"
-" registre presentat. Reporta un veredicte de coincidències o "
-"discrepàncies; l'ordre rebutja un PDF que no pot llegir com a evidència "
-"no vàlida. Per llegir veredictes i gestionar discrepàncies, consulta "
-"[reconcilia una presentació](reconcile.md)."
+"Compara el justificant de l'AEAT amb les xifres que has registrat localment "
+"mitjançant l'ordre `reconcile import`, que es mostra com a darrer marc més "
+"amunt. Executa la conciliació després del pas 4 perquè la comparació es faci "
+"amb el teu registre presentat. Informa d'un veredicte de coincidència o "
+"discrepància; l'ordre rebutja com a evidència no vàlida un PDF que no pot "
+"llegir. Per interpretar els veredictes i gestionar les discrepàncies, "
+"consulta [concilia una presentació](reconcile.md)."
 
 #: ../../how-to/file-at-aeat.md:126
 msgid ""

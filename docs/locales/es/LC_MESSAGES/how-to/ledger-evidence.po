@@ -156,7 +156,6 @@ msgstr ""
 "`evidence add`."
 
 #: ../../how-to/ledger-evidence.md:41
-#, fuzzy
 msgid ""
 "The `attach` command also has an `--attachment-id` option (repeatable) "
 "for a generic secure attachment that does not carry the purchase-invoice "
@@ -169,15 +168,15 @@ msgid ""
 "`--purchase-invoice-evidence-id` or `evidence pull` instead."
 msgstr ""
 "El comando `attach` también dispone de una opción `--attachment-id` "
-"(repetible) para un adjunto seguro genérico que no lleva el rol de "
-"factura de compra. Espera el id de contenido de 64 caracteres de un blob "
-"que ya esté en el almacenamiento cifrado de adjuntos, y rechaza cualquier"
-" id que no tenga un blob guardado (`attachment_ids must reference "
-"existing secure attachment manifests and blobs`). Actualmente ningún "
-"comando del operador imprime ese id de 64 caracteres: el `evidence_id` de"
-" `evidence add` es un id distinto y más corto que aquí no se acepta. "
-"Hasta que un comando exponga el id del adjunto, use `--purchase-invoice-"
-"evidence-id` o `doclink` en su lugar."
+"(repetible) para un adjunto seguro genérico que no tiene el papel de factura "
+"de compra. Espera el identificador de contenido de 64 caracteres de un blob "
+"que ya esté en el almacenamiento cifrado de adjuntos, y rechaza cualquier "
+"identificador que no tenga un blob guardado (`attachment_ids must reference "
+"existing secure attachment manifests and blobs`). Actualmente ningún comando "
+"del operador imprime ese identificador de 64 caracteres: el `evidence_id` de "
+"`evidence add` es un identificador distinto y más corto, que aquí no se "
+"acepta. Hasta que un comando muestre el identificador del adjunto, usa "
+"`--purchase-invoice-evidence-id` o `evidence pull`."
 
 #: ../../how-to/ledger-evidence.md:43
 msgid "Pull a document from Google Drive instead"
@@ -216,16 +215,14 @@ msgid "Bulk-fetch every invoice in a Drive folder"
 msgstr "Descarga en bloque todas las facturas de una carpeta de Drive"
 
 #: ../../how-to/ledger-evidence.md:54
-#, fuzzy
 msgid ""
 "Fetch every PDF and image invoice in one Drive folder at once, instead of"
 " one document at a time. Like `evidence pull`, this command reaches "
 "Google Drive and runs against your own authorized account:"
 msgstr ""
-"Descarga de una vez todas las facturas en PDF e imagen de una carpeta de "
-"Drive, en lugar de documento a documento. Al igual que `doclink`, este "
-"comando accede a Google Drive y se ejecuta contra tu propia cuenta "
-"autorizada:"
+"Descarga de una vez todas las facturas en PDF y en imagen de una carpeta de "
+"Drive, en lugar de documento a documento. Al igual que `evidence pull`, este "
+"comando accede a Google Drive y se ejecuta con tu propia cuenta autorizada:"
 
 #: ../../how-to/ledger-evidence.md:59
 msgid ""

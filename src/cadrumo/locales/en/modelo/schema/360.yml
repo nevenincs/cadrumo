@@ -95,10 +95,10 @@ modelo:
               label: 1. Reason for filing. Refund application or amendment of a refund
                 application
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 360.
               label: Filing year to which the request relates
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 360.
               label: Member State of refund where the tax was borne
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
               help: Box 27-42 of modelo 360, tax year 2010.
@@ -682,36 +682,40 @@ modelo:
               help: Box 1060-1061 of modelo 360, tax year 2010.
               label: 2. Applicant. Activities. 9. NACE code. description. Language
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
-              help: null
+              help: Tax information about tax information in casilla 1902 of Modelo
+                360.
               label: 4. Refund requested. Declaration of having supplied no goods
                 or services
             x-chincrrcelhmirre5pi6itj9edgg:
-              help: null
+              help: 'Review the casilla information: 4. Refund solicitada. Divisa.'
               label: 4. Refund requested. Currency
             x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
-              help: null
+              help: 'Review the casilla information: 4. Refund solicitada. Amount
+                solicitado.'
               label: 4. Refund requested. Amount requested
             x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
-              help: null
+              help: Tax information about tax information in casilla 1876-1880 of
+                Modelo 360.
               label: 4. Refund requested. Number of import documents
             x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
-              help: null
+              help: Tax information about tax information in casilla 1871-1875 of
+                Modelo 360.
               label: 4. Refund requested. Number of invoices
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
-              help: null
+              help: Tax information for casilla 1889-1896 of Modelo 360.
               label: 4. Refund requested. Period. Period end date
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
-              help: null
+              help: Tax information for casilla 1881-1888 of Modelo 360.
               label: 4. Refund requested. Period. Period start date
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
-              help: null
+              help: Tax information for casilla 1907-1911 of Modelo 360.
               label: 5. Amendment of the previous year's prorrata. Definitive prorrata
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
-              help: null
+              help: Tax information for casilla 1903-1906 of Modelo 360.
               label: 5. Amendment of the previous year's prorrata. Tax year
           construct:
             modelo-360-iva-devolucion-ue:
               field:
-                title: null
+                title: Modelo 360 — tax information
           field:
-            label: null
+            label: Casilla — tax field

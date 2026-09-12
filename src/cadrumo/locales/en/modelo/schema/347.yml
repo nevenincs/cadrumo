@@ -1,6 +1,149 @@
 modelo:
   schema:
     '347':
+      casilla:
+        continuidad:
+          arrendamiento-local-negocio:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          arrendatario-nif:
+            help: 'Casilla information: Casilla inmueble.arrendatario-nif: arrendatario
+              nif.'
+            label: 'Box inmueble.arrendatario-nif: tenant NIF'
+          arrendatario-nombre:
+            help: 'Casilla information: Casilla inmueble.arrendatario-name: arrendatario
+              name.'
+            label: 'Casilla inmueble.arrendatario-name: arrendatario name'
+          arrendatario-representante-legal-nif:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          complementaria-sustitutiva:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          contraparte-clave-operacion:
+            help: 'Casilla information: Casilla contraparte.clave-operacion: contraparte
+              clave operacion.'
+            label: 'Casilla contraparte.clave-operacion: contraparte clave operacion'
+          contraparte-importe-q1:
+            help: 'Casilla information: Casilla contraparte.amount-Q1: contraparte
+              amount q1.'
+            label: 'Casilla contraparte.amount-Q1: contraparte amount q1'
+          contraparte-importe-q2:
+            help: 'Casilla information: Casilla contraparte.amount-Q2: contraparte
+              amount q2.'
+            label: 'Casilla contraparte.amount-Q2: contraparte amount q2'
+          contraparte-importe-q3:
+            help: 'Casilla information: Casilla contraparte.amount-Q3: contraparte
+              amount q3.'
+            label: 'Casilla contraparte.amount-Q3: contraparte amount q3'
+          contraparte-importe-q4:
+            help: 'Casilla information: Casilla contraparte.amount-Q4: contraparte
+              amount q4.'
+            label: 'Casilla contraparte.amount-Q4: contraparte amount q4'
+          contraparte-nif:
+            help: 'Casilla information: Casilla contraparte.nif: contraparte nif.'
+            label: 'Casilla contraparte.nif: contraparte nif'
+          contraparte-nombre:
+            help: 'Casilla information: Casilla contraparte.name: contraparte name.'
+            label: 'Casilla contraparte.name: contraparte name'
+          contraparte-pais-codigo:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          contraparte-provincia-codigo:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          declarante-representante-legal-nif:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          direccion-inmueble:
+            help: 'Casilla information: Casilla inmueble.direccion: direccion inmueble.'
+            label: 'Box inmueble.direccion: property address'
+          ejercicio-operacion:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          filing-year:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          importe-anual-operaciones:
+            help: 'Casilla information: Casilla contraparte.amount-annual: amount
+              annual transactions.'
+            label: 'Casilla contraparte.amount-annual: amount annual transactions'
+          importe-operacion-arrendamiento:
+            help: 'Casilla information: Casilla inmueble.amount-operacion: amount
+              operacion arrendamiento.'
+            label: 'Casilla inmueble.amount-operacion: amount operacion arrendamiento'
+          importe-percibido-metalico:
+            help: 'Casilla information: Casilla contraparte.amount-metalico: amount
+              percibido metalico.'
+            label: 'Casilla contraparte.amount-metalico: amount percibido metalico'
+          importe-total-anual-operaciones:
+            help: 'Casilla information: Casilla decl.amount-total-annual: amount total
+              annual transactions.'
+            label: 'Casilla decl.amount-total-annual: amount total annual transactions'
+          importe-total-arrendamiento-locales:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          importe-transmisiones-inmuebles:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          importe-transmisiones-q1:
+            help: 'Casilla information: Casilla contraparte.amount-transmisiones-Q1:
+              amount transmisiones q1.'
+            label: 'Casilla contraparte.amount-transmisiones-Q1: amount transmisiones
+              q1'
+          importe-transmisiones-q2:
+            help: 'Casilla information: Casilla contraparte.amount-transmisiones-Q2:
+              amount transmisiones q2.'
+            label: 'Casilla contraparte.amount-transmisiones-Q2: amount transmisiones
+              q2'
+          importe-transmisiones-q3:
+            help: 'Casilla information: Casilla contraparte.amount-transmisiones-Q3:
+              amount transmisiones q3.'
+            label: 'Casilla contraparte.amount-transmisiones-Q3: amount transmisiones
+              q3'
+          importe-transmisiones-q4:
+            help: 'Casilla information: Casilla contraparte.amount-transmisiones-Q4:
+              amount transmisiones q4.'
+            label: 'Casilla contraparte.amount-transmisiones-Q4: amount transmisiones
+              q4'
+          nif-operador-comunitario:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          numero-justificante:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
+          operacion-seguro:
+            help: 'Casilla information: Casilla contraparte.operacion-seguro: operacion
+              seguro.'
+            label: 'Casilla contraparte.operacion-seguro: operacion seguro'
+          persona-con-quien-relacionarse:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          persona-con-quien-relacionarse-telefono:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          referencia-catastral:
+            help: 'Casilla information: Casilla inmueble.referencia-catastral: referencia
+              catastral.'
+            label: 'Box inmueble.referencia-catastral: cadastral reference'
+          representante-legal-nif:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          situacion-inmueble:
+            help: 'Casilla information: Casilla inmueble.situacion: situacion inmueble.'
+            label: 'Casilla inmueble.situacion: situacion inmueble'
+          tipo-declaracion:
+            help: 'Casilla information: Casilla rate-return: rate return.'
+            label: 'Casilla rate-return: rate return'
+          tipo-soporte:
+            help: 'Casilla information: Casilla decl.rate-soporte: rate soporte.'
+            label: 'Casilla decl.rate-soporte: rate soporte'
+          total-inmuebles:
+            help: Tax information about tax information in casilla  of Modelo 347.
+            label: Casilla— tax information
+          total-personas-entidades:
+            help: Tax information for casilla of Modelo 347.
+            label: Casilla — tax field
       field:
         official_name: Modelo 347. Annual return of transactions with third parties.
         title: Transactions with third parties (annual informative return)

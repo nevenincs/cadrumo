@@ -356,7 +356,6 @@ msgstr ""
 "Afegeix `--apply` per registrar-les al perfil actiu."
 
 #: ../../how-to/censo-update.md:154
-#, fuzzy
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -366,13 +365,13 @@ msgid ""
 "record of the divergence and `aeat config profile view` warns you until "
 "you resolve it."
 msgstr ""
-"Les dades registrades així porten una marca d'*evidència no oficial*: "
-"provenen d'un document que has aportat, no d'una lectura confirmada per "
-"l'AEAT, per això les vistes del perfil mostren la procedència i continua "
-"aplicant-se l'avís `censo.enrolment_unverified` del calendari de "
-"presentacions. Si un valor del certificat no coincideix amb una resposta "
-"que vas donar durant la configuració, el perfil conserva un registre de "
-"la divergència i `aeat config profile show` t'avisa fins que la "
+"Les dades registrades d'aquesta manera porten una marca d'*evidència no "
+"oficial*: provenen d'un document que has aportat, no d'una lectura "
+"confirmada per l'AEAT; per això, les vistes del perfil en mostren la "
+"procedència i continua aplicant-se l'avís `censo.enrolment_unverified` del "
+"calendari de presentació. Quan un valor del certificat no coincideix amb una "
+"resposta que vas donar durant la configuració, el perfil conserva un "
+"registre de la divergència i `aeat config profile view` t'avisa fins que la "
 "resolguis."
 
 #: ../../how-to/censo-update.md:162

@@ -1,6 +1,59 @@
 modelo:
   schema:
     '353':
+      casilla:
+        continuidad:
+          '05':
+            help: Información fiscal sobre información fiscal de la casilla 05 del
+              Modelo 353.
+            label: Casilla 05 — información fiscal
+          08:
+            help: Información fiscal sobre información fiscal de la casilla 08 del
+              Modelo 353.
+            label: Casilla 08 — información fiscal
+          09:
+            help: Información fiscal sobre información fiscal de la casilla 09 del
+              Modelo 353.
+            label: Casilla 09 — información fiscal
+          filing-period:
+            help: 'Consulte la información correspondiente a la casilla: Período de
+              la declaración.'
+            label: Casilla— período de liquidación
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          iva-agregado-reconciliacion-deducible-322:
+            help: 'Información de la casilla: Casilla iva.reconciliacion.deducible-322:
+              iva agregado reconciliacion deducible 322.'
+            label: 'Casilla iva.reconciliacion.deducible-322: iva agregado reconciliacion
+              deducible 322'
+          iva-agregado-reconciliacion-devengada-322:
+            help: 'Información de la casilla: Casilla iva.reconciliacion.devengada-322:
+              iva agregado reconciliacion devengada 322.'
+            label: 'Casilla iva.reconciliacion.devengada-322: iva agregado reconciliacion
+              devengada 322'
+          iva-agregado-reconciliacion-resultado-322:
+            help: 'Información de la casilla: Casilla iva.reconciliacion.resultado-322:
+              iva agregado reconciliacion resultado 322.'
+            label: 'Casilla iva.reconciliacion.resultado-322: iva agregado reconciliacion
+              resultado 322'
+          m353-a-deducir-autoliquidaciones-anteriores:
+            help: Información fiscal sobre información fiscal de la casilla 04 del
+              Modelo 353.
+            label: Casilla 04 — información fiscal
+          m353-cuotas-a-compensar:
+            help: Información fiscal sobre información fiscal de la casilla 02 del
+              Modelo 353.
+            label: Casilla 02 — información fiscal
+          m353-resultado:
+            help: Información fiscal sobre información fiscal de la casilla 03 del
+              Modelo 353.
+            label: Casilla 03 — información fiscal
+          m353-resultado-total-entidades:
+            help: Información fiscal sobre información fiscal de la casilla 01 del
+              Modelo 353.
+            label: Casilla 01 — información fiscal
       field:
         official_name: Modelo 353. Impuesto sobre el Valor Añadido. Grupo de entidades.
           Modelo agregado. Autoliquidación mensual.
@@ -9,133 +62,172 @@ modelo:
         2021-2025:
           casilla:
             '01':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                total (sumatorio del resultado de entidades).'
               label: Resultado total (sumatorio del resultado de entidades)
             '02':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar pendientes de ejercicios anteriores.'
               label: Cuotas a compensar pendientes de ejercicios anteriores
             '03':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                ([01] - [08]).'
               label: Resultado ([01] - [08])
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: A deducir:
+                resultado de las autoliquidaciones anteriores presentadas por el mismo
+                concepto, ejercicio y período.'
               label: 'A deducir: resultado de las autoliquidaciones anteriores presentadas
                 por el mismo concepto, ejercicio y periodo'
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                de la autoliquidación ([03] - [04]).'
               label: Resultado de la autoliquidación ([03] - [04])
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar de periodos anteriores aplicadas en este período.'
               label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar de periodos previos pendientes para periodos posteriores
+                ([02] - [08]).'
               label: Cuotas a compensar de periodos previos pendientes para periodos
                 posteriores ([02] - [08])
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la autoliquidacion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                mensual (01..12).'
               label: Periodo mensual (01..12)
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                autorepercutida en adquisiciones intracomunitarias - agregado del
+                grupo.'
               label: Cuota IVA autorepercutida en adquisiciones intracomunitarias
                 - agregado del grupo
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA deducible (agregado del grupo).'
               label: Total cuota IVA deducible (agregado del grupo)
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Total cuota
+                IVA devengada (agregado del grupo).'
               label: Total cuota IVA devengada (agregado del grupo)
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota deducible
+                agregada del grupo reconciliada desde los Modelos 322 de los miembros.'
               label: Cuota deducible agregada del grupo reconciliada desde los Modelos
                 322 de los miembros
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota devengada
+                agregada del grupo reconciliada desde los Modelos 322 de los miembros.'
               label: Cuota devengada agregada del grupo reconciliada desde los Modelos
                 322 de los miembros
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                agregado del grupo reconciliado desde los Modelos 322 de los miembros.'
               label: Resultado agregado del grupo reconciliado desde los Modelos 322
                 de los miembros
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                repercutido al tipo general (21%) - agregado del grupo.'
               label: Cuota IVA repercutido al tipo general (21%) - agregado del grupo
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                repercutido al tipo reducido (10%) - agregado del grupo.'
               label: Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                repercutido al tipo super-reducido (4%) - agregado del grupo.'
               label: Cuota IVA repercutido al tipo super-reducido (4%) - agregado
                 del grupo
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                del grupo (cuota devengada agregada - cuota deducible agregada).'
               label: Resultado del grupo (cuota devengada agregada - cuota deducible
                 agregada)
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota IVA
+                soportado en operaciones interiores corrientes - agregado del grupo.'
               label: Cuota IVA soportado en operaciones interiores corrientes - agregado
                 del grupo
           construct:
             modelo-353-iva-grupo-agregado:
               field:
-                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
+                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidación
                   mensual
           field:
             label: Modelo 353 ejercicios 2008 a 2025 (Orden EHA/3434/2007)
         2026-desde-02:
           casilla:
             '01':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                total (sumatorio del resultado de entidades) [01].'
               label: Resultado total (sumatorio del resultado de entidades) [01]
             '02':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar pendientes de ejercicios anteriores [02].'
               label: Cuotas a compensar pendientes de ejercicios anteriores [02]
             '03':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                ([01] - [08]) [03].'
               label: Resultado ([01] - [08]) [03]
             '04':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: A deducir:
+                resultado de autoliquidaciones anteriores del mismo concepto, ejercicio
+                y período [04].'
               label: 'A deducir: resultado de autoliquidaciones anteriores del mismo
                 concepto, ejercicio y periodo [04]'
             '05':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                de la autoliquidación ([03] - [04]) [05].'
               label: Resultado de la autoliquidación ([03] - [04]) [05]
             08:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar de periodos anteriores aplicadas en este período [08].'
               label: Cuotas a compensar de periodos anteriores aplicadas en este periodo
                 [08]
             09:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuotas
+                a compensar de periodos previos pendientes para periodos posteriores
+                ([02]-[08]) [09].'
               label: Cuotas a compensar de periodos previos pendientes para periodos
                 posteriores ([02]-[08]) [09]
             '10':
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Pago a
+                cuenta de entregas de gasolinas, gasóleos y biocarburantes atribuible
+                a la Administración del Estado [10].'
               label: Pago a cuenta de entregas de gasolinas, gasóleos y biocarburantes
                 atribuible a la Administración del Estado [10]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la autoliquidacion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la autoliquidación.'
+              label: Ejercicio al que se refiere la autoliquidación
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Período
+                mensual (01..12).'
               label: Periodo mensual (01..12)
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4cli7aor9c9m6ab9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota deducible
+                agregada del grupo reconciliada desde los Modelos 322 de los miembros.'
               label: Cuota deducible agregada del grupo reconciliada desde los Modelos
                 322 de los miembros
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbj4clr6arj7c5i62b9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota devengada
+                agregada del grupo reconciliada desde los Modelos 322 de los miembros.'
               label: Cuota devengada agregada del grupo reconciliada desde los Modelos
                 322 de los miembros
             x-d5r62bjiclhmurj3d5m6iob3d5nmsbjiclpnar3kc5i6ub9j68p0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Resultado
+                agregado del grupo reconciliado desde los Modelos 322 de los miembros.'
               label: Resultado agregado del grupo reconciliado desde los Modelos 322
                 de los miembros
           construct:
             modelo-353-iva-grupo-agregado:
               field:
-                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidacion
+                title: Modelo 353 IVA grupo de entidades modelo agregado autoliquidación
                   mensual
           field:
             label: Modelo 353 ejercicio 2026 y siguientes (Orden EHA/3434/2007)

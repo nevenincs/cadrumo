@@ -1,6 +1,282 @@
 modelo:
   schema:
     '190':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: Informació fiscal de la casella 148-151 del Modelo 190.
+            label: Casella 148-151 — informació fiscal
+          ingresos-a-cuenta-efectuados:
+            help: Informació fiscal sobre informació fiscal de la casella 122-134
+              del Modelo 190.
+            label: Casella 122-134 — informació fiscal
+          ingresos-a-cuenta-repercutidos:
+            help: Informació fiscal sobre informació fiscal de la casella 135-147
+              del Modelo 190.
+            label: Casella 135-147 — informació fiscal
+          m190-correo-electronico:
+            help: Informació fiscal de la casella 176-225 del Modelo 190.
+            label: Casella 176-225 — informació fiscal
+          m190-declaracion-complementaria:
+            help: Informació fiscal sobre informació fiscal de la casella 121 del
+              Modelo 190.
+            label: Casella 121 — informació fiscal
+          m190-declaracion-sustitutiva:
+            help: Informació fiscal de la casella 122 del Modelo 190.
+            label: Casella 122 — informació fiscal
+          m190-numero-identificativo:
+            help: Informació fiscal de la casella 108-120 del Modelo 190.
+            label: Casella 108-120 — informació fiscal
+          m190-numero-identificativo-anterior:
+            help: Informació fiscal de la casella 123-135 del Modelo 190.
+            label: Casella 123-135 — informació fiscal
+          m190-persona-contacto-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 68-107 del
+              Modelo 190.
+            label: Casella 68-107 — informació fiscal
+          m190-persona-contacto-telefono:
+            help: Informació fiscal sobre informació fiscal de la casella 59-67 del
+              Modelo 190.
+            label: Casella 59-67 — informació fiscal
+          payee-anualidades-alimentos:
+            help: Informació fiscal sobre anualitats per aliments de la casella 210-222
+              del Modelo 190.
+            label: Casella 210-222 — anualitats per aliments
+          payee-ascendientes-75-mas-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 244 del
+              Modelo 190.
+            label: Casella 244 — informació fiscal
+          payee-ascendientes-75-mas-total:
+            help: Informació fiscal sobre informació fiscal de la casella 243 del
+              Modelo 190.
+            label: Casella 243 — informació fiscal
+          payee-ascendientes-discapacidad-33-65-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 246 del
+              Modelo 190.
+            label: Casella 246 — informació fiscal
+          payee-ascendientes-discapacidad-33-65-total:
+            help: Informació fiscal sobre informació fiscal de la casella 245 del
+              Modelo 190.
+            label: Casella 245 — informació fiscal
+          payee-ascendientes-discapacidad-65-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 250 del
+              Modelo 190.
+            label: Casella 250 — informació fiscal
+          payee-ascendientes-discapacidad-65-total:
+            help: Informació fiscal sobre informació fiscal de la casella 249 del
+              Modelo 190.
+            label: Casella 249 — informació fiscal
+          payee-ascendientes-discapacidad-movilidad-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 248 del
+              Modelo 190.
+            label: Casella 248 — informació fiscal
+          payee-ascendientes-discapacidad-movilidad-total:
+            help: Informació fiscal sobre informació fiscal de la casella 247 del
+              Modelo 190.
+            label: Casella 247 — informació fiscal
+          payee-ascendientes-menores-75-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 242 del
+              Modelo 190.
+            label: Casella 242 — informació fiscal
+          payee-ascendientes-menores-75-total:
+            help: Informació fiscal sobre informació fiscal de la casella 241 del
+              Modelo 190.
+            label: Casella 241 — informació fiscal
+          payee-birth-year:
+            help: Informació fiscal de la casella 153-156 del Modelo 190.
+            label: Casella 153-156 — informació fiscal
+          payee-ceuta-melilla-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 152 del
+              Modelo 190.
+            label: Casella 152 — informació fiscal
+          payee-clave-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 78 del Modelo
+              190.
+            label: Casella 78 — informació fiscal
+          payee-complemento-ayuda-infancia:
+            help: Informació fiscal sobre informació fiscal de la casella 322 del
+              Modelo 190.
+            label: Casella 322 — informació fiscal
+          payee-computo-hijo-1:
+            help: Informació fiscal sobre informació fiscal de la casella 251 del
+              Modelo 190.
+            label: Casella 251 — informació fiscal
+          payee-computo-hijo-2:
+            help: Informació fiscal sobre informació fiscal de la casella 252 del
+              Modelo 190.
+            label: Casella 252 — informació fiscal
+          payee-computo-hijo-3:
+            help: Informació fiscal sobre informació fiscal de la casella 253 del
+              Modelo 190.
+            label: Casella 253 — informació fiscal
+          payee-contract-relation-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 168 del
+              Modelo 190.
+            label: Casella 168 — informació fiscal
+          payee-descendientes-discapacidad-33-65-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 231-232
+              del Modelo 190.
+            label: Casella 231-232 — informació fiscal
+          payee-descendientes-discapacidad-33-65-total:
+            help: Informació fiscal sobre informació fiscal de la casella 229-230
+              del Modelo 190.
+            label: Casella 229-230 — informació fiscal
+          payee-descendientes-discapacidad-65-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 239-240
+              del Modelo 190.
+            label: Casella 239-240 — informació fiscal
+          payee-descendientes-discapacidad-65-total:
+            help: Informació fiscal sobre informació fiscal de la casella 237-238
+              del Modelo 190.
+            label: Casella 237-238 — informació fiscal
+          payee-descendientes-discapacidad-movilidad-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 235-236
+              del Modelo 190.
+            label: Casella 235-236 — informació fiscal
+          payee-descendientes-discapacidad-movilidad-total:
+            help: Informació fiscal sobre informació fiscal de la casella 233-234
+              del Modelo 190.
+            label: Casella 233-234 — informació fiscal
+          payee-descendientes-menores-3-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 224 del
+              Modelo 190.
+            label: Casella 224 — informació fiscal
+          payee-descendientes-menores-3-total:
+            help: Informació fiscal sobre informació fiscal de la casella 223 del
+              Modelo 190.
+            label: Casella 223 — informació fiscal
+          payee-descendientes-resto-entero:
+            help: Informació fiscal sobre informació fiscal de la casella 227-228
+              del Modelo 190.
+            label: Casella 227-228 — informació fiscal
+          payee-descendientes-resto-total:
+            help: Informació fiscal sobre informació fiscal de la casella 225-226
+              del Modelo 190.
+            label: Casella 225-226 — informació fiscal
+          payee-disability-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 167 del
+              Modelo 190.
+            label: Casella 167 — informació fiscal
+          payee-emerging-stock-excess-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 388 del
+              Modelo 190.
+            label: Casella 388 — informació fiscal
+          payee-family-situation:
+            help: Informació fiscal sobre situació familiar del perceptor de la casella
+              157 del Modelo 190.
+            label: Casella 157 — situació familiar del perceptor
+          payee-gastos-deducibles:
+            help: Informació fiscal sobre despeses deduïbles del perceptor de la casella
+              184-196 del Modelo 190.
+            label: Casella 184-196 — despeses deduïbles del perceptor
+          payee-geographic-mobility-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 170 del
+              Modelo 190.
+            label: Casella 170 — informació fiscal
+          payee-incapacidad-dineraria-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 256-268
+              del Modelo 190.
+            label: Casella 256-268 — informació fiscal
+          payee-incapacidad-dineraria-retenciones:
+            help: Informació fiscal sobre informació fiscal de la casella 269-281
+              del Modelo 190.
+            label: Casella 269-281 — informació fiscal
+          payee-incapacidad-especie-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 296-308
+              del Modelo 190.
+            label: Casella 296-308 — informació fiscal
+          payee-incapacidad-especie-repercutidos:
+            help: Informació fiscal sobre informació fiscal de la casella 309-321
+              del Modelo 190.
+            label: Casella 309-321 — informació fiscal
+          payee-incapacidad-especie-valoracion:
+            help: Informació fiscal sobre informació fiscal de la casella 283-295
+              del Modelo 190.
+            label: Casella 283-295 — informació fiscal
+          payee-name:
+            help: Informació fiscal sobre nom del perceptor de la casella 36-75 del
+              Modelo 190.
+            label: Casella 36-75 — nom del perceptor
+          payee-nif:
+            help: Informació fiscal sobre NIF del perceptor de la casella 18-26 del
+              Modelo 190.
+            label: Casella 18-26 — NIF del perceptor
+          payee-pension-compensatoria:
+            help: Informació fiscal sobre pensió compensatòria de la casella 197-209
+              del Modelo 190.
+            label: Casella 197-209 — pensió compensatòria
+          payee-prestamos-vivienda-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 254 del
+              Modelo 190.
+            label: Casella 254 — informació fiscal
+          payee-province:
+            help: Informació fiscal sobre província del perceptor de la casella 76-77
+              del Modelo 190.
+            label: Casella 76-77 — província del perceptor
+          payee-reducciones-aplicables:
+            help: Informació fiscal sobre informació fiscal de la casella 171-183
+              del Modelo 190.
+            label: Casella 171-183 — informació fiscal
+          payee-retenciones-forales-araba:
+            help: Informació fiscal sobre informació fiscal de la casella 349-361
+              del Modelo 190.
+            label: Casella 349-361 — informació fiscal
+          payee-retenciones-forales-bizkaia:
+            help: Informació fiscal sobre informació fiscal de la casella 375-387
+              del Modelo 190.
+            label: Casella 375-387 — informació fiscal
+          payee-retenciones-forales-estatal:
+            help: Informació fiscal sobre informació fiscal de la casella 323-335
+              del Modelo 190.
+            label: Casella 323-335 — informació fiscal
+          payee-retenciones-forales-gipuzkoa:
+            help: Informació fiscal sobre informació fiscal de la casella 362-374
+              del Modelo 190.
+            label: Casella 362-374 — informació fiscal
+          payee-retenciones-forales-navarra:
+            help: Informació fiscal sobre informació fiscal de la casella 336-348
+              del Modelo 190.
+            label: Casella 336-348 — informació fiscal
+          payee-spouse-or-unit-titular-nif:
+            help: Informació fiscal sobre NIF del cònjuge o de la unitat titular de
+              la casella 158-166 del Modelo 190.
+            label: Casella 158-166 — NIF del cònjuge o de la unitat titular
+          payee-subclave-percepcion:
+            help: Informació fiscal sobre informació fiscal de la casella 79-80 del
+              Modelo 190.
+            label: Casella 79-80 — informació fiscal
+          payee-unit-convivencia-titular-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 169 del
+              Modelo 190.
+            label: Casella 169 — informació fiscal
+          perc-retenciones-practicadas:
+            help: Informació fiscal sobre informació fiscal de la casella 95-107 del
+              Modelo 190.
+            label: Casella 95-107 — informació fiscal
+          percepcion-integra-dineraria:
+            help: Informació fiscal sobre informació fiscal de la casella 82-94 del
+              Modelo 190.
+            label: Casella 82-94 — informació fiscal
+          percepcion-valoracion-especie:
+            help: Informació fiscal sobre informació fiscal de la casella 109-121
+              del Modelo 190.
+            label: Casella 109-121 — informació fiscal
+          representante-legal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
+              Modelo 190.
+            label: Casella 27-35 — informació fiscal
+          retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 161-175
+              del Modelo 190.
+            label: Casella 161-175 — informació fiscal
+          total-percepciones-amount:
+            help: Informació fiscal sobre informació fiscal de la casella 145-160
+              del Modelo 190.
+            label: Casella 145-160 — informació fiscal
+          total-percepciones-count:
+            help: Informació fiscal sobre informació fiscal de la casella 136-144
+              del Modelo 190.
+            label: Casella 136-144 — informació fiscal
       field:
         official_name: Modelo 190. Declaració informativa. Retencions i ingressos
           a compte. Rendiments del treball i d'activitats econòmiques, premis i determinats
@@ -10,34 +286,39 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Consulteu la informació de la casella: Declaració complementària.'
               label: Declaració complementària
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 176-225
+                del Modelo 190.
               label: Correu electrònic de la persona amb qui relacionar-se
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: Informació fiscal de la casella 108-120 del Modelo 190.
               label: Número identificatiu de la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: Informació fiscal de la casella 123-135 del Modelo 190.
               label: Número identificatiu de la declaració anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 145-160
+                del Modelo 190.
               label: Import total de les percepcions
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 68-107
+                del Modelo 190.
               label: Cognoms i nom de la persona amb qui relacionar-se
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 59-67
+                del Modelo 190.
               label: Telèfon de la persona amb qui relacionar-se
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Consulteu la informació de la casella: Import total de retencions
+                e ingressos a compte.'
               label: Import total de retencions i ingressos a compte
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: Informació fiscal de la casella 122 del Modelo 190.
               label: Declaració substitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Informació fiscal de la casella 136-144 del Modelo 190.
               label: Nombre total de percepcions
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -94,7 +375,8 @@ modelo:
                 190.
               label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 78 del
+                Modelo 190.
               label: Clau de percepció
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -204,7 +486,8 @@ modelo:
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 122-134
+                del Modelo 190.
               label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -215,8 +498,8 @@ modelo:
                 190.
               label: Mobilitat geogràfica
             x-e1in4opedpkmc:
-              help: null
-              label: null
+              help: 'Consulteu la informació de la casella: NIF del perceptor.'
+              label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -226,17 +509,20 @@ modelo:
                 190.
               label: NIF del representant legal
             x-e1in4opedpnmqojick:
-              help: null
+              help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
+                del perceptor.'
               label: Cognoms i nom o denominació del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Pensions compensatòries
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 82-94
+                del Modelo 190.
               label: Percepció íntegra dinerària no derivada d'incapacitat laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 109-121
+                del Modelo 190.
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
@@ -275,14 +561,16 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 95-107
+                del Modelo 190.
               label: Retencions practicades sobre les percepcions dineràries
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
               label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 79-80
+                del Modelo 190.
               label: Subclau de percepció
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -291,40 +579,46 @@ modelo:
           construct:
             modelo-190-annual-summary:
               field:
-                title: null
+                title: Resum anual del Model 190 a partir de les declaracions trimestrals
+                  del Model 111
           field:
-            label: null
+            label: Modelo 190 exercici 2024 i següents
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Consulteu la informació de la casella: Declaració complementària.'
               label: Declaració complementària
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 176-225
+                del Modelo 190.
               label: Correu electrònic de la persona amb qui relacionar-se
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: Informació fiscal de la casella 108-120 del Modelo 190.
               label: Número identificatiu de la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: Informació fiscal de la casella 123-135 del Modelo 190.
               label: Número identificatiu de la declaració anterior
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 145-160
+                del Modelo 190.
               label: Import total de les percepcions
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 68-107
+                del Modelo 190.
               label: Cognoms i nom de la persona amb qui relacionar-se
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 59-67
+                del Modelo 190.
               label: Telèfon de la persona amb qui relacionar-se
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Consulteu la informació de la casella: Import total de retencions
+                e ingressos a compte.'
               label: Import total de retencions i ingressos a compte
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: Informació fiscal de la casella 122 del Modelo 190.
               label: Declaració substitutiva
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Informació fiscal de la casella 136-144 del Modelo 190.
               label: Nombre total de percepcions
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -381,7 +675,8 @@ modelo:
                 190.
               label: Ceuta o Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 78 del
+                Modelo 190.
               label: Clau de percepció
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -491,7 +786,8 @@ modelo:
               label: Prestacions derivades d'incapacitat laboral. Valoració de la
                 percepció en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 122-134
+                del Modelo 190.
               label: Ingressos a compte efectuats sobre les percepcions en espècie
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -502,8 +798,8 @@ modelo:
                 190.
               label: Mobilitat geogràfica
             x-e1in4opedpkmc:
-              help: null
-              label: null
+              help: 'Consulteu la informació de la casella: NIF del perceptor.'
+              label: NIF del perceptor
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
@@ -513,17 +809,20 @@ modelo:
                 190.
               label: NIF del representant legal
             x-e1in4opedpnmqojick:
-              help: null
+              help: 'Consulteu la informació de la casella: Cognoms i nom o denominació
+                del perceptor.'
               label: Cognoms i nom o denominació del perceptor
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Import declarat en el registre de perceptor del model 190. El
                 disseny el divideix en part entera i part decimal.
               label: Pensions compensatòries
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 82-94
+                del Modelo 190.
               label: Percepció íntegra dinerària no derivada d'incapacitat laboral
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 109-121
+                del Modelo 190.
               label: Valoració de la percepció en espècie no derivada d'incapacitat
                 laboral
             x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
@@ -590,14 +889,16 @@ modelo:
               label: Retencions i ingressos a compte ingressats. Comunitat Foral de
                 Navarra
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 95-107
+                del Modelo 190.
               label: Retencions practicades sobre les percepcions dineràries
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
               label: Situació familiar
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 79-80
+                del Modelo 190.
               label: Subclau de percepció
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
@@ -606,6 +907,7 @@ modelo:
           construct:
             modelo-190-annual-summary:
               field:
-                title: null
+                title: Resum anual del Model 190 a partir de les declaracions trimestrals
+                  del Model 111
           field:
-            label: null
+            label: Modelo 190 exercici 2024 i següents

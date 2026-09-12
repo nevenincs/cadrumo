@@ -651,8 +651,6 @@ cli:
         modelo_help: Filtra per portals vinculats a un model
         portal_id_help: Identificador del portal
         view_help: Mostra una entrada del catàleg de portals
-      registry_root_help: Arrel del registre
-      source_root_help: Arrel del projecte
       to_year_help: Últim exercici de presentació
       verify:
         app_help: Registre d'auditoria de verificacions NIF de només lectura
@@ -1013,12 +1011,6 @@ cli:
         binding_help: Valor d'enllaç amb la sintaxi KEY=VALUE (repetible).
         casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Codi de comunitat autònoma per a la projecció territorial.
-        no_m130_revisions: No hi ha revisions M130 per a l'exercici indicat. Executa
-          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
-          per a cada trimestre primer.
-        no_m130_units: No hi ha unitats de treball M130 per a l'exercici indicat.
-          Crea i calcula unitats M130 primer amb `aeat app modelo work create --modelo
-          130 --year %{year} --period 1T`.
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Model 130).
@@ -1280,7 +1272,7 @@ cli:
           %{modelo} %{year} %{period} presentada; tria una de les caselles llistades.
         amend_wizard_value_prompt: Valor corregit per a la casella %{number} (%{label}),
           actualment %{previous_value}
-        amendment_kind_help: Classe legal de la modificació (complementaria, sustitutiva
+        amendment_kind_help: Classe legal de la modificació (complementària, substitutiva
           o rectificativa)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
@@ -2289,7 +2281,6 @@ cli:
         objects_help: Comprova la integritat dels objectes segurs.
         objects_namespace_help: Limita les comprovacions d'integritat d'objectes segurs
           a un espai de noms.
-        registry_help: Comprova la integritat del registre de càlcul.
       integrity_help: Comprovar la integritat dels objectes segurs i del registre.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
@@ -3196,7 +3187,6 @@ cli:
         overview_status: Mostrar l'estat general de la declaració activa.
         paragraph_operational_workflow: 'Flux operatiu: configureu el perfil -> importeu
           transaccions -> treballeu el model -> reviseu -> exporteu.'
-        registry_inspect: Inspeccionar el registre de models fiscals.
         review_queue: Mostrar la cua de revisió pending.
         review_view: Veure el detall d'un element de la cua de revisió.
         section_ledger: Llibre de transaccions
@@ -3261,8 +3251,8 @@ cli:
         footer: 'Detalls: --help. Elimina dades sensibles; després informa a github.com/nevenincs/cadrumo/issues.'
         heading: CADRUMO - flux local amb l'Agència Estatal d'Administració Tributària
           (AEAT)
-        paragraph_app_root: L'arrel app gestiona resum, llibre, models, revisió
-          i lectures autenticades de l'AEAT.
+        paragraph_app_root: L'arrel app gestiona resum, llibre, models, revisió i
+          lectures autenticades de l'AEAT.
         paragraph_config_root: L'arrel config gestiona perfils, dades locals xifrades,
           claus de recuperació, sessions, autenticació amb l'AEAT i reparació.
         paragraph_local_first: Cadrumo conserva les dades fiscals en local i exposa
@@ -3297,7 +3287,6 @@ cli:
         workflow_modelo: Crea o gestiona unitats de treball de models.
         workflow_overview: Resumeix l'estat del perfil i del treball.
         workflow_profile_status: Mostra la preparació del perfil.
-        workflow_registry: Inspecciona metadades i fonts validades del registre.
         workflow_review_queue: Mostra elements del perfil pendents de revisió.
         workflow_verification: Llista informes desats de verificació de declaracions.
     landing:
@@ -3479,88 +3468,15 @@ cli:
         caselles del règim simplificat abans de presentar.
     year_help: Any de declaració per a --period (p. ex. 2024).
   registry:
-    app_help: Gestió del registre de models fiscals
-    casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
-      calculades per defecte
-    citations:
-      app_help: Inspeccionar el corpus normatiu (Llei 37/1992, Llei 35/2006, ...)
-      articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
-      legal_id_help: Id estable de l'autoritat legal (p. ex. ley-37-1992)
-      list_help: Llistar les autoritats legals registrades al corpus legal
-      tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
-      verify_help: Verificar la integritat del corpus normatiu
-      view_help: Mostrar una autoritat legal i, opcionalment, un dels seus articles
-    diff_revisions_from_year_help: Exercici fiscal anterior la revisió del qual és
-      la base de la comparació
-    diff_revisions_help: Compara les revisions del registre d'un model entre dos exercicis
-      fiscals
-    diff_revisions_modelo_help: Identificador del model a comparar
-    diff_revisions_to_year_help: Exercici fiscal posterior la revisió del qual es
-      compara amb la base
-    inspect_help: Inspeccionar l'estat del registre i les referències
-    inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:
-      app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
-      kind_help: Filtrar per tipus de regla del manual
-      list_help: Llistar la cobertura anual declarada i les parts de manual disponibles
-        localment
-      manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
-      rules_help: Llistar les regles codificades en un manual
-      section_help: Identificador opcional de secció a mostrar
       verify_dangling_rule_section_ref: la regla %{rule_id} referència una secció
         desconeguda %{target}
       verify_dangling_section_ref: la secció %{section_id} referència una secció desconeguda
         %{target}
-      verify_help: Verificar la integritat del manual contra el seu contracte
       verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
         fetch'' per materialitzar-lo'
       verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció
         de %{field_name}'
-      view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
-      year_help: Any fiscal del manual (p. ex. 2024)
-    metrics:
-      application_link_count: vincles d'aplicació
-      application_link_surfaces: superficies de vincle d'aplicació
-      artefact_refs: refs d'artefacte
-      captured_count: captures
-      casilla_count: caselles
-      compared_casillas: caselles comparades
-      cross_reference_count: referències creuades
-      drift_count: desviacions
-      extraction_profile_count: perfils d'extracció
-      failed_declaration_count: Nombre de declaracions fallides
-      formula_count: fórmules
-      legal_reference_count: referències legals
-      missing_filed_casillas: caselles presentades que falten
-      missing_local_casillas: caselles locals que falten
-      modelo: model
-      modelo_count: models
-      modelos: models
-      observation_paths: rutes d'observació
-      revision: revisió
-      revision_count: revisions
-      row_count: files
-      source_reference_count: referències de font
-      status: estat
-      unverified_invariant_families: Famílies d'invariants no verificades
-      verification_expectation_count: expectatives de verificació
-      verified: verificades
-      verified_invariant_families: Famílies d'invariants verificades
-      workbook_parity_ref_count: refs de paritat del llibre
-    observation_help: Manifest xifrat d'observació de declaració presentada que cal
-      verificar
-    source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
-      de declaracions prèvies o relacions
-    verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
-      capturat de l'AEAT
-    verify_source_root_help: Ruta al directori d'origen per verificar
-    view_edition_help: Mostra una edició d'un model com l'edició completa que compila
-      el registre, en TOML, indicant si cada fila de casella la declara la mateixa
-      edició o l'hereta i de quina edició, i què cobreix la revisió de l'edició
-    view_edition_modelo_help: Identificador del model l'edició del qual es mostra
-    view_edition_revision_help: Identificador de la revisió del registre corresponent
-      a l'edició que es mostra
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:

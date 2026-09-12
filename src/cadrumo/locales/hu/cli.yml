@@ -639,8 +639,6 @@ cli:
         modelo_help: Szűrés egy nyomtatványhoz kapcsolt portálokra.
         portal_id_help: Portál azonosítója.
         view_help: Portálkatalógus-bejegyzés megjelenítése.
-      registry_root_help: Nyilvántartás gyökere.
-      source_root_help: Projekt forráskódjának gyökere.
       to_year_help: Utolsó benyújtási év.
       verify:
         app_help: Csak olvasható NIF-ellenőrzési auditnaplók.
@@ -1011,12 +1009,6 @@ cli:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
-        no_m130_revisions: 'Nincs M130-revízió a megadott évre. Először futtasd minden
-          negyedévre: `aeat app modelo work calculate --modelo 130 --year %{year}
-          --period 1T`.'
-        no_m130_units: 'Nincs M130 munkaegység a megadott évre. Először hozz létre
-          és számolj M130 munkaegységeket: `aeat app modelo work create --modelo 130
-          --year %{year} --period 1T`.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).
@@ -2286,7 +2278,6 @@ cli:
         objects_help: Ellenőrzi a biztonságos objektumok integritását.
         objects_namespace_help: Biztonságos objektumok integritásának ellenőrzése
           egy névtérre korlátozva.
-        registry_help: Ellenőrzi a számítási nyilvántartás épségét.
       integrity_help: Biztonságos objektumok és nyilvántartás integritásának vizsgálata.
       logs_help: A naplófájl elérési útjának és a legújabb sorainak megjelenítése.
       logs_lines_help: A megjelenítendő legújabb naplósorok száma.
@@ -3187,7 +3178,6 @@ cli:
         modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
         overview_status: Az aktuális profil és munkállapot összefoglalása.
         paragraph_operational_workflow: Az app-parancsok az aktív profilon működnek.
-        registry_inspect: Nyilvántartási metaadatok vizsgálata.
         review_queue: Üzemeltetői felülvizsgálatra váró elemek listázása.
         review_view: Egyetlen felülvizsgálati elem megtekintése.
         section_ledger: Főkönyv
@@ -3289,7 +3279,6 @@ cli:
         workflow_modelo: Modelo-munkaegységek létrehozása vagy kezelése.
         workflow_overview: A profil- és munkaállapot összegzése.
         workflow_profile_status: A profil készültségének megjelenítése.
-        workflow_registry: Ellenőrzött nyilvántartási metaadatok és források vizsgálata.
         workflow_review_queue: Kezelői felülvizsgálatra váró profilelemek megjelenítése.
         workflow_verification: Mentett bevallás-ellenőrzési jelentések listázása.
     landing:
@@ -3465,88 +3454,15 @@ cli:
         rezsim casillait.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   registry:
-    app_help: Adónyomtatvány-nyilvántartás kezelése.
-    casilla_help: Az összehasonlítandó mező azonosítója; ismételje meg az alapértelmezett
-      számított mezők felülbírálásához.
-    citations:
-      app_help: A jogi norma-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...).
-      articulo_help: A megjelenítendő konkrét cikk (pl. 91.Uno.2.1°).
-      legal_id_help: Stabil jogi hivatkozásazonosító (pl. ley-37-1992).
-      list_help: A jogi korpuszban kodifikált jogi hivatkozások listázása.
-      tag_help: Szűrés adójogi tag alapján (pl. irpf, iva).
-      verify_help: A jogi norma-korpusz integritásának ellenőrzése.
-      view_help: Egy jogi hivatkozás és opcionálisan egy cikkének megjelenítése.
-    diff_revisions_from_year_help: A korábbi adóév, amelynek fedő revíziója az összehasonlítás
-      alapja
-    diff_revisions_help: Egy modell nyilvántartási revízióinak összehasonlítása két
-      adóév között
-    diff_revisions_modelo_help: Az összehasonlítandó modell azonosítója
-    diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
-      hasonlítjuk
-    inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
-    inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
-      app_help: Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).
-      kind_help: Szűrés kézikönyvi szabálytípus alapján.
-      list_help: A deklarált éves lefedettség és a helyben elérhető kézikönyvrészek
-        listázása
-      manual_help: Kézikönyv-azonosító (renta, iva, sociedades)
-      part_help: Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).
-      rules_help: Egy kézikönyvben kodifikált szabályok listázása.
-      section_help: Opcionális szakaszazonosító a megjelenítéshez.
       verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik:
         %{target}'
       verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik:
         %{target}'
-      verify_help: A kézikönyv integritásának ellenőrzése a szerződésével szemben.
       verify_missing_manifest: '%{manifest_path} hiányzik; futtasd a ''aeat manual
         fetch'' parancsot a létrehozásához'
       verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name}
         fordítási kulcsa'
-      view_help: Egy kézikönyv szerkezetének és opcionálisan egy szakaszának megjelenítése.
-      year_help: A kézikönyv adóéve (pl. 2024).
-    metrics:
-      application_link_count: Alkalmazási hivatkozások száma
-      application_link_surfaces: Alkalmazási hivatkozási felületek
-      artefact_refs: Artefakt-hivatkozások
-      captured_count: Rögzített elemek száma
-      casilla_count: Mezők száma
-      compared_casillas: Összehasonlított mezők
-      cross_reference_count: Kereszthivatkozások száma
-      drift_count: Eltolódások száma
-      extraction_profile_count: Kinyerési profilok száma
-      failed_declaration_count: Sikertelen bevallások száma
-      formula_count: Képletek száma
-      legal_reference_count: Jogszabályi hivatkozások száma
-      missing_filed_casillas: Hiányzó benyújtott mezők
-      missing_local_casillas: Hiányzó helyi mezők
-      modelo: Nyomtatvány
-      modelo_count: Nyomtatványok száma
-      modelos: Nyomtatványok
-      observation_paths: Megfigyelési útvonalak
-      revision: Revízió
-      revision_count: Revíziók száma
-      row_count: Sorok száma
-      source_reference_count: Forráshivatkozások száma
-      status: Állapot
-      unverified_invariant_families: Nem ellenőrzött invariánscsaládok
-      verification_expectation_count: Ellenőrzési elvárások száma
-      verified: Ellenőrzött
-      verified_invariant_families: Ellenőrzött invariánscsaládok
-      workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
-    observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
-      ellenőrzéshez.
-    source_observation_help: A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt
-      titkosított forrásmegfigyelési manifeszt.
-    verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
-      a rögzített benyújtott AEAT-állapottal.
-    verify_source_root_help: Az ellenőrzendő forráskönyvtár elérési útja.
-    view_edition_help: Egy modell egy revízióját a nyilvántartás által fordított teljes
-      revízióként írja ki TOML formátumban, jelölve, hogy az egyes mezősorokat maga
-      a revízió rögzíti-e vagy örökli, és melyik revízióból, valamint hogy mire terjed
-      ki a revízió felülvizsgálata
-    view_edition_modelo_help: A modell azonosítója, amelynek revízióját ki kell írni
-    view_edition_revision_help: A kiírandó revízió nyilvántartási azonosítója
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'

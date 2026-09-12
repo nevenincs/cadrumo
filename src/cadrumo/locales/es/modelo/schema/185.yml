@@ -1,6 +1,16 @@
 modelo:
   schema:
     '185':
+      casilla:
+        continuidad:
+          filing-year:
+            help: 'Consulte la información correspondiente a la casilla: Ejercicio
+              al que se refiere la declaración.'
+            label: Casilla— ejercicio fiscal
+          tipo-declaracion:
+            help: 'Consulte la información correspondiente a la casilla: Tipo de declaración
+              (originaria / sustitutiva / complementaria).'
+            label: 'Casilla tipo-declaración: tipo declaración'
       field:
         official_name: Modelo 185. Declaración informativa mensual de cotizaciones
           de afiliados y mutualistas.
@@ -21,7 +31,8 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
               label: Ejercicio al que se refiere la declaración
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Número identificativo secuencial de esta declaración, de 13 posiciones
@@ -32,7 +43,8 @@ modelo:
                 diciembre.
               label: PERÍODO
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
               label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Número total de declarados incluidos para este declarante, es

@@ -304,10 +304,10 @@ modelo:
                 40.3 LIS).
               label: Mod. 40.3 LIS - Kiegészítő adó (IC) korrekció - Növelések
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 222 . casilla adóügyi adatai: adóév.'
               label: A részletfizetés vonatkozási éve
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 222 . casilla adóügyi adatai: adóügyi információ.'
               label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
                 adóalap)
             x-d5n6crpec5qmqpbeehniqor1e1kn8obc5lhmurbgcln76ob3d5nmsbb3e9im8qbkdtpg:
@@ -380,6 +380,6 @@ modelo:
           construct:
             modelo-222-declaration-construct:
               field:
-                title: null
+                title: Modelo 222— adóügyi információ
           field:
-            label: null
+            label: Casilla— adóügyi információ

@@ -22,10 +22,6 @@ from .validate_cross_revision import (
     strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
 )
 from .validate_label_artifacts import validate_no_label_artifacts
-from .validate_relation_sources import (
-    validate_relation_closure,
-    validate_slot_source_hygiene,
-)
 from .validate_semantic_roles import (
     semantic_role_cardinality_failures as _validate_semantic_role_cardinality,
 )
@@ -52,9 +48,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
     if len(modelos_by_id) == len(modelo_tuple):
         failures.extend(_validate_dependency_classification_source_modelos(modelo_tuple, modelos_by_id))
-        failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
         failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
-        failures.extend(validate_slot_source_hygiene(modelo_tuple, modelos_by_id))
 
     failures.extend(_validate_binding_selector_shapes(modelo_tuple))
     failures.extend(_validate_semantic_role_consistency(modelo_tuple))

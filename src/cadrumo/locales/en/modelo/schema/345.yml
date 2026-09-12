@@ -11,110 +11,111 @@ modelo:
         '2025':
           casilla:
             anio-nacimiento:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             beneficiario-nif:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             clave:
-              help: null
-              label: null
+              help: 'Review the casilla information: Clave.'
+              label: Clave
             codigo-provincia:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Province code
             datos-adicionales-clave-i:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             datos-adicionales-clave-m:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             datos-adicionales-claves-abc:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             datos-identificativos-empleador:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 345.
               label: Identifying details of the employer promoting or holding the
                 social welfare scheme
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: Tax information for casilla of Modelo 345.
               label: Supplementary or replacement return
             declarado-nif:
-              help: null
-              label: null
+              help: 'Review the casilla information: NIF of the declarado.'
+              label: Tax ID of the reported person
             declarado-nombre:
-              help: null
-              label: null
+              help: 'Review the casilla information: Surname and name of the declarado.'
+              label: Surname and forename of the reported person
             declarante-nif:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Tax ID of the filer
             declarante-razon-social:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             devoluciones-excesos:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             ejercicio-declaracion:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             empleador-nif:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             empleador-nombre:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             entidad-aseguradora-nif:
-              help: null
-              label: null
+              help: 'Review the casilla information: NIF of the entity aseguradora.'
+              label: NIF of the entity aseguradora
             fondo-pensiones-nif:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             fondo-pensiones-numero-registro:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             importe:
-              help: null
-              label: null
+              help: 'Review the casilla information: Amount.'
+              label: Amount
             importe-total-aportaciones:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             numero-identificativo-anterior:
-              help: null
+              help: Tax information for casilla of Modelo 345.
               label: Identifying number of the previous return
             numero-identificativo-declaracion:
-              help: null
+              help: Tax information for casilla of Modelo 345.
               label: Declaration identifying number
             pepp-cuenta-subcuenta:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             pepp-denominacion:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             pepp-numero-inscripcion:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             persona-relacion:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 345.
               label: Contact person
             pias-fecha-primera-prima:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             pias-importe-acumulado:
-              help: null
-              label: null
+              help: 'Review the casilla information: Amount acumulado PIAS.'
+              label: Amount acumulado PIAS
             plan-pensiones-denominacion:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Casilla — tax field
             rendimientos-trabajo-superiores-60000:
-              help: null
-              label: null
+              help: 'Review the casilla information: Income integros of the trabajo
+                superiores a 60000 euros.'
+              label: Income integros of the trabajo superiores a 60000 euros
             representante-legal-nif:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 345.
               label: Tax ID of the legal representative
             subclave:
-              help: null
-              label: null
+              help: Tax information about tax information in casilla  of Modelo 345.
+              label: Casilla— tax information
             total-declarados:
-              help: null
-              label: null
+              help: Tax information for casilla of Modelo 345.
+              label: Total number of reported members
           field:
-            label: null
+            label: Casilla — tax field

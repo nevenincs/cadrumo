@@ -389,146 +389,168 @@ modelo:
                 fixed premises. Reference number.'
               label: Activity carried on outside fixed premises. Reference number
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Tax information for casilla 102 of Modelo 036.
               label: Surnames if a natural person, or legal name if a legal entity
             x-chim6r1ecdgnasr15koj2c0:
-              help: null
+              help: Tax information about tax information in casilla 110 of Modelo
+                036.
               label: Application for a Tax Identification Number (NIF)
             x-chim6r1ecdgnasr15koj2c8:
-              help: null
+              help: Tax information about tax information in casilla 111 of Modelo
+                036.
               label: Registration in the census of entrepreneurs, professionals and
                 withholders
             x-chim6r1ecdgnasr15koj4c0:
-              help: null
+              help: Tax information about tax information in casilla 120 of Modelo
+                036.
               label: Application for a definitive NIF when holding a provisional one
             x-chim6r1ecdgnasr15koj4c8:
-              help: null
+              help: Tax information about tax information in casilla 121 of Modelo
+                036.
               label: Application for a new NIF accreditation card
             x-chim6r1ecdgnasr15koj4cg:
-              help: null
+              help: 'Review the casilla information: Modificación address fiscal.
+                (páginas 2A, 2B and 2C).'
               label: Change of tax domicile (pages 2A, 2B and 2C)
             x-chim6r1ecdgnasr15koj4co:
-              help: null
+              help: Tax information about tax information in casilla 123 of Modelo
+                036.
               label: Change of registered office or administrative management address
                 (pages 2A and 2B)
             x-chim6r1ecdgnasr15koj4d0:
-              help: null
+              help: Tax information for casilla 124 of Modelo 036.
               label: Change or removal of the address for notification purposes (pages
                 2A, 2B and 2C)
             x-chim6r1ecdgnasr15koj4d8:
-              help: null
+              help: Tax information about tax information in casilla 125 of Modelo
+                036.
               label: Change of other identifying data or domain (pages 2A, 2B and
                 2C)
             x-chim6r1ecdgnasr15koj4dg:
-              help: null
+              help: 'Review the casilla information: Modificación data representantes
+                (page 3).'
               label: Change of representative data (page 3)
             x-chim6r1ecdgnasr15koj4do:
-              help: null
+              help: Tax information about tax information in casilla 127 of Modelo
+                036.
               label: Change of data on economic activities and premises (page 4)
             x-chim6r1ecdgnasr15koj4e0:
-              help: null
+              help: Tax information about tax information in casilla 128 of Modelo
+                036.
               label: Change of Large Enterprise status, or Public Administration with
                 a budget above 6,000,000 euros (page 5)
             x-chim6r1ecdgnasr15koj4e8:
-              help: null
+              help: Tax information for casilla 129 of Modelo 036.
               label: Application to join or leave the monthly refund register (page
                 5)
             x-chim6r1ecdgnasr15koj6c0:
-              help: null
+              help: Tax information for casilla 130 of Modelo 036.
               label: Application to join or leave the register of intra-Community
                 operators (page 5)
             x-chim6r1ecdgnasr15koj6c8:
-              help: null
+              help: Tax information about tax information in casilla 131 of Modelo
+                036.
               label: Change of Value Added Tax data (page 5)
             x-chim6r1ecdgnasr15koj6cg:
-              help: null
+              help: Tax information for casilla 132 of Modelo 036.
               label: Change of Personal Income Tax data (page 6)
             x-chim6r1ecdgnasr15koj6co:
-              help: null
+              help: 'Review the casilla information: Modificación data relativos al
+                Impuesto sobre Companies (page 6).'
               label: Change of Corporate Income Tax data (page 6)
             x-chim6r1ecdgnasr15koj6d0:
-              help: null
+              help: Tax information for casilla 134 of Modelo 036.
               label: Change of Non-Resident Income Tax data for permanent establishments,
                 or for income-attribution entities formed abroad with a presence in
                 Spanish territory (page 6)
             x-chim6r1ecdgnasr15koj6d8:
-              help: null
+              help: Tax information about tax information in casilla 135 of Modelo
+                036.
               label: Election of, or withdrawal from, the special tax regime under
                 Title II of Law 49/2002 (page 6)
             x-chim6r1ecdgnasr15koj6dg:
-              help: null
+              help: 'Review the casilla information: Modificación data relativos a
+                withholdings e payments on account (page 7).'
               label: Change of data on withholdings and payments on account (page
                 7)
             x-chim6r1ecdgnasr15koj6do:
-              help: null
+              help: Tax information about tax information in casilla 137 of Modelo
+                036.
               label: Change to data on other taxes and registers (page 7)
             x-chim6r1ecdgnasr15koj6e0:
-              help: null
+              help: 'Review the casilla information: Modificación data relativos a
+                regímenes especiales of the comercio intracomunitario (page 7).'
               label: Change of data on special intra-Community trade regimes (page
                 7)
             x-chim6r1ecdgnasr15koj6e8:
-              help: null
+              help: Tax information about tax information in casilla 139 of Modelo
+                036.
               label: Change of data on the list of partners, members or participants
                 (page 8)
             x-chim6r1ecdgnasr15koj8c0:
-              help: null
+              help: Tax information for casilla 140 of Modelo 036.
               label: Ceasing all business and/or professional activities (legal persons
                 and entities, without liquidation; inactive entities)
             x-chim6r1ecdgnasr15koj8cg:
-              help: null
+              help: Tax information for casilla 142 of Modelo 036.
               label: Change or removal of telephone numbers and electronic addresses
                 for receiving notices from the AEAT, TEA and DGT (pages 2A, 2B and
                 2C)
             x-chim6r1ecdgnasr15koj8co:
-              help: null
+              help: Tax information about tax information in casilla 143 of Modelo
+                036.
               label: Notification of election of, or withdrawal from, keeping the
                 VAT record books through the AEAT electronic office (page 5)
             x-chim6r1ecdgnasr15koj8d0:
-              help: null
+              help: Tax information about tax information in casilla 144 of Modelo
+                036.
               label: Application for NIF reinstatement
             x-chim6r1ecdgnasr15koj8d8:
-              help: null
+              help: Tax information about tax information in casilla 145 of Modelo
+                036.
               label: Change of data on beneficial owners (page 10)
             x-chim6r1ecdgnasr15koj8dg:
-              help: null
+              help: Tax information for casilla 146 of Modelo 036.
               label: Change relating to entities in liquidation
             x-chim6r1ecdgnasr15kojac0:
-              help: null
+              help: Tax information for casilla 150 of Modelo 036.
               label: Deregistration from the census of entrepreneurs, professionals
                 and withholders
             x-chim6r1ecdgnasr15lh62qj1:
-              help: null
+              help: Tax information for casilla 151 of Modelo 036.
               label: Reason for deregistration from the census of traders, professionals
                 and withholders
             x-chim6r1eclr6arjk5llmirj4:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 036.
               label: Census return type
             x-chim6r1ecpim6q315limcpb3ehknco9dc9gmko8:
-              help: null
+              help: Tax information for casilla 152 of Modelo 036.
               label: Effective date of deregistration from the census
             x-chim6r1ecpim6q315limcpb3ehknco9dcdin6p8:
-              help: null
+              help: Tax information about tax information in casilla 141 of Modelo
+                036.
               label: Effective date of cessation of all business or professional activities
             x-chim6r1ecpkn4rb15lhm2r39chgm8:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 036.
               label: Capacity in which the return is signed
             x-chim6r1ecpkn4rb15lj6aor8c4:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 036.
               label: Date on which the return is signed
             x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 036.
               label: Forename and surnames of the person signing the return
             x-chim6r1ecpkn4rb15lm7apr1e8:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 036.
               label: Place where the return is signed
             x-chim6r1edpkmc:
-              help: null
+              help: Tax information for casilla 101 of Modelo 036.
               label: Tax identification number (NIF) of the declarant
             x-chim6r1edpnmqojick:
-              help: null
+              help: Tax information for casilla 103 of Modelo 036.
               label: Forename, for natural persons
             x-chim6r1eepkmepbecdkm2b9i60p3a:
-              help: null
+              help: Tax information about tax information in casilla vigencia of Modelo
+                036.
               label: Regulation in force from 3 February 2025
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
               help: 'Modelo 036 entry, tax year 2025: Permanent establishment. Alerts.
@@ -2413,121 +2435,139 @@ modelo:
               label: Legal person or entity. Legal personality and class of entity.
                 Has legal personality
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Tax information for casilla 305 of Modelo 036.
               label: Surnames and forename, or legal name, of the representative (first
                 representative, block 3.1)
             x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: 'Reason for filing: registration, deregistration or change of
                 the representative (first representative, block 3.1)'
             x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: Reason for the representation (first representative, block 3.1)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: Tax information about tax information in casilla 308 of Modelo
+                036.
               label: First surname of the designated natural person (first representative,
                 block 3.1)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: Tax information about tax information in casilla 309 of Modelo
+                036.
               label: Second surname of the designated natural person (first representative,
                 block 3.1)
             x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: Reason for filing regarding the designated natural person (first
                 representative, block 3.1)
             x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: Tax information for casilla 313 of Modelo 036.
               label: Effective date of the reason for filing regarding the designated
                 natural person (first representative, block 3.1)
             x-e9in0c9echin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: Tax information about tax information in casilla 307 of Modelo
+                036.
               label: Tax identification number (NIF) of the designated natural person
                 (first representative, block 3.1)
             x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: Tax information about tax information in casilla 310 of Modelo
+                036.
               label: Forename of the designated natural person (first representative,
                 block 3.1)
             x-e9in0c9ecpim6q315lhm2tbjc4:
-              help: null
+              help: Tax information for casilla 303 of Modelo 036.
               label: Effective date of the reason for filing regarding the representative
                 (first representative, block 3.1)
             x-e9in0c9edpkmc:
-              help: null
+              help: Tax information about tax information in casilla 304 of Modelo
+                036.
               label: Tax identification number (NIF) of the representative (first
                 representative, block 3.1)
             x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: Tax information about tax information in casilla 331 of Modelo
+                036.
               label: Code of the legal representation (first representative, block
                 3.1)
             x-e9in0c9ee9in6qb4cln78p8:
-              help: null
+              help: Tax information about tax information in casilla 306 of Modelo
+                036.
               label: 'Whether the representative is resident: yes or no (first representative,
                 block 3.1)'
             x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: Tax information about tax information in casilla 333 of Modelo
+                036.
               label: Code of the type of representation (first representative, block
                 3.1)
             x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla 334 of Modelo
+                036.
               label: Code of the title of representation (first representative, block
                 3.1)
             x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Tax information for casilla 355 of Modelo 036.
               label: Surnames and forename, or legal name, of the representative (second
                 representative, block 3.2)
             x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: 'Reason for filing: registration, deregistration or change of
                 the representative (second representative, block 3.2)'
             x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: Reason for the representation (second representative, block 3.2)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: Tax information about tax information in casilla 358 of Modelo
+                036.
               label: First surname of the designated natural person (second representative,
                 block 3.2)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: Tax information about tax information in casilla 359 of Modelo
+                036.
               label: Second surname of the designated natural person (second representative,
                 block 3.2)
             x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Tax information for casilla of Modelo 036.
               label: Reason for filing regarding the designated natural person (second
                 representative, block 3.2)
             x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: Tax information for casilla 363 of Modelo 036.
               label: Effective date of the reason for filing regarding the designated
                 natural person (second representative, block 3.2)
             x-e9in0chechin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: Tax information about tax information in casilla 357 of Modelo
+                036.
               label: Tax identification number (NIF) of the designated natural person
                 (second representative, block 3.2)
             x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: Tax information about tax information in casilla 360 of Modelo
+                036.
               label: Forename of the designated natural person (second representative,
                 block 3.2)
             x-e9in0checpim6q315lhm2tbjc4:
-              help: null
+              help: Tax information for casilla 353 of Modelo 036.
               label: Effective date of the reason for filing regarding the representative
                 (second representative, block 3.2)
             x-e9in0chedpkmc:
-              help: null
+              help: Tax information about tax information in casilla 354 of Modelo
+                036.
               label: Tax identification number (NIF) of the representative (second
                 representative, block 3.2)
             x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: Tax information about tax information in casilla 381 of Modelo
+                036.
               label: Code of the legal representation (second representative, block
                 3.2)
             x-e9in0chee9in6qb4cln78p8:
-              help: null
+              help: Tax information about tax information in casilla 356 of Modelo
+                036.
               label: 'Whether the representative is resident: yes or no (second representative,
                 block 3.2)'
             x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: Tax information about tax information in casilla 383 of Modelo
+                036.
               label: Code of the type of representation (second representative, block
                 3.2)
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: Tax information about tax information in casilla 384 of Modelo
+                036.
               label: Code of the title of representation (second representative, block
                 3.2)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
@@ -2804,99 +2844,117 @@ modelo:
               label: Partners, members or participants. Surnames and forename, or
                 legal name
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 923 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13a)
             x-edqm6bb15pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 920 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13a)
             x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 921 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13a)
             x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 922 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13a)
             x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 927 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13b)
             x-edqm6bb25pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 924 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13b)
             x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 925 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13b)
             x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 926 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13b)
             x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 931 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13c)
             x-edqm6bb35pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 928 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13c)
             x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 929 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13c)
             x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 930 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13c)
             x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 935 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13d)
             x-edqm6bb45pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 932 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13d)
             x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 933 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13d)
             x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 934 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13d)
             x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 939 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13e)
             x-edqm6bb55pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 936 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13e)
             x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 937 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13e)
             x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 938 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13e)
             x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 943 of Modelo
+                036.
               label: Share of liquidation, assets or estate of the successor or beneficiary
                 (successor 13f)
             x-edqm6bb65pn6ipg:
-              help: null
+              help: Tax information about tax information in casilla 940 of Modelo
+                036.
               label: Tax identification number (NIF) of the successor or beneficiary
                 (successor 13f)
             x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Tax information for casilla 941 of Modelo 036.
               label: Surnames and forename, or legal name, of the successor or beneficiary
                 (successor 13f)
             x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: Tax information about tax information in casilla 942 of Modelo
+                036.
               label: Percentage of liquidation, holding or inheritance of the successor
                 or beneficiary (successor 13f)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
@@ -3151,6 +3209,6 @@ modelo:
           construct:
             modelo-036-censo-foundation:
               field:
-                title: null
+                title: Modelo 036 censo foundation
           field:
-            label: null
+            label: Casilla— tax information

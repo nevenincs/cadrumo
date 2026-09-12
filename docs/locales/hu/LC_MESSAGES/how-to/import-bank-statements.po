@@ -426,7 +426,6 @@ msgstr ""
 "és bizonylatok csatolása](ledger-evidence.md)."
 
 #: ../../how-to/import-bank-statements.md:200
-#, fuzzy
 msgid ""
 "Pull a document straight from Google Drive into encrypted evidence "
 "storage with `evidence pull`. This command reaches Google Drive, so it "
@@ -434,8 +433,8 @@ msgid ""
 " sandbox:"
 msgstr ""
 "Húzzon le egy dokumentumot közvetlenül a Google Drive-ból a titkosított "
-"bizonyítéktárolóba a `doclink` paranccsal. Ez a parancs eléri a Google "
-"Drive-ot, ezért az Ön saját engedélyezett fiókján fut, nem a "
+"bizonyítéktárolóba az `evidence pull` paranccsal. Ez a parancs eléri a "
+"Google Drive-ot, ezért az Ön saját engedélyezett fiókján fut, nem a "
 "dokumentációs sandboxban:"
 
 #: ../../how-to/import-bank-statements.md:207

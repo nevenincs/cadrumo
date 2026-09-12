@@ -95,10 +95,12 @@ modelo:
               label: 1. Causa de presentació. Sol·licitud de devolució o modificació
                 d'una sol·licitud de devolució
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                360.
               label: Exercici a què es refereix la sol·licitud
             x-chim6r1eclpn8ob4dsmmqqb5dlh74ro:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                360.
               label: Estat membre de devolució on es van suportar les quotes
             x-chim6r1edpqmqbbicljmisrke9niqobeehin4qbfe8:
               help: Casella 27-42 del model 360, exercici 2010.
@@ -683,36 +685,41 @@ modelo:
               help: Casella 1060-1061 del model 360, exercici 2010.
               label: 2. Sol·licitant. Activitats. 9. Codi NACE. descripció. Idioma
             x-chincrrcelhmirre5pi6aorcc5p62or9dtn2qrjf5limst3icljm2bb2d5imspbj:
-              help: null
+              help: 'Consulteu la informació de la casella: 4. Devolució solicitada.
+                Declaració de no haber entregado béns ni serveis.'
               label: 4. Devolució sol·licitada. Declaració de no haver lliurat béns
                 ni serveis
             x-chincrrcelhmirre5pi6itj9edgg:
-              help: null
+              help: 'Consulteu la informació de la casella: 4. Devolució solicitada.
+                Divisa.'
               label: 4. Devolució sol·licitada. Divisa
             x-chincrrcelhmirre5pkmqs3fe9q6abbjdtm6ior9ehgm8ro:
-              help: null
+              help: 'Consulteu la informació de la casella: 4. Devolució solicitada.
+                Import solicitado.'
               label: 4. Devolució sol·licitada. Import sol·licitat
             x-chincrrcelhmirre5pn7arb5e9niqp3fcdqmqpbeehnn6bb9dlo6usjkc5hmirre:
-              help: null
+              help: Informació fiscal de la casella 1876-1880 del Modelo 360.
               label: 4. Devolució sol·licitada. Nombre de documents d'importació
             x-chincrrcelhmirre5pn7arb5e9niqpj1cdq7asj1ec:
-              help: null
+              help: Informació fiscal de la casella 1871-1875 del Modelo 360.
               label: 4. Devolució sol·licitada. Nombre de factures
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dcpkms:
-              help: null
+              help: 'Consulteu la informació de la casella: 4. Devolució solicitada.
+                Període. Data fin del període.'
               label: 4. Devolució sol·licitada. Període. Data de fi del període
             x-chincrrcelhmirre5po6asj9dti6ubb6clhmgo9dd5n6ior9ds:
-              help: null
+              help: 'Consulteu la informació de la casella: 4. Devolució solicitada.
+                Període. Data inicio del període.'
               label: 4. Devolució sol·licitada. Període. Data d'inici del període
             x-e1p6usjic5q62bj4clj6irj9ehknco8:
-              help: null
+              help: Informació fiscal de la casella 1907-1911 del Modelo 360.
               label: 5. Modificació de la Prorrata de l'any anterior. Prorrata definitiva
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
-              help: null
+              help: Informació fiscal de la casella 1903-1906 del Modelo 360.
               label: 5. Modificació de la Prorrata de l'any anterior. Exercici
           construct:
             modelo-360-iva-devolucion-ue:
               field:
-                title: null
+                title: Modelo 360 — informació fiscal
           field:
-            label: null
+            label: Casella — informació fiscal

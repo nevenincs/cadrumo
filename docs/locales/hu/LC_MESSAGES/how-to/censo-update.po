@@ -360,7 +360,6 @@ msgstr ""
 "Add hozzá a `--apply` kapcsolót, hogy az aktív profilba rögzítsd őket."
 
 #: ../../how-to/censo-update.md:154
-#, fuzzy
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -373,10 +372,10 @@ msgstr ""
 "Az így rögzített adatok *nem hivatalos bizonyíték* jelölést kapnak: az "
 "általad átadott dokumentumból származnak, nem az AEAT által megerősített "
 "olvasásból. Ezért a profilnézetek mutatják a származást, és továbbra is "
-"érvényes a benyújtási naptár `censo.enrolment_unverified` "
-"figyelmeztetése. Ha az igazolás értéke eltér a beállításkor megadott "
-"válaszodtól, a profil megőrzi az eltérés rekordját, és a `aeat config "
-"profile show` figyelmeztet a rendezésig."
+"érvényes a benyújtási naptár `censo.enrolment_unverified` figyelmeztetése. "
+"Ha az igazolás értéke eltér a beállításkor megadott válaszodtól, a profil "
+"megőrzi az eltérés rekordját, és az `aeat config profile view` figyelmeztet "
+"a rendezésig."
 
 #: ../../how-to/censo-update.md:162
 msgid ""

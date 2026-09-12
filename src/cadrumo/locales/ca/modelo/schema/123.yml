@@ -1,6 +1,58 @@
 modelo:
   schema:
     '123':
+      casilla:
+        continuidad:
+          '07':
+            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
+              123.
+            label: Casella 07 — informació fiscal
+          08:
+            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
+              123.
+            label: Casella 08 — informació fiscal
+          base-rentas-dividendos:
+            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
+              123.
+            label: Casella 04 — informació fiscal
+          base-rentas-resto:
+            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
+              123.
+            label: Casella 05 — informació fiscal
+          base-retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
+              123.
+            label: Casella 02 — informació fiscal
+          cuota-a-ingresar:
+            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
+              123.
+            label: Casella 08 — informació fiscal
+          ingresos-ejercicios-anteriores:
+            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
+              123.
+            label: Casella 04 — informació fiscal
+          numero-rentas-resto:
+            help: Informació fiscal de la casella 02 del Modelo 123.
+            label: Casella 02 — informació fiscal
+          numero-rentas-total:
+            help: Informació fiscal de la casella 03 del Modelo 123.
+            label: Casella 03 — informació fiscal
+          regularizacion:
+            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
+              123.
+            label: Casella 05 — informació fiscal
+          resultado-anteriores-autoliquidaciones:
+            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
+              123.
+            label: Casella 07 — informació fiscal
+          retenciones-ingresos-a-cuenta:
+            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
+              123.
+            label: Casella 03 — informació fiscal
+          suma-retenciones-regularizacion:
+            help: Informació fiscal sobre informació fiscal de la casella 06 del Modelo
+              123.
+            label: Casella 06 — informació fiscal
       field:
         official_name: Retencions i ingressos a compte de l'IRPF, l'Impost sobre Societats
           i l'IRNR d'establiments permanents. Determinats rendiments del capital mobiliari
@@ -10,82 +62,95 @@ modelo:
         2019-2023:
           casilla:
             '01':
-              help: null
+              help: Informació fiscal de la casella 01 del Modelo 123.
               label: Nombre de perceptors
             '02':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 02 del
+                Modelo 123.
               label: Base de retencions i ingressos a compte
             '03':
-              help: null
+              help: 'Consulteu la informació de la casella: Retencions e ingressos
+                a compte.'
               label: Retencions i ingressos a compte
             '04':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 04 del
+                Modelo 123.
               label: Ingressos d'exercicis anteriors
             '05':
-              help: null
+              help: 'Consulteu la informació de la casella: Regularització.'
               label: Regularització
             '06':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 06 del
+                Modelo 123.
               label: Suma de retencions i regularització
             '07':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat de anteriors
+                autoliquidacions.'
               label: Resultat d'autoliquidacions anteriors
             08:
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
             modelo-123-2019-capital-withholding:
               field:
-                title: null
+                title: Modelo 123 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal
         2024-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: Informació fiscal de la casella 01 del Modelo 123.
               label: Nombre de rendes dividends i participacions
             '02':
-              help: null
+              help: Informació fiscal de la casella 02 del Modelo 123.
               label: Nombre de la resta de rendes
             '03':
-              help: null
+              help: Informació fiscal de la casella 03 del Modelo 123.
               label: Nombre total de rendes
             '04':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 04 del
+                Modelo 123.
               label: Base dividends i participacions
             '05':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 05 del
+                Modelo 123.
               label: Base resta de rendes
             '06':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 06 del
+                Modelo 123.
               label: Base total
             '07':
-              help: null
+              help: 'Consulteu la informació de la casella: Retencions dividendos
+                i participacions.'
               label: Retencions dividends i participacions
             08:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 08 del
+                Modelo 123.
               label: Retencions resta de rendes
             09:
-              help: null
+              help: 'Consulteu la informació de la casella: Retencions total.'
               label: Retencions total
             '10':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 10 del
+                Modelo 123.
               label: Ingressos d'exercicis anteriors
             '11':
-              help: null
+              help: 'Consulteu la informació de la casella: Regularització.'
               label: Regularització
             '12':
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 12 del
+                Modelo 123.
               label: Suma de retencions i regularització
             '13':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat de anteriors
+                autoliquidacions.'
               label: Resultat d'autoliquidacions anteriors
             '14':
-              help: null
+              help: 'Consulteu la informació de la casella: Resultat a ingresar.'
               label: Resultat a ingressar
           construct:
             modelo-123-current-capital-withholding:
               field:
-                title: null
+                title: Modelo 123 — informació fiscal
           field:
-            label: null
+            label: Casella— informació fiscal

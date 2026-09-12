@@ -11,74 +11,76 @@ modelo:
         esquema-exterior:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóév.'
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak - bevallás.'
               label: A bevallás időszaka
             x-d5r62bj5f1q6asj9dtp2sorldtq62bbkdtq62r0:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: A nem uniós szabályozás szerinti áthárított HÉA összesen (célországonkénti
                 összegek összege)
             x-d5r62bj5f1q6asj9dtp2sp355ppmasjmd5hmaspdcdqmut31:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: DE célországba áthárított HÉA - nyújtott szolgáltatások (nem
                 uniós szabályozás)
           construct:
             modelo-369-esquema-exterior:
               field:
-                title: null
+                title: Modelo 369 - Esquema Exterior (rendszer especial szolgáltatások
+                  prestados szerinti no establecidos)
           field:
-            label: null
+            label: Casilla— adóügyi információ
         esquema-importacion:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóév.'
               label: Az önadózás vonatkozási éve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak - bevallás.'
               label: A bevallás időszaka
             x-d5r62bj9dlo6usjkc5hmirre5phnarrkc4mn8rrkc5m0:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: Az importszabályozás szerinti áthárított HÉA összesen (IOSS,
                 célországonkénti összeg)
             x-d5r62bj9dlo6usjkc5hmirre5pi6abjcdtriqtj1dhqmabb3elnn8o8:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: IOSS HÉA a DE célországba - behozott áruk távértékesítése ≤ 150
                 EUR (LIVA 163. quinvicies cikk)
           construct:
             modelo-369-esquema-importacion:
               field:
-                title: null
+                title: Modelo 369 - Esquema Importacion (rendszer especial IOSS)
           field:
-            label: null
+            label: Casilla— adóügyi információ
         esquema-union:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóév.'
               label: Az önadózás tárgyát képező adóév
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak - bevallás.'
               label: A bevallás időszaka
             x-d5r62bjldpkmurhecdqmut315lq6ut31dg:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: Az uniós rendszer felszámított IVA-összesen (célországok és folyamattípusok
                 közötti összeg)
             x-d5r62bjldpkmurhechiisprfdti76bb4d5pn8obecdiiqorldtq62:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: OSS uniós rendszer IVA-összege DE célországba - távértékesítések
                 + elektronikus felületek
             x-d5r62bjldpkmurhechiissr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'A Modelo 369 . casilla adóügyi adatai: adóügyi információ.'
               label: OSS uniós rendszer IVA-összege DE célországba - nyújtott szolgáltatások
                 (LIVA 163. unvicies cikk)
             x-d5r62bjldpkmurhecpp2ssr5e9r6ior5ecmm6tbfehgg:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg IVA OSS Unión al destino
+                FR - szolgáltatások prestados (LIVA art 163 unvicies).'
               label: OSS uniós rendszer IVA-összege FR célországba - nyújtott szolgáltatások
                 (LIVA 163. unvicies cikk)
           construct:
             modelo-369-esquema-union:
               field:
-                title: null
+                title: Modelo 369 - Esquema Union (rendszer especial OSS Union)
           field:
-            label: null
+            label: Casilla— adóügyi információ

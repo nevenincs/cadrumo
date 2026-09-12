@@ -156,7 +156,6 @@ msgstr ""
 "directament d'`evidence add`."
 
 #: ../../how-to/ledger-evidence.md:41
-#, fuzzy
 msgid ""
 "The `attach` command also has an `--attachment-id` option (repeatable) "
 "for a generic secure attachment that does not carry the purchase-invoice "
@@ -168,15 +167,16 @@ msgid ""
 "not accepted here. Until a command surfaces the attachment id, use "
 "`--purchase-invoice-evidence-id` or `evidence pull` instead."
 msgstr ""
-"L'ordre `attach` també té una opció `--attachment-id` (repetible) per a "
-"un adjunt segur genèric que no porta el rol de factura de compra. Espera "
-"l'id de contingut de 64 caràcters d'un blob que ja és a l'emmagatzematge "
-"xifrat d'adjunts, i rebutja qualsevol id que no tingui cap blob desat "
-"(`attachment_ids must reference existing secure attachment manifests and "
-"blobs`). Actualment cap ordre d'operador imprimeix aquest id de 64 "
-"caràcters: l'`evidence_id` d'`evidence add` és un id diferent i més curt,"
-" i aquí no s'accepta. Fins que una ordre no mostri l'id de l'adjunt, "
-"utilitza `--purchase-invoice-evidence-id` o `doclink`."
+"L'ordre `attach` també té una opció `--attachment-id` (repetible) per a un "
+"adjunt segur genèric que no té el rol de factura de compra. Espera "
+"l'identificador de contingut de 64 caràcters d'un blob que ja es trobi a "
+"l'emmagatzematge xifrat d'adjunts, i rebutja qualsevol identificador que no "
+"tingui cap blob desat (`attachment_ids must reference existing secure "
+"attachment manifests and blobs`). Actualment cap ordre de l'operador no "
+"imprimeix aquest identificador de 64 caràcters: l'`evidence_id` d'`evidence "
+"add` és un identificador diferent i més curt, i aquí no s'accepta. Fins que "
+"una ordre mostri l'identificador de l'adjunt, utilitza "
+"`--purchase-invoice-evidence-id` o `evidence pull`."
 
 #: ../../how-to/ledger-evidence.md:43
 msgid "Pull a document from Google Drive instead"
@@ -215,15 +215,14 @@ msgid "Bulk-fetch every invoice in a Drive folder"
 msgstr "Recupera de cop totes les factures d'una carpeta de Drive"
 
 #: ../../how-to/ledger-evidence.md:54
-#, fuzzy
 msgid ""
 "Fetch every PDF and image invoice in one Drive folder at once, instead of"
 " one document at a time. Like `evidence pull`, this command reaches "
 "Google Drive and runs against your own authorized account:"
 msgstr ""
-"Recupera de cop totes les factures en PDF i imatge d'una carpeta de "
-"Drive, en lloc de document a document. Com `doclink`, aquesta ordre "
-"accedeix a Google Drive i s'executa contra el teu propi compte "
+"Recupera alhora totes les factures en PDF i en imatge d'una carpeta de "
+"Drive, en lloc d'un document cada vegada. Igual que `evidence pull`, aquesta "
+"ordre accedeix a Google Drive i s'executa amb el teu propi compte "
 "autoritzat:"
 
 #: ../../how-to/ledger-evidence.md:59

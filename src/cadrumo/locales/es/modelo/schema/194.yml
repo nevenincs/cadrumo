@@ -1,6 +1,28 @@
 modelo:
   schema:
     '194':
+      casilla:
+        continuidad:
+          capital-ajeno-resumen-base-negativa:
+            help: 'Información de la casilla: Casilla 05: capital ajeno resumen base
+              negativa.'
+            label: 'Casilla 05: capital ajeno resumen base negativa'
+          capital-ajeno-resumen-base-positiva:
+            help: 'Información de la casilla: Casilla 02: capital ajeno resumen base
+              positiva.'
+            label: 'Casilla 02: capital ajeno resumen base positiva'
+          capital-ajeno-resumen-perceptores-base-negativa:
+            help: 'Información de la casilla: Casilla 04: capital ajeno resumen perceptores
+              base negativa.'
+            label: 'Casilla 04: capital ajeno resumen perceptores base negativa'
+          capital-ajeno-resumen-perceptores-base-positiva:
+            help: 'Información de la casilla: Casilla 01: capital ajeno resumen perceptores
+              base positiva.'
+            label: 'Casilla 01: capital ajeno resumen perceptores base positiva'
+          capital-ajeno-resumen-retenciones:
+            help: Información fiscal sobre información fiscal de la casilla 03 del
+              Modelo 194.
+            label: Casilla 03 — información fiscal
       field:
         official_name: Modelo 194. Impuesto sobre la Renta de las Personas Físicas,
           Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos

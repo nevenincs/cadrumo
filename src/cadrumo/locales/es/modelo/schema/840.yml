@@ -9,384 +9,509 @@ modelo:
         2003-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Actividad
+                principal.'
               label: Actividad principal
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Año en
+                que se inicio la actividad por primera vez.'
               label: Ano en que se inicio la actividad por primera vez
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
-              help: null
-              label: Bonificacion aplicable (codigo y descripcion)
+              help: Información fiscal sobre información fiscal de la casilla 61 del
+                Modelo 840.
+              label: Bonificacion aplicable (codigo y descripción)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: La actividad
+                se realiza dentro de un campamento turistico.'
               label: La actividad se realiza dentro de un campamento turistico
             x-c5hn8bj3c5qn6o9dc9gmko8:
-              help: null
-              label: Causa de la baja (codigo y descripcion)
+              help: Información fiscal sobre información fiscal de la casilla 63 del
+                Modelo 840.
+              label: Causa de la baja (codigo y descripción)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
-              help: null
-              label: Causa de la declaracion complementaria
+              help: 'Consulte la información correspondiente a la casilla: Causa de
+                la declaración complementaria.'
+              label: Causa de la declaración complementaria
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 840.
               label: Causa de la variacion
             x-c5hn8bj3dhgn6p9dcdqmut31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Clase de
+                cuota (M municipal, N nacional, P provincial, o blanco).'
               label: Clase de cuota (M municipal, N nacional, P provincial, o blanco)
             x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
-              label: Codigo de municipio de la actividad (reservado a la Administracion)
+              help: Información fiscal sobre información fiscal de la casilla 39 del
+                Modelo 840.
+              label: Codigo de municipio de la actividad (reservado a la Administración)
             x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              help: null
-              label: Codigo de provincia de la actividad (reservado a la Administracion)
+              help: Información fiscal sobre información fiscal de la casilla 41 del
+                Modelo 840.
+              label: Codigo de provincia de la actividad (reservado a la Administración)
             x-c5hn8bj4clpm6sj9e1hmirre:
-              help: null
-              label: Descripcion de la actividad (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Descripción
+                de la actividad (reservado a la Administración).'
+              label: Descripción de la actividad (reservado a la Administración)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 44 del
+                Modelo 840.
               label: 'Domicilio de la actividad: codigo postal'
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
-              label: 'Domicilio de la actividad: codigo de via (reservado a la Administracion)'
+              help: Información fiscal sobre información fiscal de la casilla 45 del
+                Modelo 840.
+              label: 'Domicilio de la actividad: codigo de via (reservado a la Administración)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: escalera.'
               label: 'Domicilio de la actividad: escalera'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: kilometro.'
               label: 'Domicilio de la actividad: kilometro'
             x-c5hn8bj4dtmmior9dhkmubbeelmmasjf:
-              help: null
-              label: 'Domicilio de la actividad: numero'
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: número.'
+              label: 'Domicilio de la actividad: número'
             x-c5hn8bj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: piso.'
               label: 'Domicilio de la actividad: piso'
             x-c5hn8bj4dtmmior9dhkmubbgehng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: Pto., segun la abreviatura del diseno de registro.'
               label: 'Domicilio de la actividad: Pto., segun la abreviatura del diseno
                 de registro'
             x-c5hn8bj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: puerta.'
               label: 'Domicilio de la actividad: puerta'
             x-c5hn8bj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: sigla de la via pública.'
               label: 'Domicilio de la actividad: sigla de la via publica'
             x-c5hn8bj4dtmmior9dhkmubbkclm6apjfdpng:
-              help: null
-              label: 'Domicilio de la actividad: telefono'
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: teléfono.'
+              label: 'Domicilio de la actividad: teléfono'
             x-c5hn8bj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Domicilio
+                de la actividad: nombre de la via pública.'
               label: 'Domicilio de la actividad: nombre de la via publica'
             x-c5hn8bj5f1imsor9dtn0:
-              help: null
-              label: Exencion aplicable (codigo y descripcion)
+              help: Información fiscal sobre información fiscal de la casilla 60 del
+                Modelo 840.
+              label: Exencion aplicable (codigo y descripción)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 62 del
+                Modelo 840.
               label: Fecha de inicio, variacion, cese u otras causas
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Grupo o
+                epigrafe de las tarifas del IAE.'
               label: Grupo o epigrafe de las tarifas del IAE
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
-              help: null
-              label: Informacion adicional
+              help: 'Consulte la información correspondiente a la casilla: Información
+                adicional.'
+              label: Información adicional
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Existe
+                local afecto indirectamente a la actividad.'
               label: Existe local afecto indirectamente a la actividad
             x-c5hn8bjdeln6ior9e1kmu:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 38 del
+                Modelo 840.
               label: Codigo de municipio donde se ejerce la actividad
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd64:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: agrupacion, primera.'
               label: 'Notas que son de aplicacion: agrupacion, primera'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd68:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: agrupacion, segunda.'
               label: 'Notas que son de aplicacion: agrupacion, segunda'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd6c:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: agrupacion, tercera.'
               label: 'Notas que son de aplicacion: agrupacion, tercera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: epigrafe, primera.'
               label: 'Notas que son de aplicacion: epigrafe, primera'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: epigrafe, segunda.'
               label: 'Notas que son de aplicacion: epigrafe, segunda'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: epigrafe, tercera.'
               label: 'Notas que son de aplicacion: epigrafe, tercera'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: grupo, primera.'
               label: 'Notas que son de aplicacion: grupo, primera'
             x-c5hn8bjedtq62bb7e9qn0rpd68:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: grupo, segunda.'
               label: 'Notas que son de aplicacion: grupo, segunda'
             x-c5hn8bjedtq62bb7e9qn0rpd6c:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Notas que
+                son de aplicación: grupo, tercera.'
               label: 'Notas que son de aplicacion: grupo, tercera'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
-              help: null
-              label: Numero de referencia de la actividad
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de referencia de la actividad.'
+              label: Número de referencia de la actividad
             x-c5hn8bjge9nncqbecdkm2:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla 40 del
+                Modelo 840.
               label: Codigo de provincia donde se ejerce la actividad
             x-c5hn8bjge9nncqbecdkm2bb3elnn8o9de1p6utj9dphmiobc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Provincia
+                a la que corresponde la cuota provincial.'
               label: Provincia a la que corresponde la cuota provincial
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Se realiza
+                la recepcion de loterias y apuestas.'
               label: Se realiza la recepcion de loterias y apuestas
             x-c5hn8bjicljmoo9d6gmj4bb6:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Regla que
+                es de aplicación: Regla 4a apartado 2 F).'
               label: 'Regla que es de aplicacion: Regla 4a apartado 2 F)'
             x-c5hn8bjjclhm6qbfdo:
-              help: null
-              label: Seccion de las tarifas del IAE (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Seccion
+                de las tarifas del IAE (reservado a la Administración).'
+              label: Seccion de las tarifas del IAE (reservado a la Administración)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                actividad (E empresarial, P profesional, A artistica).'
               label: Tipo de actividad (E empresarial, P profesional, A artistica)
             x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              help: null
-              label: Cuota antes de bonificaciones o incrementos (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Cuota antes
+                de bonificaciones o incrementos (reservado a la Administración).'
+              label: Cuota antes de bonificaciones o incrementos (reservado a la Administración)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              help: null
-              label: Clave de bonificacion aplicada (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                bonificación aplicada (reservado a la Administración).'
+              label: Clave de bonificacion aplicada (reservado a la Administración)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              help: null
-              label: Importe de la bonificacion (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                de la bonificación (reservado a la Administración).'
+              label: Importe de la bonificacion (reservado a la Administración)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                sobre el que se aplica la bonificación (reservado a la Administración).'
               label: Porcentaje sobre el que se aplica la bonificacion (reservado
-                a la Administracion)
+                a la Administración)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota despues
+                de bonificaciones o incrementos (reservado a la Administración).'
               label: Cuota despues de bonificaciones o incrementos (reservado a la
-                Administracion)
+                Administración)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              help: null
-              label: Clave de incremento aplicado (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                incremento aplicado (reservado a la Administración).'
+              label: Clave de incremento aplicado (reservado a la Administración)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              help: null
-              label: Importe del incremento (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                del incremento (reservado a la Administración).'
+              label: Importe del incremento (reservado a la Administración)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                sobre el que se aplica el incremento (reservado a la Administración).'
               label: Porcentaje sobre el que se aplica el incremento (reservado a
-                la Administracion)
+                la Administración)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota de
+                maquinas recreativas o de autoventa (reservado a la Administración).'
               label: Cuota de maquinas recreativas o de autoventa (reservado a la
-                Administracion)
+                Administración)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              help: null
-              label: Cuota de tarifa o importe minimo (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Cuota de
+                tarifa o importe mínimo (reservado a la Administración).'
+              label: Cuota de tarifa o importe minimo (reservado a la Administración)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                fiscal al que se refiere la declaración.'
               label: Ejercicio fiscal al que se refiere la declaración
             x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                de referencia de la declaración (reservado a la Administración).'
               label: Número de referencia de la declaración (reservado a la Administración)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (alta / variación / baja).'
               label: Tipo de declaración (alta / variación / baja)
             x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota consignada
+                directamente en las tarifas (reservado a la Administración).'
               label: Cuota consignada directamente en las tarifas (reservado a la
-                Administracion)
+                Administración)
             x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Suma de
+                los elementos tributarios del grupo o epigrafe (reservado a la Administración).'
               label: Suma de los elementos tributarios del grupo o epigrafe (reservado
-                a la Administracion)
+                a la Administración)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              help: null
-              label: 'Cuota municipal: coeficiente corrector (reservado a la Administracion)'
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                coeficiente corrector (reservado a la Administración).'
+              label: 'Cuota municipal: coeficiente corrector (reservado a la Administración)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                cuota del elemento tributario (reservado a la Administración).'
               label: 'Cuota municipal: cuota del elemento tributario (reservado a
-                la Administracion)'
+                la Administración)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                suma de la superficie computable de los locales.'
               label: 'Cuota municipal: suma de la superficie computable de los locales'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                suma de la superficie rectificada de los locales.'
               label: 'Cuota municipal: suma de la superficie rectificada de los locales'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                suma de la superficie total de los locales.'
               label: 'Cuota municipal: suma de la superficie total de los locales'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                superficie computable.'
               label: 'Cuota municipal: superficie computable'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                superficie deducible.'
               label: 'Cuota municipal: superficie deducible'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota municipal:
+                valor del elemento tributario (reservado a la Administración).'
               label: 'Cuota municipal: valor del elemento tributario (reservado a
-                la Administracion)'
+                la Administración)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota provincial
+                o nacional: superficie computable de los locales.'
               label: 'Cuota provincial o nacional: superficie computable de los locales'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota provincial
+                o nacional: cuota del elemento tributario (reservado a la Administración).'
               label: 'Cuota provincial o nacional: cuota del elemento tributario (reservado
-                a la Administracion)'
+                a la Administración)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
-              help: null
-              label: 'Cuota provincial o nacional: numero de locales'
+              help: 'Consulte la información correspondiente a la casilla: Cuota provincial
+                o nacional: número de locales.'
+              label: 'Cuota provincial o nacional: número de locales'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota provincial
+                o nacional: superficie rectificada de los locales.'
               label: 'Cuota provincial o nacional: superficie rectificada de los locales'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Cuota provincial
+                o nacional: superficie total de los locales.'
               label: 'Cuota provincial o nacional: superficie total de los locales'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de municipio del local afecto indirectamente a la actividad (reservado
+                a la Administración).'
               label: Código de municipio del local afecto indirectamente a la actividad
                 (reservado a la Administración)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                postal del local afecto indirectamente a la actividad.'
               label: Código postal del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de provincia del local afecto indirectamente a la actividad (reservado
+                a la Administración).'
               label: Código de provincia del local afecto indirectamente a la actividad
                 (reservado a la Administración)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de vía del local afecto indirectamente a la actividad (reservado a
+                la Administración).'
               label: Código de vía del local afecto indirectamente a la actividad
                 (reservado a la Administración)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Escalera
+                del local afecto indirectamente a la actividad.'
               label: Escalera del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Kilómetro
+                del local afecto indirectamente a la actividad.'
               label: Kilómetro del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5pmnarj9cdkn0qbf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de municipio del local afecto indirectamente a la actividad.'
               label: Código de municipio del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5pn7arb5e9ng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                del local afecto indirectamente a la actividad.'
               label: Número del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5po6isrf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Piso del
+                local afecto indirectamente a la actividad.'
               label: Piso del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5po74rrmd5n66qb1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de provincia del local afecto indirectamente a la actividad.'
               label: Código de provincia del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5po78ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Pto. del
+                local afecto indirectamente a la actividad, según la abreviatura del
+                diseño de registro.'
               label: Pto. del local afecto indirectamente a la actividad, según la
                 abreviatura del diseño de registro
             x-dhnm6obc5lkmsp39e9im6t3f5po7apbiehgg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Puerta
+                del local afecto indirectamente a la actividad.'
               label: Puerta del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5ppmiprcc4mncqb1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sigla de
+                la vía pública del local afecto indirectamente a la actividad.'
               label: Sigla de la vía pública del local afecto indirectamente a la
                 actividad
             x-dhnm6obc5lkmsp39e9im6t3f5pq6ar35cpnmsro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Teléfono
+                del local afecto indirectamente a la actividad.'
               label: Teléfono del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5pqn6rpdchin6t39dpng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Uso o destino
+                del local afecto indirectamente a la actividad.'
               label: Uso o destino del local afecto indirectamente a la actividad
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Nombre
+                de la vía pública del local afecto indirectamente a la actividad.'
               label: Nombre de la vía pública del local afecto indirectamente a la
                 actividad
             x-dlgn2tb9dpgn6bjjelmm2:
-              help: null
-              label: Suma de maquinas recreativas o de autoventa (reservado a la Administracion)
+              help: 'Consulte la información correspondiente a la casilla: Suma de
+                maquinas recreativas o de autoventa (reservado a la Administración).'
+              label: Suma de maquinas recreativas o de autoventa (reservado a la Administración)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Calidad
+                en la que firma: titular o representante.'
               label: 'Calidad en la que firma: titular o representante'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                la notificacion.'
               label: Fecha de la notificacion
             x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Lugar de
+                la notificacion.'
               label: Lugar de la notificacion
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre o razón social del representante.'
               label: Apellidos y nombre o razón social del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de municipio del representante (reservado a la Administración).'
               label: Código de municipio del representante (reservado a la Administración)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                postal del domicilio del representante.'
               label: Código postal del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de provincia del representante (reservado a la Administración).'
               label: Código de provincia del representante (reservado a la Administración)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de vía del domicilio del representante (reservado a la Administración).'
               label: Código de vía del domicilio del representante (reservado a la
                 Administración)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Escalera
+                del domicilio del representante.'
               label: Escalera del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Kilómetro
+                del domicilio del representante.'
               label: Kilómetro del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de municipio del domicilio del representante.'
               label: Código de municipio del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                del domicilio del representante.'
               label: Número del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Piso del
+                domicilio del representante.'
               label: Piso del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de provincia del domicilio del representante.'
               label: Código de provincia del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Puerta
+                del domicilio del representante.'
               label: Puerta del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sigla de
+                la vía pública del domicilio del representante.'
               label: Sigla de la vía pública del domicilio del representante
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Nombre
+                de la vía pública del domicilio del representante.'
               label: Nombre de la vía pública del domicilio del representante
             x-e9in0sj5edimst31dpq6abjed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante.'
               label: NIF del representante
             x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Teléfono
+                del representante.'
               label: Teléfono del representante
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre o razón social del sujeto pasivo.'
               label: Apellidos y nombre o razón social del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                postal del domicilio del sujeto pasivo.'
               label: Código postal del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Escalera
+                del domicilio del sujeto pasivo.'
               label: Escalera del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Kilómetro
+                del domicilio del sujeto pasivo.'
               label: Kilómetro del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de municipio del domicilio del sujeto pasivo.'
               label: Código de municipio del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Número
+                del domicilio del sujeto pasivo.'
               label: Número del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Piso del
+                domicilio del sujeto pasivo.'
               label: Piso del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Código
+                de provincia del domicilio del sujeto pasivo.'
               label: Código de provincia del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Puerta
+                del domicilio del sujeto pasivo.'
               label: Puerta del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Sigla de
+                la vía pública del domicilio del sujeto pasivo.'
               label: Sigla de la vía pública del domicilio del sujeto pasivo
             x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Nombre
+                de la vía pública del domicilio del sujeto pasivo.'
               label: Nombre de la vía pública del domicilio del sujeto pasivo
             x-edqmkpbkdsn6sqb6:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                sujeto pasivo.'
               label: NIF del sujeto pasivo
             x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Teléfono
+                de contacto del sujeto pasivo, prefijo incluido.'
               label: Teléfono de contacto del sujeto pasivo, prefijo incluido
           construct:
             modelo-840-iae-declaration:

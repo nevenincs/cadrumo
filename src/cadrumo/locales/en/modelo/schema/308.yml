@@ -11,7 +11,7 @@ modelo:
         2009-2011-junio:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 308.
               label: Filing year to which the request relates
             x-chim6r1ee1in4qbfchng:
               help: Field declared on modelo 308, taken from the official record design.
@@ -19,13 +19,13 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — tax information
           field:
-            label: null
+            label: Casilla— tax information
         2011-julio-2015:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 308.
               label: Filing year to which the request relates
             x-chim6r1ee1in4qbfchng:
               help: Field declared on modelo 308, taken from the official record design.
@@ -33,13 +33,13 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — tax information
           field:
-            label: null
+            label: Casilla— tax information
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 308.
               label: Filing year to which the request relates
             x-chim6r1ee1in4qbfchng:
               help: Field declared on modelo 308, taken from the official record design.
@@ -47,9 +47,9 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — tax information
           field:
-            label: null
+            label: Casilla— tax information
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -59,7 +59,7 @@ modelo:
               help: Box 932-965 of modelo 308, tax year 2009.
               label: Refund - IBAN
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 308.
               label: Filing year to which the request relates
             x-chim6r1edlq6sbb1chonaqbicln78p9dc5o6ar3cd5i6uso:
               help: Box 119-178 of modelo 308, tax year 2009.
@@ -188,7 +188,7 @@ modelo:
               help: Box 13 of modelo 308, tax year 2009.
               label: Return type
             x-chim6r1eehkn0rpdednmoqb3d5q7ap0:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 308.
               label: Request type (equivalence surcharge / art 30 bis / art 21.4 /
                 occasional taxable person / simplified transport regime)
             x-chim6r1eehkn0rpdehp6iojlehgm6qbfdo:
@@ -197,6 +197,6 @@ modelo:
           construct:
             modelo-308-iva-solicitud-devolucion:
               field:
-                title: null
+                title: Modelo 308 — tax information
           field:
-            label: null
+            label: Casilla— tax information

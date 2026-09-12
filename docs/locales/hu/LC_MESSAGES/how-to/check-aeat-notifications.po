@@ -184,18 +184,17 @@ msgstr ""
 " dokumentumok által jelzett összegek felsorolása:"
 
 #: ../../how-to/check-aeat-notifications.md:76
-#, fuzzy
 msgid ""
 "Treat history as a document record, not as a balance. It does not total "
 "the figures, state what is currently payable, or replace the recaudación "
 "register reported by AEAT's debts consulta. A document alone does not "
 "establish whether its amount was paid, appealed, reduced, or superseded."
 msgstr ""
-"A történetet dokumentumrekordként kezeld, ne egyenlegként. Nem összesíti "
-"az összegeket, nem mondja meg, mi fizetendő jelenleg, és nem helyettesíti"
-" a `aeat app live deudas` parancsok által mutatott beszedési "
-"nyilvántartást. Egy dokumentum önmagában nem bizonyítja, hogy az összeget"
-" kifizették, megfellebbezték, csökkentették vagy felülírták."
+"A történetet dokumentumrekordként kezeld, ne egyenlegként. Nem összesíti a "
+"számokat, nem állapítja meg, mi fizetendő jelenleg, és nem helyettesíti az "
+"AEAT tartozáslekérdezése által közölt beszedési nyilvántartást. Egy "
+"dokumentum önmagában nem bizonyítja, hogy az összeget kifizették, "
+"megfellebbezték, csökkentették vagy felülírták."
 
 #: ../../how-to/check-aeat-notifications.md:83
 msgid "3. Declaration history (expedientes)"

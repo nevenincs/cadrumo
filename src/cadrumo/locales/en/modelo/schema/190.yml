@@ -1,6 +1,250 @@
 modelo:
   schema:
     '190':
+      casilla:
+        continuidad:
+          devengo-year:
+            help: Tax information for casilla 148-151 of Modelo 190.
+            label: Casilla 148-151 — tax field
+          ingresos-a-cuenta-efectuados:
+            help: 'Casilla information: Casilla 122-134: payments on account efectuados.'
+            label: 'Casilla 122-134: payments on account efectuados'
+          ingresos-a-cuenta-repercutidos:
+            help: Tax information about tax information in casilla 135-147 of Modelo
+              190.
+            label: Casilla 135-147 — tax information
+          m190-correo-electronico:
+            help: Tax information for casilla 176-225 of Modelo 190.
+            label: Casilla 176-225 — tax field
+          m190-declaracion-complementaria:
+            help: Tax information about tax information in casilla 121 of Modelo 190.
+            label: Casilla 121 — tax information
+          m190-declaracion-sustitutiva:
+            help: Tax information for casilla 122 of Modelo 190.
+            label: Casilla 122 — tax field
+          m190-numero-identificativo:
+            help: Tax information for casilla 108-120 of Modelo 190.
+            label: Casilla 108-120 — tax field
+          m190-numero-identificativo-anterior:
+            help: Tax information for casilla 123-135 of Modelo 190.
+            label: Casilla 123-135 — tax field
+          m190-persona-contacto-nombre:
+            help: Tax information about tax information in casilla 68-107 of Modelo
+              190.
+            label: Casilla 68-107 — tax information
+          m190-persona-contacto-telefono:
+            help: Tax information about tax information in casilla 59-67 of Modelo
+              190.
+            label: Casilla 59-67 — tax information
+          payee-anualidades-alimentos:
+            help: Tax information about maintenance annuities in casilla 210-222 of
+              Modelo 190.
+            label: Casilla 210-222 — maintenance annuities
+          payee-ascendientes-75-mas-entero:
+            help: Tax information about tax information in casilla 244 of Modelo 190.
+            label: Casilla 244 — tax information
+          payee-ascendientes-75-mas-total:
+            help: Tax information about tax information in casilla 243 of Modelo 190.
+            label: Casilla 243 — tax information
+          payee-ascendientes-discapacidad-33-65-entero:
+            help: Tax information about tax information in casilla 246 of Modelo 190.
+            label: Casilla 246 — tax information
+          payee-ascendientes-discapacidad-33-65-total:
+            help: Tax information about tax information in casilla 245 of Modelo 190.
+            label: Casilla 245 — tax information
+          payee-ascendientes-discapacidad-65-entero:
+            help: Tax information about tax information in casilla 250 of Modelo 190.
+            label: Casilla 250 — tax information
+          payee-ascendientes-discapacidad-65-total:
+            help: Tax information about tax information in casilla 249 of Modelo 190.
+            label: Casilla 249 — tax information
+          payee-ascendientes-discapacidad-movilidad-entero:
+            help: Tax information about tax information in casilla 248 of Modelo 190.
+            label: Casilla 248 — tax information
+          payee-ascendientes-discapacidad-movilidad-total:
+            help: Tax information about tax information in casilla 247 of Modelo 190.
+            label: Casilla 247 — tax information
+          payee-ascendientes-menores-75-entero:
+            help: Tax information about tax information in casilla 242 of Modelo 190.
+            label: Casilla 242 — tax information
+          payee-ascendientes-menores-75-total:
+            help: Tax information about tax information in casilla 241 of Modelo 190.
+            label: Casilla 241 — tax information
+          payee-birth-year:
+            help: Tax information for casilla 153-156 of Modelo 190.
+            label: Casilla 153-156 — tax field
+          payee-ceuta-melilla-clave:
+            help: 'Casilla information: Casilla 152: payee ceuta melilla clave.'
+            label: 'Casilla 152: payee ceuta melilla clave'
+          payee-clave-percepcion:
+            help: Tax information about tax information in casilla 78 of Modelo 190.
+            label: Casilla 78 — tax information
+          payee-complemento-ayuda-infancia:
+            help: 'Casilla information: Casilla 322: payee complemento ayuda infancia.'
+            label: 'Casilla 322: payee complemento ayuda infancia'
+          payee-computo-hijo-1:
+            help: 'Casilla information: Casilla 251: payee computo hijo 1.'
+            label: 'Casilla 251: payee computo hijo 1'
+          payee-computo-hijo-2:
+            help: 'Casilla information: Casilla 252: payee computo hijo 2.'
+            label: 'Casilla 252: payee computo hijo 2'
+          payee-computo-hijo-3:
+            help: 'Casilla information: Casilla 253: payee computo hijo 3.'
+            label: 'Casilla 253: payee computo hijo 3'
+          payee-contract-relation-clave:
+            help: 'Casilla information: Casilla 168: payee contract relation clave.'
+            label: 'Casilla 168: payee contract relation clave'
+          payee-descendientes-discapacidad-33-65-entero:
+            help: Tax information about tax information in casilla 231-232 of Modelo
+              190.
+            label: Casilla 231-232 — tax information
+          payee-descendientes-discapacidad-33-65-total:
+            help: Tax information about tax information in casilla 229-230 of Modelo
+              190.
+            label: Casilla 229-230 — tax information
+          payee-descendientes-discapacidad-65-entero:
+            help: Tax information about tax information in casilla 239-240 of Modelo
+              190.
+            label: Casilla 239-240 — tax information
+          payee-descendientes-discapacidad-65-total:
+            help: Tax information about tax information in casilla 237-238 of Modelo
+              190.
+            label: Casilla 237-238 — tax information
+          payee-descendientes-discapacidad-movilidad-entero:
+            help: Tax information about tax information in casilla 235-236 of Modelo
+              190.
+            label: Casilla 235-236 — tax information
+          payee-descendientes-discapacidad-movilidad-total:
+            help: Tax information about tax information in casilla 233-234 of Modelo
+              190.
+            label: Casilla 233-234 — tax information
+          payee-descendientes-menores-3-entero:
+            help: Tax information about tax information in casilla 224 of Modelo 190.
+            label: Casilla 224 — tax information
+          payee-descendientes-menores-3-total:
+            help: Tax information about tax information in casilla 223 of Modelo 190.
+            label: Casilla 223 — tax information
+          payee-descendientes-resto-entero:
+            help: Tax information about tax information in casilla 227-228 of Modelo
+              190.
+            label: Casilla 227-228 — tax information
+          payee-descendientes-resto-total:
+            help: Tax information about tax information in casilla 225-226 of Modelo
+              190.
+            label: Casilla 225-226 — tax information
+          payee-disability-clave:
+            help: 'Casilla information: Casilla 167: payee disability clave.'
+            label: 'Casilla 167: payee disability clave'
+          payee-emerging-stock-excess-clave:
+            help: 'Casilla information: Casilla 388: payee emerging stock excess clave.'
+            label: 'Casilla 388: payee emerging stock excess clave'
+          payee-family-situation:
+            help: 'Casilla information: Casilla 157: payee family situation.'
+            label: 'Casilla 157: payee family situation'
+          payee-gastos-deducibles:
+            help: Tax information about payee deductible expenses in casilla 184-196
+              of Modelo 190.
+            label: Casilla 184-196 — payee deductible expenses
+          payee-geographic-mobility-clave:
+            help: 'Casilla information: Casilla 170: payee geographic mobility clave.'
+            label: 'Casilla 170: payee geographic mobility clave'
+          payee-incapacidad-dineraria-percepcion:
+            help: Tax information about tax information in casilla 256-268 of Modelo
+              190.
+            label: Casilla 256-268 — tax information
+          payee-incapacidad-dineraria-retenciones:
+            help: 'Casilla information: Casilla 269-281: payee incapacidad dineraria
+              withholdings.'
+            label: 'Casilla 269-281: payee incapacidad dineraria withholdings'
+          payee-incapacidad-especie-ingresos-a-cuenta:
+            help: Tax information about tax information in casilla 296-308 of Modelo
+              190.
+            label: Casilla 296-308 — tax information
+          payee-incapacidad-especie-repercutidos:
+            help: Tax information about tax information in casilla 309-321 of Modelo
+              190.
+            label: Casilla 309-321 — tax information
+          payee-incapacidad-especie-valoracion:
+            help: Tax information about tax information in casilla 283-295 of Modelo
+              190.
+            label: Casilla 283-295 — tax information
+          payee-name:
+            help: 'Casilla information: Casilla 36-75: payee name.'
+            label: 'Casilla 36-75: payee name'
+          payee-nif:
+            help: 'Casilla information: Casilla 18-26: payee nif.'
+            label: 'Casilla 18-26: payee nif'
+          payee-pension-compensatoria:
+            help: 'Casilla information: Casilla 197-209: payee pension compensatoria.'
+            label: 'Casilla 197-209: payee pension compensatoria'
+          payee-prestamos-vivienda-clave:
+            help: Tax information about tax information in casilla 254 of Modelo 190.
+            label: Casilla 254 — tax information
+          payee-province:
+            help: 'Casilla information: Casilla 76-77: payee province.'
+            label: 'Casilla 76-77: payee province'
+          payee-reducciones-aplicables:
+            help: Tax information about tax information in casilla 171-183 of Modelo
+              190.
+            label: Casilla 171-183 — tax information
+          payee-retenciones-forales-araba:
+            help: Tax information about tax information in casilla 349-361 of Modelo
+              190.
+            label: Casilla 349-361 — tax information
+          payee-retenciones-forales-bizkaia:
+            help: Tax information about tax information in casilla 375-387 of Modelo
+              190.
+            label: Casilla 375-387 — tax information
+          payee-retenciones-forales-estatal:
+            help: Tax information about tax information in casilla 323-335 of Modelo
+              190.
+            label: Casilla 323-335 — tax information
+          payee-retenciones-forales-gipuzkoa:
+            help: Tax information about tax information in casilla 362-374 of Modelo
+              190.
+            label: Casilla 362-374 — tax information
+          payee-retenciones-forales-navarra:
+            help: Tax information about tax information in casilla 336-348 of Modelo
+              190.
+            label: Casilla 336-348 — tax information
+          payee-spouse-or-unit-titular-nif:
+            help: 'Casilla information: Casilla 158-166: payee spouse or unit titular
+              nif.'
+            label: 'Casilla 158-166: payee spouse or unit titular nif'
+          payee-subclave-percepcion:
+            help: Tax information about tax information in casilla 79-80 of Modelo
+              190.
+            label: Casilla 79-80 — tax information
+          payee-unit-convivencia-titular-clave:
+            help: Tax information about tax information in casilla 169 of Modelo 190.
+            label: Casilla 169 — tax information
+          perc-retenciones-practicadas:
+            help: 'Casilla information: Casilla 95-107: withholdings payments on account.'
+            label: 'Casilla 95-107: withholdings payments on account'
+          percepcion-integra-dineraria:
+            help: Tax information about tax information in casilla 82-94 of Modelo
+              190.
+            label: Casilla 82-94 — tax information
+          percepcion-valoracion-especie:
+            help: Tax information about tax information in casilla 109-121 of Modelo
+              190.
+            label: Casilla 109-121 — tax information
+          representante-legal-nif:
+            help: Tax information about tax information in casilla 27-35 of Modelo
+              190.
+            label: Casilla 27-35 — tax information
+          retenciones-ingresos-a-cuenta:
+            help: 'Casilla information: Casilla 161-175: withholdings payments on
+              account.'
+            label: 'Casilla 161-175: withholdings payments on account'
+          total-percepciones-amount:
+            help: Tax information about tax information in casilla 145-160 of Modelo
+              190.
+            label: Casilla 145-160 — tax information
+          total-percepciones-count:
+            help: Tax information about tax information in casilla 136-144 of Modelo
+              190.
+            label: Casilla 136-144 — tax information
       field:
         official_name: Modelo 190. Informative return. Withholdings and payments on
           account. Employment and business income, prizes and certain capital gains
@@ -10,34 +254,42 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Review the casilla information: Return supplementary.'
               label: Supplementary declaration
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: Tax information about tax information in casilla 176-225 of Modelo
+                190.
               label: Contact person's email address
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return.'
               label: Declaration identifying number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return previous.'
               label: Identifying number of the previous declaration
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Tax information about tax information in casilla 145-160 of Modelo
+                190.
               label: Total amount of payments made
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: Tax information about tax information in casilla 68-107 of Modelo
+                190.
               label: Contact person's surnames and given name
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: Tax information about tax information in casilla 59-67 of Modelo
+                190.
               label: Contact person's telephone number
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: Tax information about tax information in casilla 161-175 of Modelo
+                190.
               label: Total amount of withholdings and advance payments
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: Tax information for casilla 122 of Modelo 190.
               label: Replacement declaration
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Tax information about tax information in casilla 136-144 of Modelo
+                190.
               label: Total number of payments made
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -92,7 +344,8 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Ceuta or Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: Tax information about tax information in casilla 78 of Modelo
+                190.
               label: Income key
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -197,7 +450,8 @@ modelo:
               label: Benefits arising from work incapacity. Valuation of the benefit
                 in kind
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Tax information about tax information in casilla 122-134 of Modelo
+                190.
               label: Payments on account made on in-kind income
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -206,7 +460,7 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Geographic mobility
             x-e1in4opedpkmc:
-              help: null
+              help: 'Review the casilla information: NIF of the recipient.'
               label: Recipient's tax ID (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -215,17 +469,19 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: NIF of the legal representative
             x-e1in4opedpnmqojick:
-              help: null
+              help: Tax information about payee name in casilla 36-75 of Modelo 190.
               label: Recipient's surnames and given name, or legal name
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Compensatory pensions
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: Tax information about tax information in casilla 82-94 of Modelo
+                190.
               label: Gross cash income not arising from work incapacity
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: Tax information about tax information in casilla 109-121 of Modelo
+                190.
               label: Valuation of in-kind income not arising from work incapacity
             x-e1in4opee1p6asrkc5mmuspdepkncqb5dpi62bb3dhgncp8:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -263,13 +519,15 @@ modelo:
               label: Withholdings and payments on account paid in. Chartered Community
                 of Navarre
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Tax information about tax information in casilla 95-107 of Modelo
+                190.
               label: Withholdings applied to cash income
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Family situation
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: Tax information about tax information in casilla 79-80 of Modelo
+                190.
               label: Income subkey
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -277,40 +535,48 @@ modelo:
           construct:
             modelo-190-annual-summary:
               field:
-                title: null
+                title: Modelo 190 annual summary based on quarterly Modelo 111 filings
           field:
-            label: null
+            label: Casilla — tax field
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: null
+              help: 'Review the casilla information: Return supplementary.'
               label: Supplementary declaration
             x-chim6r1ecdnn4sj5dsmmar35cdq74rred5hmu:
-              help: null
+              help: Tax information about tax information in casilla 176-225 of Modelo
+                190.
               label: Contact person's email address
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return.'
               label: Declaration identifying number
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Review the casilla information: Number identificativo of the
+                return previous.'
               label: Identifying number of the previous declaration
             x-chim6r1ee1in4or5e1hmirreclpiqt3fehgmo:
-              help: null
+              help: Tax information about tax information in casilla 145-160 of Modelo
+                190.
               label: Total amount of payments made
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmmsrrdc9p6a:
-              help: null
+              help: Tax information about tax information in casilla 68-107 of Modelo
+                190.
               label: Contact person's surnames and given name
             x-chim6r1ee1in4srfdpgiqorfdpq62orkdsmn8pbcclj6urjf:
-              help: null
+              help: Tax information about tax information in casilla 59-67 of Modelo
+                190.
               label: Contact person's telephone number
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: Tax information about tax information in casilla 161-175 of Modelo
+                190.
               label: Total amount of withholdings and advance payments
             x-chim6r1eedqn6t39ehqn8qbmc4:
-              help: null
+              help: Tax information for casilla 122 of Modelo 190.
               label: Replacement declaration
             x-chim6r1eehnn8obc5lo6asj3clo66qbfdpin6:
-              help: null
+              help: Tax information about tax information in casilla 136-144 of Modelo
+                190.
               label: Total number of payments made
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -365,7 +631,8 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Ceuta or Melilla
             x-e1in4opecdm62tj5:
-              help: null
+              help: Tax information about tax information in casilla 78 of Modelo
+                190.
               label: Income key
             x-e1in4opecdnmqs3cclmmarjkdsmm2ublchgiqqbecpgmsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -470,7 +737,8 @@ modelo:
               label: Benefits arising from work incapacity. Valuation of the benefit
                 in kind
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgg:
-              help: null
+              help: Tax information about tax information in casilla 122-134 of Modelo
+                190.
               label: Payments on account made on in-kind income
             x-e1in4oped5n6esj5ednn6bb15lhnapbeehgiqsj5e1in4orlehkm8rrj:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -479,7 +747,7 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Geographic mobility
             x-e1in4opedpkmc:
-              help: null
+              help: 'Review the casilla information: NIF of the recipient.'
               label: Recipient's tax ID (NIF)
             x-e1in4opedpkmcbb3dtn7itb7ckmn8qbkelm62shdeln6ip31cg:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -488,17 +756,19 @@ modelo:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: NIF of the legal representative
             x-e1in4opedpnmqojick:
-              help: null
+              help: Tax information about payee name in casilla 36-75 of Modelo 190.
               label: Recipient's surnames and given name, or legal name
             x-e1in4opee1imssr9dtn2qorfdlo6arjjc5q6usj9c4:
               help: Amount declared in modelo 190's perceptor record. The design splits
                 it into an integer and a decimal part.
               label: Compensatory pensions
             x-e1in4opee1in4or5e1hmirre5li6irj5e9gn4qb1:
-              help: null
+              help: Tax information about tax information in casilla 82-94 of Modelo
+                190.
               label: Gross cash income not arising from work incapacity
             x-e1in4opee1in4or5e1hmirre5lin6s35cdkma:
-              help: null
+              help: Tax information about tax information in casilla 109-121 of Modelo
+                190.
               label: Valuation of in-kind income not arising from work incapacity
             x-e1in4opee1p6asrkc5hmirre5lkmsor1e1gm6qb4c5i0:
               help: Flag 1 or 0 according to whether this B.01 benefit type was paid
@@ -563,13 +833,15 @@ modelo:
               label: Withholdings and payments on account paid in. Chartered Community
                 of Navarre
             x-e1in4opee9in8pbecdkmurj5ecmn0sj1cdq6ior1chgn6:
-              help: null
+              help: Tax information about tax information in casilla 95-107 of Modelo
+                190.
               label: Withholdings applied to cash income
             x-e1in4opeedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               help: Perceptor field declared in modelo 190's type 2 record.
               label: Family situation
             x-e1in4opeedqm4orcc5r6a:
-              help: null
+              help: Tax information about tax information in casilla 79-80 of Modelo
+                190.
               label: Income subkey
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
@@ -577,6 +849,6 @@ modelo:
           construct:
             modelo-190-annual-summary:
               field:
-                title: null
+                title: Modelo 190 annual summary based on quarterly Modelo 111 filings
           field:
-            label: null
+            label: Casilla — tax field

@@ -1,6 +1,23 @@
 modelo:
   schema:
     '194':
+      casilla:
+        continuidad:
+          capital-ajeno-resumen-base-negativa:
+            help: 'Casilla information: Casilla 05: capital ajeno resumen base negative.'
+            label: 'Casilla 05: capital ajeno resumen base negative'
+          capital-ajeno-resumen-base-positiva:
+            help: 'Casilla information: Casilla 02: capital ajeno resumen base positive.'
+            label: 'Casilla 02: capital ajeno resumen base positive'
+          capital-ajeno-resumen-perceptores-base-negativa:
+            help: Tax information about tax information in casilla 04 of Modelo 194.
+            label: Casilla 04 — tax information
+          capital-ajeno-resumen-perceptores-base-positiva:
+            help: Tax information about tax information in casilla 01 of Modelo 194.
+            label: Casilla 01 — tax information
+          capital-ajeno-resumen-retenciones:
+            help: 'Casilla information: Casilla 03: capital ajeno resumen withholdings.'
+            label: 'Casilla 03: capital ajeno resumen withholdings'
       field:
         official_name: Modelo 194. Personal Income Tax, Corporate Income Tax and Non-Resident
           Income Tax (permanent establishments). Withholdings and payments on account
@@ -33,9 +50,9 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Casilla — tax field
         '2023':
           casilla:
             '01':
@@ -59,9 +76,9 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Casilla — tax field
         '2024':
           casilla:
             '01':
@@ -85,6 +102,6 @@ modelo:
           construct:
             modelo-194-calculation-construct:
               field:
-                title: null
+                title: Modelo 194 calculation construct
           field:
-            label: null
+            label: Casilla — tax field

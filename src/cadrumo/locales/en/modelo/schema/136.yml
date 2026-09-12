@@ -9,83 +9,87 @@ modelo:
         '2026':
           casilla:
             '01':
-              help: null
+              help: Tax information about tax information in casilla 01 of Modelo
+                136.
               label: Amount of the prize obtained from the winning ticket, coupon
                 or bet
             '02':
-              help: null
+              help: Tax information for casilla 02 of Modelo 136.
               label: Amount or value of the prize corresponding individually to the
                 declarant
             '03':
-              help: null
+              help: 'Review the casilla information: Cuantia exempt of the gravamen
+                especial.'
               label: Amount exempt from the special levy
             '04':
-              help: null
+              help: 'Review the casilla information: Tax base.'
               label: Taxable base
             '05':
-              help: null
+              help: 'Review the casilla information: Amount of the gravamen especial.'
               label: Special levy tax liability
             '06':
-              help: null
+              help: Tax information about tax information in casilla 06 of Modelo
+                136.
               label: Amounts payable from previous self-assessments for the same item
                 and relating to the same prize
             '07':
-              help: null
+              help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
             09:
-              help: null
+              help: 'Review the casilla information: Amount ingresado a favor of the
+                Tesoro Publico.'
               label: Amount paid to the Public Treasury
             autoliquidacion-complementaria:
-              help: null
+              help: 'Review the casilla information: Self-assessment supplementary.'
               label: Supplementary self-assessment
             declarante-nif:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Tax identification number (NIF)
             declarante-nombre:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Surname and first name or company name
             ejercicio-declaracion:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Tax year
             fecha-celebracion:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 136.
               label: Draw date
             fecha-cobro-premio:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 136.
               label: Prize collection date
             forma-pago:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 136.
               label: Payment method
             iban:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: IBAN code
             justificante-anterior:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Reference number of the previous self-assessment
             loteria-apuesta-denominacion:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Name of the lottery or bet
             organizador-codigo-pais:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Country code of the organising body or entity
             organizador-denominacion:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Name or company name of the organising body or entity
             organizador-pais:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 136.
               label: Country of the organising body or entity
             periodo-declaracion:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Period
             precio-unitario:
-              help: null
+              help: 'Review the casilla information: Precio unitario.'
               label: Unit price
             provincia-residencia-irpf:
-              help: null
+              help: Tax information for casilla of Modelo 136.
               label: Code of the taxpayer's habitual residence province for IRPF purposes
           construct:
             modelo-136-calculation-construct:
               field:
-                title: null
+                title: Modelo 136 calculation construct for the special levy on prizes
           field:
-            label: null
+            label: Casilla — tax field

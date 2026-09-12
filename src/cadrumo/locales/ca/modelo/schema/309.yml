@@ -1,6 +1,193 @@
 modelo:
   schema:
     '309':
+      casilla:
+        continuidad:
+          a-deducir-23:
+            help: Informació fiscal sobre informació fiscal de la casella 23 del Modelo
+              309.
+            label: Casella 23 — informació fiscal
+          adjudicatario-apellidos:
+            help: Informació fiscal sobre informació fiscal de la casella 1049-1108
+              del Modelo 309.
+            label: Casella 1049-1108 — informació fiscal
+          adjudicatario-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 1040-1048
+              del Modelo 309.
+            label: Casella 1040-1048 — informació fiscal
+          adjudicatario-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 1109-1128
+              del Modelo 309.
+            label: Casella 1109-1128 — informació fiscal
+          aeronave-ano:
+            help: Informació fiscal de la casella 546 del Modelo 309.
+            label: Casella 546 — informació fiscal
+          aeronave-fabricante:
+            help: Informació fiscal sobre informació fiscal de la casella 426 del
+              Modelo 309.
+            label: Casella 426 — informació fiscal
+          aeronave-marca:
+            help: Informació fiscal sobre informació fiscal de la casella 466 del
+              Modelo 309.
+            label: Casella 466 — informació fiscal
+          aeronave-peso:
+            help: Informació fiscal sobre informació fiscal de la casella 550 del
+              Modelo 309.
+            label: Casella 550 — informació fiscal
+          aeronave-serie:
+            help: Informació fiscal sobre informació fiscal de la casella 506 del
+              Modelo 309.
+            label: Casella 506 — informació fiscal
+          cuota-devengada-22:
+            help: Informació fiscal sobre informació fiscal de la casella 22 del Modelo
+              309.
+            label: Casella 22 — informació fiscal
+          declaracion-complementaria:
+            help: Informació fiscal sobre informació fiscal de la casella 1016 del
+              Modelo 309.
+            label: Casella 1016 — informació fiscal
+          declaracion-periodo-309:
+            help: Informació fiscal sobre informació fiscal de la casella 7 del Modelo
+              309.
+            label: Casella 7 — informació fiscal
+          devolucion-iban-309:
+            help: Informació fiscal de la casella 1030-1063 del Modelo 309.
+            label: Casella 1030-1063 — informació fiscal
+          embarcacion-eslora:
+            help: Informació fiscal sobre informació fiscal de la casella 420 del
+              Modelo 309.
+            label: Casella 420 — informació fiscal
+          embarcacion-fabricante:
+            help: Informació fiscal sobre informació fiscal de la casella 300 del
+              Modelo 309.
+            label: Casella 300 — informació fiscal
+          embarcacion-tipo:
+            help: Informació fiscal sobre informació fiscal de la casella 340 del
+              Modelo 309.
+            label: Casella 340 — informació fiscal
+          justificante-anterior:
+            help: Informació fiscal sobre informació fiscal de la casella 61 del Modelo
+              309.
+            label: Casella 61 — informació fiscal
+          mtn-embarcacion-identificacion:
+            help: Informació fiscal de la casella 380 del Modelo 309.
+            label: Casella 380 — informació fiscal
+          re-base-10:
+            help: Informació fiscal sobre informació fiscal de la casella 10 del Modelo
+              309.
+            label: Casella 10 — informació fiscal
+          re-base-13:
+            help: Informació fiscal sobre informació fiscal de la casella 13 del Modelo
+              309.
+            label: Casella 13 — informació fiscal
+          re-base-16:
+            help: Informació fiscal sobre informació fiscal de la casella 16 del Modelo
+              309.
+            label: Casella 16 — informació fiscal
+          re-base-19:
+            help: Informació fiscal sobre informació fiscal de la casella 19 del Modelo
+              309.
+            label: Casella 19 — informació fiscal
+          re-cuota-12:
+            help: Informació fiscal sobre informació fiscal de la casella 12 del Modelo
+              309.
+            label: Casella 12 — informació fiscal
+          re-cuota-15:
+            help: Informació fiscal sobre informació fiscal de la casella 15 del Modelo
+              309.
+            label: Casella 15 — informació fiscal
+          re-cuota-18:
+            help: Informació fiscal sobre informació fiscal de la casella 18 del Modelo
+              309.
+            label: Casella 18 — informació fiscal
+          re-cuota-21:
+            help: Informació fiscal sobre informació fiscal de la casella 21 del Modelo
+              309.
+            label: Casella 21 — informació fiscal
+          re-tipo-11:
+            help: Informació fiscal sobre informació fiscal de la casella 11 del Modelo
+              309.
+            label: Casella 11 — informació fiscal
+          re-tipo-14:
+            help: Informació fiscal sobre informació fiscal de la casella 14 del Modelo
+              309.
+            label: Casella 14 — informació fiscal
+          re-tipo-17:
+            help: Informació fiscal sobre informació fiscal de la casella 17 del Modelo
+              309.
+            label: Casella 17 — informació fiscal
+          re-tipo-20:
+            help: Informació fiscal sobre informació fiscal de la casella 20 del Modelo
+              309.
+            label: Casella 20 — informació fiscal
+          resultado-24:
+            help: Informació fiscal sobre informació fiscal de la casella 24 del Modelo
+              309.
+            label: Casella 24 — informació fiscal
+          rg-base-01:
+            help: Informació fiscal sobre informació fiscal de la casella 01 del Modelo
+              309.
+            label: Casella 01 — informació fiscal
+          rg-base-04:
+            help: Informació fiscal sobre informació fiscal de la casella 04 del Modelo
+              309.
+            label: Casella 04 — informació fiscal
+          rg-base-07:
+            help: Informació fiscal sobre informació fiscal de la casella 07 del Modelo
+              309.
+            label: Casella 07 — informació fiscal
+          rg-cuota-03:
+            help: Informació fiscal sobre informació fiscal de la casella 03 del Modelo
+              309.
+            label: Casella 03 — informació fiscal
+          rg-cuota-06:
+            help: Informació fiscal sobre informació fiscal de la casella 06 del Modelo
+              309.
+            label: Casella 06 — informació fiscal
+          rg-cuota-09:
+            help: Informació fiscal sobre informació fiscal de la casella 09 del Modelo
+              309.
+            label: Casella 09 — informació fiscal
+          rg-tipo-02:
+            help: Informació fiscal sobre informació fiscal de la casella 02 del Modelo
+              309.
+            label: Casella 02 — informació fiscal
+          rg-tipo-05:
+            help: Informació fiscal sobre informació fiscal de la casella 05 del Modelo
+              309.
+            label: Casella 05 — informació fiscal
+          rg-tipo-08:
+            help: Informació fiscal sobre informació fiscal de la casella 08 del Modelo
+              309.
+            label: Casella 08 — informació fiscal
+          transmitente-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 25 del Modelo
+              309.
+            label: Casella 25 — informació fiscal
+          transmitente-nif-iva:
+            help: Informació fiscal sobre informació fiscal de la casella 1025-1039
+              del Modelo 309.
+            label: Casella 1025-1039 — informació fiscal
+          vehiculo-bastidor:
+            help: Informació fiscal sobre informació fiscal de la casella 220 del
+              Modelo 309.
+            label: Casella 220 — informació fiscal
+          vehiculo-clasificacion:
+            help: Informació fiscal sobre informació fiscal de la casella 260 del
+              Modelo 309.
+            label: Casella 260 — informació fiscal
+          vehiculo-marca:
+            help: Informació fiscal sobre informació fiscal de la casella 100 del
+              Modelo 309.
+            label: Casella 100 — informació fiscal
+          vehiculo-modelo:
+            help: Informació fiscal sobre informació fiscal de la casella 180 del
+              Modelo 309.
+            label: Casella 180 — informació fiscal
+          vehiculo-tipo:
+            help: Informació fiscal sobre informació fiscal de la casella 140 del
+              Modelo 309.
+            label: Casella 140 — informació fiscal
       field:
         official_name: Modelo 309. Impost sobre el Valor Afegit. Declaració-liquidació
           no periòdica.
@@ -33,7 +220,8 @@ modelo:
               label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                309.
               label: Exercici a què es refereix la declaració
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casella 420-425 del model 309, exercicis 2004-2015.
@@ -200,7 +388,7 @@ modelo:
               field:
                 title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
           field:
-            label: null
+            label: Casella — informació fiscal
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -231,7 +419,8 @@ modelo:
               label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                309.
               label: Exercici a què es refereix la declaració
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casella 492-496 del model 309, exercicis 2016-2017.
@@ -335,7 +524,9 @@ modelo:
               help: Casella 13-13 del model 309, exercicis 2016-2017.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de trigger (medios
+                de transporte nuevos / règim agricola / recàrrec d''equivalència /
+                ejecucion forzosa).'
               label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
                 / recàrrec d'equivalència / execució forçosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -368,22 +559,24 @@ modelo:
               help: Casella 242-281 del model 309, exercicis 2016-2017.
               label: Característiques i dades tècniques (7) - Vehicles - Tipus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
+                en adquisicions intracomunitàries (medios de transporte nuevos, etc.).'
               label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
                 (mitjans de transport nous, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 309.
               label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA suportat per
+                minoristas en recàrrec d''equivalència (devolució a viajeros).'
               label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
                 (devolució a viatgers)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — informació fiscal
           field:
-            label: null
+            label: Casella — informació fiscal
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -423,7 +616,8 @@ modelo:
               label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                309.
               label: Exercici a què es refereix la declaració
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casella 492-496 del model 309, exercicis 2018-2022.
@@ -527,7 +721,9 @@ modelo:
               help: Casella 13-13 del model 309, exercicis 2018-2022.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de trigger (medios
+                de transporte nuevos / règim agricola / recàrrec d''equivalència /
+                ejecucion forzosa).'
               label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
                 / recàrrec d'equivalència / execució forçosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -563,22 +759,24 @@ modelo:
               help: Casella 242-281 del model 309, exercicis 2018-2022.
               label: Característiques i dades tècniques (7) - Vehicles - Tipus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
+                en adquisicions intracomunitàries (medios de transporte nuevos, etc.).'
               label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
                 (mitjans de transport nous, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 309.
               label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA suportat per
+                minoristas en recàrrec d''equivalència (devolució a viajeros).'
               label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
                 (devolució a viatgers)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — informació fiscal
           field:
-            label: null
+            label: Casella — informació fiscal
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -618,7 +816,8 @@ modelo:
               label: Liquidació (8) - Total quota meritada ([03]+[27]+[06]+[09]+[12]+[15]+[18]+[21])
                 [22]
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                309.
               label: Exercici a què es refereix la declaració
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
               help: Casella 492-496 del model 309, exercicis 2023 y siguientes.
@@ -731,7 +930,9 @@ modelo:
               help: Casella 13-13 del model 309, exercicis 2023 y siguientes.
               label: Tipus de declaració
             x-chim6r1eehkn0rpdehp6ipr7clp0:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de trigger (medios
+                de transporte nuevos / règim agricola / recàrrec d''equivalència /
+                ejecucion forzosa).'
               label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
                 / recàrrec d'equivalència / execució forçosa)
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
@@ -767,19 +968,21 @@ modelo:
               help: Casella 242-281 del model 309, exercicis 2023 y siguientes.
               label: Característiques i dades tècniques (7) - Vehicles - Tipus
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
+                en adquisicions intracomunitàries (medios de transporte nuevos, etc.).'
               label: Quota d'IVA autorepercutida en adquisicions intracomunitàries
                 (mitjans de transport nous, etc.)
             x-d5r62bj3elnn8o9ddpniqs35e9kmup39cdgiqt3fehgmo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 309.
               label: Total de quota d'IVA no periòdica (autorepercutida + suportada-recàrrec)
             x-d5r62bjjdto6usjkc5i6ubjiclhm2sj7dsmmasbld5r62r35dphmio8:
-              help: null
+              help: 'Consulteu la informació de la casella: Quota IVA suportat per
+                minoristas en recàrrec d''equivalència (devolució a viajeros).'
               label: Quota d'IVA suportat per minoristes en recàrrec d'equivalència
                 (devolució a viatgers)
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: null
+                title: Modelo 309 — informació fiscal
           field:
-            label: null
+            label: Casella — informació fiscal

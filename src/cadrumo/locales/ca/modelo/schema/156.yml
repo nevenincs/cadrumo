@@ -11,83 +11,98 @@ modelo:
         2003-y-siguientes:
           casilla:
             afiliado-nif:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del afiliado o mutualista.'
               label: NIF de l'afiliat o mutualista
             afiliado-nombre:
-              help: null
+              help: 'Consulteu la informació de la casella: Cognoms i nom del afiliado
+                o mutualista.'
               label: Cognoms i nom de l'afiliat o mutualista
             cotizacion-abril:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de abril: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de abril: situació mensual i import de la quota meritada'
             cotizacion-agosto:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de agosto:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de agost: situació mensual i import de la quota meritada'
             cotizacion-diciembre:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de diciembre:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de desembre: situació mensual i import de la quota
                 meritada'
             cotizacion-enero:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de enero: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de gener: situació mensual i import de la quota meritada'
             cotizacion-febrero:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de febrero:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de febrer: situació mensual i import de la quota
                 meritada'
             cotizacion-julio:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de julio: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de juliol: situació mensual i import de la quota
                 meritada'
             cotizacion-junio:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de junio: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de juny: situació mensual i import de la quota meritada'
             cotizacion-marzo:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de marzo: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de març: situació mensual i import de la quota meritada'
             cotizacion-mayo:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de mayo: situacion
+                mensual e import de la quota meritada.'
               label: 'Cotització de maig: situació mensual i import de la quota meritada'
             cotizacion-noviembre:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de noviembre:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de novembre: situació mensual i import de la quota
                 meritada'
             cotizacion-octubre:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de octubre:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de octubre: situació mensual i import de la quota
                 meritada'
             cotizacion-septiembre:
-              help: null
+              help: 'Consulteu la informació de la casella: Cotizacion de septiembre:
+                situacion mensual e import de la quota meritada.'
               label: 'Cotització de setembre: situació mensual i import de la quota
                 meritada'
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Declaració complementària o substitutiva
             declarante-razon-social:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Raó social del declarant
             numero-afiliacion:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Número d'afiliació
             numero-identificativo-anterior:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Número identificatiu de la declaració anterior
             numero-justificante:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Número de justificant de la declaració
             numero-total-afiliados:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Nombre total de registres d'afiliats o mutualistes
             persona-relacion:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                156.
               label: Persona amb qui relacionar-se
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Informació fiscal sobre exercici fiscal de la casella  del Modelo
+                156.
               label: Exercici a què es refereix la declaració
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Informació fiscal de la casella del Modelo 156.
               label: Tipus de declaració (originària / substitutiva / complementària)
           construct:
             modelo-156-informative:
               field:
-                title: null
+                title: Modelo 156 declaració informativa
           field:
-            label: null
+            label: Casella— informació fiscal

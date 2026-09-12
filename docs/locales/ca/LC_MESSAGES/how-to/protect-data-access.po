@@ -204,7 +204,6 @@ msgstr ""
 "cap perfil."
 
 #: ../../how-to/protect-data-access.md:68
-#, fuzzy
 msgid ""
 "The CLI does not currently export a recovery artifact, so do not treat "
 "the phrase as a complete operator recovery path. Where an external "
@@ -214,14 +213,14 @@ msgid ""
 "reset the passphrase, enroll recovery in the restored profile, or travel "
 "inside a normal backup archive."
 msgstr ""
-"La CLI no exporta actualment cap artefacte de recuperació; per tant, no "
-"tractis la frase com una via completa de recuperació per a l'operador. "
-"Quan un flux de proveïment extern aporti l'artefacte corresponent, "
-"utilitza'l només amb l'ordre explícita de restauració de perfil basada en"
-" artefacte i una càpsula d'origen. L'artefacte i la frase proven una "
-"restauració; no inicien sessió, no restableixen la contrasenya, no "
-"inscriuen la recuperació al perfil restaurat ni viatgen dins d'un arxiu "
-"de còpia de seguretat normal."
+"La CLI actualment no exporta cap artefacte de recuperació, de manera que no "
+"consideris la frase una via completa de recuperació per a l'operador. Quan "
+"un flux de proveïment extern proporcioni l'artefacte corresponent, "
+"utilitza'l només amb l'ordre explícita `profile archive import`, basada en "
+"artefacte, i una càpsula d'origen. L'artefacte i la frase demostren una "
+"restauració; no inicien sessió, no restableixen la frase de contrasenya, no "
+"inscriuen la recuperació en el perfil restaurat ni es transporten dins d'un "
+"arxiu de còpia de seguretat normal."
 
 #: ../../how-to/protect-data-access.md:75
 msgid "Change your passphrase"
@@ -401,14 +400,12 @@ msgstr ""
 "\"new_passphrase_confirmation\": \"...\"}`"
 
 #: ../../how-to/protect-data-access.md:97
-#, fuzzy
 msgid "`aeat config profile archive import` without `--artifact`"
-msgstr "`aeat config profile restore` sense `--artifact`"
+msgstr "`aeat config profile archive import` sense `--artifact`"
 
 #: ../../how-to/protect-data-access.md:97
-#, fuzzy
 msgid "`aeat config profile archive import` with `--artifact`"
-msgstr "`aeat config profile restore` amb `--artifact`"
+msgstr "`aeat config profile archive import` amb `--artifact`"
 
 #: ../../how-to/protect-data-access.md:97
 #, python-brace-format

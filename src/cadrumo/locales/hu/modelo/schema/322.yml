@@ -1,6 +1,321 @@
 modelo:
   schema:
     '322':
+      casilla:
+        continuidad:
+          '04':
+            help: 'A Modelo 322 04. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 04 — adóügyi információ
+          '05':
+            help: 'A Modelo 322 05. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 05 — adóügyi információ
+          '06':
+            help: 'A Modelo 322 06. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 06 — adóügyi információ
+          '07':
+            help: 'A Modelo 322 07. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 07 — adóügyi információ
+          08:
+            help: 'A Modelo 322 08. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 08 — adóügyi információ
+          09:
+            help: 'A Modelo 322 09. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 09 — adóügyi információ
+          '11':
+            help: 'A Modelo 322 11. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 11 — adóügyi információ
+          '125':
+            help: 'A Modelo 322 125. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 125 — adóügyi információ
+          '126':
+            help: 'A Modelo 322 126. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 126 — adóügyi információ
+          '127':
+            help: 'A Modelo 322 127. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 127 — adóügyi információ
+          '15':
+            help: 'A Modelo 322 15. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 15 — adóügyi információ
+          '150':
+            help: 'A Modelo 322 150. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 150 — adóügyi információ
+          '151':
+            help: 'A Modelo 322 151. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 151 — adóügyi információ
+          '152':
+            help: 'A Modelo 322 152. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 152 — adóügyi információ
+          '153':
+            help: 'A Modelo 322 153. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 153 — adóügyi információ
+          '154':
+            help: 'A Modelo 322 154. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 154 — adóügyi információ
+          '155':
+            help: 'A Modelo 322 155. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 155 — adóügyi információ
+          '156':
+            help: 'A Modelo 322 156. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 156 — adóügyi információ
+          '157':
+            help: 'A Modelo 322 157. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 157 — adóügyi információ
+          '158':
+            help: 'A Modelo 322 158. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 158 — adóügyi információ
+          '159':
+            help: 'A Modelo 322 159. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 159 — adóügyi információ
+          '16':
+            help: 'A Modelo 322 16. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 16 — adóügyi információ
+          '160':
+            help: 'A Modelo 322 160. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 160 — adóügyi információ
+          '161':
+            help: 'A Modelo 322 161. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 161 — adóügyi információ
+          '162':
+            help: 'A Modelo 322 162. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 162 — adóügyi információ
+          '163':
+            help: 'A Modelo 322 163. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 163 — adóügyi információ
+          '164':
+            help: 'A Modelo 322 164. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 164 — adóügyi információ
+          '166':
+            help: 'A Modelo 322 166. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 166 — adóügyi információ
+          '167':
+            help: 'A Modelo 322 167. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 167 — adóügyi információ
+          '168':
+            help: 'A Modelo 322 168. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 168 — adóügyi információ
+          '169':
+            help: 'A Modelo 322 169. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 169 — adóügyi információ
+          '17':
+            help: 'A Modelo 322 17. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 17 — adóügyi információ
+          '170':
+            help: 'A Modelo 322 170. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 170 — adóügyi információ
+          '171':
+            help: 'A Modelo 322 171. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 171 — adóügyi információ
+          '172':
+            help: 'A Modelo 322 172. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 172 — adóügyi információ
+          '173':
+            help: 'A Modelo 322 173. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 173 — adóügyi információ
+          '18':
+            help: 'A Modelo 322 18. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 18 — adóügyi információ
+          '19':
+            help: 'A Modelo 322 19. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 19 — adóügyi információ
+          '20':
+            help: 'A Modelo 322 20. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 20 — adóügyi információ
+          '30':
+            help: 'A Modelo 322 30. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 30 — adóügyi információ
+          '31':
+            help: 'A Modelo 322 31. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 31 — adóügyi információ
+          '32':
+            help: 'A Modelo 322 32. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 32 — adóügyi információ
+          '33':
+            help: 'A Modelo 322 33. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 33 — adóügyi információ
+          '34':
+            help: 'A Modelo 322 34. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 34 — adóügyi információ
+          '35':
+            help: 'A Modelo 322 35. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 35 — adóügyi információ
+          '701':
+            help: A Modelo 322 701. casilla adóügyi adatai.
+            label: Casilla 701 — adóügyi mező
+          '702':
+            help: A Modelo 322 702. casilla adóügyi adatai.
+            label: Casilla 702 — adóügyi mező
+          '703':
+            help: A Modelo 322 703. casilla adóügyi adatai.
+            label: Casilla 703 — adóügyi mező
+          '705':
+            help: A Modelo 322 705. casilla adóügyi adatai.
+            label: Casilla 705 — adóügyi mező
+          '707':
+            help: A Modelo 322 707. casilla adóügyi adatai.
+            label: Casilla 707 — adóügyi mező
+          '709':
+            help: A Modelo 322 709. casilla adóügyi adatai.
+            label: Casilla 709 — adóügyi mező
+          '710':
+            help: A Modelo 322 710. casilla adóügyi adatai.
+            label: Casilla 710 — adóügyi mező
+          '711':
+            help: A Modelo 322 711. casilla adóügyi adatai.
+            label: Casilla 711 — adóügyi mező
+          '713':
+            help: A Modelo 322 713. casilla adóügyi adatai.
+            label: Casilla 713 — adóügyi mező
+          '719':
+            help: A Modelo 322 719. casilla adóügyi adatai.
+            label: Casilla 719 — adóügyi mező
+          '720':
+            help: A Modelo 322 720. casilla adóügyi adatai.
+            label: Casilla 720 — adóügyi mező
+          '721':
+            help: A Modelo 322 721. casilla adóügyi adatai.
+            label: Casilla 721 — adóügyi mező
+          '723':
+            help: A Modelo 322 723. casilla adóügyi adatai.
+            label: Casilla 723 — adóügyi mező
+          '725':
+            help: A Modelo 322 725. casilla adóügyi adatai.
+            label: Casilla 725 — adóügyi mező
+          '727':
+            help: A Modelo 322 727. casilla adóügyi adatai.
+            label: Casilla 727 — adóügyi mező
+          '728':
+            help: A Modelo 322 728. casilla adóügyi adatai.
+            label: Casilla 728 — adóügyi mező
+          '729':
+            help: A Modelo 322 729. casilla adóügyi adatai.
+            label: Casilla 729 — adóügyi mező
+          '731':
+            help: A Modelo 322 731. casilla adóügyi adatai.
+            label: Casilla 731 — adóügyi mező
+          '75':
+            help: 'A Modelo 322 75. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 75 — adóügyi információ
+          '84':
+            help: 'A Modelo 322 84. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 84 — adóügyi információ
+          filing-period:
+            help: A Modelo 322 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          filing-year:
+            help: A Modelo 322 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          iva-cuota-autorepercutida-intracomunitaria:
+            help: 'A casilla adatai: Casilla iva.autorepercutido.intracomunitaria:
+              iva adóösszeg autorepercutida intracomunitaria.'
+            label: 'Casilla iva.autorepercutido.intracomunitaria: iva adóösszeg autorepercutida
+              intracomunitaria'
+          iva-cuota-deducible-total:
+            help: 'A casilla adatai: Casilla iva.adóösszeg-levonható-total: iva adóösszeg
+              levonható total.'
+            label: 'Casilla iva.adóösszeg-levonható-total: iva adóösszeg levonható
+              total'
+          iva-cuota-devengada-total:
+            help: 'A casilla adatai: Casilla iva.adóösszeg-felszámított-total: iva
+              adóösszeg felszámított total.'
+            label: 'Casilla iva.adóösszeg-felszámított-total: iva adóösszeg felszámított
+              total'
+          iva-cuota-repercutida-general:
+            help: 'A casilla adatai: Casilla iva.felszámított.general: iva adóösszeg
+              felszámított general.'
+            label: 'Casilla iva.felszámított.general: iva adóösszeg felszámított general'
+          iva-cuota-repercutida-reducido:
+            help: 'A casilla adatai: Casilla iva.felszámított.csökkentett: iva adóösszeg
+              felszámított csökkentett.'
+            label: 'Casilla iva.felszámított.csökkentett: iva adóösszeg felszámított
+              csökkentett'
+          iva-cuota-repercutida-super-reducido:
+            help: 'A casilla adatai: Casilla iva.felszámított.szupercsökkentett: iva
+              adóösszeg felszámított super csökkentett.'
+            label: 'Casilla iva.felszámított.szupercsökkentett: iva adóösszeg felszámított
+              super csökkentett'
+          iva-cuota-soportada-interiores:
+            help: 'A casilla adatai: Casilla iva.viselt.interiores: iva adóösszeg
+              viselt interiores.'
+            label: 'Casilla iva.viselt.interiores: iva adóösszeg viselt interiores'
+          iva-resultado-regimen-general:
+            help: 'A casilla adatai: Casilla iva.eredmény-rendszer-general: iva eredmény
+              rendszer general.'
+            label: 'Casilla iva.eredmény-rendszer-general: iva eredmény rendszer general'
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
+            help: A Modelo 322 712. casilla adóügyi adatai.
+            label: Casilla 712 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-adquisiciones-intracomu:
+            help: A Modelo 322 708. casilla adóügyi adatai.
+            label: Casilla 708 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-co:
+            help: A Modelo 322 704. casilla adóügyi adatai.
+            label: Casilla 704 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-importaciones-bienes-de:
+            help: A Modelo 322 706. casilla adóügyi adatai.
+            label: Casilla 706 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-iva-deducible-en-operaciones-interiores:
+            help: A Modelo 322 700. casilla adóügyi adatai.
+            label: Casilla 700 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la:
+            help: A Modelo 322 730. casilla adóügyi adatai.
+            label: Casilla 730 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-adquisiciones-intracomu:
+            help: A Modelo 322 726. casilla adóügyi adatai.
+            label: Casilla 726 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-co:
+            help: A Modelo 322 722. casilla adóügyi adatai.
+            label: Casilla 722 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-importaciones-bienes-de:
+            help: A Modelo 322 724. casilla adóügyi adatai.
+            label: Casilla 724 — adóügyi mező
+          m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores:
+            help: A Modelo 322 718. casilla adóügyi adatai.
+            label: Casilla 718 — adóügyi mező
+          m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas:
+            help: 'A Modelo 322 74. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 74 — adóügyi információ
+          m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo:
+            help: 'A Modelo 322 10. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 10 — adóügyi információ
+          m322-liquidacion-iva-devengado-operaciones-intragrupo-base-imponible:
+            help: 'A Modelo 322 01. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 01 — adóügyi információ
+          m322-liquidacion-iva-devengado-operaciones-intragrupo-cuota:
+            help: 'A Modelo 322 03. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 03 — adóügyi információ
+          m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo:
+            help: 'A Modelo 322 02. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 02 — adóügyi információ
+          m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible:
+            help: 'A Modelo 322 27. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 27 — adóügyi információ
+          m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota:
+            help: 'A Modelo 322 29. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 29 — adóügyi információ
+          m322-liquidacion-iva-devengado-recargo-de-equivalencia-tipo:
+            help: 'A Modelo 322 28. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 28 — adóügyi információ
+          m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general:
+            help: 'A Modelo 322 12. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 12 — adóügyi információ
+          m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota:
+            help: 'A Modelo 322 14. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 14 — adóügyi információ
+          m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-tipo:
+            help: 'A Modelo 322 13. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 13 — adóügyi információ
+          m322-operaciones-no-sujetas-por-reglas-de-localizacion:
+            help: 'A Modelo 322 120. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 120 — adóügyi információ
+          m322-operaciones-no-sujetas-por-reglas-de-localizacion-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
+            help: 'A Modelo 322 123. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 123 — adóügyi információ
+          m322-operaciones-sujetas-con-inversion-del-sujeto-pasivo:
+            help: 'A Modelo 322 122. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 122 — adóügyi információ
+          m322-operaciones-sujetas-y-acogidas-a-los-regimenes-especiales-de-ventanilla-unica:
+            help: 'A Modelo 322 124. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 124 — adóügyi információ
       field:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.
@@ -2492,657 +2807,831 @@ modelo:
         2026-y-siguientes:
           casilla:
             '01':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [01].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [01]
             '02':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [02].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [02]
             '03':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [03].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [03]
             '04':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [04].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [04]
             '05':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [05].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [05]
             '06':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [06].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [06]
             '07':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [07].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [07]
             08:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [08].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [08]
             09:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [09].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [09]
             '10':
-              help: null
+              help: 'A Modelo 322 10. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [10].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
                 és adóösszegeinek módosítása [10]
             '107':
-              help: null
+              help: 'A Modelo 322 107. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [107].'
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Közös terület [107]
             '11':
-              help: null
+              help: 'A Modelo 322 11. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [11].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek adóalapjainak
                 és adóösszegeinek módosítása [11]
             '112':
-              help: null
+              help: 'A Modelo 322 112. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [112].'
               label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
                 utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
                 követően [112]
             '12':
-              help: null
+              help: 'A Modelo 322 12. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [12].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [12]
             '120':
-              help: null
+              help: 'A Modelo 322 120. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [120].'
               label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
                 (a 123. rovatban szereplők kivételével) [120]
             '122':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső -val/-vel
+                fordított adózás [122].'
               label: Fordított adózás alá eső adóköteles ügyletek [122]
             '123':
-              help: null
+              help: 'A Modelo 322 123. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [123].'
               label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
                 szabályozás alá tartozó ügyletek [123]
             '124':
-              help: null
+              help: 'A Modelo 322 124. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [124].'
               label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
                 [124]
             '125':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek adóztatás alá eső -val/-vel
+                fordított adózás [125].'
               label: Fordított adózás alá eső adóköteles ügyletek [125]
             '126':
-              help: null
+              help: 'A Modelo 322 126. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [126].'
               label: A teljesítési hely szabályai szerint nem adóztatandó, egyablakos
                 szabályozás alá tartozó ügyletek [126]
             '127':
-              help: null
+              help: 'A Modelo 322 127. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [127].'
               label: Az egyablakos különleges szabályozás alá tartozó adóköteles ügyletek
                 [127]
             '128':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek intragrupo valoradas
+                conforme a lo dispuesto en los arts. 78 és 79 LIVA [128].'
               label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
             '13':
-              help: null
+              help: 'A Modelo 322 13. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [13].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [13]
             '14':
-              help: null
+              help: 'A Modelo 322 14. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [14].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [14]
             '15':
-              help: null
+              help: 'A Modelo 322 15. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [15].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [15]
             '150':
-              help: null
+              help: 'A Modelo 322 150. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [150].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [150]
             '151':
-              help: null
+              help: 'A Modelo 322 151. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [151].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [151]
             '152':
-              help: null
+              help: 'A Modelo 322 152. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [152].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [152]
             '153':
-              help: null
+              help: 'A Modelo 322 153. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [153].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [153]
             '154':
-              help: null
+              help: 'A Modelo 322 154. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [154].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [154]
             '155':
-              help: null
+              help: 'A Modelo 322 155. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [155].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [155]
             '156':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóalap [156].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [156]
             '157':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Kulcs % [157].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [157]
             '158':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóösszeg [158].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [158]
             '159':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [159].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [159]
             '16':
-              help: null
+              help: 'A Modelo 322 16. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [16].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [16]
             '160':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [160].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [160]
             '161':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [161].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [161]
             '162':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [162].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [162]
             '163':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [163].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [163]
             '164':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [164].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [164]
             '165':
-              help: null
+              help: 'A Modelo 322 165. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [165].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóalap [165]
             '166':
-              help: null
+              help: 'A Modelo 322 166. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [166].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [166]
             '167':
-              help: null
+              help: 'A Modelo 322 167. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [167].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [167]
             '168':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóalap [168].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [168]
             '169':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Kulcs % [169].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [169]
             '17':
-              help: null
+              help: 'A Modelo 322 17. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [17].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [17]
             '170':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóösszeg [170].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [170]
             '171':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóalap [171].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóalap
                 [171]
             '172':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Kulcs % [172].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adókulcs
                 % [172]
             '173':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Ügyletek intragrupo. Adóösszeg [173].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [173]
             '18':
-              help: null
+              help: 'A Modelo 322 18. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [18].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint [18]
             '19':
-              help: null
+              help: 'A Modelo 322 19. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [19].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [19]
             '20':
-              help: null
+              help: 'A Modelo 322 20. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [20].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [20]
             '21':
-              help: null
+              help: 'A Modelo 322 21. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [21].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
                 Adóalap [21]
             '22':
-              help: null
+              help: 'A Modelo 322 22. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [22].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Közösségen belüli termék- és szolgáltatásbeszerzések.
                 Adóösszeg [22]
             '23':
-              help: null
-              label: null
+              help: 'A Modelo 322 23. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [23].'
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével) [23]
             '24':
-              help: null
-              label: null
+              help: 'A Modelo 322 24. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [24].'
+              label: Elszámolás. FIZETENDŐ IVA. Egyéb fordított adózású ügyletek (a
+                Közösségen belüli beszerzések kivételével). Adóösszeg [24]
             '25':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Modificación bases és adóösszegek en rendszer general. Adóalap [25].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
                 az általános szabályozásban. Adóalap [25]
             '26':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Modificación bases és adóösszegek en rendszer general. Adóösszeg [26].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Adóalapok és adóösszegek módosítása
                 az általános szabályozásban. Adóösszeg [26]
             '27':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóalap [27].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [27]
             '28':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Kulcs % [28].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [28]
             '29':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóösszeg [29].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [29]
             '30':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóalap [30].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [30]
             '31':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Kulcs % [31].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [31]
             '32':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóösszeg [32].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [32]
             '33':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóalap [33].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóalap
                 [33]
             '34':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Kulcs % [34].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [34]
             '35':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Egyenértékűségi felár. Adóösszeg [35].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adóösszeg
                 [35]
             '36':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Modificación bases és adóösszegek - egyenértékűségi felár. Adóalap
+                [36].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
                 és összegeinek módosítása. Adóalap [36]
             '37':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
+                Modificación bases és adóösszegek - egyenértékűségi felár. Adóösszeg
+                [37].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Az egyenértékűségi felár alapjainak
                 és összegeinek módosítása. Adóösszeg [37]
             '38':
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: Total adóösszeg felszámított ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
+                [38].'
+              label: Total adóösszeg felszámított ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
+                [38]
             '39':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.
+                szerinti adóösszegek soportadas en ügyletek intragrupo corrientes.
+                Adóalap [39].'
               label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
                 felszámított adóra. Adóalap [39]
             '40':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.
+                szerinti adóösszegek soportadas en ügyletek intragrupo corrientes.
+                Adóösszeg [40].'
               label: Elszámolás. Levonható áfa. Csoporton belüli folyó ügyletek után
                 felszámított adóra. Adóösszeg [40]
             '41':
-              help: null
+              help: 'A Modelo 322 41. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [41].'
               label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
                 után felszámított adóra. Adóalap [41]
             '42':
-              help: null
+              help: 'A Modelo 322 42. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [42].'
               label: Elszámolás. Levonható áfa. Csoporton belüli tárgyieszköz-ügyletek
                 után felszámított adóra. Adóösszeg [42]
             '43':
-              help: null
+              help: 'A Modelo 322 43. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [43].'
               label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
                 helyesbítése. Adóalap [43]
             '44':
-              help: null
+              help: 'A Modelo 322 44. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [44].'
               label: Elszámolás. Levonható áfa. Csoporton belüli ügyletek levonásainak
                 helyesbítése. Adóösszeg [44]
             '45':
-              help: null
+              help: 'A Modelo 322 45. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [45].'
               label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
                 felszámított adóra. Adóalap [45]
             '46':
-              help: null
+              help: 'A Modelo 322 46. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [46].'
               label: Elszámolás. Levonható áfa. Egyéb belföldi folyó ügyletek után
                 felszámított adóra. Adóösszeg [46]
             '47':
-              help: null
+              help: 'A Modelo 322 47. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [47].'
               label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
                 után felszámított adóra. Adóalap [47]
             '48':
-              help: null
+              help: 'A Modelo 322 48. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [48].'
               label: Elszámolás. Levonható áfa. Egyéb belföldi tárgyieszköz-ügyletek
                 után felszámított adóra. Adóösszeg [48]
             '49':
-              help: null
+              help: 'A Modelo 322 49. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [49].'
               label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
                 adóra. Adóalap [49]
             '50':
-              help: null
+              help: 'A Modelo 322 50. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [50].'
               label: Elszámolás. Levonható áfa. Forgóeszköz-import után felszámított
                 adóra. Adóösszeg [50]
             '500':
-              help: null
+              help: 'Tekintse át a casilla adatait: Prorratas - 1 - Kód CNAE [500].'
               label: Prorrata - 1 - CNAE-kód [500]
             '501':
-              help: null
+              help: 'A Modelo 322 501. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [501].'
               label: Prorrata - 1 - Ügyletek összege [501]
             '502':
-              help: null
+              help: 'A Modelo 322 502. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [502].'
               label: Prorrata - 1 - Levonási joggal járó ügyletek összege [502]
             '503':
-              help: null
+              help: 'A Modelo 322 503. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [503].'
               label: Prorrata - 1 - Arányosítás típusa [503]
             '504':
-              help: null
+              help: 'A Modelo 322 504. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [504].'
               label: Prorrata - 1 - Arányosítás %-a [504]
             '505':
-              help: null
+              help: 'Tekintse át a casilla adatait: Prorratas - 2 - Kód CNAE [505].'
               label: Prorrata - 2 - CNAE-kód [505]
             '506':
-              help: null
+              help: 'A Modelo 322 506. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [506].'
               label: Prorrata - 2 - Ügyletek összege [506]
             '507':
-              help: null
+              help: 'A Modelo 322 507. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [507].'
               label: Prorrata - 2 - Levonási joggal járó ügyletek összege [507]
             '508':
-              help: null
+              help: 'A Modelo 322 508. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [508].'
               label: Prorrata - 2 - Arányosítás típusa [508]
             '509':
-              help: null
+              help: 'A Modelo 322 509. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [509].'
               label: Prorrata - 2 - Arányosítás %-a [509]
             '51':
-              help: null
+              help: 'A Modelo 322 51. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [51].'
               label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
                 adóra. Adóalap [51]
             '510':
-              help: null
+              help: 'Tekintse át a casilla adatait: Prorratas - 3 - Kód CNAE [510].'
               label: Prorrata - 3 - CNAE-kód [510]
             '511':
-              help: null
+              help: 'A Modelo 322 511. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [511].'
               label: Prorrata - 3 - Ügyletek összege [511]
             '512':
-              help: null
+              help: 'A Modelo 322 512. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [512].'
               label: Prorrata - 3 - Levonási joggal járó ügyletek összege [512]
             '513':
-              help: null
+              help: 'A Modelo 322 513. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [513].'
               label: Prorrata - 3 - Arányosítás típusa [513]
             '514':
-              help: null
+              help: 'A Modelo 322 514. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [514].'
               label: Prorrata - 3 - Arányosítás %-a [514]
             '515':
-              help: null
+              help: 'Tekintse át a casilla adatait: Prorratas - 4 - Kód CNAE[515].'
               label: Prorrata - 4 - CNAE-kód [515]
             '516':
-              help: null
+              help: 'A Modelo 322 516. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [516].'
               label: Prorrata - 4 - Ügyletek összege [516]
             '517':
-              help: null
+              help: 'A Modelo 322 517. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [517].'
               label: Prorrata - 4 - Levonási joggal járó ügyletek összege [517]
             '518':
-              help: null
+              help: 'A Modelo 322 518. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [518].'
               label: Prorrata - 4 - Arányosítás típusa [518]
             '519':
-              help: null
+              help: 'A Modelo 322 519. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [519].'
               label: Prorrata - 4 - Arányosítás %-a [519]
             '52':
-              help: null
+              help: 'A Modelo 322 52. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [52].'
               label: Elszámolás. Levonható áfa. Tárgyieszköz-import után felszámított
                 adóra. Adóösszeg [52]
             '520':
-              help: null
+              help: 'Tekintse át a casilla adatait: Prorratas - 5 - Kód CNAE [520].'
               label: Prorrata - 5 - CNAE-kód [520]
             '521':
-              help: null
+              help: 'A Modelo 322 521. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [521].'
               label: Prorrata - 5 - Ügyletek összege [521]
             '522':
-              help: null
+              help: 'A Modelo 322 522. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [522].'
               label: Prorrata - 5 - Levonási joggal járó ügyletek összege [522]
             '523':
-              help: null
+              help: 'A Modelo 322 523. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [523].'
               label: Prorrata - 5 - Arányosítás típusa [523]
             '524':
-              help: null
+              help: 'A Modelo 322 524. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [524].'
               label: Prorrata - 5 - Arányosítás %-a [524]
             '53':
-              help: null
+              help: 'A Modelo 322 53. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [53].'
               label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
                 szolgáltatásbeszerzésekre. Adóalap [53]
             '54':
-              help: null
+              help: 'A Modelo 322 54. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [54].'
               label: Elszámolás. Levonható áfa. Közösségen belüli forgóeszköz- és
                 szolgáltatásbeszerzésekre. Adóösszeg [54]
             '55':
-              help: null
+              help: 'A Modelo 322 55. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [55].'
               label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
                 Adóalap [55]
             '56':
-              help: null
+              help: 'A Modelo 322 56. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [56].'
               label: Elszámolás. Levonható áfa. Közösségen belüli tárgyieszköz-beszerzésekre.
                 Adóösszeg [56]
             '57':
-              help: null
+              help: 'A Modelo 322 57. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [57].'
               label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
                 (nem csoporton belüli). Adóalap [57]
             '58':
-              help: null
+              help: 'A Modelo 322 58. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [58].'
               label: Elszámolás. Levonható áfa. A többi ügylet levonásainak helyesbítése
                 (nem csoporton belüli). Adóösszeg [58]
             '59':
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.Beszámítás
+                rendszer especial A.G. és P. Adóösszeg [59].'
               label: Elszámolás. Levonható áfa. Kompenzáció az A.G. y P különleges
                 szabályozásban. Adóösszeg [59]
             '60':
-              help: null
+              help: 'A Modelo 322 60. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [60].'
               label: Elszámolás. Levonható áfa. Tárgyi eszközök korrekciója. Adóösszeg
                 [60]
             '61':
-              help: null
+              help: 'A Modelo 322 61. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [61].'
               label: Elszámolás. Levonható áfa. A végleges arányosítási százalék alkalmazása
                 miatti korrekció. Adóösszeg [61]
             '62':
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: Total a levonni ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62].'
+              label: Összes levonható ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
+                [62]
             '63':
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás (continuación).
+                Diferencia ([38] - [62]) . [63].'
+              label: Elszámolás (folytatás). Különbözet ([38] - [62]) . [63]
             '64':
-              help: null
+              help: 'A Modelo 322 64. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [64].'
               label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
                 (%) [64]
             '65':
-              help: null
+              help: 'A Modelo 322 65. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [65].'
               label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
                 [65]
             '66':
-              help: null
+              help: 'A Modelo 322 66. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [66].'
               label: Elszámolás (folytatás). A csoporthoz csatlakozás előtti időszakokból
                 beszámítandó összegek [66]
             '67':
-              help: null
+              help: 'A Modelo 322 67. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [67].'
               label: Elszámolás (folytatás). Kizárólag az állami adóhatóság és a foral
                 adóhatóságok által együttesen adóztatott adóalanyoknak. Az éves korrekció
                 eredménye [67]
             '68':
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás (continuación).
+                Eredmény ([65] + [77] - [66] + [67]) [68].'
+              label: Adóelszámolás (continuación). Eredmény ([65] + [77] - [66] +
+                [67]) [68]
             '69':
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
               label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos
                 jogcímen, évre és időszakra korábban benyújtott önadózások eredménye'
             '70':
-              help: null
-              label: null
+              help: 'Tekintse át a casilla adatait: Eredmény - önadózási bevallás
+                ([68] - [69] - [112]) [70].'
+              label: Eredmény - önadózási bevallás ([68] - [69] - [112]) [70]
             '700':
-              help: null
+              help: 'A Modelo 322 700. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [700].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [700]
             '701':
-              help: null
+              help: 'A Modelo 322 701. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [701].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [701]
             '702':
-              help: null
+              help: 'A Modelo 322 702. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [702].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [702]
             '703':
-              help: null
+              help: 'A Modelo 322 703. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [703].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
                 [703]
             '704':
-              help: null
+              help: 'A Modelo 322 704. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [704].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Forgóeszközök. Adóalap [704]
             '705':
-              help: null
+              help: 'A Modelo 322 705. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [705].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Forgóeszközök. Levonható adóösszeg [705]
             '706':
-              help: null
+              help: 'A Modelo 322 706. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [706].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Tárgyi eszközök. Adóalap [706]
             '707':
-              help: null
+              help: 'A Modelo 322 707. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [707].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [707]
             '708':
-              help: null
+              help: 'A Modelo 322 708. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [708].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [708]
             '709':
-              help: null
+              help: 'A Modelo 322 709. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [709].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [709]
             '71':
-              help: null
+              help: 'A Modelo 322 71. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [71].'
               label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
                 [71]
             '710':
-              help: null
+              help: 'A Modelo 322 710. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [710].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
                 [710]
             '711':
-              help: null
+              help: 'A Modelo 322 711. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [711].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [711]
             '712':
-              help: null
+              help: 'A Modelo 322 712. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [712].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Adóalap [712]
             '713':
-              help: null
+              help: 'A Modelo 322 713. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [713].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Levonható adóösszeg [713]
             '714':
-              help: null
+              help: 'A Modelo 322 714. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [714].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Levonások helyesbítése. Adóalap [714]
             '715':
-              help: null
+              help: 'A Modelo 322 715. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [715].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Levonások helyesbítése. Levonható adóösszeg [715]
             '716':
-              help: null
+              help: 'A Modelo 322 716. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [716].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
                 Tárgyi eszközök korrekciója. Levonható adóösszeg [716]
             '717':
-              help: null
-              label: null
+              help: 'A Modelo 322 717. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [717].'
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 1. Levonások összege (701 + 703 + 705 + 707
+                + 709 + 711 + 713 + 715 + 716). Levonható adóösszeg [717]'
             '718':
-              help: null
+              help: 'A Modelo 322 718. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [718].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [718]
             '719':
-              help: null
+              help: 'A Modelo 322 719. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [719].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [719]
             '72':
-              help: null
+              help: 'Tekintse át a casilla adatait: Información adicional. Exportok
+                és ügyletek asimiladas. [72].'
               label: Kiegészítő információ. Export és azzal egy tekintet alá eső ügyletek
                 [72]
             '720':
-              help: null
+              help: 'A Modelo 322 720. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [720].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Adóalap [720]
             '721':
-              help: null
+              help: 'A Modelo 322 721. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [721].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Belföldi ügyletek levonható áfája. Tárgyi eszközök. Levonható adóösszeg
                 [721]
             '722':
-              help: null
+              help: 'A Modelo 322 722. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [722].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Forgóeszközök. Adóalap [722]
             '723':
-              help: null
+              help: 'A Modelo 322 723. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [723].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Forgóeszközök. Levonható adóösszeg [723]
             '724':
-              help: null
+              help: 'A Modelo 322 724. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [724].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Tárgyi eszközök. Adóalap [724]
             '725':
-              help: null
+              help: 'A Modelo 322 725. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [725].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Import levonható áfája. Tárgyi eszközök. Levonható adóösszeg [725]
             '726':
-              help: null
+              help: 'A Modelo 322 726. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [726].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Adóalap [726]
             '727':
-              help: null
+              help: 'A Modelo 322 727. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [727].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [727]
             '728':
-              help: null
+              help: 'A Modelo 322 728. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [728].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Tárgyi eszközök. Adóalap
                 [728]
             '729':
-              help: null
+              help: 'A Modelo 322 729. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [729].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Közösségen belüli beszerzések levonható áfája. Forgóeszközök és szolgáltatások.
                 Levonható adóösszeg [729]
             '730':
-              help: null
+              help: 'A Modelo 322 730. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [730].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Adóalap [730]
             '731':
-              help: null
+              help: 'A Modelo 322 731. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [731].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Kompenzáció a mezőgazdasági, állattenyésztési és halászati különleges
                 szabályozásban. Levonható adóösszeg [731]
             '732':
-              help: null
+              help: 'A Modelo 322 732. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [732].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Levonások helyesbítése. Adóalap [732]
             '733':
-              help: null
+              help: 'A Modelo 322 733. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [733].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Levonások helyesbítése. Levonható adóösszeg [733]
             '734':
-              help: null
+              help: 'A Modelo 322 734. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [734].'
               label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
                 Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
             '735':
-              help: null
-              label: null
+              help: 'A Modelo 322 735. casilla adóügyi adatai: adóügyi információ
+                Hivatkozások: [735].'
+              label: 'Elkülönített levonási szabályozás alá tartozó tevékenységek.
+                Levonható IVA: csoport 2. Levonások összege (719 + 721 + 723 + 725
+                + 727 + 729 + 731 + 733 + 734). Levonható adóösszeg [735]'
             '74':
               help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
                 adat.
@@ -3154,18 +3643,22 @@ modelo:
               label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
                 felszámított adó
             '76':
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció adóösszegek art. 80.Cinco.5ª
+                LIVA [76].'
               label: Adóösszegek korrekciója a 80.Cinco.5ª LIVA szerint [76]
             '77':
-              help: null
+              help: 'A Modelo 322 77. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [77].'
               label: Elszámolás (folytatás). A vámhatóság által megállapított, még
                 be nem fizetett import áfa [77]
             '79':
-              help: null
+              help: 'A Modelo 322 79. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [79].'
               label: Az adóévben végzett ügyletek. Ingatlanértékesítések és nem szokásos
                 pénzügyi ügyletek [79]
             '80':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
+                Ügyletek en rendszer general [80].'
               label: Az adóévben végzett ügyletek. Ügyletek az általános szabályozás
                 szerint [80]
             '81':
@@ -3174,164 +3667,190 @@ modelo:
               label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek
                 a LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
             '83':
-              help: null
+              help: 'A Modelo 322 83. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [83].'
               label: Az adóévben végzett ügyletek. Levonási jog nélküli mentes ügyletek
                 [83]
             '84':
-              help: null
+              help: 'A Modelo 322 84. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [84].'
               label: A teljesítési hely szabályai szerint nem adóztatandó ügyletek
                 (a 126. rovatban szereplők kivételével) [84]
             '86':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
+                Ügyletek en rendszer simplificado [86].'
               label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
                 szerint [86]
             '88':
-              help: null
-              label: null
+              help: 'A Modelo 322 88. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [88].'
+              label: Az évben teljesített ügyletek. Teljes ügyleti forgalom (a IVA-törvény
+                121. cikke) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 +
+                86 + 95 + 96 + 97 + 98 - 79 - 99) [88]
             '89':
-              help: null
+              help: 'A Modelo 322 89. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [89].'
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Álava [89]
             '90':
-              help: null
+              help: 'A Modelo 322 90. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [90].'
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Gipuzkoa [90]
             '91':
-              help: null
+              help: 'A Modelo 322 91. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [91].'
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Biscaya [91]
             '92':
-              help: null
+              help: 'A Modelo 322 92. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [92].'
               label: Területenkénti adózási információ (csak több adóhatóság által
                 adóztatott adóalanyoknak) - Navarra [92]
             '93':
-              help: null
+              help: 'A Modelo 322 93. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [93].'
               label: Az adóévben végzett ügyletek. Közösségen belüli termék- és szolgáltatásértékesítések
                 [93]
             '94':
-              help: null
+              help: 'A Modelo 322 94. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [94].'
               label: Az adóévben végzett ügyletek. Export és egyéb, levonási joggal
                 járó mentes ügyletek [94]
             '95':
-              help: null
+              help: 'Tekintse át a casilla adatait: Ügyletek realizadas -ban adóév.
+                Ügyletek en rendszer especial - agricultura, ganadería és pesca [95].'
               label: Az adóévben végzett ügyletek. Ügyletek a mezőgazdasági, állattenyésztési
                 és halászati különleges szabályozás szerint [95]
             '96':
-              help: null
+              help: 'A Modelo 322 96. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [96].'
               label: Az adóévben végzett ügyletek. Az egyenértékűségi felár különleges
                 szabályozása alá tartozó adóalanyok ügyletei [96]
             '97':
-              help: null
+              help: 'A Modelo 322 97. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [97].'
               label: Az adóévben végzett ügyletek. Ügyletek a használt cikkekre, műalkotásokra,
                 régiségekre és gyűjteménydarabokra vonatkozó különleges szabályozás
                 szerint [97]
             '98':
-              help: null
+              help: 'A Modelo 322 98. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [98].'
               label: Az adóévben végzett ügyletek. Ügyletek az utazási irodákra vonatkozó
                 különleges szabályozás szerint [98]
             '99':
-              help: null
+              help: 'A Modelo 322 99. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [99].'
               label: Az adóévben végzett ügyletek. Tárgyi eszközök értékesítése [99]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 5.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Tevékenységi kód - Fő
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: IAE besorolás - Fő
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Jogosult a benzin, gázolaj és bioüzemanyag értékesítése utáni
                 előleg levonására
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Pénzforgalmi elszámolású ügyletek címzettje
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóév.'
               label: Az adóbevallás vonatkozási éve
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: null
+              help: 'Tekintse át a casilla adatait: NIF - szervezet anyavállalat.'
               label: Az anyavállalat adószáma
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: null
+              help: 'Tekintse át a casilla adatait: Exonerado - bevallás-resumen éves,
+                modelo 390.'
               label: Mentesül a 390-es éves összesítő bevallás alól
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Anyavállalat vagy leányvállalat
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: 'Különleges arányosítás: választás vagy visszavonás'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: A havi visszatérítési nyilvántartásban szerepel
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: A LIVA 163 sexies.Ötödik cikke szerinti rendszer választása
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: null
+              help: A Modelo 322 . casilla adóügyi adatai.
               label: Kizárólag tartományi adóztatás
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: null
+              help: 'A Modelo 322 . casilla adóügyi adatai: adóügyi információ.'
               label: Az éves forgalom nem nulla
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg IVA autorepercutida
+                en Közösségen belüli beszerzések (LIVA art 84.Uno.2).'
               label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: null
+              help: 'Tekintse át a casilla adatait: Total adóösszeg IVA levonható
+                (viselt en ügyletek interiores + autorepercutido levonható).'
               label: Összes levonható ÁFA összeg
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: null
+              help: 'Tekintse át a casilla adatait: Total adóösszeg Felszámított áfa
+                (felszámított a los tres tipos + autorepercutido en Közösségen belüli
+                beszerzések).'
               label: Összes keletkezett ÁFA összeg
             x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
               help: A 21%-os általános kulccsal számított felszámított ÁFA teljes
                 összege.
               label: Felszámított ÁFA összeg általános kulccsal (21%)
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
+                kulcs csökkentett (10%).'
               label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
+                kulcs szupercsökkentett (4%).'
               label: Felszámított ÁFA összeg szupercsökkentett kulccsal (4%)
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Eredmény - rendszer general (adóösszeg
+                felszámított - adóösszeg levonható).'
               label: Általános rendszer eredménye
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóösszeg Levonható áfa en ügyletek
+                interiores corrientes.'
               label: Levonható ÁFA összeg belföldi folyó ügyletek után
           construct:
             modelo-322-iva-grupo-individual:

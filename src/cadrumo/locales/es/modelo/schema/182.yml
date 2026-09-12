@@ -12,28 +12,39 @@ modelo:
         '2025':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
-              label: Ejercicio al que se refiere la declaracion
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                al que se refiere la declaración.'
+              label: Ejercicio al que se refiere la declaración
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
-              label: Tipo de declaracion (originaria / sustitutiva / complementaria)
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                declaración (originaria / sustitutiva / complementaria).'
+              label: Tipo de declaración (originaria / sustitutiva / complementaria)
             x-ehkn0rpi5pi6urj1dpq6abbed5j0:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                donante (persona fisica, juridica o entidad sin fines lucrativos donataria
+                de referencia).'
               label: NIF del donante (persona fisica, juridica o entidad sin fines
                 lucrativos donataria de referencia)
             x-ehkn0rpi5pi6urj1dpq6abbedtmm4sj5:
-              help: null
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 182.
               label: Apellidos y nombre, o razon social, del donante
             x-ehkn0rpi5pkmqs3fe9q6abb4dtn62p3f:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                del donativo, donacion o aportacion recibida en el ejercicio (sin
+                signo, en euros).'
               label: Importe del donativo, donacion o aportacion recibida en el ejercicio
                 (sin signo, en euros)
             x-ehkn0rpi5po6usj3cln78obackmm8pb4elhm6qbfdo:
-              help: null
-              label: Porcentaje de deduccion aplicable al donativo (regimen fiscal
+              help: 'Consulte la información correspondiente a la casilla: Porcentaje
+                de deducción aplicable al donativo (régimen fiscal del donante, art.
+                68.3 LIRPF / régimen especial Ley 49/2002).'
+              label: Porcentaje de deducción aplicable al donativo (regimen fiscal
                 del donante, art. 68.3 LIRPF / regimen especial Ley 49/2002)
             x-ehkn0rpi5pp6aorle9p6arj3d5gg:
-              help: null
+              help: 'Consulte la información correspondiente a la casilla: Indicador
+                de donativo recurrente (donativo plurianual a la misma entidad donataria,
+                dos o mas ejercicios consecutivos).'
               label: Indicador de donativo recurrente (donativo plurianual a la misma
                 entidad donataria, dos o mas ejercicios consecutivos)
           construct:

@@ -254,8 +254,6 @@ errors:
       compatible with the calculation revision's current state.
     error_modelo_casilla_provenance_missing: An engine-result casilla has no definition
       in the registry.
-    error_modelo_detail_row_wrong_modelo: Detail row type {row_type} belongs to modelo
-      {owning_modelo}, but this calculation is for modelo {work_unit_modelo}.
     error_modelo_external_filing_import: The imported external filing could not be
       persisted. Check the casilla values and the evidence reference.
     error_modelo_filing_record_not_found: The requested filing record was not found.
@@ -756,8 +754,6 @@ errors:
       available catalogue.
     refused_application_live_input: The live AEAT read request cannot be executed
       with the input provided.
-    refused_application_registry_input: The modelo registry request cannot be executed
-      with the input provided.
     refused_auth_certificate_source_not_found: The named certificate source is not
       registered.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
@@ -1003,8 +999,6 @@ errors:
       no table with a header row.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
       be performed for this modelo or snapshot.
-    refused_topic_catalogue_empty: The bundled topic catalogue contains no topics.
-    refused_topic_not_found: The requested topic was not found.
     refused_user_profile_validation: A user profile value is not valid. Correct the
       field shown.
     refused_wizard_answer_type: A wizard answer field received an unexpected type

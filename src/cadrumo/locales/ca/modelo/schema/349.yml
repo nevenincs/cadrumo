@@ -9,68 +9,76 @@ modelo:
         2020-y-siguientes:
           casilla:
             x-chim6r1ecdgmqoj9dsmn0pbid5nm8qb3d5i62p0:
-              help: null
+              help: 'Consulteu la informació de la casella: Indicador de canvi de
+                periodicidad en la obligación de declarar.'
               label: Indicador de canvi de periodicitat en l'obligació de declarar
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: Informació fiscal de la casella 121-122 del Modelo 349.
               label: Declaració complementària o substitutiva
             x-chim6r1ed5mn0rriehiiqrrgclp62or9dtn6aso:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las operacions
+                intracomunitàries.'
               label: Import de les operacions intracomunitàries
             x-chim6r1ed5mn0rriehiiqsj5cdq6ipj9cdgm6qbfdpin6:
-              help: null
+              help: 'Consulteu la informació de la casella: Import de las rectificaciones.'
               label: Import de les rectificacions
             x-chim6r1edpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: Informació fiscal de la casella 391-399 del Modelo 349.
               label: NIF del representant legal del declarant
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: Informació fiscal de la casella 108-120 del Modelo 349.
               label: Número identificatiu de la declaració
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: Informació fiscal de la casella 123-135 del Modelo 349.
               label: Número identificatiu de la declaració anterior
             x-chim6r1edpqmqpbidsmmus35e9gm8rriclpg:
-              help: null
+              help: Informació fiscal de la casella 138-146 del Modelo 349.
               label: Nombre total d'operadors intracomunitaris
             x-chim6r1edpqmqpbidsmn4pb3ehkmcqb3c5hmirreclpg:
-              help: null
+              help: Informació fiscal de la casella 162-170 del Modelo 349.
               label: Nombre total d'operadors intracomunitaris amb rectificacions
             x-dto2sobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 93-132 del Modelo 349.
               label: Cognoms i nom o raó social de l'operador intracomunitari
             x-dto2soj1ediiqqbde1nmsqb2dhig:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 134-146
+                del Modelo 349.
               label: Base imposable o import de l'operació intracomunitària
             x-dto2sorcc5r6abbfe1in4ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Clave de operacion intracomunitaria.'
               label: Clau d'operació intracomunitària
             x-dto2sorfchkmerpde1gmiso:
-              help: null
+              help: Informació fiscal de la casella 76-77 del Modelo 349.
               label: Codi de país de l'operador comunitari
             x-dto2srj9comm6rrdeln6it31e9kmu:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 78-92
+                del Modelo 349.
               label: NIF de l'operador comunitari
             x-e9im6t1ec9gn6p9dc5n78pbid5nn4:
-              help: null
+              help: Informació fiscal de la casella 166-178 del Modelo 349.
               label: Base imposable declarada anteriorment
             x-e9im6t1ec9gn6p9de9im6t39cpkm6ob4c4:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 153-165
+                del Modelo 349.
               label: Base imposable o imports rectificats
             x-e9im6t1ecll6asj3d5hmirpde9im6t39cpkm6ob4ds:
-              help: null
+              help: 'Consulteu la informació de la casella: Exercici rectificado.'
               label: Exercici rectificat
             x-e9im6t1ee1in4qbfchniqsj5cdq6ipj9cdgm8ro:
-              help: null
+              help: 'Consulteu la informació de la casella: Període rectificado.'
               label: Període rectificat
             x-edqn6t39ehqn8rpec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 196-235
+                del Modelo 349.
               label: Cognoms i nom o raó social del subjecte passiu substitut
             x-edqn6t39ehqn8rpedpkmc:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del empresario o profesional
+                destinatario final sustituto.'
               label: NIF de l'empresari o professional destinatari final substitut
           construct:
             modelo-349-informative:
               field:
-                title: null
+                title: Declaració informativa d'operacions intracomunitàries del Model
+                  349
           field:
-            label: null
+            label: Casella— informació fiscal

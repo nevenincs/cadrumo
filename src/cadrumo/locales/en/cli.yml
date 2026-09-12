@@ -599,8 +599,6 @@ cli:
         modelo_help: Filter by portals linked to a modelo
         portal_id_help: Portal identifier
         view_help: Show a portal catalogue entry
-      registry_root_help: Registry root
-      source_root_help: Project source root
       to_year_help: Last filing year
       verify:
         app_help: Read-only NIF verification audit log
@@ -954,12 +952,6 @@ cli:
           0513=1150 for age supplement). Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
           (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
-        no_m130_revisions: No M130 revisions for the specified year. Run `aeat app
-          modelo work calculate --modelo 130 --year %{year} --period 1T` for each
-          quarter first.
-        no_m130_units: No M130 work units for the specified year. Create and calculate
-          M130 work units first with `aeat app modelo work create --modelo 130 --year
-          %{year} --period 1T`.
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
@@ -2139,7 +2131,6 @@ cli:
       integrity:
         objects_help: Check secure-object integrity.
         objects_namespace_help: Restrict secure-object integrity checks to one namespace.
-        registry_help: Check calculation registry integrity.
       integrity_help: Probe secure-object and registry integrity.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
@@ -2984,7 +2975,6 @@ cli:
         modelo_work: Create and operate modelo work units.
         overview_status: Summarize current profile and work state.
         paragraph_operational_workflow: App commands operate on the active profile.
-        registry_inspect: Inspect registry metadata.
         review_queue: List items waiting for operator review.
         review_view: Inspect one review item.
         section_ledger: Ledger
@@ -3083,7 +3073,6 @@ cli:
         workflow_modelo: Create or operate modelo work units.
         workflow_overview: Summarize profile and work state.
         workflow_profile_status: Show profile readiness.
-        workflow_registry: Inspect validated registry metadata and sources.
         workflow_review_queue: Show profile-wide items awaiting operator review.
         workflow_verification: List saved filing verification reports.
     landing:
@@ -3250,84 +3239,15 @@ cli:
         casillas before filing.
     year_help: Filing year for --period (e.g. 2024).
   registry:
-    app_help: Tax models registry management
-    casilla_help: Casilla id to compare; repeat to override the default computed casillas
-    citations:
-      app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
-      articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
-      legal_id_help: Stable legal authority id (e.g. ley-37-1992)
-      list_help: List the legal authorities codified in the legal corpus
-      tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
-      verify_help: Verify the legal-norm corpus integrity
-      view_help: Show one legal authority and, optionally, one of its articles
-    diff_revisions_from_year_help: Earlier filing year whose covering revision is
-      the diff baseline
-    diff_revisions_help: Diff the registry revisions of one modelo across two filing
-      years
-    diff_revisions_modelo_help: Modelo identifier to diff
-    diff_revisions_to_year_help: Later filing year whose covering revision is compared
-      against the baseline
-    inspect_help: Inspect registry status and references
-    inspect_registry_root_help: Path to the registry root directory
     manuals:
-      app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
-      kind_help: Filter by manual rule kind
-      list_help: List declared annual coverage and locally available manual parts
-      manual_help: Manual identifier (renta, iva, sociedades)
-      part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
-      rules_help: List the rules codified in a manual
-      section_help: Optional section identifier to show
       verify_dangling_rule_section_ref: rule %{rule_id} references unknown section
         %{target}
       verify_dangling_section_ref: section %{section_id} references unknown section
         %{target}
-      verify_help: Verify the manual integrity against its contract
       verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch''
         to materialise it'
       verify_missing_translation: 'section %{section_id}: %{field_name} missing translation
         key'
-      view_help: Show a manual structure and, optionally, one section
-      year_help: Tax year of the manual (e.g. 2024)
-    metrics:
-      application_link_count: Application link count
-      application_link_surfaces: Application link surfaces
-      artefact_refs: Artefact references
-      captured_count: Captured count
-      casilla_count: Casilla count
-      compared_casillas: Compared casillas
-      cross_reference_count: Cross reference count
-      drift_count: Drift count
-      extraction_profile_count: Extraction profile count
-      failed_declaration_count: Failed declaration count
-      formula_count: Formula count
-      legal_reference_count: Legal reference count
-      missing_filed_casillas: Missing filed casillas
-      missing_local_casillas: Missing local casillas
-      modelo: Modelo
-      modelo_count: Modelo count
-      modelos: Modelos
-      observation_paths: Observation paths
-      revision: Revision
-      revision_count: Revision count
-      row_count: Row count
-      source_reference_count: Source reference count
-      status: Status
-      unverified_invariant_families: Unverified invariant families
-      verification_expectation_count: Verification expectation count
-      verified: Verified
-      verified_invariant_families: Verified invariant families
-      workbook_parity_ref_count: Workbook parity ref count
-    observation_help: Encrypted filed-declaration observation manifest to verify
-    source_observation_help: Encrypted source observation manifest required by previous-filing
-      bindings or relations
-    verify_filed_state_help: Compare local registry calculation output against captured
-      filed AEAT state
-    verify_source_root_help: Path to the source directory to verify
-    view_edition_help: Print one edition of a modelo as the complete edition the registry
-      compiles, in TOML, marking whether each casilla row is stated by the edition
-      or inherited and from which edition, and what the edition's review covers
-    view_edition_modelo_help: Modelo identifier whose edition to print
-    view_edition_revision_help: Registry revision identifier of the edition to print
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'

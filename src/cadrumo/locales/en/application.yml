@@ -160,15 +160,6 @@ application:
         observation_merge_key_conflict: 'Observations for different modelo, year or
           period keys cannot be merged: {primary_modelo} {primary_filing_year} {primary_period}
           against {overlay_modelo} {overlay_filing_year} {overlay_period}.'
-        selector_filing_year_delta_type: The registry binding selector 'filing_year_delta'
-          must be a whole number or a numeric string; it carries {observed_type}.
-          Correct the binding selector in the registry.
-        selector_source_periods_member_type: Every entry in the registry binding selector
-          'source_periods' must be a period code. Correct the binding selector in
-          the registry.
-        selector_source_periods_type: The registry binding selector 'source_periods'
-          must be a period code or a tuple of period codes; it carries {observed_type}.
-          Correct the binding selector in the registry.
     errors:
       observation_displaces_official_evidence_app_filing: 'This modelo, year and period
         already holds evidence captured from AEAT ({existing_source_kind}), so a locally
@@ -835,10 +826,6 @@ application:
         casilla.id safely.
       calculate_semantic_role_missing: The modelo revision has no casilla with semantic
         role %{semantic_role}.
-      calculate_text_casilla_numeric_value: The --casilla value for %{key} (%{label})
-        is a non-numeric data_type=%{data_type} declarante selector naming the contribuyente
-        who obtains the income, not an amount; got %{value}. Enter the income figure
-        in its own numeric casilla and reserve this casilla for the member selector.
       calculate_text_input_empty: The --casilla value targets a text casilla and must
         be a non-empty string.
       calculate_typed_text_input_invalid: The --casilla value is not valid for that
@@ -1058,43 +1045,16 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
     findings:
-      art20_reduccion_possible: Net earnings %{rnt_id} of %{rnt_value} EUR may qualify
-        for the article 20 reduction %{reduccion_id}.
-      art52_reduccion_individual_sublimit_possible: Reduction %{reduccion_id} of %{reduccion_value}
-        EUR may exceed the individual sublimit of %{sublimit} EUR.
       attribution_received_uncaptured: Casilla %{casilla_id} for %{filing_year} carries
         %{casilla_value} EUR of attributed income that is not captured.
       attribution_received_unfolded: Attributed income for %{filing_year} totalling
         %{total_base} EUR is not folded into casilla %{casilla_id}.
       cross_casilla_invariant_violated: The cross-casilla invariant %{predicate_id}
         declared by the registry is violated in this revision.
-      cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
-        %{target_period} needs a declared activity start date.
       cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
         %{source_period} is not clean for %{origin_ids}: %{blocker_codes}.'
-      cross_period_first_year_fractional_suppression: 'Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} is scoped out: activity started %{activity_start_date}.'
-      cross_period_m111_no_retenciones: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}
-        %{target_period}.
-      cross_period_modelo_not_applicable:
-        message: '%{source_modelo_count} source modelo(s) are not applicable to this
-          taxpayer: %{source_modelos}.'
-      cross_period_non_official_local_chain:
-        message: Modelo %{source_modelo} %{source_filing_year} %{source_period} rests
-          on a local chain (%{origin_code}), not official AEAT evidence.
-      cross_period_operator_declared_suppression: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} is suppressed by operator declaration (%{origin_code}), with
-        declared activity start date %{activity_start_date}.
-      cross_period_zero_value_previous_filing: Modelo %{source_modelo} %{source_filing_year}
-        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}
-        %{target_period}.
       cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
         %{iva_category_code} has no declarable base.
-      dt12a_reduccion_antiquity_possible: Reduction %{reduccion_id} of %{reduccion_value}
-        EUR may qualify under the transitional disposition 12a antiquity rule.
-      dt12a_reduccion_possible: Income %{ingreso_id} of %{ingreso_value} EUR may qualify
-        for reduction %{reduccion_id}.
       foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: foreign
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
@@ -1109,15 +1069,10 @@ application:
         may be subject to a limitation-on-benefits clause (%{document_id}).
       m210_rate_unavailable: No Modelo 210 rate could be resolved for tipo de renta
         %{tipo_renta_code} in %{filing_year} (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'Modelo 303 and 349 disagree for
-        %{period_code} %{filing_year}: %{m303_total} EUR against %{m349_total} EUR,
-        a gap of %{gap} EUR.'
       madrid_nacimiento_adopcion_eligibility_advisory: Casilla %{casilla_id} with
         weighted count %{weighted_count} may qualify for the Madrid birth or adoption
         deduction.
       missing_required_casilla: Required casilla %{casilla_id} carries no value.
-      modelo_202_modality_incomplete: 'The Modelo 202 modality is incomplete: profile
-        fact %{profile_fact_id} is missing.'
       objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
         %{profile_field_id} declared %{declared} exceeds the %{parameter_id} threshold
         of %{threshold}.'
@@ -1135,16 +1090,6 @@ application:
         requires %{requested_grade} authority.
       registry_snapshot_unresolved: The registry snapshot for modelo %{modelo} %{filing_year}
         %{period} could not be resolved.
-      suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
-        del capital mobiliario del ahorro but credits no suffered retención (%{predicate_id}).
-        Enter the amount from the payer's certificado de retenciones e ingresos a
-        cuenta; the taxpayer never filed the Modelo 123 that declares it, so this
-        value cannot be filled in automatically.
-      suffered_retencion_trabajo_uncredited: This return declares rendimientos del
-        trabajo but credits no suffered retención (%{predicate_id}). Enter the amount
-        from the payer's certificado de retenciones e ingresos a cuenta; the taxpayer
-        never filed the Modelo 111 that declares it, so this value cannot be filled
-        in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
         evidence (binding %{binding_id}, source %{source_kind_code}, reason %{diagnostic_reason_code}).
       transaction_evidence_missing_output: An output transaction has no supporting
@@ -1179,32 +1124,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-  registry:
-    errors:
-      citation_not_found: No registry citation matched the requested legal reference.
-      edition_modelo_undeclared: 'The registry declares no modelo {modelo}. Declared
-        modelos: {available_modelos}.'
-      edition_revision_undeclared: 'Modelo {modelo} declares no edition {revision}.
-        Declared editions: {available_revisions}.'
-      invalid_manual_id: Registry manual must be one of {allowed_manual_ids}; got
-        {manual_id}.
-      invalid_manual_rule_kind: Registry manual rule kind must be one of {allowed_rule_kinds};
-        got {rule_kind}.
-      invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
-        got {locale_code}.
-      manual_section_not_found: Manual section {section} was not found in {manual_id}
-        {year} {part}.
-      manual_section_requires_structure: Manual section requires extracted structure
-        for {manual_key}.
-      no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
-        {filing_year}. Declared revisions: {available_revisions}.'
-    manuals:
-      coverage:
-        available: Available locally
-        recheck_aeat_publication: Re-check the official AEAT manuals archive and acquire
-          the annual PDF when published.
-        unacquired: Official manual published; local acquisition pending
-        unpublished: Not yet published by AEAT
   storage:
     calc_sheets:
       engine:

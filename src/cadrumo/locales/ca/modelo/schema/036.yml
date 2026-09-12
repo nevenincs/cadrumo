@@ -9,8 +9,8 @@ modelo:
         2025-02-03-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bb4clpm6sj9e1hmirre:
-              help: 'Dada del model 036, exercici 2025: Activitat. Descripcio de l''activitat.'
-              label: Activitat. Descripcio de l'activitat
+              help: 'Dada del model 036, exercici 2025: Activitat. Descripció de l''activitat.'
+              label: Activitat. Descripció de l'activitat
             x-c5hn8bj1cdq6itj9chgm8bb9c5iiqsr5cdhmirre5ljn4tbgds:
               help: 'Dada del model 036, exercici 2025: Activitat. Seccio de l''I.A.E.
                 i grup o epigraf.'
@@ -60,8 +60,8 @@ modelo:
               label: Local directament afecte (primer). Codi postal
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dcdnm8qb7dsmn0sjfepkmsor9c4:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Codi de provincia.'
-              label: Local directament afecte (primer). Codi de provincia
+                Codi de província.'
+              label: Local directament afecte (primer). Codi de província
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9dctp62p3f5lgmcpb3ehgm6qbfdo:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
                 Grau d''afectacio.'
@@ -76,12 +76,12 @@ modelo:
               label: Local directament afecte (primer). Nom de la via publica
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Numero.'
-              label: Local directament afecte (primer). Numero
+                Número.'
+              label: Local directament afecte (primer). Número
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9ddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Numero de referencia d''alta.'
-              label: Local directament afecte (primer). Numero de referencia d'alta
+                Número de referencia d''alta.'
+              label: Local directament afecte (primer). Número de referencia d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9de1kn6ro:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
                 Pis.'
@@ -104,17 +104,17 @@ modelo:
               label: Local directament afecte (primer). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Variacio.'
-              label: Local directament afecte (primer). Variacio
+                Variació.'
+              label: Local directament afecte (primer). Variació
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhdcpim6q31:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Data de variacio.'
-              label: Local directament afecte (primer). Data de variacio
+                Data de variació.'
+              label: Local directament afecte (primer). Data de variació
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqc9depgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (primer).
-                Numero de referencia de la variacio.'
-              label: Local directament afecte (primer). Numero de referencia de la
-                variacio
+                Número de referencia de la variació.'
+              label: Local directament afecte (primer). Número de referencia de la
+                variació
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdc5m78o8:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
                 Alta.'
@@ -137,8 +137,8 @@ modelo:
               label: Local directament afecte (segon). Codi postal
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdcdnm8qb7dsmn0sjfepkmsor9c4:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Codi de provincia.'
-              label: Local directament afecte (segon). Codi de provincia
+                Codi de província.'
+              label: Local directament afecte (segon). Codi de província
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdctp62p3f5lgmcpb3ehgm6qbfdo:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
                 Grau d''afectacio.'
@@ -153,12 +153,12 @@ modelo:
               label: Local directament afecte (segon). Nom de la via publica
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Numero.'
-              label: Local directament afecte (segon). Numero
+                Número.'
+              label: Local directament afecte (segon). Número
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchddpqmqpbidsmn4pb6clp6arj3d5giqobcehgg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Numero de referencia d''alta.'
-              label: Local directament afecte (segon). Numero de referencia d'alta
+                Número de referencia d''alta.'
+              label: Local directament afecte (segon). Número de referencia d'alta
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchde1kn6ro:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
                 Pis.'
@@ -181,17 +181,17 @@ modelo:
               label: Local directament afecte (segon). Superficie en metres quadrats
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Variacio.'
-              label: Local directament afecte (segon). Variacio
+                Variació.'
+              label: Local directament afecte (segon). Variació
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhdcpim6q31:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Data de variacio.'
-              label: Local directament afecte (segon). Data de variacio
+                Data de variació.'
+              label: Local directament afecte (segon). Data de variació
             x-c5hn8bjcdthm2r1dchkn4pb3ehniqchdepgn4qb1cdkmurhddpqmqpbidsmn4pb6clp6arj3d5gg:
               help: 'Dada del model 036, exercici 2025: Local directament afecte (segon).
-                Numero de referencia de la variacio.'
-              label: Local directament afecte (segon). Numero de referencia de la
-                variacio
+                Número de referencia de la variació.'
+              label: Local directament afecte (segon). Número de referencia de la
+                variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm2r3kc4:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (primer). Alta.'
@@ -214,8 +214,8 @@ modelo:
               label: Local indirectament afecte (primer). Codi postal
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mm6rr4d5jmubbge9nncqbecdkm2:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Codi de provincia.'
-              label: Local indirectament afecte (primer). Codi de provincia
+                (primer). Codi de província.'
+              label: Local indirectament afecte (primer). Codi de província
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmesj1chniqob6clhn8ob3d5nms:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (primer). Grau d''afectacio.'
@@ -230,12 +230,12 @@ modelo:
               label: Local indirectament afecte (primer). Nom de la via publica
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6u:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Numero.'
-              label: Local indirectament afecte (primer). Numero
+                (primer). Número.'
+              label: Local indirectament afecte (primer). Número
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Numero de referencia d''alta.'
-              label: Local indirectament afecte (primer). Numero de referencia d'alta
+                (primer). Número de referencia d''alta.'
+              label: Local indirectament afecte (primer). Número de referencia d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mn0qbjds:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (primer). Pis.'
@@ -262,17 +262,17 @@ modelo:
               label: Local indirectament afecte (primer). Us o desti
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdo:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Variacio.'
-              label: Local indirectament afecte (primer). Variacio
+                (primer). Variació.'
+              label: Local indirectament afecte (primer). Variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommcpb3d1gg:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Data de variacio.'
-              label: Local indirectament afecte (primer). Data de variacio
+                (primer). Data de variació.'
+              label: Local indirectament afecte (primer). Data de variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd64mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (primer). Numero de referencia de la variacio.'
-              label: Local indirectament afecte (primer). Numero de referencia de
-                la variacio
+                (primer). Número de referencia de la variació.'
+              label: Local indirectament afecte (primer). Número de referencia de
+                la variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm2r3kc4:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (segon). Alta.'
@@ -295,8 +295,8 @@ modelo:
               label: Local indirectament afecte (segon). Codi postal
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mm6rr4d5jmubbge9nncqbecdkm2:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Codi de provincia.'
-              label: Local indirectament afecte (segon). Codi de provincia
+                (segon). Codi de província.'
+              label: Local indirectament afecte (segon). Codi de província
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmesj1chniqob6clhn8ob3d5nms:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (segon). Grau d''afectacio.'
@@ -311,12 +311,12 @@ modelo:
               label: Local indirectament afecte (segon). Nom de la via publica
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6u:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Numero.'
-              label: Local indirectament afecte (segon). Numero
+                (segon). Número.'
+              label: Local indirectament afecte (segon). Número
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mmstbdclp6ubbiclj6asj5dphmio9dc5m78o8:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Numero de referencia d''alta.'
-              label: Local indirectament afecte (segon). Numero de referencia d'alta
+                (segon). Número de referencia d''alta.'
+              label: Local indirectament afecte (segon). Número de referencia d'alta
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mn0qbjds:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
                 (segon). Pis.'
@@ -343,17 +343,17 @@ modelo:
               label: Local indirectament afecte (segon). Us o desti
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdo:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Variacio.'
-              label: Local indirectament afecte (segon). Variacio
+                (segon). Variació.'
+              label: Local indirectament afecte (segon). Variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommcpb3d1gg:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Data de variacio.'
-              label: Local indirectament afecte (segon). Data de variacio
+                (segon). Data de variació.'
+              label: Local indirectament afecte (segon). Data de variació
             x-c5hn8bjcdthm2r1dd5n68qbiclhn8rpd68mncobid5gm6qbfdommstbdclp6ubbiclj6asj5dphmio8:
               help: 'Dada del model 036, exercici 2025: Local indirectament afecte
-                (segon). Numero de referencia de la variacio.'
-              label: Local indirectament afecte (segon). Numero de referencia de la
-                variacio
+                (segon). Número de referencia de la variació.'
+              label: Local indirectament afecte (segon). Número de referencia de la
+                variació
             x-c5hn8bjjd5n2qr3fcdgmobb1dhq62:
               help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
                 Alta.'
@@ -372,161 +372,188 @@ modelo:
               label: Activitat fora de local determinat. Data de baixa
             x-c5hn8bjjd5n2qr3fcdgmobb3dti6iprf5lo74rrmd5n66qb1:
               help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
-                Codi de provincia.'
-              label: Activitat fora de local determinat. Codi de provincia
+                Codi de província.'
+              label: Activitat fora de local determinat. Codi de província
             x-c5hn8bjjd5n2qr3fcdgmobbdeln6ior9e1kmu:
               help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
                 Municipi.'
               label: Activitat fora de local determinat. Municipi
             x-c5hn8bjjd5n2qr3fcdgmobbeelmmasjf5lp6apj5e9imsor9c4:
               help: 'Dada del model 036, exercici 2025: Activitat fora de local determinat.
-                Numero de referencia.'
-              label: Activitat fora de local determinat. Numero de referencia
+                Número de referencia.'
+              label: Activitat fora de local determinat. Número de referencia
             x-chim6r1ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Informació fiscal de la casella 102 del Modelo 036.
               label: Cognoms si es persona fisica, o rao social o denominacio si es
                 persona juridica
             x-chim6r1ecdgnasr15koj2c0:
-              help: null
+              help: Informació fiscal de la casella 110 del Modelo 036.
               label: Sol·licitud de Número d'Identificació Fiscal (NIF)
             x-chim6r1ecdgnasr15koj2c8:
-              help: null
+              help: 'Consulteu la informació de la casella: Alta en el censo de empresarios,
+                professionals i retenedores.'
               label: Alta al cens d'empresaris, professionals i retenidors
             x-chim6r1ecdgnasr15koj4c0:
-              help: null
+              help: 'Consulteu la informació de la casella: Solicitud de NIF definitivo,
+                disponiendo de NIF provisional.'
               label: Sol·licitud de NIF definitiu, disposant de NIF provisional
             x-chim6r1ecdgnasr15koj4c8:
-              help: null
+              help: 'Consulteu la informació de la casella: Solicitud de nueva tarjeta
+                acreditativa del NIF.'
               label: Sol·licitud de nova targeta acreditativa del NIF
             x-chim6r1ecdgnasr15koj4cg:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación domicili
+                fiscal. (páginas 2A, 2B i 2C).'
               label: Modificació del domicili fiscal (pàgines 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4co:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación domicili
+                social o de gestión administrativa. (páginas 2A i 2B).'
               label: Modificació del domicili social o de gestió administrativa (pàgines
                 2A i 2B)
             x-chim6r1ecdgnasr15koj4d0:
-              help: null
+              help: Informació fiscal de la casella 124 del Modelo 036.
               label: Modificació i baixa del domicili a efectes de notificacions (pàgines
                 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4d8:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 125 del
+                Modelo 036.
               label: Modificació d'altres dades identificatives o de domini (pàgines
                 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj4dg:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades representantes
+                (pàgina 3).'
               label: Modificació de dades de representants (pàgina 3)
             x-chim6r1ecdgnasr15koj4do:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 127 del
+                Modelo 036.
               label: Modificació de dades relatives a activitats econòmiques i locals
                 (pàgina 4)
             x-chim6r1ecdgnasr15koj4e0:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación de la condición
+                de Gran Empresa o Admón. Pública de presupuesto superior a 6.000.000
+                de euros (pàgina 5).'
               label: Modificació de la condició de Gran Empresa o Administració Pública
                 amb pressupost superior a 6.000.000 d'euros (pàgina 5)
             x-chim6r1ecdgnasr15koj4e8:
-              help: null
+              help: Informació fiscal de la casella 129 del Modelo 036.
               label: Sol·licitud d'alta o baixa al registre de devolució mensual (pàgina
                 5)
             x-chim6r1ecdgnasr15koj6c0:
-              help: null
+              help: Informació fiscal de la casella 130 del Modelo 036.
               label: Sol·licitud d'alta o baixa al registre d'operadors intracomunitaris
                 (pàgina 5)
             x-chim6r1ecdgnasr15koj6c8:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades relativos
+                al Impuesto sobre el Valor Añadido (pàgina 5).'
               label: Modificació de dades relatives a l'Impost sobre el Valor Afegit
                 (pàgina 5)
             x-chim6r1ecdgnasr15koj6cg:
-              help: null
+              help: Informació fiscal de la casella 132 del Modelo 036.
               label: Modificació de dades relatives a l'Impost sobre la Renda de les
                 Persones Físiques (pàgina 6)
             x-chim6r1ecdgnasr15koj6co:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades relativos
+                al Impuesto sobre Societats (pàgina 6).'
               label: Modificació de dades relatives a l'Impost sobre Societats (pàgina
                 6)
             x-chim6r1ecdgnasr15koj6d0:
-              help: null
+              help: Informació fiscal de la casella 134 del Modelo 036.
               label: Modificació de dades relatives a l'Impost sobre la Renda de no
                 Residents corresponent a establiments permanents o a entitats en atribució
                 de rendes constituïdes a l'estranger amb presència en territori espanyol
                 (pàgina 6)
             x-chim6r1ecdgnasr15koj6d8:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 135 del
+                Modelo 036.
               label: Opció o renúncia al règim fiscal especial del Títol II de la
                 Llei 49/2002 (pàgina 6)
             x-chim6r1ecdgnasr15koj6dg:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades relativos
+                a retencions e ingressos a compte (pàgina 7).'
               label: Modificació de dades relatives a retencions i ingressos a compte
                 (pàgina 7)
             x-chim6r1ecdgnasr15koj6do:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 137 del
+                Modelo 036.
               label: Modificació dades relatives a altres impostos i registres (pàgina
                 7)
             x-chim6r1ecdgnasr15koj6e0:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades relativos
+                a regímenes especiales del comercio intracomunitario (pàgina 7).'
               label: Modificació de dades relatives a règims especials del comerç
                 intracomunitari (pàgina 7)
             x-chim6r1ecdgnasr15koj6e8:
-              help: null
+              help: 'Consulteu la informació de la casella: Modificación dades relativos
+                a la relación de socios, miembros o partícipes (pàgina 8).'
               label: Modificació de dades relatives a la relació de socis, membres
                 o partícips (pàgina 8)
             x-chim6r1ecdgnasr15koj8c0:
-              help: null
+              help: Informació fiscal de la casella 140 del Modelo 036.
               label: Deixar d'exercir totes les activitats empresarials i/o professionals
                 (persones jurídiques i entitats, sense liquidació; entitats inactives)
             x-chim6r1ecdgnasr15koj8cg:
-              help: null
+              help: Informació fiscal de la casella 142 del Modelo 036.
               label: Modificació i baixa de dades de telèfons i adreces electròniques
                 per rebre avisos de l'AEAT, TEA i DGT (pàgines 2A, 2B i 2C)
             x-chim6r1ecdgnasr15koj8co:
-              help: null
+              help: 'Consulteu la informació de la casella: Comunicación de opción
+                i renuncia a la llevanza de los Libros registro del IVA a través de
+                la Sede electrónica de la AEAT (pàgina 5).'
               label: Comunicació d'opció i renúncia a la portada dels llibres registre
                 de l'IVA a través de la Seu electrònica de l'AEAT (pàgina 5)
             x-chim6r1ecdgnasr15koj8d0:
-              help: null
+              help: 'Consulteu la informació de la casella: Solicitud de rehabilitación
+                de NIF.'
               label: Sol·licitud de rehabilitació del NIF
             x-chim6r1ecdgnasr15koj8d8:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 145 del
+                Modelo 036.
               label: Modificació de dades relatives a titulars reals (pàgina 10)
             x-chim6r1ecdgnasr15koj8dg:
-              help: null
+              help: Informació fiscal de la casella 146 del Modelo 036.
               label: Modificació d'entitats en liquidació
             x-chim6r1ecdgnasr15kojac0:
-              help: null
+              help: Informació fiscal de la casella 150 del Modelo 036.
               label: Baixa del cens d'empresaris, professionals i retenidors
             x-chim6r1ecdgnasr15lh62qj1:
-              help: null
+              help: Informació fiscal de la casella 151 del Modelo 036.
               label: Causa de la baixa en el cens d'empresaris, professionals i retenidors
             x-chim6r1eclr6arjk5llmirj4:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de declaració censal.'
               label: Tipus de declaració censal
             x-chim6r1ecpim6q315limcpb3ehknco9dc9gmko8:
-              help: null
+              help: Informació fiscal de la casella 152 del Modelo 036.
               label: Data efectiva de la baixa en el cens
             x-chim6r1ecpim6q315limcpb3ehknco9dcdin6p8:
-              help: null
+              help: 'Consulteu la informació de la casella: Data efectiva del cese
+                de totes las activitats empresarials o professionals.'
               label: Data efectiva del cessament de totes les activitats empresarials
                 o professionals
             x-chim6r1ecpkn4rb15lhm2r39chgm8:
-              help: null
-              label: Qualitat en que se signa la declaracio
+              help: 'Consulteu la informació de la casella: Calidad en la que se firma
+                la declaració.'
+              label: Qualitat en que se signa la declaració
             x-chim6r1ecpkn4rb15lj6aor8c4:
-              help: null
-              label: Data en que se signa la declaracio
+              help: 'Consulteu la informació de la casella: Data en que se firma la
+                declaració.'
+              label: Data en que se signa la declaració
             x-chim6r1ecpkn4rb15lj6isjdc5n78p8:
-              help: null
-              label: Nom i cognoms de qui signa la declaracio
+              help: 'Consulteu la informació de la casella: Nom i cognoms de quien
+                firma la declaració.'
+              label: Nom i cognoms de qui signa la declaració
             x-chim6r1ecpkn4rb15lm7apr1e8:
-              help: null
-              label: Lloc on se signa la declaracio
+              help: 'Consulteu la informació de la casella: Lugar en que se firma
+                la declaració.'
+              label: Lloc on se signa la declaració
             x-chim6r1edpkmc:
-              help: null
-              label: Numero d'identificacio fiscal (NIF) del declarant
+              help: Informació fiscal de la casella 101 del Modelo 036.
+              label: Número d'identificacio fiscal (NIF) del declarant
             x-chim6r1edpnmqojick:
-              help: null
+              help: Informació fiscal de la casella 103 del Modelo 036.
               label: Nom, en el cas de persones fisiques
             x-chim6r1eepkmepbecdkm2b9i60p3a:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella vigencia
+                del Modelo 036.
               label: Vigència normativa des del 3 de febrer de 2025
             x-clo2sobmd5pmuspdc5im2t1dc5m78o8:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
@@ -567,17 +594,17 @@ modelo:
               label: Establiment permanent. Avisos. Baixa del correu electronic d'avisos
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
-                Alta o modificacio del telefon mobil.'
-              label: Establiment permanent. Avisos. Alta o modificacio del telefon
+                Alta o modificacio del telèfon mobil.'
+              label: Establiment permanent. Avisos. Alta o modificacio del telèfon
                 mobil
             x-clo2sobmd5pmuspddlnncqbc5lh62qj1:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
-                Baixa del telefon mobil.'
-              label: Establiment permanent. Avisos. Baixa del telefon mobil
+                Baixa del telèfon mobil.'
+              label: Establiment permanent. Avisos. Baixa del telèfon mobil
             x-clo2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
-                Prefix de pais del telefon mobil.'
-              label: Establiment permanent. Avisos. Prefix de pais del telefon mobil
+                Prefix de pais del telèfon mobil.'
+              label: Establiment permanent. Avisos. Prefix de pais del telèfon mobil
             x-clo2sobmd5pmuspdehim2bb1dhq62:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
                 Alta d''avisos del TEA.'
@@ -588,17 +615,17 @@ modelo:
               label: Establiment permanent. Avisos. Baixa d'avisos del TEA
             x-clo2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Avisos.
-                Telefon mobil.'
-              label: Establiment permanent. Avisos. Telefon mobil
+                Telèfon mobil.'
+              label: Establiment permanent. Avisos. Telèfon mobil
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 fiscal a Espanya. Bloc.'
               label: Establiment permanent. Domicili fiscal a Espanya. Bloc
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                fiscal a Espanya. Qualificador del numero.'
+                fiscal a Espanya. Qualificador del número.'
               label: Establiment permanent. Domicili fiscal a Espanya. Qualificador
-                del numero
+                del número
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 fiscal a Espanya. Codi de municipi INE.'
@@ -610,8 +637,8 @@ modelo:
               label: Establiment permanent. Domicili fiscal a Espanya. Codi postal
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                fiscal a Espanya. Codi de provincia.'
-              label: Establiment permanent. Domicili fiscal a Espanya. Codi de provincia
+                fiscal a Espanya. Codi de província.'
+              label: Establiment permanent. Domicili fiscal a Espanya. Codi de província
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 fiscal a Espanya. Codi de via INE.'
@@ -647,8 +674,8 @@ modelo:
                 publica
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                fiscal a Espanya. Numero de casa.'
-              label: Establiment permanent. Domicili fiscal a Espanya. Numero de casa
+                fiscal a Espanya. Número de casa.'
+              label: Establiment permanent. Domicili fiscal a Espanya. Número de casa
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 fiscal a Espanya. Planta.'
@@ -668,8 +695,8 @@ modelo:
                 cadastral
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                fiscal a Espanya. Tipus de numero.'
-              label: Establiment permanent. Domicili fiscal a Espanya. Tipus de numero
+                fiscal a Espanya. Tipus de número.'
+              label: Establiment permanent. Domicili fiscal a Espanya. Tipus de número
             x-clo2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 fiscal a Espanya. Tipus de via.'
@@ -686,13 +713,13 @@ modelo:
                 postal de l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Codi de provincia de l''apartat de correus.'
+                a efectes de notificacions. Codi de província de l''apartat de correus.'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
-                de provincia de l'apartat de correus
+                de província de l'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Numero d''apartat de correus.'
-              label: Establiment permanent. Domicili a efectes de notificacions. Numero
+                a efectes de notificacions. Número d''apartat de correus.'
+              label: Establiment permanent. Domicili a efectes de notificacions. Número
                 d'apartat de correus
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
@@ -722,9 +749,9 @@ modelo:
                 qualitat de (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Qualificador del numero (domicili 1).'
+                a efectes de notificacions. Qualificador del número (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Qualificador
-                del numero (domicili 1)
+                del número (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 a efectes de notificacions. Codi de municipi INE (domicili 1).'
@@ -737,9 +764,9 @@ modelo:
                 postal (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Codi de provincia (domicili 1).'
+                a efectes de notificacions. Codi de província (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Codi
-                de provincia (domicili 1)
+                de província (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 a efectes de notificacions. Codi de via INE (domicili 1).'
@@ -778,8 +805,8 @@ modelo:
                 de la via publica (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Numero de casa (domicili 1).'
-              label: Establiment permanent. Domicili a efectes de notificacions. Numero
+                a efectes de notificacions. Número de casa (domicili 1).'
+              label: Establiment permanent. Domicili a efectes de notificacions. Número
                 de casa (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
@@ -798,9 +825,9 @@ modelo:
                 (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
-                a efectes de notificacions. Tipus de numero (domicili 1).'
+                a efectes de notificacions. Tipus de número (domicili 1).'
               label: Establiment permanent. Domicili a efectes de notificacions. Tipus
-                de numero (domicili 1)
+                de número (domicili 1)
             x-clo2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
               help: 'Dada del model 036, exercici 2025: Establiment permanent. Domicili
                 a efectes de notificacions. Tipus de via (domicili 1).'
@@ -879,9 +906,9 @@ modelo:
               label: IVA. Facturacio. Facturacio per destinataris o tercers. Data
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdc5i6qrre5lo7aojcd5hm2bbge9in6tbgelin6t3f:
               help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
-                publiques. Es administracio publica amb un darrer pressupost anual
+                publiques. Es administració publica amb un darrer pressupost anual
                 aprovat superior a 6 milions d''euros.'
-              label: Gran empresa i administracions publiques. Es administracio publica
+              label: Gran empresa i administracions publiques. Es administració publica
                 amb un darrer pressupost anual aprovat superior a 6 milions d'euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmaspdctp62rhdclmn0sj5edgg:
               help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
@@ -890,10 +917,10 @@ modelo:
                 empresa
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqob4dlnmsbbgelh6oqb3c4mn0sj5edqn0tb5edq6u:
               help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
-                publiques. Data de la condicio d''administracio publica amb pressupost
+                publiques. Data de la condicio d''administració publica amb pressupost
                 superior a 6 milions d''euros.'
               label: Gran empresa i administracions publiques. Data de la condicio
-                d'administracio publica amb pressupost superior a 6 milions d'euros
+                d'administració publica amb pressupost superior a 6 milions d'euros
             x-d5r62bj7e9gmsbb5dlo74pbjc4mmcpb3d1giqpric5n2qpbde1p6asr1:
               help: 'Dada del model 036, exercici 2025: Gran empresa i administracions
                 publiques. Data de la condicio de gran empresa.'
@@ -1194,13 +1221,13 @@ modelo:
               label: IRNR. Establiment permanent. Modalitat d'establiment permanent
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4:
               help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
-                Obligacio de presentar declaracio.'
-              label: IRNR. Establiment permanent. Obligacio de presentar declaracio
+                Obligacio de presentar declaració.'
+              label: IRNR. Establiment permanent. Obligacio de presentar declaració
             x-dth6obj9e9n74bbfc9m6ipr1cdkmurhdchim6r31e9gn4bb6clhmgo8:
               help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
-                Data de l''obligacio de presentar declaracio.'
+                Data de l''obligacio de presentar declaració.'
               label: IRNR. Establiment permanent. Data de l'obligacio de presentar
-                declaracio
+                declaració
             x-dth6obj9e9n74bbfe1hmirre5lgn4t1d6go2qco:
               help: 'Dada del model 036, exercici 2025: IRNR. Establiment permanent.
                 Opcio pel sistema de calcul de l''art. 40.3.'
@@ -1369,12 +1396,12 @@ modelo:
               label: Impost sobre Societats. Exempcio. Data
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62sg:
               help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Obligacio
-                de presentar declaracio.'
-              label: Impost sobre Societats. Obligacio de presentar declaracio
+                de presentar declaració.'
+              label: Impost sobre Societats. Obligacio de presentar declaració
             x-dth6objjdthmipb4c5i6aspddth6oqb7c5hmirre5li6aorcc5p62shdcpim6q31:
               help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Data
-                de l''obligacio de presentar declaracio.'
-              label: Impost sobre Societats. Data de l'obligacio de presentar declaracio
+                de l''obligacio de presentar declaració.'
+              label: Impost sobre Societats. Data de l'obligacio de presentar declaració
             x-dth6objjdthmipb4c5i6aspddto66qbfdomm2sjk5kq30b9j:
               help: 'Dada del model 036, exercici 2025: Impost sobre Societats. Opcio
                 pel sistema de calcul de l''art. 40.3.'
@@ -1432,16 +1459,16 @@ modelo:
               label: Avisos. Baixa del correu electronic d'avisos
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
               help: 'Dada del model 036, exercici 2025: Avisos. Alta o modificacio
-                del telefon mobil.'
-              label: Avisos. Alta o modificacio del telefon mobil
+                del telèfon mobil.'
+              label: Avisos. Alta o modificacio del telèfon mobil
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:
-              help: 'Dada del model 036, exercici 2025: Avisos. Baixa del telefon
+              help: 'Dada del model 036, exercici 2025: Avisos. Baixa del telèfon
                 mobil.'
-              label: Avisos. Baixa del telefon mobil
+              label: Avisos. Baixa del telèfon mobil
             x-e1j2sobmd5pmuspde1p6apj9d9niqs31d5piqrbfepkmo:
               help: 'Dada del model 036, exercici 2025: Avisos. Prefix de pais del
-                telefon mobil.'
-              label: Avisos. Prefix de pais del telefon mobil
+                telèfon mobil.'
+              label: Avisos. Prefix de pais del telèfon mobil
             x-e1j2sobmd5pmuspdehim2bb1dhq62:
               help: 'Dada del model 036, exercici 2025: Avisos. Alta d''avisos del
                 TEA.'
@@ -1451,16 +1478,16 @@ modelo:
                 TEA.'
               label: Avisos. Baixa d'avisos del TEA
             x-e1j2sobmd5pmuspdehimopb6dtn6ubbddtr6ir0:
-              help: 'Dada del model 036, exercici 2025: Avisos. Telefon mobil.'
-              label: Avisos. Telefon mobil
+              help: 'Dada del model 036, exercici 2025: Avisos. Telèfon mobil.'
+              label: Avisos. Telèfon mobil
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dc9m6usblck:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
                 Bloc.'
               label: Domicili fiscal a Espanya. Bloc
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdgmoqb6d5hm2p3fe8mmstbdclp6u:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
-                Qualificador del numero.'
-              label: Domicili fiscal a Espanya. Qualificador del numero
+                Qualificador del número.'
+              label: Domicili fiscal a Espanya. Qualificador del número
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmmqtbed5hmis39dsmmirj5:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
                 Codi de municipi INE.'
@@ -1471,8 +1498,8 @@ modelo:
               label: Domicili fiscal a Espanya. Codi postal
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmn0sjfepkmsor9c4:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
-                Codi de provincia.'
-              label: Domicili fiscal a Espanya. Codi de provincia
+                Codi de província.'
+              label: Domicili fiscal a Espanya. Codi de província
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dcdnm8qb7dsmncqb15lkmsp8:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
                 Codi de via INE.'
@@ -1504,8 +1531,8 @@ modelo:
               label: Domicili fiscal a Espanya. Nom de la via publica
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1ddpqmqpbidsmm6objc4:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
-                Numero de casa.'
-              label: Domicili fiscal a Espanya. Numero de casa
+                Número de casa.'
+              label: Domicili fiscal a Espanya. Número de casa
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1de1m62rjkc4:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
                 Planta.'
@@ -1524,8 +1551,8 @@ modelo:
               label: Domicili fiscal a Espanya. Referencia cadastral
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
-                Tipus de numero.'
-              label: Domicili fiscal a Espanya. Tipus de numero
+                Tipus de número.'
+              label: Domicili fiscal a Espanya. Tipus de número
             x-e1j2sp3fdlkm6qbcd5niqpj9edhm2r1dehkn0rpdepkm2:
               help: 'Dada del model 036, exercici 2025: Domicili fiscal a Espanya.
                 Tipus de via.'
@@ -1536,8 +1563,8 @@ modelo:
               label: Domicili de gestio administrativa. Bloc
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhm2r39cpkm6ob4dtp2qrjldlin4ro:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
-                Qualificador del numero.'
-              label: Domicili de gestio administrativa. Qualificador del numero
+                Qualificador del número.'
+              label: Domicili de gestio administrativa. Qualificador del número
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqrbldpkm6qbgd5niqqbeck:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
                 Codi de municipi INE.'
@@ -1548,8 +1575,8 @@ modelo:
               label: Domicili de gestio administrativa. Codi postal
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqs3idtr6irj3d5gg:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
-                Codi de provincia.'
-              label: Domicili de gestio administrativa. Codi de provincia
+                Codi de província.'
+              label: Domicili de gestio administrativa. Codi de província
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lhmup39ctniqtj9c4mmirj5:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
                 Codi de via INE.'
@@ -1581,8 +1608,8 @@ modelo:
               label: Domicili de gestio administrativa. Nom de la via publica
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15ln7arb5e9niqor1edgg:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
-                Numero de casa.'
-              label: Domicili de gestio administrativa. Numero de casa
+                Número de casa.'
+              label: Domicili de gestio administrativa. Número de casa
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lo6oobeehgg:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
                 Planta.'
@@ -1597,8 +1624,8 @@ modelo:
               label: Domicili de gestio administrativa. Porta
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5ln7arb5e9ng:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
-                Tipus de numero.'
-              label: Domicili de gestio administrativa. Tipus de numero
+                Tipus de número.'
+              label: Domicili de gestio administrativa. Tipus de número
             x-e1j2sp3fdlkm6qbcd5niqpr5edq6irre5lgm8rb9dpkn6t3ic5q6itj15lq6is3f5lr6io8:
               help: 'Dada del model 036, exercici 2025: Domicili de gestio administrativa.
                 Tipus de via.'
@@ -1615,13 +1642,13 @@ modelo:
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rr4d5jmubbge9nncqbecdkm2:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Codi de provincia de l''apartat de correus.'
-              label: Domicili a efectes de notificacions. Codi de provincia de l'apartat
+                Codi de província de l''apartat de correus.'
+              label: Domicili a efectes de notificacions. Codi de província de l'apartat
                 de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm6rrie9imuso:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Numero d''apartat de correus.'
-              label: Domicili a efectes de notificacions. Numero d'apartat de correus
+                Número d''apartat de correus.'
+              label: Domicili a efectes de notificacions. Número d'apartat de correus
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqobgc5p78ob4dsmm8pbjehkmsobkc5p6iro:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
                 Destinatari de l''apartat de correus, si es diferent del declarant.'
@@ -1647,8 +1674,8 @@ modelo:
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqor1dhkmcqb3c5i6ushddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Qualificador del numero (domicili 1).'
-              label: Domicili a efectes de notificacions. Qualificador del numero
+                Qualificador del número (domicili 1).'
+              label: Domicili a efectes de notificacions. Qualificador del número
                 (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
@@ -1661,8 +1688,8 @@ modelo:
               label: Domicili a efectes de notificacions. Codi postal (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpde1p6utj9dphmio8:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Codi de provincia (domicili 1).'
-              label: Domicili a efectes de notificacions. Codi de provincia (domicili
+                Codi de província (domicili 1).'
+              label: Domicili a efectes de notificacions. Codi de província (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqorfchkmerpdepkm2bb9dpig:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
@@ -1700,8 +1727,8 @@ modelo:
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqrjldlin4rpdcdgn6o8:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Numero de casa (domicili 1).'
-              label: Domicili a efectes de notificacions. Numero de casa (domicili
+                Número de casa (domicili 1).'
+              label: Domicili a efectes de notificacions. Número de casa (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqs3cc5n78o8:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
@@ -1717,8 +1744,8 @@ modelo:
               label: Domicili a efectes de notificacions. Porta (domicili 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqrjldlin4ro:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
-                Tipus de numero (domicili 1).'
-              label: Domicili a efectes de notificacions. Tipus de numero (domicili
+                Tipus de número (domicili 1).'
+              label: Domicili a efectes de notificacions. Tipus de número (domicili
                 1)
             x-e1j2sp3fdlkm6qbcd5niqrjfehkmcqb3c5hmirreclpiqt39e1niqtj9c4:
               help: 'Dada del model 036, exercici 2025: Domicili a efectes de notificacions.
@@ -1750,8 +1777,8 @@ modelo:
               label: Domicili a l'Estat de residencia. Poblacio o ciutat
             x-e1j2sp3fdlkm6qbcd5niqsj5edkm8pbecdkm2bb5f1q74obed9in4rpde1p6utj9dphmio9de9imeqbfdo:
               help: 'Dada del model 036, exercici 2025: Domicili a l''Estat de residencia.
-                Provincia, regio o estat.'
-              label: Domicili a l'Estat de residencia. Provincia, regio o estat
+                Província, regio o estat.'
+              label: Domicili a l'Estat de residencia. Província, regio o estat
             x-e1j2spbjehgm4r35cdkmqqb5dpq6uspde1in4rb1dpimst35ecmm6tb1dpq6uso:
               help: 'Dada del model 036, exercici 2025: Establiments permanents. Nombre
                 d''establiments permanents.'
@@ -1872,17 +1899,17 @@ modelo:
                 d'avisos
             x-e1l2sobmd5pmubbddtr6ir1dc5m78o8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Avisos. Alta o modificacio del telefon mobil.'
-              label: Persona juridica o entitat. Avisos. Alta o modificacio del telefon
+                Avisos. Alta o modificacio del telèfon mobil.'
+              label: Persona juridica o entitat. Avisos. Alta o modificacio del telèfon
                 mobil
             x-e1l2sobmd5pmubbddtr6ir1dc9gmko8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Avisos. Baixa del telefon mobil.'
-              label: Persona juridica o entitat. Avisos. Baixa del telefon mobil
+                Avisos. Baixa del telèfon mobil.'
+              label: Persona juridica o entitat. Avisos. Baixa del telèfon mobil
             x-e1l2sobmd5pmubbge9imcqbadsmn0ob9ecmmqrrmd5m0:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Avisos. Prefix de pais del telefon mobil.'
-              label: Persona juridica o entitat. Avisos. Prefix de pais del telefon
+                Avisos. Prefix de pais del telèfon mobil.'
+              label: Persona juridica o entitat. Avisos. Prefix de pais del telèfon
                 mobil
             x-e1l2sobmd5pmubbkclgiqobcehgg:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
@@ -1894,8 +1921,8 @@ modelo:
               label: Persona juridica o entitat. Avisos. Baixa d'avisos del TEA
             x-e1l2sobmd5pmubbkclm6apjfdpniqrbfepkmo:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Avisos. Telefon mobil.'
-              label: Persona juridica o entitat. Avisos. Telefon mobil
+                Avisos. Telèfon mobil.'
+              label: Persona juridica o entitat. Avisos. Telèfon mobil
             x-e1l2sp35f1q2qorfchkmerpde1gmiso:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a l''Estat de residencia. Codi de pais.'
@@ -1934,18 +1961,18 @@ modelo:
                 Poblacio o ciutat
             x-e1l2sp35f1q2qs3idtr6irj3d5giqsj5ctkmurg:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a l''Estat de residencia. Provincia, regio o estat.'
+                Domicili a l''Estat de residencia. Província, regio o estat.'
               label: Persona juridica o entitat. Domicili a l'Estat de residencia.
-                Provincia, regio o estat
+                Província, regio o estat
             x-e1l2sp36d5pm6bb2dhnn2tb5:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili fiscal a Espanya. Bloc.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Bloc
             x-e1l2sp36d5pm6bb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili fiscal a Espanya. Qualificador del numero.'
+                Domicili fiscal a Espanya. Qualificador del número.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Qualificador
-                del numero
+                del número
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili fiscal a Espanya. Codi de municipi INE.'
@@ -1957,9 +1984,9 @@ modelo:
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi postal
             x-e1l2sp36d5pm6bb3dti6iprf5lo74rrmd5n66qb1:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili fiscal a Espanya. Codi de provincia.'
+                Domicili fiscal a Espanya. Codi de província.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Codi de
-                provincia
+                província
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili fiscal a Espanya. Codi de via INE.'
@@ -1997,8 +2024,8 @@ modelo:
                 la via publica
             x-e1l2sp36d5pm6bbeelmmasjf5lhm2sr1:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili fiscal a Espanya. Numero de casa.'
-              label: Persona juridica o entitat. Domicili fiscal a Espanya. Numero
+                Domicili fiscal a Espanya. Número de casa.'
+              label: Persona juridica o entitat. Domicili fiscal a Espanya. Número
                 de casa
             x-e1l2sp36d5pm6bbgdhgmst31:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
@@ -2019,9 +2046,9 @@ modelo:
                 cadastral
             x-e1l2sp36d5pm6bbkd5o6ubbeelmmasjf:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili fiscal a Espanya. Tipus de numero.'
+                Domicili fiscal a Espanya. Tipus de número.'
               label: Persona juridica o entitat. Domicili fiscal a Espanya. Tipus
-                de numero
+                de número
             x-e1l2sp36d5pm6bbkd5o6ubbmd5gg:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili fiscal a Espanya. Tipus de via.'
@@ -2041,15 +2068,15 @@ modelo:
                 Codi postal de l'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfchkmerpde1p6utj9dphmio8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Codi de provincia de l''apartat
+                Domicili a efectes de notificacions. Codi de província de l''apartat
                 de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Codi de provincia de l'apartat de correus
+                Codi de província de l'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqorfe9p6arrj:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Numero d''apartat de correus.'
+                Domicili a efectes de notificacions. Número d''apartat de correus.'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Numero d'apartat de correus
+                Número d'apartat de correus
             x-e1l2sp3edtq6ibb1e1gn4t31chniqp35edq6irj1ehgn4qbf:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a efectes de notificacions. Destinatari de l''apartat de
@@ -2080,10 +2107,10 @@ modelo:
                 En qualitat de (domicili 1)
             x-e1l2sp3edtq6ibb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Qualificador del numero (domicili
+                Domicili a efectes de notificacions. Qualificador del número (domicili
                 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Qualificador del numero (domicili 1)
+                Qualificador del número (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a efectes de notificacions. Codi de municipi INE (domicili
@@ -2097,9 +2124,9 @@ modelo:
                 Codi postal (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lo74rrmd5n66qb1:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Codi de provincia (domicili 1).'
+                Domicili a efectes de notificacions. Codi de província (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Codi de provincia (domicili 1)
+                Codi de província (domicili 1)
             x-e1l2sp3edtq6ibb3dti6iprf5lr6io9dd5n6a:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a efectes de notificacions. Codi de via INE (domicili 1).'
@@ -2141,9 +2168,9 @@ modelo:
                 Nom de la via publica (domicili 1)
             x-e1l2sp3edtq6ibbeelmmasjf5lhm2sr1:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Numero de casa (domicili 1).'
+                Domicili a efectes de notificacions. Número de casa (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Numero de casa (domicili 1)
+                Número de casa (domicili 1)
             x-e1l2sp3edtq6ibbgdhgmst31:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a efectes de notificacions. Planta (domicili 1).'
@@ -2161,9 +2188,9 @@ modelo:
                 Porta (domicili 1)
             x-e1l2sp3edtq6ibbkd5o6ubbeelmmasjf:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili a efectes de notificacions. Tipus de numero (domicili 1).'
+                Domicili a efectes de notificacions. Tipus de número (domicili 1).'
               label: Persona juridica o entitat. Domicili a efectes de notificacions.
-                Tipus de numero (domicili 1)
+                Tipus de número (domicili 1)
             x-e1l2sp3edtq6ibbkd5o6ubbmd5gg:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili a efectes de notificacions. Tipus de via (domicili 1).'
@@ -2175,9 +2202,9 @@ modelo:
               label: Persona juridica o entitat. Domicili social. Bloc
             x-e1l2sp3jdthiqor1dhkmcqb3c5i6ushddpqmqpbids:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili social. Qualificador del numero.'
+                Domicili social. Qualificador del número.'
               label: Persona juridica o entitat. Domicili social. Qualificador del
-                numero
+                número
             x-e1l2sp3jdthiqorfchkmerpddlqmsqb3d5o6irpdd5n6a:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili social. Codi de municipi INE.'
@@ -2189,8 +2216,8 @@ modelo:
               label: Persona juridica o entitat. Domicili social. Codi postal
             x-e1l2sp3jdthiqorfchkmerpde1p6utj9dphmio8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili social. Codi de provincia.'
-              label: Persona juridica o entitat. Domicili social. Codi de provincia
+                Domicili social. Codi de província.'
+              label: Persona juridica o entitat. Domicili social. Codi de província
             x-e1l2sp3jdthiqorfchkmerpdepkm2bb9dpig:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili social. Codi de via INE.'
@@ -2217,8 +2244,8 @@ modelo:
               label: Persona juridica o entitat. Domicili social. Nom de la via publica
             x-e1l2sp3jdthiqrjldlin4rpdcdgn6o8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili social. Numero de casa.'
-              label: Persona juridica o entitat. Domicili social. Numero de casa
+                Domicili social. Número de casa.'
+              label: Persona juridica o entitat. Domicili social. Número de casa
             x-e1l2sp3jdthiqs3cc5n78o8:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili social. Planta.'
@@ -2233,8 +2260,8 @@ modelo:
               label: Persona juridica o entitat. Domicili social. Porta
             x-e1l2sp3jdthiqt39e1niqrjldlin4ro:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
-                Domicili social. Tipus de numero.'
-              label: Persona juridica o entitat. Domicili social. Tipus de numero
+                Domicili social. Tipus de número.'
+              label: Persona juridica o entitat. Domicili social. Tipus de número
             x-e1l2sp3jdthiqt39e1niqtj9c4:
               help: 'Dada del model 036, exercici 2025: Persona juridica o entitat.
                 Domicili social. Tipus de via.'
@@ -2422,114 +2449,132 @@ modelo:
               label: Persona juridica o entitat. Personalitat juridica i classe d'entitat.
                 Te personalitat juridica
             x-e9in0c9ec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Informació fiscal de la casella 305 del Modelo 036.
               label: Cognoms i nom o rao social del representant (primer representant,
                 bloc 3.1)
             x-e9in0c9ecdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: 'Causa de la presentacio: alta, baixa o modificacio del representant
                 (primer representant, bloc 3.1)'
             x-e9in0c9ecdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: Causa de la representacio (primer representant, bloc 3.1)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 308 del
+                Modelo 036.
               label: Primer cognom de la persona fisica designada (primer representant,
                 bloc 3.1)
             x-e9in0c9echin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 309 del
+                Modelo 036.
               label: Segon cognom de la persona fisica designada (primer representant,
                 bloc 3.1)
             x-e9in0c9echin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: Causa de la presentacio de la persona fisica designada (primer
                 representant, bloc 3.1)
             x-e9in0c9echin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: Informació fiscal de la casella 313 del Modelo 036.
               label: Data efectiva de la causa de la presentacio de la persona fisica
                 designada (primer representant, bloc 3.1)
             x-e9in0c9echin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 307 del
+                Modelo 036.
               label: NIF de la persona fisica designada (primer representant, bloc
                 3.1)
             x-e9in0c9echin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 310 del
+                Modelo 036.
               label: Nom de la persona fisica designada (primer representant, bloc
                 3.1)
             x-e9in0c9ecpim6q315lhm2tbjc4:
-              help: null
+              help: Informació fiscal de la casella 303 del Modelo 036.
               label: Data efectiva de la causa de la presentacio del representant
                 (primer representant, bloc 3.1)
             x-e9in0c9edpkmc:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 304 del
+                Modelo 036.
               label: NIF del representant (primer representant, bloc 3.1)
             x-e9in0c9ee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 331 del
+                Modelo 036.
               label: Clau de la representacio legal (primer representant, bloc 3.1)
             x-e9in0c9ee9in6qb4cln78p8:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 306 del
+                Modelo 036.
               label: 'El representant es resident: si o no (primer representant, bloc
                 3.1)'
             x-e9in0c9eehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 333 del
+                Modelo 036.
               label: Clau del tipus de representacio (primer representant, bloc 3.1)
             x-e9in0c9eehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 334 del
+                Modelo 036.
               label: Clau del titol de representacio (primer representant, bloc 3.1)
             x-e9in0chec5o6ar3cd5i6uspde9gnkrre5lpmuor9c5m0:
-              help: null
+              help: Informació fiscal de la casella 355 del Modelo 036.
               label: Cognoms i nom o rao social del representant (segon representant,
                 bloc 3.2)
             x-e9in0checdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: 'Causa de la presentacio: alta, baixa o modificacio del representant
                 (segon representant, bloc 3.2)'
             x-e9in0checdgnasr15lp6as3iclpmarjkc5hmirre:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: Causa de la representacio (segon representant, bloc 3.2)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9h:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 358 del
+                Modelo 036.
               label: Primer cognom de la persona fisica designada (segon representant,
                 bloc 3.2)
             x-e9in0chechin6qb7dpgm8o9dc5o6ar3cd5i6ub9i:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 359 del
+                Modelo 036.
               label: Segon cognom de la persona fisica designada (segon representant,
                 bloc 3.2)
             x-e9in0chechin6qb7dpgm8o9dcdgnasr15lo74pbjcln78ob3d5nms:
-              help: null
+              help: Informació fiscal de la casella del Modelo 036.
               label: Causa de la presentacio de la persona fisica designada (segon
                 representant, bloc 3.2)
             x-e9in0chechin6qb7dpgm8o9dcpim6q315lhm2tbjc4:
-              help: null
+              help: Informació fiscal de la casella 363 del Modelo 036.
               label: Data efectiva de la causa de la presentacio de la persona fisica
                 designada (segon representant, bloc 3.2)
             x-e9in0chechin6qb7dpgm8o9ddpkmc:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 357 del
+                Modelo 036.
               label: NIF de la persona fisica designada (segon representant, bloc
                 3.2)
             x-e9in0chechin6qb7dpgm8o9ddpnmqojick:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 360 del
+                Modelo 036.
               label: Nom de la persona fisica designada (segon representant, bloc
                 3.2)
             x-e9in0checpim6q315lhm2tbjc4:
-              help: null
+              help: Informació fiscal de la casella 353 del Modelo 036.
               label: Data efectiva de la causa de la presentacio del representant
                 (segon representant, bloc 3.2)
             x-e9in0chedpkmc:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 354 del
+                Modelo 036.
               label: NIF del representant (segon representant, bloc 3.2)
             x-e9in0chee9in0sj5edimst31cdkmurhddhimeobc5lhmoobmck:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 381 del
+                Modelo 036.
               label: Clau de la representacio legal (segon representant, bloc 3.2)
             x-e9in0chee9in6qb4cln78p8:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 356 del
+                Modelo 036.
               label: 'El representant es resident: si o no (segon representant, bloc
                 3.2)'
             x-e9in0cheehkn0rpde9in0sj5edimst31cdkmurg:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 383 del
+                Modelo 036.
               label: Clau del tipus de representacio (segon representant, bloc 3.2)
             x-e9in0cheehkn8tbcdsmn4pbge9in6pbeehgm6qbfdo:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 384 del
+                Modelo 036.
               label: Clau del titol de representacio (segon representant, bloc 3.2)
             x-e9in8bj5f1q74ob3ehnn4pbj5li6as3fedkn8rrj5lgmoorfd1nmo:
               help: 'Dada del model 036, exercici 2025: Registre d''extractors de
@@ -2577,26 +2622,26 @@ modelo:
                 al registre territorial de l'oficina gestora
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uso:
               help: 'Dada del model 036, exercici 2025: Impostos especials. Obligacio
-                de presentar declaracio per l''Impost Especial sobre Primes d''Assegurances.'
-              label: Impostos especials. Obligacio de presentar declaracio per l'Impost
+                de presentar declaració per l''Impost Especial sobre Primes d''Assegurances.'
+              label: Impostos especials. Obligacio de presentar declaració per l'Impost
                 Especial sobre Primes d'Assegurances
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde1p6irb1ecmn6pb7elp6uspdcpim6q31:
               help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
-                Obligacio de presentar declaracio per l''Impost Especial sobre Primes
+                Obligacio de presentar declaració per l''Impost Especial sobre Primes
                 d''Assegurances.'
-              label: Impostos especials. Data. Obligacio de presentar declaracio per
+              label: Impostos especials. Data. Obligacio de presentar declaració per
                 l'Impost Especial sobre Primes d'Assegurances
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre:
               help: 'Dada del model 036, exercici 2025: Impostos especials. Obligat
-                a presentar la declaracio resum anual de l''Impost Especial sobre
+                a presentar la declaració resum anual de l''Impost Especial sobre
                 el Carbo.'
-              label: Impostos especials. Obligat a presentar la declaracio resum anual
+              label: Impostos especials. Obligat a presentar la declaració resum anual
                 de l'Impost Especial sobre el Carbo
             x-e9in8bj9dlo7apbjehnn6bb5edo6aor9c5m6aspde9in6tbdcln2qobeelgmobb3c5p64rre5lj6aor8c4:
               help: 'Dada del model 036, exercici 2025: Impostos especials. Data.
-                Obligat a presentar la declaracio resum anual de l''Impost Especial
+                Obligat a presentar la declaració resum anual de l''Impost Especial
                 sobre el Carbo.'
-              label: Impostos especials. Data. Obligat a presentar la declaracio resum
+              label: Impostos especials. Data. Obligat a presentar la declaració resum
                 anual de l'Impost Especial sobre el Carbo
             x-e9in8bj9epgiqqbeehp62orfdlqmsqbkc5p6irpddto66qbfdomn4pb7d5mmarhdctimspbic5m0:
               help: 'Dada del model 036, exercici 2025: IVA. Adquisicions intracomunitaries.
@@ -2610,12 +2655,12 @@ modelo:
                 10.000 euros
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi:
               help: 'Dada del model 036, exercici 2025: Impostos mediambientals. Obligacio
-                de presentar declaracio.'
-              label: Impostos mediambientals. Obligacio de presentar declaracio
+                de presentar declaració.'
+              label: Impostos mediambientals. Obligacio de presentar declaració
             x-e9in8bjdcli6irr1dlh6ipbeehgmopbj5lnm4r39ctgm6qbfdomm8pb3dhgn4obi5lj6aor8c4:
               help: 'Dada del model 036, exercici 2025: Impostos mediambientals. Data
-                de l''obligacio de presentar declaracio.'
-              label: Impostos mediambientals. Data de l'obligacio de presentar declaracio
+                de l''obligacio de presentar declaració.'
+              label: Impostos mediambientals. Data de l'obligacio de presentar declaració
             x-e9in8bjiclq6arj3d5nmspbj5lgm6t39epkm8ob4clpiqs3idtj6asr9dtn62r35ec:
               help: 'Dada del model 036, exercici 2025: Retencions i ingressos a compte.
                 Obligacio de retenir o ingressar a compte sobre rendiments d''activitats
@@ -2807,93 +2852,111 @@ modelo:
               label: Socis, membres o particips. Cognoms i nom, rao o denominacio
                 social
             x-edqm6bb15phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 923 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13a)
             x-edqm6bb15pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13a).'
               label: NIF del successor o beneficiari (successor 13a)
             x-edqm6bb15pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 921 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13a)
             x-edqm6bb15po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13a).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13a)
             x-edqm6bb25phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 927 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13b)
             x-edqm6bb25pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13b).'
               label: NIF del successor o beneficiari (successor 13b)
             x-edqm6bb25pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 925 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13b)
             x-edqm6bb25po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13b).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13b)
             x-edqm6bb35phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 931 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13c)
             x-edqm6bb35pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13c).'
               label: NIF del successor o beneficiari (successor 13c)
             x-edqm6bb35pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 929 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13c)
             x-edqm6bb35po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13c).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13c)
             x-edqm6bb45phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 935 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13d)
             x-edqm6bb45pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13d).'
               label: NIF del successor o beneficiari (successor 13d)
             x-edqm6bb45pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 933 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13d)
             x-edqm6bb45po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13d).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13d)
             x-edqm6bb55phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 939 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13e)
             x-edqm6bb55pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13e).'
               label: NIF del successor o beneficiari (successor 13e)
             x-edqm6bb55pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 937 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13e)
             x-edqm6bb55po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13e).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13e)
             x-edqm6bb65phnarrkc4mmoqbhelkm8ob3d5nms:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella 943 del
+                Modelo 036.
               label: Quota de liquidacio, patrimoni o cabal hereditari del successor
                 o beneficiari (successor 13f)
             x-edqm6bb65pn6ipg:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del sucesor o beneficiario
+                (sucesor 13f).'
               label: NIF del successor o beneficiari (successor 13f)
             x-edqm6bb65pn6urb2e9iiqsj1f9nmsbbjdthmiobc:
-              help: null
+              help: Informació fiscal de la casella 941 del Modelo 036.
               label: Cognoms i nom, rao o denominacio social del successor o beneficiari
                 (successor 13f)
             x-edqm6bb65po6usj3cln78obackmmoqbhelkm8ob3d5nms:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de liquidació,
+                participacion o herencia del sucesor o beneficiario (sucesor 13f).'
               label: Percentatge de liquidacio, participacio o herencia del successor
                 o beneficiari (successor 13f)
             x-ehkn8bj15lhm2tbjc4mmcpb3d1gg:
@@ -3057,9 +3120,9 @@ modelo:
               label: Titulars reals. Tipus de document identificatiu, titular real
                 14d
             x-ehkn8bj4clhmoobic5hmirre5ln6ubbmc5p6iob3d5nms:
-              help: 'Dada del model 036, exercici 2025: Titulars reals. Declaracio
-                de no variacio de dades.'
-              label: Titulars reals. Declaracio de no variacio de dades
+              help: 'Dada del model 036, exercici 2025: Titulars reals. Declaració
+                de no variació de dades.'
+              label: Titulars reals. Declaració de no variació de dades
             x-ehkn8bj55lhm2tbjc4mmcpb3d1gg:
               help: 'Dada del model 036, exercici 2025: Titulars reals. Data de la
                 causa de la presentacio, titular real 14e.'
@@ -3148,6 +3211,6 @@ modelo:
           construct:
             modelo-036-censo-foundation:
               field:
-                title: null
+                title: Modelo 036 censo foundation
           field:
-            label: null
+            label: Casella— informació fiscal

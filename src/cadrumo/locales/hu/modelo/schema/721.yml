@@ -1,6 +1,33 @@
 modelo:
   schema:
     '721':
+      casilla:
+        continuidad:
+          custodio-nombre:
+            help: A Modelo 721 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          custodio-pais:
+            help: A Modelo 721 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          filing-year:
+            help: A Modelo 721 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          moneda-virtual-clave-token:
+            help: 'A casilla adatai: Casilla moneda.clave-token: moneda virtual clave
+              token.'
+            label: 'moneda.clave-token mező: virtuális pénznem tokenkulcsa'
+          moneda-virtual-saldo-31-diciembre:
+            help: 'A casilla adatai: Casilla moneda.saldo-31-diciembre: moneda virtual
+              saldo 31 diciembre.'
+            label: 'moneda.saldo-31-diciembre mező: virtuális pénznem december 31-i
+              egyenlege'
+          moneda-virtual-saldo-inicio:
+            help: 'A casilla adatai: Casilla moneda.saldo-inicio: moneda virtual saldo
+              inicio.'
+            label: 'moneda.saldo-inicio mező: virtuális pénznem kezdő egyenlege'
+          tipo-declaracion:
+            help: 'A casilla adatai: Casilla kulcs-bevallás: kulcs bevallás.'
+            label: 'Casilla kulcs-bevallás: kulcs bevallás'
       field:
         official_name: Modelo 721. Adatszolgáltatási bevallás a külföldön található
           virtuális fizetőeszközökről.
@@ -9,66 +36,70 @@ modelo:
         '2023':
           casilla:
             ejercicio:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóév.'
               label: A külföldi virtuális pénznemekről szóló bevallás tárgyát képező
                 adóév
             tipo-declaracion:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A bevallás típusa (eredeti / kiegészítő / helyettesítő)
             x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A letétkezelő országkódja (ISO 3166-1 alfa-2)
             x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A külföldi virtuális pénznem letétkezelőjének neve vagy cégneve
             x-dlnmspb4c4n66r31epiiqt3fddims:
-              help: null
+              help: 'Tekintse át a casilla adatait: Identificador - moneda virtual
+                (ticker / token ID, p.ej. BTC, ETH).'
               label: A virtuális pénznem azonosítója (ticker / token ID, például BTC,
                 ETH)
             x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóügyi információ.'
               label: A virtuális pénznem egyenlege vagy értéke december 31-én, euróban
                 kifejezve
             x-dlnmspb4c4n76obcchniqqbed5hmiro:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóügyi információ.'
               label: A virtuális pénznem egyenlege vagy értéke az időszak elején (jelentős
                 változások esetén)
           construct:
             modelo-721-informative:
               field:
-                title: null
+                title: A 721. számú nyomtatvány külföldön, letétkezelőnél tartott
+                  virtuális pénznemekről szóló adatszolgáltató bevallása
           field:
-            label: null
+            label: Casilla— adóügyi információ
         '2024':
           casilla:
             ejercicio:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóév.'
               label: A külföldi virtuális pénznemekről szóló bevallás tárgyát képező
                 adóév
             tipo-declaracion:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A bevallás típusa (eredeti / kiegészítő / helyettesítő)
             x-cdqn6t3fchkmubj3dti6iprf5lo62qbj:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A letétkezelő országkódja (ISO 3166-1 alfa-2)
             x-cdqn6t3fchkmubjedtmm4sj55lp62ujfdomn6rr3d5gmo:
-              help: null
+              help: A Modelo 721 . casilla adóügyi adatai.
               label: A külföldi virtuális pénznem letétkezelőjének neve vagy cégneve
             x-dlnmspb4c4n66r31epiiqt3fddims:
-              help: null
+              help: 'Tekintse át a casilla adatait: Identificador - moneda virtual
+                (ticker / token ID, p.ej. BTC, ETH).'
               label: A virtuális pénznem azonosítója (ticker / token ID, például BTC,
                 ETH)
             x-dlnmspb4c4n76obcchniqcph5li6ior9clmm4sj5:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóügyi információ.'
               label: A virtuális pénznem egyenlege vagy értéke december 31-én, euróban
                 kifejezve
             x-dlnmspb4c4n76obcchniqqbed5hmiro:
-              help: null
+              help: 'A Modelo 721 . casilla adóügyi adatai: adóügyi információ.'
               label: A virtuális pénznem egyenlege vagy értéke az időszak elején (jelentős
                 változások esetén)
           construct:
             modelo-721-informative:
               field:
-                title: null
+                title: A 721. számú nyomtatvány külföldön, letétkezelőnél tartott
+                  virtuális pénznemekről szóló adatszolgáltató bevallása
           field:
-            label: null
+            label: Casilla— adóügyi információ

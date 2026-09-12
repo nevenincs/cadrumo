@@ -27,6 +27,8 @@ msgid ""
 "Cadrumo is a command-line application. Install it, then run `aeat`. It "
 "works on Windows, macOS, and Linux."
 msgstr ""
+"A Cadrumo parancssori alkalmazás. Telepítse, majd futtassa az `aeat` "
+"parancsot. Windows, macOS és Linux rendszeren működik."
 
 #: ../../download.md:6
 msgid "What you need"
@@ -51,9 +53,8 @@ msgstr ""
 "semmi sem hagyja el a gépét."
 
 #: ../../download.md:15
-#, fuzzy
 msgid "Install"
-msgstr "Telepítési csatornák"
+msgstr "Telepítés"
 
 #: ../../download.md:17
 msgid ""
@@ -63,19 +64,26 @@ msgid ""
 "isolated environment; Homebrew and Scoop install the same package for "
 "platforms where a Python toolchain cannot be assumed."
 msgstr ""
+"Az alábbi [Telepítési csatornák](#install-channels) közül válassza a "
+"platformjához tartozót, és futtassa a felsorolt parancsot. A PyPI az "
+"elsődleges csatorna: az `aeat` parancsot a beépített jogi korpusszal együtt "
+"elszigetelt környezetbe telepíti; a Homebrew és a Scoop ugyanezt a csomagot "
+"telepíti azokon a platformokon, ahol nem feltételezhető "
+"Python-eszközkészlet."
 
 #: ../../download.md:23
 msgid ""
 "The channel table is generated from the shipped channel inventory, so the"
 " commands there are the ones this release actually publishes."
 msgstr ""
+"A csatornatáblázat a kiadott csatornák leltárából készül, ezért a benne "
+"szereplő parancsok azok, amelyeket ez a kiadás ténylegesen közzétesz."
 
 #: ../../download.md:26
 msgid "Confirm the install"
 msgstr "A telepítés megerősítése"
 
 #: ../../download.md:32
-#, fuzzy
 msgid ""
 "A version number confirms the install. Then run the full workstation "
 "check and add the optional extras you want (Google export, the live AEAT "
@@ -83,35 +91,35 @@ msgid ""
 "setup.md), which covers the dependency report, platform checks, and per-"
 "extra install commands."
 msgstr ""
-"Egy verziószám megerősíti a telepítést. Ezután futtassa a teljes "
+"A verziószám megerősíti a telepítést. Ezután futtassa a teljes "
 "munkaállomás-ellenőrzést, és adja hozzá a kívánt opcionális extrákat "
-"(Google-export, az élő AEAT-böngésző, OFX/QFX-import, az ügynökfelület) "
-"az [A Cadrumo telepítése](workstation-setup.md) oldal követésével, amely "
-"ismerteti a függőségi jelentést, a platformellenőrzéseket és az "
-"extránkénti telepítési parancsokat. Ha azt szeretné, hogy egy MI-"
-"asszisztens, például a Claude vezérelje a Cadrumót, folytassa az [Ügynök "
-"csatlakoztatása (MCP)](how-to/connect-an-agent.md) oldallal."
+"(Google-export, élő AEAT-böngésző, OFX/QFX-import) az [A Cadrumo "
+"telepítése](workstation-setup.md) oldal szerint; ez ismerteti a függőségi "
+"jelentést, a platformellenőrzéseket és az egyes extrák telepítési "
+"parancsait."
 
 #: ../../download.md:37
-#, fuzzy
 msgid ""
 "To let an AI assistant such as Claude drive Cadrumo, continue with "
 "[Connect an agent (MCP)](how-to/connect-an-agent.md)."
 msgstr ""
-"Lehetővé teszi, hogy egy Claude-hoz hasonló MI-asszisztens veled együtt, "
-"a saját gépeden vezérelje a Cadrumót."
+"Ha azt szeretné, hogy egy Claude-hoz hasonló MI-asszisztens vezérelje a "
+"Cadrumót, folytassa az [Ügynök csatlakoztatása "
+"(MCP)](how-to/connect-an-agent.md) oldalon."
 
 #: ../../download.md:40
 msgid "Two ways to work"
-msgstr ""
+msgstr "Kétféle munkavégzés"
 
 #: ../../download.md:42
 msgid "`aeat` runs as ordinary commands that print their results:"
-msgstr ""
+msgstr "Az `aeat` szokásos parancsokként fut, és kiírja az eredményeit:"
 
 #: ../../download.md:48
 msgid "Start the full-screen workbench separately when that suits the task:"
 msgstr ""
+"Indítsa el teljes képernyős munkafelületet külön, amikor a feladat ezt "
+"kívánja:"
 
 #: ../../download.md:54
 msgid ""
@@ -119,6 +127,9 @@ msgid ""
 "availability are owned inside that interface. Both entrypoints use the "
 "same local records."
 msgstr ""
+"A parancs elindítja a független munkafelületet; navigációját és "
+"elérhetőségét maga a felület kezeli. Mindkét belépési pont ugyanazokat a "
+"helyi rekordokat használja."
 
 #: ../../download.md:57
 msgid "Install channels"
@@ -130,6 +141,9 @@ msgid ""
 "for users without a Python toolchain. Each release is install-tested on "
 "every platform it claims before it is published."
 msgstr ""
+"A PyPI az elsődleges csatorna; a Homebrew és a Scoop ugyanazt a csomagot "
+"telepíti azoknak, akiknek nincs Python-eszközkészletük. Minden kiadást "
+"telepítéssel tesztelünk minden feltüntetett platformon a közzététel előtt."
 
 #: ../../download.md:70
 msgid "Platform"
@@ -141,7 +155,7 @@ msgstr "Csatorna"
 
 #: ../../download.md:72
 msgid "Where it comes from"
-msgstr ""
+msgstr "Honnan származik"
 
 #: ../../download.md:73
 msgid "Any platform with Python 3.13+"
@@ -153,7 +167,7 @@ msgstr "Python-csomag"
 
 #: ../../download.md:75
 msgid "PyPI listing"
-msgstr ""
+msgstr "PyPI-adatlap"
 
 #: ../../download.md:76
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
@@ -164,9 +178,8 @@ msgid "Homebrew formula"
 msgstr "Homebrew-formula"
 
 #: ../../download.md:78
-#, fuzzy
 msgid "Homebrew tap"
-msgstr "Homebrew-formula"
+msgstr "Homebrew-tároló"
 
 #: ../../download.md:79
 msgid "Windows (x86-64)"
@@ -177,9 +190,8 @@ msgid "Scoop package"
 msgstr "Scoop csomag"
 
 #: ../../download.md:81
-#, fuzzy
 msgid "Scoop bucket"
-msgstr "Scoop csomag"
+msgstr "Scoop-bucket"
 
 #: ../../download.md:84
 msgid "Per-channel install paths:"
@@ -200,6 +212,8 @@ msgstr "**Scoop csomag**: Windows (x86-64)"
 #: ../../download.md:111
 msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
+"Az egyes kiadások [Frissítések](updates.md) alatt található jegyzetei "
+"megnevezik a változásokat."
 
 #: ../../download.md:113
 msgid "After you install"

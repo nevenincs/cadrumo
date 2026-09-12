@@ -654,8 +654,6 @@ cli:
         modelo_help: Filtra por portales vinculados a un modelo
         portal_id_help: Identificador del portal
         view_help: Muestra una entrada del catálogo de portales
-      registry_root_help: Raíz del registro
-      source_root_help: Raíz del proyecto
       to_year_help: Último ejercicio de presentación
       verify:
         app_help: Registro de auditoría de verificaciones NIF de solo lectura
@@ -686,7 +684,7 @@ cli:
           o collectible_invoice. Repetible para varias observaciones.
         invoice_retencion_excluded_notice: 'La factura %{invoice_id} no se enrutó
           al almacén de retenciones: %{reasons}.'
-        invoice_retencion_wrong_modelo: --received-invoice-retencion enruta al almacén
+        invoice_retencion_wrong_modelo: --received-invoice-retención enruta al almacén
           de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
           123, 180, 190, 193.
         json_not_object: '{flag} debe ser un objeto JSON.'
@@ -1027,12 +1025,6 @@ cli:
         binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
-        no_m130_revisions: No hay revisiones M130 para el ejercicio indicado. Ejecuta
-          `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`
-          para cada trimestre primero.
-        no_m130_units: No hay unidades de trabajo M130 para el ejercicio indicado.
-          Crea y calcula unidades M130 primero con `aeat app modelo work create --modelo
-          130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -2229,7 +2221,7 @@ cli:
         add_help: Añadir uno o varios descendientes al perfil activo.
         ambiguous_relacion_advisory: descendiente %{indices} declara meses_madre_trabajo
           bajo la relacion no indicada. El manual concede el minimo pero excluye la
-          deduccion por maternidad del art. 81.1 para un nieto u otro descendiente
+          deducción por maternidad del art. 81.1 para un nieto u otro descendiente
           por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia
           judicial -- el dato almacenado no permite distinguirlo de un hijo real.
           Confirme que este descendiente es un hijo, o indique la relacion real con
@@ -2315,7 +2307,6 @@ cli:
         objects_help: Comprueba la integridad de los objetos seguros.
         objects_namespace_help: Limita las comprobaciones de integridad de objetos
           seguros a un espacio de nombres.
-        registry_help: Comprueba la integridad del registro de cálculo.
       integrity_help: Comprobar la integridad de los objetos seguros y del registro.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
@@ -3226,7 +3217,6 @@ cli:
         overview_status: Mostrar el estado general de la declaración activa.
         paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
           transacciones -> trabaje el modelo -> revise -> exporte.'
-        registry_inspect: Inspeccionar el registro de modelos fiscales.
         review_queue: Mostrar la cola de revisión pendiente.
         review_view: Ver el detalle de un elemento de la cola de revisión.
         section_ledger: Libro de transacciones
@@ -3333,7 +3323,6 @@ cli:
         workflow_modelo: Crea o gestiona unidades de trabajo de modelos.
         workflow_overview: Resume el estado del perfil y del trabajo.
         workflow_profile_status: Muestra la preparación del perfil.
-        workflow_registry: Inspecciona metadatos y fuentes validados del registro.
         workflow_review_queue: Muestra elementos del perfil pendientes de revisión.
         workflow_verification: Lista informes guardados de verificación de declaraciones.
     landing:
@@ -3516,89 +3505,15 @@ cli:
         casillas del régimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
   registry:
-    app_help: Gestión del registro de modelos fiscales
-    casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
-      por defecto
-    citations:
-      app_help: Inspeccionar el corpus normativo (Ley 37/1992, Ley 35/2006, ...)
-      articulo_help: Artículo concreto a mostrar (p. ej. 91.Uno.2.1º)
-      legal_id_help: Id estable de la autoridad legal (p. ej. ley-37-1992)
-      list_help: Listar las autoridades legales registradas en el corpus legal
-      tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
-      verify_help: Verificar la integridad del corpus normativo
-      view_help: Mostrar una autoridad legal y, opcionalmente, uno de sus artículos
-    diff_revisions_from_year_help: Ejercicio fiscal anterior cuya revisión cubridora
-      es la base de la comparación
-    diff_revisions_help: Compara las revisiones del registro de un modelo entre dos
-      ejercicios fiscales
-    diff_revisions_modelo_help: Identificador del modelo a comparar
-    diff_revisions_to_year_help: Ejercicio fiscal posterior cuya revisión cubridora
-      se compara con la base
-    inspect_help: Inspeccionar el estado del registro y las referencias
-    inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
-      app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
-      kind_help: Filtrar por tipo de regla del manual
-      list_help: Listar la cobertura anual declarada y las partes de manual disponibles
-        localmente
-      manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
-        part3)
-      rules_help: Listar las reglas codificadas en un manual
-      section_help: Identificador opcional de sección a mostrar
       verify_dangling_rule_section_ref: la regla %{rule_id} referencia una sección
         desconocida %{target}
       verify_dangling_section_ref: la sección %{section_id} referencia una sección
         desconocida %{target}
-      verify_help: Verificar la integridad del manual contra su contrato
       verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual
         fetch'' para materializarlo'
       verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción
         de %{field_name}'
-      view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
-      year_help: Año fiscal del manual (p. ej. 2024)
-    metrics:
-      application_link_count: Nº enlaces de aplicación
-      application_link_surfaces: Superficies de enlace de aplicación
-      artefact_refs: Referencias de artefactos
-      captured_count: Nº capturados
-      casilla_count: Nº casillas
-      compared_casillas: Casillas comparadas
-      cross_reference_count: Nº referencias cruzadas
-      drift_count: Nº desviaciones (drift)
-      extraction_profile_count: Nº perfiles de extracción
-      failed_declaration_count: Número de declaraciones fallidas
-      formula_count: Nº fórmulas
-      legal_reference_count: Nº referencias legales
-      missing_filed_casillas: Casillas presentadas faltantes
-      missing_local_casillas: Casillas locales faltantes
-      modelo: Modelo
-      modelo_count: Nº modelos
-      modelos: Modelos
-      observation_paths: Rutas de observación
-      revision: Revisión
-      revision_count: Nº revisiones
-      row_count: Nº filas
-      source_reference_count: Nº referencias de origen
-      status: Estado
-      unverified_invariant_families: Familias de invariantes no verificadas
-      verification_expectation_count: Nº expectativas de verificación
-      verified: Verificado
-      verified_invariant_families: Familias de invariantes verificadas
-      workbook_parity_ref_count: Nº referencias de paridad de libro
-    observation_help: Manifiesto cifrado de observación de declaración presentada
-      que se va a verificar
-    source_observation_help: Manifiesto cifrado de observación fuente requerido por
-      vínculos de declaraciones previas o relaciones
-    verify_filed_state_help: Comparar el cálculo local del registro con el estado
-      presentado capturado de AEAT
-    verify_source_root_help: Ruta al directorio de origen para verificar
-    view_edition_help: Muestra una edición de un modelo como la edición completa que
-      compila el registro, en TOML, indicando si cada fila de casilla la declara la
-      propia edición o la hereda y de qué edición, y qué cubre la revisión de la edición
-    view_edition_modelo_help: Identificador del modelo cuya edición se muestra
-    view_edition_revision_help: Identificador de la revisión del registro correspondiente
-      a la edición que se muestra
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'

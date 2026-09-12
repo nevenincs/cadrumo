@@ -362,7 +362,6 @@ msgstr ""
 "Añade `--apply` para registrarlos en el perfil activo."
 
 #: ../../how-to/censo-update.md:154
-#, fuzzy
 msgid ""
 "Facts recorded this way carry a *non-official evidence* marker: they came"
 " from a document you supplied, not from an AEAT-confirmed read, so "
@@ -374,12 +373,12 @@ msgid ""
 msgstr ""
 "Los datos registrados de este modo llevan una marca de *evidencia no "
 "oficial*: proceden de un documento que has aportado, no de una lectura "
-"confirmada por la AEAT, por lo que las vistas del perfil muestran su "
-"procedencia y sigue aplicándose el aviso `censo.enrolment_unverified` del"
-" calendario de presentaciones. Si un valor del certificado no coincide "
-"con una respuesta que diste durante la configuración, el perfil conserva "
-"un registro de la divergencia y `aeat config profile show` te avisa hasta"
-" que la resuelvas."
+"confirmada por la AEAT; por eso, las vistas del perfil muestran su "
+"procedencia y sigue aplicándose el aviso `censo.enrolment_unverified` del "
+"calendario de presentación. Cuando un valor del certificado no coincide con "
+"una respuesta que diste durante la configuración, el perfil conserva un "
+"registro de la divergencia y `aeat config profile view` te avisa hasta que "
+"la resuelvas."
 
 #: ../../how-to/censo-update.md:162
 msgid ""

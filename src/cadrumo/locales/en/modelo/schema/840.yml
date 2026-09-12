@@ -9,389 +9,441 @@ modelo:
         2003-y-siguientes:
           casilla:
             x-c5hn8bj1cdq6itj9chgm8bbge9kmsor9e1gmo:
-              help: null
+              help: Tax information for casilla 59 of Modelo 840.
               label: Principal activity
             x-c5hn8bj1dpniqqbed5hmirpde1p6irb5e9giqtj5f8:
-              help: null
+              help: Tax information for casilla 65 of Modelo 840.
               label: Year the activity was first commenced
             x-c5hn8bj2dtn6ipj9cdgm6qbfdo:
-              help: null
+              help: Tax information for casilla 61 of Modelo 840.
               label: Applicable reduction (code and description)
             x-c5hn8bj3c5mn0obdcln78rpdehqn4qbjehkm6ro:
-              help: null
+              help: Tax information for casilla of Modelo 840.
               label: The activity is carried out inside a tourist campsite
             x-c5hn8bj3c5qn6o9dc9gmko8:
-              help: null
+              help: Tax information for casilla 63 of Modelo 840.
               label: Reason for deregistration (code and description)
             x-c5hn8bj3c5qn6o9dchim6r31e9gm6qbfdomm6rrde1m6arb5dpq62sj9c4:
-              help: null
+              help: Tax information for casilla 64 of Modelo 840.
               label: Reason for the supplementary return
             x-c5hn8bj3c5qn6o9depgn4qb1cdkmurg:
-              help: null
+              help: Tax information for casilla of Modelo 840.
               label: Reason for the variation
             x-c5hn8bj3dhgn6p9dcdqmut31:
-              help: null
+              help: Tax information for casilla 33 of Modelo 840.
               label: Quota class (M municipal, N national, P provincial, or blank)
             x-c5hn8bj3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: Tax information for casilla 39 of Modelo 840.
               label: Municipality code of the activity (reserved for the tax administration)
             x-c5hn8bj3dti6iprf5lo74rrmd5n66qb1:
-              help: null
+              help: Tax information for casilla 41 of Modelo 840.
               label: Province code of the activity (reserved for the tax administration)
             x-c5hn8bj4clpm6sj9e1hmirre:
-              help: null
+              help: Tax information for casilla 36 of Modelo 840.
               label: Description of the activity (reserved for the tax administration)
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: Tax information for casilla 44 of Modelo 840.
               label: 'Address of the activity: postal code'
             x-c5hn8bj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
+              help: Tax information for casilla 45 of Modelo 840.
               label: 'Address of the activity: street code (reserved for the tax administration)'
             x-c5hn8bj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Review the casilla information: Address of the activity: escalera.'
               label: 'Address of the activity: stairwell'
             x-c5hn8bj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Review the casilla information: Address of the activity: kilometro.'
               label: 'Address of the activity: kilometre marker'
             x-c5hn8bj4dtmmior9dhkmubbeelmmasjf:
-              help: null
+              help: Tax information for casilla 46 of Modelo 840.
               label: 'Address of the activity: street number'
             x-c5hn8bj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Review the casilla information: Address of the activity: piso.'
               label: 'Address of the activity: floor'
             x-c5hn8bj4dtmmior9dhkmubbgehng:
-              help: null
+              help: Tax information about tax information in casilla 48 of Modelo
+                840.
               label: 'Address of the activity: Pto., as abbreviated in the record
                 design'
             x-c5hn8bj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Review the casilla information: Address of the activity: puerta.'
               label: 'Address of the activity: door'
             x-c5hn8bj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Review the casilla information: Address of the activity: sigla
+                of the via publica.'
               label: 'Address of the activity: street-type abbreviation'
             x-c5hn8bj4dtmmior9dhkmubbkclm6apjfdpng:
-              help: null
+              help: 'Review the casilla information: Address of the activity: telefono.'
               label: 'Address of the activity: telephone number'
             x-c5hn8bj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Review the casilla information: Address of the activity: name
+                of the via publica.'
               label: 'Address of the activity: street name'
             x-c5hn8bj5f1imsor9dtn0:
-              help: null
+              help: Tax information for casilla 60 of Modelo 840.
               label: Applicable exemption (code and description)
             x-c5hn8bj6clhmgo9dd5n6ior9dsmncobid5gm6qbfdomm6pbjck:
-              help: null
+              help: Tax information for casilla 62 of Modelo 840.
               label: Date of commencement, variation, cessation or other cause
             x-c5hn8bj7e9qn0rpdclo6ipric5j6a:
-              help: null
+              help: Tax information about tax information in casilla 37 of Modelo
+                840.
               label: Group or heading of the IAE tariffs
             x-c5hn8bj9dpj6usjdc5hmirre5lgm8qb3d5nmsobc:
-              help: null
+              help: 'Review the casilla information: Informacion adicional.'
               label: Additional information
             x-c5hn8bjcdthm2r1dc5j6aorkdsmmirj4d5p6aorkc5mmarjkck:
-              help: null
+              help: Tax information about tax information in casilla 35 of Modelo
+                840.
               label: There are premises indirectly used for the activity
             x-c5hn8bjdeln6ior9e1kmu:
-              help: null
+              help: Tax information for casilla 38 of Modelo 840.
               label: Municipality code where the activity is carried out
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd64:
-              help: null
+              help: Tax information about tax information in casilla 53 of Modelo
+                840.
               label: 'Applicable notes: grouping, first'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd68:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: grouping, second'
             x-c5hn8bjedtq62bb1ctp7as31cdkmurhd6c:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: grouping, third'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqc8:
-              help: null
+              help: Tax information about tax information in casilla 55 of Modelo
+                840.
               label: 'Applicable notes: heading, first'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqcg:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: heading, second'
             x-c5hn8bjedtq62bb5e1kmesj1cpiiqco:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: heading, third'
             x-c5hn8bjedtq62bb7e9qn0rpd64:
-              help: null
+              help: Tax information about tax information in casilla 54 of Modelo
+                840.
               label: 'Applicable notes: group, first'
             x-c5hn8bjedtq62bb7e9qn0rpd68:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: group, second'
             x-c5hn8bjedtq62bb7e9qn0rpd6c:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Applicable notes: group, third'
             x-c5hn8bjeelmmasjf5lp6apj5e9imsor9c4:
-              help: null
+              help: Tax information for casilla 67 of Modelo 840.
               label: Reference number of the activity
             x-c5hn8bjge9nncqbecdkm2:
-              help: null
+              help: Tax information for casilla 40 of Modelo 840.
               label: Province code where the activity is carried out
             x-c5hn8bjge9nncqbecdkm2bb3elnn8o9de1p6utj9dphmiobc:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: Province to which the provincial quota corresponds
             x-c5hn8bjiclhmas33d5nmsbbcdtq6asj9c5pg:
-              help: null
+              help: Tax information for casilla of Modelo 840.
               label: Lottery and betting reception is carried out
             x-c5hn8bjicljmoo9d6gmj4bb6:
-              help: null
+              help: Tax information about tax information in casilla 57 of Modelo
+                840.
               label: 'Applicable rule: Rule 4, paragraph 2 F)'
             x-c5hn8bjjclhm6qbfdo:
-              help: null
+              help: Tax information for casilla 58 of Modelo 840.
               label: Section of the IAE tariffs (reserved for the tax administration)
             x-c5hn8bjkd5o6ubb1cdq6itj9chgm8:
-              help: null
+              help: Tax information about tax information in casilla 34 of Modelo
+                840.
               label: Type of activity (E business, P professional, A artistic)
             x-cdqmut315pgmst35ecmm4rred5j6ior1cdkmurj5ecmmirj3e9imqpbeehnn6:
-              help: null
+              help: Tax information for casilla 100 of Modelo 840.
               label: Quota before reductions or increases (reserved for the tax administration)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb3dhgncp8:
-              help: null
+              help: Tax information for casilla 101 of Modelo 840.
               label: Code of the reduction applied (reserved for the tax administration)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbb9dlo6usjkck:
-              help: null
+              help: Tax information for casilla 103 of Modelo 840.
               label: Amount of the reduction (reserved for the tax administration)
             x-cdqmut315ph6urj9cpkm6ob3d5nmsbbgdtp66pbeehgmkp8:
-              help: null
+              help: Tax information for casilla 102 of Modelo 840.
               label: Percentage to which the reduction applies (reserved for the tax
                 administration)
             x-cdqmut315pi6asrgelin6bb2dtn6ipj9cdgm6qbfdpin6bb9dphn4pbdcln78rrj:
-              help: null
+              help: Tax information for casilla 107 of Modelo 840.
               label: Quota after reductions or increases (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmm6r31epig:
-              help: null
+              help: Tax information for casilla 104 of Modelo 840.
               label: Code of the increase applied (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmmirbgdtp78p8:
-              help: null
+              help: Tax information for casilla 106 of Modelo 840.
               label: Amount of the increase (reserved for the tax administration)
             x-cdqmut315pkmsoriclmmarjkdsmn0rricdimst31d9ig:
-              help: null
+              help: Tax information for casilla 105 of Modelo 840.
               label: Percentage to which the increase applies (reserved for the tax
                 administration)
             x-cdqmut315pmm2sbld5n62spde9im6sj5c5q6itj1ecmm2tbkdtr6arjkc4:
-              help: null
+              help: Tax information for casilla of Modelo 840.
               label: Quota for gaming machines or vending activity (reserved for the
                 tax administration)
             x-cdqmut315pq62sj9cpgiqrpdd5mn0rriehiiqrb9dpkmqro:
-              help: null
+              help: Tax information for casilla 108 of Modelo 840.
               label: Tariff quota or minimum amount (reserved for the tax administration)
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla 14 of Modelo 840.
               label: Tax year to which the return relates
             x-chim6r1edpqmqpbidsmn4pb6clp6arj3d5gg:
-              help: null
+              help: Tax information about tax information in casilla 16 of Modelo
+                840.
               label: Reference number of the return (reserved for the tax administration)
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla 15 of Modelo 840.
               label: Return type (registration / change / deregistration)
             x-clm6ar9dehp6iohecdqmut315lhmurjjd5jmsob4c4mn8obid5j62so:
-              help: null
+              help: Tax information for casilla 84 of Modelo 840.
               label: Quota stated directly in the tariffs (reserved for the tax administration)
             x-clm6ar9dehp6iohectp7as3f5lin0qb7e9gmcp9dedqmqo8:
-              help: null
+              help: Tax information for casilla 85 of Modelo 840.
               label: Sum of the taxable elements of the group or heading (reserved
                 for the tax administration)
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdnmapj9cdkmarjkckmm6rrie9im6t3fe8:
-              help: null
+              help: Tax information for casilla 93 of Modelo 840.
               label: 'Municipal quota: correcting coefficient (reserved for the tax
                 administration)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: Tax information for casilla 94 of Modelo 840.
               label: 'Municipal quota: quota of the taxable element (reserved for
                 the tax administration)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
-              help: null
+              help: Tax information about tax information in casilla 89 of Modelo
+                840.
               label: 'Municipal quota: sum of the countable floor area of the premises'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
-              help: null
+              help: Tax information about tax information in casilla 88 of Modelo
+                840.
               label: 'Municipal quota: sum of the adjusted floor area of the premises'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
-              help: null
+              help: Tax information about tax information in casilla 87 of Modelo
+                840.
               label: 'Municipal quota: sum of the total floor area of the premises'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
-              help: null
+              help: Tax information about tax information in casilla 91 of Modelo
+                840.
               label: 'Municipal quota: countable floor area'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
-              help: null
+              help: Tax information about tax information in casilla 90 of Modelo
+                840.
               label: 'Municipal quota: deductible floor area'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
-              help: null
+              help: Tax information for casilla 92 of Modelo 840.
               label: 'Municipal quota: value of the taxable element (reserved for
                 the tax administration)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
-              help: null
+              help: Tax information about tax information in casilla 98 of Modelo
+                840.
               label: 'Provincial or national quota: countable floor area of the premises'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
-              help: null
+              help: Tax information for casilla 99 of Modelo 840.
               label: 'Provincial or national quota: quota of the taxable element (reserved
                 for the tax administration)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
-              help: null
+              help: Tax information for casilla 95 of Modelo 840.
               label: 'Provincial or national quota: number of premises'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
-              help: null
+              help: Tax information about tax information in casilla 97 of Modelo
+                840.
               label: 'Provincial or national quota: adjusted floor area of the premises'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
-              help: null
+              help: Tax information about tax information in casilla 96 of Modelo
+                840.
               label: 'Provincial or national quota: total floor area of the premises'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
-              help: null
+              help: Tax information about tax information in casilla 71 of Modelo
+                840.
               label: Municipality code of the premises indirectly used for the activity
                 (reserved for the tax administration)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3fedq62r0:
-              help: null
+              help: Tax information about tax information in casilla 69 of Modelo
+                840.
               label: Postal code of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqs3idtr6irj3d5gg:
-              help: null
+              help: Tax information about tax information in casilla 73 of Modelo
+                840.
               label: Province code of the premises indirectly used for the activity
                 (reserved for the tax administration)
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqtj9c4:
-              help: null
+              help: Tax information about tax information in casilla 76 of Modelo
+                840.
               label: Street code of the premises indirectly used for the activity
                 (reserved for the tax administration)
             x-dhnm6obc5lkmsp39e9im6t3f5pin6or1dhin4o8:
-              help: null
+              help: Tax information about tax information in casilla 80 of Modelo
+                840.
               label: Stairwell of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5plmir3fdlin8sjf:
-              help: null
+              help: Tax information about tax information in casilla 78 of Modelo
+                840.
               label: Kilometre marker of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pmnarj9cdkn0qbf:
-              help: null
+              help: Tax information about tax information in casilla 70 of Modelo
+                840.
               label: Municipality code of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pn7arb5e9ng:
-              help: null
+              help: Tax information about tax information in casilla 77 of Modelo
+                840.
               label: Street number of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5po6isrf:
-              help: null
+              help: Tax information about tax information in casilla 81 of Modelo
+                840.
               label: Floor of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5po74rrmd5n66qb1:
-              help: null
+              help: Tax information about tax information in casilla 72 of Modelo
+                840.
               label: Province code of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5po78ro:
-              help: null
+              help: Tax information about tax information in casilla 79 of Modelo
+                840.
               label: Pto. of the premises indirectly used for the activity, as abbreviated
                 in the record design
             x-dhnm6obc5lkmsp39e9im6t3f5po7apbiehgg:
-              help: null
+              help: Tax information about tax information in casilla 82 of Modelo
+                840.
               label: Door of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5ppmiprcc4mncqb1:
-              help: null
+              help: Tax information about tax information in casilla 74 of Modelo
+                840.
               label: Street-type abbreviation of the premises indirectly used for
                 the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pq6ar35cpnmsro:
-              help: null
+              help: Tax information about tax information in casilla 83 of Modelo
+                840.
               label: Telephone number of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pqn6rpdchin6t39dpng:
-              help: null
+              help: Tax information about tax information in casilla 68 of Modelo
+                840.
               label: Use or purpose of the premises indirectly used for the activity
             x-dhnm6obc5lkmsp39e9im6t3f5pr6io9de1qm4r39cdgg:
-              help: null
+              help: Tax information about tax information in casilla 75 of Modelo
+                840.
               label: Street name of the premises indirectly used for the activity
             x-dlgn2tb9dpgn6bjjelmm2:
-              help: null
+              help: Tax information for casilla 86 of Modelo 840.
               label: Sum for gaming machines or vending activity (reserved for the
                 tax administration)
             x-dpnn8qb6d5hm2or9dtn2sor1dhkm8ob4:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 840.
               label: 'Capacity in which the return is signed: holder or representative'
             x-dpnn8qb6d5hm2or9dtn2spj5cdk62:
-              help: null
+              help: 'Review the casilla information: Date of the notificacion.'
               label: Date of the notification
             x-dpnn8qb6d5hm2or9dtn2sr3lctgn4:
-              help: null
+              help: 'Review the casilla information: Lugar of the notificacion.'
               label: Place of the notification
             x-e9in0sj5edimst31dpq6abj1e1imor39chnn6bbic5t6urhdednm6qb1dg:
-              help: null
+              help: Tax information about tax information in casilla 18 of Modelo
+                840.
               label: Surnames and forename, or legal name, of the representative
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: Tax information about tax information in casilla 30 of Modelo
+                840.
               label: Municipality code of the representative (reserved for the tax
                 administration)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: 'Review the casilla information: Code postal of the address of
+                the representative.'
               label: Postal code of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lo74rrmd5n66qb1:
-              help: null
+              help: Tax information about tax information in casilla 32 of Modelo
+                840.
               label: Province code of the representative (reserved for the tax administration)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb3dti6iprf5lr6io8:
-              help: null
+              help: Tax information about tax information in casilla 21 of Modelo
+                840.
               label: Street code of the representative's address (reserved for the
                 tax administration)
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubb5edhm2r35e9gg:
-              help: null
+              help: 'Review the casilla information: Escalera of the address of the
+                representative.'
               label: Stairwell of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbbd5m6urb5ehp6u:
-              help: null
+              help: 'Review the casilla information: Kilómetro of the address of the
+                representative.'
               label: Kilometre marker of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbdeln6ior9e1kmu:
-              help: null
+              help: Tax information about tax information in casilla 29 of Modelo
+                840.
               label: Municipality code of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbeelmmasjf:
-              help: null
+              help: 'Review the casilla information: Number of the address of the
+                representative.'
               label: Street number of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgd5pmu:
-              help: null
+              help: 'Review the casilla information: Piso of the address of the representative.'
               label: Floor of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbge9nncqbecdkm2:
-              help: null
+              help: Tax information about tax information in casilla 31 of Modelo
+                840.
               label: Province code of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbgelin4t31:
-              help: null
+              help: 'Review the casilla information: Puerta of the address of the
+                representative.'
               label: Door of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbjd5jmoo9depkm2:
-              help: null
+              help: 'Review the casilla information: Sigla of the vía pública of the
+                address of the representative.'
               label: Street-type abbreviation of the representative's address
             x-e9in0sj5edimst31dpq6abj4dtmmior9dhkmubbmd5giqs3lc9m6ior1:
-              help: null
+              help: 'Review the casilla information: Name of the vía pública of the
+                address of the representative.'
               label: Street name of the representative's address
             x-e9in0sj5edimst31dpq6abjed5j0:
-              help: null
+              help: 'Review the casilla information: NIF of the representative.'
               label: Tax identification number (NIF) of the representative
             x-e9in0sj5edimst31dpq6abjkclm6apjfdpng:
-              help: null
+              help: 'Review the casilla information: Teléfono of the representative.'
               label: Telephone number of the representative
             x-edqmkpbkdsn62s35dhm6ip3fecmn4obqdtn2qsrfcdkm2r0:
-              help: null
+              help: Tax information about tax information in casilla 2 of Modelo 840.
               label: Surnames and forename, or legal name, of the taxable person
             x-edqmkpbkdsn68rrdd5hmir39dsmm6rr4d5jmubbgdtpn8obc:
-              help: null
+              help: Tax information about tax information in casilla 12 of Modelo
+                840.
               label: Postal code of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmmasr3c5m6asj1:
-              help: null
+              help: Tax information about tax information in casilla 7 of Modelo 840.
               label: Stairwell of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmmmqbcdtmmat3ids:
-              help: null
+              help: Tax information about tax information in casilla 6 of Modelo 840.
               label: Kilometre marker of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmmqtbed5hmis39ds:
-              help: null
+              help: Tax information about tax information in casilla 10 of Modelo
+                840.
               label: Municipality code of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmmstbdclp6u:
-              help: null
+              help: Tax information about tax information in casilla 5 of Modelo 840.
               label: Street number of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmn0qbjds:
-              help: null
+              help: Tax information about tax information in casilla 8 of Modelo 840.
               label: Floor of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmn0sjfepkmsor9c4:
-              help: null
+              help: Tax information about tax information in casilla 11 of Modelo
+                840.
               label: Province code of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmn0tb5e9q62:
-              help: null
+              help: Tax information about tax information in casilla 9 of Modelo 840.
               label: Door of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmn6qb7dhgiqtj9c4:
-              help: null
+              help: Tax information about tax information in casilla 3 of Modelo 840.
               label: Street-type abbreviation of the taxable person's address
             x-edqmkpbkdsn68rrdd5hmir39dsmncqb15lo7aojcd5hm2:
-              help: null
+              help: Tax information about tax information in casilla 4 of Modelo 840.
               label: Street name of the taxable person's address
             x-edqmkpbkdsn6sqb6:
-              help: null
+              help: Tax information about tax information in casilla 1 of Modelo 840.
               label: Tax identification number (NIF) of the taxable person
             x-edqmkpbkdsn78pbcclj6urjf5lhmurjkc5hn8ro:
-              help: null
+              help: Tax information about tax information in casilla 13 of Modelo
+                840.
               label: Contact telephone number of the taxable person, dialling code
                 included
           construct:
             modelo-840-iae-declaration:
               field:
-                title: null
+                title: Modelo 840 — tax information
           field:
-            label: null
+            label: Casilla— tax information

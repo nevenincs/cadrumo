@@ -1,6 +1,62 @@
 modelo:
   schema:
     '714':
+      casilla:
+        continuidad:
+          filing-period:
+            help: A Modelo 714 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          filing-year:
+            help: A Modelo 714 . casilla adóügyi adatai.
+            label: Casilla — adóügyi mező
+          patrimonio-base-ahorro-excluida:
+            help: 'A Modelo 714 32. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 32 — adóügyi információ
+          patrimonio-base-imponible:
+            help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 25 — adóügyi információ
+          patrimonio-base-liquidable:
+            help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 27 — adóügyi információ
+          patrimonio-cuota-a-ingresar:
+            help: 'A Modelo 714 55. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 55 — adóügyi információ
+          patrimonio-cuota-integra:
+            help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 29 — adóügyi információ
+          patrimonio-cuota-integra-susceptible-limitacion:
+            help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 36 — adóügyi információ
+          patrimonio-cuota-minorada:
+            help: 'A Modelo 714 45. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 45 — adóügyi információ
+          patrimonio-dividendos-no-irpf:
+            help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 31 — adóügyi információ
+          patrimonio-exceso-limite-conjunto:
+            help: A Modelo 714 38. casilla adóügyi adatai.
+            label: Casilla 38 — adóügyi mező
+          patrimonio-irpf-bases-imponibles:
+            help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 30 — adóügyi információ
+          patrimonio-irpf-cuotas-excluidas-base-ahorro:
+            help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 35 — adóügyi információ
+          patrimonio-irpf-cuotas-integras:
+            help: 'A Modelo 714 34. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 34 — adóügyi információ
+          patrimonio-limite-conjunto:
+            help: A Modelo 714 33. casilla adóügyi adatai.
+            label: Casilla 33 — adóügyi mező
+          patrimonio-reduccion-limite-ochenta:
+            help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 39 — adóügyi információ
+          patrimonio-suma-cuotas-limite:
+            help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 37 — adóügyi információ
+          patrimonio-total-cuota-integra:
+            help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 40 — adóügyi információ
       field:
         official_name: Vagyonadó. Bevallás
         title: Modelo 714
@@ -8,399 +64,411 @@ modelo:
         '2021':
           casilla:
             declaracion-01:
-              help: null
+              help: A Modelo 714 01. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Városi ingatlanok összesen
             declaracion-02:
-              help: null
+              help: A Modelo 714 02. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - B. Mezőgazdasági ingatlanok - Összesen
             declaracion-03:
-              help: null
+              help: A Modelo 714 03. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak és jogok - Összesen
             declaracion-04:
-              help: null
+              help: A Modelo 714 04. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez
                 kötött, mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
             declaracion-05:
-              help: null
+              help: A Modelo 714 05. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - E. Folyószámla- és megtakarítási betétek,
                 pénzügyi számlák, lekötések - Összesen
             declaracion-06:
-              help: null
+              help: A Modelo 714 06. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Államadósság, kötvények, obligációk és
                 egyéb forgalmazott értékpapírok - Összesen
             declaracion-07:
-              help: null
+              help: A Modelo 714 07. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F2. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Kötvények, obligációk, letéti jegyek és
                 váltók - összesen
             declaracion-08:
-              help: null
+              help: A Modelo 714 08. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G1. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények forgalmazott részvényei és befektetési jegyei
                 - Összesen
             declaracion-09:
-              help: null
+              help: A Modelo 714 09. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G2. Nem mentes értékpapírok - Más szervezetek
                 alapjaiban lévő részvények és részesedések - Összesen
             declaracion-10:
-              help: null
+              help: A Modelo 714 10. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G3. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények nem forgalmazott részvényei és befektetési
                 jegyei - összesen
             declaracion-11:
-              help: null
+              help: A Modelo 714 11. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G4. Nem mentes értékpapírok - Más jogi
                 személyek nem forgalmazott részvényei és részesedései - Összesen
             declaracion-12:
-              help: null
+              help: A Modelo 714 12. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H1. Mentes értékpapírok - Jogi személyek
                 forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-13:
-              help: null
+              help: A Modelo 714 13. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H2. Mentes értékpapírok - Jogi személyek
                 mentes, nem forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-14:
-              help: null
+              help: A Modelo 714 14. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
             declaracion-15:
-              help: null
+              help: A Modelo 714 15. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok
                 - Összesen
             declaracion-16:
-              help: null
+              help: A Modelo 714 16. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - K. Járművek, ékszerek, luxusprémek,
                 hajók és légi járművek - Összesen
             declaracion-17:
-              help: null
+              help: A Modelo 714 17. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
             declaracion-18:
-              help: null
+              help: A Modelo 714 18. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - M. Használati és haszonélvezeti jogok
                 (az állandó lakás kivételével) - Összesen
             declaracion-19:
-              help: null
+              help: A Modelo 714 19. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
             declaracion-20:
-              help: null
+              help: A Modelo 714 20. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
                 jogok - Összesen
             declaracion-21:
-              help: null
+              help: A Modelo 714 21. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - P. Szerződéses opciók - Összesen
             declaracion-22:
-              help: null
+              help: A Modelo 714 22. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
                 és jogok - Összesen
             declaracion-23:
-              help: null
+              help: A Modelo 714 23. casilla adóügyi adatai.
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
                 és jogok összesen'
             declaracion-24:
-              help: null
+              help: 'Tekintse át a casilla adatait: Deudas deducibles - Total.'
               label: Levonható tartozások - Összesen
             declaracion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Az adómentes
                 minimum címén érvényesített csökkentés'
             declaracion-28:
-              help: null
+              help: A Modelo 714 28. casilla adóügyi adatai.
               label: Progresszivitás szempontjából figyelembe vett mentes vagyon -
                 Mentes vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
                 meghatározók kivételével
             declaracion-41:
-              help: null
+              help: A Modelo 714 41. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
                 összege
             declaracion-42:
-              help: null
+              help: A Modelo 714 42. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
                 és Melillában lévő vagyontárgyak és jogok nettó értéke
             declaracion-43:
-              help: null
+              help: A Modelo 714 43. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
                 és jogokra eső arányos adórész
             declaracion-44:
-              help: null
+              help: A Modelo 714 44. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
                 összege
             declaracion-46:
-              help: null
+              help: A Modelo 714 46. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - Q. Virtuális valuta egyenlegek - Összesen
             declaracion-48:
-              help: null
+              help: A Modelo 714 48. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - A levonásra jogosító teljes összeg
             declaracion-49:
-              help: null
+              help: A Modelo 714 49. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - Érvényesített összeg
             declaracion-50:
-              help: null
+              help: A Modelo 714 50. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi kedvezmény - Érvényesített összeg
             declaracion-56:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Adóösszeg ingresar korábbi önadózási bevallások/liquidaciones.'
               label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
                 szerint fizetendő adó
             declaracion-57:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Diferencia a ingresar eredmény bevallás kiegészítő.'
               label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
                 fizetendő különbözet
             declaracion-60:
-              help: null
+              help: A Modelo 714 60. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
                 mentességre jogosító teljes értéke
             declaracion-61:
-              help: null
+              help: A Modelo 714 61. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Mentes érték
             declaracion-62:
-              help: null
+              help: A Modelo 714 62. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Nem mentes érték
             declaracion-63:
-              help: null
+              help: A Modelo 714 63. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Összesen
             declaracion-a:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
                 ténylegesen megfizetett adók
             declaracion-b:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
                 külföldön adóztatott része
             declaracion-i:
-              help: null
+              help: 'Tekintse át a casilla adatait: Befizetés - Összeg - befizetés.'
               label: Befizetés - A befizetés összege
             declaracion-negativa:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás negatív.'
               label: Nemleges bevallás
             identificacion-1:
-              help: null
+              help: 'A Modelo 714 1. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2020-ben szokásos tartózkodási helye
                 Spanyolország területén kívül volt, és korlátozott adókötelezettség
                 alá esik
             identificacion-10:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás Kiegészítő.'
               label: Kiegészítő bevallás
             identificacion-12:
-              help: null
+              help: 'A Modelo 714 12. casilla adóügyi adatai: adóügyi információ.'
               label: Ha a 4. rovatot megjelölte, és az autonóm közösségi szabályozás
                 alkalmazását választja
             identificacion-15:
-              help: null
+              help: 'A Modelo 714 15. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület jellege
             identificacion-16:
-              help: null
+              help: 'A Modelo 714 16. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület neve
             identificacion-17:
-              help: null
+              help: 'A Modelo 714 17. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszámozás típusa
             identificacion-18:
-              help: null
+              help: 'A Modelo 714 18. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám
             identificacion-19:
-              help: null
+              help: 'A Modelo 714 19. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám kiegészítése
             identificacion-2:
-              help: null
+              help: 'A Modelo 714 2. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2020-ben megszűnt a spanyolországi
                 illetősége, de továbbra is teljes körű adókötelezettség alá esik
             identificacion-20:
-              help: null
+              help: 'A Modelo 714 20. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Épülettömb
             identificacion-21:
-              help: null
+              help: 'A Modelo 714 21. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcsőház
             identificacion-22:
-              help: null
+              help: 'A Modelo 714 22. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcső
             identificacion-23:
-              help: null
+              help: 'A Modelo 714 23. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Emelet
             identificacion-24:
-              help: null
+              help: 'A Modelo 714 24. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Ajtó
             identificacion-25:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - További címadatok
             identificacion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
                 az önkormányzattól)
             identificacion-27:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Irányítószám
             identificacion-28:
-              help: null
+              help: 'A Modelo 714 28. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Önkormányzat neve
             identificacion-29:
-              help: null
+              help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Tartomány
             identificacion-3:
-              help: null
+              help: A Modelo 714 3. casilla adóügyi adatai.
               label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
                 vagyontárgy vagy jog található
             identificacion-35:
-              help: null
+              help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Cím
             identificacion-36:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - További címadatok
             identificacion-37:
-              help: null
+              help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Település vagy város
             identificacion-39:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [ZIP].'
               label: Adóalany - Külföldi cím - Irányítószám (ZIP)
             identificacion-4:
-              help: null
+              help: 'A Modelo 714 4. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2020-ben adóügyi illetősége Spanyolországban
                 volt, de a személyi jövedelemadóról szóló 35/2006. törvény 93. cikke
                 szerinti különleges rendszer választása miatt korlátozott vagyonadó-kötelezettség
                 alá esik
             identificacion-40:
-              help: null
+              help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
             identificacion-41:
-              help: null
+              help: 'A Modelo 714 41. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Ország
             identificacion-42:
-              help: null
+              help: 'A Modelo 714 42. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Országkód
             identificacion-8:
-              help: null
+              help: 'A Modelo 714 8. casilla adóügyi adatai: adóügyi információ.'
               label: 2020. évi lakóhely szerinti autonóm közösség vagy város
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóév.'
               label: A bevallás adóéve
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
               label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakóhely - Tartománykód
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
                 befizetendő összegek
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: Adóalany - Fogyatékosság - A fogyatékosság típusa
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Fogyatékosság - A fogyatékosság mértéke százalékban
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Családi állapota
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: A bevallás kelte - Év
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás kelte - Nap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Localidad.'
               label: A bevallás kelte - Helység
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Mes.'
               label: A bevallás kelte - Hónap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Születési ideje
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'A Modelo 714 nacionalidad. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állampolgárság
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Rendszer económico - matrimonio.'
               label: Házassági vagyonjogi rendszer
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Képviselő - NIF.'
               label: Képviselő - Adóazonosító szám
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Képviselő - Vezeték- és utóneve vagy cégneve
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'A Modelo 714 sexo. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Neme
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás típusa
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Befizetés - Fizetési mód
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte - adóalap - ahorro - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 megtakarítási adóalapjának része
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett
                 adóalap'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg a ingresar
+                - Adóösszeg a ingresar.'
               label: Adómegállapítás - Fizetendő adó - Fizetendő adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg teljes
+                - Adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó - Bruttó adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás
                 alá eshető bruttó vagyonadó-rész
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg minorada
+                - Adóösszeg minorada.'
               label: Adómegállapítás - Csökkentett adó - Csökkentett adó
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
                 nem beszámított osztalékok és nyereségrészesedések
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - a) Exceso.'
               label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 adóalapjainak összege
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte adóösszegek íntegras IRPF, saldo positivo ganancias
+                és pérdidas vagyoni.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
                 és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Adóösszegek íntegras - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 bruttó adója
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: A Modelo 714 33. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
                 a személyi jövedelemadó együttes felső korlátja
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
                 80%-a
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: A Modelo 714 37. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
                 céljából figyelembe vett adók összege
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Total adóösszeg
+                teljes - Total adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
           construct:
             m714-patrimonio-calculation:
@@ -411,399 +479,411 @@ modelo:
         '2022':
           casilla:
             declaracion-01:
-              help: null
+              help: A Modelo 714 01. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Városi ingatlanok összesen
             declaracion-02:
-              help: null
+              help: A Modelo 714 02. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - B. Mezőgazdasági ingatlanok - Összesen
             declaracion-03:
-              help: null
+              help: A Modelo 714 03. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak és jogok - Összesen
             declaracion-04:
-              help: null
+              help: A Modelo 714 04. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez
                 kötött, mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
             declaracion-05:
-              help: null
+              help: A Modelo 714 05. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - E. Folyószámla- és megtakarítási betétek,
                 pénzügyi számlák, lekötések - Összesen
             declaracion-06:
-              help: null
+              help: A Modelo 714 06. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Államadósság, kötvények, obligációk és
                 egyéb forgalmazott értékpapírok - Összesen
             declaracion-07:
-              help: null
+              help: A Modelo 714 07. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F2. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Kötvények, obligációk, letéti jegyek és
                 váltók - összesen
             declaracion-08:
-              help: null
+              help: A Modelo 714 08. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G1. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények forgalmazott részvényei és befektetési jegyei
                 - Összesen
             declaracion-09:
-              help: null
+              help: A Modelo 714 09. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G2. Nem mentes értékpapírok - Más szervezetek
                 alapjaiban lévő részvények és részesedések - Összesen
             declaracion-10:
-              help: null
+              help: A Modelo 714 10. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G3. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények nem forgalmazott részvényei és befektetési
                 jegyei - összesen
             declaracion-11:
-              help: null
+              help: A Modelo 714 11. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G4. Nem mentes értékpapírok - Más jogi
                 személyek nem forgalmazott részvényei és részesedései - Összesen
             declaracion-12:
-              help: null
+              help: A Modelo 714 12. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H1. Mentes értékpapírok - Jogi személyek
                 forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-13:
-              help: null
+              help: A Modelo 714 13. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H2. Mentes értékpapírok - Jogi személyek
                 mentes, nem forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-14:
-              help: null
+              help: A Modelo 714 14. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
             declaracion-15:
-              help: null
+              help: A Modelo 714 15. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok
                 - Összesen
             declaracion-16:
-              help: null
+              help: A Modelo 714 16. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - K. Járművek, ékszerek, luxusprémek,
                 hajók és légi járművek - Összesen
             declaracion-17:
-              help: null
+              help: A Modelo 714 17. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
             declaracion-18:
-              help: null
+              help: A Modelo 714 18. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - M. Használati és haszonélvezeti jogok
                 (az állandó lakás kivételével) - Összesen
             declaracion-19:
-              help: null
+              help: A Modelo 714 19. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
             declaracion-20:
-              help: null
+              help: A Modelo 714 20. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
                 jogok - Összesen
             declaracion-21:
-              help: null
+              help: A Modelo 714 21. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - P. Szerződéses opciók - Összesen
             declaracion-22:
-              help: null
+              help: A Modelo 714 22. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
                 és jogok - Összesen
             declaracion-23:
-              help: null
+              help: A Modelo 714 23. casilla adóügyi adatai.
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
                 és jogok összesen'
             declaracion-24:
-              help: null
+              help: 'Tekintse át a casilla adatait: Deudas deducibles - Total.'
               label: Levonható tartozások - Összesen
             declaracion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Az adómentes
                 minimum címén érvényesített csökkentés'
             declaracion-28:
-              help: null
+              help: A Modelo 714 28. casilla adóügyi adatai.
               label: Progresszivitás szempontjából figyelembe vett mentes vagyon -
                 Mentes vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
                 meghatározók kivételével
             declaracion-41:
-              help: null
+              help: A Modelo 714 41. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
                 összege
             declaracion-42:
-              help: null
+              help: A Modelo 714 42. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
                 és Melillában lévő vagyontárgyak és jogok nettó értéke
             declaracion-43:
-              help: null
+              help: A Modelo 714 43. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
                 és jogokra eső arányos adórész
             declaracion-44:
-              help: null
+              help: A Modelo 714 44. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
                 összege
             declaracion-46:
-              help: null
+              help: A Modelo 714 46. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - Q. Virtuális valuta egyenlegek - Összesen
             declaracion-48:
-              help: null
+              help: A Modelo 714 48. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - A levonásra jogosító teljes összeg
             declaracion-49:
-              help: null
+              help: A Modelo 714 49. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - Érvényesített összeg
             declaracion-50:
-              help: null
+              help: A Modelo 714 50. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi kedvezmény - Érvényesített összeg
             declaracion-56:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Adóösszeg ingresar korábbi önadózási bevallások/liquidaciones.'
               label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
                 szerint fizetendő adó
             declaracion-57:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Diferencia a ingresar eredmény bevallás kiegészítő.'
               label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
                 fizetendő különbözet
             declaracion-60:
-              help: null
+              help: A Modelo 714 60. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
                 mentességre jogosító teljes értéke
             declaracion-61:
-              help: null
+              help: A Modelo 714 61. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Mentes érték
             declaracion-62:
-              help: null
+              help: A Modelo 714 62. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Nem mentes érték
             declaracion-63:
-              help: null
+              help: A Modelo 714 63. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Összesen
             declaracion-a:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
                 ténylegesen megfizetett adók
             declaracion-b:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
                 külföldön adóztatott része
             declaracion-i:
-              help: null
+              help: 'Tekintse át a casilla adatait: Befizetés - Összeg - befizetés.'
               label: Befizetés - A befizetés összege
             declaracion-negativa:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás negatív.'
               label: Nemleges bevallás
             identificacion-1:
-              help: null
+              help: 'A Modelo 714 1. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2022-ben szokásos tartózkodási helye
                 Spanyolország területén kívül volt, és korlátozott adókötelezettség
                 alá esik
             identificacion-10:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás Kiegészítő.'
               label: Kiegészítő bevallás
             identificacion-12:
-              help: null
+              help: 'A Modelo 714 12. casilla adóügyi adatai: adóügyi információ.'
               label: Ha a 4. rovatot megjelölte, és az autonóm közösségi szabályozás
                 alkalmazását választja
             identificacion-15:
-              help: null
+              help: 'A Modelo 714 15. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület jellege
             identificacion-16:
-              help: null
+              help: 'A Modelo 714 16. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület neve
             identificacion-17:
-              help: null
+              help: 'A Modelo 714 17. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszámozás típusa
             identificacion-18:
-              help: null
+              help: 'A Modelo 714 18. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám
             identificacion-19:
-              help: null
+              help: 'A Modelo 714 19. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám kiegészítése
             identificacion-2:
-              help: null
+              help: 'A Modelo 714 2. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2022-ben megszűnt a spanyolországi
                 illetősége, de továbbra is teljes körű adókötelezettség alá esik
             identificacion-20:
-              help: null
+              help: 'A Modelo 714 20. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Épülettömb
             identificacion-21:
-              help: null
+              help: 'A Modelo 714 21. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcsőház
             identificacion-22:
-              help: null
+              help: 'A Modelo 714 22. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcső
             identificacion-23:
-              help: null
+              help: 'A Modelo 714 23. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Emelet
             identificacion-24:
-              help: null
+              help: 'A Modelo 714 24. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Ajtó
             identificacion-25:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - További címadatok
             identificacion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
                 az önkormányzattól)
             identificacion-27:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Irányítószám
             identificacion-28:
-              help: null
+              help: 'A Modelo 714 28. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Önkormányzat neve
             identificacion-29:
-              help: null
+              help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Tartomány
             identificacion-3:
-              help: null
+              help: A Modelo 714 3. casilla adóügyi adatai.
               label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
                 vagyontárgy vagy jog található
             identificacion-35:
-              help: null
+              help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Cím
             identificacion-36:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - További címadatok
             identificacion-37:
-              help: null
+              help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Település vagy város
             identificacion-39:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [ZIP].'
               label: Adóalany - Külföldi cím - Irányítószám (ZIP)
             identificacion-4:
-              help: null
+              help: 'A Modelo 714 4. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2022-ben adóügyi illetősége Spanyolországban
                 volt, de a személyi jövedelemadóról szóló 35/2006. törvény 93. cikke
                 szerinti különleges rendszer választása miatt korlátozott vagyonadó-kötelezettség
                 alá esik
             identificacion-40:
-              help: null
+              help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
             identificacion-41:
-              help: null
+              help: 'A Modelo 714 41. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Ország
             identificacion-42:
-              help: null
+              help: 'A Modelo 714 42. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Országkód
             identificacion-8:
-              help: null
+              help: 'A Modelo 714 8. casilla adóügyi adatai: adóügyi információ.'
               label: 2022. évi lakóhely szerinti autonóm közösség vagy város
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóév.'
               label: A bevallás adóéve
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
               label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakóhely - Tartománykód
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
                 befizetendő összegek
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: Adóalany - Fogyatékosság - A fogyatékosság típusa
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Fogyatékosság - A fogyatékosság mértéke százalékban
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Családi állapota
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: A bevallás kelte - Év
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás kelte - Nap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Localidad.'
               label: A bevallás kelte - Helység
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Mes.'
               label: A bevallás kelte - Hónap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Születési ideje
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'A Modelo 714 nacionalidad. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állampolgárság
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Rendszer económico - matrimonio.'
               label: Házassági vagyonjogi rendszer
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Képviselő - NIF.'
               label: Képviselő - Adóazonosító szám
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Képviselő - Vezeték- és utóneve vagy cégneve
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'A Modelo 714 sexo. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Neme
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás típusa
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Befizetés - Fizetési mód
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte - adóalap - ahorro - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 megtakarítási adóalapjának része
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett
                 adóalap'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg a ingresar
+                - Adóösszeg a ingresar.'
               label: Adómegállapítás - Fizetendő adó - Fizetendő adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg teljes
+                - Adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó - Bruttó adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás
                 alá eshető bruttó vagyonadó-rész
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg minorada
+                - Adóösszeg minorada.'
               label: Adómegállapítás - Csökkentett adó - Csökkentett adó
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
                 nem beszámított osztalékok és nyereségrészesedések
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - a) Exceso.'
               label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 adóalapjainak összege
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte adóösszegek íntegras IRPF, saldo positivo ganancias
+                és pérdidas vagyoni.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
                 és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Adóösszegek íntegras - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 bruttó adója
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: A Modelo 714 33. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
                 a személyi jövedelemadó együttes felső korlátja
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
                 80%-a
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: A Modelo 714 37. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
                 céljából figyelembe vett adók összege
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Total adóösszeg
+                teljes - Total adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
           construct:
             m714-patrimonio-calculation:
@@ -814,399 +894,411 @@ modelo:
         '2023':
           casilla:
             declaracion-01:
-              help: null
+              help: A Modelo 714 01. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Városi ingatlanok összesen
             declaracion-02:
-              help: null
+              help: A Modelo 714 02. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - B. Mezőgazdasági ingatlanok - Összesen
             declaracion-03:
-              help: null
+              help: A Modelo 714 03. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak és jogok - Összesen
             declaracion-04:
-              help: null
+              help: A Modelo 714 04. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez
                 kötött, mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
             declaracion-05:
-              help: null
+              help: A Modelo 714 05. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - E. Folyószámla- és megtakarítási betétek,
                 pénzügyi számlák, lekötések - Összesen
             declaracion-06:
-              help: null
+              help: A Modelo 714 06. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Államadósság, kötvények, obligációk és
                 egyéb forgalmazott értékpapírok - Összesen
             declaracion-07:
-              help: null
+              help: A Modelo 714 07. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F2. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Kötvények, obligációk, letéti jegyek és
                 váltók - összesen
             declaracion-08:
-              help: null
+              help: A Modelo 714 08. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G1. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények forgalmazott részvényei és befektetési jegyei
                 - Összesen
             declaracion-09:
-              help: null
+              help: A Modelo 714 09. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G2. Nem mentes értékpapírok - Más szervezetek
                 alapjaiban lévő részvények és részesedések - Összesen
             declaracion-10:
-              help: null
+              help: A Modelo 714 10. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G3. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények nem forgalmazott részvényei és befektetési
                 jegyei - összesen
             declaracion-11:
-              help: null
+              help: A Modelo 714 11. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G4. Nem mentes értékpapírok - Más jogi
                 személyek nem forgalmazott részvényei és részesedései - Összesen
             declaracion-12:
-              help: null
+              help: A Modelo 714 12. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H1. Mentes értékpapírok - Jogi személyek
                 forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-13:
-              help: null
+              help: A Modelo 714 13. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H2. Mentes értékpapírok - Jogi személyek
                 mentes, nem forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-14:
-              help: null
+              help: A Modelo 714 14. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
             declaracion-15:
-              help: null
+              help: A Modelo 714 15. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok
                 - Összesen
             declaracion-16:
-              help: null
+              help: A Modelo 714 16. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - K. Járművek, ékszerek, luxusprémek,
                 hajók és légi járművek - Összesen
             declaracion-17:
-              help: null
+              help: A Modelo 714 17. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
             declaracion-18:
-              help: null
+              help: A Modelo 714 18. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - M. Használati és haszonélvezeti jogok
                 (az állandó lakás kivételével) - Összesen
             declaracion-19:
-              help: null
+              help: A Modelo 714 19. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
             declaracion-20:
-              help: null
+              help: A Modelo 714 20. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
                 jogok - Összesen
             declaracion-21:
-              help: null
+              help: A Modelo 714 21. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - P. Szerződéses opciók - Összesen
             declaracion-22:
-              help: null
+              help: A Modelo 714 22. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
                 és jogok - Összesen
             declaracion-23:
-              help: null
+              help: A Modelo 714 23. casilla adóügyi adatai.
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
                 és jogok összesen'
             declaracion-24:
-              help: null
+              help: 'Tekintse át a casilla adatait: Deudas deducibles - Total.'
               label: Levonható tartozások - Összesen
             declaracion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Az adómentes
                 minimum címén érvényesített csökkentés'
             declaracion-28:
-              help: null
+              help: A Modelo 714 28. casilla adóügyi adatai.
               label: Progresszivitás szempontjából figyelembe vett mentes vagyon -
                 Mentes vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
                 meghatározók kivételével
             declaracion-41:
-              help: null
+              help: A Modelo 714 41. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
                 összege
             declaracion-42:
-              help: null
+              help: A Modelo 714 42. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
                 és Melillában lévő vagyontárgyak és jogok nettó értéke
             declaracion-43:
-              help: null
+              help: A Modelo 714 43. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
                 és jogokra eső arányos adórész
             declaracion-44:
-              help: null
+              help: A Modelo 714 44. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
                 összege
             declaracion-46:
-              help: null
+              help: A Modelo 714 46. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - Q. Virtuális valuta egyenlegek - Összesen
             declaracion-48:
-              help: null
+              help: A Modelo 714 48. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - A levonásra jogosító teljes összeg
             declaracion-49:
-              help: null
+              help: A Modelo 714 49. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - Érvényesített összeg
             declaracion-50:
-              help: null
+              help: A Modelo 714 50. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi kedvezmény - Érvényesített összeg
             declaracion-56:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Adóösszeg ingresar korábbi önadózási bevallások/liquidaciones.'
               label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
                 szerint fizetendő adó
             declaracion-57:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Diferencia a ingresar eredmény bevallás kiegészítő.'
               label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
                 fizetendő különbözet
             declaracion-60:
-              help: null
+              help: A Modelo 714 60. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
                 mentességre jogosító teljes értéke
             declaracion-61:
-              help: null
+              help: A Modelo 714 61. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Mentes érték
             declaracion-62:
-              help: null
+              help: A Modelo 714 62. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Nem mentes érték
             declaracion-63:
-              help: null
+              help: A Modelo 714 63. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Összesen
             declaracion-a:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
                 ténylegesen megfizetett adók
             declaracion-b:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
                 külföldön adóztatott része
             declaracion-i:
-              help: null
+              help: 'Tekintse át a casilla adatait: Befizetés - Összeg - befizetés.'
               label: Befizetés - A befizetés összege
             declaracion-negativa:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás negatív.'
               label: Nemleges bevallás
             identificacion-1:
-              help: null
+              help: 'A Modelo 714 1. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2023-ben szokásos tartózkodási helye
                 Spanyolország területén kívül volt, és korlátozott adókötelezettség
                 alá esik
             identificacion-10:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás Kiegészítő.'
               label: Kiegészítő bevallás
             identificacion-12:
-              help: null
+              help: 'A Modelo 714 12. casilla adóügyi adatai: adóügyi információ.'
               label: Ha a 4. rovatot megjelölte, és az autonóm közösségi szabályozás
                 alkalmazását választja
             identificacion-15:
-              help: null
+              help: 'A Modelo 714 15. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület jellege
             identificacion-16:
-              help: null
+              help: 'A Modelo 714 16. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület neve
             identificacion-17:
-              help: null
+              help: 'A Modelo 714 17. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszámozás típusa
             identificacion-18:
-              help: null
+              help: 'A Modelo 714 18. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám
             identificacion-19:
-              help: null
+              help: 'A Modelo 714 19. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám kiegészítése
             identificacion-2:
-              help: null
+              help: 'A Modelo 714 2. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2023-ben megszűnt a spanyolországi
                 illetősége, de továbbra is teljes körű adókötelezettség alá esik
             identificacion-20:
-              help: null
+              help: 'A Modelo 714 20. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Épülettömb
             identificacion-21:
-              help: null
+              help: 'A Modelo 714 21. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcsőház
             identificacion-22:
-              help: null
+              help: 'A Modelo 714 22. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcső
             identificacion-23:
-              help: null
+              help: 'A Modelo 714 23. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Emelet
             identificacion-24:
-              help: null
+              help: 'A Modelo 714 24. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Ajtó
             identificacion-25:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - További címadatok
             identificacion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
                 az önkormányzattól)
             identificacion-27:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Irányítószám
             identificacion-28:
-              help: null
+              help: 'A Modelo 714 28. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Önkormányzat neve
             identificacion-29:
-              help: null
+              help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Tartomány
             identificacion-3:
-              help: null
+              help: A Modelo 714 3. casilla adóügyi adatai.
               label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
                 vagyontárgy vagy jog található
             identificacion-35:
-              help: null
+              help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Cím
             identificacion-36:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - További címadatok
             identificacion-37:
-              help: null
+              help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Település vagy város
             identificacion-39:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [ZIP].'
               label: Adóalany - Külföldi cím - Irányítószám (ZIP)
             identificacion-4:
-              help: null
+              help: 'A Modelo 714 4. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2023-ben adóügyi illetősége Spanyolországban
                 volt, de a személyi jövedelemadóról szóló 35/2006. törvény 93. cikke
                 szerinti különleges rendszer választása miatt korlátozott vagyonadó-kötelezettség
                 alá esik
             identificacion-40:
-              help: null
+              help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
             identificacion-41:
-              help: null
+              help: 'A Modelo 714 41. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Ország
             identificacion-42:
-              help: null
+              help: 'A Modelo 714 42. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Országkód
             identificacion-8:
-              help: null
+              help: 'A Modelo 714 8. casilla adóügyi adatai: adóügyi információ.'
               label: 2023. évi lakóhely szerinti autonóm közösség vagy város
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóév.'
               label: A bevallás adóéve
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
               label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakóhely - Tartománykód
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
                 befizetendő összegek
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: Adóalany - Fogyatékosság - A fogyatékosság típusa
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Fogyatékosság - A fogyatékosság mértéke százalékban
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Családi állapota
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: A bevallás kelte - Év
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás kelte - Nap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Localidad.'
               label: A bevallás kelte - Helység
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Mes.'
               label: A bevallás kelte - Hónap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Születési ideje
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'A Modelo 714 nacionalidad. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állampolgárság
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Rendszer económico - matrimonio.'
               label: Házassági vagyonjogi rendszer
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Képviselő - NIF.'
               label: Képviselő - Adóazonosító szám
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Képviselő - Vezeték- és utóneve vagy cégneve
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'A Modelo 714 sexo. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Neme
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás típusa
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Befizetés - Fizetési mód
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte - adóalap - ahorro - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 megtakarítási adóalapjának része
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett
                 adóalap'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg a ingresar
+                - Adóösszeg a ingresar.'
               label: Adómegállapítás - Fizetendő adó - Fizetendő adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg teljes
+                - Adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó - Bruttó adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás
                 alá eshető bruttó vagyonadó-rész
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg minorada
+                - Adóösszeg minorada.'
               label: Adómegállapítás - Csökkentett adó - Csökkentett adó
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
                 nem beszámított osztalékok és nyereségrészesedések
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - a) Exceso.'
               label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 adóalapjainak összege
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte adóösszegek íntegras IRPF, saldo positivo ganancias
+                és pérdidas vagyoni.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
                 és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Adóösszegek íntegras - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 bruttó adója
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: A Modelo 714 33. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
                 a személyi jövedelemadó együttes felső korlátja
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
                 80%-a
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: A Modelo 714 37. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
                 céljából figyelembe vett adók összege
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Total adóösszeg
+                teljes - Total adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
           construct:
             m714-patrimonio-calculation:
@@ -1217,399 +1309,411 @@ modelo:
         '2024':
           casilla:
             declaracion-01:
-              help: null
+              help: A Modelo 714 01. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Városi ingatlanok összesen
             declaracion-02:
-              help: null
+              help: A Modelo 714 02. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - B. Mezőgazdasági ingatlanok - Összesen
             declaracion-03:
-              help: null
+              help: A Modelo 714 03. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak és jogok - Összesen
             declaracion-04:
-              help: null
+              help: A Modelo 714 04. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez
                 kötött, mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
             declaracion-05:
-              help: null
+              help: A Modelo 714 05. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - E. Folyószámla- és megtakarítási betétek,
                 pénzügyi számlák, lekötések - Összesen
             declaracion-06:
-              help: null
+              help: A Modelo 714 06. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Államadósság, kötvények, obligációk és
                 egyéb forgalmazott értékpapírok - Összesen
             declaracion-07:
-              help: null
+              help: A Modelo 714 07. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F2. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Kötvények, obligációk, letéti jegyek és
                 váltók - összesen
             declaracion-08:
-              help: null
+              help: A Modelo 714 08. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G1. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények forgalmazott részvényei és befektetési jegyei
                 - Összesen
             declaracion-09:
-              help: null
+              help: A Modelo 714 09. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G2. Nem mentes értékpapírok - Más szervezetek
                 alapjaiban lévő részvények és részesedések - Összesen
             declaracion-10:
-              help: null
+              help: A Modelo 714 10. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G3. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények nem forgalmazott részvényei és befektetési
                 jegyei - összesen
             declaracion-11:
-              help: null
+              help: A Modelo 714 11. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G4. Nem mentes értékpapírok - Más jogi
                 személyek nem forgalmazott részvényei és részesedései - Összesen
             declaracion-12:
-              help: null
+              help: A Modelo 714 12. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H1. Mentes értékpapírok - Jogi személyek
                 forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-13:
-              help: null
+              help: A Modelo 714 13. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H2. Mentes értékpapírok - Jogi személyek
                 mentes, nem forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-14:
-              help: null
+              help: A Modelo 714 14. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
             declaracion-15:
-              help: null
+              help: A Modelo 714 15. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok
                 - Összesen
             declaracion-16:
-              help: null
+              help: A Modelo 714 16. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - K. Járművek, ékszerek, luxusprémek,
                 hajók és légi járművek - Összesen
             declaracion-17:
-              help: null
+              help: A Modelo 714 17. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
             declaracion-18:
-              help: null
+              help: A Modelo 714 18. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - M. Használati és haszonélvezeti jogok
                 (az állandó lakás kivételével) - Összesen
             declaracion-19:
-              help: null
+              help: A Modelo 714 19. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
             declaracion-20:
-              help: null
+              help: A Modelo 714 20. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
                 jogok - Összesen
             declaracion-21:
-              help: null
+              help: A Modelo 714 21. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - P. Szerződéses opciók - Összesen
             declaracion-22:
-              help: null
+              help: A Modelo 714 22. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
                 és jogok - Összesen
             declaracion-23:
-              help: null
+              help: A Modelo 714 23. casilla adóügyi adatai.
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
                 és jogok összesen'
             declaracion-24:
-              help: null
+              help: 'Tekintse át a casilla adatait: Deudas deducibles - Total.'
               label: Levonható tartozások - Összesen
             declaracion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Az adómentes
                 minimum címén érvényesített csökkentés'
             declaracion-28:
-              help: null
+              help: A Modelo 714 28. casilla adóügyi adatai.
               label: Progresszivitás szempontjából figyelembe vett mentes vagyon -
                 Mentes vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
                 meghatározók kivételével
             declaracion-41:
-              help: null
+              help: A Modelo 714 41. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
                 összege
             declaracion-42:
-              help: null
+              help: A Modelo 714 42. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
                 és Melillában lévő vagyontárgyak és jogok nettó értéke
             declaracion-43:
-              help: null
+              help: A Modelo 714 43. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
                 és jogokra eső arányos adórész
             declaracion-44:
-              help: null
+              help: A Modelo 714 44. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
                 összege
             declaracion-46:
-              help: null
+              help: A Modelo 714 46. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - Q. Virtuális valuta egyenlegek - Összesen
             declaracion-48:
-              help: null
+              help: A Modelo 714 48. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - A levonásra jogosító teljes összeg
             declaracion-49:
-              help: null
+              help: A Modelo 714 49. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - Érvényesített összeg
             declaracion-50:
-              help: null
+              help: A Modelo 714 50. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi kedvezmény - Érvényesített összeg
             declaracion-56:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Adóösszeg ingresar korábbi önadózási bevallások/liquidaciones.'
               label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
                 szerint fizetendő adó
             declaracion-57:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Diferencia a ingresar eredmény bevallás kiegészítő.'
               label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
                 fizetendő különbözet
             declaracion-60:
-              help: null
+              help: A Modelo 714 60. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
                 mentességre jogosító teljes értéke
             declaracion-61:
-              help: null
+              help: A Modelo 714 61. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Mentes érték
             declaracion-62:
-              help: null
+              help: A Modelo 714 62. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Nem mentes érték
             declaracion-63:
-              help: null
+              help: A Modelo 714 63. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Összesen
             declaracion-a:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
                 ténylegesen megfizetett adók
             declaracion-b:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
                 külföldön adóztatott része
             declaracion-i:
-              help: null
+              help: 'Tekintse át a casilla adatait: Befizetés - Összeg - befizetés.'
               label: Befizetés - A befizetés összege
             declaracion-negativa:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás negatív.'
               label: Nemleges bevallás
             identificacion-1:
-              help: null
+              help: 'A Modelo 714 1. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2024-ben szokásos tartózkodási helye
                 Spanyolország területén kívül volt, és korlátozott adókötelezettség
                 alá esik
             identificacion-10:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás Kiegészítő.'
               label: Kiegészítő bevallás
             identificacion-12:
-              help: null
+              help: 'A Modelo 714 12. casilla adóügyi adatai: adóügyi információ.'
               label: Ha a 4. rovatot megjelölte, és az autonóm közösségi szabályozás
                 alkalmazását választja
             identificacion-15:
-              help: null
+              help: 'A Modelo 714 15. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület jellege
             identificacion-16:
-              help: null
+              help: 'A Modelo 714 16. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület neve
             identificacion-17:
-              help: null
+              help: 'A Modelo 714 17. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszámozás típusa
             identificacion-18:
-              help: null
+              help: 'A Modelo 714 18. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám
             identificacion-19:
-              help: null
+              help: 'A Modelo 714 19. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám kiegészítése
             identificacion-2:
-              help: null
+              help: 'A Modelo 714 2. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2024-ben megszűnt a spanyolországi
                 illetősége, de továbbra is teljes körű adókötelezettség alá esik
             identificacion-20:
-              help: null
+              help: 'A Modelo 714 20. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Épülettömb
             identificacion-21:
-              help: null
+              help: 'A Modelo 714 21. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcsőház
             identificacion-22:
-              help: null
+              help: 'A Modelo 714 22. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcső
             identificacion-23:
-              help: null
+              help: 'A Modelo 714 23. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Emelet
             identificacion-24:
-              help: null
+              help: 'A Modelo 714 24. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Ajtó
             identificacion-25:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - További címadatok
             identificacion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
                 az önkormányzattól)
             identificacion-27:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Irányítószám
             identificacion-28:
-              help: null
+              help: 'A Modelo 714 28. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Önkormányzat neve
             identificacion-29:
-              help: null
+              help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Tartomány
             identificacion-3:
-              help: null
+              help: A Modelo 714 3. casilla adóügyi adatai.
               label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
                 vagyontárgy vagy jog található
             identificacion-35:
-              help: null
+              help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Cím
             identificacion-36:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - További címadatok
             identificacion-37:
-              help: null
+              help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Település vagy város
             identificacion-39:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [ZIP].'
               label: Adóalany - Külföldi cím - Irányítószám (ZIP)
             identificacion-4:
-              help: null
+              help: 'A Modelo 714 4. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2024-ben adóügyi illetősége Spanyolországban
                 volt, de a személyi jövedelemadóról szóló 35/2006. törvény 93. cikke
                 szerinti különleges rendszer választása miatt korlátozott vagyonadó-kötelezettség
                 alá esik
             identificacion-40:
-              help: null
+              help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
             identificacion-41:
-              help: null
+              help: 'A Modelo 714 41. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Ország
             identificacion-42:
-              help: null
+              help: 'A Modelo 714 42. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Országkód
             identificacion-8:
-              help: null
+              help: 'A Modelo 714 8. casilla adóügyi adatai: adóügyi információ.'
               label: 2024. évi lakóhely szerinti autonóm közösség vagy város
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóév.'
               label: A bevallás adóéve
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
               label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakóhely - Tartománykód
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
                 befizetendő összegek
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: Adóalany - Fogyatékosság - A fogyatékosság típusa
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Fogyatékosság - A fogyatékosság mértéke százalékban
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Családi állapota
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: A bevallás kelte - Év
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás kelte - Nap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Localidad.'
               label: A bevallás kelte - Helység
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Mes.'
               label: A bevallás kelte - Hónap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Születési ideje
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'A Modelo 714 nacionalidad. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állampolgárság
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Rendszer económico - matrimonio.'
               label: Házassági vagyonjogi rendszer
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Képviselő - NIF.'
               label: Képviselő - Adóazonosító szám
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Képviselő - Vezeték- és utóneve vagy cégneve
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'A Modelo 714 sexo. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Neme
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás típusa
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Befizetés - Fizetési mód
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte - adóalap - ahorro - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 megtakarítási adóalapjának része
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett
                 adóalap'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg a ingresar
+                - Adóösszeg a ingresar.'
               label: Adómegállapítás - Fizetendő adó - Fizetendő adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg teljes
+                - Adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó - Bruttó adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás
                 alá eshető bruttó vagyonadó-rész
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg minorada
+                - Adóösszeg minorada.'
               label: Adómegállapítás - Csökkentett adó - Csökkentett adó
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
                 nem beszámított osztalékok és nyereségrészesedések
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - a) Exceso.'
               label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 adóalapjainak összege
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte adóösszegek íntegras IRPF, saldo positivo ganancias
+                és pérdidas vagyoni.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
                 és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Adóösszegek íntegras - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 bruttó adója
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: A Modelo 714 33. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
                 a személyi jövedelemadó együttes felső korlátja
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
                 80%-a
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: A Modelo 714 37. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
                 céljából figyelembe vett adók összege
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Total adóösszeg
+                teljes - Total adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
           construct:
             m714-patrimonio-calculation:
@@ -1620,400 +1724,412 @@ modelo:
         '2025':
           casilla:
             declaracion-01:
-              help: null
+              help: A Modelo 714 01. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Városi ingatlanok összesen
             declaracion-02:
-              help: null
+              help: A Modelo 714 02. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - B. Mezőgazdasági ingatlanok - Összesen
             declaracion-03:
-              help: null
+              help: A Modelo 714 03. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak és jogok - Összesen
             declaracion-04:
-              help: null
+              help: A Modelo 714 04. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez
                 kötött, mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
             declaracion-05:
-              help: null
+              help: A Modelo 714 05. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - E. Folyószámla- és megtakarítási betétek,
                 pénzügyi számlák, lekötések - Összesen
             declaracion-06:
-              help: null
+              help: A Modelo 714 06. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Államadósság, kötvények, obligációk és
                 egyéb forgalmazott értékpapírok - Összesen
             declaracion-07:
-              help: null
+              help: A Modelo 714 07. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - F2. Harmadik félnek átengedett tőkét
                 megtestesítő értékpapírok - Kötvények, obligációk, letéti jegyek és
                 váltók - összesen
             declaracion-08:
-              help: null
+              help: A Modelo 714 08. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G1. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények forgalmazott részvényei és befektetési jegyei
                 - Összesen
             declaracion-09:
-              help: null
+              help: A Modelo 714 09. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G2. Nem mentes értékpapírok - Más szervezetek
                 alapjaiban lévő részvények és részesedések - Összesen
             declaracion-10:
-              help: null
+              help: A Modelo 714 10. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G3. Nem mentes értékpapírok - Kollektív
                 befektetési intézmények nem forgalmazott részvényei és befektetési
                 jegyei - összesen
             declaracion-11:
-              help: null
+              help: A Modelo 714 11. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - G4. Nem mentes értékpapírok - Más jogi
                 személyek nem forgalmazott részvényei és részesedései - Összesen
             declaracion-12:
-              help: null
+              help: A Modelo 714 12. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H1. Mentes értékpapírok - Jogi személyek
                 forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-13:
-              help: null
+              help: A Modelo 714 13. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - H2. Mentes értékpapírok - Jogi személyek
                 mentes, nem forgalmazott részvényei és részesedései - Összesen (tartozásokkal
                 csökkentve)
             declaracion-14:
-              help: null
+              help: A Modelo 714 14. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
             declaracion-15:
-              help: null
+              help: A Modelo 714 15. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok
                 - Összesen
             declaracion-16:
-              help: null
+              help: A Modelo 714 16. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - K. Járművek, ékszerek, luxusprémek,
                 hajók és légi járművek - Összesen
             declaracion-17:
-              help: null
+              help: A Modelo 714 17. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
             declaracion-18:
-              help: null
+              help: A Modelo 714 18. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - M. Használati és haszonélvezeti jogok
                 (az állandó lakás kivételével) - Összesen
             declaracion-19:
-              help: null
+              help: A Modelo 714 19. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
             declaracion-20:
-              help: null
+              help: A Modelo 714 20. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
                 jogok - Összesen
             declaracion-21:
-              help: null
+              help: A Modelo 714 21. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - P. Szerződéses opciók - Összesen
             declaracion-22:
-              help: null
+              help: A Modelo 714 22. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
                 és jogok - Összesen
             declaracion-23:
-              help: null
+              help: A Modelo 714 23. casilla adóügyi adatai.
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
                 és jogok összesen'
             declaracion-24:
-              help: null
+              help: 'Tekintse át a casilla adatait: Deudas deducibles - Total.'
               label: Levonható tartozások - Összesen
             declaracion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Az adómentes
                 minimum címén érvényesített csökkentés'
             declaracion-28:
-              help: null
+              help: A Modelo 714 28. casilla adóügyi adatai.
               label: Progresszivitás szempontjából figyelembe vett mentes vagyon -
                 Mentes vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
                 meghatározók kivételével
             declaracion-41:
-              help: null
+              help: A Modelo 714 41. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
                 összege
             declaracion-42:
-              help: null
+              help: A Modelo 714 42. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
                 és Melillában lévő vagyontárgyak és jogok nettó értéke
             declaracion-43:
-              help: null
+              help: A Modelo 714 43. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
                 és jogokra eső arányos adórész
             declaracion-44:
-              help: null
+              help: A Modelo 714 44. casilla adóügyi adatai.
               label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
                 összege
             declaracion-46:
-              help: null
+              help: A Modelo 714 46. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - Q. Virtuális valuta egyenlegek - Összesen
             declaracion-48:
-              help: null
+              help: A Modelo 714 48. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - A levonásra jogosító teljes összeg
             declaracion-49:
-              help: null
+              help: A Modelo 714 49. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi levonások - Érvényesített összeg
             declaracion-50:
-              help: null
+              help: A Modelo 714 50. casilla adóügyi adatai.
               label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények
                 - Autonóm közösségi kedvezmény - Érvényesített összeg
             declaracion-56:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Adóösszeg ingresar korábbi önadózási bevallások/liquidaciones.'
               label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
                 szerint fizetendő adó
             declaracion-57:
-              help: null
+              help: 'Tekintse át a casilla adatait: Korrekció bevallás kiegészítő
+                - Diferencia a ingresar eredmény bevallás kiegészítő.'
               label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
                 fizetendő különbözet
             declaracion-60:
-              help: null
+              help: A Modelo 714 60. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Az állandó lakás
                 mentességre jogosító teljes értéke
             declaracion-61:
-              help: null
+              help: A Modelo 714 61. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Mentes érték
             declaracion-62:
-              help: null
+              help: A Modelo 714 62. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A1. Városi ingatlanok - Nem mentes érték
             declaracion-63:
-              help: null
+              help: A Modelo 714 63. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - A2. Városi ingatlanok - Egyéb ingatlanok
                 - Összesen
             declaracion-a:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
                 ténylegesen megfizetett adók
             declaracion-b:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
                 külföldön adóztatott része
             declaracion-i:
-              help: null
+              help: 'Tekintse át a casilla adatait: Befizetés - Összeg - befizetés.'
               label: Befizetés - A befizetés összege
             declaracion-negativa:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás negatív.'
               label: Nemleges bevallás
             identificacion-1:
-              help: null
+              help: 'A Modelo 714 1. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2025-ben szokásos tartózkodási helye
                 Spanyolország területén kívül volt, és korlátozott adókötelezettség
                 alá esik
             identificacion-10:
-              help: null
+              help: 'Tekintse át a casilla adatait: Bevallás Kiegészítő.'
               label: Kiegészítő bevallás
             identificacion-12:
-              help: null
+              help: 'A Modelo 714 12. casilla adóügyi adatai: adóügyi információ.'
               label: Ha a 4. rovatot megjelölte, és az autonóm közösségi szabályozás
                 alkalmazását választja
             identificacion-15:
-              help: null
+              help: 'A Modelo 714 15. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület jellege
             identificacion-16:
-              help: null
+              help: 'A Modelo 714 16. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Közterület neve
             identificacion-17:
-              help: null
+              help: 'A Modelo 714 17. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszámozás típusa
             identificacion-18:
-              help: null
+              help: 'A Modelo 714 18. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám
             identificacion-19:
-              help: null
+              help: 'A Modelo 714 19. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Házszám kiegészítése
             identificacion-2:
-              help: null
+              help: 'A Modelo 714 2. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2025-ben vagy korábban megszűnt a
                 spanyolországi illetősége, de továbbra is teljes körű adókötelezettség
                 alá esik
             identificacion-20:
-              help: null
+              help: 'A Modelo 714 20. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Épülettömb
             identificacion-21:
-              help: null
+              help: 'A Modelo 714 21. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcsőház
             identificacion-22:
-              help: null
+              help: 'A Modelo 714 22. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Lépcső
             identificacion-23:
-              help: null
+              help: 'A Modelo 714 23. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Emelet
             identificacion-24:
-              help: null
+              help: 'A Modelo 714 24. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Ajtó
             identificacion-25:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - További címadatok
             identificacion-26:
-              help: null
+              help: 'A Modelo 714 26. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
                 az önkormányzattól)
             identificacion-27:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Irányítószám
             identificacion-28:
-              help: null
+              help: 'A Modelo 714 28. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Önkormányzat neve
             identificacion-29:
-              help: null
+              help: 'A Modelo 714 29. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakcím - Tartomány
             identificacion-3:
-              help: null
+              help: A Modelo 714 3. casilla adóügyi adatai.
               label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
                 vagyontárgy vagy jog található
             identificacion-35:
-              help: null
+              help: 'A Modelo 714 35. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Cím
             identificacion-36:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - További címadatok
             identificacion-37:
-              help: null
+              help: 'A Modelo 714 37. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Település vagy város
             identificacion-39:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ Hivatkozások:
+                [ZIP].'
               label: Adóalany - Külföldi cím - Irányítószám (ZIP)
             identificacion-4:
-              help: null
+              help: 'A Modelo 714 4. casilla adóügyi adatai: adóügyi információ.'
               label: Különleges adózási módok - 2025-ben adóügyi illetősége Spanyolországban
                 volt, de a személyi jövedelemadóról szóló 35/2006. törvény 93. cikke
                 szerinti különleges rendszer választása miatt korlátozott vagyonadó-kötelezettség
                 alá esik
             identificacion-40:
-              help: null
+              help: 'A Modelo 714 40. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
             identificacion-41:
-              help: null
+              help: 'A Modelo 714 41. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Ország
             identificacion-42:
-              help: null
+              help: 'A Modelo 714 42. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Külföldi cím - Országkód
             identificacion-8:
-              help: null
+              help: 'A Modelo 714 8. casilla adóügyi adatai: adóügyi információ.'
               label: 2025. évi lakóhely szerinti autonóm közösség vagy város
             x-c9kmarj5ecn66c9dehnn8obc:
-              help: null
+              help: A Modelo 714 a. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
             x-c9kmarj5ecn66chdehnn8obc:
-              help: null
+              help: A Modelo 714 b. casilla adóügyi adatai.
               label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez
                 kötött, nem mentes ingatlanok - Összesen
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóév.'
               label: A bevallás adóéve
             x-chim6r1ed5i6irrdc4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Idioma - bevallás.'
               label: A bevallás nyelve
             x-chim6r1ee1in4qbfchng:
-              help: null
+              help: 'Tekintse át a casilla adatait: Időszak (éves, 0A).'
               label: Időszak (éves, 0A)
             x-d5i6arjkd5j6ior1cdkmurhecdnm8qb7dsmn0sjfepkmsor9c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állandó lakóhely - Tartománykód
             x-d5i6arjkd5j6ior1cdkmurhecdnmqs3cclmmarjkc5p6io9dcdqmut31ecmm2rjkclp6irriclpg:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
                 befizetendő összegek
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qorcc5pma:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: Adóalany - Fogyatékosság - A fogyatékosság típusa
             x-d5i6arjkd5j6ior1cdkmurhechkn6or1e1gm6qb4c5i2qs3fe9hmarjkc5l6a:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Fogyatékosság - A fogyatékosság mértéke százalékban
             x-d5i6arjkd5j6ior1cdkmurheclpn8ob4dsmm6qbmd5m0:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Családi állapota
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qobed5ng:
-              help: null
+              help: A Modelo 714 . casilla adóügyi adatai.
               label: A bevallás kelte - Év
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qp39c4:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás kelte - Nap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qr3fcdgmoqb4c5i0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Localidad.'
               label: A bevallás kelte - Helység
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315li6aorcc5p62or9dtn2qrb5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Dátum - bevallás - Mes.'
               label: A bevallás kelte - Hónap
             x-d5i6arjkd5j6ior1cdkmurhecpim6q315ln62or9dlkmarjkds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Születési ideje
             x-d5i6arjkd5j6ior1cdkmurhedpgm6qbfdpgmoqb4c5i0:
-              help: null
+              help: 'A Modelo 714 nacionalidad. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Állampolgárság
             x-d5i6arjkd5j6ior1cdkmurhee9imeqbdcln2qpb3dtn6urb9cdniqrb1ehp6irbfdpkmu:
-              help: null
+              help: 'Tekintse át a casilla adatait: Rendszer económico - matrimonio.'
               label: Házassági vagyonjogi rendszer
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbed5j0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Képviselő - NIF.'
               label: Képviselő - Adóazonosító szám
             x-d5i6arjkd5j6ior1cdkmurhee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Képviselő - Vezeték- és utóneve vagy cégneve
             x-d5i6arjkd5j6ior1cdkmurheedingro:
-              help: null
+              help: 'A Modelo 714 sexo. casilla adóügyi adatai: adóügyi információ.'
               label: Adóalany - Neme
             x-d5i6arjkd5j6ior1cdkmurheehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: A bevallás típusa
             x-d5n6esj5ednispjfe9mm2bb4ckmn0ob7ds:
-              help: null
+              help: 'A Modelo 714 . casilla adóügyi adatai: adóügyi információ.'
               label: Befizetés - Fizetési mód
             x-e1gn8sj9dlnmsqbf5ph62sr55lgmgrrie9niqpbocdm7aqb4c4:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte - adóalap - ahorro - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 megtakarítási adóalapjának része
             x-e1gn8sj9dlnmsqbf5ph62sr55lkmqs3fdpkm4r35:
-              help: null
+              help: 'A Modelo 714 25. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
             x-e1gn8sj9dlnmsqbf5ph62sr55lm6isbld5i62ojcck:
-              help: null
+              help: 'A Modelo 714 27. casilla adóügyi adatai: adóügyi információ.'
               label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett
                 adóalap'
             x-e1gn8sj9dlnmsqbf5phnarrkc4mm2bb9dpjn4pbjc5p0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg a ingresar
+                - Adóösszeg a ingresar.'
               label: Adómegállapítás - Fizetendő adó - Fizetendő adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o8:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg teljes
+                - Adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó - Bruttó adó
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmirjkcljn4o9dedqn6or5e1q6iojcckmmoqbdd5q62or9dtn0:
-              help: null
+              help: 'A Modelo 714 36. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás
                 alá eshető bruttó vagyonadó-rész
             x-e1gn8sj9dlnmsqbf5phnarrkc4mmqqbedtp62p31:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Adóösszeg minorada
+                - Adóösszeg minorada.'
               label: Adómegállapítás - Csökkentett adó - Csökkentett adó
             x-e1gn8sj9dlnmsqbf5pi6itj9chimsp3fecmmsrpdd5p70pg:
-              help: null
+              help: 'A Modelo 714 31. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
                 nem beszámított osztalékok és nyereségrészesedések
             x-e1gn8sj9dlnmsqbf5pingor5edniqr39dlkn8p9dcdnmsqjldpq6u:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - a) Exceso.'
               label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
             x-e1gn8sj9dlnmsqbf5pkn4s365lh62sr5ecmmirbgdtn6iojcclpg:
-              help: null
+              help: 'A Modelo 714 30. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 adóalapjainak összege
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqpbocdm7aqb4c5piqoj1ediiqob8dtp74ro:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Parte adóösszegek íntegras IRPF, saldo positivo ganancias
+                és pérdidas vagyoni.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
                 és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
             x-e1gn8sj9dlnmsqbf5pkn4s365lhnarrkc5piqqbeehimesj1ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Límite adóösszeg
+                teljes - Adóösszegek íntegras - IRPF.'
               label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
                 bruttó adója
             x-e1gn8sj9dlnmsqbf5pm6irb9ehiiqorfdpl7arjkds:
-              help: null
+              help: A Modelo 714 33. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
                 a személyi jövedelemadó együttes felső korlátja
             x-e1gn8sj9dlnmsqbf5pp6ap3lcdhmirre5lm6irb9ehiiqe1g:
-              help: null
+              help: 'A Modelo 714 39. casilla adóügyi adatai: adóügyi információ.'
               label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
                 80%-a
             x-e1gn8sj9dlnmsqbf5ppnarb15lhnarrkc5piqr39dlkn8p8:
-              help: null
+              help: A Modelo 714 37. casilla adóügyi adatai.
               label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
                 céljából figyelembe vett adók összege
             x-e1gn8sj9dlnmsqbf5pq6ut31dgmm6tbfehgiqqbeehimesj1:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adóelszámolás - Total adóösszeg
+                teljes - Total adóösszeg teljes.'
               label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
           construct:
             m714-patrimonio-calculation:

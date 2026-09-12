@@ -26,6 +26,8 @@ msgid ""
 "Cadrumo is a command-line application. Install it, then run `aeat`. It "
 "works on Windows, macOS, and Linux."
 msgstr ""
+"A Cadrumo és una aplicació de línia d'ordres. Instal·la-la i després executa "
+"`aeat`. Funciona a Windows, macOS i Linux."
 
 #: ../../download.md:6
 msgid "What you need"
@@ -50,9 +52,8 @@ msgstr ""
 "sobre els teus impostos no surt de la teva màquina."
 
 #: ../../download.md:15
-#, fuzzy
 msgid "Install"
-msgstr "Canals d'instal·lació"
+msgstr "Instal·la"
 
 #: ../../download.md:17
 msgid ""
@@ -62,19 +63,26 @@ msgid ""
 "isolated environment; Homebrew and Scoop install the same package for "
 "platforms where a Python toolchain cannot be assumed."
 msgstr ""
+"Tria a continuació el canal corresponent a la teva plataforma a [Canals "
+"d'instal·lació](#install-channels) i executa l'ordre que hi figura. PyPI és "
+"el canal principal i instal·la l'ordre `aeat` amb el corpus legal inclòs en "
+"un entorn aïllat; Homebrew i Scoop instal·len el mateix paquet en "
+"plataformes on no es pot donar per suposada una cadena d'eines de Python."
 
 #: ../../download.md:23
 msgid ""
 "The channel table is generated from the shipped channel inventory, so the"
 " commands there are the ones this release actually publishes."
 msgstr ""
+"La taula de canals es genera a partir de l'inventari de canals distribuït; "
+"per tant, les ordres que hi apareixen són les que aquesta versió publica "
+"realment."
 
 #: ../../download.md:26
 msgid "Confirm the install"
 msgstr "Confirma la instal·lació"
 
 #: ../../download.md:32
-#, fuzzy
 msgid ""
 "A version number confirms the install. Then run the full workstation "
 "check and add the optional extras you want (Google export, the live AEAT "
@@ -82,35 +90,35 @@ msgid ""
 "setup.md), which covers the dependency report, platform checks, and per-"
 "extra install commands."
 msgstr ""
-"Un número de versió confirma la instal·lació. Després executa la "
-"comprovació completa de l'estació de treball i afegeix els extres "
-"opcionals que vulguis (exportació a Google, el navegador AEAT en directe,"
-" la importació OFX/QFX, la superfície d'agent) seguint [Instal·la Cadrumo"
-"](workstation-setup.md), que cobreix l'informe de dependències, les "
-"comprovacions de plataforma i les ordres d'instal·lació de cada extra. "
-"Per deixar que un assistent d'IA com ara Claude faci servir Cadrumo, "
-"continua amb [Connecta un agent (MCP)](how-to/connect-an-agent.md)."
+"Un número de versió confirma la instal·lació. Després executa la comprovació "
+"completa de l'estació de treball i afegeix els extres opcionals que vulguis "
+"(exportació a Google, el navegador de l'AEAT en directe, importació OFX/QFX) "
+"seguint [Instal·la Cadrumo](workstation-setup.md), que cobreix l'informe de "
+"dependències, les comprovacions de la plataforma i les ordres d'instal·lació "
+"de cada extra."
 
 #: ../../download.md:37
-#, fuzzy
 msgid ""
 "To let an AI assistant such as Claude drive Cadrumo, continue with "
 "[Connect an agent (MCP)](how-to/connect-an-agent.md)."
 msgstr ""
-"Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a"
-" la teva màquina."
+"Per permetre que un assistent d'IA com Claude controli Cadrumo, continua amb "
+"[Connecta un agent (MCP)](how-to/connect-an-agent.md)."
 
 #: ../../download.md:40
 msgid "Two ways to work"
-msgstr ""
+msgstr "Dues maneres de treballar"
 
 #: ../../download.md:42
 msgid "`aeat` runs as ordinary commands that print their results:"
 msgstr ""
+"`aeat` s'executa com a ordres habituals que imprimeixen els seus resultats:"
 
 #: ../../download.md:48
 msgid "Start the full-screen workbench separately when that suits the task:"
 msgstr ""
+"Inicia per separat l'espai de treball a pantalla completa quan la tasca ho "
+"requereixi:"
 
 #: ../../download.md:54
 msgid ""
@@ -118,6 +126,9 @@ msgid ""
 "availability are owned inside that interface. Both entrypoints use the "
 "same local records."
 msgstr ""
+"L'ordre inicia l'espai de treball independent; la seva navegació i "
+"disponibilitat són responsabilitat d'aquesta interfície. Tots dos punts "
+"d'entrada utilitzen els mateixos registres locals."
 
 #: ../../download.md:57
 msgid "Install channels"
@@ -129,6 +140,10 @@ msgid ""
 "for users without a Python toolchain. Each release is install-tested on "
 "every platform it claims before it is published."
 msgstr ""
+"PyPI és el canal principal; Homebrew i Scoop instal·len el mateix paquet als "
+"usuaris que no disposen d'una cadena d'eines de Python. Cada versió es prova "
+"durant la instal·lació a totes les plataformes que declara abans de "
+"publicar-la."
 
 #: ../../download.md:70
 msgid "Platform"
@@ -140,7 +155,7 @@ msgstr "Canal"
 
 #: ../../download.md:72
 msgid "Where it comes from"
-msgstr ""
+msgstr "D'on prové"
 
 #: ../../download.md:73
 msgid "Any platform with Python 3.13+"
@@ -152,7 +167,7 @@ msgstr "Paquet de Python"
 
 #: ../../download.md:75
 msgid "PyPI listing"
-msgstr ""
+msgstr "Fitxa de PyPI"
 
 #: ../../download.md:76
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
@@ -163,9 +178,8 @@ msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
 #: ../../download.md:78
-#, fuzzy
 msgid "Homebrew tap"
-msgstr "Fórmula de Homebrew"
+msgstr "Repositori de Homebrew"
 
 #: ../../download.md:79
 msgid "Windows (x86-64)"
@@ -176,9 +190,8 @@ msgid "Scoop package"
 msgstr "Paquet de Scoop"
 
 #: ../../download.md:81
-#, fuzzy
 msgid "Scoop bucket"
-msgstr "Paquet de Scoop"
+msgstr "Dipòsit de Scoop"
 
 #: ../../download.md:84
 msgid "Per-channel install paths:"
@@ -199,6 +212,8 @@ msgstr "**Paquet de Scoop**: Windows (x86-64)"
 #: ../../download.md:111
 msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
+"Les notes de cada versió a [Actualitzacions](updates.md) indiquen què ha "
+"canviat."
 
 #: ../../download.md:113
 msgid "After you install"

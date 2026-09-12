@@ -81,16 +81,15 @@ msgid "Rollback"
 msgstr "Visszaállítás"
 
 #: ../../_release_notes_template.md:51
-#, fuzzy
 msgid ""
 "If this release regresses, see `RELEASING.md#diagnose-and-recover`. In "
 "short: the previous version remains installable and this version can be "
 "yanked from PyPI without breaking anyone pinned to an earlier pin."
 msgstr ""
-"Ha ez a kiadás visszalépést okoz, lásd a `RELEASING.md#rollback-"
-"procedure` szakaszt. Röviden: az előző verzió továbbra is telepíthető "
-"marad, ez a verzió pedig visszavonható a PyPI-ról anélkül, hogy megtörné "
-"bárki működését, aki egy korábbi verzióhoz van rögzítve."
+"Ha ez a kiadás regressziót okoz, lásd a `RELEASING.md#diagnose-and-recover` "
+"szakaszt. Röviden: az előző verzió továbbra is telepíthető, ez a verzió "
+"pedig visszavonható a PyPI-ról anélkül, hogy ez érintené a korábbi verzióhoz "
+"rögzítőket."
 
 #: ../../_release_notes_template.md:55
 msgid "Verification"

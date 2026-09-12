@@ -9,79 +9,86 @@ modelo:
         '2025':
           casilla:
             clave-identificacion:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Clau d'identificació
             clave-mercado:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Clau de mercat
             clave-representacion:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Clau de representació
             clave-titularidad:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Clau de titularitat
             clave-valor:
-              help: null
+              help: 'Consulteu la informació de la casella: Clave de valor.'
               label: Clau de valor
             codigo-pais:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Codi de país
             codigo-provincia:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Codi de província
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Declaració complementària o substitutiva
             declarado-nif:
-              help: null
+              help: 'Consulteu la informació de la casella: NIF del declarado.'
               label: NIF del declarat
             declarado-nombre:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Cognoms i nom, raó social o denominació del declarat
             declarante-nif:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: NIF del declarant
             declarante-razon-social:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Raó social del declarant
             ejercicio-declaracion:
-              help: null
+              help: 'Consulteu la informació de la casella: Exercici de declaració.'
               label: Exercici de declaració
             identificacion-valores:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Identificació dels valors
             nominal-unitario-valores:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Nominal unitari dels valors
             numero-identificativo-anterior:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Número identificatiu de la declaració anterior
             numero-justificante:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Número de justificant de la declaració
             numero-total-declarados:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Nombre total de declarats
             numero-valores:
-              help: null
+              help: Informació fiscal de la casella del Modelo 189.
               label: Nombre de valors
             persona-relacion:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Persona amb qui relacionar-se
             porcentaje-participacion:
-              help: null
+              help: 'Consulteu la informació de la casella: Percentatge de participacion.'
               label: Percentatge de participació
             representante-legal-nif:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: NIF del representant legal
             tipo-soporte:
-              help: null
+              help: 'Consulteu la informació de la casella: Tipus de soporte.'
               label: Tipus de suport
             valoracion:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Valoració
             valoracion-total:
-              help: null
+              help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+                189.
               label: Valoració total
           field:
-            label: null
+            label: Casella— informació fiscal

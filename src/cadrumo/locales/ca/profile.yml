@@ -27,9 +27,125 @@ profile:
           traslladar les dades ja declarades.
         title: Declaracions anteriors
   keys:
+    activities:
+      description: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
+    capabilities:
+      google_export: Voleu activar l'exportació a Google Sheets?
+      llm_vision: Voleu activar la visió LLM local per llegir factures?
+    censo:
+      activity_start_date: Des de quina data tens obligacions de declaració / quan
+        et vas donar d'alta? (AAAA-MM-DD, opcional)
+      large_company: Condició de gran empresa
+      public_administration_budget_gt_6000000: Pressupost d'administració pública
+        superior a 6.000.000 EUR
+    contact:
+      postcode: Codi postal del domicili fiscal
     description: Claus de configuració del perfil i les seves descripcions
+    identity:
+      legal_name: Raó social de l'entitat per a capçaleres d'exportació
+      name: Nom visible mostrat en revisions locals
+      notes: Notes per als teus propis registres (opcional)
+      surnames: Cognoms o raó social per a capçaleres d'exportació
+      tax_id: Identificador fiscal (NIF/NIE) per a declaracions
+    irpf:
+      art109_activity_income_withholding_ge_70pct: Aplica l'excepció Art. 109 per
+        cobertura del 70% dels ingressos d'activitat
+      estimation_regime: Règim d'estimació IRPF
+      objective_estimation_modulos_iae_epigraph: Epígraf IAE per a mòduls d'estimació
+        objectiva
+      objective_estimation_modulos_module_1_units: Unitats anuals del mòdul 1
+      objective_estimation_modulos_module_2_units: Unitats anuals del mòdul 2
+      objective_estimation_modulos_module_3_units: Unitats anuals del mòdul 3
+      objective_estimation_modulos_module_4_units: Unitats anuals del mòdul 4
+      objective_estimation_modulos_module_5_units: Unitats anuals del mòdul 5
+      objective_estimation_modulos_module_6_units: Unitats anuals del mòdul 6
+      objective_estimation_modulos_module_7_units: Unitats anuals del mòdul 7
+      special_regime: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
+      special_regime_start_date: Data d'inici del règim especial (AAAA-MM-DD)
+    iva:
+      cash_accounting_regime_enrolled: Està inscrit al règim especial del criteri
+        de caixa?
+      does_intracomunitario: Realitza operacions intracomunitàries
+      group_dominant_entity_enrolled: Alta com a entitat dominant d'un grup d'IVA
+      group_member_enrolled: Alta com a entitat membre d'un grup d'IVA
+      hydrocarbon_deposit_advance_payment_deduction_entitled: Té dret a deduir pagaments
+        anticipats del règim de dipòsits fiscals d'hidrocarburs?
+      intracommunity_operations_exceed_50000_eur: Operacions intracomunitàries superen
+        50.000 EUR
+      m303_regime_composition: Quina composició de règims s'aplica al Model 303?
+      oss_enrolled: Alta en OSS
+      redeme_enrolled: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
+      regime: Quin règim d'IVA s'aplica?
+      roi_enrolled: Alta en ROI
+      sii_enrolled: Inscrit al SII (Subministrament Immediat d'Informació)
+      voluntary_sii_enrolled: Està inscrit voluntàriament al SII?
+    obligations:
+      bienes_extranjero_above_threshold: Béns a l'estranger superen el llindar del
+        Model 720
+      monedas_virtuales_extranjero_above_threshold: Monedes virtuals a l'estranger
+        superen el llindar del Model 721
+      third_party_transactions_above_347_threshold: Operacions amb tercers superen
+        el llindar del Model 347
+    preferences:
+      output_language: Idioma de sortida de la CLI per a aquest perfil
+    renta_family:
+      descendants_eu_eea_deduction: Descendents UE/EEE en la deducció per unitat familiar
+      minor_children_in_unit: Fills menors a la unitat familiar
+      situacion_familiar: Situació familiar (Art. 82 LIRPF)
+    renta_filing:
+      declaration_type: Codi del tipus de tributació
+    renta_spouse:
+      birth_date: Data de naixement del cònjuge
+      disability_grade: Grau de discapacitat del cònjuge (si escau)
+      eu_eea_country: País de residència UE/EEE del cònjuge
+      eu_eea_resident: Cònjuge resident a la UE/EEE
+      name: Nom del cònjuge
+      non_resident_irpf: Cònjuge no resident (no contribuent IRPF)
+      sex: Sexe del cònjuge
+      surnames: Cognoms del cònjuge
+      tax_id: NIF/NIE del cònjuge
+    renta_taxpayer:
+      birth_date: Data de naixement del primer declarant
+      death_date: Data de defunció del primer declarant
+      disability_grade: Clau de discapacitat del primer declarant
+      marital_status: Estat civil del primer declarant
+      marriage_date: Data d'inici del matrimoni (AAAA-MM-DD)
+      sex: Sexe del primer declarant
     tax:
       id: Tax identifier (NIF/NIE/CIF)
+    tax_residence:
+      ccaa: Comunitat autònoma de residència fiscal
+      jurisdiction_scope: Quin territori tributari s'aplica a aquest Model 303?
+    taxpayer_type:
+      country_of_fiscal_residence: País de residència fiscal (codi ISO 3166-1 alfa-2,
+        p.ex. GB, DE, FR)
+      declaration_roles: L'entitat declarant exerceix algun d'aquests rols institucionals
+        als efectes del Model 347 (operacions amb terceres persones)?
+      entity_type: Tipus d'entitat
+      fiscal_residency: Categoria de residència fiscal
+      incn_prior_12_months: Quin va ser el teu import net de la xifra de negocis durant
+        els darrers 12 mesos? (en euros, opcional)
+      irpf_income_categories: Categories de renda IRPF
+      legal_entity_form: Forma jurídica
+      ley_49_2002_special_regime_option_date: Data declarada de l'opció pel règim
+        especial de la Llei 49/2002
+      ley_49_2002_special_regime_option_declared: L'entitat ha presentat al model
+        036 l'opció pel règim fiscal especial del títol II de la Llei 49/2002?
+      ley_49_2002_special_regime_renunciation_date: Data declarada de la renúncia
+        al règim especial de la Llei 49/2002
+      ley_49_2002_special_regime_renunciation_declared: L'entitat ha presentat al
+        model 036 la renúncia al règim fiscal especial del títol II de la Llei 49/2002?
+      new_entity_first_two_profit_periods: És una entitat de nova creació en un dels
+        seus dos primers períodes impositius amb beneficis?
+      representante_fiscal_nif: NIF/NIE del representant fiscal a Espanya (obligatori
+        fora UE/EEE)
+      representante_fiscal_nombre: Nom del representant fiscal a Espanya
+    withholding:
+      has_employees: Té empleats i paga salaris amb retenció
+      modelo_111_no_retenciones_periods: Períodes Model 111 sense retencions
+      pays_capital_income_with_retencion: Paga rendes de capital amb retenció
+      pays_professionals_with_retencion: Paga a professionals amb retenció
+      pays_rent_with_retencion: Paga lloguer de local amb retenció
   schema:
     field:
       activities:
@@ -232,8 +348,16 @@ profile:
         voluntary_sii_enrolled:
           label: Inscripció voluntària al SII
       maritime_worker:
+        annual_salary:
+          label: Salari anual
+        exemption_path_rebeca:
+          label: Via d'exempció REBECA
+        gross_navigation_income:
+          label: Ingressos bruts de navegació
         pending_eu_clearance:
           label: Pendent d'autorització d'ajudes d'Estat (UE)
+        qualifying_days:
+          label: Dies computables
         retmar_registered:
           label: Inscripció al RETMAR
         tuna_fleet:
@@ -455,4 +579,17 @@ profile:
       withholding:
         title: Obligacions com a pagador amb retenció
   validation:
+    boolean_field_invalid: El camp booleà no és vàlid
+    conditional_required_field_missing: Falta un camp requerit condicionalment
+    conditionally_forbidden_field: Camp prohibit condicionalment
+    derived_field_not_editable: El camp derivat no es pot editar
+    effective_window_end_not_enforced: El final de la finestra de vigència no s'aplica
+    effective_window_unused: La finestra de vigència no s'utilitza
+    invalid_date_value: Valor de data no vàlid
+    invalid_email_value: Valor de correu electrònic no vàlid
+    invalid_enum_value: Valor d'enumeració no vàlid
+    modelo_work_profile_baseline_missing: Falta el camp base del perfil per al treball
+      del model
+    numeric_field_invalid: El camp numèric no és vàlid
     required_field_missing: Falta un camp obligatori del perfil.
+    unknown_field: Camp desconegut

@@ -430,17 +430,16 @@ msgstr ""
 "limitación actual."
 
 #: ../../how-to/import-bank-statements.md:200
-#, fuzzy
 msgid ""
 "Pull a document straight from Google Drive into encrypted evidence "
 "storage with `evidence pull`. This command reaches Google Drive, so it "
 "runs against your own authorized account rather than in the documentation"
 " sandbox:"
 msgstr ""
-"Descarga un documento directamente desde Google Drive al almacenamiento "
-"de evidencia cifrado con `doclink`. Esta orden accede a Google Drive, así"
-" que se ejecuta contra tu propia cuenta autorizada en lugar de en el "
-"entorno de pruebas de la documentación:"
+"Descarga un documento directamente desde Google Drive al almacenamiento de "
+"evidencia cifrado con `evidence pull`. Este comando accede a Google Drive, "
+"así que se ejecuta contra tu propia cuenta autorizada y no en el sandbox de "
+"la documentación:"
 
 #: ../../how-to/import-bank-statements.md:207
 msgid ""

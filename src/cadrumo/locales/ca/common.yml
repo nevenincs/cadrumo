@@ -16,9 +16,6 @@ aggregation:
         o una observació o defectes, mai tots dos ni cap.
   irnr_income_ledger:
     diagnostics:
-      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} és de
-        font estrangera; l'art. 13 del TRLIRNR l'exclou de la projecció de rendiments
-        íntegres de font espanyola del Model 210.
       incomplete_m210_classification: L'operació entrant de font espanyola no té una
         classificació explícita de renda del Model 210; la projecció de l'IRNR mai
         no infereix un codi oficial de tipus de renda a partir de irpf_category.
@@ -28,9 +25,6 @@ aggregation:
       tipo_renta_code_not_declared: El codi oficial de tipus de renda %{tipo_renta_code}
         del Model 210 no està declarat per a la revisió i el període de presentació
         %{period} seleccionats.
-    errors:
-      official_tipo_renta_parameter_count: La revisió %{revision_id} del Model 210
-        ha de declarar exactament un paràmetre de codi oficial de tipus de renda.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
@@ -805,11 +799,13 @@ sheets:
       clave_codigo: Clau codi
       clave_declarado: Clau de titularitat de l'immoble
       clave_mercado: Clau de mercat
+      closing_minus_opening_positive: Diferència positiva entre tancament i obertura
       codigo_cuenta: Codi compte valors / n.º operació préstec
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
       compensaciones: Compensacions
       complemento_infancia_clave: Complement d'ajuda a la infància
+      complete_acquisition_cost: Cost total d'adquisició
       contract_relation_clave: Contracte o relació
       contributor_legal_name: Cognoms i nom del contribuent
       contributor_tax_id: NIF del contribuent
@@ -851,6 +847,11 @@ sheets:
       geographic_mobility_clave: Mobilitat geogràfica
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
       importe_gastos: Import de despeses
+      importe_q1: Import 1T
+      importe_q2: Import 2T
+      importe_q3: Import 3T
+      importe_q4: Import 4T
+      importe_total: Import total
       incapacity_cash_perception: Percepció monetària derivada d'incapacitat laboral
       incapacity_cash_withholding: Retenció sobre prestacions d'incapacitat laboral
       incapacity_kind_ingreso_a_cuenta: Ingressos a compte per prestacions en espècie
@@ -871,6 +872,7 @@ sheets:
       naturaleza_inmueble: Naturalesa de l'immoble
       nif_pagador_anterior: NIF del pagador anterior
       numero_orden: Número d'ordre
+      opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
       operation_kind_code: Clau d'operació
       pago: Pagament

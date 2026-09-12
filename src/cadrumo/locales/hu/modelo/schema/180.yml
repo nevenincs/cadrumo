@@ -3,83 +3,96 @@ modelo:
     '180':
       casilla:
         continuidad:
+          base-retenciones-ingresos-a-cuenta:
+            help: 'A Modelo 180 145-160. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 145-160 — adóügyi információ
           devengo-year:
-            help: null
+            help: 'A Modelo 180 110-113. casilla adóügyi adatai: teljesítési év.'
             label: Az adóztatandó esemény adóéve
           payee-inmueble-bloque:
-            help: null
+            help: 'A Modelo 180 201-203. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan tömbje
           payee-inmueble-calificador-numero:
-            help: null
+            help: A Modelo 180 198-200. casilla adóügyi adatai.
             label: A bérbe adott ingatlan házszám-minősítője
           payee-inmueble-codigo-municipio:
-            help: null
+            help: A Modelo 180 316-320. casilla adóügyi adatai.
             label: A bérbe adott ingatlan település kódja
           payee-inmueble-codigo-postal:
-            help: null
+            help: A Modelo 180 323-327. casilla adóügyi adatai.
             label: A bérbe adott ingatlan irányítószáma
           payee-inmueble-complemento:
-            help: null
+            help: 'A Modelo 180 216-255. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan cím kiegészítése
           payee-inmueble-escalera:
-            help: null
+            help: 'Tekintse át a casilla adatait: Escalera - inmueble arrendado.'
             label: A bérbe adott ingatlan lépcsőháza
           payee-inmueble-localidad:
-            help: null
+            help: 'Tekintse át a casilla adatait: Localidad - inmueble arrendado.'
             label: A bérbe adott ingatlan helysége
           payee-inmueble-municipio:
-            help: null
+            help: 'A Modelo 180 286-315. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan települése
           payee-inmueble-nombre-via:
-            help: null
+            help: 'Tekintse át a casilla adatait: Név - via publica - inmueble arrendado.'
             label: A bérbe adott ingatlan közterületének neve
           payee-inmueble-numero-casa:
-            help: null
+            help: A Modelo 180 193-197. casilla adóügyi adatai.
             label: A bérbe adott ingatlan házszáma
           payee-inmueble-planta:
-            help: null
+            help: 'Tekintse át a casilla adatait: Planta - inmueble arrendado.'
             label: A bérbe adott ingatlan emelete
           payee-inmueble-portal:
-            help: null
+            help: 'Tekintse át a casilla adatait: Portal - inmueble arrendado.'
             label: A bérbe adott ingatlan bejárata
           payee-inmueble-provincia:
-            help: null
+            help: A Modelo 180 321-322. casilla adóügyi adatai.
             label: A bérbe adott ingatlan tartományának kódja
           payee-inmueble-puerta:
-            help: null
+            help: 'Tekintse át a casilla adatait: Puerta - inmueble arrendado.'
             label: A bérbe adott ingatlan ajtaja
           payee-inmueble-referencia-catastral:
-            help: null
+            help: 'Tekintse át a casilla adatait: Referencia catastral - inmueble
+              arrendado.'
             label: A bérbe adott ingatlan kataszteri hivatkozása
           payee-inmueble-situacion:
-            help: null
+            help: 'Tekintse át a casilla adatait: Situacion - inmueble.'
             label: Az ingatlan helyzete
           payee-inmueble-tipo-numeracion:
-            help: null
+            help: 'A Modelo 180 190-192. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan számozásának típusa
           payee-inmueble-tipo-via:
-            help: null
+            help: 'A Modelo 180 135-139. casilla adóügyi adatai: adóügyi információ.'
             label: A bérbe adott ingatlan közterületének típusa
           payee-modalidad-renta:
-            help: null
+            help: 'A Modelo 180 78. casilla adóügyi adatai: adóügyi információ.'
             label: Jövedelem vagy hozam típusa
           payee-name:
-            help: null
+            help: A Modelo 180 36-75. casilla adóügyi adatai.
             label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
           payee-nif:
-            help: null
+            help: 'Tekintse át a casilla adatait: NIF - kedvezményezett.'
             label: A kedvezményezett adóazonosító száma (NIF)
           payee-province:
-            help: null
+            help: A Modelo 180 76-77. casilla adóügyi adatai.
             label: A kedvezményezett lakóhelye szerinti tartomány kódja
           payee-representative-nif:
-            help: null
+            help: 'A Modelo 180 27-35. casilla adóügyi adatai: a képviselő NIF-je.'
             label: A kedvezményezett törvényes képviselőjének adóazonosító száma (NIF)
+          perc-base:
+            help: 'A Modelo 180 79-92. casilla adóügyi adatai: adóügyi információ.'
+            label: Casilla 79-92 — adóügyi információ
+          perc-retenciones:
+            help: 'A casilla adatai: Casilla 97-109: adólevonások előlegfizetések.'
+            label: 'Casilla 97-109: adólevonások előlegfizetések'
           porcentaje-retencion:
-            help: null
+            help: A Modelo 180 93-96. casilla adóügyi adatai.
             label: Az alkalmazott forrásadó százaléka
+          retenciones-ingresos-a-cuenta:
+            help: 'A casilla adatai: Casilla 161-175: adólevonások előlegfizetések.'
+            label: 'Casilla 161-175: adólevonások előlegfizetések'
           total-perceptores-count:
-            help: null
+            help: A Modelo 180 136-144. casilla adóügyi adatai.
             label: Kedvezményezettek teljes száma
       field:
         official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
@@ -90,216 +103,226 @@ modelo:
         2019-2022:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
+              help: 'A Modelo 180 145-160. casilla adóügyi adatai: adóügyi információ.'
               label: A forrásadó és előlegfizetés teljes alapja
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: A Modelo 180 121-122. casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás.'
               label: A bevallás azonosító száma
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás
+                korábbi.'
               label: Az előző bevallás azonosító száma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések
+                total.'
               label: Forrásadó és előlegfizetés összesen
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
+              help: Kedvezményezettek teljes száma
               label: Kedvezményezettek teljes száma
             x-e1in4opec9gn6p8:
-              help: null
+              help: 'A Modelo 180 79-92. casilla adóügyi adatai: adóügyi információ.'
               label: A kedvezményezett forrásadó- és előlegfizetés-alapja
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
+              help: Az adóztatandó esemény adóéve
               label: Az adóztatandó esemény adóéve
             x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: null
+              help: A bérbe adott ingatlan tömbje
               label: A bérbe adott ingatlan tömbje
             x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: null
+              help: A bérbe adott ingatlan házszám-minősítője
               label: A bérbe adott ingatlan házszám-minősítője
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: A bérbe adott ingatlan település kódja
               label: A bérbe adott ingatlan település kódja
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: A bérbe adott ingatlan irányítószáma
               label: A bérbe adott ingatlan irányítószáma
             x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: null
+              help: A bérbe adott ingatlan cím kiegészítése
               label: A bérbe adott ingatlan cím kiegészítése
             x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: null
+              help: A bérbe adott ingatlan lépcsőháza
               label: A bérbe adott ingatlan lépcsőháza
             x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: null
+              help: A bérbe adott ingatlan helysége
               label: A bérbe adott ingatlan helysége
             x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: null
+              help: A bérbe adott ingatlan települése
               label: A bérbe adott ingatlan települése
             x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: null
+              help: A bérbe adott ingatlan közterületének neve
               label: A bérbe adott ingatlan közterületének neve
             x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: null
+              help: A bérbe adott ingatlan házszáma
               label: A bérbe adott ingatlan házszáma
             x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: null
+              help: A bérbe adott ingatlan emelete
               label: A bérbe adott ingatlan emelete
             x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: null
+              help: A bérbe adott ingatlan bejárata
               label: A bérbe adott ingatlan bejárata
             x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: null
+              help: A bérbe adott ingatlan tartományának kódja
               label: A bérbe adott ingatlan tartományának kódja
             x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: null
+              help: A bérbe adott ingatlan ajtaja
               label: A bérbe adott ingatlan ajtaja
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: null
+              help: A bérbe adott ingatlan számozásának típusa
               label: A bérbe adott ingatlan számozásának típusa
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: null
+              help: A bérbe adott ingatlan közterületének típusa
               label: A bérbe adott ingatlan közterületének típusa
             x-e1in4opedlnm8obcd5i62p0:
-              help: null
+              help: Jövedelem vagy hozam típusa
               label: Jövedelem vagy hozam típusa
             x-e1in4opedpkmc:
-              help: null
+              help: A kedvezményezett adóazonosító száma (NIF)
               label: A kedvezményezett adóazonosító száma (NIF)
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: A kedvezményezett törvényes képviselőjének adóazonosító száma
+                (NIF)
               label: A kedvezményezett törvényes képviselőjének adóazonosító száma
                 (NIF)
             x-e1in4opedpnmqojick:
-              help: null
+              help: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
               label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
             x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
+              help: Az alkalmazott forrásadó százaléka
               label: Az alkalmazott forrásadó százaléka
             x-e1in4opee1p6utj9dphmio8:
-              help: null
+              help: A kedvezményezett lakóhelye szerinti tartomány kódja
               label: A kedvezményezett lakóhelye szerinti tartomány kódja
             x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: null
+              help: A bérbe adott ingatlan kataszteri hivatkozása
               label: A bérbe adott ingatlan kataszteri hivatkozása
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések
+                - kedvezményezett.'
               label: A kedvezményezett forrásadója és előlegfizetése
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: null
+              help: Az ingatlan helyzete
               label: Az ingatlan helyzete
           construct:
             modelo-180-annual-summary:
               field:
-                title: null
+                title: A 180. számú nyomtatvány éves összesítése a 115. számú nyomtatvány
+                  negyedéves bevallásaiból
           field:
-            label: null
+            label: Casilla— adóügyi információ
         2023-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: null
+              help: 'A Modelo 180 145-160. casilla adóügyi adatai: adóügyi információ.'
               label: A forrásadó és előlegfizetés teljes alapja
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: null
+              help: A Modelo 180 121-122. casilla adóügyi adatai.
               label: Kiegészítő vagy helyettesítő bevallás
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmds:
-              help: null
+              help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás.'
               label: A bevallás azonosító száma
             x-chim6r1edpqmqpbidsmmip35dpq6ipj9cdgn8qbmdsmm2rjkclp6irri:
-              help: null
+              help: 'Tekintse át a casilla adatait: Szám identificativo - bevallás
+                korábbi.'
               label: Az előző bevallás azonosító száma
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések
+                total.'
               label: Forrásadó és előlegfizetés összesen
             x-chim6r1eehnn8obc5lo6asj3clo78rriclpg:
-              help: null
+              help: Kedvezményezettek teljes száma
               label: Kedvezményezettek teljes száma
             x-e1in4opec9gn6p8:
-              help: null
+              help: 'A Modelo 180 79-92. casilla adóügyi adatai: adóügyi információ.'
               label: A kedvezményezett forrásadó- és előlegfizetés-alapja
             x-e1in4opecll6asj3d5hmirpdchincpbectng:
-              help: null
+              help: Az adóztatandó esemény adóéve
               label: Az adóztatandó esemény adóéve
             x-e1in4oped5n6qtb5c9m6abb2dhnn2tb5:
-              help: null
+              help: A bérbe adott ingatlan tömbje
               label: A bérbe adott ingatlan tömbje
             x-e1in4oped5n6qtb5c9m6abb3c5m6ipj9cdgm8rri5ln7arb5e9ng:
-              help: null
+              help: A bérbe adott ingatlan házszám-minősítője
               label: A bérbe adott ingatlan házszám-minősítője
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lmnarj9cdkn0qbf:
-              help: null
+              help: A bérbe adott ingatlan település kódja
               label: A bérbe adott ingatlan település kódja
             x-e1in4oped5n6qtb5c9m6abb3dti6iprf5lo6usrkc5m0:
-              help: null
+              help: A bérbe adott ingatlan irányítószáma
               label: A bérbe adott ingatlan irányítószáma
             x-e1in4oped5n6qtb5c9m6abb3dtmn0r35dlimst3f:
-              help: null
+              help: A bérbe adott ingatlan cím kiegészítése
               label: A bérbe adott ingatlan cím kiegészítése
             x-e1in4oped5n6qtb5c9m6abb5edhm2r35e9gg:
-              help: null
+              help: A bérbe adott ingatlan lépcsőháza
               label: A bérbe adott ingatlan lépcsőháza
             x-e1in4oped5n6qtb5c9m6abbcdthm2r39chgm8:
-              help: null
+              help: A bérbe adott ingatlan helysége
               label: A bérbe adott ingatlan helysége
             x-e1in4oped5n6qtb5c9m6abbdeln6ior9e1kmu:
-              help: null
+              help: A bérbe adott ingatlan települése
               label: A bérbe adott ingatlan települése
             x-e1in4oped5n6qtb5c9m6abbedtmm4sj55lr6io8:
-              help: null
+              help: A bérbe adott ingatlan közterületének neve
               label: A bérbe adott ingatlan közterületének neve
             x-e1in4oped5n6qtb5c9m6abbeelmmasjf5lhm2sr1:
-              help: null
+              help: A bérbe adott ingatlan házszáma
               label: A bérbe adott ingatlan házszáma
             x-e1in4oped5n6qtb5c9m6abbgdhgmst31:
-              help: null
+              help: A bérbe adott ingatlan emelete
               label: A bérbe adott ingatlan emelete
             x-e1in4oped5n6qtb5c9m6abbgdtp78obc:
-              help: null
+              help: A bérbe adott ingatlan bejárata
               label: A bérbe adott ingatlan bejárata
             x-e1in4oped5n6qtb5c9m6abbge9nncqbecdkm2:
-              help: null
+              help: A bérbe adott ingatlan tartományának kódja
               label: A bérbe adott ingatlan tartományának kódja
             x-e1in4oped5n6qtb5c9m6abbgelin4t31:
-              help: null
+              help: A bérbe adott ingatlan ajtaja
               label: A bérbe adott ingatlan ajtaja
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbeelmmasj1cdkmurg:
-              help: null
+              help: A bérbe adott ingatlan számozásának típusa
               label: A bérbe adott ingatlan számozásának típusa
             x-e1in4oped5n6qtb5c9m6abbkd5o6ubbmd5gg:
-              help: null
+              help: A bérbe adott ingatlan közterületének típusa
               label: A bérbe adott ingatlan közterületének típusa
             x-e1in4opedlnm8obcd5i62p0:
-              help: null
+              help: Jövedelem vagy hozam típusa
               label: Jövedelem vagy hozam típusa
             x-e1in4opedpkmc:
-              help: null
+              help: A kedvezményezett adóazonosító száma (NIF)
               label: A kedvezményezett adóazonosító száma (NIF)
             x-e1in4opedpkmcbbiclo74pbjcln78obeehiiqr35ctgmo:
-              help: null
+              help: A kedvezményezett törvényes képviselőjének adóazonosító száma
+                (NIF)
               label: A kedvezményezett törvényes képviselőjének adóazonosító száma
                 (NIF)
             x-e1in4opedpnmqojick:
-              help: null
+              help: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
               label: A kedvezményezett családi és utóneve, cégneve vagy megnevezése
             x-e1in4opee1nn4or5dpq62qj55lp6at35dphmirre:
-              help: null
+              help: Az alkalmazott forrásadó százaléka
               label: Az alkalmazott forrásadó százaléka
             x-e1in4opee1p6utj9dphmio8:
-              help: null
+              help: A kedvezményezett lakóhelye szerinti tartomány kódja
               label: A kedvezményezett lakóhelye szerinti tartomány kódja
             x-e1in4opee9imcpbicln66qb15lhm2t31edq74obc:
-              help: null
+              help: A bérbe adott ingatlan kataszteri hivatkozása
               label: A bérbe adott ingatlan kataszteri hivatkozása
             x-e1in4opee9in8pbecdkmurj5ec:
-              help: null
+              help: 'Tekintse át a casilla adatait: Adólevonások e előlegfizetések
+                - kedvezményezett.'
               label: A kedvezményezett forrásadója és előlegfizetése
             x-e1in4opeedkn8tb1cdkmurhdd5n6qtb5c9m6a:
-              help: null
+              help: Az ingatlan helyzete
               label: Az ingatlan helyzete
           construct:
             modelo-180-annual-summary:
               field:
-                title: null
+                title: A 180. számú nyomtatvány éves összesítése a 115. számú nyomtatvány
+                  negyedéves bevallásaiból
           field:
-            label: null
+            label: Casilla— adóügyi információ

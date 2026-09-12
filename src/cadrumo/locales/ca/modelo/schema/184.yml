@@ -1,6 +1,338 @@
 modelo:
   schema:
     '184':
+      casilla:
+        continuidad:
+          actividad-principal-espanola:
+            help: Informació fiscal de la casella 146 del Modelo 184.
+            label: Casella 146 — informació fiscal
+          base-deduccion-o-importe:
+            help: Informació fiscal de la casella 221-232 del Modelo 184.
+            label: Casella 221-232 — informació fiscal
+          cesionario-denominacion:
+            help: Informació fiscal de la casella 97-116 del Modelo 184.
+            label: Casella 97-116 — informació fiscal
+          cesionario-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 88-96 del
+              Modelo 184.
+            label: Casella 88-96 — informació fiscal
+          clave-declarado:
+            help: Informació fiscal sobre informació fiscal de la casella 194 del
+              Modelo 184.
+            label: Casella 194 — informació fiscal
+          clave-pais-entidad-extranjera:
+            help: Informació fiscal sobre informació fiscal de la casella 149-150
+              del Modelo 184.
+            label: Casella 149-150 — informació fiscal
+          clave-pais-renta:
+            help: Informació fiscal sobre informació fiscal de la casella 80-81 del
+              Modelo 184.
+            label: Casella 80-81 — informació fiscal
+          clave-tipo-participe:
+            help: Informació fiscal sobre informació fiscal de la casella 81 del Modelo
+              184.
+            label: Casella 81 — informació fiscal
+          criterio-cobros-y-pagos:
+            help: Informació fiscal sobre informació fiscal de la casella 396 del
+              Modelo 184.
+            label: Casella 396 — informació fiscal
+          declaracion-complementaria-sustitutiva:
+            help: Informació fiscal de la casella 121-122 del Modelo 184.
+            label: Casella 121-122 — informació fiscal
+          epigrafe-iae:
+            help: Informació fiscal sobre informació fiscal de la casella 84-87 del
+              Modelo 184.
+            label: Casella 84-87 — informació fiscal
+          fecha-adquisicion:
+            help: Informació fiscal sobre informació fiscal de la casella 117-124
+              del Modelo 184.
+            label: Casella 117-124 — informació fiscal
+          filing-year:
+            help: Informació fiscal de la casella del Modelo 184.
+            label: Casella — informació fiscal
+          ganancias-perdidas-patrimoniales-atribuibles:
+            help: Informació fiscal sobre informació fiscal de la casella 208-220
+              del Modelo 184.
+            label: Casella 208-220 — informació fiscal
+          gasto-actividad-amortizaciones:
+            help: Informació fiscal sobre informació fiscal de la casella 362-373
+              del Modelo 184.
+            label: Casella 362-373 — informació fiscal
+          gasto-actividad-arrendamientos-canones:
+            help: Informació fiscal sobre informació fiscal de la casella 302-313
+              del Modelo 184.
+            label: Casella 302-313 — informació fiscal
+          gasto-actividad-consumos-explotacion:
+            help: Informació fiscal sobre informació fiscal de la casella 278-289
+              del Modelo 184.
+            label: Casella 278-289 — informació fiscal
+          gasto-actividad-gastos-financieros:
+            help: Informació fiscal sobre informació fiscal de la casella 350-361
+              del Modelo 184.
+            label: Casella 350-361 — informació fiscal
+          gasto-actividad-gastos-personal:
+            help: Informació fiscal sobre informació fiscal de la casella 266-277
+              del Modelo 184.
+            label: Casella 266-277 — informació fiscal
+          gasto-actividad-otros-gastos-deducibles:
+            help: Informació fiscal sobre informació fiscal de la casella 386-395
+              del Modelo 184.
+            label: Casella 386-395 — informació fiscal
+          gasto-actividad-provisiones:
+            help: Informació fiscal sobre informació fiscal de la casella 374-385
+              del Modelo 184.
+            label: Casella 374-385 — informació fiscal
+          gasto-actividad-reparaciones-conservacion:
+            help: Informació fiscal sobre informació fiscal de la casella 314-325
+              del Modelo 184.
+            label: Casella 314-325 — informació fiscal
+          gasto-actividad-servicios-profesionales:
+            help: Informació fiscal sobre informació fiscal de la casella 326-337
+              del Modelo 184.
+            label: Casella 326-337 — informació fiscal
+          gasto-actividad-suministros:
+            help: Informació fiscal sobre informació fiscal de la casella 338-349
+              del Modelo 184.
+            label: Casella 338-349 — informació fiscal
+          gasto-actividad-tributos-deducibles:
+            help: Informació fiscal sobre informació fiscal de la casella 290-301
+              del Modelo 184.
+            label: Casella 290-301 — informació fiscal
+          gasto-inmobiliario-amortizacion-bienes-muebles:
+            help: Informació fiscal sobre informació fiscal de la casella 481-488
+              del Modelo 184.
+            label: Casella 481-488 — informació fiscal
+          gasto-inmobiliario-amortizacion-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella 471-480
+              del Modelo 184.
+            label: Casella 471-480 — informació fiscal
+          gasto-inmobiliario-cantidades-devengadas-terceros:
+            help: Informació fiscal sobre informació fiscal de la casella 451-460
+              del Modelo 184.
+            label: Casella 451-460 — informació fiscal
+          gasto-inmobiliario-conservacion-reparacion:
+            help: Informació fiscal sobre informació fiscal de la casella 408-418
+              del Modelo 184.
+            label: Casella 408-418 — informació fiscal
+          gasto-inmobiliario-intereses-financiacion:
+            help: Informació fiscal sobre informació fiscal de la casella 397-407
+              del Modelo 184.
+            label: Casella 397-407 — informació fiscal
+          gasto-inmobiliario-intereses-gastos-reparacion:
+            help: Informació fiscal sobre informació fiscal de la casella 419-429
+              del Modelo 184.
+            label: Casella 419-429 — informació fiscal
+          gasto-inmobiliario-otros-gastos-deducibles:
+            help: Informació fiscal sobre informació fiscal de la casella 489-497
+              del Modelo 184.
+            label: Casella 489-497 — informació fiscal
+          gasto-inmobiliario-primas-seguros:
+            help: Informació fiscal sobre informació fiscal de la casella 461-470
+              del Modelo 184.
+            label: Casella 461-470 — informació fiscal
+          gasto-inmobiliario-saldos-dudoso-cobro:
+            help: Informació fiscal sobre informació fiscal de la casella 440-450
+              del Modelo 184.
+            label: Casella 440-450 — informació fiscal
+          gasto-inmobiliario-tributos-recargos:
+            help: Informació fiscal sobre informació fiscal de la casella 430-439
+              del Modelo 184.
+            label: Casella 430-439 — informació fiscal
+          gastos-deducibles-atribuibles:
+            help: Informació fiscal sobre informació fiscal de la casella 165-176
+              del Modelo 184.
+            label: Casella 165-176 — informació fiscal
+          importe-atribuido-miembro:
+            help: Informació fiscal sobre informació fiscal de la casella 96-108 del
+              Modelo 184.
+            label: Casella 96-108 — informació fiscal
+          importe-neto-cifra-negocios:
+            help: Informació fiscal sobre informació fiscal de la casella 157-171
+              del Modelo 184.
+            label: Casella 157-171 — informació fiscal
+          ingresos-integros-atribuibles:
+            help: Informació fiscal sobre informació fiscal de la casella 151-164
+              del Modelo 184.
+            label: Casella 151-164 — informació fiscal
+          miembro-a-31-diciembre:
+            help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
+              184.
+            label: Casella 82 — informació fiscal
+          miembro-clave-pais:
+            help: Informació fiscal sobre informació fiscal de la casella 79-80 del
+              Modelo 184.
+            label: Casella 79-80 — informació fiscal
+          miembro-codigo-provincia:
+            help: Informació fiscal de la casella 77-78 del Modelo 184.
+            label: Casella 77-78 — informació fiscal
+          miembro-domicilio-fiscal:
+            help: Informació fiscal sobre informació fiscal de la casella 120-159
+              del Modelo 184.
+            label: Casella 120-159 — informació fiscal
+          miembro-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 18-26 del
+              Modelo 184.
+            label: Casella 18-26 — informació fiscal
+          miembro-nombre-razon-social:
+            help: Informació fiscal de la casella 36-75 del Modelo 184.
+            label: Casella 36-75 — informació fiscal
+          miembro-representante-fiscal-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 27-35 del
+              Modelo 184.
+            label: Casella 27-35 — informació fiscal
+          naturaleza-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella 172 del
+              Modelo 184.
+            label: Casella 172 — informació fiscal
+          numero-dias-arrendamiento:
+            help: Informació fiscal de la casella 498-500 del Modelo 184.
+            label: Casella 498-500 — informació fiscal
+          numero-dias-miembro:
+            help: Informació fiscal de la casella 83-85 del Modelo 184.
+            label: Casella 83-85 — informació fiscal
+          numero-justificante:
+            help: Informació fiscal de la casella 108-120 del Modelo 184.
+            label: Casella 108-120 — informació fiscal
+          objeto-entidad-extranjera:
+            help: Informació fiscal sobre informació fiscal de la casella 148 del
+              Modelo 184.
+            label: Casella 148 — informació fiscal
+          persona-relacion:
+            help: Informació fiscal sobre informació fiscal de la casella 59-107 del
+              Modelo 184.
+            label: Casella 59-107 — informació fiscal
+          porcentaje-participacion:
+            help: Informació fiscal sobre informació fiscal de la casella 86-92 del
+              Modelo 184.
+            label: Casella 86-92 — informació fiscal
+          porcentaje-reduccion-renta-atribuible:
+            help: Informació fiscal sobre informació fiscal de la casella 191-195
+              del Modelo 184.
+            label: Casella 191-195 — informació fiscal
+          porcentaje-renta-atribuible-residentes:
+            help: Informació fiscal sobre informació fiscal de la casella 151-155
+              del Modelo 184.
+            label: Casella 151-155 — informació fiscal
+          porcentaje-titularidad-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella 195-199
+              del Modelo 184.
+            label: Casella 195-199 — informació fiscal
+          provisiones-y-gastos-dificil-justificacion:
+            help: Informació fiscal sobre informació fiscal de la casella 160-171
+              del Modelo 184.
+            label: Casella 160-171 — informació fiscal
+          reduccion-atribuida-miembro:
+            help: Informació fiscal sobre informació fiscal de la casella 109-119
+              del Modelo 184.
+            label: Casella 109-119 — informació fiscal
+          referencia-catastral:
+            help: Informació fiscal sobre informació fiscal de la casella 246-265
+              del Modelo 184.
+            label: Casella 246-265 — informació fiscal
+          regimen-determinacion-rendimientos:
+            help: Informació fiscal sobre informació fiscal de la casella 82 del Modelo
+              184.
+            label: Casella 82 — informació fiscal
+          rendimiento-neto-minorado-agricola-estimacion-objetiva:
+            help: Informació fiscal de la casella 216-229 del Modelo 184.
+            label: Casella 216-229 — informació fiscal
+          rendimiento-neto-previo-estimacion-objetiva:
+            help: Informació fiscal de la casella 203-215 del Modelo 184.
+            label: Casella 203-215 — informació fiscal
+          renta-atribuible-con-derecho-reduccion:
+            help: Informació fiscal sobre informació fiscal de la casella 196-207
+              del Modelo 184.
+            label: Casella 196-207 — informació fiscal
+          renta-atribuible-importe:
+            help: Informació fiscal sobre informació fiscal de la casella 177-190
+              del Modelo 184.
+            label: Casella 177-190 — informació fiscal
+          representante-nif:
+            help: Informació fiscal sobre informació fiscal de la casella 172-180
+              del Modelo 184.
+            label: Casella 172-180 — informació fiscal
+          representante-nombre:
+            help: Informació fiscal sobre informació fiscal de la casella 181-220
+              del Modelo 184.
+            label: Casella 181-220 — informació fiscal
+          retenciones-ingresos-a-cuenta-atribuibles:
+            help: Informació fiscal sobre informació fiscal de la casella 233-244
+              del Modelo 184.
+            label: Casella 233-244 — informació fiscal
+          situacion-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella 245 del
+              Modelo 184.
+            label: Casella 245 — informació fiscal
+          tipo-actividad:
+            help: Informació fiscal sobre informació fiscal de la casella 83 del Modelo
+              184.
+            label: Casella 83 — informació fiscal
+          tipo-declaracion:
+            help: Informació fiscal sobre informació fiscal de la casella  del Modelo
+              184.
+            label: Casella— informació fiscal
+          tipo-entidad-espanola:
+            help: Informació fiscal sobre informació fiscal de la casella 145 del
+              Modelo 184.
+            label: Casella 145 — informació fiscal
+          tipo-entidad-extranjera:
+            help: Informació fiscal sobre informació fiscal de la casella 147 del
+              Modelo 184.
+            label: Casella 147 — informació fiscal
+          tipo-hoja:
+            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
+              184.
+            label: Casella 76 — informació fiscal
+          tipo-renta-atribuida-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 77 del Modelo
+              184.
+            label: Casella 77 — informació fiscal
+          tipo-renta-atribuida-subclave:
+            help: Informació fiscal sobre informació fiscal de la casella 78-79 del
+              Modelo 184.
+            label: Casella 78-79 — informació fiscal
+          tipo-soporte:
+            help: Informació fiscal sobre informació fiscal de la casella 58 del Modelo
+              184.
+            label: Casella 58 — informació fiscal
+          tipo3-clave:
+            help: Informació fiscal sobre informació fiscal de la casella 93 del Modelo
+              184.
+            label: Casella 93 — informació fiscal
+          tipo3-dias-arrendamiento:
+            help: Informació fiscal de la casella 200-202 del Modelo 184.
+            label: Casella 200-202 — informació fiscal
+          tipo3-referencia-catastral:
+            help: Informació fiscal sobre informació fiscal de la casella 174-193
+              del Modelo 184.
+            label: Casella 174-193 — informació fiscal
+          tipo3-situacion-inmueble:
+            help: Informació fiscal sobre informació fiscal de la casella 173 del
+              Modelo 184.
+            label: Casella 173 — informació fiscal
+          tipo3-subclave:
+            help: Informació fiscal sobre informació fiscal de la casella 94-95 del
+              Modelo 184.
+            label: Casella 94-95 — informació fiscal
+          tipo3-tipo-hoja:
+            help: Informació fiscal sobre informació fiscal de la casella 76 del Modelo
+              184.
+            label: Casella 76 — informació fiscal
+          total-registros-socios:
+            help: Informació fiscal sobre informació fiscal de la casella 136-144
+              del Modelo 184.
+            label: Casella 136-144 — informació fiscal
+          tributacion-impuesto-sociedades:
+            help: Informació fiscal de la casella 156 del Modelo 184.
+            label: Casella 156 — informació fiscal
+          valor-adquisicion-o-ajustes-disminuciones:
+            help: Informació fiscal sobre informació fiscal de la casella 138-150
+              del Modelo 184.
+            label: Casella 138-150 — informació fiscal
+          valor-liquidativo-o-ajustes-aumentos:
+            help: Informació fiscal sobre informació fiscal de la casella 125-137
+              del Modelo 184.
+            label: Casella 125-137 — informació fiscal
       field:
         official_name: Modelo 184. Declaració informativa anual d'entitats en règim
           d'atribució de rendes.
@@ -67,7 +399,7 @@ modelo:
               help: Casella 148 del model 184, exercicis 2023 i 2024.
               label: OBJECTE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
@@ -231,7 +563,7 @@ modelo:
                 del model 184. El disseny la divideix en part entera i part decimal.
               label: Despeses del capital immobiliari. Tributs i recàrrecs
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Ingressos íntegres / import de rendiments meritats / resultat
                 comptable
@@ -281,7 +613,7 @@ modelo:
               help: Casella 93 del model 184, exercicis 2023 i 2024.
               label: CLAU
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
@@ -343,7 +675,7 @@ modelo:
                 i part decimal.
               label: Rendiment net previ d'activitats en estimació objectiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
@@ -383,7 +715,7 @@ modelo:
               help: Casella 148 del model 184, exercici 2025.
               label: OBJECTE
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjgdtp66pbeehgmkp9de9imst315lp6asr9chimst35ec:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Percentatge de renda atribuïble
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
@@ -412,7 +744,7 @@ modelo:
               help: Casella 58 del model 184, exercici 2025.
               label: TIPUS DE SUPORT
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Nombre total de registres d'entitat
             x-chim6r1eehnn8obc5lpmuor9dtpg:
@@ -551,7 +883,7 @@ modelo:
                 del model 184. El disseny la divideix en part entera i part decimal.
               label: Despeses del capital immobiliari. Tributs i recàrrecs
             x-ehkn0rpi5pkmspriclpmuspdd5n78pb7e9nn6:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Ingressos íntegres / import de rendiments meritats / resultat
                 comptable
@@ -601,7 +933,7 @@ modelo:
               help: Casella 93 del model 184, exercici 2025.
               label: CLAU
             x-ehkn0rpj5phmoobmckmm8pb3dhgn4ob4ds:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: Clau de declarat
             x-ehkn0rpj5phmoobmckmn0ob9ec:
@@ -663,7 +995,7 @@ modelo:
                 i part decimal.
               label: Rendiment net previ d'activitats en estimació objectiva
             x-ehkn0rpj5pp6as3iclpmarjkc5n78p9dcpkn6or1dgmmsqb6:
-              help: Dada declarada al model 184, declaracio informativa d'entitats
+              help: Dada declarada al model 184, declaració informativa d'entitats
                 en regim d'atribucio de rendes.
               label: NIF del representant fiscal
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:

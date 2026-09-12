@@ -15,9 +15,6 @@ aggregation:
         o una observación o defectos, nunca ambos ni ninguno.
   irnr_income_ledger:
     diagnostics:
-      foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
-        fuente extranjera; el art. 13 del TRLIRNR la excluye de la proyección de rendimientos
-        íntegros de fuente española del Modelo 210.
       incomplete_m210_classification: La operación entrante de fuente española no
         tiene una clasificación expresa de renta del Modelo 210; la proyección del
         IRNR nunca infiere un código oficial de tipo de renta desde irpf_category.
@@ -27,9 +24,6 @@ aggregation:
       tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
         del Modelo 210 no está declarado para la revisión y el período de presentación
         %{period} seleccionados.
-    errors:
-      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo 210
-        debe declarar exactamente un parámetro de código oficial de tipo de renta.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -154,13 +148,13 @@ aggregation:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
         %{min_year}-%{max_year}.
       invoice_retencion_collision: La(s) observación(es) de retención de la(s) factura(s)
-        %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retencion;
+        %{source_object_ids} se declararon manualmente y también mediante --received-invoice-retención;
         elimine el duplicado antes de agregar.
       m111_no_retenciones_attestation_missing: 'No existen observaciones de retención
         por perceptor para el modelo 111 %{filing_year} %{period}. No presentes un
         Modelo 111 en blanco: declara el trimestre como periodo sin retenciones con
         `aeat config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        o registra las filas de perceptor con `aeat app modelo aggregate --retencion-observation`.'
+        o registra las filas de perceptor con `aeat app modelo aggregate --retención-observation`.'
       perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
@@ -816,11 +810,13 @@ sheets:
       clave_codigo: Clave código
       clave_declarado: Clave de titularidad del inmueble
       clave_mercado: Clave de mercado
+      closing_minus_opening_positive: Diferencia positiva entre cierre y apertura
       codigo_cuenta: Código cuenta valores / n.º operación préstamo
       codigo_emisor: Código emisor
       codigo_provincia: Código de provincia
       compensaciones: Compensaciones
       complemento_infancia_clave: Complemento de ayuda a la infancia
+      complete_acquisition_cost: Coste total de adquisición
       contract_relation_clave: Contrato o relación
       contributor_legal_name: Apellidos y nombre del contribuyente
       contributor_tax_id: NIF del contribuyente
@@ -862,6 +858,11 @@ sheets:
       geographic_mobility_clave: Movilidad geográfica
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
       importe_gastos: Importe de gastos
+      importe_q1: Importe 1T
+      importe_q2: Importe 2T
+      importe_q3: Importe 3T
+      importe_q4: Importe 4T
+      importe_total: Importe total
       incapacity_cash_perception: Percepción dineraria derivada de incapacidad laboral
       incapacity_cash_withholding: Retención sobre prestaciones de incapacidad laboral
       incapacity_kind_ingreso_a_cuenta: Ingresos a cuenta por prestaciones en especie
@@ -882,6 +883,7 @@ sheets:
       naturaleza_inmueble: Naturaleza del inmueble
       nif_pagador_anterior: NIF del pagador anterior
       numero_orden: Número de orden
+      opening_minus_closing_positive: Diferencia positiva entre apertura y cierre
       operation_date: Fecha de la operación
       operation_kind_code: Clave de operación
       pago: Pago

@@ -11,77 +11,77 @@ modelo:
         2003-y-siguientes:
           casilla:
             afiliado-nif:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: Tax ID of the member or mutualist
             afiliado-nombre:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: Surnames and given name of the member or mutualist
             cotizacion-abril:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'April contribution: monthly status and accrued premium amount'
             cotizacion-agosto:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'August contribution: monthly status and accrued premium amount'
             cotizacion-diciembre:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'December contribution: monthly status and accrued premium amount'
             cotizacion-enero:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'January contribution: monthly status and accrued premium amount'
             cotizacion-febrero:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'February contribution: monthly status and accrued premium amount'
             cotizacion-julio:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'July contribution: monthly status and accrued premium amount'
             cotizacion-junio:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'June contribution: monthly status and accrued premium amount'
             cotizacion-marzo:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'March contribution: monthly status and accrued premium amount'
             cotizacion-mayo:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'May contribution: monthly status and accrued premium amount'
             cotizacion-noviembre:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'November contribution: monthly status and accrued premium amount'
             cotizacion-octubre:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'October contribution: monthly status and accrued premium amount'
             cotizacion-septiembre:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: 'September contribution: monthly status and accrued premium amount'
             declaracion-complementaria-sustitutiva:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Supplementary or replacement return
             declarante-razon-social:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Business name of the filer
             numero-afiliacion:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Membership number
             numero-identificativo-anterior:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Identifying number of the previous return
             numero-justificante:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Filing receipt number
             numero-total-afiliados:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Total number of member or mutualist records
             persona-relacion:
-              help: null
+              help: Tax information about tax information in casilla  of Modelo 156.
               label: Contact person
             x-chim6r1ecll6asj3d5hmiro:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Filing year to which the return relates
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: null
+              help: Tax information for casilla of Modelo 156.
               label: Return type (original / substitute / supplementary)
           construct:
             modelo-156-informative:
               field:
-                title: null
+                title: Modelo 156 return informative
           field:
-            label: null
+            label: Casilla— tax information
