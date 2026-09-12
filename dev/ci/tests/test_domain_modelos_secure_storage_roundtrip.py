@@ -29,7 +29,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import MODELO
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import WorkUnitPersistenceError
 from cadrumo.domain.modelos.work_unit import (
@@ -148,7 +148,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
     assert dumped_unit["filing_year"] == 2025
     assert dumped_unit["period"] == {"filing_year": 2025, "code": "1T"}
     assert "2025Q1" not in loaded_unit.model_dump_json()
-    from ....tests.secure_sql import read_db_at_rest_bytes
+    from cadrumo.adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
     assert b"2025Q1" not in database_bytes

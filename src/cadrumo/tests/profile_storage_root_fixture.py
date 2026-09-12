@@ -9,7 +9,7 @@ import pytest
 from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..core.config import override_settings
 from .profile_capsule import open_test_profile_session
-from .secure_sql import isolated_profile_storage_root
+from ..adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
 
 @pytest.fixture(name="profile_storage_root")

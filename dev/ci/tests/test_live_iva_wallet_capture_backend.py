@@ -24,7 +24,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationReconciliationDecision,
 )
 from cadrumo.entrypoints.cli.app_live_iva_remote_state_composition import persist_and_reconcile_iva_compensation_wallet
-from cadrumo.tests.secure_sql import (
+from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_runtime_profile,
     read_db_at_rest_bytes,

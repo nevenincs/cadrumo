@@ -36,7 +36,7 @@ from ..domain.modelos.verification_report import (
 )
 from ..domain.modelos.verification_repository import upsert_verification_report
 from ..domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from .secure_sql import isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 8, 12, 10, 0, 0, tzinfo=UTC)

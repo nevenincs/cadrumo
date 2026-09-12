@@ -42,7 +42,7 @@ from ..domain.calculations.registry.temporal import select_revision
 from ..domain.modelos.codes import ModeloCode
 from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .profile_capsule import seed_test_profile_record
-from .secure_sql import isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
 _REVISION = "2019-y-siguientes"

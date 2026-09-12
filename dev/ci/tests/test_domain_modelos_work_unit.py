@@ -38,7 +38,7 @@ from cadrumo.application.modelo.work_lifecycle import (
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.period import Period
 from cadrumo.tests.profile_capsule import seed_test_profile_record
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.domain.modelos.codes import ModeloCode

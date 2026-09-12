@@ -109,7 +109,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from cadrumo.tests.bucket_aggregation_calculate import calculate_modelo_revision_from_bucket_aggregation
 from cadrumo.tests.profile_capsule import seed_test_profile_record
-from cadrumo.tests.secure_sql import isolated_runtime_profile
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 from ..perf_measurement import wall_advisory_message
 

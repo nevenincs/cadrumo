@@ -84,7 +84,7 @@ def _names_a_tests_package(module: str) -> bool:
 def _dynamic_tests_import(node: ast.Call) -> bool:
     """Whether ``node`` imports a tests package by STRING rather than syntax.
 
-    ``importlib.import_module("cadrumo.tests.secure_sql")`` is an import that
+    ``importlib.import_module("cadrumo.adapters.persistence.storage.tests.secure_sql")`` is an import that
     no ``ast.Import`` node describes. This is not a hypothetical spelling
     here: the architecture rules explicitly sanction a dynamic
     ``import_module`` to break a cycle, so a production module has a
@@ -150,8 +150,8 @@ def test_a_dynamic_import_of_test_support_is_still_seen() -> None:
     cycle-breaking, so it is the one a production module is most likely to
     already have on hand.
     """
-    dynamic = ast.parse("import importlib\nm = importlib.import_module('cadrumo.tests.secure_sql')\n")
-    builtin = ast.parse("m = __import__('cadrumo.tests.secure_sql')\n")
+    dynamic = ast.parse("import importlib\nm = importlib.import_module('cadrumo.adapters.persistence.storage.tests.secure_sql')\n")
+    builtin = ast.parse("m = __import__('cadrumo.adapters.persistence.storage.tests.secure_sql')\n")
 
     assert any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(dynamic))
     assert any(isinstance(n, ast.Call) and _dynamic_tests_import(n) for n in ast.walk(builtin))

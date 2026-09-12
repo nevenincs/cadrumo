@@ -14,7 +14,7 @@ from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftReposi
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import FILING_DRAFTS_NAMESPACE
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
-from cadrumo.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.row_source_identity import RowSourceIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus

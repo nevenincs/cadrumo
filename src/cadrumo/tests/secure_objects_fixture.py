@@ -21,7 +21,7 @@ import pytest
 
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from .bucket_id_fixture import bucket_id
-from .secure_sql import isolated_runtime_profile
+from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 
 
 @pytest.fixture

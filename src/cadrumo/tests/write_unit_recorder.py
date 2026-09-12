@@ -50,7 +50,7 @@ be another tally with the same exposure; the note is here instead, where a
 reader meets it at the moment they would change the funnel.
 
 See Also:
-    :func:`~cadrumo.tests.secure_sql.isolated_runtime_profile`:
+    :func:`~cadrumo.adapters.persistence.storage.tests.secure_sql.isolated_runtime_profile`:
         Yields the encrypted-SQLite profile whose ``repository.engine`` this
         recorder attaches to.
 """

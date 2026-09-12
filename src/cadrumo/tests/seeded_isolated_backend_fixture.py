@@ -38,7 +38,7 @@ from ..adapters.persistence.storage.sql.engine import dispose_engine
 from ..core.config import override_settings
 from .active_profile_isolated_backend_fixture import DEFAULT_BUCKET_ID
 from .profile_capsule import open_test_profile_session
-from .secure_sql import isolated_profile_storage_root
+from ..adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .user_profile import register_minimal_profile
 
 __all__ = ["seeded_isolated_backend_fixture"]

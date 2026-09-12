@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import re
+import tempfile
 import tomllib
 from collections import Counter, defaultdict
 from collections.abc import Iterable
@@ -78,6 +79,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         or source_inventory["unread_or_invalid_sources"]
         or parallel_inventory["parallel_localization_declarations"]
         or parallel_inventory["invalid_data_files"]
+        or parallel_inventory["docs_extraction_failures"]
         or spelling_inventory["spelling_tool_failures"]
         or unresolved_families
     )
@@ -114,6 +116,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         + source_inventory["unread_or_invalid_sources"]
         + parallel_inventory["parallel_localization_declarations"]
         + parallel_inventory["invalid_data_files"]
+        + parallel_inventory["docs_extraction_failures"]
         + spelling_inventory["spelling_tool_failures"]
         + len(unresolved_families)
         + len(discovery_findings)
@@ -646,11 +649,144 @@ def _parallel_localization_inventory(
                     "docs_translation_missing", docs_root / locale / "LC_MESSAGES" / catalogue, message_id, locale
                 )
             )
+    docs_inventory, docs_findings = _documentation_source_inventory(
+        repository,
+        docs_messages,
+        spelling_values=spelling_values,
+    )
+    findings.extend(docs_findings)
     return {
         "parallel_localization_declarations": counts["parallel_localization_declarations"],
         "parallel_localization_cells": counts["parallel_localization_cells"],
         "invalid_data_files": counts["invalid_data_files"],
+        **docs_inventory,
     }, findings
+
+
+def _documentation_source_inventory(
+    repository: Path,
+    catalogue_messages: dict[tuple[str, str], dict[str, bool]],
+    *,
+    spelling_values: dict[str, dict[str, str]] | None = None,
+) -> tuple[dict[str, int], list[dict[str, object]]]:
+    """Extract the live user-doc message surface and compare it with every PO.
+
+    The committed catalogues are not a source authority: a newly authored
+    paragraph is absent from every PO until gettext extraction is rerun.  This
+    audit therefore consumes the same page selector and real Sphinx gettext
+    extractor as the docs localization workflow.  English source messages are
+    also enrolled in the shared Hunspell pass, alongside the translated PO
+    values collected above.
+    """
+    from dev.docs.i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
+
+    counts = Counter[str]()
+    findings: list[dict[str, object]] = []
+    docs_root = repository / "docs"
+    try:
+        pages = user_scope_source_pages(docs_root)
+    except Exception as exc:  # The page authority is an audit boundary.
+        counts["docs_extraction_failures"] += 1
+        findings.append(_docs_extraction_finding(docs_root, exc))
+        return _documentation_counts(counts), findings
+    counts["docs_source_pages"] = len(pages)
+    if not pages:
+        return _documentation_counts(counts), findings
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-locale-docs-") as temporary:
+            pot_root = Path(temporary)
+            extracted = extract_pot(repository, out_dir=pot_root)
+            for page in pages:
+                catalogue = Path(page).with_suffix(".po").as_posix()
+                pot = extracted / Path(page).with_suffix(".pot")
+                source_ids = _read_gettext_message_ids(pot)
+                if source_ids is None:
+                    counts["docs_source_drift_pages"] += 1
+                    counts["docs_extraction_failures"] += 1
+                    findings.append(
+                        _data_finding("docs_source_template_missing", pot, page, "en")
+                    )
+                    continue
+                counts["docs_source_messages"] += len(source_ids)
+                if spelling_values is not None:
+                    for message_id in source_ids:
+                        spelling_values.setdefault("en", {})[
+                            f"parallel:docs/{page}:{message_id}"
+                        ] = message_id
+                page_drifted = False
+                for locale in TARGET_LANGUAGES:
+                    counts["docs_catalogue_files_expected"] += 1
+                    catalogue_ids = {
+                        message_id
+                        for (candidate, message_id), states in catalogue_messages.items()
+                        if candidate == catalogue and locale in states
+                    }
+                    if catalogue_ids:
+                        counts["docs_catalogue_files_read"] += 1
+                    missing = source_ids - catalogue_ids
+                    stale = catalogue_ids - source_ids
+                    counts["docs_source_messages_missing"] += len(missing)
+                    counts["docs_catalogue_messages_stale"] += len(stale)
+                    if missing or stale:
+                        page_drifted = True
+                        findings.append(
+                            {
+                                "classification": "blocking",
+                                "kind": "docs_source_catalogue_drift",
+                                "path": f"docs/{page}",
+                                "locale": locale,
+                                "source_messages_missing": len(missing),
+                                "catalogue_messages_stale": len(stale),
+                                "missing_message_ids": sorted(missing),
+                                "stale_message_ids": sorted(stale),
+                                "next_action": "run python -m dev.docs.i18n, then translate the catalogue delta",
+                            }
+                        )
+                counts["docs_source_drift_pages"] += int(page_drifted)
+    except (Exception, SystemExit) as exc:  # Sphinx and filesystem failures must fail closed.
+        counts["docs_extraction_failures"] += 1
+        findings.append(_docs_extraction_finding(docs_root, exc))
+    return _documentation_counts(counts), findings
+
+
+def _read_gettext_message_ids(path: Path) -> set[str] | None:
+    """Return canonical non-header ids from one extracted POT template."""
+    if not path.is_file():
+        return None
+    with path.open(encoding=UTF_8) as handle:
+        return {_po_message_id(message.id) for message in read_po(handle) if message.id}
+
+
+def _po_message_id(value: object) -> str:
+    """Normalize singular and plural Babel message identifiers."""
+    return value if isinstance(value, str) else "\x04".join(value)
+
+
+def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
+    """Return the stable user-document inventory schema, including zeroes."""
+    return {
+        "docs_source_pages": counts["docs_source_pages"],
+        "docs_source_messages": counts["docs_source_messages"],
+        "docs_catalogue_files_expected": counts["docs_catalogue_files_expected"],
+        "docs_catalogue_files_read": counts["docs_catalogue_files_read"],
+        "docs_source_drift_pages": counts["docs_source_drift_pages"],
+        "docs_source_messages_missing": counts["docs_source_messages_missing"],
+        "docs_catalogue_messages_stale": counts["docs_catalogue_messages_stale"],
+        "docs_extraction_failures": counts["docs_extraction_failures"],
+    }
+
+
+def _docs_extraction_finding(path: Path, exc: BaseException) -> dict[str, object]:
+    """Normalize a user-document discovery/extraction tool failure."""
+    return {
+        "classification": "blocking",
+        "kind": "docs_source_extraction_failure",
+        "path": path.as_posix(),
+        "error_type": type(exc).__name__,
+        "detail": str(exc),
+        "next_action": "restore the user-doc gettext extraction path, then rerun check-locales",
+    }
 
 
 def _po_translation_strings(value: object) -> tuple[str, ...]:

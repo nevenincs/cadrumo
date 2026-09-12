@@ -26,7 +26,7 @@ from ..core.classification.policies import SensitivityClass
 from ..core.config import load_settings, override_settings
 from ..core.storage_taxonomy import StorageCategory
 from ..core.storage_taxonomy_locations import storage_location
-from .secure_sql import (
+from ..adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
