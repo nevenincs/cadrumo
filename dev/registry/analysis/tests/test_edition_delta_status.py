@@ -813,6 +813,7 @@ class TestSignal:
             "blocked",
             "rooted",
             "rooted_recoverable",
+            "ledger",
             "family",
             "limitation",
         }

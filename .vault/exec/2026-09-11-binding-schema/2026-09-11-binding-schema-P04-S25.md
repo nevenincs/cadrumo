@@ -5,7 +5,7 @@ tags:
 date: '2026-09-12'
 modified: '2026-09-12'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4203c2a207bff637951c89dff6de4cad0f04877cf45dd6921eb0c831eb797c2'
+body_hash: 'sha256:b4e178cfa70749290a04d0d71937e95fa17007dc6400b03215764c86f197d72b'
 step_id: 'S25'
 related:
   - "[[2026-09-11-binding-schema-plan]]"
@@ -61,3 +61,7 @@ profile fact is a boolean used only as an `if_then_else` predicate.
 concurrent contributor's `_merge_relation_values_into_bindings` interleaved into
 the middle of `_resolve_calculation_inputs`, leaving that function returning
 `None`. The ordering was repaired with both contributions preserved.
+
+`src/cadrumo/application/modelo/profile_binding.py` was re-landed after an
+external HEAD restore reverted this file alone; the other boolean-channel files
+survived.

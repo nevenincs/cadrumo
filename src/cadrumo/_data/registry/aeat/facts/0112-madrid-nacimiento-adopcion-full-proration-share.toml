@@ -1,0 +1,20 @@
+[fact]
+fact_id = "madrid-nacimiento-adopcion-full-proration-share"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "madrid-nacimiento-adopcion-full-proration-share:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = ["madrid-dl-1-2010:art-4"]
+source_refs = ["aeat-madrid-birth-adoption-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "aeat-madrid-birth-adoption-statutory-facts"
+required_text = ["Ámbito temporal de aplicación de la deducción"]
+[fact.variants.payload]
+kind = "scalar"
+value_type = "decimal"
+value = "1"
+unit = "ratio"

@@ -1,0 +1,60 @@
+# LGT prescription and formal-obligation provisions supporting the retained
+# four-year record-retention floor.  Each entry is anchored to the bundled
+# BOE consolidated text; no statutory value is asserted outside the cited
+# provisions.
+
+[legal."ley-58-2003:art-66"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a66"
+document_id = "BOE-A-2003-23186"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a66"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
+notes = "LGT art. 66: the cited provision sets four years for the Administration's right to determine tax debt and related collection/refund rights."
+required_text = [
+    "Prescribirán a los cuatro años los siguientes derechos:",
+    "El derecho de la Administración para determinar la deuda tributaria mediante la oportuna liquidación.",
+]
+
+[legal."ley-58-2003:art-67"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a67"
+document_id = "BOE-A-2003-23186"
+article = "67"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a67"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
+notes = "LGT art. 67: the cited rule starts the art. 66(a) prescription period on the day after the regulatory filing deadline."
+required_text = [
+    "El plazo de prescripción comenzará a contarse en los distintos casos a los que se refiere el artículo",
+    "En el caso a), desde el día siguiente a aquel en que finalice el plazo reglamentario para presentar la correspondiente declaración o autoliquidación.",
+]
+
+[legal."ley-58-2003:art-70.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a70"
+document_id = "BOE-A-2003-23186"
+article = "70.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a70"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "verified against bundled corpus; operator to re-stamp"
+notes = "LGT art. 70.2: the cited provision addresses the period for conservation and supply obligations where the formal-obligation period governs."
+required_text = [
+    "A efectos del cumplimiento de las obligaciones tributarias de otras personas o entidades, las obligaciones de conservación y suministro de información previstas en los párrafos d), e) y f) del apartado 2 del artículo 29 de esta ley deberán cumplirse en el plazo previsto en la normativa mercantil o en el plazo de exigencia de sus propias obligaciones formales al que se refiere el apartado anterior, si este último fuese superior.",
+]

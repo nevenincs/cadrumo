@@ -10,6 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifactError
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.analysis import generated_tree_state, registry_status
 from dev.registry.pipeline import cli as pipeline_cli
 from dev.registry.pipeline.authority_publication import AuthorityArtifactCurrencyStatus
@@ -38,12 +39,19 @@ def test_valid_is_a_fail_closed_whole_registry_verdict(monkeypatch) -> None:
 
 
 def test_valid_refuses_a_registry_validation_failure(monkeypatch) -> None:
-    monkeypatch.setattr(cli, "validate_registry", lambda **_: (_ for _ in ()).throw(ValueError("malformed")))
+    refusal = RegistryValidationError("malformed registry definition")
+
+    def refuse(**_: object) -> None:
+        raise refusal
+
+    monkeypatch.setattr(cli, "validate_registry", refuse)
 
     result = CliRunner().invoke(cli.app, ["valid"])
 
     assert result.exit_code == 1
     assert "registry-valid\tstatus=failed" in result.stderr
+    assert type(refusal).__name__ in result.stderr
+    assert str(refusal) in result.stderr
 
 
 def test_runtime_load_reports_the_artifact_backed_authority_as_loadable(monkeypatch) -> None:
@@ -90,7 +98,25 @@ def test_target_mutation_reports_follow_up_currentness_and_publication(monkeypat
 
 def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     authority = SimpleNamespace(
-        modelos=(SimpleNamespace(id="296", revisions={"2024-y-siguientes": object(), "2025": object()}),),
+        modelos=(
+            SimpleNamespace(
+                id="296",
+                revisions={
+                    "2024-y-siguientes": SimpleNamespace(
+                        bindings=(),
+                        casillas=(),
+                        formulas=(),
+                        export_layouts=(),
+                    ),
+                    "2025": SimpleNamespace(
+                        bindings=(),
+                        casillas=(),
+                        formulas=(),
+                        export_layouts=(),
+                    ),
+                },
+            ),
+        ),
     )
     calls: list[str] = []
 
@@ -102,22 +128,30 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     )
     monkeypatch.setattr(
         generated_tree_state,
-        "generated_state_facts",
+        "generated_state_inventory",
         lambda *_args, **_kwargs: (
-            generated_tree_state.GeneratedTreeState(
-                "296",
-                "2024-y-siguientes",
-                "reproducible",
-                (),
-                (),
-                "reproduces exactly",
+            (
+                generated_tree_state.GeneratedTreeState(
+                    "296",
+                    "2024-y-siguientes",
+                    "reproducible",
+                    (),
+                    (),
+                    "reproduces exactly",
+                ),
             ),
+            (),
         ),
     )
     monkeypatch.setattr(
         registry_status,
         "authority_artifact_currency",
-        lambda *_args, **_kwargs: SimpleNamespace(status=AuthorityArtifactCurrencyStatus.CURRENT, detail=""),
+        lambda *_args, **_kwargs: SimpleNamespace(
+            status=AuthorityArtifactCurrencyStatus.CURRENT,
+            detail="",
+            recorded_identity_digest=None,
+            candidate_identity_digest=None,
+        ),
     )
     monkeypatch.setattr(
         registry_status,
