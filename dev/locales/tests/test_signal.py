@@ -18,6 +18,7 @@ from .._signal import (
     _source_inventory,
     _spellcheck_catalogues,
     _translation_matrix,
+    _visible_document_prose,
 )
 from ..manager import LocaleManager
 
@@ -278,7 +279,7 @@ def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tm
     )
     values: dict[str, dict[str, str]] = {}
 
-    _parallel_localization_inventory(tmp_path, spelling_values=values)
+    inventory, _findings = _parallel_localization_inventory(tmp_path, spelling_values=values)
 
     assert values["ca"]["parallel:src/cadrumo/_data/labels.toml:label_ca"] == "Declaració tributària"
     plural_values = {key: value for key, value in values["ca"].items() if "docs/locales/ca/LC_MESSAGES/guide.po" in key}
@@ -286,6 +287,26 @@ def test_parallel_inventory_enrols_toml_and_every_po_plural_form_for_spelling(tm
         "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[0]": "Una declaració",
         "parallel:docs/locales/ca/LC_MESSAGES/guide.po:One return\x04Many returns:plural[1]": "Moltes declaracions",
     }
+    assert inventory["docs_catalogues_compiled"] == 1
+    assert inventory["docs_catalogues_compiled_ca"] == 1
+
+
+def test_generated_user_doc_adapter_reads_visible_prose_not_option_or_literal_syntax(tmp_path) -> None:
+    page = tmp_path / "command.rst"
+    page.write_text(
+        "Filing command\n==============\n\nReview the prepared return.\n\n"
+        "--source\n   Select the source record.\n\n``raw_internal_token``\n",
+        encoding="utf-8",
+    )
+
+    prose = _visible_document_prose(page)
+
+    rendered = {text for _line, text in prose}
+    assert "Filing command" in rendered
+    assert "Review the prepared return." in rendered
+    assert "Select the source record." in rendered
+    assert all("--source" not in text for text in rendered)
+    assert all("raw_internal_token" not in text for text in rendered)
 
 
 def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
