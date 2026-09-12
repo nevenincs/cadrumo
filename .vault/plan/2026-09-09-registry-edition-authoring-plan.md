@@ -9,9 +9,9 @@ related:
   - '[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]'
   - '[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]'
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
-modified: '2026-09-11'
+modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:cf99351721c6461e7bb5d101d08222245093f690fadd156e0247974ff605a380'
+body_hash: 'sha256:bec526065506ecf605313ce514ef25b44c8d106e37bfdbf08fe39cc6fb4e9679'
 ---
 
 # `registry-edition-authoring` plan
@@ -115,10 +115,11 @@ decision's naming clause should be read as settling terms for future work, not a
 migration here. The same applies to consolidating the modelo number type and renaming the export
 family to wire.
 
-It does not extend delta authoring beyond casilla declarations. The lineage field this depends on
-exists nowhere else in the tree, and the two heaviest families by bytes show weak cross-edition
-similarity for a structural reason — fixed-width offsets renumber whenever a record gains or loses
-a field.
+It extends delta authoring to every declaration family with a stable identity key, casillas
+first because their key has to be seeded, then the identifier-keyed families once the materialiser
+merges them by identifier. A family without a stable key stays full-copy until it has one; that is
+the family's property, not a list this plan keeps. The identifier-keyed families are not part of
+any per-modelo step below.
 
 It does not touch the wire slot addressing union, the authoring lane, or the requirement column,
 which are settled or in flight elsewhere. It does not improve completeness coverage, and no step
@@ -236,6 +237,8 @@ Every modelo not named above, in file-count order, plus the one whose classifica
 - [ ] `W03.P08.S28` - [L | sonnet-high] Migrate the remaining modelos in file-count order, smallest first, batching those whose similarity is above the high-similarity threshold. Stop and escalate any modelo whose delta exceeds its measured difference. Proof: the pilot's three checks per modelo, and a single table of deltas against measured differences.; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W03.P08.S38` - [M | opus-medium] Author explicit dispositions for the four modelos that must not be delta-authored, each with its reason recorded in data rather than in a plan: the modelo whose sparse successor withholds by design, the modelo whose three editions are parallel scheme variants with no definable predecessor, the modelo whose six editions hold twelve rows in total and would save nothing, and the modelo already carrying an authored prose refusal that should be lifted to data. Proof: each is marked remains-full-copy and the minimality screen reports them as such rather than as unmigrated.; `src/cadrumo/_data/registry/aeat/modelos`.
 - [ ] `W03.P08.S59` - [S | sonnet-high] Report the identifier truncation as a generator defect in its own right. One modelo's identifiers are cut by two different length caps under two different rules, and the older rule elides from the middle so the identifier is not even a prefix of the label it came from and cannot be reconstructed from it. A sweep of all 58 modelos found no other cap signature, so this is confined rather than systemic. It does not block chaining, because the official label sits in the declaration comment beside every affected row — which is precisely why it is worth reporting: the corpus retained what the generator destroyed, and only by accident.; `dev/registry/pipeline`.
+- [x] `W03.P08.S65` - [M | opus-medium] Accept the modelos published from the staged tree against the publication boundary the tool's author set: once the binding provider-shape conversion has run over the whole corpus, compile the live registry as a validated authority (compile_validated_authority over src/cadrumo/_data/registry/aeat). The 41 modelos published from staged while the corpus could not compile cleared only the per-modelo round-trip gate; the 7 applied by the tool cleared both. Proof: the whole-tree compile is clean, or every modelo it names is re-run through the tool's real apply path and the compile re-run until clean.; `src/cadrumo/_data/registry/aeat/modelos`.
+- [ ] `W03.P08.S66` - [S | opus-medium] Decide on its merits whether the migration tool gains a lift-in-place capability for an already delta-authored tree (prove by materialising against the predecessor chain instead of a full-copy reference). Two known residuals stand until then: modelo 390 edition 2025 casilla iva.anual.regularizacion-prorrata-definitiva states source_refs opening with the edition default (row_source_refs_liftable=1) and the tool refuses to re-plan a delta-authored tree; modelo 576 edition 2007 is a one-row edition with no derivable casilla_source_refs (edition_default_underivable=1), accepted as terminal. Proof: a decision recorded either way; if built, the signal reads row_source_refs_liftable=0 with 390 re-run.; `dev/registry/edition_delta_migration.py`.
 
 ## Wave `W04` - Closeout
 

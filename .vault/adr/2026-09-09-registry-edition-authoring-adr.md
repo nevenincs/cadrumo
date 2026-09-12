@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-09-10'
+modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:6afefd8e08441706a6b7455f61c904965d56f2ab3eee88492e789834a94e9a1a'
+body_hash: 'sha256:a6b9162f9c717148f38ebb5b1b16ae953641e472cac69fa9432f3e57748cb9ab'
 related:
   - "[[2026-09-09-registry-edition-authoring-edition-restatement-measurement-research]]"
   - "[[2026-09-09-registry-edition-authoring-registry-mechanics-audit-research]]"
@@ -91,11 +91,43 @@ effective windows, so a casilla-side field would create two temporal truths that
 
 ### What a successor edition declares
 
-**Scope: casilla declarations only.** An edition has twenty-one declaration families plus its
-manifest. Lineage exists on casillas and nowhere else, and the measurement backing this decision
-counted casilla rows and nothing else. Formulas, bindings, export layouts, parameters and the
-remaining families continue to be declared in full by every edition. They may be worth the same
-treatment later; this decision does not make that claim and no measurement here supports it.
+**Scope: every declaration family whose members carry a stable identity.** An edition is a
+union of declaration families, and the rule is the same for each of them: a member is declared
+by the edition that introduces it or changes it, and inherited unchanged by every later edition
+in the predecessor chain. A successor edition states a member only when it is **new** or its
+declaration **differs** from the inherited one, stated in full; anything unmentioned is
+inherited; a stated member supersedes the inherited member of the same identity in place; a
+withdrawal is an authored retirement in the family's evolutions section, and a withdrawal by
+omission is a validation failure. Which edition a member applies in is decided by whoever asks:
+the target filing context selects the edition and the edition holds the member, so a member that
+restates its edition, or is redeclared unchanged by a successor, declares nothing the directory
+does not already say. A unioned registry that redeclares stable members across editions is not
+unioned.
+
+The rule is stated once and does not enumerate families, because the enumeration would be wrong
+the next time a family is measured. What a family needs to join the union is an identity key
+the compiler can validate as stable across editions:
+
+- casillas key on `continuidad_id`, because their identifiers are edition-local and a printed
+  box number is not unique within a modelo; the rest of this decision is about making that key
+  exist and refusing the chains that would falsify it;
+- every other family keys on its own identifier, which must therefore be edition-free; the
+  rename below strips edition tokens from identifiers, and that rename is the precondition of
+  inheritance for any family, not only for reference resolution;
+- a family whose members have no stable identity — a positional layout whose identity is the
+  byte offset that renumbers whenever a record gains a field — cannot be inherited by identity
+  and stays declared in full until it has one. That is a property of the family's key, not a
+  list this decision maintains.
+
+Measurement is evidence of the benefit, not the boundary of the rule. Of 19,563 successor
+casilla rows, 13,855 are identical to the predecessor once restatement is removed; of 7,228
+successor binding rows, 4,771; of 1,202 successor formulas, 876. A family measured later joins
+under the same rule without amending this decision.
+
+`source_refs` and `legal_refs` on any member follow one lifting rule: the edition default is
+declared once on the manifest and a member states only what differs from it. Claims a member
+makes about its own predecessor — on casillas `continuidad_origin` and `continuidad_evidence` —
+are never inherited, because a predecessor's claim is false one edition later.
 
 **The completeness manifest is excluded explicitly, not by implication.** Its rows are
 casilla-shaped and there are roughly 4,821 of them, so the family boundary alone does not settle
@@ -328,10 +360,14 @@ provenance or restates the design token on every row.
 predecessor. They are never inherited: an inherited row materialises with both unset, because a
 predecessor's claim that a box is new on its form is false one edition later.
 
-`formula` and `binding` references on an inherited row resolve to the successor edition's
-declaration of the same formula or binding lineage. A reference that does not resolve is a
-validation failure, not an inherited pointer. Those identifiers must therefore stop embedding an
-edition key; that rename is authorised here **for those two families only**.
+`formula` and `binding` references on an inherited row resolve within the materialised successor
+edition: a `binding` reference resolves to the binding the successor states or inherits under
+that identifier, and a `formula` reference resolves to the successor edition's own declaration of
+the same formula lineage. A reference that does not resolve is a validation failure, not an
+inherited pointer. Those identifiers must therefore stop embedding an edition key; that rename is
+authorised here **for those two families only**. For bindings the edition-free identifier is also
+the inheritance key, so the rename is a precondition of binding inheritance, not only of
+reference resolution.
 
 ### Where expansion happens
 
@@ -503,13 +539,21 @@ reader of one declaration file should still see a complete row.
 
 ## Consequences
 
-What a person maintains falls by roughly seven tenths. A diff between editions begins to show only
-what changed — and, once a legal-reference period-correctness gate lands, only what the law
+What a person maintains falls by roughly seven tenths for casillas, and by a comparable share
+for each identifier-keyed family as it joins the union. A diff between editions
+begins to show only what changed — and, once a legal-reference period-correctness gate lands, only what the law
 changed. Until then the diff shows law plus the residual authoring drift, and the drift will look
 like law.
 
 Two screens that currently infer cross-edition continuity become near-automatic; six need
 restating against inherited state.
+
+Inheritance for the identifier-keyed families lands after casilla inheritance, on the same
+materialiser and the same round-trip gate: the materialiser merges every section with a stable
+key by that key, the migration tool drops a successor declaration identical to the inherited
+one, and the proof obligations are the same typed round-trip, order and export-byte checks.
+Until the materialiser merges a family, its editions keep stating it in full and that
+restatement is reported, not gated.
 
 Against that: reading a successor edition's files no longer shows the complete edition, so the
 materialised view becomes the thing to inspect and tooling must make that easy or the tree gets

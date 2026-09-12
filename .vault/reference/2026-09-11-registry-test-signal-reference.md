@@ -9,8 +9,6 @@ body_hash: 'sha256:3d1720969b7fcb1cddad3fc281fb61601f3ce68db23fdf9e5d89c3ea97c68
 related: []
 ---
 
-
-
 # `registry-test-signal` reference: lane-aware pytest signal reduction
 
 ## Summary

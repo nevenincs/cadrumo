@@ -6,7 +6,7 @@ tags:
 date: '2026-08-23'
 modified: '2026-09-11'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5eb2db838a3925d7f038ff1de12bc7aab59029fe9c198feac737011a6b0f639'
+body_hash: 'sha256:b54182c6c3c13f399f4ac5db10169e7a0cd3d941c4620e06da97dcc02d7bbb1d'
 related:
   - '[[2026-07-01-import-centralization-adr]]'
   - '[[2026-07-01-import-centralization-ledger]]'
@@ -16,7 +16,9 @@ related:
   - '[[2026-07-02-import-centralization-exec]]'
   - '[[2026-08-24-import-centralization-audit]]'
   - '[[2026-08-30-import-centralization-core-facade-dismantling-inventory-audit]]'
+  - '[[2026-09-11-import-centralization-collection-deconflation-audit]]'
   - '[[2026-09-11-import-centralization-import-authority-drift-audit]]'
+  - '[[2026-09-11-import-centralization-lane1-closed-graph-code-review-audit]]'
   - '[[2026-09-11-import-centralization-outer-package-consolidation-audit]]'
 ---
 
@@ -35,7 +37,9 @@ Auto-generated index of all documents tagged with `#import-centralization`.
 - `2026-07-02-import-centralization-audit` - `import-centralization` audit: `closeout synthesis of the structural code review and the fresh-context honesty review`
 - `2026-08-24-import-centralization-audit` - `import-centralization` audit: `S403 import-integrity closure review`
 - `2026-08-30-import-centralization-core-facade-dismantling-inventory-audit` - `import-centralization` audit: core facade dismantling inventory
+- `2026-09-11-import-centralization-collection-deconflation-audit` - `import-centralization` audit: `collection deconflation`
 - `2026-09-11-import-centralization-import-authority-drift-audit` - `import-centralization` audit: `Import authority drift and single-gate ownership`
+- `2026-09-11-import-centralization-lane1-closed-graph-code-review-audit` - `import-centralization` audit: `Lane 1 closed graph code review`
 - `2026-09-11-import-centralization-outer-package-consolidation-audit` - `import-centralization` audit: `Outer-package consolidation and canonical imports review`
 
 ### exec
