@@ -2,6 +2,7 @@
 
 [[revisions."2021".casillas]]
 id = "declaracion-49"
+continuidad_id = "patrimonio-deducciones-autonomicas-aplicadas"
 number = "49"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -11,6 +12,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-50"
+continuidad_id = "patrimonio-bonificacion-autonomica-aplicada"
 number = "50"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -35,6 +37,7 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-56"
+continuidad_id = "patrimonio-cuotas-previas-complementaria"
 number = "56"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
@@ -44,6 +47,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-57"
+continuidad_id = "patrimonio-diferencia-ingresar-complementaria"
 number = "57"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
@@ -54,6 +58,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-60"
+continuidad_id = "patrimonio-vivienda-habitual-susceptible-exencion"
 number = "60"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -65,6 +70,7 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-61"
+continuidad_id = "patrimonio-vivienda-habitual-exenta"
 number = "61"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -76,6 +82,7 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-62"
+continuidad_id = "patrimonio-vivienda-habitual-no-exenta"
 number = "62"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -86,6 +93,7 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-63"
+continuidad_id = "patrimonio-otros-inmuebles-urbanos"
 number = "63"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -95,6 +103,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-1"
+continuidad_id = "patrimonio-obligacion-real-no-residente"
 number = "1"
 segmento = "714-01"
 section = ["identificacion"]
@@ -105,6 +114,7 @@ legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-2"
+continuidad_id = "patrimonio-opcion-obligacion-personal-no-residente"
 number = "2"
 segmento = "714-01"
 section = ["identificacion"]
@@ -115,6 +125,7 @@ legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-3"
+continuidad_id = "patrimonio-comunidad-mayor-valor-bienes"
 number = "3"
 segmento = "714-01"
 section = ["identificacion"]
@@ -124,6 +135,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-4"
+continuidad_id = "patrimonio-obligacion-real-regimen-impatriados"
 number = "4"
 segmento = "714-01"
 section = ["identificacion"]
@@ -134,6 +146,7 @@ legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
 
 [[revisions."2021".casillas]]
 id = "identificacion-8"
+continuidad_id = "patrimonio-comunidad-residencia"
 number = "8"
 segmento = "714-01"
 section = ["identificacion"]
@@ -143,6 +156,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-10"
+continuidad_id = "patrimonio-declaracion-complementaria"
 number = "10"
 segmento = "714-01"
 section = ["identificacion"]
@@ -152,6 +166,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-12"
+continuidad_id = "patrimonio-opcion-normativa-autonomica-impatriados"
 number = "12"
 segmento = "714-01"
 section = ["identificacion"]
@@ -161,6 +176,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-15"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
 number = "15"
 segmento = "714-01"
 section = ["identificacion"]
@@ -170,6 +186,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-16"
+continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
 number = "16"
 segmento = "714-01"
 section = ["identificacion"]
@@ -179,6 +196,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-17"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
 number = "17"
 segmento = "714-01"
 section = ["identificacion"]
@@ -188,6 +206,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-18"
+continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
 number = "18"
 segmento = "714-01"
 section = ["identificacion"]
@@ -197,6 +216,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-19"
+continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
 number = "19"
 segmento = "714-01"
 section = ["identificacion"]
@@ -206,6 +226,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-20"
+continuidad_id = "patrimonio-domicilio-habitual-bloque"
 number = "20"
 segmento = "714-01"
 section = ["identificacion"]
@@ -215,6 +236,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-21"
+continuidad_id = "patrimonio-domicilio-habitual-portal"
 number = "21"
 segmento = "714-01"
 section = ["identificacion"]
@@ -224,6 +246,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-22"
+continuidad_id = "patrimonio-domicilio-habitual-escalera"
 number = "22"
 segmento = "714-01"
 section = ["identificacion"]
@@ -233,6 +256,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-23"
+continuidad_id = "patrimonio-domicilio-habitual-planta"
 number = "23"
 segmento = "714-01"
 section = ["identificacion"]
@@ -242,6 +266,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-24"
+continuidad_id = "patrimonio-domicilio-habitual-puerta"
 number = "24"
 segmento = "714-01"
 section = ["identificacion"]
@@ -251,6 +276,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-25"
+continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
 number = "25"
 segmento = "714-01"
 section = ["identificacion"]
@@ -260,6 +286,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-26"
+continuidad_id = "patrimonio-domicilio-habitual-localidad"
 number = "26"
 segmento = "714-01"
 section = ["identificacion"]
@@ -269,6 +296,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-27"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
 number = "27"
 segmento = "714-01"
 section = ["identificacion"]
@@ -278,6 +306,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-28"
+continuidad_id = "patrimonio-domicilio-habitual-municipio"
 number = "28"
 segmento = "714-01"
 section = ["identificacion"]
@@ -287,6 +316,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-29"
+continuidad_id = "patrimonio-domicilio-habitual-provincia"
 number = "29"
 segmento = "714-01"
 section = ["identificacion"]
@@ -296,6 +326,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-35"
+continuidad_id = "patrimonio-domicilio-extranjero-direccion"
 number = "35"
 segmento = "714-01"
 section = ["identificacion"]
@@ -305,6 +336,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-36"
+continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
 number = "36"
 segmento = "714-01"
 section = ["identificacion"]
@@ -314,6 +346,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-37"
+continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
 number = "37"
 segmento = "714-01"
 section = ["identificacion"]
@@ -323,6 +356,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-39"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
 number = "39"
 segmento = "714-01"
 section = ["identificacion"]
@@ -332,6 +366,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-40"
+continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
 number = "40"
 segmento = "714-01"
 section = ["identificacion"]
@@ -341,6 +376,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-41"
+continuidad_id = "patrimonio-domicilio-extranjero-pais"
 number = "41"
 segmento = "714-01"
 section = ["identificacion"]
@@ -350,6 +386,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion-42"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
 number = "42"
 segmento = "714-01"
 section = ["identificacion"]
@@ -387,6 +424,7 @@ source_refs = ["aeat-modelo-714-procedure"]
 
 [[revisions."2021".casillas]]
 id = "declaracion-a"
+continuidad_id = "patrimonio-impuestos-satisfechos-extranjero"
 number = "a"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -396,6 +434,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-b"
+continuidad_id = "patrimonio-base-liquidable-gravada-extranjero"
 number = "b"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -405,6 +444,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-i"
+continuidad_id = "patrimonio-importe-ingreso"
 number = "I"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -414,6 +454,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "ingreso.forma-de-pago"
+continuidad_id = "patrimonio-forma-pago"
 number = "forma-de-pago"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -423,6 +464,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "declaracion-negativa"
+continuidad_id = "patrimonio-declaracion-negativa"
 number = "declaracion-negativa"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -432,6 +474,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.tipo-declaracion"
+continuidad_id = "patrimonio-tipo-declaracion"
 number = "tipo-declaracion"
 segmento = "714-01"
 section = ["identificacion"]
@@ -441,6 +484,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.sexo"
+continuidad_id = "patrimonio-sexo-contribuyente"
 number = "sexo"
 segmento = "714-01"
 section = ["identificacion"]

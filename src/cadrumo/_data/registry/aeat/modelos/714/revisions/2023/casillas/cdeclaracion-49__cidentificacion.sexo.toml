@@ -2,6 +2,9 @@
 
 [[revisions."2023".casillas]]
 id = "declaracion-49"
+continuidad_id = "patrimonio-deducciones-autonomicas-aplicadas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 27, filas 32/32: (6) Liquidación - Deducciones y bonificaciones autonómicas - Deducciones autonómicas - Importe aplicado [49]. Descripcion, tipo, validacion y contenido coinciden."
 number = "49"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -11,6 +14,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-50"
+continuidad_id = "patrimonio-bonificacion-autonomica-aplicada"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 28, filas 33/33: (6) Liquidación - Deducciones y bonificaciones autonómicas - Bonificación autonómica - Importe aplicado [50]. Descripcion, tipo, validacion y contenido coinciden."
 number = "50"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -36,6 +42,9 @@ additional_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-56"
+continuidad_id = "patrimonio-cuotas-previas-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 30, filas 35/35: (7) Regularización declaración complementaria - Cuota ingresar anteriores autoliquidaciones/liquidaciones [56]. Descripcion, tipo, validacion y contenido coinciden."
 number = "56"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
@@ -45,6 +54,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-57"
+continuidad_id = "patrimonio-diferencia-ingresar-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 31, filas 36/36: (7) Regularización declaración complementaria - Diferencia a ingresar resultado declaración complementaria [57]. Descripcion, tipo, validacion y contenido coinciden."
 number = "57"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
@@ -55,6 +67,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-60"
+continuidad_id = "patrimonio-vivienda-habitual-susceptible-exencion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-02 Patrimonio, campo 35, filas 40/40: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana - Valor total vivienda habitual susceptible exención [60]. Descripcion, tipo, validacion y contenido coinciden."
 number = "60"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -66,6 +81,9 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-61"
+continuidad_id = "patrimonio-vivienda-habitual-exenta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-02 Patrimonio, campo 36, filas 41/41: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -  Valor exento [61]. Descripcion, tipo, validacion y contenido coinciden."
 number = "61"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -77,6 +95,9 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-62"
+continuidad_id = "patrimonio-vivienda-habitual-no-exenta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-02 Patrimonio, campo 37, filas 42/42: (1) Bienes y derechos - A1. Bienes inmuebles naturaleza urbana -  Valor no exento ( [60] - [61] )    [62]. Descripcion, tipo, validacion y contenido coinciden."
 number = "62"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -87,6 +108,9 @@ legal_refs = ["ley-19-1991:art-4-9", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-63"
+continuidad_id = "patrimonio-otros-inmuebles-urbanos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-02 Patrimonio, campo 86, filas 91/91: (1) Bienes y derechos - A2. Bienes inmuebles naturaleza urbana - Otros inmuebles - Total [63]. Descripcion, tipo, validacion y contenido coinciden."
 number = "63"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
@@ -96,6 +120,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-1"
+continuidad_id = "patrimonio-obligacion-real-no-residente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 44, filas 49/49. Ayuda Patrimonio 4.1.1: obligacion real del no residente durante el ejercicio; mismo indicador, actualiza el anio."
 number = "1"
 segmento = "714-01"
 section = ["identificacion"]
@@ -106,6 +133,9 @@ legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "identificacion-2"
+continuidad_id = "patrimonio-opcion-obligacion-personal-no-residente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 45, filas 50/50. Ayuda Patrimonio 4.1.1: opcion por seguir tributando por obligacion personal, ejercitada el primer anio no residente; la opcion subsiste. En 2025, 'o anterior' lo explicita sin crear otra opcion."
 number = "2"
 segmento = "714-01"
 section = ["identificacion"]
@@ -116,6 +146,9 @@ legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "identificacion-3"
+continuidad_id = "patrimonio-comunidad-mayor-valor-bienes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 46, filas 51/51: Modalidades especiales de tributación - Comunidad Autónoma donde radique el mayor de los bienes o derechos [3]. Descripcion, tipo, validacion y contenido coinciden."
 number = "3"
 segmento = "714-01"
 section = ["identificacion"]
@@ -125,6 +158,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-4"
+continuidad_id = "patrimonio-obligacion-real-regimen-impatriados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 47, filas 52/52. Ayuda Patrimonio 4.1.1: obligacion real del residente acogido al regimen del art. 93 LIRPF; mismo indicador, actualiza el anio."
 number = "4"
 segmento = "714-01"
 section = ["identificacion"]
@@ -135,6 +171,9 @@ legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4"]
 
 [[revisions."2023".casillas]]
 id = "identificacion-8"
+continuidad_id = "patrimonio-comunidad-residencia"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 51, filas 56/56. Ayuda Patrimonio 4.1.5: Comunidad o Ciudad Autonoma de residencia habitual durante el ejercicio; mismo dato anual."
 number = "8"
 segmento = "714-01"
 section = ["identificacion"]
@@ -144,6 +183,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-10"
+continuidad_id = "patrimonio-declaracion-complementaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 52, filas 57/57: Declaración Complementaria [10]. Descripcion, tipo, validacion y contenido coinciden."
 number = "10"
 segmento = "714-01"
 section = ["identificacion"]
@@ -153,6 +195,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-12"
+continuidad_id = "patrimonio-opcion-normativa-autonomica-impatriados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 61, filas 66/66: Si ha consignado la modalidad de la casilla 4 y desea optar por la aplicación de la normativa autonómica [12]. Descripcion, tipo, validacion y contenido coinciden."
 number = "12"
 segmento = "714-01"
 section = ["identificacion"]
@@ -162,6 +207,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-15"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 16, filas 21/21: Sujeto Pasivo - Domicilio habitual - Tipo de Vía [15]. Descripcion, tipo, validacion y contenido coinciden."
 number = "15"
 segmento = "714-01"
 section = ["identificacion"]
@@ -171,6 +219,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-16"
+continuidad_id = "patrimonio-domicilio-habitual-nombre-via"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 18, filas 23/23: Sujeto Pasivo - Domicilio habitual - Nombre de la Vía Pública [16]. Descripcion, tipo, validacion y contenido coinciden."
 number = "16"
 segmento = "714-01"
 section = ["identificacion"]
@@ -180,6 +231,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-17"
+continuidad_id = "patrimonio-domicilio-habitual-tipo-numeracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 19, filas 24/24: Sujeto Pasivo - Domicilio habitual - Tipo de numeración [17]. Descripcion, tipo, validacion y contenido coinciden."
 number = "17"
 segmento = "714-01"
 section = ["identificacion"]
@@ -189,6 +243,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-18"
+continuidad_id = "patrimonio-domicilio-habitual-numero-casa"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 20, filas 25/25: Sujeto Pasivo - Domicilio habitual - Número de Casa [18]. Descripcion, tipo, validacion y contenido coinciden."
 number = "18"
 segmento = "714-01"
 section = ["identificacion"]
@@ -198,6 +255,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-19"
+continuidad_id = "patrimonio-domicilio-habitual-calificador-numero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 21, filas 26/26: Sujeto Pasivo - Domicilio habitual - Calificador del número [19]. Descripcion, tipo, validacion y contenido coinciden."
 number = "19"
 segmento = "714-01"
 section = ["identificacion"]
@@ -207,6 +267,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-20"
+continuidad_id = "patrimonio-domicilio-habitual-bloque"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 22, filas 27/27: Sujeto Pasivo - Domicilio habitual - Bloque [20]. Descripcion, tipo, validacion y contenido coinciden."
 number = "20"
 segmento = "714-01"
 section = ["identificacion"]
@@ -216,6 +279,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-21"
+continuidad_id = "patrimonio-domicilio-habitual-portal"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 23, filas 28/28: Sujeto Pasivo - Domicilio habitual - Portal [21]. Descripcion, tipo, validacion y contenido coinciden."
 number = "21"
 segmento = "714-01"
 section = ["identificacion"]
@@ -225,6 +291,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-22"
+continuidad_id = "patrimonio-domicilio-habitual-escalera"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 24, filas 29/29: Sujeto Pasivo - Domicilio habitual - Escalera [22]. Descripcion, tipo, validacion y contenido coinciden."
 number = "22"
 segmento = "714-01"
 section = ["identificacion"]
@@ -234,6 +303,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-23"
+continuidad_id = "patrimonio-domicilio-habitual-planta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 25, filas 30/30: Sujeto Pasivo - Domicilio habitual - Planta [23]. Descripcion, tipo, validacion y contenido coinciden."
 number = "23"
 segmento = "714-01"
 section = ["identificacion"]
@@ -243,6 +315,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-24"
+continuidad_id = "patrimonio-domicilio-habitual-puerta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 26, filas 31/31: Sujeto Pasivo - Domicilio habitual - Puerta [24]. Descripcion, tipo, validacion y contenido coinciden."
 number = "24"
 segmento = "714-01"
 section = ["identificacion"]
@@ -252,6 +327,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-25"
+continuidad_id = "patrimonio-domicilio-habitual-datos-complementarios"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 27, filas 32/32: Sujeto Pasivo - Domicilio habitual - Datos complementarios del domicilio  [25]. Descripcion, tipo, validacion y contenido coinciden."
 number = "25"
 segmento = "714-01"
 section = ["identificacion"]
@@ -261,6 +339,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-26"
+continuidad_id = "patrimonio-domicilio-habitual-localidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 28, filas 33/33: Sujeto Pasivo - Domicilio habitual - Localidad / Población (si es distinta del municipio) [26]. Descripcion, tipo, validacion y contenido coinciden."
 number = "26"
 segmento = "714-01"
 section = ["identificacion"]
@@ -270,6 +351,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-27"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 29, filas 34/34: Sujeto Pasivo - Domicilio habitual - Código Postal [27]. Descripcion, tipo, validacion y contenido coinciden."
 number = "27"
 segmento = "714-01"
 section = ["identificacion"]
@@ -279,6 +363,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-28"
+continuidad_id = "patrimonio-domicilio-habitual-municipio"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 31, filas 36/36: Sujeto Pasivo - Domicilio habitual - Nombre del Municipio [28]. Descripcion, tipo, validacion y contenido coinciden."
 number = "28"
 segmento = "714-01"
 section = ["identificacion"]
@@ -288,6 +375,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-29"
+continuidad_id = "patrimonio-domicilio-habitual-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 33, filas 38/38: Sujeto Pasivo - Domicilio habitual - Provincia [29]. Descripcion, tipo, validacion y contenido coinciden."
 number = "29"
 segmento = "714-01"
 section = ["identificacion"]
@@ -297,6 +387,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-35"
+continuidad_id = "patrimonio-domicilio-extranjero-direccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 34, filas 39/39: Sujeto Pasivo - Domicilio extranjero - Domicilio / Address [35]. Descripcion, tipo, validacion y contenido coinciden."
 number = "35"
 segmento = "714-01"
 section = ["identificacion"]
@@ -306,6 +399,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-36"
+continuidad_id = "patrimonio-domicilio-extranjero-datos-complementarios"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 35, filas 40/40: Sujeto Pasivo - Domicilio extranjero - Datos complementarios del domicilio [36]. Descripcion, tipo, validacion y contenido coinciden."
 number = "36"
 segmento = "714-01"
 section = ["identificacion"]
@@ -315,6 +411,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-37"
+continuidad_id = "patrimonio-domicilio-extranjero-poblacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 36, filas 41/41: Sujeto Pasivo - Domicilio extranjero - Población / Ciudad [37]. Descripcion, tipo, validacion y contenido coinciden."
 number = "37"
 segmento = "714-01"
 section = ["identificacion"]
@@ -324,6 +423,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-39"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-postal"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 38, filas 43/43: Sujeto Pasivo - Domicilio extranjero - Código Postal [ZIP] [39]. Descripcion, tipo, validacion y contenido coinciden."
 number = "39"
 segmento = "714-01"
 section = ["identificacion"]
@@ -333,6 +435,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-40"
+continuidad_id = "patrimonio-domicilio-extranjero-provincia-region-estado"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 39, filas 44/44: Sujeto Pasivo - Domicilio extranjero - Provincia / Región / Estado [40]. Descripcion, tipo, validacion y contenido coinciden."
 number = "40"
 segmento = "714-01"
 section = ["identificacion"]
@@ -342,6 +447,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-41"
+continuidad_id = "patrimonio-domicilio-extranjero-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 40, filas 45/45: Sujeto Pasivo - Domicilio extranjero - País [41]. Descripcion, tipo, validacion y contenido coinciden."
 number = "41"
 segmento = "714-01"
 section = ["identificacion"]
@@ -351,6 +459,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion-42"
+continuidad_id = "patrimonio-domicilio-extranjero-codigo-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 41, filas 46/46: Sujeto Pasivo - Domicilio extranjero - Código País [42]. Descripcion, tipo, validacion y contenido coinciden."
 number = "42"
 segmento = "714-01"
 section = ["identificacion"]
@@ -390,6 +501,9 @@ source_refs = ["aeat-modelo-714-procedure"]
 
 [[revisions."2023".casillas]]
 id = "declaracion-a"
+continuidad_id = "patrimonio-impuestos-satisfechos-extranjero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 19, filas 24/24: (6) Liquidación - Deducción impuestos extranjero - Impuestos efectivamente satisfechos en el extranjero [a]. Descripcion, tipo, validacion y contenido coinciden."
 number = "a"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -399,6 +513,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-b"
+continuidad_id = "patrimonio-base-liquidable-gravada-extranjero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-10 Patrimonio, campo 20, filas 25/25: (6) Liquidación - Deducción impuestos extranjero - Parte de la base liquidable gravada en el extranjero [b]. Descripcion, tipo, validacion y contenido coinciden."
 number = "b"
 segmento = "714-10"
 section = ["liquidacion"]
@@ -408,6 +525,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-i"
+continuidad_id = "patrimonio-importe-ingreso"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-Ingreso o Devolución, campo 12, filas 17/17: Ingreso - Importe (casilla [55] o casilla [57] en caso declaración complementaria)  [I]. Descripcion, tipo, validacion y contenido coinciden."
 number = "I"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -417,6 +537,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "ingreso.forma-de-pago"
+continuidad_id = "patrimonio-forma-pago"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-Ingreso o Devolución, campo 13, filas 18/18: Ingreso - Forma de pago. Descripcion, tipo, validacion y contenido coinciden."
 number = "forma-de-pago"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -426,6 +549,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "declaracion-negativa"
+continuidad_id = "patrimonio-declaracion-negativa"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-Ingreso o Devolución, campo 15, filas 20/20: Negativa - Declaración negativa. Descripcion, tipo, validacion y contenido coinciden."
 number = "declaracion-negativa"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
@@ -435,6 +561,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.tipo-declaracion"
+continuidad_id = "patrimonio-tipo-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 6, filas 11/11: Tipo de declaración (Ver Nota). Descripcion, tipo, validacion y contenido coinciden."
 number = "tipo-declaracion"
 segmento = "714-01"
 section = ["identificacion"]
@@ -444,6 +573,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.sexo"
+continuidad_id = "patrimonio-sexo-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 11, filas 16/16: Sujeto pasivo - Sexo \"H\" Hombre, \"M\" Mujer (45). Descripcion, tipo, validacion y contenido coinciden."
 number = "sexo"
 segmento = "714-01"
 section = ["identificacion"]

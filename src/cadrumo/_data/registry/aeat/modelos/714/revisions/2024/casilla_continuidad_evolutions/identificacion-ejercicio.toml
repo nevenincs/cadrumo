@@ -1,0 +1,67 @@
+# Identidad revisada contra las ayudas oficiales AEAT de ambos ejercicios,
+# apartados 4.1.1 (sujeto pasivo), 4.1.4 (complementaria) y 4.1.5 (residencia).
+# La ayuda 2021 corrige la referencia 2020 que conserva el diseno de ese ejercicio.
+# En 2025, la expresion o anterior explicita la continuidad de la opcion personal;
+# no cambia su ejercicio inicial ni crea otra modalidad de tributacion.
+
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_4-complementaria.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2023/4-cumplimentacion-declaraciones-patrimonio/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_1-datos-sujeto-pasivo.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_4-complementaria.html
+# https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-ayuda-presentacion/patrimonio-2024/4-cumplimentacion/4_1-datos-identificativos-otros/4_1_5-comunidad-ciudad-autonoma-residencia.html
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-obligacion-real-no-residente-orden-aprobacion"
+continuidad_id = "patrimonio-obligacion-real-no-residente"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-opcion-obligacion-personal-no-residente-orden-aprobacion"
+continuidad_id = "patrimonio-opcion-obligacion-personal-no-residente"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-obligacion-real-regimen-impatriados-orden-aprobacion"
+continuidad_id = "patrimonio-obligacion-real-regimen-impatriados"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-2", "orden-hac-265-2024:art-4", "orden-hac-242-2025:art-2", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-comunidad-residencia-orden-aprobacion"
+continuidad_id = "patrimonio-comunidad-residencia"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "label_and_legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-fecha-nacimiento-orden-aprobacion"
+continuidad_id = "patrimonio-fecha-nacimiento"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "patrimonio-complementaria-cuotas-anteriores-orden-aprobacion"
+continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hac-265-2024:art-4", "orden-hac-242-2025:art-4"]
+source_refs = ["aeat-dr-714-2023", "aeat-dr-714-2024"]
+

@@ -2,6 +2,7 @@
 
 [[revisions."2021".casillas]]
 id = "identificacion.estado-civil"
+continuidad_id = "patrimonio-estado-civil"
 number = "estado-civil"
 segmento = "714-01"
 section = ["identificacion"]
@@ -11,6 +12,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-nacimiento"
+continuidad_id = "patrimonio-fecha-nacimiento"
 number = "fecha-nacimiento"
 segmento = "714-01"
 section = ["identificacion"]
@@ -20,6 +22,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.discapacidad-porcentaje"
+continuidad_id = "patrimonio-porcentaje-discapacidad"
 number = "discapacidad-porcentaje"
 segmento = "714-01"
 section = ["identificacion"]
@@ -29,6 +32,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.discapacidad-clase"
+continuidad_id = "patrimonio-clase-discapacidad"
 number = "discapacidad-clase"
 segmento = "714-01"
 section = ["identificacion"]
@@ -38,6 +42,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.codigo-provincia"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-provincia"
 number = "codigo-provincia"
 segmento = "714-01"
 section = ["identificacion"]
@@ -47,6 +52,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.nacionalidad"
+continuidad_id = "patrimonio-nacionalidad"
 number = "nacionalidad"
 segmento = "714-01"
 section = ["identificacion"]
@@ -56,6 +62,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.regimen-economico-matrimonio"
+continuidad_id = "patrimonio-regimen-economico-matrimonio"
 number = "regimen-economico-matrimonio"
 segmento = "714-01"
 section = ["identificacion"]
@@ -65,6 +72,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.representante-nif"
+continuidad_id = "patrimonio-representante-nif"
 number = "representante-nif"
 segmento = "714-01"
 section = ["identificacion"]
@@ -74,6 +82,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.representante-nombre"
+continuidad_id = "patrimonio-representante-nombre"
 number = "representante-nombre"
 segmento = "714-01"
 section = ["identificacion"]
@@ -83,6 +92,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-localidad"
+continuidad_id = "patrimonio-localidad-declaracion"
 number = "fecha-declaracion-localidad"
 segmento = "714-01"
 section = ["identificacion"]
@@ -92,6 +102,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-dia"
+continuidad_id = "patrimonio-dia-declaracion"
 number = "fecha-declaracion-dia"
 segmento = "714-01"
 section = ["identificacion"]
@@ -101,6 +112,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-mes"
+continuidad_id = "patrimonio-mes-declaracion"
 number = "fecha-declaracion-mes"
 segmento = "714-01"
 section = ["identificacion"]
@@ -110,6 +122,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-anio"
+continuidad_id = "patrimonio-anio-declaracion"
 number = "fecha-declaracion-anio"
 segmento = "714-01"
 section = ["identificacion"]
@@ -119,6 +132,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "identificacion.complementaria-cuotas-anteriores"
+continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
 number = "complementaria-cuotas-anteriores"
 segmento = "714-01"
 section = ["identificacion"]
@@ -128,6 +142,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "decl.idioma"
+continuidad_id = "patrimonio-idioma-declaracion"
 number = "idioma"
 segmento = "714-00"
 section = ["declarante"]
@@ -137,6 +152,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "bienes.c1-total"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles"
 number = "a"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -146,6 +162,7 @@ input_kind = "manual"
 
 [[revisions."2021".casillas]]
 id = "bienes.c2-total"
+continuidad_id = "patrimonio-inmuebles-afectos-no-exentos"
 number = "b"
 segmento = "714-03"
 section = ["bienes_y_derechos"]

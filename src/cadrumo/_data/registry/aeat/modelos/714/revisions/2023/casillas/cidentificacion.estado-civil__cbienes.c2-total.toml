@@ -2,6 +2,9 @@
 
 [[revisions."2023".casillas]]
 id = "identificacion.estado-civil"
+continuidad_id = "patrimonio-estado-civil"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 12, filas 17/17: Sujeto pasivo - Estado Civil. \"1\" Soltero/a, \"2\" Casado/a, \"3\" Viudo/a, \"4\" Divorciado/a o Separado/a. Descripcion, tipo, validacion y contenido coinciden."
 number = "estado-civil"
 segmento = "714-01"
 section = ["identificacion"]
@@ -11,6 +14,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.fecha-nacimiento"
+continuidad_id = "patrimonio-fecha-nacimiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 13, filas 18/18. Ayuda Patrimonio 4.1.1: fecha de nacimiento del sujeto pasivo. El anio limite y la referencia de nota cambian en el diseno; permanece el mismo dato biografico."
 number = "fecha-nacimiento"
 segmento = "714-01"
 section = ["identificacion"]
@@ -20,6 +26,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.discapacidad-porcentaje"
+continuidad_id = "patrimonio-porcentaje-discapacidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 14, filas 19/19: Sujeto pasivo - Discapacidad  - % discapacidad (09). Descripcion, tipo, validacion y contenido coinciden."
 number = "discapacidad-porcentaje"
 segmento = "714-01"
 section = ["identificacion"]
@@ -29,6 +38,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.discapacidad-clase"
+continuidad_id = "patrimonio-clase-discapacidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 15, filas 20/20: Sujeto pasivo - Discapacidad  - Clase discapacidad física o psíquica  (11) (\"0, 1 física o 2 psíquica\"). Descripcion, tipo, validacion y contenido coinciden."
 number = "discapacidad-clase"
 segmento = "714-01"
 section = ["identificacion"]
@@ -38,6 +50,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.codigo-provincia"
+continuidad_id = "patrimonio-domicilio-habitual-codigo-provincia"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 32, filas 37/37: Sujeto Pasivo - Domicilio habitual - Código provincia. Descripcion, tipo, validacion y contenido coinciden."
 number = "codigo-provincia"
 segmento = "714-01"
 section = ["identificacion"]
@@ -47,6 +62,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.nacionalidad"
+continuidad_id = "patrimonio-nacionalidad"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 43, filas 48/48: Sujeto Pasivo - Nacionalidad \"0\" No consta; \"1\" Española; \"2\" Otra (43). Descripcion, tipo, validacion y contenido coinciden."
 number = "nacionalidad"
 segmento = "714-01"
 section = ["identificacion"]
@@ -56,6 +74,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.regimen-economico-matrimonio"
+continuidad_id = "patrimonio-regimen-economico-matrimonio"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 50, filas 55/55: Régimen Económico del matrimonio. Descripcion, tipo, validacion y contenido coinciden."
 number = "regimen-economico-matrimonio"
 segmento = "714-01"
 section = ["identificacion"]
@@ -65,6 +86,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.representante-nif"
+continuidad_id = "patrimonio-representante-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 53, filas 58/58: Representante -  NIF. Descripcion, tipo, validacion y contenido coinciden."
 number = "representante-nif"
 segmento = "714-01"
 section = ["identificacion"]
@@ -74,6 +98,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.representante-nombre"
+continuidad_id = "patrimonio-representante-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 54, filas 59/59: Representante - Apellidos y nombre o razón social. Descripcion, tipo, validacion y contenido coinciden."
 number = "representante-nombre"
 segmento = "714-01"
 section = ["identificacion"]
@@ -83,6 +110,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.fecha-declaracion-localidad"
+continuidad_id = "patrimonio-localidad-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 55, filas 60/60: Fecha de la declaración - Localidad. Descripcion, tipo, validacion y contenido coinciden."
 number = "fecha-declaracion-localidad"
 segmento = "714-01"
 section = ["identificacion"]
@@ -92,6 +122,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.fecha-declaracion-dia"
+continuidad_id = "patrimonio-dia-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 56, filas 61/61: Fecha de la declaración - Día. Descripcion, tipo, validacion y contenido coinciden."
 number = "fecha-declaracion-dia"
 segmento = "714-01"
 section = ["identificacion"]
@@ -101,6 +134,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.fecha-declaracion-mes"
+continuidad_id = "patrimonio-mes-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 57, filas 62/62: Fecha de la declaración - Mes. Descripcion, tipo, validacion y contenido coinciden."
 number = "fecha-declaracion-mes"
 segmento = "714-01"
 section = ["identificacion"]
@@ -110,6 +146,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.fecha-declaracion-anio"
+continuidad_id = "patrimonio-anio-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 58, filas 63/63: Fecha de la declaración - Año. Descripcion, tipo, validacion y contenido coinciden."
 number = "fecha-declaracion-anio"
 segmento = "714-01"
 section = ["identificacion"]
@@ -119,6 +158,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "identificacion.complementaria-cuotas-anteriores"
+continuidad_id = "patrimonio-complementaria-cuotas-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-01 Patrimonio, campo 62, filas 67/67. Ayuda Patrimonio 4.1.4: cuotas de anteriores autoliquidaciones o liquidaciones del mismo ejercicio en la complementaria; mismo importe previo, cambia el anio."
 number = "complementaria-cuotas-anteriores"
 segmento = "714-01"
 section = ["identificacion"]
@@ -128,6 +170,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "decl.idioma"
+continuidad_id = "patrimonio-idioma-declaracion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-00 Patrimonio, campo 4, filas 9/9: Idioma de la declaración (**). Descripcion, tipo, validacion y contenido coinciden."
 number = "idioma"
 segmento = "714-00"
 section = ["declarante"]
@@ -137,6 +182,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "bienes.c1-total"
+continuidad_id = "patrimonio-bienes-afectos-no-exentos-excluidos-inmuebles"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-03 Patrimonio, campo 66, filas 72/72: (1) Bienes y derechos - C1. No exentos afectos activ. empresariales y profesionales (no inm.) - Total [a]. Descripcion, tipo, validacion y contenido coinciden."
 number = "a"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
@@ -146,6 +194,9 @@ input_kind = "manual"
 
 [[revisions."2023".casillas]]
 id = "bienes.c2-total"
+continuidad_id = "patrimonio-inmuebles-afectos-no-exentos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-714-2022 y aeat-dr-714-2023, hoja 714-03 Patrimonio, campo 115, filas 121/121: (1) Bienes y derechos - C2. Bienes inmuebles no exentos afectos activ. empres. y profes. - Total [b]. Descripcion, tipo, validacion y contenido coinciden."
 number = "b"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
