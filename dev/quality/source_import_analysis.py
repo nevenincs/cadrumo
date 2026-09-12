@@ -1,4 +1,4 @@
-"""Shared AST reading primitives for the development scanners.
+"""Shared source-import analysis primitives for development scanners.
 
 READ-ONLY. This module owns the parsing vocabulary several ``dev/`` scanners
 need in common -- module-name resolution, relative-import resolution, the

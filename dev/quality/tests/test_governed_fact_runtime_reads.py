@@ -13,7 +13,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..import_hygiene_scan import module_name_for, resolve_relative_import
+from ..source_import_analysis import module_name_for, resolve_relative_import
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

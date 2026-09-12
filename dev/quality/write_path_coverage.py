@@ -122,7 +122,7 @@ from dev.audit.unreachable_code import (
     shipped_modules,
     string_reference_names,
 )
-from dev.quality.import_hygiene_scan import resolve_relative_import
+from dev.quality.source_import_analysis import resolve_relative_import
 
 _EXIT_FINDINGS: Final[int] = 1
 _EXIT_ERROR: Final[int] = 1
