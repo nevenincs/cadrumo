@@ -1,4 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 97/97, filas 102/102: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Capital - Escriturado [00562]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - Escriturado (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00562"
 number = "00562"
 segmento = "DP200010"
@@ -9,6 +12,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 98/98, filas 103/103: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Capital - No exigido [00563]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - No exigido (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00563"
 number = "00563"
 segmento = "DP200010"
@@ -28,6 +34,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-reservas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 100/100, filas 105/105: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Reservas [00565]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Reservas (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00565"
 number = "00565"
 segmento = "DP200010"
@@ -38,6 +47,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 101/101, filas 106/106: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Acciones y participaciones en patrimonio propias [00566]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Acciones y participaciones en patrimonio propias (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00566"
 number = "00566"
 segmento = "DP200010"
@@ -48,6 +60,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-resultados-ejercicios-anteriores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 102/102, filas 107/107: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Resultados ejercicios anteriores [00567]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Resultados ejercicios anteriores (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00567"
 number = "00567"
 segmento = "DP200010"
@@ -58,6 +73,9 @@ required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-distribucion-dividendos-otras-aportaciones-socios"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 103/103, filas 108/108: Estado de cambios patrimonio neto (II) - Distribucion de dividendos - Otras aportaciones de socios [00568]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Otras aportaciones de socios (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00568"
 number = "00568"
 segmento = "DP200010"

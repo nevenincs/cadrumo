@@ -1,4 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
+continuidad_id = "is-ecpn-total-cambios-combinacion-negocios-capital-escriturado"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200010/DP200010, campos 111/111, filas 116/116: Estado de cambios patrimonio neto (II) - Incremento (reduccion) de patr. neto de combinacion de negocios - Capital - Escriturado [00590]. Descripcion legal, tipo, validacion y contenido coinciden; misma columna Capital - Escriturado (manuales Sociedades 2024 p.144 / 2025 p.147)."
 id = "DP200010:00590"
 number = "00590"
 segmento = "DP200010"

@@ -452,6 +452,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-base-25"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT record designs: 2018-2022 prints box [04] at M30901 campo 35, position 692 (04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls.extracted.md:78); 2023-y-siguientes prints box [25] at M30901 campo 35, position 692 (01-309-ejercicios-2023-y-siguientes.xls.extracted.md:78). Box [25] is absent from the predecessor design, so this is a new printed concept, not a continuation of [04]."
 number = "692-708"
 form_number = "25"
 section = ["declarante", "liquidacion"]
@@ -465,6 +467,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-tipo-26"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT record designs: 2018-2022 prints box [05] at M30901 campo 36, position 709 (04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls.extracted.md:79); 2023-y-siguientes prints box [26] at M30901 campo 36, position 709 (01-309-ejercicios-2023-y-siguientes.xls.extracted.md:79). Box [26] is absent from the predecessor design, so this is a new printed concept, not a continuation of [05]."
 number = "709-713"
 form_number = "26"
 section = ["declarante", "liquidacion"]
@@ -477,6 +481,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2023-y-siguientes".casillas]]
 id = "decl.rg-cuota-27"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "AEAT record designs: 2018-2022 prints box [06] at M30901 campo 37, position 714 (04-309-orden-eha-3212-2004-ejercicios-2018-y-posteriores.xls.extracted.md:80); 2023-y-siguientes prints box [27] at M30901 campo 37, position 714 (01-309-ejercicios-2023-y-siguientes.xls.extracted.md:80). Box [27] is absent from the predecessor design, so this is a new printed concept, not a continuation of [06]."
 number = "714-730"
 form_number = "27"
 section = ["declarante", "liquidacion"]
