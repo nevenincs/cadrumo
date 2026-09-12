@@ -7,9 +7,9 @@ tier: L3
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
-modified: '2026-09-10'
+modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:e6cd1e3973e4e304e3e29d2aceb9b9a395cf4759aa456892582e1801251fc5f8'
+body_hash: 'sha256:b49f2da03d0ea2329ad0620ab348971760788aef260eac7f0d756e65130a24d4'
 ---
 
 # `registry-authority-artifact-boundary` plan
@@ -68,6 +68,26 @@ Exercise publication refusal, artifact-only installed use, corruption refusal, a
 
 - [ ] `W03.P05.S07` - Prove artifact publication and installed runtime behavior; `tests/integration/`.
 - [ ] `W03.P05.S08` - Document the artifact publication and recovery workflow; `docs/`.
+
+## Wave `W04` - Canonical compiled runtime
+
+Complete the authority boundary by removing bootstrap and parallel regulated-data lanes, publishing compact v4 typed projections, and proving one installed runtime authority.
+
+### Phase `W04.P06` - Compact artifact and bootstrap-safe identifiers
+
+Publish v4 without authoring-source bootstrap, preserve the canonical typed graph, and remove schema-approved wire defaults without adding runtime delta interpretation.
+
+- [ ] `W04.P06.S11` - Implement syntax-only Modelo and TaxDomain value types and migrate enum-dependent callers; `src/cadrumo/core/modelo.py, src/cadrumo/core/tax_domain.py, src/cadrumo/entrypoints/, src/cadrumo/application/, src/cadrumo/domain/`.
+
+### Phase `W04.P07` - Typed runtime catalogue unification
+
+Compile every regulated AEAT runtime table into typed authority catalogues and route consumers, supported-year admission, and cache coordinates through one authority provider.
+
+
+### Phase `W04.P08` - Installed boundary proof
+
+Regenerate the tracked v4 authority and prove compact semantic round-trip, raw-source isolation, fail-closed loading, centralized temporal limits, and installed artifact-only workflows.
+
 
 ## Parallelization
 

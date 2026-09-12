@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-edition-authoring-code-shape-and-blast-radius-reference]]'
 modified: '2026-09-12'
 body_schema: body-v2
-body_hash: 'sha256:debbef9bae700f234673238b28bbae7200439772097504c70fd41922cf996992'
+body_hash: 'sha256:00489e2423578f60f914a6d84e5bdf9d826c4db9b7654302e28b3fd066a886f8'
 ---
 
 # `registry-edition-authoring` plan
@@ -241,7 +241,7 @@ Every modelo not named above, in file-count order, plus the one whose classifica
 - [ ] `W03.P08.S66` - [S | opus-medium] Decide on its merits whether the migration tool gains a lift-in-place capability for an already delta-authored tree (prove by materialising against the predecessor chain instead of a full-copy reference). Two known residuals stand until then: modelo 390 edition 2025 casilla iva.anual.regularizacion-prorrata-definitiva states source_refs opening with the edition default (row_source_refs_liftable=1) and the tool refuses to re-plan a delta-authored tree; modelo 576 edition 2007 is a one-row edition with no derivable casilla_source_refs (edition_default_underivable=1), accepted as terminal. Proof: a decision recorded either way; if built, the signal reads row_source_refs_liftable=0 with 390 re-run.; `dev/registry/edition_delta_migration.py`.
 - [x] `W03.P08.S67` - [M | luna-max] Replace naked built-in exceptions on the fact-backed Modelo and tax-domain catalogue import boundary with the registered Cadrumo core validation contract, preserving ValueError compatibility and proving malformed authored facts fail with typed, actionable errors.; `src/cadrumo/core/modelo.py and src/cadrumo/core/tax_domain.py and focused core tests`.
 - [x] `W03.P08.S68` - [M | luna-max] Close the registry signal's remaining proof gaps with a fail-closed preflight matrix for collect-pass/load-fail and dual-failure cases, plus focused runtime-load error typing without coupling the lane runner to domain exceptions.; `dev/test_runs/tests/test_lanes.py and dev/registry/conformance/tests/test_lifecycle_cli.py`.
-- [ ] `W03.P08.S69` - [M | luna-max] Re-run the focused hierarchy, signal-runner, conformance lifecycle, collection, artifact load, and registry aggregate signals; inspect the normalized envelope and review the bounded diff before push.; `src/cadrumo/core/errors/tests and dev/test_runs/tests and dev/registry/conformance/tests and just test-registry`.
+- [ ] `W03.P08.S69` - [M | luna-max] Normalize typed registry runtime-load refusals as load_failure with their concrete cause instead of generic tool_failure, add production-line-shape parser teeth, then re-run the focused hierarchy, signal-runner, lifecycle, collection, artifact-load, and registry aggregate signals before push.; `dev/test_runs/command.py and dev/test_runs/tests/test_command.py and focused registry signals`.
 
 ## Wave `W04` - Closeout
 
