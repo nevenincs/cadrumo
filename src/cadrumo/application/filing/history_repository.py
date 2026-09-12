@@ -57,6 +57,11 @@ class ModeloHistoryRepository:
         """Return the natural modelo identifier carried by ``payload``."""
         return str(payload.modelo)
 
+    @classmethod
+    def payload_model(cls) -> type[ModeloHistory]:
+        """Return the payload type for outer custody-key inspection."""
+        return cls.payload_type
+
     def load(self, identifier: str) -> ModeloHistory | None:
         """Load one history through the composed application capability."""
         return self._ports.repository.load(identifier)
