@@ -161,8 +161,8 @@ def _select_revision_for_filing_year(
     **Module-private, and it must stay that way.** This resolver answers an
     evidence-attribution question ("which revision does this captured oracle
     payload belong to"), never the legal question ("which revision governs
-    this filing"). Standing on the registry package facade beside
-    :func:`select_revision` it would be one autocomplete away from a
+    this filing"). Exposing it beside the public filing resolver
+    :func:`select_revision` would place it one autocomplete away from a
     calculation path that holds only a filing year: that path would silently
     drop the period axis and, on an unresolvable year, receive ``None`` and
     abstain exactly where the law-determined resolver refuses. Abstention is

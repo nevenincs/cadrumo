@@ -102,7 +102,6 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from cadrumo.core.casilla_id import CasillaId as _CasillaId
 from cadrumo.core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.modelo import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from cadrumo.core.modelo import Modelo as _Modelo
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -121,6 +120,7 @@ from cadrumo.domain.calculations.registry.ids import ModeloId as _ModeloId
 from cadrumo.domain.calculations.registry.ids import RelationId as _RelationId
 from cadrumo.domain.calculations.registry.ids import RevisionId as _RevisionId
 from cadrumo.domain.calculations.registry.ids import SourceRefId as _SourceRefId
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from cadrumo.domain.calculations.registry.schema import CasillaProducerKind as _CasillaProducerKind
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
 from cadrumo.domain.calculations.registry.schema import ModeloRevision as _ModeloRevision

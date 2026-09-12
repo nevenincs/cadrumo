@@ -1,0 +1,87 @@
+# Casillas transcribed from the bundled ejercicio 2024 Diseño de Registro,
+# source aeat-dr-182-2024, sha256
+# 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f.
+#
+# This modelo is an informativa whose printed sheets carry no box numbers, so
+# `number` is a stable slug rather than an AEAT casilla number, exactly as in the
+# 2025 sibling edition. The record positions each slug stands for, read from the
+# design: EJERCICIO tipo 1 5-8; N.I.F. DEL DECLARADO tipo 2 18-26; APELLIDOS Y
+# NOMBRE O RAZÓN SOCIAL DEL DECLARADO tipo 2 36-75; % DE DEDUCCIÓN tipo 2 79-83;
+# IMPORTE O VALORACIÓN DEL DONATIVO, APORTACIÓN O DISPOSICIÓN tipo 2 84-96;
+# RECURRENCIA DONATIVOS tipo 2 132.
+
+[[revisions."2024".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2024".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2024".casillas]]
+id = "tipo2.donante-nif"
+number = "nif-donante"
+section = ["declarado", "donante"]
+data_type = "nif"
+semantic_role = "donante_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+
+[[revisions."2024".casillas]]
+id = "tipo2.donante-nombre"
+number = "nombre-donante"
+section = ["declarado", "donante"]
+data_type = "name"
+semantic_role = "donante_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+[[revisions."2024".casillas]]
+id = "tipo2.importe-donado"
+number = "importe-donativo"
+section = ["declarado", "donativo"]
+data_type = "money"
+semantic_role = "importe_donativo"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3021-2007:art-1", "ley-35-2006:art-68.3", "ley-58-2003:art-93"]
+
+[[revisions."2024".casillas]]
+id = "tipo2.porcentaje-deduccion"
+number = "porcentaje-deduccion"
+section = ["declarado", "donativo"]
+data_type = "ratio"
+semantic_role = "porcentaje_deduccion"
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]
+
+# RECURRENCIA DONATIVOS, tipo 2 position 132. Present and identically placed in
+# the ejercicio 2024 and ejercicio 2025 designs, but its clave test differs: the
+# ejercicio 2024 design reads "en favor de dicha entidad por importe igual o
+# superior, en cada uno de ellos, al del ejercicio anterior", which Orden
+# HAC/1430/2025 art. 2 later replaced for ejercicio 2025 onward. This row carries
+# the 2024 test and cites no 2025 orden.
+[[revisions."2024".casillas]]
+id = "tipo2.recurrencia"
+number = "recurrencia"
+section = ["declarado", "donativo"]
+data_type = "boolean"
+semantic_role = "donativo_recurrente"
+required = true
+input_kind = "manual"
+legal_refs = ["ley-35-2006:art-68.3", "orden-eha-3021-2007:art-1", "ley-58-2003:art-93"]

@@ -107,15 +107,21 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     layouts = revision.export_layouts
     if not layouts:
         return ()
-    claimed_records = _claimed_export_binding_records(layouts)
+    claimed_records = claimed_export_binding_records(layouts)
     bindings_by_record = _bindings_by_export_record(revision, claimed_records)
     return tuple(_derive_export_layout(layout, bindings_by_record) for layout in layouts)
 
 
-def _claimed_export_binding_records(
+def claimed_export_binding_records(
     layouts: Sequence[ExportLayoutDefinition],
 ) -> frozenset[str]:
-    """Return record names that layouts explicitly claim for binding derivation."""
+    """Return record names that layouts explicitly claim for binding derivation.
+
+    Public because the binding-derivation order gate needs the same eligibility
+    set this resolver uses: a duplicate ``row_field`` claim is only a defect for
+    a binding that actually reaches :func:`derive_export_layouts_from_bindings`,
+    and re-deriving that set at the gate would let the two drift apart.
+    """
     return frozenset(
         record.binding_record for layout in layouts for record in layout.records if record.binding_record is not None
     )
@@ -610,6 +616,7 @@ type ResolvedExportEndpointPath = Literal["field", "projection", "row_field"]
 __all__ = [
     "ResolvedExportEndpointPath",
     "ResolvedExportLayout",
+    "claimed_export_binding_records",
     "clasificar_casillas_oficiales",
     "derive_export_layouts_from_bindings",
     "fixed_width_record_casilla_ids",

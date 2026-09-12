@@ -1,0 +1,11 @@
+[[revisions."2024".constructs]]
+id = "modelo-222-declaration-construct"
+legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-40"]
+source_refs = ["boe-modelo-202-base-order"]
+casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
+application_links = ["modelo-222-deadline", "modelo-222-filing", "modelo-222-workflow"]
+deadline_windows = [
+    "modelo-222-2024-1p",
+    "modelo-222-2024-2p",
+    "modelo-222-2024-3p",
+]

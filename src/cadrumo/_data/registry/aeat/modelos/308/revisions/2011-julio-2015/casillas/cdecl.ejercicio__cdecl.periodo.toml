@@ -19,6 +19,7 @@ number = "periodo"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"
+continuidad_id = "filing-period"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3786-2008:art-2"]

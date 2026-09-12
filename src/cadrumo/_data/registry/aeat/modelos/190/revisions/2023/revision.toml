@@ -1,5 +1,6 @@
 [revisions."2023"]
 predecessor = "2022"
+reviewed_against = "2022"
 casilla_source_refs = ["aeat-dr-190-2023"]
 # Applicability-grade historical epoch for modelo 190, filing year 2023.
 #

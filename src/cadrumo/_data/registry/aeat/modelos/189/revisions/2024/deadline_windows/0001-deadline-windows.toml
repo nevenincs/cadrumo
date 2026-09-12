@@ -1,0 +1,15 @@
+# Plazo from Orden EHA/3481/2008 art. 5, "entre el día 1 y el 31 del mes de
+# marzo de cada año". The ejercicio 2024 declaration is presented in marzo 2025.
+# Both dates are the NOMINAL statutory ones and are stored UNSHIFTED:
+# 2025-03-01 is a Saturday, shift_deadline derives the operational date with its
+# reason, and pre-shifting here would destroy the statutory date and report no
+# shift occurred.
+[[revisions."2024".deadline_windows]]
+id = "modelo-189-2024-0a"
+filing_year = 2024
+period = "2024 0A"
+period_kind = "annual"
+opens_on = 2025-03-01
+closes_on = 2025-03-31
+legal_refs = ["orden-eha-3481-2008:art-5"]
+source_refs = ["boe-modelo-189-base-order"]

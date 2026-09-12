@@ -15,13 +15,16 @@ from pathlib import Path
 
 import pytest
 
+from ..record_design_labels import design_slot_name, read_record_design
 from ..rename_formula_binding_identifiers import (
     ChainedRenameMapError,
     DirtyFragmentDirectoryError,
+    _selector,
     apply_span_strip,
     plan_span_strip,
     remove_emptied_fragment_directories,
     rewrite_identifier_references,
+    unreadable_selectors,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -276,8 +279,11 @@ def test_two_slots_named_by_their_offsets_alone_refuse_the_whole_modelo(tmp_path
 
     plan = plan_span_strip(MODELO, modelos_root=tmp_path)
 
+    # Both are withdrawn and named. Neither is more entitled to the surviving
+    # spelling, and re-appending an offset to separate them is the restatement
+    # the rule removes; the corpus keeps two names a reader can still tell apart.
     assert plan.rename_map == {}
-    assert plan.refused_modelo
+    assert not plan.refused_modelo
     collision = "".join(plan.collisions)
     assert "modelo-131.r1.bloque" in collision
     assert "modelo-131.r1.bloque-14" in collision
@@ -302,7 +308,7 @@ def test_two_mid_word_truncated_slots_sharing_a_prefix_are_refused(tmp_path: Pat
     plan = plan_span_strip(MODELO, modelos_root=tmp_path)
 
     assert plan.rename_map == {}
-    assert plan.refused_modelo
+    assert not plan.refused_modelo
     assert any("modelo-131.r1.situado-en-el-termin" in collision for collision in plan.collisions)
 
 
@@ -390,3 +396,136 @@ def test_an_emptied_directory_carrying_pending_work_is_left_in_place(tmp_path: P
 
     assert refusal.value.directory == applicability
     assert applicability.is_dir()
+
+
+# ---------------------------------------------------------------------------
+# Naming a slot from the official record design
+# ---------------------------------------------------------------------------
+
+
+def test_a_design_label_names_the_slot_the_offset_stood_in_for(tmp_path: Path) -> None:
+    """The name an ingestion never recorded comes from the design, not from a derivation."""
+    sidecar = tmp_path / "design.md"
+    _write(
+        sidecar,
+        "# r1 Patrimonio\n"
+        "N\u00ba | Posic. | Lon | Tipo | Comp | Descripci\u00f3n\n"
+        "25 | 290 | 13 | Num | C | (1) Valores no exentos - N\u00ba Valores 3\n",
+    )
+
+    rows = read_record_design(sidecar)
+
+    assert rows[("r1", 290)].length == 13
+    assert design_slot_name(rows[("r1", 290)].label) == "valores-no-exentos-no-valores-3"
+
+
+def test_a_design_label_keeps_the_percent_it_states(tmp_path: Path) -> None:
+    """``% Titularidad 7`` and ``Titularidad 7`` are different fields and must stay different names."""
+    sidecar = tmp_path / "design.md"
+    _write(
+        sidecar,
+        "# r1 Patrimonio\n"
+        "N\u00ba | Posic. | Lon | Tipo | Descripci\u00f3n\n"
+        "1 | 10 | 5 | Num | % Titularidad 7\n"
+        "2 | 20 | 5 | Num | Titularidad 7\n",
+    )
+
+    rows = read_record_design(sidecar)
+
+    assert design_slot_name(rows[("r1", 10)].label) == "porcentaje-titularidad-7"
+    assert design_slot_name(rows[("r1", 20)].label) == "titularidad-7"
+
+
+def test_the_label_column_is_read_from_the_header_not_a_fixed_index(tmp_path: Path) -> None:
+    """Detector teeth: two records in one design declare different column sets."""
+    sidecar = tmp_path / "design.md"
+    _write(
+        sidecar,
+        "# r0 Patrimonio\n"
+        "N\u00ba | Posic. | Long. | Tipo | Descripci\u00f3n\n"
+        "1 | 1 | 17 | An | Constante de cabecera\n"
+        "# r1 Patrimonio\n"
+        "N\u00ba | Posic. | Lon | Tipo | Comp | Descripci\u00f3n\n"
+        "1 | 1 | 2 | An | C | Inicio del identificador\n",
+    )
+
+    rows = read_record_design(sidecar)
+
+    # A fixed index would have read "An" or "C" as the label for one of these.
+    assert rows[("r0", 1)].label == "Constante de cabecera"
+    assert rows[("r1", 1)].label == "Inicio del identificador"
+
+
+def test_the_strict_decode_is_what_keeps_the_ordinal_mark_intact(tmp_path: Path) -> None:
+    """Detector teeth for the encoding: the same bytes read as Latin-1 name the slot wrongly.
+
+    A tolerant or wrong decode does not raise here -- it yields ``nao-valores-3``
+    where the design says ``No Valores 3``, which is a plausible-looking name for
+    a field that does not exist. The reader states UTF-8 once; this proves the
+    statement is doing work.
+    """
+    sidecar = tmp_path / "design.md"
+    _write(
+        sidecar,
+        "# r1 Patrimonio\nNº | Posic. | Lon | Tipo | Descripción\n1 | 290 | 13 | Num | Nº Valores 3\n",
+    )
+
+    correct = design_slot_name(read_record_design(sidecar)[("r1", 290)].label)
+    mis_decoded = design_slot_name(sidecar.read_bytes().decode("latin-1").splitlines()[-1].split("|")[-1].strip())
+
+    assert correct == "no-valores-3"
+    assert mis_decoded != correct
+
+
+# ---------------------------------------------------------------------------
+# Reading the declared period selector
+# ---------------------------------------------------------------------------
+
+
+def test_a_selector_declaring_period_overrides_is_typed(tmp_path: Path) -> None:
+    """The retype reaches the arrays nested inside ``period_overrides``.
+
+    Each override is an inline table carrying its own ``periods`` array, so a
+    retype that stops at the outermost array leaves a ``list`` where the model
+    declares a tuple, strict validation refuses it, and the whole edition reads
+    as an unreadable selector -- which silently narrows the year set the caller
+    reports.
+    """
+    edition_dir = tmp_path / MODELO / "revisions" / "2025"
+    _write(
+        edition_dir / "revision.toml",
+        '[revisions."2025"]\n'
+        "valid_from = 2025-01-01\n"
+        '[revisions."2025".period_selector]\n'
+        "year_from = 2025\n"
+        'periods = ["01", "02", "03"]\n'
+        'period_overrides = [{ year = 2026, periods = ["02", "03"] }]\n',
+    )
+
+    selector = _selector(edition_dir)
+
+    assert selector is not None
+    assert selector.periods == ("01", "02", "03")
+    assert selector.periods_for_year(2026) == ("02", "03")
+    assert selector.periods_for_year(2025) == ("01", "02", "03")
+    assert unreadable_selectors(tmp_path / MODELO) == ()
+
+
+def test_a_selector_without_overrides_is_typed_unchanged(tmp_path: Path) -> None:
+    """The recursion leaves the override-free selector exactly as it read before."""
+    edition_dir = tmp_path / MODELO / "revisions" / "2024"
+    _write(
+        edition_dir / "revision.toml",
+        '[revisions."2024"]\n'
+        "valid_from = 2024-01-01\n"
+        '[revisions."2024".period_selector]\n'
+        "year_from = 2024\n"
+        'periods = ["1T"]\n',
+    )
+
+    selector = _selector(edition_dir)
+
+    assert selector is not None
+    assert selector.periods == ("1T",)
+    assert selector.period_overrides == ()
+    assert selector.periods_for_year(2026) == ("1T",)

@@ -9144,7 +9144,7 @@ record_identity = 'Pág. 5'
 [[entries]]
 export_field_id = 'modelo-390-page-5-1273-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273'
 kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273'
+binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -9163,7 +9163,7 @@ record_identity = 'Pág. 5'
 [[entries]]
 export_field_id = 'modelo-390-page-5-1290-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290'
 kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290'
+binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -9182,7 +9182,7 @@ record_identity = 'Pág. 5'
 [[entries]]
 export_field_id = 'modelo-390-page-5-1307-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307'
 kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307'
+binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -9201,7 +9201,7 @@ record_identity = 'Pág. 5'
 [[entries]]
 export_field_id = 'modelo-390-page-5-1324-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324'
 kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324'
+binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -9220,7 +9220,7 @@ record_identity = 'Pág. 5'
 [[entries]]
 export_field_id = 'modelo-390-page-5-1341-operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341'
 kind = 'binding'
-binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341'
+binding = 'modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por'
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',

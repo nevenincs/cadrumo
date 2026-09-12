@@ -39,11 +39,26 @@ repeated record is therefore empty, and the compared bytes judge the edition's
 base layout and envelope. The 2023 edition names no predecessor, so the gate
 does not require its bytes.
 
+Modelos with no draft input
+---------------------------
+Modelos 714, 322, 490, 309, 308, 123, 604, 151, 165, 184, 202, 180, 185, 210,
+270, 341, 353 and 576 route through one shared
+builder, :func:`general_export_scenario`. None of them registers an envelope
+policy -- Modelo 303 is the only modelo that does -- and none declares a
+required repeated record, so an empty draft leaves no required occurrence
+unemitted and the compared bytes judge each edition's base layout and envelope,
+as Modelo 390's do. Each carries the full set of its export-bearing editions, so
+no edition of a listed modelo reports missing while its siblings report clean.
+
 Where it stops
 --------------
 - One quarterly period per edition. A period whose facts would change which
   records emit (a fourth quarter's final-period prorrata coverage, a monthly
   filer) is not rendered.
+- Modelo 347 has no scenario: its layout declares a required repeated record,
+  so an empty draft leaves a required occurrence unemitted and the export path
+  refuses it. Supplying that occurrence needs source-shaped arrivals this module
+  has no honest synthetic form for, so the modelo stays undeclared.
 - Modelo 303's 2022 edition has no scenario: the export path refuses its layout,
   whose regimen-simplificado record does not repeat per projection row. It is
   the modelo's first edition and names no predecessor, so the gate does not
@@ -124,10 +139,29 @@ from .compiler.authority import compiled_bundled_authority
 from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 
 __all__ = [
+    "M123_SCENARIO_PERIODS",
     "M131_SCENARIO_PERIODS",
+    "M151_SCENARIO_PERIODS",
+    "M165_SCENARIO_PERIODS",
+    "M180_SCENARIO_PERIODS",
+    "M184_SCENARIO_PERIODS",
+    "M185_SCENARIO_PERIODS",
+    "M202_SCENARIO_PERIODS",
+    "M210_SCENARIO_PERIODS",
+    "M270_SCENARIO_PERIODS",
     "M303_SCENARIO_PERIODS",
+    "M308_SCENARIO_PERIODS",
+    "M309_SCENARIO_PERIODS",
+    "M322_SCENARIO_PERIODS",
+    "M341_SCENARIO_PERIODS",
+    "M353_SCENARIO_PERIODS",
     "M390_SCENARIO_PERIODS",
+    "M490_SCENARIO_PERIODS",
+    "M576_SCENARIO_PERIODS",
+    "M604_SCENARIO_PERIODS",
+    "M714_SCENARIO_PERIODS",
     "edition_export_scenarios",
+    "general_export_scenario",
     "m131_export_scenario",
     "m303_export_scenario",
     "m390_export_scenario",
@@ -154,6 +188,103 @@ M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2024": Period.from_year_and_code(2024, "1T"),
     "2025": Period.from_year_and_code(2025, "1T"),
     "2026": Period.from_year_and_code(2026, "1T"),
+}
+#: The annual period each Modelo 714 edition is rendered for; 714 files only ``0A``.
+M714_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2021": Period.from_year_and_code(2021, "0A"),
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
+    "2024": Period.from_year_and_code(2024, "0A"),
+    "2025": Period.from_year_and_code(2025, "0A"),
+}
+#: The month each Modelo 322 edition is rendered for; 322 is a monthly group filer.
+M322_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2008-2022": Period.from_year_and_code(2022, "01"),
+    "2023": Period.from_year_and_code(2023, "01"),
+    "2024-2025": Period.from_year_and_code(2024, "01"),
+    "2026-y-siguientes": Period.from_year_and_code(2026, "01"),
+}
+#: The quarter each Modelo 490 edition is rendered for; the 2022 editions split at 2T.
+M490_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2021": Period.from_year_and_code(2021, "1T"),
+    "2022-1t": Period.from_year_and_code(2022, "1T"),
+    "2022-2t-4t": Period.from_year_and_code(2022, "2T"),
+    "2023-y-siguientes": Period.from_year_and_code(2023, "1T"),
+}
+#: The ad-hoc period each Modelo 309 edition is rendered for; 309 is event-driven.
+M309_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2004-2015": Period.from_year_and_code(2004, "AD-HOC"),
+    "2016-2017": Period.from_year_and_code(2016, "AD-HOC"),
+    "2018-2022": Period.from_year_and_code(2018, "AD-HOC"),
+    "2023-y-siguientes": Period.from_year_and_code(2023, "AD-HOC"),
+}
+#: The ad-hoc period Modelo 308's one export-bearing edition is rendered for.
+M308_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2019-y-siguientes": Period.from_year_and_code(2019, "AD-HOC"),
+}
+#: The quarter each Modelo 123 edition is rendered for.
+M123_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2019-2023": Period.from_year_and_code(2019, "1T"),
+    "2024-y-siguientes": Period.from_year_and_code(2024, "1T"),
+}
+#: The month each Modelo 604 edition is rendered for.
+M604_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2021-2023": Period.from_year_and_code(2021, "01"),
+    "2024-y-siguientes": Period.from_year_and_code(2024, "01"),
+}
+#: The annual period each Modelo 151 edition is rendered for.
+M151_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2015-2022": Period.from_year_and_code(2015, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
+}
+#: The annual period each Modelo 165 edition is rendered for.
+M165_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2016-2022": Period.from_year_and_code(2016, "0A"),
+    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
+}
+#: The annual period each Modelo 184 edition is rendered for.
+M184_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2023-2024": Period.from_year_and_code(2023, "0A"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "0A"),
+}
+#: The payment period each Modelo 202 edition is rendered for; 202 files ``1P``-``3P``.
+M202_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2019-2022": Period.from_year_and_code(2019, "1P"),
+    "2023-2024": Period.from_year_and_code(2023, "1P"),
+    "2025-y-siguientes": Period.from_year_and_code(2025, "1P"),
+}
+#: The annual period each Modelo 180 edition is rendered for.
+M180_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2019-2022": Period.from_year_and_code(2019, "0A"),
+    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
+}
+#: The month Modelo 185's one export-bearing edition is rendered for.
+M185_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025-y-siguientes": Period.from_year_and_code(2026, "01"),
+}
+#: The annual period each Modelo 210 edition is rendered for.
+M210_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2025": Period.from_year_and_code(2025, "0A"),
+    "2026-y-siguientes": Period.from_year_and_code(2026, "0A"),
+}
+#: The annual period each Modelo 270 edition is rendered for.
+M270_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2013-2022": Period.from_year_and_code(2013, "0A"),
+    "2023-y-siguientes": Period.from_year_and_code(2023, "0A"),
+}
+#: The quarter each Modelo 341 edition is rendered for.
+M341_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2005-2015": Period.from_year_and_code(2005, "1T"),
+    "2016-y-siguientes": Period.from_year_and_code(2016, "1T"),
+}
+#: The month each Modelo 353 edition is rendered for; the 2026 edition starts at ``02``.
+M353_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2021-2025": Period.from_year_and_code(2021, "01"),
+    "2026-desde-02": Period.from_year_and_code(2026, "02"),
+}
+#: The annual period Modelo 576's one export-bearing edition is rendered for.
+M576_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2008-y-siguientes": Period.from_year_and_code(2008, "0A"),
 }
 
 
@@ -511,9 +642,79 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
     )
 
 
+# ── modelos whose export path asks for no draft input ───────────────────────
+
+
+def general_export_scenario(modelo_id: str, period: Period) -> EditionExportScenario:
+    """A scenario carrying no draft input, for a modelo whose export path asks for none.
+
+    These bytes exist to be comparable, never to be right: they are only ever
+    compared with the bytes the same scenario renders through the other tree, so
+    what the scenario must be is ACCEPTED by the export path. It states no
+    taxpayer's real figures and is not an AEAT-correct declaration.
+
+    No draft input is supplied, so every repeated record emits no occurrence and
+    the compared bytes judge the edition's base layout and envelope -- the cheap
+    end Modelo 390 already occupies. Modelo 303 is the demanding end and keeps
+    its own builder: it is the one modelo registering an envelope policy, and
+    its records refuse an envelope that leaves a required occurrence unemitted.
+    The modelos routed here declare no required repeated record, so an empty
+    draft satisfies their occurrence requirements.
+    """
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=partial(_general_producer_snapshot, modelo_id),
+    )
+
+
+def _general_producer_snapshot(modelo_id: str) -> FilingProducerSnapshot:
+    """The general-profile producer snapshot the no-input scenarios render through.
+
+    The result disposition is the zero-result code every modelo here declares,
+    which is what an empty draft computes; no account is selected, because no
+    payment or refund is elected.
+    """
+    return build_filing_producer_snapshot(
+        modelo=Modelo(modelo_id),
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_presenter(),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
 #: Per modelo, the scenario builder and the period each edition is rendered for.
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
     str(Modelo("303")): (m303_export_scenario, M303_SCENARIO_PERIODS),
     str(Modelo("131")): (m131_export_scenario, M131_SCENARIO_PERIODS),
     str(Modelo("390")): (m390_export_scenario, M390_SCENARIO_PERIODS),
+    str(Modelo("714")): (partial(general_export_scenario, "714"), M714_SCENARIO_PERIODS),
+    str(Modelo("322")): (partial(general_export_scenario, "322"), M322_SCENARIO_PERIODS),
+    str(Modelo("490")): (partial(general_export_scenario, "490"), M490_SCENARIO_PERIODS),
+    str(Modelo("309")): (partial(general_export_scenario, "309"), M309_SCENARIO_PERIODS),
+    str(Modelo("308")): (partial(general_export_scenario, "308"), M308_SCENARIO_PERIODS),
+    str(Modelo("123")): (partial(general_export_scenario, "123"), M123_SCENARIO_PERIODS),
+    str(Modelo("604")): (partial(general_export_scenario, "604"), M604_SCENARIO_PERIODS),
+    str(Modelo("151")): (partial(general_export_scenario, "151"), M151_SCENARIO_PERIODS),
+    str(Modelo("165")): (partial(general_export_scenario, "165"), M165_SCENARIO_PERIODS),
+    str(Modelo("184")): (partial(general_export_scenario, "184"), M184_SCENARIO_PERIODS),
+    str(Modelo("202")): (partial(general_export_scenario, "202"), M202_SCENARIO_PERIODS),
+    str(Modelo("180")): (partial(general_export_scenario, "180"), M180_SCENARIO_PERIODS),
+    str(Modelo("185")): (partial(general_export_scenario, "185"), M185_SCENARIO_PERIODS),
+    str(Modelo("210")): (partial(general_export_scenario, "210"), M210_SCENARIO_PERIODS),
+    str(Modelo("270")): (partial(general_export_scenario, "270"), M270_SCENARIO_PERIODS),
+    str(Modelo("341")): (partial(general_export_scenario, "341"), M341_SCENARIO_PERIODS),
+    str(Modelo("353")): (partial(general_export_scenario, "353"), M353_SCENARIO_PERIODS),
+    str(Modelo("576")): (partial(general_export_scenario, "576"), M576_SCENARIO_PERIODS),
 }

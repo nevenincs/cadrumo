@@ -1,0 +1,110 @@
+[revisions."2023"]
+casilla_source_refs = ["aeat-dr-345-2023"]
+# Applicability-grade historical epoch for modelo 345, ejercicio 2023.
+#
+# WHY THIS IS ITS OWN REVISION AND NOT PART OF A 2022-2025 SPAN. Orden
+# HFP/823/2022 disposición final segunda opens the design at ejercicio 2022
+# («será aplicable, por primera vez, a las declaraciones informativas
+# correspondientes al ejercicio 2022»), but it does NOT leave the design
+# unchanged afterwards: BOE's consolidated text of BOE-A-2022-14168 records four
+# amendments to the anexo, and the first two of them land on THIS ejercicio.
+# Orden HFP/528/2023 (artículo único) creates the campos DATOS ADICIONALES PARA
+# LA CLAVE M (190-270), RENDIMIENTOS ÍNTEGROS DEL TRABAJO (271), DATOS
+# IDENTIFICATIVOS DEL EMPLEADOR (272-320) and DEVOLUCIONES O REINTEGROS (321),
+# and Orden HFP/1397/2023 (artículo sexto) rewrites subclave 03 of clave A; both
+# disposiciones finales únicas apply «por primera vez» to ejercicio 2023.
+# AEAT publishes a matching record design of its own for this ejercicio,
+# registered as aeat-dr-345-2023 with applies_from 2023-01-01 and applies_to
+# 2023-12-31 -- a CLOSED window, which is the catalogue stating that this design
+# answers for one ejercicio and not for its neighbours.
+#
+# MEASURED GEOMETRY, against aeat-dr-345-2023's own position table
+# (corpus/aeat_official/disenos_registro/modelo_345/files/
+# 02-345-ejercicio-2023-y-siguientes.pdf, sha256
+# 94800d433248ad6bd9baf1213fe2ae512732d21520b923cc0ce2c044edd247de):
+#   - registro de tipo 1: 13 top-level rows, data ending at 159, closed
+#     «160-500 ------------ BLANCOS». Identical to 2022, 2024 and 2025.
+#   - registro de tipo 2: 21 top-level rows, data ending at 321, closed
+#     «322-500 -------- BLANCOS.». The ejercicio-2022 anexo ends at 189 and
+#     closes «190‑500 – BLANCOS.», so the record GREW by four campos here; it is
+#     unchanged from here to 2025.
+#   - every sub-span (59-67/68-107, 145-157/158-159, 94-104/105-106,
+#     107-146/147-151/152-160, 170-177/178-189, 178-187/188-189, 190-229/230-269/
+#     270, 272-280/281-320) is identical to the 2024 and 2025 designs.
+#
+# THE FIELD AT POSITION 271 IS NOT THE 2025 FIELD AND DOES NOT SHARE ITS ID. In
+# this epoch and in 2024 the design names it «RENDIMIENTOS ÍNTEGROS DEL TRABAJO
+# NO SUPERIORES A 60.000 EUROS» and fills it «consignando una "X", cuando el
+# trabajador no obtenga en el ejercicio rendimientos íntegros del trabajo
+# superiores a 60.000 euros». Orden HAC/1430/2025 artículo séptimo INVERTS it for
+# ejercicio 2025, where the design reads «SUPERIORES A 60.000 EUROS» filled with
+# «S» when the worker DOES obtain them. Same byte, opposite predicate: this
+# revision therefore carries `rendimientos-trabajo-no-superiores-60000`, and the
+# 2025 revision's `rendimientos-trabajo-superiores-60000` is a different casilla,
+# not a renamed one.
+#
+# WHY THE GRADE IS 'applicability' AND NOT 'filing'. aeat-modelo-345-procedure
+# and aeat-modelo-345-deadlines both declare applies_from 2025-01-01 and so do
+# not cover this ejercicio. No binding, formula, export layout, application link
+# or completeness manifest is declared, every casilla is input_kind = "manual",
+# and the tipo-1 resumen totales are operator-supplied. Promoting this to filing
+# grade needs ONE acquisition: AEAT's modelo 345 procedure or instrucciones as
+# they stood for ejercicio 2023, registered as its own source with a window
+# covering 2023. The geometry above would not change.
+#
+# NOTE ON ONE CITED SOURCE'S OWN WINDOW. boe-modelo-345-2023-amendment-hfp-1397
+# declares applies_from 2024-01-01, its entry into force, while its disposición
+# final única applies it to ejercicio 2023. It is cited here because it governs
+# this ejercicio and because it is carried in this modelo's manifest-level
+# cross-year corpus. Re-keying that metadata to the governed ejercicio is a
+# legal-catalogue change and is deliberately NOT made here.
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-345-2023 record design. VERIFIED -- \
+GEOMETRY: the position table was read row by row and compared position for position against the \
+ejercicio-2022 anexo, the ejercicio-2024 design and the ejercicio-2025 design; the tipo-2 record \
+end was confirmed against the design's own «322-500 -------- BLANCOS.» line. VERIFIED -- THE \
+DELTA FROM 2022 IS ADDITIVE: the four campos at 190-270, 271, 272-320 and 321 are created by \
+Orden HFP/528/2023 for this ejercicio, and nothing in the shared 1-189 prefix moved. VERIFIED -- \
+POSITION 271 POLARITY: this epoch's design says «NO SUPERIORES A 60.000 EUROS» marked with «X»; \
+the 2025 design says «SUPERIORES A 60.000 EUROS» marked with «S». Both were read in the bundled \
+extracts. NOT CLAIMED -- NO OPERATOR COUNTERSIGNATURE. NOT CLAIMED -- NO FILING GRADE: no \
+ejercicio-2023 AEAT procedure or instrucciones source exists in the corpus."""
+reviewed_at = 2026-09-12
+authority_grade = "applicability"
+id = "2023"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+period_selector = { year_from = 2023, year_to = 2023, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-3",
+    "orden-hfp-823-2022:art-4",
+    "orden-hfp-528-2023:df-unica",
+    "orden-hfp-1397-2023:df-unica",
+]
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-2",
+    "orden-hfp-823-2022:art-3",
+    "orden-hfp-823-2022:art-4",
+    "orden-hfp-823-2022:art-5",
+    "orden-hfp-528-2023:art-unico",
+    "orden-hfp-528-2023:df-unica",
+    "orden-hfp-1397-2023:art-sexto",
+    "orden-hfp-1397-2023:df-unica",
+]
+source_refs = [
+    "aeat-dr-345-2023",
+    "boe-modelo-345-base-order",
+    "boe-modelo-345-2023-amendment-hfp-528",
+    "boe-modelo-345-2023-amendment-hfp-1397",
+]
+
+[revisions."2023".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-3",
+]
+source_refs = ["aeat-dr-345-2023", "boe-modelo-345-base-order"]

@@ -1,0 +1,47 @@
+# Modelo 222 trimestral deadline windows for filing year 2024, grounded in
+# Orden HFP/227/2017 art 5.2, which reads verbatim in the bundled corpus:
+# "La presentación de la autoliquidación modelo 222, pago fraccionado a cuenta
+# del Impuesto sobre Sociedades para los grupos fiscales, se efectuará, durante
+# los primeros veinte días naturales de los meses de abril, octubre y diciembre
+# de cada año natural." Each window opens on the first of the month and closes
+# on the 20th natural day, derived strictly from that statutory plazo. The
+# phrase "de cada año natural" is a recurring open-ended plazo, which is what
+# lets a 2024 edition reproduce it without outrunning its orden: the article
+# was in force from 2017-03-16 and is not year-bound.
+#
+# The foral (Navarra / País Vasco) modalities of art 5.3 are out of this
+# revision's scope, exactly as they are out of the 2025-y-siguientes edition's.
+#
+# aeat-modelo-202-instructions is DELIBERATELY NOT cited here: it declares
+# applies_from 2025-01-01 and cannot speak for filing year 2024. Only the BOE
+# orden, open-ended from 2017, is cited.
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-222-2024-1p"
+filing_year = 2024
+period = "2024 1P"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-222-2024-2p"
+filing_year = 2024
+period = "2024 2P"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-222-2024-3p"
+filing_year = 2024
+period = "2024 3P"
+period_kind = "quarterly"
+opens_on = 2024-12-01
+closes_on = 2024-12-20
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order"]

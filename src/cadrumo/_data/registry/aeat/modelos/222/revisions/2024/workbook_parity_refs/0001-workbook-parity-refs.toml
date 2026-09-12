@@ -1,0 +1,22 @@
+# Modelo 222 record-design parity anchor for the 2024 epoch. Unlike the
+# 2025-y-siguientes edition, which anchors on the BOE Orden form spec, this
+# edition anchors on the epoch's OWN bundled diseño de registro
+# `aeat-dr-222-2023-2024` (applies_from 2023-01-01, applies_to 2024-12-31),
+# because that is the artefact whose 56 boxes and 900-position records this
+# edition transcribes. The fixture id is EPOCH-scoped, not year-scoped: one
+# design file governs both 2023 and 2024, so both editions name the same
+# fixture, while the 2025 layout -- a different geometry -- keeps its own.
+#
+# runner_required is false: this applicability-grade edition carries no
+# formulas, so the anchor pins the official layout provenance without asserting
+# a numeric parity run.
+
+[[revisions."2024".workbook_parity_refs]]
+id = "modelo-222-record-design"
+workbook_source = "aeat-dr-222-2023-2024"
+fixture_id = "modelo-222-2023-2024-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-dr-222-2023-2024"]

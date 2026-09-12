@@ -25,11 +25,12 @@ from datetime import date
 import pytest
 
 from cadrumo.core.export_layout_format import ExportLayoutFormat
-from cadrumo.core.modelo import NON_REGISTRY_MODELOS, Modelo
+from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 

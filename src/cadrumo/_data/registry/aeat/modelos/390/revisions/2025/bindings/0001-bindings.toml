@@ -4,7 +4,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -16,7 +16,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -28,7 +28,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -40,7 +40,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general", 
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -55,7 +55,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["import_third_countr
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -66,7 +66,7 @@ id = "modelo-390-prorrata-regularizacion-anual"
 provider = { kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -77,7 +77,7 @@ id = "modelo-390-bienes-inversion-regularizacion-casilla-63"
 provider = { kind = "bienes_inversion_regularizacion", source_modelo = "303", regularizacion_output = "modelo_390_casilla_63" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -96,7 +96,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acq
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -127,7 +127,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -139,7 +139,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -151,7 +151,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -171,7 +171,7 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -184,7 +184,7 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -197,7 +197,7 @@ applicability = { kind = "target_periods", periods = ["0A"] }
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -208,7 +208,7 @@ id = "modelo-390-prev-303-compensacion-ultimo-periodo"
 provider = { kind = "iva_compensation_annual_partition", source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "last_period_amount" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -219,7 +219,7 @@ id = "modelo-390-prev-303-compensacion-generada-ejercicio-no-97"
 provider = { kind = "iva_compensation_annual_partition", source_modelo = "303", source_casilla_ids = ["iva.compensacion-generada-periodo", "iva.compensacion-aplicada-periodo", "iva.compensacion-disponible-fin-periodo", "iva.compensacion-pendiente-periodos-posteriores"], source_periods = ["1T", "2T", "3T", "4T"], partition_output = "generated_not_in_last_amount" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"

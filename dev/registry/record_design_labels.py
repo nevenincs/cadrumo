@@ -85,7 +85,7 @@ def read_record_design(sidecar: Path) -> dict[tuple[str, int], RecordDesignRow]:
     for line in sidecar.read_text(encoding=_SIDECAR_ENCODING).splitlines():
         heading = _RECORD_HEADING.match(line)
         if heading is not None:
-            record, columns = heading.group("record"), None
+            record, columns = str(heading.group("record")), None
             continue
         if record is None:
             continue
@@ -142,6 +142,27 @@ def design_slot_name(label: str) -> str:
     text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     text = re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-").lower()
     return re.sub(r"-+", "-", text)
+
+
+def design_field_component(label: str) -> str:
+    """Return the slot name for the LAST component of a design label.
+
+    An AEAT label states a path: the apartado, the block, the block's full
+    description, and finally the field itself with its repetition ordinal --
+    ``... - Acciones y particip. Inst. Invers. Colectiva negociadas - No Valores 3``.
+    Everything before the final component is the BLOCK, which the corpus id
+    already carries in its own (abbreviated) spelling; repeating it in full
+    pushes the identifier past the schema's length limit without adding a
+    distinction. So only the final component is taken, and it is the part that
+    actually separates one slot of a block from another.
+
+    The separator is a dash surrounded by whitespace on at least the right,
+    because the corpus contains ``negociadas- Valor 3`` as well as
+    ``negociadas - Valor 3``, while a dash inside a word (``NIF/NIE``) or a
+    hyphenated term must not split the component.
+    """
+    parts = re.split(r"\s-\s+|\s-(?=\S)|(?<=\S)-\s+", label)
+    return design_slot_name(parts[-1] if parts else label)
 
 
 def _legal_sources() -> dict[str, dict[str, object]]:

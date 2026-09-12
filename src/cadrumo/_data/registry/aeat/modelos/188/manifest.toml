@@ -7,7 +7,22 @@ output_sensitivity = "financial"
 legal_refs = ["orden-1999-11-17:apartado-quinto", "ley-35-2006:art-99", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-188-procedure", "boe-modelo-188-form-layout"]
 
+# Why the 2022 edition grounds on the founding Orden and not on a diseño de
+# registro: modelo 188's only registered record design, aeat-dr-188-2023,
+# declares applies_from 2023-01-01, so it cannot reach ejercicio 2022. The
+# casillas of BOTH editions come instead from ANEXO IV of the Orden de
+# 17-11-1999 (boe-modelo-188-form-text, applies_from 1999-11-21, open-ended),
+# and BOE's Referencias posteriores record the 2023 amendment as touching
+# "el anexo V" -- the diseños -- not the hoja-resumen the registry models.
+#
+# ACQUIRABLE DEBT -- two acquisitions, both needed only to deepen the 2022
+# edition, neither of which would change the five boxes it declares:
+#   - modelo 188 anexo V (diseños físicos y lógicos) as amended by Orden
+#     HFP/1308/2017, the record design in force for ejercicio 2022;
+#   - AEAT modelo 188 instrucciones as they stood for ejercicio 2022, without
+#     which the calculation layer cannot be grounded and every box stays
+#     input_kind = "manual".
 [modelo.inception.unauthored]
-earliest_authored = 2023
-reason = "Approved by the Orden of 17 November 1999; filing year 2022 existed in law and is not yet authored."
+earliest_authored = 2022
+reason = "Approved by the Orden of 17 November 1999; filing years below 2022 existed in law and are not yet authored. Edition 2022 was authored 2026-09-12 at applicability grade from ANEXO IV of that Orden, whose declared window is open-ended; the record design and the instrucciones for that ejercicio are not in the catalogue."
 legal_refs = ["orden-1999-11-17:apartado-quinto"]

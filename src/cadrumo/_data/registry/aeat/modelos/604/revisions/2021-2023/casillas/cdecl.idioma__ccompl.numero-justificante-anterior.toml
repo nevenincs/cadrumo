@@ -376,6 +376,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.06-a-deducir"
+continuidad_id = "importe-a-deducir"
 number = "06"
 section = ["liquidacion"]
 data_type = "money"
@@ -385,6 +386,7 @@ legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-20
 
 [[revisions."2021-2023".casillas]]
 id = "liq.07-resultado"
+continuidad_id = "resultado-autoliquidacion"
 number = "07"
 section = ["liquidacion"]
 data_type = "money"

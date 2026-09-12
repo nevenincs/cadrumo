@@ -34,7 +34,6 @@ rounding = "money-2"
 # manual example could not surface, structurally proven by
 # test_m390_super_reducido_recargo_delta.
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -64,7 +63,6 @@ expression = { op = "add", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -82,7 +80,6 @@ expression = { op = "add", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -97,7 +94,6 @@ expression = { op = "subtract", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-390-procedure"

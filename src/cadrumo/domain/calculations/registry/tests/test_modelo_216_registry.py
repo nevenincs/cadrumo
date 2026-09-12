@@ -21,7 +21,7 @@ See Also:
         Typed casilla identifier used for the Modelo 216 calculation inputs.
     :class:`~core.TaxDomain`
         Closed tax-family enum whose IRNR member classifies the registration.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by the Modelo 216 promotion.
 """
 

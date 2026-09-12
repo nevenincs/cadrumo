@@ -269,6 +269,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "resultado-a-deducir-18"
+continuidad_id = "resultado-anteriores-declaraciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021; las revision.toml de 2021 y 2022-1t vinculan ambas al mismo diseno DR49001 (ejercicio 2021 y 2022 hasta 1T): Resultado. A deducir [18] en posicion 916 conserva rol, seccion y forma money de 17 caracteres. La division temporal de 2022 no renumera este campo."
 number = "18"
 section = ["490_01"]
 data_type = "money"
@@ -278,6 +281,9 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq21-resultado-19"
+continuidad_id = "resultado-liquidacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-490-2021; las revision.toml de 2021 y 2022-1t vinculan ambas al mismo diseno DR49001 (ejercicio 2021 y 2022 hasta 1T): Resultado de la liquidacion [19] en posicion 933 conserva rol, seccion y forma money firmada de 17 caracteres. La division temporal de 2022 no renumera este campo."
 number = "19"
 section = ["490_01"]
 data_type = "money"

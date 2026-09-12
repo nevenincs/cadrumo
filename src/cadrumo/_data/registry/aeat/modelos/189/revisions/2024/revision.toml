@@ -1,0 +1,101 @@
+[revisions."2024"]
+id = "2024"
+authority_grade = "applicability"
+casilla_source_refs = ["boe-modelo-189-base-order"]
+# Applicability-grade historical epoch for modelo 189, ejercicio 2024, presented
+# in marzo 2025.
+#
+# The gap this closes was authoring debt, not a legal absence: modelo 189 was
+# approved by Orden EHA/3481/2008 art. 1 with no ejercicio bound, art. 5 sets a
+# recurring plazo "entre el día 1 y el 31 del mes de marzo de cada año", and the
+# diseños físicos y lógicos live in that orden's anexo II, bundled and
+# hash-pinned as boe-modelo-189-base-order.
+#
+# THIS EDITION SHARES ITS DESIGN EPOCH WITH 2023 AND 2025. The epoch opens at
+# ejercicio 2023 because Orden HFP/1180/2023 and Orden HFP/1284/2023 each state
+# in their own disposición final única that they apply "por primera vez" to the
+# declaraciones informativas correspondientes al ejercicio 2023. It stays open
+# through ejercicio 2024: BOE's consolidated text of BOE-A-2008-19523 records no
+# amendment to the modelo 189 diseños later than Orden HFP/1284/2023 of 28
+# November 2023, and the only later modelo 189 authority in this catalogue,
+# Orden HAC/132/2026 art. único, approves the relaciones de valores negociados
+# del cuarto trimestre de 2025 and so reaches ejercicio 2025 rather than this
+# year. A separate edition is authored per ejercicio rather than one spanning
+# selector because each year's deadline window is its own datum.
+#
+# GEOMETRY, established by measurement rather than assumed. The bundled AEAT
+# Diseño de Registro aeat-dr-189-2023 (sha256
+# c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a, catalogue
+# window applies_from 2023-01-01, open) governs this year, and its position lines
+# agree field for field with the anexo II of the consolidated base orden:
+# registro de tipo 1 closes "168-500 ------------ BLANCOS" and registro de tipo 2
+# closes "165-500 ------------ BLANCOS", both records 500 bytes. CÓDIGO PAÍS sits
+# at tipo 2 78-79, NÚMERO DE VALORES at tipo 2 130-146 and NOMINAL UNITARIO DE
+# LOS VALORES at tipo 2 147-164 -- the positions Orden HFP/1284/2023 art. 11
+# apartado Dos fixed when it moved NÚMERO DE VALORES off 130-145. This edition's
+# 25 casillas are the same boxes at the same positions its 2023 and 2025 siblings
+# model; nothing moved between them.
+#
+# WINDOW DISCIPLINE. orden-hac-132-2026 art. único and the source
+# boe-modelo-189-2025-values are DELIBERATELY absent as ejercicio 2025 authority
+# published 2026-02-27. The source aeat-modelo-189-procedure is likewise absent
+# because its catalogue window opens 2025-01-01.
+#
+# Why the grade is 'applicability' and NOT 'filing': no AEAT instrucciones or
+# procedure source in the catalogue opens before 2025-01-01, so this edition has
+# no grounded calculation layer. It declares no bindings, formulas, export layout
+# or completeness manifest, and its casillas are input_kind 'manual' with no
+# binding reference left dangling.
+#
+# ACQUIRABLE DEBT -- promoting this edition to filing grade needs ONE
+# acquisition: AEAT's modelo 189 procedure or instrucciones as they stood for
+# ejercicio 2024, registered as its own source with a window covering 2024. The
+# record geometry above is already grounded verbatim and would not change.
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-eha-3481-2008:art-1",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+]
+legal_refs = [
+    "orden-eha-3481-2008:art-1",
+    "orden-eha-3481-2008:art-5",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+    "aeat-dr-189-2023",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled anexo II of Orden EHA/3481/2008 and the hash-pinned AEAT Diseño \
+de Registro aeat-dr-189-2023. VERIFIED -- the position lines of the bundled design agree field for \
+field with the consolidated anexo II, both records close at 500 bytes, and this edition's 25 \
+casillas were generated from the 2023 edition with only the revision key changed, so the two \
+epochs' box sets are provably identical. VERIFIED -- BOE's consolidated text of BOE-A-2008-19523 \
+lists no modelo 189 diseño amendment later than Orden HFP/1284/2023, which is what leaves \
+ejercicio 2024 inside the epoch that opened at ejercicio 2023. VERIFIED -- every legal_ref and \
+source_ref cited here has a catalogue window overlapping ejercicio 2024; orden-hac-132-2026 and \
+boe-modelo-189-2025-values and aeat-modelo-189-procedure are deliberately absent as out of window. \
+NOT CLAIMED -- no independent AEAT oracle checked any value here. NOT CLAIMED -- no bindings, \
+formulas, export layout or completeness manifest are declared, so calculation refuses this edition \
+rather than resolving a silent blank. No human operator has countersigned this."""
+reviewed_at = 2026-09-12
+
+[revisions."2024".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-eha-3481-2008:art-1",
+    "orden-hfp-1180-2023:art-primero",
+    "orden-hfp-1284-2023:art-11",
+]
+source_refs = [
+    "boe-modelo-189-base-order",
+    "boe-modelo-189-2023-amendment-hfp-1180",
+    "boe-modelo-189-2023-amendment-hfp-1284",
+]

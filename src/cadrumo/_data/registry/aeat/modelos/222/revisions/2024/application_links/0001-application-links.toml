@@ -1,0 +1,41 @@
+# Application links for the 2024 epoch. Every source_ref is checked against its
+# own declared window: boe-modelo-202-base-order applies_from 2017-03-16
+# open-ended, aeat-dr-222-2023-2024 applies_from 2023-01-01 applies_to
+# 2024-12-31. aeat-modelo-202-instructions and aeat-modelo-222-instructions are
+# BOTH absent here because both declare applies_from 2025-01-01.
+#
+# The 2025-y-siguientes edition also declares an "export" link. This edition
+# declares no export layout, so it declares no export link either rather than
+# pointing a consumer at a layout that does not exist.
+
+[[revisions."2024".application_links]]
+id = "modelo-222-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".application_links]]
+id = "modelo-222-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".application_links]]
+id = "modelo-222-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["boe-modelo-202-base-order"]
+
+[[revisions."2024".application_links]]
+id = "modelo-222-calculation"
+surface = "calculation"
+consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-222-2023-2024"]

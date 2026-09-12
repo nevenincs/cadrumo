@@ -8,7 +8,7 @@ See Also:
         loadable.
     :func:`~domain.calculations.registry.bundled_authority`
         Deadline-window authority used for the legal plazo assertions.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Central set these promoted IS-consolidation modelos must leave.
     :class:`~core.modelo.Modelo`
         Canonical modeled-obligation fleet that must include both forms.

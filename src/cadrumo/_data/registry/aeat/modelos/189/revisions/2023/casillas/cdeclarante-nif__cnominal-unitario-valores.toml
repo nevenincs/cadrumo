@@ -1,0 +1,104 @@
+[[revisions."2023".casillas]]
+id = "declarante-nif"
+number = "tipo1.nif-declarante"
+section = ["identificacion_declaracion"]
+data_type = "nif"
+semantic_role = "irpf_declarante_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2023".casillas]]
+id = "ejercicio-declaracion"
+number = "tipo1.ejercicio"
+section = ["identificacion_declaracion"]
+data_type = "year"
+semantic_role = "filing_year"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5"]
+
+[[revisions."2023".casillas]]
+id = "declarado-nif"
+number = "tipo2.nif-declarado"
+section = ["declarado"]
+data_type = "nif"
+semantic_role = "m189_declarado_nif"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2023".casillas]]
+id = "declarado-nombre"
+number = "tipo2.nombre-declarado"
+section = ["declarado"]
+data_type = "name"
+semantic_role = "m189_declarado_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3481-2008:art-1"]
+
+[[revisions."2023".casillas]]
+id = "codigo-pais"
+number = "tipo2.78-79"
+section = ["declarado", "localizacion"]
+data_type = "country_code"
+semantic_role = "m189_codigo_pais"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"]
+
+[[revisions."2023".casillas]]
+id = "clave-valor"
+number = "tipo2.81"
+section = ["valores_seguros_rentas", "identificacion_valor"]
+data_type = "text"
+semantic_role = "m189_clave_valor"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1180-2023:art-primero"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"]
+
+# VALORACIÓN, tipo 2 positions 108-123, as rewritten by Orden HFP/1180/2023
+# art. primero apartado Tres. The ejercicio 2025 sibling additionally cites
+# orden-hac-132-2026 art. único and boe-modelo-189-2025-values for the
+# relaciones de valores negociados del cuarto trimestre de 2025; that orden was
+# published 2026-02-27 and grounds ejercicio 2025 only, so it is not cited here.
+[[revisions."2023".casillas]]
+id = "valoracion"
+number = "tipo2.108-123"
+section = ["valores_seguros_rentas", "valoracion"]
+data_type = "money"
+semantic_role = "m189_valoracion"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1180-2023:art-primero"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180"]
+
+# NÚMERO DE VALORES "pasará a ocupar las posiciones 130-146" and NOMINAL
+# UNITARIO DE LOS VALORES follows it at 147-164, both per Orden HFP/1284/2023
+# art. 11 apartado Dos, first applicable to ejercicio 2023. Before this epoch the
+# pair sat at 130-145 and 146-163; that earlier geometry belongs to ejercicio
+# 2022, which is not authored.
+[[revisions."2023".casillas]]
+id = "numero-valores"
+number = "tipo2.130-146"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "decimal"
+semantic_role = "m189_numero_valores"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"]
+
+[[revisions."2023".casillas]]
+id = "nominal-unitario-valores"
+number = "tipo2.147-164"
+section = ["valores_seguros_rentas", "detalle_valor"]
+data_type = "money"
+semantic_role = "m189_nominal_unitario_valores"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-hfp-1284-2023:art-11"]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1284"]

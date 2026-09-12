@@ -26,7 +26,32 @@ source_refs = [
     "boe-modelo-136-current-form",
 ]
 
+# Why 2022-2025 is ONE edition and not four: Orden HAC/763/2018 disposicion
+# final unica states its own boundary verbatim -- "El nuevo modelo 136 ... sera
+# de aplicacion para las autoliquidaciones correspondientes al tercer trimestre
+# del ano 2018 y siguientes." That is an open end with no terminus, and the
+# catalogue carries no later amending orden for this modelo, so one design era
+# spans every gap year. The form reproduced as anexo III of that orden was read
+# field by field against the 2026 edition: the box set is identical position for
+# position, twenty-four fields, boxes 01-07 then 09 with no 08 printed. Nothing
+# moved and nothing changed meaning between the epochs, because it is one
+# document. This is not acquirable debt.
+#
+# ACQUIRABLE DEBT -- promotion of the 2022-2025 edition from calculation to
+# filing grade. The form geometry and the three-formula calculation closure are
+# already grounded verbatim and would not change; what is missing is procedure
+# authority inside the span. Needed:
+#   - the AEAT modelo 136 procedure/instrucciones pages as they stood during
+#     2022-2025, registered as their own source with an applies_from inside the
+#     span. Both bundled procedure sources (aeat-modelo-136-procedure and
+#     aeat-modelo-136-procedure-record) declare applies_from 2026-01-01, so the
+#     2022-2025 edition cites boe-modelo-136-base-order in their place rather
+#     than a source outside its own window.
+#   - an AEAT diseno de registro for modelo 136, if one is ever published, to
+#     support an export layout. None exists for ANY year of this modelo, so that
+#     is a standing absence rather than an unfetched file, and the 2026 edition
+#     disposes the export_layouts family on the same ground.
 [modelo.inception.unauthored]
-earliest_authored = 2026
-reason = "Gravamen especial approved by Orden HAP/70/2013; the 2018 redesign applies from 3T 2018 onward, so 2022-2025 existed in law and are not yet authored."
+earliest_authored = 2022
+reason = "Gravamen especial approved by Orden HAP/70/2013; filing years below 2022 existed in law and are not yet authored. The 2022-2025 edition was authored 2026-09-12 at calculation grade as a single edition, because Orden HAC/763/2018 applies the redesign to 3T 2018 'y siguientes' with no terminus: the form geometry is transcribed verbatim from that design and the calculation closure from LIRPF DA 33, both in force across the whole span, while filing grade is withheld because no procedure or instrucciones source in the catalogue opens before 2026-01-01."
 legal_refs = ["orden-hap-70-2013:art-5"]

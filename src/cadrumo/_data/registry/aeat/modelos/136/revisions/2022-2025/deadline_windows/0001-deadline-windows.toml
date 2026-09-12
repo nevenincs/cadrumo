@@ -1,0 +1,188 @@
+# Sixteen quarterly windows, four per filing year across 2022-2025.
+#
+# Orden HAP/70/2013 art. 7 states them verbatim in the bundled corpus
+# (corpus/normatives/html/orden-hap-70-2013.html.extracted.md):
+#
+#   "La presentacion del modelo 136, asi como el ingreso de su importe en el
+#    Tesoro Publico, salvo cuando se domicilie el pago, se efectuara por los
+#    sujetos pasivos en los veinte primeros dias naturales de los meses de abril,
+#    julio, octubre y enero en relacion con los premios cobrados en el trimestre
+#    natural inmediato anterior."
+#
+# Every window below reproduces that: days 1-20 of April, July, October and the
+# following January, for the quarter immediately preceding. The 4T window of each
+# year therefore opens in January of the next year, which is why the 4T 2025
+# window falls outside this edition's valid_to -- the same shape the 2026 edition
+# uses for its own 4T.
+#
+# Stored NOMINAL, with no weekend or holiday pre-shift applied. The very next
+# sentence of art. 7 -- "Los vencimientos de plazo que coincidan con un sabado o
+# dia inhabil se entenderan trasladados al primer dia habil inmediato siguiente"
+# -- is precisely what shift_deadline applies at read time, so baking a shift in
+# here would apply the rule twice.
+#
+# The AEAT procedure source the 2026 edition cites alongside the orden is absent
+# here on purpose: aeat-modelo-136-procedure declares applies_from 2026-01-01 and
+# cannot be cited by a window inside this span. boe-modelo-136-base-order is the
+# founding Orden HAP/70/2013 itself (applies_from 2013-02-01) and carries art. 7
+# verbatim.
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2022-1t"
+filing_year = 2022
+period = "2022 1T"
+period_kind = "quarterly"
+opens_on = 2022-04-01
+closes_on = 2022-04-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2022-2t"
+filing_year = 2022
+period = "2022 2T"
+period_kind = "quarterly"
+opens_on = 2022-07-01
+closes_on = 2022-07-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2022-3t"
+filing_year = 2022
+period = "2022 3T"
+period_kind = "quarterly"
+opens_on = 2022-10-01
+closes_on = 2022-10-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2022-4t"
+filing_year = 2022
+period = "2022 4T"
+period_kind = "quarterly"
+opens_on = 2023-01-01
+closes_on = 2023-01-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2023-1t"
+filing_year = 2023
+period = "2023 1T"
+period_kind = "quarterly"
+opens_on = 2023-04-01
+closes_on = 2023-04-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2023-2t"
+filing_year = 2023
+period = "2023 2T"
+period_kind = "quarterly"
+opens_on = 2023-07-01
+closes_on = 2023-07-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2023-3t"
+filing_year = 2023
+period = "2023 3T"
+period_kind = "quarterly"
+opens_on = 2023-10-01
+closes_on = 2023-10-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2023-4t"
+filing_year = 2023
+period = "2023 4T"
+period_kind = "quarterly"
+opens_on = 2024-01-01
+closes_on = 2024-01-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2024-1t"
+filing_year = 2024
+period = "2024 1T"
+period_kind = "quarterly"
+opens_on = 2024-04-01
+closes_on = 2024-04-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2024-2t"
+filing_year = 2024
+period = "2024 2T"
+period_kind = "quarterly"
+opens_on = 2024-07-01
+closes_on = 2024-07-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2024-3t"
+filing_year = 2024
+period = "2024 3T"
+period_kind = "quarterly"
+opens_on = 2024-10-01
+closes_on = 2024-10-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2024-4t"
+filing_year = 2024
+period = "2024 4T"
+period_kind = "quarterly"
+opens_on = 2025-01-01
+closes_on = 2025-01-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2025-1t"
+filing_year = 2025
+period = "2025 1T"
+period_kind = "quarterly"
+opens_on = 2025-04-01
+closes_on = 2025-04-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2025-2t"
+filing_year = 2025
+period = "2025 2T"
+period_kind = "quarterly"
+opens_on = 2025-07-01
+closes_on = 2025-07-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2025-3t"
+filing_year = 2025
+period = "2025 3T"
+period_kind = "quarterly"
+opens_on = 2025-10-01
+closes_on = 2025-10-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]
+
+[[revisions."2022-2025".deadline_windows]]
+id = "modelo-136-2025-4t"
+filing_year = 2025
+period = "2025 4T"
+period_kind = "quarterly"
+opens_on = 2026-01-01
+closes_on = 2026-01-20
+legal_refs = ["orden-hap-70-2013:art-7"]
+source_refs = ["boe-modelo-136-base-order"]

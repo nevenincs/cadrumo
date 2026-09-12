@@ -41,7 +41,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -53,7 +53,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -65,7 +65,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -77,7 +77,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -89,7 +89,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"
@@ -101,7 +101,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2024", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2024".bindings.source_citations]]
 source_ref = "aeat-modelo-390-procedure"

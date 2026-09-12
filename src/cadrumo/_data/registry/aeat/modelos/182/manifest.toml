@@ -16,7 +16,18 @@ source_refs = [
     "enrolled-modelo-182-layout",
 ]
 
+# ACQUIRABLE DEBT -- editions 182/2022 and 182/2023. Unauthorable, not merely
+# ungraded: no registered layout authority covers those years. The only source whose
+# window spans them is enrolled-modelo-182-procedure, a 1355-byte excerpt of Orden
+# EHA/3021/2007 carrying articulos 1 and 5 and NO anexo; aeat-dr-182-2024 declares
+# applies_from 2024-01-01 and does not reach back. Needed:
+#   - an AEAT diseno de registro, or the EHA/3021/2007 anexo II, for ejercicio 2022
+#   - the same for ejercicio 2023
+#
+# ACQUIRABLE DEBT -- promotion of 182/2024 to filing grade. Geometry is grounded
+# verbatim and would not change; no instrucciones source covers the ejercicio.
+#   - AEAT modelo 182 instrucciones as they stood for ejercicio 2024
 [modelo.inception.unauthored]
-earliest_authored = 2025
-reason = "Approved by Orden EHA/3021/2007; filing years 2022-2024 existed in law and are not yet authored."
+earliest_authored = 2024
+reason = "Approved by Orden EHA/3021/2007 art. 1, which carries no year bound; filing years below 2024 existed in law and are not yet authored. Edition 2024 was authored 2026-09-12 at applicability grade on aeat-dr-182-2024, whose declared window is exactly that ejercicio. 2022 and 2023 are ACQUIRABLE, not merely ungraded: no registered layout authority covers them, since the only source spanning those years is the procedure excerpt of the orden, which carries arts. 1 and 5 and no anexo."
 legal_refs = ["orden-eha-3021-2007:art-1"]

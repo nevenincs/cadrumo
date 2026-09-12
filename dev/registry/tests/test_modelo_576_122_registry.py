@@ -16,7 +16,7 @@ See Also:
         Closed tax-family enum extended for the plastico and IEDMT registrations.
     :class:`~core.modelo.Modelo`
         Canonical fleet membership reached after this final-tail promotion.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Former residual obligation set that this tail reduces to empty.
     :mod:`~domain.calculations.registry.tests.test_modelo_iva_batch4_registry`
         Sibling registry-foundation coverage for windowless IVA promotions.

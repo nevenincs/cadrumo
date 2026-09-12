@@ -7,21 +7,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-15"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-15", offset = 15, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-20"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-20", offset = 20, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-61"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-61", offset = 61, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -42,21 +42,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-99"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-99", offset = 99, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-104"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-104", offset = 104, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-145"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-145", offset = 145, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -77,21 +77,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-183"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-183", offset = 183, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-188"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-188", offset = 188, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-229"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-229", offset = 229, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -112,21 +112,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-267"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-267", offset = 267, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-272"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-272", offset = 272, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-313"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-313", offset = 313, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -147,21 +147,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-351"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-351", offset = 351, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-356"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-356", offset = 356, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-397"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-397", offset = 397, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -182,21 +182,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-435"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-435", offset = 435, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-440"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-440", offset = 440, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-481"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-481", offset = 481, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -217,21 +217,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-519"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-7"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-519", offset = 519, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-524"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-7"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-524", offset = 524, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-565"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-7"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-565", offset = 565, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -252,21 +252,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-603"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-8"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-603", offset = 603, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-608"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-8"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-608", offset = 608, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-649"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-8"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-649", offset = 649, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -287,21 +287,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-687"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-9"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-687", offset = 687, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-692"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-9"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-692", offset = 692, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-733"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-9"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-733", offset = 733, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -322,21 +322,21 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-771"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-porcentaje-titularidad-10"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-771", offset = 771, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-776"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-entidad-deposito-10"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-776", offset = 776, length = 41, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-817"
+id = "modelo-714.714-04.bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-no-cuenta-deposito-10"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-e-depositos-cuenta-corriente-ahorro-financieras-imposiciones-817", offset = 817, length = 24, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -357,7 +357,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-868"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-868", offset = 868, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -378,7 +378,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-906"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-906", offset = 906, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -420,7 +420,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1006"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1006", offset = 1006, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -441,7 +441,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1044"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1044", offset = 1044, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -483,7 +483,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1144"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1144", offset = 1144, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -504,7 +504,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1182"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1182", offset = 1182, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -546,7 +546,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1282"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1282", offset = 1282, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -567,7 +567,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1320"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1320", offset = 1320, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -609,7 +609,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1420"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1420", offset = 1420, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -630,7 +630,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1458"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1458", offset = 1458, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -672,7 +672,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1558"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1558", offset = 1558, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -693,7 +693,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1596"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1596", offset = 1596, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -735,7 +735,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1696"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-7"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1696", offset = 1696, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -756,7 +756,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1734"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-7"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1734", offset = 1734, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -798,7 +798,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1834"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-8"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1834", offset = 1834, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -819,7 +819,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1872"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-8"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1872", offset = 1872, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -861,7 +861,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1972"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-9"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-1972", offset = 1972, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -882,7 +882,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2010"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-9"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2010", offset = 2010, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -924,7 +924,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2110"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-porcentaje-titularidad-10"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2110", offset = 2110, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -945,7 +945,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2148"
+id = "modelo-714.714-04.bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-nif-nie-entidad-emisora-10"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f1-valores-cesion-terceros-deuda-publica-obligaciones-bonos-2148", offset = 2148, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -987,35 +987,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2261"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2261", offset = 2261, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2266"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2266", offset = 2266, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2279"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2279", offset = 2279, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2299"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2299", offset = 2299, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2300"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-1"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2300", offset = 2300, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -1036,35 +1036,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2376"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2376", offset = 2376, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2381"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2381", offset = 2381, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2394"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2394", offset = 2394, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2414"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2414", offset = 2414, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2415"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-2"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2415", offset = 2415, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -1085,35 +1085,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2491"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2491", offset = 2491, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2496"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2496", offset = 2496, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2509"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2509", offset = 2509, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2529"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2529", offset = 2529, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2530"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-3"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2530", offset = 2530, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -1134,35 +1134,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2606"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2606", offset = 2606, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2611"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2611", offset = 2611, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2624"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2624", offset = 2624, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2644"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2644", offset = 2644, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2645"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-4"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2645", offset = 2645, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -1183,35 +1183,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2721"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2721", offset = 2721, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2726"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2726", offset = 2726, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2739"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2739", offset = 2739, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2759"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2759", offset = 2759, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2760"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-5"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2760", offset = 2760, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -1232,35 +1232,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2836"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2836", offset = 2836, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2841"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-no-valores-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2841", offset = 2841, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2854"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-nie-entidad-emisora-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2854", offset = 2854, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2874"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-nif-otro-pais-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2874", offset = 2874, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2875"
+id = "modelo-714.714-04.bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-descripcion-6"
 provider = { kind = "manual_input", record = "714-04", field = "bienes-y-derechos-f2-valores-cesion-terceros-obligaciones-bonos-certificados-2875", offset = 2875, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]

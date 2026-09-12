@@ -202,6 +202,7 @@ the rewrite in place after the same safety checks pass.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -728,6 +729,21 @@ def valid_from_years(modelo_dir: Path) -> dict[str, str]:
     return years
 
 
+def _retyped_for_strict(value: Any) -> Any:
+    """Return a TOML value with every nested array retyped as the tuple strict mode expects.
+
+    The recursion matters for ``period_overrides``, whose declaration is an
+    array of inline tables that each carry a ``periods`` array: retyping only
+    the outermost array leaves the inner lists intact and strict validation
+    refuses them, so the whole selector reads as untypable.
+    """
+    if isinstance(value, dict):
+        return {key: _retyped_for_strict(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return tuple(_retyped_for_strict(item) for item in value)
+    return value
+
+
 def _selector(revision_dir: Path) -> PeriodSelector | None:
     """Return an edition's typed ``period_selector``, built through the domain model itself.
 
@@ -741,7 +757,7 @@ def _selector(revision_dir: Path) -> PeriodSelector | None:
     declared = _revision_table(revision_dir).get("period_selector")
     if not isinstance(declared, dict):
         return None
-    retyped = {key: tuple(value) if isinstance(value, list) else value for key, value in declared.items()}
+    retyped = _retyped_for_strict(declared)
     try:
         return PeriodSelector.model_validate(retyped)
     except ValueError:
@@ -1844,12 +1860,25 @@ class ChainedRenameMapError(Exception):
     """A rename map whose target is also one of its own sources."""
 
 
+class WriteNotObservedError(Exception):
+    """A file was written and read back as something other than what was written."""
+
+    def __init__(self, path: Path) -> None:
+        """Record the path whose read-back did not match the intended content."""
+        super().__init__(
+            f"{path}: the rewrite was written but reads back differently. Exit status is not evidence that a "
+            "write landed; stopping here rather than reporting a rename the corpus does not carry."
+        )
+        self.path = path
+
+
 def rewrite_identifier_references(
     renames: Mapping[str, str],
     modelos_root: Path = REGISTRY_MODELOS_ROOT,
     mappings_root: Path = MAPPINGS_ROOT,
     *,
     code_files: Sequence[Path] | None = None,
+    manifest: list[dict[str, Any]] | None = None,
 ) -> tuple[list[Path], int]:
     """Rewrite every quoted occurrence of a renamed id across the authored corpus and code.
 
@@ -1890,9 +1919,26 @@ def rewrite_identifier_references(
                 if needle in updated:
                     hits += updated.count(needle)
                     updated = updated.replace(needle, f"{quote}{new_id}{quote}")
-        if updated != original:
-            path.write_text(updated, encoding="utf-8")
-            touched.append(path)
+        if updated == original:
+            continue
+        path.write_text(updated, encoding="utf-8")
+        # Read back rather than trusting the write. A write that reports success
+        # and does not land leaves a corpus half renamed and a report claiming
+        # it whole, which is worse than a failure; the post hash is taken from
+        # what is now ON DISK and a mismatch stops the pass.
+        written = path.read_text(encoding="utf-8")
+        if written != updated:
+            raise WriteNotObservedError(path)
+        touched.append(path)
+        if manifest is not None:
+            manifest.append(
+                {
+                    "path": str(path.relative_to(REPO_ROOT).as_posix()),
+                    "identifiers": sorted(old_id for old_id in renames if f'"{old_id}"' in original),
+                    "sha256_before": hashlib.sha256(original.encode("utf-8")).hexdigest(),
+                    "sha256_after": hashlib.sha256(written.encode("utf-8")).hexdigest(),
+                }
+            )
     return touched, hits
 
 
@@ -2129,6 +2175,102 @@ def edition_declared_families(revision_dir: Path, revision_id: str) -> dict[str,
     return dict(merged)
 
 
+def binding_identifier_limit() -> int:
+    """Return the maximum length the shipped ``BindingId`` type allows.
+
+    Read off the live annotation rather than written here, so a name this tool
+    proposes can never be one the loader would refuse: the two numbers cannot
+    drift apart because there is only one.
+    """
+    import typing
+
+    from pydantic.fields import FieldInfo
+
+    from cadrumo.domain.calculations.registry.ids import BindingId
+
+    for marker in typing.get_args(BindingId.__value__):
+        constraints = list(marker.metadata) if isinstance(marker, FieldInfo) else [marker]
+        for constraint in constraints:
+            length = getattr(constraint, "max_length", None)
+            if isinstance(length, int):
+                return length
+    raise RuntimeError("BindingId declares no max_length; the identifier-length gate has nothing to read")
+
+
+def _resolve_record_designs(
+    modelo: str,
+    modelos_root: Path,
+    plan: SpanStripPlan,
+) -> dict[str, dict[tuple[str, int], Any]]:
+    """Return each edition's record-design rows, or none at all when they cannot be trusted.
+
+    A design that cannot be read is reported and the pass continues WITHOUT it,
+    falling back to the mechanical rules. That is deliberate: an unreadable
+    design means a slot's real name is unavailable, not that the id's restated
+    address has become legitimate, and the two failures are answered
+    differently -- the second is still stripped, the first is listed as needing
+    design evidence.
+    """
+    from .record_design_labels import RecordDesignUnavailableError, edition_record_designs
+
+    try:
+        return dict(edition_record_designs(modelo, modelos_root))
+    except RecordDesignUnavailableError as exc:
+        plan.refusals.append(f"{modelo}: needs design evidence -- {exc}")
+        return {}
+
+
+def _design_named_identifier(
+    modelo: str,
+    edition: str,
+    identifier: str,
+    member: Mapping[str, Any],
+    design: Mapping[tuple[str, int], Any],
+) -> str | None:
+    """Return the id the official design's own field label states, or ``None`` when it proves nothing.
+
+    The proof is per row and it is three-part: the design must declare a row at
+    this provider's ``(record, offset)``, that row's width must EQUAL the
+    provider's ``length``, and it must carry a non-empty label. A width that
+    disagrees is the decisive test -- modelo 714's ``714-05`` offset 290 is a
+    13-byte ``No Valores 3`` in the 2021 design and a 1-byte ``Clave 3`` in the
+    2022 one, which is two different fields at one address, and naming the
+    second from the first would assert a continuity the design denies.
+
+    Returns ``None`` where any part fails, which leaves the row to the
+    mechanical rules and, when they cannot separate it from a sibling, to the
+    collision gate that lists it as needing design evidence.
+    """
+    from .record_design_labels import design_field_component
+
+    provider = member.get("provider")
+    if not isinstance(provider, Mapping):
+        return None
+    record, offset, length = provider.get("record"), provider.get("offset"), provider.get("length")
+    if not isinstance(record, str) or not isinstance(offset, int) or isinstance(offset, bool):
+        return None
+    row = design.get((record, offset))
+    if row is None or row.length != length or not row.label.strip():
+        return None
+    slot = design_field_component(row.label)
+    if not slot:
+        return None
+    # The block is already named -- by the id itself, in the abbreviation the
+    # corpus chose for this whole family of slots, and its offset-free form is
+    # exactly the prefix its well-named siblings carry. Taking the block from
+    # the id and the field from the design keeps the renamed row spelled like
+    # the rows beside it, and keeps the result inside the schema's identifier
+    # length where the label's full path would not fit.
+    block = drop_provider_offset_tail(identifier, member)
+    if not block or block == identifier:
+        # The id does not end in its own address, so it is not a row whose slot
+        # name went missing: it already states one. Naming it from the design
+        # would append a second field component to a complete name.
+        return None
+    named = f"{block}-{slot}"
+    return named if len(named) <= binding_identifier_limit() else None
+
+
 def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> SpanStripPlan:
     """Decide which of one modelo's binding ids lose the fixed-width span they spell.
 
@@ -2155,9 +2297,12 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
         plan.refused_modelo = True
         return plan
 
+    designs = _resolve_record_designs(modelo, modelos_root, plan)
+
     inventory: dict[str, list[tuple[str, str]]] = {}
     for revision_dir in iter_revision_dirs(modelo_dir):
         edition = revision_dir.name
+        design = designs.get(edition, {})
         sections = edition_declared_families(revision_dir, edition)
         owned: dict[str, str] = {}
         for family, members in sorted(sections.items()):
@@ -2199,6 +2344,15 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 segment = identifier[start:end]
                 new_id = strip_span_segment(identifier, start, end)
                 new_id = restore_truncated_field_slot(new_id, identifier[end + 1 :], member)
+            # Where the official design PROVES this row -- same record, same
+            # offset, same declared width -- its own Descripcion column is the
+            # slot's name, ordinal and all. That is the only thing that can
+            # restore a name the ingestion never recorded, and it is a citation
+            # rather than a derivation: the mechanical rules below can remove a
+            # restatement but cannot invent the word the address stood in for.
+            named = _design_named_identifier(modelo, edition, identifier, member, design)
+            if named is not None:
+                new_id, segment = named, "design-label"
             # The restoration can put the address straight back where the
             # provider's own ``field`` ends in the offset, and a row that never
             # spelled a run may still end in one, so the tail drop runs on both.
@@ -2217,34 +2371,88 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 SpanStrip(modelo=modelo, edition=edition, old_id=identifier, new_id=new_id, segment=segment)
             )
 
-        # The post-strip image of this edition's WHOLE authored namespace, so a
-        # stripped id landing on a name another family already owns is caught
-        # alongside two stripped bindings landing on each other.
-        stripped = {strip.old_id: strip.new_id for strip in edition_strips}
-        after: dict[str, list[str]] = defaultdict(list)
-        for identifier, family in sorted(owned.items()):
-            after[stripped.get(identifier, identifier)].append(f"{family}:{identifier}")
-        for collapsed, owners in sorted(after.items()):
-            if len(owners) > 1:
-                plan.collisions.append(f"{modelo} {edition}: {collapsed} would be shared by {', '.join(owners)}")
         plan.strips.extend(edition_strips)
         plan.candidates.extend(edition_strips)
         inventory[edition] = sorted(owned.items())
 
-    # The same cross-edition projection the family collapse runs: the strip is
-    # planned per edition but rewritten textually corpus-wide, so a stripped id
-    # may land on a name a DIFFERENT edition already declares. Only the modelo's
-    # whole post-image shows it.
+    # One id, one name. The rewrite is a TEXTUAL pass over the corpus, so an
+    # id two editions both declare can only become one string -- and where the
+    # design gives it two different names, that is precisely the signal that the
+    # editions declare different fields at one address. Such a pair is withdrawn
+    # and named, because the rename tool cannot express it: separating the two
+    # needs an identifier_evolutions ``replaced`` row grounded in both designs,
+    # which is an authoring act and not a spelling change.
+    _withdraw_edition_divergent_names(plan)
+
+    # One projection answers both hazards. The strip is planned per edition but
+    # rewritten textually corpus-wide, so a renamed id may land on a name its
+    # OWN edition already declares -- two design rows sharing a label, as
+    # modelo 714's 2021 design does at ``714-02`` offsets 40 and 42, both
+    # "Situacion 1" -- or on one a DIFFERENT edition declares. Projecting the
+    # map over every edition's full id inventory shows both, and every rename
+    # onto a contested name is withdrawn.
     _refuse_post_image_collisions(plan, inventory)
 
-    if plan.collisions:
+    # Withdrawal is the remedy, not refusal of the modelo: a row whose name the
+    # design states ambiguously keeps the name it has, which a reader can
+    # reapply by hand from the same design. Only a collision that SURVIVES the
+    # withdrawal would mean the rule cannot be stated, and that withdraws the
+    # modelo whole rather than writing a namespace the loader will reject.
+    surviving = _surviving_collisions(plan, inventory)
+    if surviving:
         plan.refused_modelo = True
+        plan.refusals.extend(surviving)
         plan.refusals.append(
-            f"{modelo}: {len(plan.collisions)} within-edition collisions after the strip; the whole modelo is "
-            "refused rather than half applied"
+            f"{modelo}: {len(surviving)} collisions survive the withdrawal; the whole modelo is refused "
+            "rather than half applied"
         )
     plan.stranded_export_trees = stranded_generated_trees(modelo_dir, plan.rename_map)
     return plan
+
+
+def _withdraw_edition_divergent_names(plan: SpanStripPlan) -> None:
+    """Withdraw every id whose editions would give it two different names, and say why.
+
+    The withdrawal is not a defeat: it isolates the rows where the corpus'
+    single identifier is genuinely covering two different fields, which is the
+    exact input the ``identifier_evolutions`` family exists to record. Leaving
+    them in would let one edition's name silently overwrite the other's
+    everywhere the id is quoted.
+    """
+    targets: dict[str, dict[str, str]] = defaultdict(dict)
+    for strip in plan.strips:
+        targets[strip.old_id][strip.new_id] = strip.edition
+    divergent = {old_id: names for old_id, names in targets.items() if len(names) > 1}
+    for old_id, names in sorted(divergent.items()):
+        rendered = "; ".join(f"{edition} -> {new_id}" for new_id, edition in sorted(names.items()))
+        plan.refusals.append(
+            f"{plan.modelo} bindings {old_id}: its editions name this address differently ({rendered}), so one "
+            "identifier is covering two fields. A textual rename cannot express that; declare an "
+            "identifier_evolutions 'replaced' row grounded in both record designs instead"
+        )
+    plan.withdraw(set(divergent))
+
+
+def _surviving_collisions(plan: SpanStripPlan, inventory: Mapping[str, list[tuple[str, str]]]) -> list[str]:
+    """Return the post-image collisions that remain once every contested rename is withdrawn.
+
+    Re-projected rather than inferred from the withdrawal: the question is what
+    the corpus looks like AFTER the plan is applied, and only recomputing it
+    answers that. An empty result is the injectivity proof for the surviving
+    map -- every id in every edition still names exactly one member.
+    """
+    renames = plan.rename_map
+    remaining: list[str] = []
+    for edition, declared in sorted(inventory.items()):
+        after: dict[str, list[str]] = defaultdict(list)
+        for identifier, family in declared:
+            after[renames.get(identifier, identifier)].append(f"{family}:{identifier}")
+        remaining.extend(
+            f"{plan.modelo} {edition}: {collapsed} still shared by {', '.join(sorted(owners))}"
+            for collapsed, owners in sorted(after.items())
+            if len(owners) > 1
+        )
+    return remaining
 
 
 def apply_span_strip(
@@ -2254,8 +2462,14 @@ def apply_span_strip(
     *,
     code_files: Sequence[Path] | None = None,
     export_republish_acknowledged: bool = False,
+    manifest: list[dict[str, Any]] | None = None,
 ) -> tuple[list[Path], int]:
     """Rewrite every declaration and reference of a planned span strip.
+
+    When *manifest* is given it is filled with one entry per file actually
+    written: the path, the identifiers it carried, and its sha256 before and
+    after, the latter read back off disk rather than computed from the string
+    the pass intended to write.
 
     Raises:
         GeneratedExportTreeStaleError: When a published export tree quotes an id
@@ -2267,7 +2481,7 @@ def apply_span_strip(
         return [], 0
     if plan.stranded_export_trees and not export_republish_acknowledged:
         raise GeneratedExportTreeStaleError(plan.modelo, plan.stranded_export_trees)
-    return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files)
+    return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files, manifest=manifest)
 
 
 GENERATED_ROOT = REPO_ROOT / "dev" / "registry" / "generated"
@@ -2403,6 +2617,7 @@ def _run_span_strip(
     emit_json: bool,
     report_path: Path | None,
     export_republish_acknowledged: bool,
+    manifest_root: Path | None = None,
 ) -> int:
     """Report, and with ``--apply`` perform, the span strip for each named modelo."""
     report: dict[str, Any] = {"span_strip": {}}
@@ -2450,8 +2665,11 @@ def _run_span_strip(
             exit_code = 1
             continue
         if write:
+            written: list[dict[str, Any]] = []
             try:
-                touched, hits = apply_span_strip(plan, export_republish_acknowledged=export_republish_acknowledged)
+                touched, hits = apply_span_strip(
+                    plan, export_republish_acknowledged=export_republish_acknowledged, manifest=written
+                )
             except GeneratedExportTreeStaleError as exc:
                 print(f"Refusing to apply {modelo}: {exc}", file=sys.stderr)
                 return 1
@@ -2466,6 +2684,15 @@ def _run_span_strip(
                 print(f"  REMOVED emptied fragment directory {path.as_posix()}")
             entry["files_touched"] = len(touched)
             entry["references_rewritten"] = hits
+            if manifest_root is not None:
+                manifest_path = manifest_root / f"span-strip-{modelo}.json"
+                manifest_path.parent.mkdir(parents=True, exist_ok=True)
+                manifest_path.write_text(
+                    json.dumps({"modelo": modelo, "files": written}, indent=2, ensure_ascii=False) + "\n",
+                    encoding="utf-8",
+                )
+                entry["write_manifest"] = str(manifest_path)
+                print(f"  WRITE MANIFEST {manifest_path} ({len(written)} files, sha256 pre/post from read-back)")
             print(f"Span strip {modelo}: {hits} references rewritten, {len(touched)} files touched")
     if emit_json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
@@ -2510,6 +2737,15 @@ def main(argv: list[str] | None = None) -> int:
         help="Report what --apply would rewrite and write nothing; the default when --apply is absent.",
     )
     parser.add_argument(
+        "--write-manifest-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Write a per-file JSON manifest of the rewrite here: every path touched, the identifiers it "
+            "carried, and its sha256 before and after, the latter taken from a read-back of the written file."
+        ),
+    )
+    parser.add_argument(
         "--export-republish-acknowledged",
         action="store_true",
         help="Apply even though a generated export tree quotes a renamed id; only within a change that republishes it.",
@@ -2533,6 +2769,7 @@ def main(argv: list[str] | None = None) -> int:
             emit_json=args.json,
             report_path=args.report,
             export_republish_acknowledged=args.export_republish_acknowledged,
+            manifest_root=args.write_manifest_dir,
         )
 
     measurements, failures = measure(selected)

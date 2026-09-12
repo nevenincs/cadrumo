@@ -21,9 +21,7 @@ def _period_selector_year_bounds(selector: PeriodSelector) -> tuple[int, int | N
 
 
 def _overridden_years(left: PeriodSelector, right: PeriodSelector) -> tuple[int, ...]:
-    return tuple(
-        sorted({override.year for selector in (left, right) for override in selector.period_overrides})
-    )
+    return tuple(sorted({override.year for selector in (left, right) for override in selector.period_overrides}))
 
 
 def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
@@ -54,12 +52,14 @@ def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> boo
     # The shared span still holds a year neither selector overrides whenever it
     # is wider than the overridden set, and there both serve their flat tuples.
     shared_start = max(left_start, right_start)
-    shared_end = None if left_end is None or right_end is None else min(left_end, right_end)
-    span_years = (
-        None
-        if shared_end is None
-        else tuple(year for year in range(shared_start, shared_end + 1) if left.includes_year(year) and right.includes_year(year))
-    )
-    if span_years is not None and set(span_years).issubset(overridden):
-        return False
+    declared_ends = [end for end in (left_end, right_end) if end is not None]
+    shared_end = min(declared_ends) if declared_ends else None
+    if shared_end is not None:
+        shared_years = {
+            year
+            for year in range(shared_start, shared_end + 1)
+            if left.includes_year(year) and right.includes_year(year)
+        }
+        if shared_years.issubset(overridden):
+            return False
     return bool(set(left.periods).intersection(right.periods))

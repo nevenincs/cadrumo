@@ -1,6 +1,6 @@
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14"
+id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-14", offset = 14, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -21,7 +21,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94"
+id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-94", offset = 94, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -42,7 +42,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174"
+id = "modelo-714.714-08.bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-08", field = "bienes-y-derechos-o-derechos-derivados-de-la-propiedad-intelectual-o-industrial-174", offset = 174, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]

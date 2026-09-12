@@ -1,0 +1,84 @@
+[revisions."2024"]
+id = "2024"
+authority_grade = "applicability"
+casilla_source_refs = ["aeat-dr-182-2024", "enrolled-modelo-182-procedure"]
+# Applicability-grade historical epoch for modelo 182, ejercicio 2024, presented
+# in enero 2025.
+#
+# The gap this closes was authoring debt, not a legal absence: modelo 182 was
+# approved by Orden EHA/3021/2007 art. 1 with no ejercicio bound, art. 5 sets a
+# recurring plazo "en el mes de enero de cada año", and AEAT publishes a diseño
+# de registro per ejercicio. The design governing ejercicio 2024 is bundled and
+# hash-pinned as aeat-dr-182-2024 (sha256
+# 6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f), whose own
+# catalogue window is applies_from 2024-01-01, applies_to 2024-12-31 -- exactly
+# this edition's life.
+#
+# GEOMETRY, established by measurement rather than assumed. Every position line
+# of the bundled ejercicio 2024 design was compared against the bundled
+# ejercicio 2025 design (aeat-dr-182-2025) and the two sets are IDENTICAL: same
+# fields, same positions, same widths, same record ends. Registro de tipo 1
+# closes "161-237 ------------ BLANCOS" then "238-250 Alfanumérico SELLO
+# ELECTRONICO."; registro de tipo 2 closes "182-250 -------- BLANCOS." Both
+# records are 250 bytes in both epochs. The 7 casillas this edition models are
+# therefore the same boxes at the same positions its 2025 sibling models, and
+# none of them moved.
+#
+# WHAT DID CHANGE between the two epochs is the MEANING of one field, not its
+# place. RECURRENCIA DONATIVOS at position 132 of the tipo 2 record is the field
+# Orden HAC/1430/2025 art. 2 amended. The ejercicio 2024 design states the
+# clave "1" test as donations "en favor de dicha entidad por importe igual o
+# superior, en cada uno de ellos, al del ejercicio anterior"; the ejercicio 2025
+# design restates it as "en favor de una misma entidad, por un importe en este
+# ejercicio y el del periodo impositivo anterior, igual o superior, en cada uno
+# de ellos, al del ejercicio inmediato anterior". Same box, same width, changed
+# legal test. This edition carries the 2024 test and does NOT cite
+# orden-hac-1430-2025, whose disposición final única applies its modelo 182
+# amendment "por primera vez" to ejercicio 2025 and therefore does not reach
+# this year.
+#
+# Why the grade is 'applicability' and NOT 'filing': the calculation surface of
+# this modelo -- the five donativo_donor row bindings and the construct that
+# gathers them -- is grounded in the corpus only by enrolled-modelo-182-procedure,
+# a 1355-byte excerpt of Orden EHA/3021/2007 carrying arts. 1 and 5 and no anexo
+# at all. That excerpt names the modelo; it does not instruct a filing. Rather
+# than restate bindings this edition cannot ground in a record layout, it
+# declares no bindings, constructs, formulas, export layout, completeness
+# manifest or verification expectations, and its 7 casillas are input_kind
+# 'manual' or 'informational' with no binding reference left dangling.
+#
+# ACQUIRABLE DEBT -- promoting this edition to filing grade needs ONE
+# acquisition: AEAT's modelo 182 instrucciones or procedure page as it stood for
+# ejercicio 2024, registered as its own source with a window covering 2024. The
+# record geometry above is already grounded verbatim and would not change.
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }
+legal_refs = [
+    "orden-eha-3021-2007:art-1",
+    "orden-eha-3021-2007:art-5",
+    "ley-35-2006:art-68.3",
+    "ley-58-2003:art-93",
+]
+orden_aplicabilidad = ["orden-eha-3021-2007:art-1"]
+source_refs = [
+    "aeat-dr-182-2024",
+    "enrolled-modelo-182-procedure",
+    "enrolled-modelo-182-layout",
+]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-182-2024 record design. VERIFIED -- every \
+position line of the ejercicio 2024 design was diffed against the ejercicio 2025 design and the \
+two field sets are identical, so the 7 modelled casillas sit at the same places in both epochs; \
+the only substantive textual difference between the two designs is the RECURRENCIA DONATIVOS \
+clave test at tipo 2 position 132, recorded above verbatim on both sides. VERIFIED -- every \
+legal_ref and source_ref cited here has a catalogue window covering ejercicio 2024: \
+orden-hac-1430-2025 art. 2 and df-unica and the source aeat-dr-182-2025 are DELIBERATELY absent \
+because that orden first applies to ejercicio 2025. NOT CLAIMED -- no independent AEAT oracle \
+checked any value here; independent_check_coverage is no claim, not zero. NOT CLAIMED -- no \
+bindings, formulas, export layout or completeness manifest are declared, so calculation refuses \
+this edition rather than resolving a silent blank. NOT CLAIMED -- the per-donor tipo 2 detail rows \
+beyond the 5 modelled boxes are not modelled, exactly as in the 2025 sibling. No human operator \
+has countersigned this."""
+reviewed_at = 2026-09-12

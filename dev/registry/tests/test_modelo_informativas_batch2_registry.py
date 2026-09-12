@@ -1,7 +1,9 @@
 """Tests for the six Batch-2 declaración-informativa registry foundations.
 
 Modelos 165, 233, 156 (annual, January plazo) and 038, 185, 186 (monthly plazo)
-were promoted from :data:`~core.UNMODELED_OBLIGATIONS` to registry-loadable definitions.
+were promoted from
+:data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
+to registry-loadable definitions.
 Each is approved by a bundled orden whose approval (art 1) and plazo (art 4 or 6)
 articles are cross-checked against the bundled BOE corpus at build. These
 Several remain scheduling/applicability-grade (declaration-header casillas

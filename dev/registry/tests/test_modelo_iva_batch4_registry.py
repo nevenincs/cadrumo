@@ -18,7 +18,7 @@ See Also:
         Registry validator that cross-checks legal/source catalogue references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to inspect generated deadline windows.
-    :data:`~core.UNMODELED_OBLIGATIONS`
+    :data:`~domain.calculations.registry.modelo_obligation_scope.UNMODELED_OBLIGATIONS`
         Legacy unmodeled set these IVA foundations must leave.
     :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
         Sibling registry-foundation coverage for windowless/unmodeled-tail modelos.

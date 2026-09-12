@@ -1125,9 +1125,7 @@ def revision_selection_coordinates(
         raise RegistryValidationError(
             f"revision {revision.id!r} declares no filing year through coverage horizon {assessment_horizon}"
         )
-    return tuple(
-        (filing_year, period) for filing_year in years for period in selector.periods_for_year(filing_year)
-    )
+    return tuple((filing_year, period) for filing_year in years for period in selector.periods_for_year(filing_year))
 
 
 @dataclass(frozen=True, slots=True)

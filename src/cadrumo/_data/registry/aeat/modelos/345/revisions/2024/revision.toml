@@ -1,0 +1,102 @@
+[revisions."2024"]
+casilla_source_refs = ["aeat-dr-345-2024"]
+# Applicability-grade historical epoch for modelo 345, ejercicio 2024.
+#
+# WHY THIS IS ITS OWN REVISION. Orden HAC/1504/2024 artículo octavo amends the
+# modelo 345 anexo of Orden HFP/823/2022, and its disposición final única applies
+# «por primera vez» to «declaraciones informativas del ejercicio 2024 presentadas
+# en el ejercicio 2025» -- the legal catalogue carries that retroactive reach
+# explicitly as governs_periods_from 2024-01-01 / governs_periods_to 2024-12-31.
+# AEAT publishes a matching record design of its own, registered as
+# aeat-dr-345-2024 with applies_from 2024-01-01 and applies_to 2024-12-31, a
+# CLOSED window: the catalogue stating that this design answers one ejercicio and
+# not its neighbours.
+#
+# MEASURED GEOMETRY, against aeat-dr-345-2024's own position table
+# (corpus/aeat_official/disenos_registro/modelo_345/files/
+# 04-345-diseno-de-registro-actualizado-en-2024.pdf, sha256
+# 90b12b42a644c55793a93831cc279bc6cdaad832802d3e7b1f309a0743a46c1f):
+#   - registro de tipo 1: 13 top-level rows, data ending at 159, closed
+#     «160-500 ------------ BLANCOS».
+#   - registro de tipo 2: 21 top-level rows, data ending at 321, closed
+#     «322-500 -------- BLANCOS.».
+#   - every top-level span and every sub-span is IDENTICAL to the 2023 and 2025
+#     designs. The record did not move in this epoch; only field content did.
+#
+# WHAT ACTUALLY CHANGED FROM 2023, read in the bundled design text:
+#   - CLAVE (82) absorbs a case that clave B carried in 2023. The 2024 design
+#     adds to clave A «Del mismo modo, se utilizará también esta clave para
+#     consignar las aportaciones a los planes de pensiones de empleo sectoriales
+#     y simplificados de trabajadores por cuenta propia o autónomos previstos en
+#     las letras a) y c) del apartado 1 del artículo 67 del texto refundido de la
+#     Ley de Regulación de los Planes y Fondos de Pensiones», and the 2023
+#     wording of that same passage is removed from the neighbouring clave. This
+#     is a MEANING change at a byte whose position did not move, which is why the
+#     two ejercicios are separate revisions rather than one span.
+#   - Position 271 keeps its 2023 title, «RENDIMIENTOS ÍNTEGROS DEL TRABAJO NO
+#     SUPERIORES A 60.000 EUROS», and gains an explicit negative value: «En otro
+#     caso, se consignará "N".» It is still the NEGATIVE predicate here. Orden
+#     HAC/1430/2025 artículo séptimo inverts it for ejercicio 2025, so this
+#     revision carries `rendimientos-trabajo-no-superiores-60000` and the 2025
+#     revision's `rendimientos-trabajo-superiores-60000` is a different casilla.
+#
+# WHY THE GRADE IS 'applicability' AND NOT 'filing'. aeat-modelo-345-procedure
+# and aeat-modelo-345-deadlines both declare applies_from 2025-01-01 and so do
+# not cover this ejercicio. No binding, formula, export layout, application link
+# or completeness manifest is declared, every casilla is input_kind = "manual",
+# and the tipo-1 resumen totales are operator-supplied. Promoting this to filing
+# grade needs ONE acquisition: AEAT's modelo 345 procedure or instrucciones as
+# they stood for ejercicio 2024, registered as its own source with a window
+# covering 2024. The geometry above would not change.
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-345-2024 record design. VERIFIED -- \
+GEOMETRY: the position table was read row by row and compared position for position against the \
+ejercicio-2023 and ejercicio-2025 designs and against the ejercicio-2022 anexo; the tipo-2 record \
+end was confirmed against the design's own «322-500 -------- BLANCOS.» line. VERIFIED -- NO \
+POSITION MOVED FROM 2023: the only differences found in a normalised full-text comparison of the \
+two designs are the clave A/B reallocation at position 82 and the added «En otro caso, se \
+consignará "N"» at position 271. VERIFIED -- POSITION 271 POLARITY: this epoch is still «NO \
+SUPERIORES A 60.000 EUROS»; the 2025 design inverts it. NOT CLAIMED -- NO OPERATOR \
+COUNTERSIGNATURE. NOT CLAIMED -- NO FILING GRADE: no ejercicio-2024 AEAT procedure or \
+instrucciones source exists in the corpus."""
+reviewed_at = 2026-09-12
+authority_grade = "applicability"
+id = "2024"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }
+orden_aplicabilidad = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-3",
+    "orden-hfp-823-2022:art-4",
+    "orden-hac-1504-2024:df-unica",
+]
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-2",
+    "orden-hfp-823-2022:art-3",
+    "orden-hfp-823-2022:art-4",
+    "orden-hfp-823-2022:art-5",
+    "orden-hfp-528-2023:art-unico",
+    "orden-hfp-528-2023:df-unica",
+    "orden-hfp-1397-2023:art-sexto",
+    "orden-hfp-1397-2023:df-unica",
+    "orden-hac-1504-2024:art-octavo",
+    "orden-hac-1504-2024:df-unica",
+]
+source_refs = [
+    "aeat-dr-345-2024",
+    "boe-modelo-345-base-order",
+    "boe-modelo-345-2023-amendment-hfp-528",
+    "boe-modelo-345-2023-amendment-hfp-1397",
+    "boe-modelo-345-2024-amendment-hac-1504",
+]
+
+[revisions."2024".family_dispositions.formulas]
+reason = "This is an informational declaration reporting third-party data to AEAT; it computes no taxpayer liability of its own, so the formula family is inapplicable by this modelo's nature rather than merely absent."
+legal_refs = [
+    "orden-hfp-823-2022:art-1",
+    "orden-hfp-823-2022:art-3",
+]
+source_refs = ["aeat-dr-345-2024", "boe-modelo-345-base-order"]

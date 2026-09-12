@@ -26,7 +26,7 @@ source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-instructions", "aeat
 # bindings surface; this expectation carries the verification tolerance and
 # evidence without duplicating that binding.
 [[revisions."2020-y-siguientes".verification_expectations]]
-id = "modelo-349-m303-reconciliation"
+id = "modelo-349-2020-y-siguientes-m303-reconciliation"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = ["decl.importe-operaciones"]
 tolerance = "1.00"

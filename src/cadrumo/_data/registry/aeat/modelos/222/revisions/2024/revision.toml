@@ -1,0 +1,78 @@
+[revisions."2024"]
+predecessor = { none = { reason = "Stated in full: editions 2023 and 2024 are each authored complete because their rows carry no lineage yet. Both state casilla '01' with no continuidad_id, so a chain from 2023 cannot distinguish supersession from a different box of the same number, and the merge refuses. The two editions share one design era (aeat-dr-222-2023-2024, 2023-01-01 to 2024-12-31) and differ only by edition key, so nothing is lost by stating each in full; a chain is seeded through the canonical path with design evidence, not by hand here.", legal_refs = ["orden-hfp-227-2017:art-2"], source_refs = ["aeat-dr-222-2023-2024"] } }
+casilla_source_refs = ["aeat-dr-222-2023-2024"]
+# Applicability-grade historical edition for modelo 222, filing year 2024.
+#
+# SAME DESIGN, DIFFERENT YEAR. This edition and its predecessor 2023 are
+# governed by ONE artefact: aeat-dr-222-2023-2024 declares applies_from
+# 2023-01-01 and applies_to 2024-12-31, so a single diseño de registro covers
+# both filing years. The two editions exist because the filing year is the
+# datum -- each carries its own three trimestral plazos -- not because the
+# geometry changed. It did not: the 56 boxes, their order, their record
+# assignment and both 900-position envelopes are the same file read twice.
+#
+# The predecessor is declared, and this edition nonetheless states its own
+# complete casilla set rather than relying on inheritance, which is how the
+# back-year editions of modelos 190 and 193 are authored. The grade is equal to
+# its predecessor's, so the predecessor does not outrank it.
+#
+# WHAT THIS EDITION ESTABLISHES, measured against that bundled design:
+#   - 56 own-box declarations, zero duplicates: 24 on DR22201, 32 on DR22202,
+#     matching the count the 2025-y-siguientes edition's own review reports for
+#     this file ("56 in the 2024 one").
+#   - Both records are 900 positions with "Indicador de fin de registro" at
+#     position 889, length 12, constants "</T22201000>" and "</T22202000>".
+#   - The delta to 2025 is purely additive -- [67] on DR22201 and [61]-[66] on
+#     DR22202 -- and shifts the rest of the record, so no position was copied
+#     across the epoch boundary. The eleven unnumbered 'Información adicional'
+#     slots, whose casilla `number` IS a position range, are declared at
+#     555-741 here against 633-819 in 2025.
+#   - This epoch prints TWO rate tiers in B.2, not four.
+#   - Every legal_ref cited is in force across the whole filing year:
+#     orden-hfp-227-2017:art-2 and art-5 from 2017-03-16, ley-27-2014:art-40
+#     from 2015-01-01, all open-ended.
+#
+# Why the grade is 'applicability': as for 2023, every instrucciones source in
+# the catalogue (aeat-modelo-222-instructions, aeat-modelo-202-instructions)
+# declares applies_from 2025-01-01, so the fifteen boxes the 2025 edition
+# computes are input_kind = "manual" here with their formula references
+# dropped, and no formula, parameter, export layout or completeness manifest is
+# declared. Promoting this edition needs ONE acquisition: the AEAT modelo 222
+# instrucciones as they stood for ejercicio 2024. The record geometry is
+# already here and would not change.
+authority_grade = "applicability"
+id = "2024"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+period_selector = { year_from = 2024, year_to = 2024, periods = ["1P", "2P", "3P"] }
+orden_aplicabilidad = ["orden-hfp-227-2017:art-2"]
+legal_refs = [
+    "orden-hfp-227-2017:art-2",
+    "orden-hfp-227-2017:art-5",
+    "ley-27-2014:art-40",
+]
+source_refs = ["aeat-dr-222-2023-2024", "boe-modelo-202-base-order"]
+review_status = "agent_reviewed"
+reviewed_by = """\
+agent: authored from the bundled hash-pinned aeat-dr-222-2023-2024 diseño de registro, the \
+same artefact that governs the 2023 edition, whose declared window \
+(2023-01-01..2024-12-31) covers this filing year exactly. VERIFIED -- EVERY CITED REF COVERS \
+THE YEAR: orden-hfp-227-2017 art-2 and art-5 effective_from 2017-03-16 open-ended, \
+ley-27-2014:art-40 effective_from 2015-01-01 open-ended, boe-modelo-202-base-order \
+applies_from 2017-03-16 open-ended, aeat-dr-222-2023-2024 2023-01-01..2024-12-31. \
+aeat-dr-222-2025 is deliberately absent: it opens 2025-01-01. VERIFIED -- 56 OWN-BOX \
+DECLARATIONS, ZERO DUPLICATES, identical to the 2023 edition because the governing design \
+file is identical; the two editions differ only in filing year, plazos and revision \
+identity. VERIFIED -- THE PREDECESSOR DECLARATION IS SOUND: 2023 is authored at the same \
+authority grade, so it does not outrank this successor, and this edition states its full \
+casilla set rather than depending on inheritance. VERIFIED -- POSITIONS WERE NOT COPIED FROM \
+THE 2025 EDITION: the eleven position-range casillas are declared at 555-571 through \
+725-741, read off this design, against 633-649 through 803-819 in 2025. NOT CLAIMED -- \
+calculation or filing grade: no instrucciones source in the catalogue opens before \
+2025-01-01, so all 56 boxes are input_kind = "manual" and no formula, parameter, export \
+layout or completeness manifest is declared. NOT CLAIMED -- locale labels: the es/en/ca/hu \
+schema catalogues carry a casilla block for 2025-y-siguientes only; this edition adds none, \
+the same state the back-year editions of modelos 190 and 193 are in. NOT CLAIMED -- \
+independent_check_coverage is n/a: NO CLAIM, not zero. No human operator has countersigned \
+this edition."""
+reviewed_at = 2026-09-12

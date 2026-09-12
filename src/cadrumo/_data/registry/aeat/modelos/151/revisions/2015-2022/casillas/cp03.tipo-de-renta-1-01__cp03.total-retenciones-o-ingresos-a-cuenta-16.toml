@@ -980,6 +980,7 @@ legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:
 # AEAT campo: Total retenciones o ingresos a cuenta [16]
 [[revisions."2015-2022".casillas]]
 id = "p03.total-retenciones-o-ingresos-a-cuenta-16"
+continuidad_id = "p03-total-retenciones-o-ingresos-a-cuenta-16"
 number = "1040-1056"
 segmento = "M15103000"
 section = ["p03", "total_retenciones_o_ingresos_a_cuenta_16"]

@@ -4,7 +4,6 @@ period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 profile_condition_mode = "all"
 legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
-source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
 field = "does_intracomunitario"
@@ -28,7 +27,6 @@ period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "all"
 legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93", "rd-1624-1992:art-81"]
-source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
 field = "does_intracomunitario"

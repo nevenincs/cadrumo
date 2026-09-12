@@ -3,613 +3,525 @@ id = "modelo-390.page_5.indicador-de-pagina-complementaria"
 provider = { kind = "manual_input", record = "page_5", field = "indicador-de-pagina-complementaria", offset = 12, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-i-a-e"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-epigrafe-i-a-e", offset = 13, length = 4, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-122", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-1"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-1", offset = 17, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-1"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-1", offset = 27, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-2"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-2", offset = 44, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-2"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-2", offset = 54, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-3"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-3", offset = 71, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-3"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-3", offset = 81, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-4"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-4", offset = 98, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-4"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-4", offset = 108, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-5"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-5", offset = 125, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-5"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-5", offset = 135, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-6"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-6", offset = 152, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-6"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-6", offset = 162, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-7"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-a-no-unidades-modulo-7", offset = 179, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-b-importe-modulo-7"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-b-importe-modulo-7", offset = 189, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-c-cuota-devengada-operaciones-corrientes", offset = 206, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-d-cuota-soportadas-operaciones-corrientes"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-d-cuota-soportadas-operaciones-corrientes", offset = 240, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-e-indice-corrector"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-e-indice-corrector", offset = 257, length = 3, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-f-resultado"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-f-resultado", offset = 260, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-g-porcentaje-cuota-minima"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-g-porcentaje-cuota-minima", offset = 277, length = 5, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-h-devolucion-cuotas-soportadas-otros-paises"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-h-devolucion-cuotas-soportadas-otros-paises", offset = 282, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-i-cuota-minima"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-i-cuota-minima", offset = 299, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-cuota-derivada-regimen-simplificado-j1"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-cuota-derivada-regimen-simplificado-j1", offset = 316, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-i-a-e"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-epigrafe-i-a-e", offset = 333, length = 4, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-122", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-1"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-1", offset = 337, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-1"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-1", offset = 347, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-2"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-2", offset = 364, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-2"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-2", offset = 374, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-3"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-3", offset = 391, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-3"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-3", offset = 401, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-4"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-4", offset = 418, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-4"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-4", offset = 428, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-5"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-5", offset = 445, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-5"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-5", offset = 455, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-6"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-6", offset = 472, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-6"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-6", offset = 482, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-7"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-a-no-unidades-modulo-7", offset = 499, length = 10, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-b-importe-modulo-7"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-b-importe-modulo-7", offset = 509, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-c-cuota-devengada-operaciones-corrientes"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-c-cuota-devengada-operaciones-corrientes", offset = 526, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-d-cuota-soportadas-operaciones-corrientes"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-d-cuota-soportadas-operaciones-corrientes", offset = 560, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-e-indice-corrector"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-e-indice-corrector", offset = 577, length = 3, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-f-resultado"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-f-resultado", offset = 580, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-g-porcentaje-cuota-minima"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-g-porcentaje-cuota-minima", offset = 597, length = 5, data_type = "decimal", decimals = 2, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-h-devolucion-cuotas-soportadas-otros-paises"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-h-devolucion-cuotas-soportadas-otros-paises", offset = 602, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-i-cuota-minima"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-i-cuota-minima", offset = 619, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-cuota-derivada-regimen-simplificado-j2"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-cuota-derivada-regimen-simplificado-j2", offset = 636, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-codigo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-codigo", offset = 653, length = 2, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-volumen-ingresos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-volumen-ingresos", offset = 655, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-indice-cuota"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-indice-cuota", offset = 672, length = 6, data_type = "decimal", decimals = 5, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-devengada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-devengada", offset = 678, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-soportada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-soportada", offset = 695, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplif"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplificado-k1", offset = 712, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-codigo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-codigo", offset = 729, length = 2, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-volumen-ingresos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-volumen-ingresos", offset = 731, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-indice-cuota"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-indice-cuota", offset = 748, length = 6, data_type = "decimal", decimals = 5, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-devengada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-devengada", offset = 754, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-soportada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-soportada", offset = 771, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplif"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplificado-k2", offset = 788, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-codigo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-codigo", offset = 805, length = 2, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-volumen-ingresos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-volumen-ingresos", offset = 807, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-indice-cuota"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-indice-cuota", offset = 824, length = 6, data_type = "decimal", decimals = 5, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-devengada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-devengada", offset = 830, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-soportada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-soportada", offset = 847, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplificado-k3", offset = 864, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-codigo", offset = 881, length = 2, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-volumen-ingresos", offset = 883, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-indice-cuota", offset = 900, length = 6, data_type = "decimal", decimals = 5, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-devengada", offset = 906, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-soportada", offset = 923, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplif"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplificado-k4", offset = 940, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-codigo", offset = 957, length = 2, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-volumen-ingresos", offset = 959, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-indice-cuota", offset = 976, length = 6, data_type = "decimal", decimals = 5, signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-devengada", offset = 982, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-soportada", offset = 999, length = 17, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simpl"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simplificado-k5", offset = 1016, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest", offset = 1033, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest", offset = 1050, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias", offset = 1067, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo", offset = 1084, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos", offset = 1101, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos", offset = 1135, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion", offset = 1152, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-deducciones-suma-de-deducciones"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-deducciones-suma-de-deducciones", offset = 1169, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-resultado-regimen-simplificado"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-resultado-regimen-simplificado", offset = 1186, length = 17, data_type = "money", signed = true }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-1-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-caso-de-1203", offset = 1203, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390.page_5.operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-cas"
 provider = { kind = "manual_input", record = "page_5", field = "operaciones-reg-simplificado-actividad-2-epigrafe-iae-indicador-auxiliar-de-actividad-en-el-caso-de-1204", offset = 1204, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2025"]

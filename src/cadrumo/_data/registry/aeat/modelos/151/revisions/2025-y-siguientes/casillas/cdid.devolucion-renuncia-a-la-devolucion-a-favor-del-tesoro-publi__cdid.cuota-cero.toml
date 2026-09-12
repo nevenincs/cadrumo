@@ -47,6 +47,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Devolución. SWIFT-BIC
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.devolucion-swift-bic"
+continuidad_id = "did-devolucion-swift-bic"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-151-2015-2022 campo 7 (posicion 47, longitud 11, tipo An) y aeat-dr-151-2023-y-siguientes campo 9 (posicion 49, longitud 11, tipo An), registro M151DID00: la descripcion oficial del campo es literalmente la misma, Devolucion. SWIFT-BIC, con identica longitud y tipo. El desplazamiento de dos bytes lo produce el traslado de las marcas de renuncia y de solicitud de devolucion por delante del IBAN en el diseno de 2023."
 number = "49-59"
 segmento = "M151DID00"
 section = ["did", "devolucion_swift_bic"]

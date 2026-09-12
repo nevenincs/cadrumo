@@ -1376,9 +1376,19 @@ _DECLARED_DEFAULT_KEYS: Final[frozenset[str]] = frozenset(
 
 
 def _member_identities(source: _EditionSource) -> Mapping[str, tuple[str, ...]]:
-    """The identity of every member the edition materialises, by family, in materialised order."""
+    """The identity of every member the edition materialises, by family, in materialised order.
+
+    Every family a drop can reach is named here, not just the reference
+    families. A family absent from this mapping still cannot change unnoticed --
+    ``_chain_materialisation`` catches it -- but it reports as an unspecific byte
+    difference, which names no member and leaves the reader to find it. While
+    drops were unreachable that cost nothing; a drop operation makes every
+    droppable family reachable, so each one earns a refusal that names the
+    member it lost.
+    """
     identities = {_CASILLAS: tuple(f"{_row_id(row)}|{_lineage(row)}" for row in source.rows)}
-    for section in sorted(set(_REFERENCE_SECTIONS.values())):
+    sections = set(_REFERENCE_SECTIONS.values()) | {family.section for family in _DROPPABLE_FAMILIES}
+    for section in sorted(sections - {_CASILLAS}):
         identities[section] = tuple(str(member.get("id")) for member in _family_members(source.table, section))
     return identities
 

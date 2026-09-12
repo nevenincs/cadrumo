@@ -32,6 +32,6 @@ source_refs = [
 ]
 
 [modelo.inception.unauthored]
-earliest_authored = 2025
-reason = "Current design Orden HFP/823/2022 repeals only apartado noveno of the Orden of 27 July 2001, which already approved Modelo 345; filing years 2022-2024 existed in law and are not yet authored."
+earliest_authored = 2022
+reason = "Approved by the Orden of 27 July 2001 and redesigned by Orden HFP/823/2022; filing years below 2022 existed in law and are not yet authored. Editions 2022, 2023 and 2024 were authored 2026-09-12 at applicability grade, each a SEPARATE era rather than one span: the tipo 2 record ends at position 189 for ejercicio 2022 and at 321 from 2023, because Orden HFP/528/2023 created the clave M/PEPP, rendimientos, empleador and devoluciones campos. AEAT publishes per-ejercicio designs with closed windows for this modelo, which is the catalogue saying each design answers one year."
 legal_refs = ["orden-hfp-823-2022:art-1"]

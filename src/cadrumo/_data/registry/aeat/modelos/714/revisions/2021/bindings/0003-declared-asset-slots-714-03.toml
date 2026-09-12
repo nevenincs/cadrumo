@@ -1,6 +1,6 @@
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-14"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-14", offset = 14, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -14,7 +14,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-20"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-20", offset = 20, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -28,7 +28,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-26"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-26", offset = 26, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -42,14 +42,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-47"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-47", offset = 47, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-48"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-48", offset = 48, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -70,7 +70,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-115"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-115", offset = 115, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -84,7 +84,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-121"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-121", offset = 121, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -98,7 +98,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-127"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-127", offset = 127, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -112,14 +112,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-148"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-148", offset = 148, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-149"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-149", offset = 149, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -140,7 +140,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-216"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-216", offset = 216, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -154,7 +154,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-222"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-222", offset = 222, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -168,7 +168,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-228"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-228", offset = 228, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -182,14 +182,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-249"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-249", offset = 249, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-250"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-250", offset = 250, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -210,7 +210,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-317"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-317", offset = 317, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -224,7 +224,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-323"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-323", offset = 323, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -238,7 +238,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-329"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-329", offset = 329, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -252,14 +252,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-350"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-350", offset = 350, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-351"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-351", offset = 351, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -280,7 +280,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-418"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-418", offset = 418, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -294,7 +294,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-424"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-424", offset = 424, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -308,7 +308,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-430"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-430", offset = 430, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -322,14 +322,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-451"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-451", offset = 451, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-452"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-452", offset = 452, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -350,7 +350,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-519"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-epigrafe-iae-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-519", offset = 519, length = 5, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -364,7 +364,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-525"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-tit-us-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-525", offset = 525, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -378,7 +378,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-531"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-ref-catastral-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-531", offset = 531, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -392,14 +392,14 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-552"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-valor-utilizado-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-552", offset = 552, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-553"
+id = "modelo-714.714-03.bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-domicilio-activ-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c1-no-exentos-afectos-activ-empresariales-y-profesionales-no-553", offset = 553, length = 28, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -427,7 +427,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-638"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-638", offset = 638, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -441,7 +441,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-644"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-644", offset = 644, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -483,7 +483,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-no-exentos-afectos-activ-empresariales-y-profesionales-no-713"
+id = "modelo-714.714-03.bienes-y-derechos-c2-no-exentos-afectos-activ-empresariales-y-profesionales-no-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-no-exentos-afectos-activ-empresariales-y-profesionales-no-713", offset = 713, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -497,7 +497,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-719"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-719", offset = 719, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -539,7 +539,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-788"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-788", offset = 788, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -553,7 +553,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-794"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-794", offset = 794, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -595,7 +595,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-863"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-863", offset = 863, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -609,7 +609,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-869"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-869", offset = 869, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -651,7 +651,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-938"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-938", offset = 938, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -665,7 +665,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-944"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-944", offset = 944, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -707,7 +707,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1013"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1013", offset = 1013, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -721,7 +721,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1019"
+id = "modelo-714.714-03.bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-referencia-catastral-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-c2-bienes-inmuebles-no-exentos-afectos-activ-empres-y-profes-1019", offset = 1019, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -784,7 +784,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1121"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-1"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1121", offset = 1121, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -847,7 +847,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1197"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-2"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1197", offset = 1197, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -910,7 +910,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1273"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-3"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1273", offset = 1273, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -973,7 +973,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1349"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-4"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1349", offset = 1349, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -1036,7 +1036,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1425"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-5"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1425", offset = 1425, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -1099,7 +1099,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1501"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-6"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1501", offset = 1501, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -1162,7 +1162,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1577"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-7"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1577", offset = 1577, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -1225,7 +1225,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1653"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-8"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1653", offset = 1653, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]
@@ -1288,7 +1288,7 @@ legal_refs = ["orden-hfp-207-2022:art-4"]
 source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".bindings]]
-id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1729"
+id = "modelo-714.714-03.bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-referencia-catastral-9"
 provider = { kind = "manual_input", record = "714-03", field = "bienes-y-derechos-d-bienes-y-derechos-exentos-afectos-activ-empres-y-profes-1729", offset = 1729, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hfp-207-2022:art-4"]

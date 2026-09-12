@@ -65,7 +65,7 @@ source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
 [[revisions."2025".identifier_evolutions]]
 kind = "retired"
 family = "bindings"
-identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por-1273"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-reduccion-aplicable-por"
 to_revision = "2025"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
@@ -74,7 +74,7 @@ source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
 [[revisions."2025".identifier_evolutions]]
 kind = "retired"
 family = "bindings"
-identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por-1290"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-reduccion-aplicable-por"
 to_revision = "2025"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
@@ -83,7 +83,7 @@ source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
 [[revisions."2025".identifier_evolutions]]
 kind = "retired"
 family = "bindings"
-identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por-1307"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-reduccion-aplicable-por"
 to_revision = "2025"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
@@ -92,7 +92,7 @@ source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
 [[revisions."2025".identifier_evolutions]]
 kind = "retired"
 family = "bindings"
-identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por-1324"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-reduccion-aplicable-por"
 to_revision = "2025"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
@@ -101,7 +101,7 @@ source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]
 [[revisions."2025".identifier_evolutions]]
 kind = "retired"
 family = "bindings"
-identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por-1341"
+identifier = "modelo-390.page_5.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-reduccion-aplicable-por"
 to_revision = "2025"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2024", "aeat-dr-390-2025"]

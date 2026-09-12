@@ -22,10 +22,21 @@ from .reference_checker import IdReferenceChecker
 #: the revision manifest, paired with that manifest field. Declared as pairs so a
 #: section can never be defaulted from another family's grounding: a modelo's
 #: bindings cite its record design, its formulas the approving orden's
-#: instructions, and the two are different documents.
+#: instructions, and the two are different documents. Every keyed family that
+#: grounds its members in one document of its own carries its own pair here, so
+#: enrolling a family is adding its tuple and its manifest field, never a second
+#: defaulting path.
 FAMILY_SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
     ("bindings", "binding_source_refs"),
     ("formulas", "formula_source_refs"),
+    ("application_links", "application_link_source_refs"),
+    ("applicability", "applicability_source_refs"),
+    ("filing_schedules", "filing_schedule_source_refs"),
+    ("live_cross_references", "live_cross_reference_source_refs"),
+    ("extraction_profiles", "extraction_profile_source_refs"),
+    ("dependency_classifications", "dependency_classification_source_refs"),
+    ("constructs", "construct_source_refs"),
+    ("parameters", "parameter_source_refs"),
 )
 
 

@@ -1,41 +1,41 @@
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-14"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-14", offset = 14, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-15"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-15", offset = 15, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-20", offset = 20, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-33"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-33", offset = 33, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-53"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-53", offset = 53, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-73"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-73", offset = 73, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -49,77 +49,77 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-77"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-77", offset = 77, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-139"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-139", offset = 139, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-152"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-152", offset = 152, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-153"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-153", offset = 153, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-158"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-158", offset = 158, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-171"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-171", offset = 171, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-191"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-191", offset = 191, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-211"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-211", offset = 211, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-212"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-212", offset = 212, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-215"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-215", offset = 215, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-277"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-277", offset = 277, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -133,252 +133,252 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-291"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-291", offset = 291, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-296"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-296", offset = 296, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-309"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-309", offset = 309, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-329"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-329", offset = 329, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-349"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-349", offset = 349, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-350"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-350", offset = 350, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-353"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-353", offset = 353, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-415"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-415", offset = 415, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-428"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-428", offset = 428, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-429"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-429", offset = 429, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-434"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-434", offset = 434, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-447"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-447", offset = 447, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-467"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-467", offset = 467, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-487"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-487", offset = 487, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-488"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-488", offset = 488, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-491"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-491", offset = 491, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-553"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-553", offset = 553, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-566"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-566", offset = 566, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-567"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-567", offset = 567, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-572"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-572", offset = 572, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-585"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-585", offset = 585, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-605"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-605", offset = 605, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-625"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-625", offset = 625, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-626"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-626", offset = 626, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-629"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-629", offset = 629, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-691"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-691", offset = 691, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-704"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-704", offset = 704, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-705"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-705", offset = 705, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-710"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-710", offset = 710, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-723"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-723", offset = 723, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-743"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-743", offset = 743, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-763"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-763", offset = 763, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-764"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-764", offset = 764, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-767"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-767", offset = 767, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-829"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-829", offset = 829, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-842"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-clave-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-842", offset = 842, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -392,49 +392,49 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-848"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-848", offset = 848, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-861"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-isin-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-861", offset = 861, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-881"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-881", offset = 881, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-901"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-901", offset = 901, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-902"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-codigo-pais-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-902", offset = 902, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-905"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-905", offset = 905, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-967"
+id = "modelo-714.714-05.bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-valor-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g1-valores-no-exentos-acciones-y-particip-inst-invers-967", offset = 967, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -448,14 +448,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-994"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-994", offset = 994, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-999"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-999", offset = 999, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -469,28 +469,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1032"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1032", offset = 1032, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1052"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1052", offset = 1052, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1053"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1053", offset = 1053, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1056"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1056", offset = 1056, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -511,14 +511,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1132"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1132", offset = 1132, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1137"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1137", offset = 1137, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -532,28 +532,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1170"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1170", offset = 1170, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1190"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1190", offset = 1190, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1191"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1191", offset = 1191, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1194"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1194", offset = 1194, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -574,14 +574,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1270"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1270", offset = 1270, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1275"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1275", offset = 1275, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -595,28 +595,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1308"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1308", offset = 1308, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1328"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1328", offset = 1328, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1329"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1329", offset = 1329, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1332"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1332", offset = 1332, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -637,14 +637,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1408"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1408", offset = 1408, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1413"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1413", offset = 1413, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -658,28 +658,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1446"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1446", offset = 1446, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1466"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1466", offset = 1466, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1467"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1467", offset = 1467, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1470"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1470", offset = 1470, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -700,7 +700,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1546"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1546", offset = 1546, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -721,28 +721,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1584"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1584", offset = 1584, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1604"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1604", offset = 1604, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1605"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1605", offset = 1605, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1608"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-5"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1608", offset = 1608, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -763,14 +763,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1684"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1684", offset = 1684, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1689"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1689", offset = 1689, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -784,28 +784,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1722"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1722", offset = 1722, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1742"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1742", offset = 1742, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1743"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1743", offset = 1743, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1746"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-6"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1746", offset = 1746, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -826,14 +826,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1822"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-porcentaje-titularidad-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1822", offset = 1822, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1827"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-no-valores-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1827", offset = 1827, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -847,28 +847,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1860"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-nie-entidad-emisora-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1860", offset = 1860, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1880"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-nif-otro-pais-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1880", offset = 1880, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1881"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-codigo-pais-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1881", offset = 1881, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1884"
+id = "modelo-714.714-05.bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-descripcion-7"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g2-valores-no-exentos-acciones-y-particip-fondos-otras-1884", offset = 1884, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -882,392 +882,392 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1972"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-clave-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1972", offset = 1972, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1973"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1973", offset = 1973, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1978"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1978", offset = 1978, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1991"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-1991", offset = 1991, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2011"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2011", offset = 2011, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2012"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2012", offset = 2012, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2074"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-valor-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2074", offset = 2074, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2087"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-clave-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2087", offset = 2087, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2088"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2088", offset = 2088, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2093"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2093", offset = 2093, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2106"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2106", offset = 2106, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2126"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2126", offset = 2126, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2127"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2127", offset = 2127, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2189"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-valor-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2189", offset = 2189, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2202"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-clave-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2202", offset = 2202, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2203"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2203", offset = 2203, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2208"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2208", offset = 2208, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2221"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2221", offset = 2221, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2241"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2241", offset = 2241, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2242"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2242", offset = 2242, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2304"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-valor-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2304", offset = 2304, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2317"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-clave-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2317", offset = 2317, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2318"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2318", offset = 2318, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2323"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-no-valores-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2323", offset = 2323, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2336"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2336", offset = 2336, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2356"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2356", offset = 2356, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2357"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-descripcion-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2357", offset = 2357, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2419"
+id = "modelo-714.714-05.bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-valor-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g3-valores-no-exentos-acciones-y-particip-inst-invers-2419", offset = 2419, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2445"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-clave-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2445", offset = 2445, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2446"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-porcentaje-titularidad-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2446", offset = 2446, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2451"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2451", offset = 2451, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2464"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2464", offset = 2464, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2484"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2484", offset = 2484, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2485"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2485", offset = 2485, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2547"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-1"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2547", offset = 2547, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2560"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-clave-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2560", offset = 2560, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2561"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-porcentaje-titularidad-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2561", offset = 2561, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2566"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2566", offset = 2566, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2579"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2579", offset = 2579, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2599"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2599", offset = 2599, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2600"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2600", offset = 2600, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2662"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-2"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2662", offset = 2662, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2675"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-clave-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2675", offset = 2675, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2676"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-porcentaje-titularidad-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2676", offset = 2676, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2681"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2681", offset = 2681, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2694"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2694", offset = 2694, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2714"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2714", offset = 2714, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2715"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2715", offset = 2715, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2777"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-3"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2777", offset = 2777, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2790"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-clave-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2790", offset = 2790, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2791"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-porcentaje-titularidad-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2791", offset = 2791, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2796"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-no-valores-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2796", offset = 2796, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2809"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-nie-entidad-emisora-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2809", offset = 2809, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2829"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-nif-otro-pais-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2829", offset = 2829, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2830"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-descripcion-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2830", offset = 2830, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2892"
+id = "modelo-714.714-05.bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-valor-4"
 provider = { kind = "manual_input", record = "714-05", field = "bienes-y-derechos-g4-valores-no-exentos-acciones-y-particip-otras-entidades-2892", offset = 2892, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]

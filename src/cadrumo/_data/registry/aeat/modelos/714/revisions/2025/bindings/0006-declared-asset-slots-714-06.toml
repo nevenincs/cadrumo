@@ -7,7 +7,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-16", offset = 16, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -21,14 +21,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-49"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-49", offset = 49, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-69"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-69", offset = 69, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -42,7 +42,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-73"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-73", offset = 73, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -77,7 +77,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-160"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-160", offset = 160, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -91,28 +91,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-193"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-193", offset = 193, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-213"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-213", offset = 213, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-214"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-214", offset = 214, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-217"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-217", offset = 217, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -147,7 +147,7 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-304"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-no-valores-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-304", offset = 304, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -161,28 +161,28 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-337"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-337", offset = 337, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-357"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-357", offset = 357, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-358"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-codigo-pais-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-358", offset = 358, length = 3, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-361"
+id = "modelo-714.714-06.bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-descripcion-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h1-valores-exentos-acciones-y-particip-entidades-juridicas-361", offset = 361, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -210,35 +210,35 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-459"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-clave-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-459", offset = 459, length = 2, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-461"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-461", offset = 461, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-474"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-nie-entidad-emisora-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-474", offset = 474, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-494"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-otro-pais-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-494", offset = 494, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-495"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-descripcion-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-495", offset = 495, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -252,49 +252,49 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-562"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-porcentaje-participacion-familiar-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-562", offset = 562, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-567"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-valor-1"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-567", offset = 567, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-580"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-clave-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-580", offset = 580, length = 2, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-582"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-582", offset = 582, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-595"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-nie-entidad-emisora-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-595", offset = 595, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-615"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-otro-pais-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-615", offset = 615, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-616"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-descripcion-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-616", offset = 616, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -308,49 +308,49 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-683"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-porcentaje-participacion-familiar-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-683", offset = 683, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-688"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-valor-2"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-688", offset = 688, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-701"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-clave-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-701", offset = 701, length = 2, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-703"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-no-valores-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-703", offset = 703, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-716"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-nie-entidad-emisora-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-716", offset = 716, length = 20, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-736"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-nif-otro-pais-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-736", offset = 736, length = 1, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-737"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-descripcion-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-737", offset = 737, length = 62, data_type = "text", signed = false }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-277-2026:art-4"]
@@ -364,14 +364,14 @@ legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-804"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-porcentaje-participacion-familiar-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-804", offset = 804, length = 5, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-277-2026:art-4"]
 source_refs = ["aeat-dr-714-2025"]
 
 [[revisions."2025".bindings]]
-id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-809"
+id = "modelo-714.714-06.bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-valor-3"
 provider = { kind = "manual_input", record = "714-06", field = "bienes-y-derechos-h2-valores-exentos-acciones-y-particip-exentas-entidades-809", offset = 809, length = 13, data_type = "money", signed = false }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-277-2026:art-4"]

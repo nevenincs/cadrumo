@@ -1,0 +1,23 @@
+# Provenance anchor for the static form layout this edition is authored from.
+#
+# workbook_source and fixture_id are deliberately the SAME as the 2026 edition's,
+# because the artefact is the same artefact: the modelo 136 form reproduced as
+# anexo III of Orden HAC/763/2018, in force from 3T 2018 with no stated terminus.
+# Two editions pinning one layout to one fixture is the shipped shape -- modelo
+# 038's 2024-desde-06 and 2025-y-siguientes editions both pin
+# modelo-038-2024-layout for the same reason.
+#
+# runner_required is false: this is a static-layout provenance pin, not an
+# assertion that a byte-position parity run was executed. No positional record
+# design exists for modelo 136 in any year, so there is nothing to run one
+# against.
+
+[[revisions."2022-2025".workbook_parity_refs]]
+id = "modelo-136-current-static-layout"
+workbook_source = "boe-modelo-136-current-form"
+fixture_id = "modelo-136-2018-current-form-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hac-763-2018:art-tercero", "orden-hac-763-2018:df-unica"]
+source_refs = ["boe-modelo-136-current-form"]
