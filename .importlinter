@@ -7,7 +7,6 @@ root_packages =
     cadrumo_harness
     dev
     docs
-    test_support
 include_external_packages = False
 # Import form does not change the architectural verdict.  In particular,
 # TYPE_CHECKING imports and function-local imports remain in the graph.
@@ -49,14 +48,6 @@ layers =
     conf
 exhaustive = True
 
-[importlinter:contract:closed-test-support-classification]
-type = layers
-name = Every shared test-support package has a declared lane
-containers = test_support
-layers =
-    registry_authoring : tui_frame : tui_home_fixtures : tui_registration : tui_workbench
-exhaustive = True
-
 # ``cadrumo_data`` is an installed namespace rather than a local Python
 # directory in this checkout.  Its resource lane is therefore represented by
 # the static census gate, which also rejects undeclared generated-root imports.
@@ -74,7 +65,6 @@ source_modules =
 forbidden_modules =
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------
@@ -94,7 +84,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:domain-is-inward]
@@ -109,7 +98,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:application-is-inward]
@@ -123,7 +111,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:shared-tests-are-core-only]
@@ -139,7 +126,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:resource-data-isolated]
@@ -156,7 +142,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:harness-has-no-entrypoint-or-repository-dependency]
@@ -168,7 +153,6 @@ forbidden_modules =
     cadrumo.entrypoints
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 # ---------------------------------------------------------------------------
@@ -185,7 +169,6 @@ forbidden_modules =
     cadrumo_harness
     dev
     docs
-    test_support
 allow_indirect_imports = False
 
 [importlinter:contract:cli-does-not-reach-tui]
