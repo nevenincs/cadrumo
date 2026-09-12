@@ -653,6 +653,7 @@ def _parallel_localization_inventory(
 
     docs_root = repository / "docs" / "locales"
     docs_messages: dict[tuple[str, str], dict[str, bool]] = defaultdict(dict)
+    docs_obsolete: dict[tuple[str, str], set[str]] = defaultdict(set)
     docs_catalogue_files: set[tuple[str, str]] = set()
     for path in sorted(docs_root.rglob("*.po")) if docs_root.is_dir() else ():
         try:
@@ -688,6 +689,9 @@ def _parallel_localization_inventory(
                     if len(translations) > 1:
                         cell = f"{cell}:plural[{index}]"
                     spelling_values.setdefault(locale, {})[cell] = value
+        for message in catalogue_payload.obsolete.values():
+            if message.id:
+                docs_obsolete[(locale, catalogue)].add(_po_message_identity(message))
     for (catalogue, message_id), states in docs_messages.items():
         for locale in ("ca", "es", "hu"):
             if states.get(locale):
@@ -702,6 +706,7 @@ def _parallel_localization_inventory(
         repository,
         docs_messages,
         catalogue_files=docs_catalogue_files,
+        catalogue_obsolete=docs_obsolete,
         spelling_values=spelling_values,
     )
     findings.extend(docs_findings)
@@ -723,6 +728,7 @@ def _documentation_source_inventory(
     catalogue_messages: dict[tuple[str, str], dict[str, bool]],
     *,
     catalogue_files: set[tuple[str, str]] | None = None,
+    catalogue_obsolete: dict[tuple[str, str], set[str]] | None = None,
     spelling_values: dict[str, dict[str, str]] | None = None,
 ) -> tuple[dict[str, int], list[dict[str, object]]]:
     """Validate cached source extraction and compare it with every PO.
@@ -743,6 +749,10 @@ def _documentation_source_inventory(
 
     counts = Counter[str]()
     findings: list[dict[str, object]] = []
+    catalogue_obsolete = catalogue_obsolete or {}
+    for (locale, _catalogue), identities in catalogue_obsolete.items():
+        counts["docs_catalogue_messages_obsolete"] += len(identities)
+        counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
     catalogue_files = catalogue_files or {
         (locale, catalogue) for (catalogue, _message_id), states in catalogue_messages.items() for locale in states
     }
@@ -880,10 +890,13 @@ def _documentation_source_inventory(
                     for (candidate, message_id), states in catalogue_messages.items()
                     if candidate == catalogue and locale in states
                 }
+                obsolete_ids = catalogue_obsolete.get((locale, catalogue), set())
+                catalogue_ids.update(obsolete_ids)
                 missing = source_ids - catalogue_ids
                 stale = catalogue_ids - source_ids
                 counts["docs_source_messages_missing"] += len(missing)
                 counts["docs_catalogue_messages_stale"] += len(stale)
+                counts[f"docs_catalogue_messages_stale_{locale}"] += len(stale)
                 if missing or stale:
                     page_drifted = True
                     findings.append(
@@ -897,6 +910,8 @@ def _documentation_source_inventory(
                             "catalogue_messages_stale": len(stale),
                             "missing_message_ids": sorted(missing),
                             "stale_message_ids": sorted(stale),
+                            "catalogue_messages_obsolete": len(obsolete_ids),
+                            "obsolete_message_ids": sorted(obsolete_ids),
                             "next_action": "run python -m dev.docs.i18n, then translate the catalogue delta",
                         }
                     )
@@ -937,6 +952,7 @@ def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
         "docs_source_drift_pages": counts["docs_source_drift_pages"],
         "docs_source_messages_missing": counts["docs_source_messages_missing"],
         "docs_catalogue_messages_stale": counts["docs_catalogue_messages_stale"],
+        "docs_catalogue_messages_obsolete": counts["docs_catalogue_messages_obsolete"],
         "docs_extraction_failures": counts["docs_extraction_failures"],
         "docs_orphan_catalogue_files": counts["docs_orphan_catalogue_files"],
         "docs_missing_catalogue_files": counts["docs_missing_catalogue_files"],
@@ -951,6 +967,14 @@ def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
         },
         **{
             f"docs_catalogue_files_read_{locale}": counts[f"docs_catalogue_files_read_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_catalogue_messages_stale_{locale}": counts[f"docs_catalogue_messages_stale_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_catalogue_messages_obsolete_{locale}": counts[f"docs_catalogue_messages_obsolete_{locale}"]
             for locale in ("ca", "es", "hu")
         },
     }

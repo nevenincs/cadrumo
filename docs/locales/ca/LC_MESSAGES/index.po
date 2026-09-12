@@ -179,7 +179,7 @@ msgstr "Resolució de problemes"
 
 #: ../../index.md:182
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Publica l'autoritat d'execució"
 
 #: ../../index.md:182
 msgid "Disclaimer"

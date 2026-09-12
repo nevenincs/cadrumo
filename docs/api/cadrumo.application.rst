@@ -74,7 +74,6 @@ Submodules
    cadrumo.application.profile_deletion_hold_contract
    cadrumo.application.profile_preconditions
    cadrumo.application.provisioning
-   cadrumo.application.repair_integrity
    cadrumo.application.state_projection
    cadrumo.application.storage_write_policy
    cadrumo.application.workbench_generation

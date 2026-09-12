@@ -104,7 +104,7 @@ msgstr ""
 
 #: ../../reference/registry-legal-api.md:22
 msgid "Runtime authority artifact"
-msgstr ""
+msgstr "Artefacto de autoridad de ejecución"
 
 #: ../../reference/registry-legal-api.md:24
 msgid ""
@@ -115,56 +115,73 @@ msgid ""
 "`registry/authority/authority.json` and checks its schema version and "
 "content digest before reconstructing typed authority data."
 msgstr ""
+"El artefacto de autoridad de ejecución es la publicación versionada, cuyo"
+" resumen criptográfico se verifica, del registro validado de la AEAT, "
+"destinada a los cálculos instalados y a las exportaciones de "
+"declaraciones. Es una salida generada. `bundled_authority()` lee el "
+"`registry/authority/authority.json` empaquetado y comprueba su versión de"
+" esquema y su resumen de contenido antes de reconstruir los datos de "
+"autoridad tipados."
 
 #: ../../reference/registry-legal-api.md
 msgid "Term"
-msgstr ""
+msgstr "Término"
 
 #: ../../reference/registry-legal-api.md
 msgid "Validated candidate"
-msgstr ""
+msgstr "Candidato validado"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The registry and source-evidence inputs accepted by the development "
 "compiler."
 msgstr ""
+"Las entradas del registro y de las evidencias de origen aceptadas por el "
+"compilador de desarrollo."
 
 #: ../../reference/registry-legal-api.md
 msgid "Validation receipt"
-msgstr ""
+msgstr "Justificante de validación"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The digests captured for those inputs; a change before publication "
 "refuses the candidate."
 msgstr ""
+"Los resúmenes capturados para esas entradas; cualquier cambio antes de la"
+" publicación hace que el candidato sea rechazado."
 
 #: ../../reference/registry-legal-api.md
 msgid "Identity digest"
-msgstr ""
+msgstr "Resumen de identidad"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "The content-addressed identity of the candidate, recorded in the artifact"
 " so a stale artifact can be detected."
 msgstr ""
+"La identidad del candidato basada en su contenido, registrada en el "
+"artefacto para poder detectar si está desactualizado."
 
 #: ../../reference/registry-legal-api.md
 msgid "Authority artifact"
-msgstr ""
+msgstr "Artefacto de autoridad"
 
 #: ../../reference/registry-legal-api.md
 msgid "The atomically written JSON publication containing the resolved authority."
 msgstr ""
+"La publicación JSON escrita de forma atómica que contiene la autoridad "
+"resuelta."
 
 #: ../../reference/registry-legal-api.md
 msgid "Schema version"
-msgstr ""
+msgstr "Versión del esquema"
 
 #: ../../reference/registry-legal-api.md
 msgid "The artifact format identifier. Runtime refuses an unsupported version."
 msgstr ""
+"El identificador del formato del artefacto. El entorno de ejecución "
+"rechaza una versión no compatible."
 
 #: ../../reference/registry-legal-api.md:38
 msgid ""
@@ -174,6 +191,11 @@ msgid ""
 "`payload` together. The digest detects a truncated, corrupted, or hand-"
 "edited file."
 msgstr ""
+"El artefacto es un único objeto JSON canónico con exactamente tres "
+"miembros: `schema_version`, `payload` y `payload_sha256`. "
+"`payload_sha256` es el resumen SHA-256 del JSON canónico formado "
+"conjuntamente por `schema_version` y `payload`. El resumen detecta si el "
+"archivo está truncado, dañado o editado manualmente."
 
 #: ../../reference/registry-legal-api.md:43
 msgid ""
@@ -184,6 +206,13 @@ msgid ""
 "timestamps never contribute, so an identical checkout anywhere derives "
 "the same identity."
 msgstr ""
+"El resumen de identidad incorpora, para cada archivo del registro y cada "
+"archivo de evidencias de origen, su ruta relativa a la raíz "
+"correspondiente y el resumen SHA-256 de su contenido. Los archivos del "
+"registro se resumen leyendo los finales de línea CRLF como LF. Las "
+"evidencias de origen se resumen byte a byte. Las rutas absolutas, los "
+"tamaños y las marcas de tiempo nunca contribuyen, por lo que una copia de"
+" trabajo idéntica obtiene la misma identidad en cualquier ubicación."
 
 #: ../../reference/registry-legal-api.md:49
 msgid ""
@@ -199,58 +228,71 @@ msgid ""
 "Every non-text fact value is therefore written as an object with one tag "
 "that names its type:"
 msgstr ""
+"El formato actual es `cadrumo-authority-artifact-v4`. Su contenido es una"
+" proyección compacta de la autoridad tipada completa. Los campos "
+"obligatorios siempre se escriben; un campo solo se omite cuando su valor "
+"tipado coincide con el valor predeterminado declarado por su esquema. La "
+"rehidratación estricta restaura esos valores predeterminados. Los "
+"discriminadores y las grafías de las uniones tal como se autorizaron "
+"permanecen en la representación serializada, de modo que la compactación "
+"nunca tiene que adivinar qué variante tipada construir. Los decimales y "
+"las fechas son cadenas JSON cuando el esquema tipa un campo como decimal "
+"o fecha. Un valor de hecho gobernado puede ser texto, un entero, un "
+"decimal, un booleano o una fecha, y JSON no puede distinguirlos solo por "
+"su valor. Por ello, todo valor de hecho que no sea texto se escribe como "
+"un objeto con una etiqueta que identifica su tipo:"
 
 #: ../../reference/registry-legal-api.md
 msgid "Fact value"
-msgstr ""
+msgstr "Valor del hecho"
 
 #: ../../reference/registry-legal-api.md
 msgid "Written as"
-msgstr ""
+msgstr "Se escribe como"
 
 #: ../../reference/registry-legal-api.md
 msgid "Decimal"
-msgstr ""
+msgstr "Decimal"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$decimal\": \"0.40\"}`"
-msgstr ""
+msgstr "`{\"$decimal\": \"0.40\"}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Date"
-msgstr ""
+msgstr "Fecha"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$date\": \"2025-01-01\"}`"
-msgstr ""
+msgstr "`{\"$date\": \"2025-01-01\"}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Integer"
-msgstr ""
+msgstr "Entero"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$int\": 5}`"
-msgstr ""
+msgstr "`{\"$int\": 5}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Boolean"
-msgstr ""
+msgstr "Booleano"
 
 #: ../../reference/registry-legal-api.md
 #, python-brace-format
 msgid "`{\"$bool\": true}`"
-msgstr ""
+msgstr "`{\"$bool\": true}`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Text"
-msgstr ""
+msgstr "Texto"
 
 #: ../../reference/registry-legal-api.md
 msgid "The bare JSON string, for example `\"0.40\"`"
-msgstr ""
+msgstr "La cadena JSON sin etiqueta, por ejemplo `\"0.40\"`"
 
 #: ../../reference/registry-legal-api.md:68
 msgid ""
@@ -260,6 +302,12 @@ msgid ""
 " from the shape of a string. It refuses every superseded v1, v2, or v3 "
 "artifact and names the v4 format to republish in."
 msgstr ""
+"El entorno de ejecución decodifica el contenido conforme al mismo esquema"
+" estricto que utiliza el compilador de desarrollo. Rechaza una etiqueta "
+"desconocida, un valor etiquetado malformado o no canónico y un valor de "
+"hecho no textual sin etiqueta; nunca infiere un tipo a partir de la forma"
+" de una cadena. Rechaza todos los artefactos v1, v2 o v3 sustituidos e "
+"indica que deben volver a publicarse en el formato v4."
 
 #: ../../reference/registry-legal-api.md:74
 msgid ""
@@ -271,6 +319,16 @@ msgid ""
 "bytes or an untyped JSON bag. A v4 write or read refuses an authority "
 "when any required runtime catalogue is empty."
 msgstr ""
+"El compilador, y no el entorno de ejecución del producto, expande las "
+"diferencias de autoría en revisiones canónicas completas. El artefacto "
+"también contiene catálogos tipados del entorno de ejecución para la "
+"normativa del IVA, las reglas del lugar de realización, los alias de "
+"países, los territorios postales españoles, las exclusiones "
+"territoriales, las bandas de recargo y los ámbitos de apoderamiento. Son "
+"registros congelados del esquema, no bytes TOML incrustados ni un "
+"contenedor JSON sin tipo. Una escritura o lectura v4 rechaza una "
+"autoridad cuando cualquiera de los catálogos obligatorios del entorno de "
+"ejecución está vacío."
 
 #: ../../reference/registry-legal-api.md:81
 msgid ""
@@ -281,6 +339,13 @@ msgid ""
 "`horizon`, and optional `hard_ceiling`—used to admit supported "
 "coordinates."
 msgstr ""
+"Los tipos de Modelo y del dominio fiscal validan la sintaxis estable de "
+"los identificadores sin cargar el árbol de autoría. La autoridad "
+"compilada es la fuente de pertenencia y valida esos identificadores "
+"frente a sus vocabularios publicados. La misma autoridad proyecta el "
+"sobre temporal de soporte compartido —`floor`, `horizon` y el "
+"`hard_ceiling` opcional— que se utiliza para admitir coordenadas "
+"compatibles."
 
 #: ../../reference/registry-legal-api.md:87
 msgid ""
@@ -292,6 +357,15 @@ msgid ""
 " failures occur before authority-dependent calculation or filing "
 "proceeds."
 msgstr ""
+"El flujo de carga de artefactos de `bundled_authority()` no compila "
+"fuentes, no carga el árbol de autoría sin procesar, no ofrece una ruta de"
+" reparación ni mantiene una caché paralela de tablas del entorno de "
+"ejecución. Si falta el artefacto, se produce un error de disponibilidad. "
+"Un contenedor malformado, un miembro inesperado, un catálogo tipado "
+"incompleto o un contenido no válido producen un error de formato. Un "
+"resumen que no coincide produce un error de integridad. Estos fallos "
+"ocurren antes de que continúen los cálculos o las declaraciones que "
+"dependen de la autoridad."
 
 #: ../../reference/registry-legal-api.md:94
 msgid ""
@@ -300,6 +374,10 @@ msgid ""
 " development-only "
 "`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:"
 msgstr ""
+"Las herramientas de desarrollo publican mediante `uv run --no-sync python"
+" -m dev.registry.pipeline publish-authority` o, de forma programática, "
+"mediante la API exclusiva de desarrollo "
+"`dev.registry.pipeline.cli.publish_authority_candidate_workflow`:"
 
 #: ../../reference/registry-legal-api.md:107
 msgid ""
@@ -308,6 +386,11 @@ msgid ""
 "and source evidence. See [Publish a validated runtime authority](../how-"
 "to/publish-runtime-authority.md) for the workflow and recovery path."
 msgstr ""
+"`python -m dev.registry.conformance integrity` rechaza un artefacto cuyo "
+"resumen de identidad registrado difiere de la identidad del registro y de"
+" las evidencias de origen actuales. Consulta [Publicar una autoridad de "
+"ejecución validada](../how-to/publish-runtime-authority.md) para conocer "
+"el flujo de trabajo y la ruta de recuperación."
 
 #: ../../reference/registry-legal-api.md:112
 msgid "Filing-input contract shapes"

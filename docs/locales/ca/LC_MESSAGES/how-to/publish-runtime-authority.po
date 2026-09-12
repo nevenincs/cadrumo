@@ -21,7 +21,7 @@ msgstr ""
 
 #: ../../how-to/publish-runtime-authority.md:1
 msgid "How to publish a validated runtime authority"
-msgstr ""
+msgstr "Com publicar una autoritat d'execució validada"
 
 #: ../../how-to/publish-runtime-authority.md:3
 msgid ""
@@ -31,6 +31,12 @@ msgid ""
 "calculations and filing exports. It is a development and release "
 "operation, not an `aeat` command for taxpayers."
 msgstr ""
+"Utilitzeu aquesta guia quan canvieu el registre de regles fiscals de "
+"Cadrumo o les seves proves legals. La publicació converteix les regles de"
+" modelo validades per l'Agencia Estatal de Administración Tributaria "
+"(AEAT) en l'artefacte que el temps d'execució llegeix per als càlculs i "
+"les exportacions de declaracions. És una operació de desenvolupament i de"
+" llançament, no una ordre `aeat` per als contribuents."
 
 #: ../../how-to/publish-runtime-authority.md:9
 msgid ""
@@ -40,6 +46,12 @@ msgid ""
 "shipped runtime source: installed code does not open the authored "
 "registry tree or maintain a parallel cache of tables parsed from it."
 msgstr ""
+"L'artefacte és una sortida generada. Registra un resum del seu propi "
+"contingut i la identitat del registre i de les proves a partir dels quals"
+" s'ha compilat, perquè el control del registre pugui saber quan està "
+"desactualitzat. També és l'única font d'execució que s'envia: el codi "
+"instal·lat no obre l'arbre de registre d'autoria ni manté una memòria cau"
+" paral·lela de les taules analitzades."
 
 #: ../../how-to/publish-runtime-authority.md:15
 msgid ""
@@ -48,18 +60,25 @@ msgid ""
 "and Python API](../reference/registry-legal-api.md). For an ordinary "
 "installed-command failure, use [Diagnose and repair](troubleshooting.md)."
 msgstr ""
+"Per al format de l'artefacte, les comprovacions en temps d'execució, les "
+"classes d'error i la interfície de programació d'aplicacions (API) de "
+"Python, consulteu [Registre, fonts legals i API de Python](../reference"
+"/registry-legal-api.md). Per a una fallada ordinària de l'ordre "
+"instal·lada, consulteu [Diagnosticar i reparar](troubleshooting.md)."
 
 #: ../../how-to/publish-runtime-authority.md:19
 msgid "Publish"
-msgstr ""
+msgstr "Publica"
 
 #: ../../how-to/publish-runtime-authority.md:21
 msgid "Start from a registry that passes the registry validation suite."
 msgstr ""
+"Comenceu amb un registre que superi el conjunt de proves de validació del"
+" registre."
 
 #: ../../how-to/publish-runtime-authority.md:22
 msgid "From the repository root, run:"
-msgstr ""
+msgstr "Des de l'arrel del repositori, executeu:"
 
 #: ../../how-to/publish-runtime-authority.md:28
 msgid ""
@@ -70,12 +89,20 @@ msgid ""
 "root`, `--source-root`, and `--artifact` select other trees or another "
 "destination."
 msgstr ""
+"L'ordre materialitza els canvis d'autoria en revisions tipades completes,"
+" valida el registre inclòs i les proves d'origen, i després substitueix "
+"atòmicament `src/cadrumo/_data/registry/authority/authority.json`. "
+"Imprimeix la ruta de l'artefacte i el resum d'identitat que hi ha "
+"registrat. `--registry-root`, `--source-root` i `--artifact` permeten "
+"seleccionar altres arbres o una altra destinació."
 
 #: ../../how-to/publish-runtime-authority.md:34
 msgid ""
 "Commit the regenerated `authority.json` together with the registry change"
 " that required it."
 msgstr ""
+"Confirmeu l'`authority.json` regenerat juntament amb el canvi del "
+"registre que l'ha requerit."
 
 #: ../../how-to/publish-runtime-authority.md:37
 msgid ""
@@ -84,6 +111,10 @@ msgid ""
 "byte in place. Don't edit the artifact by hand. Correct the registry, "
 "then publish again."
 msgstr ""
+"Si es rebutja la validació o el registre canvia mentre es valida, la "
+"publicació falla i deixa l'artefacte anterior exactament igual, byte per "
+"byte. No editeu l'artefacte manualment. Corregiu el registre i torneu-lo "
+"a publicar."
 
 #: ../../how-to/publish-runtime-authority.md:41
 msgid ""
@@ -95,14 +126,23 @@ msgid ""
 "membership belongs to this validated authority; an identifier absent from"
 " its published vocabulary is not silently admitted."
 msgstr ""
+"La publicació també projecta l'envolupant de compatibilitat compartida "
+"`floor`, `horizon` i `hard_ceiling` opcional, així com els catàlegs "
+"tipats de temps d'execució per a les regles d'IVA, el lloc de prestació, "
+"els països i territoris, les bandes de recàrrec i els àmbits "
+"d'apoderament. Tots els catàlegs requerits han d'estar emplenats. Els "
+"identificadors de modelo i de domini fiscal accepten la sintaxi estable "
+"en el codi, però la pertinença correspon a aquesta autoritat validada; un"
+" identificador absent del seu vocabulari publicat no s'hi admet "
+"silenciosament."
 
 #: ../../how-to/publish-runtime-authority.md:49
 msgid "Check that the artifact is current"
-msgstr ""
+msgstr "Comproveu que l'artefacte està actualitzat"
 
 #: ../../how-to/publish-runtime-authority.md:51
 msgid "Run the registry gate:"
-msgstr ""
+msgstr "Executeu el control del registre:"
 
 #: ../../how-to/publish-runtime-authority.md:57
 msgid ""
@@ -111,6 +151,11 @@ msgid ""
 "or in an earlier format. The refusal names the recorded and the expected "
 "identity digests and the command that republishes the artifact."
 msgstr ""
+"El primer pas, `python -m dev.registry.conformance integrity`, acaba amb "
+"el codi 1 i rebutja l'operació per l'error estàndard quan l'artefacte "
+"està desactualitzat, no es pot llegir o té un format anterior. El rebuig "
+"indica els resums d'identitat registrat i esperat, i l'ordre que torna a "
+"publicar l'artefacte."
 
 #: ../../how-to/publish-runtime-authority.md:62
 msgid ""
@@ -120,10 +165,16 @@ msgid ""
 "the registry or its evidence doesn't make the artifact stale. The full-"
 "registry publication round-trip test covers the compiler itself."
 msgstr ""
+"La identitat depèn únicament del contingut dels fitxers i de les rutes "
+"relatives als arbres del registre i de l'origen. Per tant, un clon nou "
+"coincideix amb el publicador en qualsevol plataforma. Un canvi al codi "
+"del compilador que no toqui el registre ni les seves proves no fa que "
+"l'artefacte quedi desactualitzat. La prova de recorregut complet de "
+"publicació del registre cobreix el mateix compilador."
 
 #: ../../how-to/publish-runtime-authority.md:68
 msgid "Recover from an invalid authority"
-msgstr ""
+msgstr "Recupereu-vos d'una autoritat no vàlida"
 
 #: ../../how-to/publish-runtime-authority.md:70
 msgid ""
@@ -133,22 +184,33 @@ msgid ""
 "TOML, repair an artifact, or fall back to a separately cached runtime "
 "table."
 msgstr ""
+"Quan un flux de treball instal·lat rebutja un artefacte no disponible, "
+"mal format, alterat o d'una versió no compatible, atureu el flux de "
+"treball. La càrrega de `bundled_authority()` no compila les fonts "
+"d'autoria, no analitza el TOML en brut, no repara cap artefacte ni "
+"recorre a una taula de temps d'execució desada en una memòria cau "
+"separada."
 
 #: ../../how-to/publish-runtime-authority.md:75
 msgid ""
 "Preserve the failed artifact when it is present, plus the package "
 "version, artifact digest, error class, and redacted logs."
 msgstr ""
+"Conserveu l'artefacte que ha fallat si és present, juntament amb la "
+"versió del paquet, el resum de l'artefacte, la classe d'error i els "
+"registres redactats."
 
 #: ../../how-to/publish-runtime-authority.md:77
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
 msgstr ""
+"Torneu a publicar des d'un registre validat i confirmeu que `just check-"
+"registry` passa."
 
 #: ../../how-to/publish-runtime-authority.md:79
 msgid "Rebuild the package so it contains the replacement artifact."
-msgstr ""
+msgstr "Reconstruïu el paquet perquè contingui l'artefacte substitutori."
 
 #: ../../how-to/publish-runtime-authority.md:81
 msgid ""
@@ -157,4 +219,8 @@ msgid ""
 "version, artifact digest, error class, and redacted log context. Never "
 "include taxpayer data."
 msgstr ""
+"Escaliu el cas mitjançant el [sistema de seguiment d'incidències del "
+"projecte](https://github.com/nevenincs/cadrumo/issues), indicant la "
+"versió del llançament, el resum de l'artefacte, la classe d'error i el "
+"context dels registres redactats. No inclogueu dades dels contribuents."
 

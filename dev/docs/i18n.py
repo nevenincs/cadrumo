@@ -500,6 +500,28 @@ def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGU
     prune_orphan_catalogues(repo_root, languages)
 
 
+def _run_set_batch(manifest: Path, *, dry_run: bool) -> int:
+    """Apply one validated docs-locale manifest and emit its stable result.
+
+    The mutation service owns manifest validation, locking, and publication;
+    this CLI layer only translates its result into the documented process
+    contract. Importing lazily keeps extraction and ``--help`` usable when a
+    caller has not installed the optional mutation service dependencies.
+    """
+    try:
+        from .locale_mutations import apply_manifest
+
+        result = apply_manifest(manifest, repo_root=_repo_root(), dry_run=dry_run)
+    except Exception as exc:
+        # Validation/refusal failures are operator-correctable input errors.
+        # Keep the diagnostic on stderr and reserve stdout for the stable JSON
+        # result emitted only after a successful validation/application.
+        print(f"docs locale batch refused: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True, separators=(",", ":")), flush=True)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint: extract POT templates and refresh the language catalogues.
 
@@ -515,7 +537,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Extract POT templates without refreshing the per-language catalogues.",
     )
+    commands = parser.add_subparsers(dest="command")
+    set_batch = commands.add_parser("set-batch", help="Apply a validated documentation PO update manifest.")
+    set_batch.add_argument("manifest", type=Path, help="JSON schema-v1 PO update manifest.")
+    set_batch.add_argument("--dry-run", action="store_true", help="Validate and report without writing catalogues.")
     args = parser.parse_args(argv)
+
+    if args.command == "set-batch":
+        return _run_set_batch(args.manifest, dry_run=args.dry_run)
 
     repo_root = _repo_root()
     templates = extract_pot(repo_root)
