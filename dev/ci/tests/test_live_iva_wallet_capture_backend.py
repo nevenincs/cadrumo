@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from cadrumo.entrypoints.live_state_composition import persist_and_reconcile_iva_compensation_wallet
 
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
@@ -36,6 +35,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
+from cadrumo.entrypoints.live_state_composition import persist_and_reconcile_iva_compensation_wallet
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"

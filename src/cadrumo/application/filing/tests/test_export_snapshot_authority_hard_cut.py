@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import inspect
-from operator import attrgetter
 
 import pytest
 
-from ... import filing
 from ..export import export_draft
 from .export_support import (
     _approved_modelo_131_historical_registry_draft,
@@ -19,12 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_snapshot_free_renderer_and_external_projection_arguments_are_unreachable() -> None:
-    """The removed injection seam must stay absent from both facade and exporter."""
-    assert not hasattr(filing, "render_layout")
-    with pytest.raises(AttributeError):
-        attrgetter("render_layout")(filing)
-    assert "render_layout" not in filing.__all__
-
+    """The removed injection seam must stay absent from the exporter."""
     parameters = inspect.signature(export_draft).parameters
     assert "layout" not in parameters
     assert "projection_values" not in parameters

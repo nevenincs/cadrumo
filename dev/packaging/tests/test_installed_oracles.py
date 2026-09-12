@@ -38,6 +38,7 @@ from ..installed_mcp_oracle import run_installed_mcp_oracle
 from ..installed_tax_oracle import run_installed_tax_oracle
 from ..lane_verification_core import (
     create_pip_venv,
+    installed_product_env,
     run_checked,
     venv_bin_dir,
     venv_python_path,
@@ -272,6 +273,42 @@ def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: Installed
             sort_keys=True,
         ),
     )
+
+
+def test_installed_runtime_imports_v4_authority_without_authoring_sources(
+    installed_cohort: InstalledCohort,
+) -> None:
+    """The isolated installed interpreter loads the artifact and has no authored registry tree."""
+    execution_root = installed_cohort.work_dir / "authority-artifact-only"
+    execution_root.mkdir()
+    probe = """
+import json
+from importlib.resources import files
+
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.authority_artifact import AUTHORITY_ARTIFACT_SCHEMA_VERSION
+
+registry = files("cadrumo").joinpath("_data", "registry")
+artifact = registry.joinpath("authority", "authority.json")
+frame = json.loads(artifact.read_bytes())
+authority = bundled_authority()
+print(json.dumps({
+    "authoring_exists": registry.joinpath("aeat").is_dir(),
+    "modelos": len(authority.modelos),
+    "schema_version": frame["schema_version"],
+}, sort_keys=True))
+"""
+    result = run_checked(
+        [str(venv_python_path(installed_cohort.venv)), "-I", "-c", probe],
+        cwd=execution_root,
+        env=installed_product_env(execution_root / "state", installed_cohort.venv),
+    )
+
+    observed = json.loads(result.stdout)
+    assert observed["authoring_exists"] is False
+    assert observed["schema_version"] == "cadrumo-authority-artifact-v4"
+    assert observed["modelos"] > 0
+    assert AUTHORITY_ARTIFACT_SCHEMA_VERSION == "cadrumo-authority-artifact-v4"
 
 
 def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(

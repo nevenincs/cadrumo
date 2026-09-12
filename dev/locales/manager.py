@@ -337,7 +337,7 @@ class LocaleManager:
         """
         from dev.quality.unread_inputs import report_unread
 
-        from ._ast_scanner import scan_source_tree
+        from ._ast_scanner import scan_source_trees
         from ._command_spec_scanner import scan_command_spec_keys
         from ._registry_scanner import scan_modelo_schema_keys, scan_profile_schema_keys, scan_registry_keys
         from .fstring_registry import get_registered_keys
@@ -347,7 +347,8 @@ class LocaleManager:
 
         keys: set[str] = set()
         unread: list[str] = []
-        for root in (self.src_dir, *self.extra_src_dirs):
+        source_roots = (self.src_dir, *self.extra_src_dirs)
+        for root in source_roots:
             for py_file in iter_directory(root, pattern="*.py", recursive=True):
                 if _is_test_module(py_file):
                     continue
@@ -363,7 +364,11 @@ class LocaleManager:
                     continue
                 for match in self.pattern.finditer(content):
                     keys.add(match.group(1))
-            keys.update(scan_source_tree(root))
+        # The roots form one logical source corpus. Parse and index them in one
+        # scanner invocation so cross-module analysis runs once instead of once
+        # per root (the package, docs, and harness each contribute to the same
+        # required-key set).
+        keys.update(scan_source_trees(source_roots))
         keys.update(get_registered_keys())
         keys.update(scan_command_spec_keys())
         keys.update(scan_registry_keys())

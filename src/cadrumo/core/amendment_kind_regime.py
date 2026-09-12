@@ -65,15 +65,8 @@ from typing import TYPE_CHECKING
 from .modelo import Modelo
 
 if TYPE_CHECKING:
-    # Deferred: ``._period`` transitively imports ``.errors``, which imports
-    # ``core.classification``, which imports ``STRICT_FROZEN_CONFIG`` back from
-    # the ``core`` package facade (``._models``). Importing ``Period`` eagerly
-    # here would run that chain before ``core/__init__.py`` has bound
-    # ``STRICT_FROZEN_CONFIG`` (this module sorts alphabetically before
-    # ``._models`` in the facade's import block), reproducing the partial-
-    # initialization ``ImportError`` the facade's ordering otherwise avoids.
-    # ``Period`` is used only as a type annotation here, so the deferred import
-    # is sufficient and the module needs no runtime binding of the name.
+    # ``Period`` is used only as a type annotation. Keeping the import out of
+    # runtime avoids loading its transitive validation dependencies here.
     from _typeshed import SupportsAllComparisons
 
     from .period import Period

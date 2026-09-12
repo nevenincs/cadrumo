@@ -13,11 +13,11 @@ returns what the profile declares. It is deliberately a test of the SEAM rather
 than of either consumer: the consumers have their own gates, and what neither of
 them can prove is that anything connects them to a profile.
 
-Everything is reached through the package facade. The reading path's own thin
-wrapper over this -- workflow-state load, then this call -- is deliberately NOT
-reached here: a leading-underscore symbol pulled into a test across a package
-boundary is a seam that should not exist, and the wrapper's remaining behaviour
-is covered where it belongs, by an end-to-end read.
+Everything is reached through canonical defining modules. The reading path's
+own thin wrapper over this -- workflow-state load, then this call -- is
+deliberately NOT reached here: a leading-underscore symbol pulled into a test
+across a package boundary is a seam that should not exist, and the wrapper's
+remaining behaviour is covered where it belongs, by an end-to-end read.
 
 The negative case is the load-bearing half. A profile declaring no identifier
 must yield ``None`` rather than a placeholder, because a placeholder compares

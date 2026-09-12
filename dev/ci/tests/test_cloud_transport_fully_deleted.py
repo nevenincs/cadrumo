@@ -121,7 +121,7 @@ def _verify_settings_field(symbol: str) -> None:
 
 
 def _verify_consent_predicate(symbol: str) -> None:
-    """Assert the consent predicate is importable from the package facade and callable."""
+    """Assert the consent predicate is importable from its defining module and callable."""
     from cadrumo.adapters.outbound.llm.consent import cloud_evidence_read_permitted
 
     assert cloud_evidence_read_permitted.__name__ == symbol

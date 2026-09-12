@@ -1,12 +1,11 @@
-"""Application test-support helpers re-exported for cross-package reuse.
+"""Inert namespace for application test support.
 
 Colocated tests for :mod:`application` subpackages live next to the modules
-they exercise; this facade exists only for the helper other packages' tests
-need, so a cross-package consumer resolves here rather than reaching into a
-private submodule.
+they exercise. Cross-package consumers import shared support from its defining
+test-support module.
 
-It carries the autouse session fixture that registers the wizard catalogue,
-from :mod:`application.tests._wizard_catalogue_fixtures`, imported by e2e and
+The wizard-catalogue fixture is defined in
+:mod:`application.tests.wizard_catalogue_fixtures` and imported by e2e and
 fold-in suites across ``application.modelo.tests``,
 ``application.calculations.tests`` and ``application.aggregation.tests`` that
 exercise wizard-backed casillas.

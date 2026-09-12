@@ -3,9 +3,10 @@
 Single authoritative implementation of the half-up euro-cent
 rounding convention used across every AEAT calculation surface
 (LIRPF art. 23.1 rental net income, IRPF deductions, IVA prorata,
-asset depreciation, inventory cost basis). Callers in
-``cadrumo.domain.*`` import :func:`round_to_cents` and the ``CENT`` quantum
-from here rather than reimplementing the quantize call.
+asset depreciation, inventory cost basis). Callers import
+:func:`rounding.round_to_cents` and the ``CENT`` quantum from the defining
+``rounding`` module rather than reimplementing the quantize call. This package
+initializer is inert.
 
 The half-up rounding mode (:data:`~decimal.ROUND_HALF_UP`) matches
 the AEAT publication convention: a residual cent of exactly 0.5

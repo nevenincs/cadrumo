@@ -6,8 +6,8 @@ classes. Concrete persistence surfaces live in
 :mod:`storage` for the SQL, blob, namespace, and
 encrypted-envelope substrate.
 
-Domain and application repositories depend on the focused storage facades when
-they need concrete encrypted persistence. The package root stays import-light so
+Consumers import concrete encrypted persistence from its defining modules. The
+package root stays import-light so
 layout and CLI smoke tests can import the persistence layer without
 materialising database, keyring, or migration machinery.
 
@@ -17,6 +17,6 @@ See Also:
     :mod:`storage`
         Secure-object, namespace, SQL, blob, and encrypted-envelope substrate.
     :mod:`application.user_profile`
-        Application lifecycle facade that composes profile repositories with
+        Application lifecycle service that composes profile repositories with
         bucket custody and validation policy.
 """

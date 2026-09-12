@@ -187,7 +187,7 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
             ("cadrumo.entrypoints.module",),
         ),
         (
-            "product-to-separate-harness-root",
+            "product-to-harness-package",
             "cadrumo.entrypoints.bad",
             "import cadrumo_harness.mcp.module\n",
             ("cadrumo_harness.mcp.module",),
@@ -614,7 +614,7 @@ def test_unknown_object_module_projection_fails_closed(tmp_path: Path) -> None:
     _assert_category(root, "UNRESOLVED_DYNAMIC_TARGET")
 
 
-def test_separate_harness_root_keeps_absolute_product_imports(tmp_path: Path) -> None:
+def test_harness_package_keeps_absolute_product_imports(tmp_path: Path) -> None:
     root = _fixture_root(tmp_path)
     _write_module(
         root,

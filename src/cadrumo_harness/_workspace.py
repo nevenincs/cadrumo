@@ -92,7 +92,7 @@ _PLUGIN_DESCRIPTION = (
 )
 # The single product author-identity string, derived from the central product
 # identity. Shared by the plugin, marketplace, and shipped MCPB manifests so all
-# three read one declaration; exposed through the ``cadrumo_harness`` facade.
+# three read one declaration from this defining workspace module.
 PRODUCT_AUTHOR_NAME = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _PLUGIN_AUTHOR_NAME = PRODUCT_AUTHOR_NAME
 _PLUGIN_LICENSE = "Apache-2.0"

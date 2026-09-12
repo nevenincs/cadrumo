@@ -37,6 +37,14 @@ from textwrap import dedent
 import pytest
 
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
+from ....adapters.persistence.storage.custody.tests.profile_record_boundary_support import (
+    PROFILE_ID,
+    RECORD_NAMESPACE,
+    defaultable_fields_at_default,
+    initial_record,
+    open_record_session,
+    replacement_record,
+)
 from ....adapters.persistence.storage.errors import DecryptionError
 from ....application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
@@ -45,14 +53,6 @@ from ....application.user_profile.capsule_record import (
     profile_record_object_key,
 )
 from ....application.user_profile.custody_ports import profile_custody_secure_object_repository
-from ....application.user_profile.tests.profile_record_boundary_support import (
-    PROFILE_ID,
-    RECORD_NAMESPACE,
-    defaultable_fields_at_default,
-    initial_record,
-    open_record_session,
-    replacement_record,
-)
 from ....domain.user_profile.values import UserProfileRecord
 from .subprocess_cli import run_subprocess_cli_harness
 
@@ -77,7 +77,7 @@ _PUBLISHER_SOURCE = dedent(
     composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
     composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
 
-    from cadrumo.application.user_profile.tests.profile_record_boundary_support import (
+    from cadrumo.adapters.persistence.storage.custody.tests.profile_record_boundary_support import (
         advance_to_revision_two,
         open_record_session,
         publish_capsule,

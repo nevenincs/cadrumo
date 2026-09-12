@@ -1,9 +1,8 @@
-"""Last-sync provenance: the typed record of a completed synchronisation run.
+"""Inert namespace for completed-sync provenance.
 
-The public facade for the sync-run store. The parent
-:mod:`application.storage` package is a namespace container that re-exports
-nothing by design, so every cross-package consumer imports from here rather
-than from the parent or from a private module.
+The ``records`` and ``persist`` modules own the sync-run contracts and
+operations. Cross-package consumers import from those defining modules; this
+package initializer exports nothing.
 
 The store answers "when was this surface last synchronised, and how much did
 that run actually cover". It replaces reading provenance off whatever the

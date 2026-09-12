@@ -1,10 +1,6 @@
-"""Spending and income categories, and the taxonomy that classifies them.
+"""Spending and income categories and their classification taxonomy.
 
-Inert namespace. Every contract is reached at its own defining module:
-``corpus``, ``errors``, ``profile``, ``proportionality``, ``registry``, ``spending_category``.
-
-This package re-exported its surface through the namespace. The map is
-retired: a consumer names the module that defines what it imports.
+The initializer is inert; import contracts from their defining modules.
 """
 
 from __future__ import annotations

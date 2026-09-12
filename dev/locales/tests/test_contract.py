@@ -11,15 +11,15 @@ sibling ``test_contract_live.py``: it is integration-scope, and the marker
 taxonomy allows one execution-scope marker per module.
 
 See Also:
-    :mod:`~application.operator_surface`
-        Public facade for the backend-owned command contract under test.
-    :func:`~application.operator_surface.get_operator_surface_contract`
+    :mod:`~application.operator_surface.contract`
+        Defining module for the backend-owned command contract under test.
+    :func:`~application.operator_surface.contract.get_operator_surface_contract`
         Cached contract builder exercised by the root, lifecycle, command-family,
         and source-kind assertions.
-    :func:`~application.operator_surface.build_help_document`
+    :func:`~application.operator_surface.help.build_help_document`
         Backend help document builder checked against the current mounted
         command families.
-    :func:`~application.operator_surface.require_accepted_root`
+    :func:`~application.operator_surface.contract.require_accepted_root`
         Refusal gate that raises the registered operator-surface contract error.
     :mod:`~entrypoints.cli`
         Entrypoint layer consuming the contract without owning it.

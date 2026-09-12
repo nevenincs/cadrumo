@@ -1,7 +1,7 @@
-"""Inbound adapter for the Certificado de Situación Censal (G313) artefact.
+"""Inert namespace for the Certificado de Situación Censal adapter.
 
-Public facade: :func:`parse_certificado_censal_bytes`. See the parser
-module docstring for the structure-only / unpinned-extraction posture.
+The parsing contract is defined by :func:`parser.parse_certificado_censal_bytes`;
+the package initializer exports no symbols.
 """
 
 from __future__ import annotations

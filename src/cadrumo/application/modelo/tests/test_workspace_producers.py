@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-import re
-import sys
-from pathlib import Path
-
 import pytest
 from pydantic import ValidationError
 
@@ -299,44 +295,3 @@ def test_registry_projection_refuses_carrying_both_or_neither_admission_shape() 
             inspection=inspection_only.projection.inspection,
             snapshot=snapshot_only.projection.snapshot,
         )
-
-
-def test_workspace_producers_have_one_public_module_and_no_private_or_package_binding_remnant() -> None:
-    public_module = sys.modules[ModeloWorkspaceEpochV1.__module__]
-    package = sys.modules["cadrumo.application.modelo"]
-    private_module = ".".join((*public_module.__name__.split(".")[:-1], "_workspace" + "_producers"))
-    sys.modules.pop(private_module, None)
-
-    assert public_module.ModeloWorkspaceEpochV1 is ModeloWorkspaceEpochV1
-    assert ModeloWorkspaceEpochV1.__module__ == public_module.__name__
-    assert package.__all__ == ()
-    assert not hasattr(package, "ModeloWorkspaceEpochV1")
-    assert not (Path(public_module.__file__).parent / "_workspace_producers.py").exists()
-    assert not (Path(public_module.__file__).parent / "_workspace_producers").exists()
-
-
-def test_workspace_producer_docs_and_active_tree_reach_the_public_module_fixed_point() -> None:
-    repository = Path(__file__).resolve().parents[5]
-    private_module = "_workspace" + "_producers"
-    public_module = "workspace_producers"
-    scanned_paths = (
-        *sorted((repository / "src").rglob("*.py")),
-        *sorted((repository / "docs").rglob("*.rst")),
-    )
-    # Matched on a WORD BOUNDARY, not as a bare substring. The retired module
-    # is `_workspace_producers`, and that string also occurs inside
-    # `test_workspace_producers` -- the legitimately named suite for the public
-    # module. A substring scan flags every file that merely NAMES that suite in
-    # prose, so the gate reported a docstring in a sibling test as a surviving
-    # reference to a deleted module. A remnant is preceded by `.`, `/`, a quote
-    # or nothing; a false positive is preceded by a word character.
-    remnant_pattern = re.compile(rf"(?<![0-9A-Za-z]){re.escape(private_module)}")
-    remnants = tuple(
-        path.relative_to(repository)
-        for path in scanned_paths
-        if path != Path(__file__).resolve() and remnant_pattern.search(path.read_text(encoding="utf-8"))
-    )
-
-    assert not remnants
-    assert (repository / "docs" / "api" / f"cadrumo.application.modelo.{public_module}.rst").is_file()
-    assert public_module in (repository / "docs" / "api" / "cadrumo.application.modelo.rst").read_text(encoding="utf-8")

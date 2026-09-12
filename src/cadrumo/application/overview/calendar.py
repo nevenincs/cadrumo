@@ -15,8 +15,8 @@ loaded, preserving distinct :class:`OverviewLocalFilingState` and
 :class:`OverviewAeatSubmissionState` axes.
 
 See Also:
-    :mod:`cadrumo.application.overview`
-        Public facade that re-exports these calendar builders and DTOs.
+    :mod:`cadrumo.application.overview.calendar_models`
+        Defines the calendar DTOs returned by these builders.
     :class:`~cadrumo.domain.deadlines.DeadlineEngine`
         Deadline authority that produces the legal obligation schedule merged
         into the overview calendar.

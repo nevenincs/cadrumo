@@ -2,7 +2,7 @@
 
 Boundary posture: ``dev.agent_eval`` is a CONSUMER of the shipped surfaces, never
 a reach around them. Harness-owned material (skills, personas, operator rules)
-comes from the ``cadrumo_harness`` distribution's public facade; taxpayer- and
+comes from its canonical ``cadrumo_harness`` defining modules; taxpayer- and
 application-state material comes from the real ``aeat`` CLI / MCP dispatch the
 caller performs; and this module imports nothing from ``cadrumo``'s adapters,
 application or entrypoints layers.
@@ -11,7 +11,7 @@ Pure with respect to the CLI: the set of resolvable command keys is injected by
 the caller (the test wires it from the live CLI schema registry), so this module
 never imports the entrypoints layer. The registry snapshot it reads for the
 provenance and verification-contract dimensions is a pure registry read through
-the public ``cadrumo.core.resources`` facade and needs no profile or secret
+its defining resource module and needs no profile or secret
 storage; it stays a direct read because no CLI verb projects a revision's
 ``verification_expectations``, and the CLI-boundary half of the same question is
 already covered by the separate response-provenance dimension below. The

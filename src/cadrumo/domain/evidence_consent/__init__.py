@@ -1,4 +1,4 @@
-"""Public facade for the off-host evidence-consent audit record.
+"""Inert namespace for the off-host evidence-consent audit record.
 
 This package owns the RECORD SHAPE of one honoured consent decision --
 :class:`EvidenceConsentLedgerEntry` -- and the natural key it is stored under,
@@ -18,6 +18,9 @@ run-telemetry) are swept on retention because they are diagnostic and
 regenerable; this one is neither, because a consent withdrawal reads it to
 enumerate which artefacts depend on a cloud read, and an entry aged out of
 existence would make that withdrawal silently incomplete.
+
+Consumers import the record and natural-key helper from their defining module;
+the package initializer exports no symbols.
 """
 
 from __future__ import annotations

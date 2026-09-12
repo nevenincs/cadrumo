@@ -22,13 +22,13 @@ What it makes impossible, each because it already happened once:
 **Reachability finding, recorded rather than worked around.** The deterministic
 stage-1 producers (``transcribe_text_layer``, ``text_layer_transcriber_identity``,
 ``extract_evidence_pages``) and the evidence resolver
-(``resolve_attachment_evidence_input``) are NOT on the ledger package's public
-facade; only the data types are. A harness driving the real deterministic S1
-entry point therefore cannot reach it without importing a private module, which
-the architecture forbids. This package does not clone those surfaces and does not
-reach into the private module: the runner takes measured rows from an injected
-engine instead. Promoting those four symbols is a precondition of the measurement
-Steps, not of this one.
+(``resolve_attachment_evidence_input``) do not yet have canonical non-private
+defining modules. A harness driving the real deterministic S1 entry point
+therefore cannot reach them without importing a private module, which the
+architecture forbids. This package does not clone those surfaces or reach into
+the private module: the runner takes measured rows from an injected engine
+instead. Giving those four symbols canonical owners is a precondition of the
+measurement Steps, not of this one.
 
 Every symbol this package defines is imported from the module that defines it;
 this initialiser is an inert namespace marker and forwards nothing.

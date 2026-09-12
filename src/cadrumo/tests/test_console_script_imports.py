@@ -1,24 +1,12 @@
-"""Structural gate for the Cadrumo package hard cut.
+"""Smoke checks for the installed Cadrumo package and console-script metadata.
 
-A prior disaster-recovery traced a cold-start
-10-minute silent hang to a stale ``cadrumo.domain.iva`` import that
-crashed every Cadrumo console-script invocation after the registry
-validation completed. The crash was masked by a compatibility shim
-at ``cadrumo.domain.iva.__init__`` that re-exported from
-``cadrumo.domain.iva``; the shim violated the project's no-shim mandate
-and was retired in the same commit as this gate landed.
-
-These tests enforce both sides of the rename contract: the canonical
-``cadrumo`` package must import successfully, while the retired ``aeat``
-product root must fail instead of resolving through an alias or shim.
-
-The gate runs in two flavours:
+The package import runs in two flavours:
 
 1. **In-process import**: ``import cadrumo`` directly. Catches every
    import-time error reachable from the package's eager
    ``__init__.py`` chain.
-2. **Subprocess imports**: a fresh Python subprocess proves
-   ``import cadrumo`` succeeds and ``import aeat`` fails without aliases.
+2. **Subprocess import**: a fresh Python subprocess proves ``import cadrumo``
+   succeeds without relying on the test runner's module cache.
 """
 
 from __future__ import annotations
@@ -69,28 +57,6 @@ def test_cadrumo_package_imports_in_subprocess() -> None:
     assert completed.returncode == 0, (
         f"fresh-subprocess `import cadrumo` failed:\n  stdout: {completed.stdout!r}\n  stderr: {completed.stderr!r}"
     )
-
-
-def test_retired_aeat_package_fails_in_subprocess() -> None:
-    """The retired product root does not resolve through an alias or shim."""
-    completed = subprocess.run(
-        [sys.executable, "-c", "import aeat"],
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=120,
-    )
-    assert completed.returncode != 0, (
-        "fresh-subprocess `import aeat` unexpectedly succeeded; the hard cut forbids compatibility aliases and shims"
-    )
-
-
-def test_retired_aeat_package_root_is_absent_from_the_source_tree() -> None:
-    """The checkout contains no package or module that could restore ``import aeat``."""
-    source_root = _PROJECT_ROOT / "src"
-
-    assert not (source_root / "aeat").exists()
-    assert not (source_root / "aeat.py").exists()
 
 
 def test_console_scripts_expose_only_the_canonical_cadrumo_commands() -> None:

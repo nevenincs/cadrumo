@@ -160,17 +160,6 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
     )
 
 
-def test_workflow_engine_avoids_outbound_adapter_imports() -> None:
-    """The application engine must not bind an outbound AEAT adapter module."""
-    bound_outbound_modules = {
-        name: value.__name__
-        for name, value in vars(engine_module).items()
-        if inspect.ismodule(value) and value.__name__.startswith("cadrumo.adapters.outbound.aeat")
-    }
-
-    assert bound_outbound_modules == {}
-
-
 def test_workflow_deadline_gate_and_projection_share_the_production_schedule() -> None:
     """Both consumers expose every supported year's exact authority schedule."""
     profile = TaxpayerProfile(

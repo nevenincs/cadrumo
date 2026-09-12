@@ -1,7 +1,7 @@
-"""Secret-store substrate: keyed secret records over encrypted blobs.
+"""Inert namespace for keyed secret records over encrypted blobs.
 
-Public surface for the keyed-secret persistence layer. Exposes the
-typed :class:`SecretRecord` payload and the :class:`SecretStore`
+The defining ``store`` module owns the typed :class:`SecretRecord` payload and
+the :class:`SecretStore`
 repository that wraps records in
 :class:`adapters.persistence.storage.envelope.Envelope`, persists
 them via
@@ -14,6 +14,7 @@ collision, corruption, and cleanup messages. SECRET and SESSION
 records must also carry explicit expiry before write. This package
 owns opaque secret persistence, not tempfile lifecycle; every current
 consumer reads bytes directly rather than through a filesystem path.
+The package initializer exports no symbols.
 """
 
 from __future__ import annotations

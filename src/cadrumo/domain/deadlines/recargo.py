@@ -1,11 +1,10 @@
 """Loader and resolver for the Ley 58/2003 art-27 recargo bracket table.
 
-The bracket schedule lives at
-``registry/aeat/legal/ley-58-2003-recargo-bands.toml`` so the surcharge
-percentages stay outside Python source and can be revised when the law
-changes without touching engine code. Two functions are exposed:
+The bracket schedule is published in the typed runtime authority so surcharge
+percentages stay outside Python source and can be revised without touching
+engine code. Two functions are exposed:
 
-- :func:`load_recargo_bands` reads and validates the TOML into a tuple
+- :func:`load_recargo_bands` adapts the published projection into a tuple
   of :class:`domain.deadlines.RecargoBand` records.
 - :func:`completed_months_late` counts the COMPLETED months between the
   filing deadline and the presentation date (Art. 27.2 LGT counts only
@@ -28,86 +27,38 @@ from __future__ import annotations
 import calendar
 from collections.abc import Sequence
 from datetime import date
-from decimal import Decimal
-from functools import lru_cache
-from pathlib import Path
 
-from pydantic import ValidationError
-
-from ...core.decimal.coercion import coerce_decimal
-from ...core.paths import path_stat_fingerprint
 from ...core.period import Period
-from ...core.resources.bundled_data import bundled_path
-from ...core.toml import read_toml
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from .errors import DeadlineValidationError
 from .models import RecargoBand, Recovery
 
-_DEFAULT_BRACKET_PATH = bundled_path("registry", "aeat", "legal", "ley-58-2003-recargo-bands.toml")
 
-
-def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
-    """Load and validate the recargo bracket TOML.
-
-    Args:
-        path: Override path; defaults to the canonical registry location.
+def load_recargo_bands() -> tuple[RecargoBand, ...]:
+    """Adapt the recargo brackets from the bundled published authority.
 
     Returns:
         Tuple of :class:`RecargoBand` records ordered by
         ``min_completed_months`` ascending.
 
-    Raises:
-        DeadlineValidationError: When the TOML cannot be read, is
-            malformed, is missing rows, or carries an invalid band.
     """
-    target = path if path is not None else _DEFAULT_BRACKET_PATH
-    resolved = target.resolve()
-    try:
-        fingerprint = path_stat_fingerprint(resolved)
-    except OSError as exc:
-        raise DeadlineValidationError(f"{resolved}: cannot stat recargo bracket registry: {exc}") from exc
-    return _load_recargo_bands_cached(*fingerprint)
+    from ..calculations.registry.authority import bundled_authority
 
-
-@lru_cache(maxsize=16)
-def _required_decimal(value: object) -> Decimal:
-    coerced = coerce_decimal(value)
-    if coerced is None:
-        raise ValueError(f"could not parse decimal: {value!r}")
-    return coerced
-
-
-def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoBand, ...]:
-    del byte_count, modified_ns
-    target = Path(path)
-    raw = read_toml(target, error_factory=DeadlineValidationError)
-    raw_band = raw.get("band")
-    if not raw_band:
-        raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
-    try:
-        built: list[RecargoBand] = []
-        for raw_row in OBJECT_TUPLE_ADAPTER.validate_python(raw_band):
-            row = STR_KEYED_MAPPING_ADAPTER.validate_python(raw_row)
-            row_min = row.get("min_completed_months")
-            row_max = row.get("max_completed_months")
-            if not isinstance(row_min, int):
-                raise DeadlineValidationError(
-                    f"recargo band {row.get('id')!r} declares no integer min_completed_months",
-                )
-            built.append(
-                RecargoBand(
-                    id=str(row.get("id")),
-                    min_completed_months=row_min,
-                    max_completed_months=int(row_max) if isinstance(row_max, int) else None,
-                    surcharge_pct=_required_decimal(row.get("surcharge_pct")),
-                    interest_applies=bool(row.get("interest_applies", False)),
-                    legal_ref=str(row.get("legal_ref")),
-                ),
-            )
-        bands = tuple(built)
-    except (ArithmeticError, KeyError, TypeError, ValueError, ValidationError) as exc:
-        raise DeadlineValidationError(f"{target}: invalid recargo band row: {exc}") from exc
-    return tuple(sorted(bands, key=lambda band: band.min_completed_months))
+    return tuple(
+        RecargoBand.model_validate(
+            {
+                "id": published.id,
+                "min_completed_months": published.min_completed_months,
+                "max_completed_months": published.max_completed_months,
+                "surcharge_pct": published.surcharge_pct,
+                "interest_applies": published.interest_applies,
+                "legal_ref": published.legal_ref,
+            }
+        )
+        for published in sorted(
+            bundled_authority().catalogues.runtime.recargo_bands.values(),
+            key=lambda band: band.min_completed_months,
+        )
+    )
 
 
 def completed_months_late(closes_on: date, reference_today: date) -> int:
@@ -214,7 +165,7 @@ def resolve_recargo_band(completed_months: int, bands: Sequence[RecargoBand]) ->
 
     Raises:
         DeadlineValidationError: When ``completed_months < 0`` or no band's
-            window covers the value (which would indicate a TOML gap).
+            window covers the value (which would indicate an authority gap).
     """
     if completed_months < 0:
         raise DeadlineValidationError(
@@ -252,8 +203,8 @@ def build_recovery_for_overdue(
         reference_today: The date the self-assessment is presented.
         modelo: Modelo identifier for the overdue obligation.
         period: Typed filing period for the overdue obligation.
-        bands: Optional pre-loaded band table; when ``None``, the canonical
-            TOML is loaded once.
+        bands: Optional pre-loaded band table; when ``None``, the published
+            runtime authority is adapted.
 
     Returns:
         A :class:`Recovery` carrying the resolved band and legal reference.

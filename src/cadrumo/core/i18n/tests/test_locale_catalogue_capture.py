@@ -125,18 +125,3 @@ def test_capture_exposes_no_catalogue_internals_and_no_parallel_reader() -> None
         "comparison_domain",
         "generation",
     }
-
-
-def test_locale_catalogue_capture_is_owned_by_its_defining_module() -> None:
-    """Every capture symbol is defined here and bound nowhere in the package namespace."""
-    from ... import i18n as i18n_namespace
-
-    for owned in (
-        LocaleCatalogueCapture,
-        LocaleCatalogueCurrentCoordinate,
-        LocaleCatalogueCaptureError,
-        capture_locale_catalogue,
-        read_locale_catalogue_current_coordinate,
-    ):
-        assert owned.__module__ == "cadrumo.core.i18n.locale_catalogue"
-        assert not hasattr(i18n_namespace, owned.__name__)

@@ -16,11 +16,8 @@ profile passphrase encryption raised until it was repointed.
 
 This gate closes that class. It resolves each relative import that binds a
 package name, collects every attribute read through that binding, and asserts
-the name is reachable on the package: defined in its ``__init__``, imported
-there, or listed as a key of a still-live lazy export map. A package whose map
-is retired therefore fails the moment a consumer still reaches through it,
-which is when the retirement is landing rather than when a taxpayer's
-calculation runs.
+the name is statically bound by the package initializer. Lazy export maps are
+not treated as valid namespace authority.
 
 The check is deliberately about REACHABILITY, not about whether reaching
 through a namespace is good style. `aeat-architecture-boundaries` already
@@ -37,9 +34,6 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path(__file__).resolve().parent.parent
-
-#: Maps whose keys are reachable through ``__getattr__`` while they still ship.
-_LAZY_MAP_NAMES = frozenset({"_LAZY_EXPORTS", "_EXPORT_MODULES", "_LAZY_NAMES", "_LAZY_REPOSITORY_NAMES"})
 
 
 def _is_package(path: Path) -> bool:
@@ -80,12 +74,6 @@ def _reachable_names(package_init: Path) -> set[str]:
         elif isinstance(node, ast.Assign):
             targets = [t.id for t in node.targets if isinstance(t, ast.Name)]
             names.update(targets)
-            if set(targets) & _LAZY_MAP_NAMES:
-                names.update(
-                    element.value
-                    for element in ast.walk(node.value)
-                    if isinstance(element, ast.Constant) and isinstance(element.value, str)
-                )
         elif isinstance(node, ast.ImportFrom):
             names.update(alias.asname or alias.name for alias in node.names)
         elif isinstance(node, ast.Import):

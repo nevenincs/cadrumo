@@ -16,8 +16,8 @@ tooling; a stored token that names no member is refused here rather than
 silently filtered out of every result.
 
 See Also:
-    :func:`~application.corpus_search.search_terminology`
-        Public facade for approved-concept terminology search.
+    :func:`~application.corpus_search.terminology.search_terminology`
+        Approved-concept terminology search defined here.
 
 Notes:
     External adapters may project ranked terminology hits into their own

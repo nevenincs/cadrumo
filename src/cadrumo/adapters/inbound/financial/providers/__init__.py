@@ -31,12 +31,14 @@ Major declarations:
   — the failure taxonomy.
 
 See Also:
-    - :mod:`adapters.inbound.financial` for the parent financial-import
-      facade.
+    - :mod:`adapters.inbound.financial` for the inert parent namespace.
     - :mod:`application.ledger` for the operator-facing import service that
       calls these providers and persists ledger transactions.
     - :mod:`domain.transactions` for the raw transaction records produced
       by successful parsing.
+
+The package initializer exports no symbols; consumers import each provider or
+contract from its defining module.
 """
 
 from __future__ import annotations

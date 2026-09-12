@@ -4,9 +4,9 @@ Carries the per-casilla :class:`CasillaProvenance` trace, the aggregated
 :class:`CasillaAggregation` ledger shape, and :class:`LedgerAggregationResultBase`,
 the shared envelope every ledger-projection aggregation result (renta income,
 renta gasto, IRNR income, impatriado income, and the Modelo 100 first-slice
-expense aggregation) subclasses. The aggregation package re-exports the
-canonical :class:`core.Period`; period construction and date-span authority
-live in core, not in an application-layer wrapper.
+expense aggregation) subclasses. These models import the canonical
+:class:`core.period.Period`; period construction and date-span authority live
+in core, not in an application-layer wrapper.
 """
 
 from __future__ import annotations

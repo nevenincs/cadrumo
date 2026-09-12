@@ -9,8 +9,8 @@ then stop detecting anything.
 Reading rather than importing is forced by the architecture decision that
 bars a development tool from importing, loading, annotating against or
 registering from the TUI package. An AST walk over the source text takes
-none of those actions, and is the same technique the import-hygiene scanner
-already uses to inspect ``src`` from outside it.
+none of those actions, and is the same technique the shared source-import
+analysis uses to inspect ``src`` from outside it.
 """
 
 from __future__ import annotations

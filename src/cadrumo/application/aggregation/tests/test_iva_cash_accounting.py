@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -120,6 +121,52 @@ def _aggregation(*transactions: Transaction, period: Period) -> IvaLedgerAggrega
         TransactionCatalogue.from_transactions(transactions),
         period=period,
     )
+
+
+class _CommonTransactionFields(TypedDict):
+    """The fields the rate-box pair holds constant, so only the axis varies."""
+
+    direction: TransactionDirection
+    taxable_base: Decimal
+    iva_amount: Decimal
+
+
+def test_cash_accounting_supply_reports_art75_information_before_collection_and_settles_when_collected() -> None:
+    cash_sale = _transaction(
+        "cash-sale",
+        direction=TransactionDirection.INCOMING,
+        booked_date=date(2026, 4, 15),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        operation_date=date(2026, 3, 20),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 4, 15),
+                taxable_base=Decimal("1000.00"),
+                iva_amount=Decimal("210.00"),
+            ),
+        ),
+    )
+    ordinary_sale = _transaction(
+        "ordinary-sale",
+        direction=TransactionDirection.INCOMING,
+        booked_date=date(2026, 3, 25),
+        taxable_base=Decimal("500.00"),
+        iva_amount=Decimal("105.00"),
+    )
+
+    q1_values = _binding_values(cash_sale, ordinary_sale, period=_Q1_2026)
+    assert q1_values["modelo-303-criterio-caja-entregas-art75-base"] == Decimal("1000.00")
+    assert q1_values["modelo-303-criterio-caja-entregas-art75-cuota"] == Decimal("210.00")
+    assert q1_values["modelo-303-iva-repercutido-general-base"] == Decimal("500.00")
+    assert q1_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("105.00")
+
+    q2_values = _binding_values(cash_sale, period=_Q2_2026)
+    assert q2_values["modelo-303-criterio-caja-entregas-art75-base"] == Decimal("0")
+    assert q2_values["modelo-303-criterio-caja-entregas-art75-cuota"] == Decimal("0")
+    assert q2_values["modelo-303-iva-repercutido-general-base"] == Decimal("1000.00")
+    assert q2_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("210.00")
 
 
 def test_cash_accounting_purchase_reports_acquisition_information_without_admitting_ordinary_domestic_rows() -> None:
@@ -285,6 +332,56 @@ def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_
     )
 
 
+def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplier_evidence_in_a_mixed_period() -> None:
+    """Taxpayer-regime cash timing is never evidence that the taxpayer received a supplier-regime operation."""
+    taxpayer_cash_sale = _transaction(
+        "taxpayer-regime-sale",
+        direction=TransactionDirection.INCOMING,
+        booked_date=date(2026, 3, 20),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        operation_date=date(2026, 3, 12),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 20),
+                taxable_base=Decimal("200.00"),
+                iva_amount=Decimal("42.00"),
+            ),
+        ),
+    )
+    supplier_cash_purchase = _transaction(
+        "supplier-regime-mixed",
+        direction=TransactionDirection.OUTGOING,
+        booked_date=date(2026, 3, 24),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        operation_date=date(2026, 3, 14),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 24),
+                taxable_base=Decimal("100.00"),
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
+    )
+
+    taxpayer_only = _aggregation(taxpayer_cash_sale, period=_Q1_2026)
+    assert (
+        resolve_m303_supplier_regime_arrival(
+            period=_Q1_2026,
+            iva_aggregation=taxpayer_only,
+        ).recipient_of_cash_accounting_operations
+        is False
+    )
+
+    mixed = _aggregation(taxpayer_cash_sale, supplier_cash_purchase, period=_Q1_2026)
+    mixed_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=mixed)
+    assert mixed_arrival.recipient_of_cash_accounting_operations is True
+    assert mixed_arrival.source_ledger_ids == (supplier_cash_purchase.transaction_id,)
+
+
 def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_quarter_devengo(
     tmp_path: Path,
 ) -> None:
@@ -377,6 +474,52 @@ def _gate_reasons(transaction: Transaction) -> tuple[str, ...]:
     return tuple(issue.reason.value for issue in aggregation.issues)
 
 
+@pytest.mark.parametrize(
+    "category",
+    [IvaCategory.OPERACION_NO_SUJETA, IvaCategory.DOMESTIC_NOT_SUBJECT],
+)
+def test_both_not_subject_categories_are_outside_the_cash_accounting_regime(
+    category: IvaCategory,
+) -> None:
+    """Ley 37/1992 art. 163 duodecies.Uno scopes the regime to operations realizadas en el TAI.
+
+    An operation that is not subject in the TAI is outside by SCOPE and matches
+    no letter of apartado Dos, so both not-subject members belong in the
+    exclusion set on that ground. `DOMESTIC_NOT_SUBJECT` was previously absent
+    while its twin was present, with nothing in the set distinguishing the two
+    mechanisms it carries -- which is how the omission survived.
+    """
+    transaction = _not_subject_transaction(
+        f"not-subject-{category.value}",
+        category=category,
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+    )
+
+    assert _gate_reasons(transaction) == ("cash_accounting_excluded_category",)
+
+
+def test_an_exempt_domestic_supply_still_enters_the_cash_accounting_regime() -> None:
+    """Anti-vacuity: the gate refuses the excluded set, not every cuota-less row.
+
+    A domestic exempt supply is realizada en el TAI and is not an apartado-Dos
+    carve-out, so it stays inside the regime. Without this the parametrized
+    refusal above would pass equally if the gate rejected everything.
+    """
+    transaction = _not_subject_transaction(
+        "exempt-inside-regime",
+        category=IvaCategory.DOMESTIC_EXEMPT,
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+    )
+
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q1_2026,
+    )
+
+    assert aggregation.issues == ()
+    assert aggregation.observations != ()
+
+
 def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> None:
     """The gate keys on the regime being active, not on the category alone.
 
@@ -391,3 +534,85 @@ def test_a_not_subject_row_outside_the_regime_is_not_refused_by_this_gate() -> N
     )
 
     assert "cash_accounting_excluded_category" not in _gate_reasons(transaction)
+
+
+_M390_EJERCICIO = 2025
+
+
+def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
+    """Resolve the real M390 repercutido bindings for one transaction."""
+    # Modelo 390 is annual and AEAT publishes an ejercicio's design late in that
+    # same year, so ejercicio 2026 has no instrument yet. The caller's claim is
+    # an equality between two economically identical sales within ONE ejercicio,
+    # so it is year-agnostic and reads the latest published one.
+    annual = Period.from_year_and_code(_M390_EJERCICIO, "0A")
+    aggregation = aggregate_iva_ledger_observations(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=annual,
+    )
+    assert aggregation.issues == ()
+    # The revision is RESOLVED from the same period the observations were
+    # aggregated for, never pinned: an id literal names one moment in the
+    # registry and rots on the next span split, and pinning a different year's
+    # id would compute this period under another year's norms.
+    revision = (
+        bundled_authority()
+        .snapshot(
+            "390",
+            filing_year=annual.filing_year,
+            period=annual.registry_token,
+        )
+        .revision
+    )
+    resolved = resolve_ledger_iva_aggregation_binding_values(
+        revision,
+        aggregation.observations,
+    )
+    return {key: value for key, value in resolved.items() if value and "repercutido" in key}
+
+
+def test_cash_accounting_row_reaches_the_same_rate_boxes_as_an_ordinary_row() -> None:
+    """A criterio-de-caja sale must fill the official rate boxes, not only its tier total.
+
+    ``applied_rate is None`` is a claim that the rate is genuinely unknown, and
+    it makes an observation match no rate-specific binding. A cash-accounting
+    row knows its rate as well as any other -- ``rate_kind`` is resolved FROM
+    it -- so omitting it filed an M390 whose tier totals were populated while
+    every rate box beneath them was blank, a return that contradicts itself.
+
+    Asserted as an equality between the two producers on economically identical
+    sales, so it cannot be satisfied by both going blank, and pinned to the
+    declared rate's own boxes.
+    """
+    # Declared, not inferred: an untyped mapping widens each value to the union
+    # of all three, so the splat below reads as offering a Decimal where a
+    # direction is expected and checks none of them.
+    common: _CommonTransactionFields = {
+        "direction": TransactionDirection.INCOMING,
+        "taxable_base": Decimal("1000.00"),
+        "iva_amount": Decimal("210.00"),
+    }
+    ordinary = _transaction("ordinary-rate-box", booked_date=date(2025, 4, 20), **common)
+    cash = _transaction(
+        "cash-rate-box",
+        booked_date=date(2025, 4, 15),
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        operation_date=date(2025, 4, 10),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2025, 4, 15),
+                taxable_base=Decimal("1000.00"),
+                iva_amount=Decimal("210.00"),
+            ),
+        ),
+        **common,
+    )
+
+    ordinary_values = _m390_repercutido_values(ordinary)
+    cash_values = _m390_repercutido_values(cash)
+
+    assert cash_values == ordinary_values
+    # Pins the shared result to the declared 21 % boxes, so the equality above
+    # cannot be satisfied by both filings losing the rate breakdown.
+    assert ordinary_values["modelo-390-iva-repercutido-tipo-21-base"] == Decimal("1000.00")
+    assert ordinary_values["modelo-390-iva-repercutido-tipo-21-cuota"] == Decimal("210.00")

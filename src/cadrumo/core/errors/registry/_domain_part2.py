@@ -138,6 +138,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.EjercicioOrdenNotYetPublishedError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_EJERCICIO_ORDEN_NOT_YET_PUBLISHED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.AmbiguousRevisionSelectionError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_AMBIGUOUS_REVISION",

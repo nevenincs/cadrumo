@@ -1,4 +1,4 @@
-"""Public facade for :class:`EvidenceBundle` audit services.
+"""Inert namespace for evidence-bundle audit services.
 
 The evidence bundle is a bucket-scoped, work-unit-bound
 :class:`EvidenceBundle` manifest plus :class:`EvidenceRecordRef` records
@@ -31,6 +31,9 @@ Bucket events emitted by mutating operations:
 The audit surface never contacts AEAT and never performs live submission.
 Export refuses on failed verification unless ``--force-incomplete`` is
 explicitly passed at the operator boundary.
+
+Models are defined in ``models`` and repository/service operations in
+``service``. The package initializer exports no symbols.
 
 See Also:
     :class:`EvidenceBundleService`

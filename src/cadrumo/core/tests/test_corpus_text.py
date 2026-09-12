@@ -18,7 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[4]
 _NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives" / "html"
 
 
-def test_core_facade_reexports_the_corpus_text_owner() -> None:
+def test_corpus_text_imports_resolve_to_the_defining_module_owner() -> None:
     """All consumers share the exact stdlib-only normaliser object."""
     assert normalise_corpus_text is normalise_corpus_text_owner
 
@@ -26,10 +26,8 @@ def test_core_facade_reexports_the_corpus_text_owner() -> None:
 def test_normaliser_imports_without_configuration_or_domain_loading() -> None:
     """Build tooling can use the normaliser without loading settings or registry code.
 
-    The probe imported through the ``cadrumo.core`` facade. That namespace is
-    inert now, so it imports from the defining module -- which is the stricter
-    form of the same question: the module itself must not drag in settings or
-    domain code, with no facade in between to absorb the blame.
+    The probe imports the defining module directly and verifies that doing so
+    does not drag settings or domain code into the process.
     """
     probe = (
         "import sys\n"

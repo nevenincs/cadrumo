@@ -5,10 +5,10 @@ Holds helpers used by more than one of the sibling test packages beneath
 A helper needed by only one of them belongs in that package's own
 ``tests/_*_support.py``, not here.
 
-Shared helpers are re-exported here so a sibling imports the package rather
-than dotting into ``_process_support``: a cross-package reach into a private
-module is what ``service-imports-via-top-level-reexports`` forbids, and the
-import-hygiene gate counts every occurrence.
+Shared helpers live in public defining modules such as ``process_support`` so
+sibling test packages can import their owner directly.  This package marker is
+inert; repository-wide private and forwarding imports are owned by
+``just check-import-boundaries``.
 """
 
 from __future__ import annotations

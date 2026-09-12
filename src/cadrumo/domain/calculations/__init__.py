@@ -2,14 +2,11 @@
 
 This package is a namespace container, not a public aggregation facade. Callers
 import the filing-grade registry authority from
-:mod:`registry`, where
-:class:`registry.ValidatedRegistryAuthority`,
-:class:`registry.RegistrySnapshot`, and
-:func:`registry.calculate_registry_snapshot` live.
+:mod:`registry.authority`, registry snapshots from :mod:`registry.schema`, and
+the calculator from :mod:`registry.formula_runtime`.
 
-Only the generic row-source identity value object is exported here because it
-crosses application source resolution and domain revision persistence without
-belonging to either adapter.
+The package initializer exports no symbols. The generic row-source identity
+value object is imported from its defining module.
 
 See Also:
     :mod:`registry`

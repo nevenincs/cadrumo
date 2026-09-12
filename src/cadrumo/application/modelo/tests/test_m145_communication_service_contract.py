@@ -3,12 +3,12 @@
 See Also:
     :mod:`~application.modelo.m145_communication`
         Registry-backed ownership contract under test.
-    :class:`~application.modelo.M145CommunicationServiceContract`
+    :class:`~application.modelo.m145_communication.M145CommunicationServiceContract`
         Immutable contract returned by the service builder.
-    :class:`~application.modelo.M145CommunicationAction`
+    :class:`~application.modelo.m145_communication.M145CommunicationAction`
         Closed action vocabulary for the non-filing local workflow.
-    :func:`~application.modelo.build_m145_communication_service_contract`
-        Public facade builder that refuses filing-like registry drift.
+    :func:`~application.modelo.m145_communication.build_m145_communication_service_contract`
+        Builder that refuses filing-like registry drift.
     :class:`~domain.calculations.registry.ModeloRevision`
         Registry revision whose application links and export layouts ground the
         contract.

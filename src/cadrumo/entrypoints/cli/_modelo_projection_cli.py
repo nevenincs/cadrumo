@@ -223,7 +223,7 @@ def _compare_lines(service_result: ModeloCompareServiceResult) -> list[str]:
     return lines
 
 
-def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo("1").value) -> None:
+def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo("100").value) -> None:
     """Emit :class:`ModeloCompareResult` with grounded delta rows.
 
     Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI

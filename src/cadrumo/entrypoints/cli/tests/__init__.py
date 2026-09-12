@@ -1,10 +1,8 @@
-"""Public test-support facade for the CLI test package.
+"""Inert namespace for CLI test support.
 
-Re-exports the real-CLI profile-minting helpers so a consumer outside this
-package (e.g. an application-layer integration test that needs a genuinely
-minted taxpayer profile the encrypted store can load) imports them from the
-package top level rather than reaching into the private
-:mod:`cadrumo.entrypoints.cli.tests._profile_cli_support` module.
+The real-CLI profile-minting helpers are defined in
+:mod:`cadrumo.entrypoints.cli.tests._profile_cli_support`. Consumers import
+them from that module; the package initializer exports no symbols.
 """
 
 from __future__ import annotations

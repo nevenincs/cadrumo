@@ -11,8 +11,11 @@ The register is source evidence for the live
 ``bienes_inversion_regularizacion`` calculation source: application calculation
 code can project it into governed Modelo 303 casilla 43 / Modelo 390
 regularización binding values once definitive prorrata facts exist, and into a
-non-blocking advisory when those facts are still pending. This facade does not
+non-blocking advisory when those facts are still pending. This capability does not
 derive definitive prorrata percentages or write binding values.
+
+Consumers import operations from their defining service module; the package
+initializer exports no symbols.
 
 See Also:
     :mod:`domain.bienes_inversion`

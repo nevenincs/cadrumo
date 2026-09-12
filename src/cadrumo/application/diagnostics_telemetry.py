@@ -13,7 +13,7 @@ or sink logic:
 * :func:`~application.diagnostics_telemetry.build_telemetry_flush_preview`
   aggregates the same local, non-sensitive LLM run-timing signal
   :func:`~application.diagnostics_run_health.build_run_health_report` already
-  reads (:class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`)
+  reads (:class:`~application.diagnostics_run_health_ports.DiagnosticRunTelemetryPort`)
   into ONE allowlisted :class:`~core.telemetry.TelemetryEventPayload` via
   :func:`~core.telemetry.build_telemetry_payload`, and reports whether the
   consent gate (:func:`~core.telemetry.telemetry_emit_permitted`) would
@@ -32,7 +32,7 @@ or sink logic:
 
 No producer here reads transaction content, profile identity, or file
 contents; the aggregate is built from the same accounting/timing-only
-:class:`~adapters.outbound.llm.LLMRunRecord` rows the local-only
+:class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord` rows the local-only
 ``run-health`` diagnostics already expose.
 
 See Also:
@@ -145,8 +145,12 @@ def build_telemetry_status_report(*, settings: Settings | None = None) -> Teleme
     )
 
 
-def _build_flush_payload(settings: Settings) -> TelemetryEventPayload:
-    report = build_run_health_report()
+def _build_flush_payload(
+    settings: Settings,
+    *,
+    run_telemetry_port: DiagnosticRunTelemetryPort,
+) -> TelemetryEventPayload:
+    report = build_run_health_report(run_telemetry_port=run_telemetry_port)
     return build_telemetry_payload(
         workspace_hash=workspace_hash(settings.cadrumo_local_storage_root),
         command=_FLUSH_COMMAND,
@@ -164,11 +168,12 @@ def build_telemetry_flush_preview(
     *,
     settings: Settings | None = None,
     acknowledged: bool = False,
+    run_telemetry_port: DiagnosticRunTelemetryPort,
 ) -> TelemetryFlushPreview:
     """Build the allowlisted payload a flush would send, without sending it.
 
     Aggregates every locally recorded LLM run
-    (:class:`~adapters.outbound.llm.LLMRunRecord`, read via
+    (:class:`~application.diagnostics_run_health_ports.DiagnosticRunRecord`, read via
     :func:`~application.diagnostics_run_health.build_run_health_report`)
     into one ``diagnostics.llm_run`` :class:`~core.telemetry.TelemetryEventPayload`.
     This is the sole payload-construction step; both the ``--dry-run`` preview
@@ -187,6 +192,8 @@ def build_telemetry_flush_preview(
             :func:`~core.config.load_settings`.
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky.
+        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+            the outer composition root.
 
     Returns:
         The populated
@@ -194,7 +201,7 @@ def build_telemetry_flush_preview(
         performs a network call.
     """
     resolved_settings = settings if settings is not None else load_settings()
-    payload = _build_flush_payload(resolved_settings)
+    payload = _build_flush_payload(resolved_settings, run_telemetry_port=run_telemetry_port)
     gate_permits = telemetry_emit_permitted(resolved_settings, acknowledged=acknowledged)
     endpoint_configured = bool(resolved_settings.cadrumo_telemetry_endpoint)
     return TelemetryFlushPreview(
@@ -205,7 +212,12 @@ def build_telemetry_flush_preview(
     )
 
 
-def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> TelemetryFlushPreview:
+def flush_telemetry(
+    *,
+    settings: Settings | None = None,
+    acknowledged: bool,
+    run_telemetry_port: DiagnosticRunTelemetryPort,
+) -> TelemetryFlushPreview:
     """Send the aggregate local telemetry payload, honouring the consent gate.
 
     Reuses
@@ -230,6 +242,8 @@ def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> 
         acknowledged: Whether the operator acknowledged remote telemetry for
             this specific invocation. Never sticky; must be re-affirmed on
             every call.
+        run_telemetry_port: Injected diagnostic telemetry read port supplied by
+            the outer composition root.
 
     Returns:
         The :class:`~application.diagnostics_telemetry.TelemetryFlushPreview`
@@ -237,7 +251,11 @@ def flush_telemetry(*, settings: Settings | None = None, acknowledged: bool) -> 
         have been) sent for THIS invocation's ``acknowledged`` value.
     """
     resolved_settings = settings if settings is not None else load_settings()
-    preview = build_telemetry_flush_preview(settings=resolved_settings, acknowledged=acknowledged)
+    preview = build_telemetry_flush_preview(
+        settings=resolved_settings,
+        acknowledged=acknowledged,
+        run_telemetry_port=run_telemetry_port,
+    )
     sink = HttpTelemetrySink(endpoint=resolved_settings.cadrumo_telemetry_endpoint)
     emit_telemetry_event(preview.payload, settings=resolved_settings, acknowledged=acknowledged, sink=sink)
     return preview

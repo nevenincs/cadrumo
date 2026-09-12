@@ -1,10 +1,10 @@
-"""Public facade for the local AEAT portal metadata catalogue.
+"""Inert namespace for the local AEAT portal metadata catalogue.
 
 This package owns declarative AEAT portal identifiers and metadata used by
-registry, schema, and live-read planning surfaces. The facade exposes
+registry, schema, and live-read planning surfaces. Defining modules own
 :class:`Portal` identifiers, taxonomy enums :class:`PortalCategory`,
-:class:`AuthMethod`, :class:`PortalHost`, and :class:`UrlStability`, plus lazy
-exports for strict frozen :class:`PortalMetadata` records and the frozen
+:class:`AuthMethod`, :class:`PortalHost`, and :class:`UrlStability`, plus strict
+frozen :class:`PortalMetadata` records and the frozen
 :data:`PORTAL_REGISTRY` mapping from :class:`Portal` keys to metadata.
 
 Registry assembly validates host names through the central external-constants

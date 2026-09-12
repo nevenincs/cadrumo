@@ -97,11 +97,11 @@ def _skip_generated_output_for_i18n(generator: str) -> bool:
     if not _I18N_MODE:
         return False
     print(
-        f"DOCS_I18N_GENERATOR generator={generator} status=skipped "
-        "reason=excluded_from_authored_gettext_scope",
+        f"DOCS_I18N_GENERATOR generator={generator} status=skipped reason=excluded_from_authored_gettext_scope",
         flush=True,
     )
     return True
+
 
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [

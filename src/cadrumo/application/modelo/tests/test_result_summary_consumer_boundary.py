@@ -14,9 +14,6 @@ the defining module. That distinction is the whole design: a direct-defining
 module migration changes the import path but not the protected symbol name, so
 name scanning remains immune to it without a closure walk to keep in step.
 
-The defining module is the sole re-export surface. The inert
-``application.modelo`` namespace must never become a second publisher.
-
 Known limit, stated rather than implied: ``import cadrumo.application.modelo``
 followed by attribute access is not an ``ImportFrom`` and is not seen. No
 consumer uses that form and the import discipline pushes against it, but the gate
@@ -59,10 +56,6 @@ _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 #: violation list, and an empty violation list reads as "no leak".
 _MINIMUM_MODULES_SCANNED = 200
 
-#: The defining module is the sole publisher; a package-facade re-export is a
-#: duplicate authority now that package namespaces are inert.
-_EXPECTED_REEXPORTERS = 1
-
 
 def _production_modules() -> Iterator[Path]:
     for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
@@ -79,33 +72,16 @@ def _imports_symbol(tree: ast.AST, symbol: str) -> bool:
     )
 
 
-def _reexports_symbol(tree: ast.AST, symbol: str) -> bool:
-    """Whether the module re-publishes ``symbol`` through its ``__all__``."""
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign):
-            continue
-        if not any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-            continue
-        if isinstance(node.value, ast.List | ast.Tuple) and any(
-            isinstance(item, ast.Constant) and item.value == symbol for item in node.value.elts
-        ):
-            return True
-    return False
-
-
-def _scan(symbol: str) -> tuple[list[Path], list[Path], int]:
-    """Return modules importing ``symbol``, modules re-exporting it, and modules read."""
+def _scan(symbol: str) -> tuple[list[Path], int]:
+    """Return modules importing ``symbol`` and the number of modules read."""
     importers: list[Path] = []
-    reexporters: list[Path] = []
     scanned = 0
     for path in _production_modules():
         scanned += 1
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         if _imports_symbol(tree, symbol):
             importers.append(path)
-        if _reexports_symbol(tree, symbol):
-            reexporters.append(path)
-    return importers, reexporters, scanned
+    return importers, scanned
 
 
 def _outside_permitted_layers(paths: Iterable[Path]) -> list[str]:
@@ -129,7 +105,7 @@ def _outside_permitted_layers(paths: Iterable[Path]) -> list[str]:
 @pytest.mark.parametrize("symbol", _APPLICATION_SYMBOLS)
 def test_the_localized_summary_is_not_reached_from_outside_its_layers(symbol: str) -> None:
     """No module outside the owning package or the display layer imports the type."""
-    importers, _reexporters, _scanned = _scan(symbol)
+    importers, _scanned = _scan(symbol)
     offenders = _outside_permitted_layers(importers)
 
     assert offenders == [], (
@@ -149,34 +125,13 @@ def test_the_scan_still_matches_the_symbol(symbol: str) -> None:
     and a number people routinely bump has stopped being a guard. The floor still
     refuses the silently-empty scan this design exists to prevent.
     """
-    importers, _reexporters, scanned = _scan(symbol)
+    importers, scanned = _scan(symbol)
 
     assert scanned >= _MINIMUM_MODULES_SCANNED, (
         f"only {scanned} production modules scanned; the walk has stopped matching and an "
         "empty violation list would be meaningless"
     )
     assert importers, f"no module imports {symbol}; it was renamed or removed and this gate is now inert"
-
-
-@pytest.mark.parametrize("symbol", _APPLICATION_SYMBOLS)
-def test_the_defining_module_is_the_sole_reexport_surface(symbol: str) -> None:
-    """A facade promotion is duplicate authority and must fail the fixed point.
-
-    The re-export set is computed rather than inferred from module depth. Name
-    scanning independently covers importers; this inventory prevents a second
-    publisher from re-entering through the inert package namespace.
-    """
-    _importers, reexporters, _scanned = _scan(symbol)
-    relative = sorted(str(path.relative_to(_REPO_ROOT)) for path in reexporters)
-
-    assert all(path.is_relative_to(_OWNING_PACKAGE) for path in reexporters), (
-        f"{symbol} is re-exported from outside its owning package, widening the surface a "
-        f"consumer can reach it through: {relative}"
-    )
-    assert len(reexporters) == _EXPECTED_REEXPORTERS, (
-        f"the {symbol} re-export surface has {len(reexporters)} publishers: {relative}. "
-        "The defining module is the sole permitted publisher; delete any facade re-export."
-    )
 
 
 def test_the_boundary_predicates_can_fail() -> None:
@@ -206,12 +161,6 @@ def test_the_boundary_predicates_can_fail() -> None:
         "scanning the application row matched a CLI payload import: the matcher is not "
         "exact and the two families have merged"
     )
-
-    republishing = ast.parse('__all__ = ["ResultSummaryRow"]\n')
-    silent = ast.parse('__all__ = ["work_unit_for_revision"]\n')
-
-    assert _reexports_symbol(republishing, "ResultSummaryRow")
-    assert not _reexports_symbol(silent, "ResultSummaryRow")
 
     export_module = _PACKAGE_ROOT / "application" / "filing" / "_calculate.py"
     assert _outside_permitted_layers([export_module]) == [

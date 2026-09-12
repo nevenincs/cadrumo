@@ -19,10 +19,10 @@ See Also:
         Domain-side structural validator that deliberately avoids importing
         adapter parser modules.
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`
-        Registry-profile-driven declaración parser facade referenced by
+        Registry-profile-driven declaración parser entrypoint referenced by
         shipped extraction profiles.
     :func:`~adapters.inbound.borrador.parser.parse_borrador`
-        Borrador parser facade allowed as a sanctioned parser authority.
+        Borrador parser entrypoint allowed as a sanctioned parser authority.
     :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
         Domain-layer regression proving only dotted-callable shape is checked.
 """

@@ -411,6 +411,12 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
     env = {
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
+        # The localized surface is the authored page set above. Builder-inited
+        # projections (CLI, glossary, casilla/legal references, and CLI-tree
+        # assets) are generated English artefacts explicitly excluded by
+        # ``user_scope_source_pages``; declaring extraction mode lets conf.py
+        # skip those producers before they import the registry or command tree.
+        "CADRUMO_DOCS_I18N_MODE": "1",
         "CADRUMO_DOCS_SCOPE": "user",
         "CADRUMO_DOCS_LANGUAGE": "en",
         "CADRUMO_DOCS_OFFLINE": "1",
@@ -429,6 +435,7 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         # (``dev/docs/tests/_sphinx_build_harness.py``).
         "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
     }
+    print(f"DOCS_I18N_SCOPE authored_pages={len(pages)} mode=gettext", flush=True)
     command = [
         sys.executable,
         "-m",

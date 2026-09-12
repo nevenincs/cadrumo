@@ -394,7 +394,7 @@ def test_parser_refuses_noncanonical_sign_boolean_and_policy_mutations(mutation:
         parse_export_payload(ExportLayoutDefinition.model_validate(layout), mutation)
 
 
-def test_codec_has_one_owner_and_active_consumers_import_the_public_facade() -> None:
+def test_codec_has_one_owner_and_active_consumers_import_its_defining_module() -> None:
     root = Path("src/cadrumo")
     owner = root / "domain/calculations/registry/fixed_width_codec.py"
     consumers = (

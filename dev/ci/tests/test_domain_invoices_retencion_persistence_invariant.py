@@ -51,8 +51,8 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-# The persistence contract is read from the namespace definition the storage
-# facade exports, not restated. A literal copy here would keep passing after
+# The persistence contract is read from its canonical namespace definition,
+# not restated. A literal copy here would keep passing after
 # the real namespace, object key, or schema version moved, which would leave
 # these proofs mutating bytes nothing reads.
 _INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace

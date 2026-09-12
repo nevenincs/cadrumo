@@ -38,9 +38,9 @@ def build_snapshot(
     through :class:`ValidatedRegistryAuthority`.
 
     ``grade`` defaults to :attr:`RegistryAuthorityGrade.FILING`, so this function is
-    strict by default rather than by request. It is exported on the package facade
-    and returns a full :class:`RegistrySnapshot`, which made the previous permissive
-    default a door: importing the obvious-looking name yielded an unattested,
+    strict by default rather than by request. It is a public function of this
+    defining module and returns a full :class:`RegistrySnapshot`, which made the
+    previous permissive default a door: importing the obvious-looking name yielded an unattested,
     filing-shaped snapshot with none of the three gates run. A caller needing a
     lower rung now names it.
 

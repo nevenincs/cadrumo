@@ -704,7 +704,7 @@ convention = "google"
 # already imported the aggregate via sibling tests, so an in-process check
 # would pass regardless. argv is `sys.executable` plus a literal probe
 # source defined in the module; no operator input reaches it.
-"src/cadrumo/application/user_profile/tests/test_profile_summary_inventory.py" = ["S603"]
+"src/cadrumo/adapters/persistence/storage/custody/tests/test_profile_summary_inventory.py" = ["S603"]
 # Resolves live CLI nodes in FRESH interpreters: what a process imports is a
 # property of a cold start, and this session has already imported every
 # capability family, so an in-process scan would read other tests' imports.

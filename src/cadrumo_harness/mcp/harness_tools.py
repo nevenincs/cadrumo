@@ -17,10 +17,11 @@ directly, while :func:`build_harness_floor_tool` lazily adapts the payload
 surface onto the MCP SDK's ``Tool`` type so the module still imports (and the
 server still refuses gracefully) when the harness distribution's MCP runtime is absent.
 
-The operating-layer text is read through the ``cadrumo_harness`` package facade
-(:func:`~agent.operator_rules_text` and
-:func:`~agent.iter_personas`), never a private submodule, per the
-``aeat-architecture-boundaries`` discipline.
+The operating-layer text is read through the defining
+``cadrumo_harness.resources`` module
+(:func:`~cadrumo_harness.resources.operator_rules_text` and
+:func:`~cadrumo_harness.resources.iter_personas`), never through the inert
+package initializer or a private submodule.
 """
 
 from __future__ import annotations
@@ -159,7 +160,8 @@ def _persona_document_text(persona: AgentPersona) -> str | None:
 
     The persona file stems under ``cadrumo/_data/agent/personas/`` match the
     :class:`AgentPersona` values exactly, so ``persona.value + ".md"`` is the
-    document name. Reads through the ``iter_personas`` package facade.
+    document name. Reads through ``iter_personas`` in the defining
+    ``cadrumo_harness.resources`` module.
     """
     target = persona.value + _MARKDOWN_SUFFIX
     for document in iter_personas():

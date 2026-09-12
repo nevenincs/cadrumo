@@ -112,6 +112,7 @@ from .sessions import (
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent, BucketEventType
+    from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
 
 
@@ -231,7 +232,11 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     )
 
 
-def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
+def inspect_operator_auth(
+    provider: str | None = None,
+    *,
+    read_ports: StateProjectionReadPorts,
+) -> AuthStatusResult:
     """Return current local auth state as :class:`AuthStatusResult`, optionally scoped to a known provider slot.
 
     Consumes the canonical
@@ -250,6 +255,7 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(
+        read_ports=read_ports,
         requested_provider=provider,
         probe_live_backend=True,
         include_workspace_summary=False,
@@ -258,7 +264,12 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     return _auth_status_from_projection(projection)
 
 
-def test_operator_auth(provider: str | None = None, *, settings: Settings | None = None) -> AuthTestResult:
+def test_operator_auth(
+    provider: str | None = None,
+    *,
+    read_ports: StateProjectionReadPorts,
+    settings: Settings | None = None,
+) -> AuthTestResult:
     """Return auth readiness as :class:`AuthTestResult`, plus a deeper local session-token probe.
 
     ``auth test`` and ``auth status`` (:func:`inspect_operator_auth`)
@@ -286,7 +297,7 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
     """
     if settings is not None:
         with _active_profile_storage_span(settings):
-            return test_operator_auth(provider, settings=None)
+            return test_operator_auth(provider, read_ports=read_ports, settings=None)
 
     with _auth_operator_settings_scope(None) as resolved_settings:
         provider_kind = _provider_kind_or_none(provider)
@@ -298,6 +309,7 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
         ) as snapshot:
             return _test_operator_auth_from_snapshot(
                 snapshot,
+                read_ports=read_ports,
                 requested_provider=requested_provider,
                 resolved_settings=resolved_settings,
             )
@@ -306,6 +318,7 @@ def test_operator_auth(provider: str | None = None, *, settings: Settings | None
 def _test_operator_auth_from_snapshot(
     snapshot: ActiveAuthProjectionSnapshot,
     *,
+    read_ports: StateProjectionReadPorts,
     requested_provider: str | None,
     resolved_settings: Settings,
 ) -> AuthTestResult:
@@ -320,6 +333,7 @@ def _test_operator_auth_from_snapshot(
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(
+        read_ports=read_ports,
         auth_snapshot=snapshot,
         requested_provider=requested_provider,
         probe_live_backend=True,

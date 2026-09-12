@@ -1,4 +1,4 @@
-"""Public test-support facade for domain verification witnesses."""
+"""Inert namespace for domain verification test support."""
 
 from __future__ import annotations
 

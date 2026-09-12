@@ -6,9 +6,7 @@ own ``_assert_read_http`` / ``_assert_read_browser_action`` wrappers.
 ``_walker.py`` — a separate declarations-register surface — declares its own
 non-delegating read guards and never imports from this module.
 ``extract_csv_from_url`` is shared more widely, by ``_declarations.py`` and
-``_parse.py`` as well, and is re-exported through the package facade so a
-consumer outside this adapter can recover the CSV a cotejo URL was built
-around without reaching into a private module.
+``_parse.py`` as well. External consumers import it from this defining module.
 """
 
 from __future__ import annotations

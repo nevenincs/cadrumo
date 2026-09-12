@@ -1,22 +1,8 @@
-"""Strict Pydantic models for the LLM package.
+"""Strict Pydantic models for the outbound LLM adapter.
 
-These records are public through this package's own :mod:`llm` facade. The
-sibling :mod:`adapters.outbound.llm` package does NOT re-export them -- since
-the split its ``__all__`` is four encrypted stores and the two telemetry
-records -- so a consumer reaches them here and never through the adapter.
-:class:`~llm.LLMRequest`,
-:class:`~llm.LLMResponse`, and
-:class:`~llm.LLMProvider` form the
-:class:`~llm.LLMClient` boundary.
-:class:`~llm.CachedEntry`,
-:class:`~llm.CacheKey`, and
-:class:`~llm.CacheStats` support
-:class:`~adapters.outbound.llm.LLMCache`, while
-:class:`~llm.UsageRecord` and
-:class:`~llm.UsageSummary` support
-:class:`~adapters.outbound.llm.UsageRecorder`. Prompt definitions are
-managed through :class:`~llm.PromptRegistry`; validation
-helpers raise :exc:`~llm.LLMValidationError`.
+This module is the canonical owner of request, response, provider, cache,
+usage, prompt, and validation record types. Consumers import these records
+directly from this defining module; the sibling package initializer is inert.
 """
 
 from __future__ import annotations

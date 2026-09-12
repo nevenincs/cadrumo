@@ -53,6 +53,11 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
+from ....application.diagnostics_run_health_ports import (
+    DiagnosticRunRecord,
+    DiagnosticRunTelemetryError,
+    DiagnosticRunTelemetryPort,
+)
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
@@ -63,7 +68,12 @@ from ...persistence.storage.secure_object_namespaces import LLM_RUN_TELEMETRY_NA
 from .errors import LLMCacheError
 from .retention import select_retention_removal_keys
 
-__all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
+__all__ = [
+    "LLMRunRecord",
+    "LLMRunTelemetryDiagnosticsAdapter",
+    "LLMRunTelemetryRecorder",
+    "LLMRunTelemetrySummary",
+]
 
 _RUN_TELEMETRY_NAMESPACE = LLM_RUN_TELEMETRY_NAMESPACE.namespace
 _RUN_TELEMETRY_VERSION = LLM_RUN_TELEMETRY_NAMESPACE.schema_version
@@ -363,3 +373,35 @@ class LLMRunTelemetryRecorder:
                 object_key_uuid,
             ),
         )
+
+
+class LLMRunTelemetryDiagnosticsAdapter(DiagnosticRunTelemetryPort):
+    """Adapt encrypted LLM run records to the application diagnostics port."""
+
+    def __init__(self, recorder: LLMRunTelemetryRecorder) -> None:
+        self._recorder = recorder
+
+    def load_records(
+        self,
+        *,
+        since: date | None,
+        until: date | None,
+    ) -> tuple[DiagnosticRunRecord, ...]:
+        """Read and translate local run telemetry at the application boundary."""
+        try:
+            records = self._recorder.load_records(since=since, until=until)
+            return tuple(
+                DiagnosticRunRecord(
+                    run_id=record.run_id,
+                    caller=record.caller,
+                    provider=record.provider,
+                    model=record.model,
+                    duration_ms=record.duration_ms,
+                    succeeded=record.succeeded,
+                    error_kind=record.error_kind,
+                    started_at=record.started_at,
+                )
+                for record in records
+            )
+        except Exception as exc:
+            raise DiagnosticRunTelemetryError("Unable to load diagnostic run telemetry.") from exc

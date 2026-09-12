@@ -169,9 +169,9 @@ def _resolve_projected_filing_window(
     tipo_renta_code: str | None,
 ) -> DeadlineWindowDefinition | None:
     """Resolve one already-validated authority projection by semantic coordinate."""
-    # Registry applicability imports this deadline facade, so defer the public
-    # registry-facade import until resolution time to keep that dependency cycle
-    # out of module initialisation.
+    # Registry applicability imports this defining module, so defer the
+    # registry coordinate import until resolution time to keep that dependency
+    # cycle out of module initialisation.
     from ..calculations.registry.deadline_coordinate import deadline_semantic_coordinate
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)

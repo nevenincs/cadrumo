@@ -27,7 +27,6 @@ from pydantic import JsonValue
 from cadrumo.tests.env_scope import scoped_env_var
 from cadrumo.tests.golden_comparison import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
 
-from .. import runner
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
 from ..runner import SANDBOX_PROFILE_ID, SequenceTranscript, execute_page_sequences, execute_sequence, sequence_sandbox
@@ -100,13 +99,8 @@ def _profile_seed_sequence(
     )
 
 
-def test_sandbox_publishes_through_canonical_capsule_runtime(tmp_path: Path) -> None:
-    """The docs runner must consume the relocated capsule owner, never its retired facade."""
-    from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-        publish_test_profile_capsule as canonical_publish,
-    )
-
-    assert runner.publish_test_profile_capsule is canonical_publish
+def test_sandbox_publishes_a_profile_capsule(tmp_path: Path) -> None:
+    """The docs sandbox publishes a usable isolated profile capsule."""
     with sequence_sandbox(sequence_id="canonical-capsule-runtime", sandbox_root=tmp_path / "scope") as sandbox:
         assert sandbox.profile_id == SANDBOX_PROFILE_ID
         assert (sandbox.storage_root / "buckets" / SANDBOX_PROFILE_ID).is_dir()

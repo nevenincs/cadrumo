@@ -478,8 +478,8 @@ def _resolve_readiness(
 ) -> ProjectionModeloReadiness | None:
     """Run the readiness projection for the target, tolerating advisory failure.
 
-    Readiness is imported lazily so the ``application.modelo`` package facade
-    does not import ``application.state_projection`` at load time. A raised
+    Readiness is imported lazily so loading this orchestrator does not import
+    ``application.state_projection`` at module load time. A raised
     :class:`core.errors.CadrumoError` degrades to ``None`` (advisory only):
     readiness never blocks the chain, so a projection failure must not abort it.
     """

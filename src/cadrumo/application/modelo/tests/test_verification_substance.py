@@ -127,6 +127,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
     the legal_refs from the registry declaration.
     """
     predicate = VerificationPredicateDefinition(
+        id="cap-le-when-positive:c15-cap-by-c14",
         predicate_id="modelo-130-c15-cap-by-c14",
         legal_refs=("rd-439-2007:art-110",),
         expression='cap_le_when_positive(["15", "14"])',
@@ -146,6 +147,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
 def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
     """A satisfied cap predicate produces no finding."""
     predicate = VerificationPredicateDefinition(
+        id="cap-le-when-positive:c15-cap-by-c14",
         predicate_id="modelo-130-c15-cap-by-c14",
         legal_refs=("rd-439-2007:art-110",),
         expression='cap_le_when_positive(["15", "14"])',
@@ -188,6 +190,7 @@ def test_at_most_one_positive_emits_blocking_rule_finding() -> None:
     """A violated at_most_one_positive predicate produces a BLOCKING_RULE finding."""
 
     predicate = VerificationPredicateDefinition(
+        id="at-most-one-positive:test-at-most-one-positive",
         predicate_id="test-at-most-one-positive",
         legal_refs=("ley-27-2014:art-40-3",),
         expression='at_most_one_positive(["01", "02"])',
@@ -298,6 +301,7 @@ def test_roll_forward_balances_bad_arity_holds_and_does_not_fire() -> None:
 def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None:
     """The ADVISORY M200 BIN predicate fires a WARNING finding on a dropped carryforward."""
     predicate = VerificationPredicateDefinition(
+        id="roll-forward-balances:bin-stock-cierre-reconcilia-roll-forward",
         predicate_id="modelo-200-bin-stock-cierre-reconcilia-roll-forward",
         legal_refs=("ley-27-2014:art-26",),
         expression=_BIN_ROLL_FORWARD,
@@ -319,6 +323,7 @@ def test_roll_forward_balances_emits_advisory_finding_on_discontinuity() -> None
 def test_roll_forward_balances_emits_no_finding_when_continuous() -> None:
     """The ADVISORY M200 BIN predicate stays silent for a reconciling closing."""
     predicate = VerificationPredicateDefinition(
+        id="roll-forward-balances:bin-stock-cierre-reconcilia-roll-forward",
         predicate_id="modelo-200-bin-stock-cierre-reconcilia-roll-forward",
         legal_refs=("ley-27-2014:art-26",),
         expression=_BIN_ROLL_FORWARD,
@@ -434,6 +439,7 @@ def test_casilla_equals_implies_nonzero_is_advisory_only_no_blocking_branch() ->
 def test_casilla_equals_implies_nonzero_emits_advisory_finding_via_evaluate_verification_predicates() -> None:
     """The full evaluate_verification_predicates entry point threads text_values into the ADVISORY branch."""
     predicate = VerificationPredicateDefinition(
+        id="casilla-equals-implies-nonzero:test-categorical-conditional-invariant",
         predicate_id="test-categorical-conditional-invariant",
         legal_refs=("ley-35-2006:art-99",),
         expression=_CASILLA_EQUALS_IMPLIES_NONZERO,
@@ -460,6 +466,7 @@ def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:
 def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> None:
     """A violated all_nonzero predicate produces a BLOCKING_RULE finding."""
     predicate = VerificationPredicateDefinition(
+        id="all-nonzero:test-invariant",
         predicate_id="test-invariant",
         legal_refs=("ley-35-2006:art-99",),
         expression='all_nonzero(["01", "02"])',
@@ -476,6 +483,7 @@ def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> 
 def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None:
     """A satisfied predicate does not produce any finding."""
     predicate = VerificationPredicateDefinition(
+        id="all-nonzero:test-invariant",
         predicate_id="test-invariant",
         legal_refs=("ley-35-2006:art-99",),
         expression='all_nonzero(["01", "02"])',

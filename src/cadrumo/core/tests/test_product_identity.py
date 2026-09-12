@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from ... import core as core_package
 from .. import product_identity as identity_module
 from ..product_identity import (
     PRODUCT_IDENTITY,
@@ -18,17 +17,6 @@ from ..product_identity import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-_IDENTITY_EXPORTS = frozenset(
-    {
-        "AeatProductSoftwareEvidence",
-        "AeatProductSoftwareIdentity",
-        "AeatProgramIdentifier",
-        "PRODUCT_IDENTITY",
-        "ProductIdentity",
-        "normalise_product_identity_references",
-    }
-)
 
 
 def test_product_identity_matches_the_accepted_external_tuple() -> None:
@@ -137,13 +125,6 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
         )
 
 
-def test_core_facade_is_inert_and_identity_stays_in_its_defining_module() -> None:
-    """The defining module owns identity while the core package stays inert."""
-    assert set(identity_module.__all__) == _IDENTITY_EXPORTS
-    for export_name in _IDENTITY_EXPORTS:
-        assert not hasattr(core_package, export_name), export_name
-
-
 def test_identity_api_exposes_no_former_product_aliases() -> None:
     """AEAT-prefixed exports name genuine AEAT-format contracts."""
     # AEAT_CSV_* names the shape contract for AEAT's own Codigo Seguro de
@@ -157,14 +138,9 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
-    # This enumerated the AEAT-prefixed names the core FACADE exposed -- a set
-    # spanning several owning modules, because the facade re-exported them all.
-    # The facade is inert now, so the question is asked of the DEFINING module,
-    # whose legitimate AEAT referents are its own:
+    # The defining module's legitimate AEAT referents are its own:
     #   AeatProductSoftware*       the AEAT-format software identity contract
     #   AeatProgramIdentifier      AEAT's identifier for submitting software
-    # and the stronger half is added: no AEAT-prefixed name is reachable
-    # through the package at all.
     identity_aeat_names = {
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
@@ -172,14 +148,3 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     }
     assert {name for name in identity_module.__all__ if name.casefold().startswith("aeat")} == identity_aeat_names
     assert allowed_aeat_names  # the wider cross-module set stays documented above
-    # Submodules count as attributes of a package, and `core/aeat_csv.py` is a
-    # legitimately named module -- so this asks about re-exported SYMBOLS only.
-    import types
-
-    leaked = [
-        name
-        for name in dir(core_package)
-        if name.casefold().startswith("aeat") and not isinstance(getattr(core_package, name), types.ModuleType)
-    ]
-    assert not leaked, leaked
-    assert "__getattr__" not in vars(identity_module)

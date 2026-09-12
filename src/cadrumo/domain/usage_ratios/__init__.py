@@ -1,4 +1,4 @@
-"""Public facade for persisted per-category usage-ratio overrides.
+"""Inert namespace for persisted per-category usage-ratio overrides.
 
 This subpackage owns the user-writable substrate for proportional-deduction
 coefficients: a frozen :class:`UsageRatioProfile`, the
@@ -38,9 +38,8 @@ See Also:
         Supplies the bound censo facts used to derive and guard HOME_OFFICE
         usage-ratio values.
 
-Callers must import from this package root rather than reaching into the
-private submodules; the public surface listed in :data:`__all__` is the only
-supported API.
+Callers import each symbol from its defining module. The package initializer
+exports no symbols.
 """
 
 from __future__ import annotations

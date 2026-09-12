@@ -6,8 +6,6 @@ import ast
 import asyncio
 import importlib
 import inspect
-import subprocess
-import sys
 import textwrap
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -698,61 +696,3 @@ def test_public_registration_uses_a_strict_profile_free_request_schema(tmp_path:
     assert registry.lookup_public_registration(definition.definition_id) is registration
     assert tuple(request_schema["properties"]) == ("output_root", "today", "limit", "dry_run")
     assert "TaxpayerProfile" not in request_schema.get("$defs", {})
-
-
-def test_active_profile_resolution_uses_the_workflow_persistence_definition() -> None:
-    """The live operation imports the repository from its defining module."""
-    module = importlib.import_module("..filed_history_operation", package=__package__)
-    module_file = module.__file__
-    assert module_file is not None
-    source = Path(module_file).read_text(encoding="utf-8")
-
-    assert "from cadrumo.application.workflow.persistence import workflow_state_repository" in source
-    assert "from ..workflow import workflow_state_repository" not in source
-
-
-def test_live_package_is_inert_and_public_leaves_have_no_private_remnants() -> None:
-    """The package owns no facade contract and its source tree names no retired leaf."""
-    root = Path(__file__).resolve().parents[5]
-    live_root = root / "src" / "cadrumo" / "application" / "live"
-
-    assert not tuple(path for path in live_root.glob("_*.py") if path.name != "__init__.py")
-    source_tree = root / "src"
-    swept = tuple(source_tree.rglob("*.py"))
-    assert swept, (
-        f"the sweep of {source_tree} matched no module; a walk that reads nothing reports no "
-        "private remnant of the live package because it reads no module at all"
-    )
-    for source_path in swept:
-        source = source_path.read_text(encoding="utf-8")
-        assert "cadrumo.application.live._" not in source, source_path
-        tree = ast.parse(source, filename=str(source_path))
-        assert not any(
-            isinstance(node, ast.ImportFrom) and node.module in {"cadrumo.application.live", "application.live"}
-            for node in ast.walk(tree)
-        ), source_path
-
-
-def test_importing_live_keeps_the_package_boundary_inert() -> None:
-    """Importing only the package binds neither a facade nor a public leaf."""
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter and inline code under test
-        [
-            sys.executable,
-            "-c",
-            textwrap.dedent(
-                """
-                import sys
-                import cadrumo.application.live
-
-                assert "cadrumo.application.live.filed_history_operation" not in sys.modules
-                assert cadrumo.application.live.__all__ == ()
-                """,
-            ),
-        ],
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
-
-    assert completed.returncode == 0, completed.stderr

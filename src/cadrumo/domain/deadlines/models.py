@@ -4,8 +4,7 @@ Every type that crosses a public boundary lives here as a strict, frozen
 :class:`pydantic.BaseModel` (or :class:`enum.StrEnum` for closed
 enumerations). No dataclasses; no bare ``dict[str, Any]``.
 
-Consumed by :class:`cadrumo.domain.deadlines.DeadlineEngine` and re-exported
-from :mod:`cadrumo.domain.deadlines`.
+Consumers import these models from this defining module.
 """
 
 from __future__ import annotations

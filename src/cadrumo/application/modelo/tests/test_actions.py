@@ -240,6 +240,7 @@ def _predicate_finding(
     casilla_values: dict[CasillaId, Decimal],
 ):
     predicate = VerificationPredicateDefinition(
+        id=predicate_id,
         predicate_id=predicate_id,
         legal_refs=(legal_ref,),
         expression=expression,

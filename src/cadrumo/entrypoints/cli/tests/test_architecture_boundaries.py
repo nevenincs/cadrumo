@@ -13,8 +13,8 @@ See Also:
     :mod:`~entrypoints.cli.tests.test_cli_module_size`
         Companion size-budget guard for CLI decomposition.
 
-Modelo revision commands must stay thin transports over public application
-facades, and every modelo command module must respect the CLI's
+Modelo revision commands must stay thin transports over application-owned
+use cases, and every modelo command module must respect the CLI's
 backend-boundary rule.
 """
 
@@ -172,7 +172,7 @@ def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_suppo
 def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> None:
-    """Extracted command modules delegate work/revision selection to application facades."""
+    """Extracted command modules delegate work/revision selection to application owners."""
     offenders: list[str] = []
     for path in _production_modelo_cli_modules():
         if path.name in _LEGACY_SELECTOR_HELPERS:
@@ -187,7 +187,7 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
     assert offenders == [], "modelo CLI modules reintroduced local selector policy:\n  " + "\n  ".join(offenders)
 
 
-def test_modelo_cli_uses_centralized_operator_addressing_facades(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+def test_modelo_cli_uses_centralized_operator_addressing_services(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     """Modelo CLI code must not rebuild work/revision addressing policy locally."""
     offenders: list[str] = []
     for path in _modelo_cli_modules():
@@ -206,4 +206,4 @@ def test_modelo_cli_uses_centralized_operator_addressing_facades(source_tree_ast
                 if name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                     offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: {name}")
 
-    assert offenders == [], "modelo CLI bypasses centralized operator-addressing facades:\n  " + "\n  ".join(offenders)
+    assert offenders == [], "modelo CLI bypasses centralized operator-addressing services:\n  " + "\n  ".join(offenders)

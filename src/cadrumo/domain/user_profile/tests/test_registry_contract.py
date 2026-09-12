@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
-import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -361,33 +359,6 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
     assert all(issue.severity is not BaseSeverity.ERROR for issue in report.issues)
     assert not report.warnings
     assert not report.issues
-
-
-def test_user_profile_defining_modules_import_without_a_registry_barrel() -> None:
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            # The registry package root is an inert namespace marker, so the
-            # invariant is that each symbol resolves at the module that DEFINES
-            # it and importing the package root exports nothing. Asserting a
-            # symbol on the root would demand the re-export layer the
-            # architecture forbids.
-            "import cadrumo.domain.user_profile.loader as l; "
-            "import cadrumo.domain.user_profile.registry_contract as c; "
-            "import cadrumo.domain.calculations.registry as r; "
-            "import cadrumo.domain.calculations.registry.authority as a; "
-            "assert hasattr(l, 'load_user_profile_schema'); "
-            "assert hasattr(c, 'validate_user_profile_registry_contract'); "
-            "assert hasattr(a, 'bundled_authority'); "
-            "assert tuple(r.__all__) == ()",
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert result.returncode == 0, result.stderr
 
 
 def _live_profile_binding_selectors() -> frozenset[str]:

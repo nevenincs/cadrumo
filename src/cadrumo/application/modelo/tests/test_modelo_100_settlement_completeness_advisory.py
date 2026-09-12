@@ -56,6 +56,7 @@ def _profile() -> TaxpayerProfile:
 
 def _predicate() -> VerificationPredicateDefinition:
     return VerificationPredicateDefinition(
+        id=f"implies-nonzero:{_PREDICATE_ID_SUFFIX}",
         predicate_id=f"modelo-100-2024-{_PREDICATE_ID_SUFFIX}",
         legal_refs=("ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"),
         expression=_EXPRESSION,

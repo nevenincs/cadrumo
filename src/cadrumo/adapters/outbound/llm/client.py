@@ -369,9 +369,8 @@ class LLMClient:
         """Build the client, resolving settings and provider from the arguments."""
         # Deferred: the three persistence-touching stores live on the CORE side
         # of the boundary and import this package for the shared error and model
-        # types, so binding them at module load would close the cycle. Resolved
-        # here, at construction, through that package's public facade -- the
-        # sanctioned cycle-break target, never a private submodule.
+        # types, so binding them at module load would close the cycle. Resolve
+        # each class from its defining module here, at construction time.
         from .cache import LLMCache
         from .consent_ledger import EvidenceConsentLedger
         from .run_telemetry import LLMRunTelemetryRecorder
@@ -535,11 +534,10 @@ class LLMClient:
         opinion that could disagree with the doctor surface an operator just
         read.
 
-        Resolved through the application package's public facade at call time
-        rather than at module load. The edge is downward and permitted, but this
-        package is imported BY application code, so an eager binding would risk
-        closing that loop at import time -- the same reason the stores above are
-        deferred.
+        Resolved from its application defining module at call time rather than
+        at module load. The edge is downward and permitted, but this package is
+        imported by application code, so an eager binding would risk closing
+        that loop at import time.
 
         **Assessed only where the catalogue makes a claim.** An uncatalogued
         model has no declared requirement, and inventing one would be worse than
@@ -995,10 +993,9 @@ class LLMClient:
 def _llm_run_record() -> type:
     """Resolve ``LLMRunRecord`` from the core-side telemetry store, deferred.
 
-    The record type lives with the store that persists it, on the core side of
-    the boundary. Imported through that package's public facade at call time
-    rather than at module load, so the import cycle the split creates never
-    closes (see the TYPE_CHECKING block above for why the edge exists at all).
+    The record type lives with the store that persists it. Importing its
+    defining module at call time prevents the cycle from closing at module load
+    (see the TYPE_CHECKING block above for why the edge exists at all).
     """
     from .run_telemetry import LLMRunRecord
 

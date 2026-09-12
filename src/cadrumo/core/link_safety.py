@@ -8,9 +8,10 @@ the two-part test inline before this module existed, and the one place the
 predicate was already named lived in a journal repository, unreachable from
 any other package.
 
-The neighbouring primitives -- :func:`~cadrumo.core.fsync_parent_dir`,
-:func:`~cadrumo.core.exclusive_file_lock` -- are freestanding path helpers
-re-exported from the package root, and this follows that shape deliberately.
+The neighbouring primitives live in their own defining modules:
+:func:`~cadrumo.core.fsync.fsync_parent_dir` and
+:func:`~cadrumo.core.locks.exclusive_file_lock`. This predicate follows the
+same single-owner shape.
 """
 
 from __future__ import annotations

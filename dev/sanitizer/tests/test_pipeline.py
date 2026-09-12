@@ -8,7 +8,6 @@ assert:
 * The signed-PDF refuse guard fires.
 * The already-sanitised refuse guard fires when the source SHA
   is in :data:`SANITIZED_SHAS`, and can be opted out per-call.
-* Public re-exports import cleanly from :mod:`dev.sanitizer`.
 """
 
 from __future__ import annotations
@@ -16,7 +15,6 @@ from __future__ import annotations
 import hashlib
 import io
 import logging
-from importlib import import_module
 
 import pikepdf
 import pytest
@@ -319,35 +317,6 @@ class TestRefuseIfAlreadySanitized:
 
         result = sanitize_pdf(source, TokenMap(), refuse_if_already_sanitized=False)
         assert result.source_sha256 == sha
-
-
-class TestInertInitialiser:
-    """The package initialiser forwards nothing.
-
-    This class replaces one that asserted the opposite. It required
-    ``dev.sanitizer`` to declare a NON-EMPTY ``__all__`` and to answer every name
-    in it, and it was hardened against an empty list precisely so that emptying
-    the facade could not pass silently. That made it a gate protecting the
-    defect: it could not be satisfied at the same time as the accepted boundary,
-    which makes a package initialiser an inert namespace marker.
-
-    The property worth holding is the inverse, and it is held here rather than
-    deleted, because "the initialiser exports nothing" is a real contract that
-    can regress the moment somebody adds a convenience import back.
-    """
-
-    def test_the_initialiser_declares_no_exports(self) -> None:
-        sanitizer = import_module("dev.sanitizer")
-
-        assert not hasattr(sanitizer, "__all__"), "an inert initialiser declares no exports"
-
-    def test_the_initialiser_carries_nothing_but_its_own_submodules(self) -> None:
-        sanitizer = import_module("dev.sanitizer")
-
-        public = [name for name in vars(sanitizer) if not name.startswith("_")]
-        assert all(getattr(sanitizer, name).__name__.startswith("dev.sanitizer.") for name in public), (
-            f"the initialiser forwards non-module names: {public}"
-        )
 
     def test_the_public_symbols_are_importable_from_the_modules_that_define_them(self) -> None:
         """What the retired test was actually protecting, asked of the real homes."""

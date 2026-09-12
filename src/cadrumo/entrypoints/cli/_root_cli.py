@@ -1,10 +1,10 @@
 """Owned lazy handlers for the executable and ``app`` namespace roots.
 
-The CLI package facade assembles the command graph.  Keeping executable root
-callbacks on that facade made their deferred targets indistinguishable from
-package bootstrap and forced the graph-import gate to exempt them.  This module
-is the public behavior boundary resolved by the two owning ``CommandSpec``
-nodes; importing command authority never imports it.
+The command graph binds its executable root callbacks to this defining module.
+Keeping those callbacks on the package namespace would make their deferred
+targets indistinguishable from package bootstrap and force the graph-import gate
+to exempt them.  This module is the public behavior boundary resolved by the two
+owning ``CommandSpec`` nodes; importing command authority never imports it.
 """
 
 from __future__ import annotations

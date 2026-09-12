@@ -49,6 +49,7 @@ def _profile() -> TaxpayerProfile:
 
 def _predicate() -> VerificationPredicateDefinition:
     return VerificationPredicateDefinition(
+        id="advisory-when-computed-diverges:modulos-computed-diverges-de-c01",
         predicate_id="modelo-131-2025-modulos-computed-diverges-de-c01",
         legal_refs=("ley-35-2006:art-31", "orden-hac-1347-2024:art-4", "orden-hac-1347-2024:da-1"),
         expression=_EXPRESSION,

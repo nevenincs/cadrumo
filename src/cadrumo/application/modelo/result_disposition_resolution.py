@@ -54,7 +54,7 @@ from ...core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
@@ -68,7 +68,6 @@ from ...domain.iva.refund_eligibility import is_last_filing_period_of_year, refu
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
-from ._registry_resources import registry_root
 from .action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,
@@ -247,7 +246,7 @@ def _result_disposition_values_for_revision(
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": registry_root()},
+            context={"registry_root": bundled_authority_artifact_path()},
         ) from exc
     except RegistrySnapshotError as exc:
         raise CalculationRegistryUnavailableError(

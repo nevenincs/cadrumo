@@ -30,7 +30,7 @@ from decimal import Decimal
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import bundled_authority, bundled_authority_artifact_path
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.formula_runtime import (
@@ -41,9 +41,6 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ._registry_resources import (
-    registry_root as _registry_root,
-)
 from .action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,
@@ -152,7 +149,7 @@ def resolve_registry_snapshot_for_work_unit(
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
             translated_message="application.modelo.errors.calculation_registry_root_missing",
-            context={"registry_root": _registry_root()},
+            context={"registry_root": bundled_authority_artifact_path()},
         ) from exc
     try:
         snapshot = authority.snapshot(

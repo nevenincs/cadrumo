@@ -14,8 +14,8 @@ from ..registry import PORTAL_REGISTRY
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_smoke_portals_public_surface() -> None:
-    """The subpackage is importable and publishes the documented surface."""
+def test_smoke_portals_namespace_and_registry() -> None:
+    """The package is inert and the defining registry module is usable."""
     package = sys.modules[portals_registry.__package__]
     portals_all = vars(package).get("__all__", ())
     portals_doc = vars(package).get("__doc__")
@@ -23,9 +23,8 @@ def test_smoke_portals_public_surface() -> None:
     assert issubclass(CadrumoError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
-    # Every name advertised in __all__ is resolvable.
-    for name in portals_all:
-        assert hasattr(package, name), name
+    assert portals_all == ()
+    assert "__getattr__" not in vars(package)
 
     # Sanity: the registry materialises on first access.
     assert len(PORTAL_REGISTRY) == 41

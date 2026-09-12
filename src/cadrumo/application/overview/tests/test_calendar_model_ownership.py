@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from importlib import import_module
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -16,37 +15,6 @@ from ..calendar import calendar_events_from_notification_snapshots
 from ..calendar_models import OverviewCalendarEvent, OverviewCalendarRange
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_PUBLIC_CALENDAR_MODEL_NAMES = frozenset(
-    {
-        "CalendarCompleteness",
-        "CalendarWarning",
-        "OverviewAeatSubmissionState",
-        "OverviewCalendar",
-        "OverviewCalendarEntry",
-        "OverviewCalendarEvent",
-        "OverviewCalendarEventType",
-        "OverviewCalendarFilingEvidence",
-        "OverviewCalendarRange",
-        "OverviewCensoEnrolmentState",
-        "OverviewLocalFilingState",
-        "OverviewPeriodState",
-        "OverviewStatusReport",
-        "SuppressedCalendarEntry",
-        "user_state_for",
-    },
-)
-
-
-def test_calendar_dtos_are_publicly_owned_by_models_not_builder_module() -> None:
-    """The public DTO surface resolves directly to its defining module."""
-    overview = import_module("..", package=__package__)
-    calendar_builder = import_module("..calendar", package=__package__)
-
-    assert set(overview.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
-    assert set(_calendar_models.__all__) >= _PUBLIC_CALENDAR_MODEL_NAMES
-    assert all(getattr(overview, name) is getattr(_calendar_models, name) for name in _PUBLIC_CALENDAR_MODEL_NAMES)
-    assert _PUBLIC_CALENDAR_MODEL_NAMES.isdisjoint(vars(calendar_builder))
 
 
 def test_calendar_event_projection_materialises_models_from_their_canonical_owner() -> None:

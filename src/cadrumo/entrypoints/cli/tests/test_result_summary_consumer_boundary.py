@@ -17,16 +17,10 @@ renderer, so a NEW consumer in an export module is invisible to every one of
 them -- they never import export code. This gate is structural for that reason:
 it fails on the commit that wires the consumer, not on the filing that leaks.
 
-Scanning is by SYMBOL NAME across every ``from ... import`` in the tree, not by
-importers of the defining module. That distinction is the whole design. The
-project mandates importing through a package facade
-(``aeat-architecture-boundaries``), and the one real consumer obeys
-it -- ``_modelo_rendering`` reaches the payload type through ``_modelo_payloads``
-and the application types through ``application.modelo``, never through a
-definer. A gate keyed on the definers' importers would therefore score exactly
-ZERO, report clean, and certify its own blindness as the baseline. Symbol-name
-scanning is immune to that by construction: a facade re-export changes the path,
-never the name.
+Scanning is by SYMBOL NAME across every ``from ... import`` in the tree.  The
+consumer restriction is semantic and therefore independent of whether a
+canonical module is spelled absolutely or relatively.  Repository-wide import
+authority separately rejects non-owning forwarding surfaces.
 
 This half covers the CLI payload row. The application-layer types
 (``calculation_result_summary`` and the row it returns) are the same hazard by
@@ -73,12 +67,6 @@ _DISPLAY_LAYER = _PACKAGE_ROOT / "entrypoints" / "cli"
 #: layer -- is asserted directly and catches the hazard regardless of the count.
 _MINIMUM_PAYLOAD_IMPORTERS = 2
 
-#: EXACT, unlike the importer floor above, and the asymmetry is deliberate. A new
-#: re-export point genuinely widens the symbol's reachable surface, which is the
-#: thing this assertion exists to surface for review; here a bump IS the review
-#: action rather than a way around one.
-_EXPECTED_PAYLOAD_REEXPORTERS = 2
-
 
 def _production_modules() -> Iterator[Path]:
     for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
@@ -95,31 +83,14 @@ def _imports_symbol(tree: ast.AST, symbol: str) -> bool:
     )
 
 
-def _reexports_symbol(tree: ast.AST, symbol: str) -> bool:
-    """Whether the module re-publishes ``symbol`` through its ``__all__``."""
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign):
-            continue
-        if not any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets):
-            continue
-        if isinstance(node.value, ast.List | ast.Tuple) and any(
-            isinstance(item, ast.Constant) and item.value == symbol for item in node.value.elts
-        ):
-            return True
-    return False
-
-
-def _scan(symbol: str) -> tuple[list[Path], list[Path]]:
-    """Return the modules importing ``symbol`` and those re-exporting it."""
+def _scan(symbol: str) -> list[Path]:
+    """Return the modules importing ``symbol`` by name."""
     importers: list[Path] = []
-    reexporters: list[Path] = []
     for path in _production_modules():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         if _imports_symbol(tree, symbol):
             importers.append(path)
-        if _reexports_symbol(tree, symbol):
-            reexporters.append(path)
-    return importers, reexporters
+    return importers
 
 
 def _outside_display_layer(paths: Iterable[Path]) -> list[str]:
@@ -140,7 +111,7 @@ def _outside_display_layer(paths: Iterable[Path]) -> list[str]:
 
 def test_no_module_outside_the_display_layer_consumes_the_summary_payload() -> None:
     """Only the CLI display layer may reach the localized payload row."""
-    importers, _ = _scan(_PAYLOAD_SYMBOL)
+    importers = _scan(_PAYLOAD_SYMBOL)
     assert len(importers) >= _MINIMUM_PAYLOAD_IMPORTERS, (
         f"found only {len(importers)} importers of {_PAYLOAD_SYMBOL}; the scan matched fewer "
         "modules than the known consumers, so an empty violation list below would mean "
@@ -153,22 +124,6 @@ def test_no_module_outside_the_display_layer_consumes_the_summary_payload() -> N
     )
 
 
-def test_the_payload_reexport_surface_is_the_one_we_think_it_is() -> None:
-    """The re-export closure is COMPUTED, so a facade promotion is visible.
-
-    The reachable paths for the symbol are what a naive definer-keyed gate got
-    wrong. Pinning the computed set means a promotion that widens reach shows up
-    as a failure to review rather than silently enlarging the surface -- and
-    ``aeat-architecture-boundaries`` actively encourages exactly such
-    promotions, so an assumed depth would be correct today and wrong later.
-    """
-    _, reexporters = _scan(_PAYLOAD_SYMBOL)
-    assert len(reexporters) == _EXPECTED_PAYLOAD_REEXPORTERS, (
-        f"the {_PAYLOAD_SYMBOL} re-export surface changed: {sorted(str(p.relative_to(REPO_ROOT)) for p in reexporters)}"
-    )
-    assert _outside_display_layer(reexporters) == []
-
-
 def test_the_scan_flags_a_planted_export_consumer(tmp_path: Path) -> None:
     """Anti-tautology: the predicates fire on a module that would leak.
 
@@ -178,21 +133,19 @@ def test_the_scan_flags_a_planted_export_consumer(tmp_path: Path) -> None:
     """
     leaking = tmp_path / "_fichero_boe_writer.py"
     leaking.write_text(
-        f"from ..cli._modelo_payloads import {_PAYLOAD_SYMBOL}\n__all__ = [{_PAYLOAD_SYMBOL!r}]\n",
+        f"from ..cli._modelo_payloads import {_PAYLOAD_SYMBOL}\n",
         encoding="utf-8",
     )
     tree = ast.parse(leaking.read_text(encoding="utf-8"), filename=str(leaking))
     assert _imports_symbol(tree, _PAYLOAD_SYMBOL), "an export-side import must be detected"
-    assert _reexports_symbol(tree, _PAYLOAD_SYMBOL), "an export-side re-export must be detected"
     assert _outside_display_layer([leaking]) == [str(leaking).replace("\\", "/")]
 
-    # ...and a module touching neither is not flagged, so the predicates are not
-    # simply returning True.
+    # ...and a module not importing the symbol is not flagged, so the predicate
+    # is not simply returning True.
     inert = tmp_path / "_unrelated.py"
     inert.write_text("from decimal import Decimal\n__all__ = ['Decimal']\n", encoding="utf-8")
     inert_tree = ast.parse(inert.read_text(encoding="utf-8"), filename=str(inert))
     assert not _imports_symbol(inert_tree, _PAYLOAD_SYMBOL)
-    assert not _reexports_symbol(inert_tree, _PAYLOAD_SYMBOL)
 
 
 def test_the_scan_corpus_did_not_collapse() -> None:

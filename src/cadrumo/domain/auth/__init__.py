@@ -1,11 +1,11 @@
-"""Domain facade for AEAT apoderamiento scope vocabulary.
+"""Inert namespace for AEAT apoderamiento scope vocabulary.
 
-This package re-exports the catalogue and parser primitives from
-:mod:`domain.auth.apoderamientos` so callers can import the authorization
-scope vocabulary from :mod:`domain.auth`. The domain layer owns
+The defining :mod:`domain.auth.apoderamientos.catalogue` module owns
 :class:`ApoderadoScope`, :class:`ApoderamientosCatalogue`,
 :func:`parse_scope_tokens`, and :class:`UnknownScopeError`; it does not persist
 represented-party configuration or contact AEAT.
+
+The package initializer exports no symbols.
 
 See Also:
     - :mod:`domain.auth.apoderamientos` for the shipped scope catalogue,

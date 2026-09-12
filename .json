@@ -1,0 +1,2248 @@
+Y:\code\cadrumo-worktrees\main\src\cadrumo\domain\calculations\registry\schema_references.py:404: GenericBeforeBaseModelWarning: Classes should inherit from `BaseModel` before generic classes (e.g. `typing.Generic[T]`) for pydantic generics to work properly.
+  class DateSupportEnvelope(OrderedSupportEnvelope[date], RegistryModel):
+Y:\code\cadrumo-worktrees\main\src\cadrumo\domain\calculations\registry\schema_references.py:417: GenericBeforeBaseModelWarning: Classes should inherit from `BaseModel` before generic classes (e.g. `typing.Generic[T]`) for pydantic generics to work properly.
+  class TemporalSupportEnvelope(OrderedSupportEnvelope[int], RegistryModel):
+{
+  "span_strip": {
+    "232": {
+      "stripped_count": 185,
+      "candidates": 370,
+      "refused_modelo": false,
+      "strips": [
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.144-158.vinculada-1-nif",
+          "new_id": "modelo-232.page_01.vinculada-1-nif",
+          "segment": "144-158"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.159-159.vinculada-1-fjo",
+          "new_id": "modelo-232.page_01.vinculada-1-fjo",
+          "segment": "159-159"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.160-219.vinculada-1-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-1-razon-social",
+          "segment": "160-219"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.240-240.vinculada-1-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-1-tipo-vinculacion",
+          "segment": "240-240"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.241-242.vinculada-1-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-1-provincia-pais",
+          "segment": "241-242"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.243-244.vinculada-1-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-1-tipo-operacion",
+          "segment": "243-244"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.245-245.vinculada-1-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-1-ingreso-pago",
+          "segment": "245-245"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.246-247.vinculada-1-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-1-metodo-valoracion",
+          "segment": "246-247"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.248-264.vinculada-1-importe",
+          "new_id": "modelo-232.page_01.vinculada-1-importe",
+          "segment": "248-264"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.265-279.vinculada-2-nif",
+          "new_id": "modelo-232.page_01.vinculada-2-nif",
+          "segment": "265-279"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.280-280.vinculada-2-fjo",
+          "new_id": "modelo-232.page_01.vinculada-2-fjo",
+          "segment": "280-280"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.281-340.vinculada-2-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-2-razon-social",
+          "segment": "281-340"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.361-361.vinculada-2-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-2-tipo-vinculacion",
+          "segment": "361-361"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.362-363.vinculada-2-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-2-provincia-pais",
+          "segment": "362-363"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.364-365.vinculada-2-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-2-tipo-operacion",
+          "segment": "364-365"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.366-366.vinculada-2-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-2-ingreso-pago",
+          "segment": "366-366"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.367-368.vinculada-2-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-2-metodo-valoracion",
+          "segment": "367-368"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.369-385.vinculada-2-importe",
+          "new_id": "modelo-232.page_01.vinculada-2-importe",
+          "segment": "369-385"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.386-400.vinculada-3-nif",
+          "new_id": "modelo-232.page_01.vinculada-3-nif",
+          "segment": "386-400"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.401-401.vinculada-3-fjo",
+          "new_id": "modelo-232.page_01.vinculada-3-fjo",
+          "segment": "401-401"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.402-461.vinculada-3-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-3-razon-social",
+          "segment": "402-461"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.482-482.vinculada-3-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-3-tipo-vinculacion",
+          "segment": "482-482"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.483-484.vinculada-3-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-3-provincia-pais",
+          "segment": "483-484"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.485-486.vinculada-3-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-3-tipo-operacion",
+          "segment": "485-486"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.487-487.vinculada-3-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-3-ingreso-pago",
+          "segment": "487-487"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.488-489.vinculada-3-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-3-metodo-valoracion",
+          "segment": "488-489"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.490-506.vinculada-3-importe",
+          "new_id": "modelo-232.page_01.vinculada-3-importe",
+          "segment": "490-506"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.507-521.vinculada-4-nif",
+          "new_id": "modelo-232.page_01.vinculada-4-nif",
+          "segment": "507-521"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.522-522.vinculada-4-fjo",
+          "new_id": "modelo-232.page_01.vinculada-4-fjo",
+          "segment": "522-522"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.523-582.vinculada-4-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-4-razon-social",
+          "segment": "523-582"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.603-603.vinculada-4-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-4-tipo-vinculacion",
+          "segment": "603-603"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.604-605.vinculada-4-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-4-provincia-pais",
+          "segment": "604-605"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.606-607.vinculada-4-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-4-tipo-operacion",
+          "segment": "606-607"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.608-608.vinculada-4-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-4-ingreso-pago",
+          "segment": "608-608"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.609-610.vinculada-4-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-4-metodo-valoracion",
+          "segment": "609-610"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.611-627.vinculada-4-importe",
+          "new_id": "modelo-232.page_01.vinculada-4-importe",
+          "segment": "611-627"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.628-642.vinculada-5-nif",
+          "new_id": "modelo-232.page_01.vinculada-5-nif",
+          "segment": "628-642"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.643-643.vinculada-5-fjo",
+          "new_id": "modelo-232.page_01.vinculada-5-fjo",
+          "segment": "643-643"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.644-703.vinculada-5-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-5-razon-social",
+          "segment": "644-703"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.724-724.vinculada-5-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-5-tipo-vinculacion",
+          "segment": "724-724"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.725-726.vinculada-5-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-5-provincia-pais",
+          "segment": "725-726"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.727-728.vinculada-5-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-5-tipo-operacion",
+          "segment": "727-728"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.729-729.vinculada-5-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-5-ingreso-pago",
+          "segment": "729-729"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.730-731.vinculada-5-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-5-metodo-valoracion",
+          "segment": "730-731"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.732-748.vinculada-5-importe",
+          "new_id": "modelo-232.page_01.vinculada-5-importe",
+          "segment": "732-748"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.749-763.matriz-nif",
+          "new_id": "modelo-232.page_01.matriz-nif",
+          "segment": "749-763"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.764-823.matriz-razon-social",
+          "new_id": "modelo-232.page_01.matriz-razon-social",
+          "segment": "764-823"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.824-838.vinculada-metodo-1-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-nif",
+          "segment": "824-838"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.839-839.vinculada-metodo-1-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-fjo",
+          "segment": "839-839"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.840-899.vinculada-metodo-1-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-razon-social",
+          "segment": "840-899"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.920-921.vinculada-metodo-1-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-provincia-pais",
+          "segment": "920-921"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.922-922.vinculada-metodo-1-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-tipo-vinculacion",
+          "segment": "922-922"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.923-939.vinculada-metodo-1-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-importe",
+          "segment": "923-939"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.940-954.vinculada-metodo-2-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-nif",
+          "segment": "940-954"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.955-955.vinculada-metodo-2-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-fjo",
+          "segment": "955-955"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.956-1015.vinculada-metodo-2-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-razon-social",
+          "segment": "956-1015"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1036-1037.vinculada-metodo-2-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-provincia-pais",
+          "segment": "1036-1037"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1038-1038.vinculada-metodo-2-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-tipo-vinculacion",
+          "segment": "1038-1038"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1039-1055.vinculada-metodo-2-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-importe",
+          "segment": "1039-1055"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1056-1070.vinculada-metodo-3-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-nif",
+          "segment": "1056-1070"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1071-1071.vinculada-metodo-3-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-fjo",
+          "segment": "1071-1071"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1072-1131.vinculada-metodo-3-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-razon-social",
+          "segment": "1072-1131"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1152-1153.vinculada-metodo-3-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-provincia-pais",
+          "segment": "1152-1153"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1154-1154.vinculada-metodo-3-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-tipo-vinculacion",
+          "segment": "1154-1154"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_01.1155-1171.vinculada-metodo-3-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-importe",
+          "segment": "1155-1171"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.13-62.paraiso-operacion-1-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-descripcion",
+          "segment": "13-62"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.63-122.paraiso-operacion-1-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-persona",
+          "segment": "63-122"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.143-143.paraiso-operacion-1-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-fjo",
+          "segment": "143-143"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.144-145.paraiso-operacion-1-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-clave-pais",
+          "segment": "144-145"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.146-162.paraiso-operacion-1-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-importe",
+          "segment": "146-162"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.163-212.paraiso-operacion-2-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-descripcion",
+          "segment": "163-212"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.213-272.paraiso-operacion-2-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-persona",
+          "segment": "213-272"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.293-293.paraiso-operacion-2-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-fjo",
+          "segment": "293-293"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.294-295.paraiso-operacion-2-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-clave-pais",
+          "segment": "294-295"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.296-312.paraiso-operacion-2-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-importe",
+          "segment": "296-312"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.313-362.paraiso-operacion-3-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-descripcion",
+          "segment": "313-362"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.363-422.paraiso-operacion-3-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-persona",
+          "segment": "363-422"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.443-443.paraiso-operacion-3-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-fjo",
+          "segment": "443-443"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.444-445.paraiso-operacion-3-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-clave-pais",
+          "segment": "444-445"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.446-462.paraiso-operacion-3-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-importe",
+          "segment": "446-462"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.463-512.paraiso-operacion-4-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-descripcion",
+          "segment": "463-512"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.513-572.paraiso-operacion-4-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-persona",
+          "segment": "513-572"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.593-593.paraiso-operacion-4-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-fjo",
+          "segment": "593-593"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.594-595.paraiso-operacion-4-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-clave-pais",
+          "segment": "594-595"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.596-612.paraiso-operacion-4-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-importe",
+          "segment": "596-612"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.613-662.paraiso-operacion-5-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-descripcion",
+          "segment": "613-662"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.663-722.paraiso-operacion-5-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-persona",
+          "segment": "663-722"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.743-743.paraiso-operacion-5-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-fjo",
+          "segment": "743-743"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.744-745.paraiso-operacion-5-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-clave-pais",
+          "segment": "744-745"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.746-762.paraiso-operacion-5-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-importe",
+          "segment": "746-762"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.763-812.paraiso-operacion-6-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-descripcion",
+          "segment": "763-812"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.813-872.paraiso-operacion-6-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-persona",
+          "segment": "813-872"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.893-893.paraiso-operacion-6-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-fjo",
+          "segment": "893-893"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.894-895.paraiso-operacion-6-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-clave-pais",
+          "segment": "894-895"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.896-912.paraiso-operacion-6-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-importe",
+          "segment": "896-912"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.913-962.paraiso-operacion-7-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-descripcion",
+          "segment": "913-962"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.963-1022.paraiso-operacion-7-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-persona",
+          "segment": "963-1022"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1043-1043.paraiso-operacion-7-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-fjo",
+          "segment": "1043-1043"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1044-1045.paraiso-operacion-7-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-clave-pais",
+          "segment": "1044-1045"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1046-1062.paraiso-operacion-7-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-importe",
+          "segment": "1046-1062"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1063-1112.paraiso-operacion-8-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-descripcion",
+          "segment": "1063-1112"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1113-1172.paraiso-operacion-8-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-persona",
+          "segment": "1113-1172"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1193-1193.paraiso-operacion-8-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-fjo",
+          "segment": "1193-1193"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1194-1195.paraiso-operacion-8-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-clave-pais",
+          "segment": "1194-1195"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1196-1212.paraiso-operacion-8-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-importe",
+          "segment": "1196-1212"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1213-1262.paraiso-operacion-9-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-descripcion",
+          "segment": "1213-1262"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1263-1322.paraiso-operacion-9-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-persona",
+          "segment": "1263-1322"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1343-1343.paraiso-operacion-9-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-fjo",
+          "segment": "1343-1343"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1344-1345.paraiso-operacion-9-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-clave-pais",
+          "segment": "1344-1345"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1346-1362.paraiso-operacion-9-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-importe",
+          "segment": "1346-1362"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1363-1412.paraiso-operacion-10-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-descripcion",
+          "segment": "1363-1412"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1413-1472.paraiso-operacion-10-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-persona",
+          "segment": "1413-1472"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1493-1493.paraiso-operacion-10-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-fjo",
+          "segment": "1493-1493"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1494-1495.paraiso-operacion-10-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-clave-pais",
+          "segment": "1494-1495"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1496-1512.paraiso-operacion-10-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-importe",
+          "segment": "1496-1512"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1513-1562.paraiso-operacion-11-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-descripcion",
+          "segment": "1513-1562"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1563-1622.paraiso-operacion-11-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-persona",
+          "segment": "1563-1622"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1643-1643.paraiso-operacion-11-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-fjo",
+          "segment": "1643-1643"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1644-1645.paraiso-operacion-11-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-clave-pais",
+          "segment": "1644-1645"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1646-1662.paraiso-operacion-11-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-importe",
+          "segment": "1646-1662"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1663-1712.paraiso-operacion-12-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-descripcion",
+          "segment": "1663-1712"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1713-1772.paraiso-operacion-12-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-persona",
+          "segment": "1713-1772"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1793-1793.paraiso-operacion-12-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-fjo",
+          "segment": "1793-1793"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1794-1795.paraiso-operacion-12-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-clave-pais",
+          "segment": "1794-1795"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1796-1812.paraiso-operacion-12-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-importe",
+          "segment": "1796-1812"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1813-1813.paraiso-valor-1-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-tipo",
+          "segment": "1813-1813"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1814-1873.paraiso-valor-1-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-entidad",
+          "segment": "1814-1873"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1894-1895.paraiso-valor-1-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-clave-pais",
+          "segment": "1894-1895"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1896-1912.paraiso-valor-1-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-valor-adquisicion",
+          "segment": "1896-1912"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1913-1917.paraiso-valor-1-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-porcentaje-participacion",
+          "segment": "1913-1917"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1918-1918.paraiso-valor-2-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-tipo",
+          "segment": "1918-1918"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1919-1978.paraiso-valor-2-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-entidad",
+          "segment": "1919-1978"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.1999-2000.paraiso-valor-2-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-clave-pais",
+          "segment": "1999-2000"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2001-2017.paraiso-valor-2-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-valor-adquisicion",
+          "segment": "2001-2017"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2018-2022.paraiso-valor-2-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-porcentaje-participacion",
+          "segment": "2018-2022"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2023-2023.paraiso-valor-3-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-tipo",
+          "segment": "2023-2023"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2024-2083.paraiso-valor-3-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-entidad",
+          "segment": "2024-2083"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2104-2105.paraiso-valor-3-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-clave-pais",
+          "segment": "2104-2105"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2106-2122.paraiso-valor-3-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-valor-adquisicion",
+          "segment": "2106-2122"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2123-2127.paraiso-valor-3-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-porcentaje-participacion",
+          "segment": "2123-2127"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2128-2128.paraiso-valor-4-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-tipo",
+          "segment": "2128-2128"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2129-2188.paraiso-valor-4-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-entidad",
+          "segment": "2129-2188"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2209-2210.paraiso-valor-4-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-clave-pais",
+          "segment": "2209-2210"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2211-2227.paraiso-valor-4-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-valor-adquisicion",
+          "segment": "2211-2227"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2228-2232.paraiso-valor-4-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-porcentaje-participacion",
+          "segment": "2228-2232"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2233-2233.paraiso-valor-5-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-tipo",
+          "segment": "2233-2233"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2234-2293.paraiso-valor-5-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-entidad",
+          "segment": "2234-2293"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2314-2315.paraiso-valor-5-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-clave-pais",
+          "segment": "2314-2315"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2316-2332.paraiso-valor-5-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-valor-adquisicion",
+          "segment": "2316-2332"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2333-2337.paraiso-valor-5-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-porcentaje-participacion",
+          "segment": "2333-2337"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2338-2338.paraiso-valor-6-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-tipo",
+          "segment": "2338-2338"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2339-2398.paraiso-valor-6-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-entidad",
+          "segment": "2339-2398"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2419-2420.paraiso-valor-6-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-clave-pais",
+          "segment": "2419-2420"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2421-2437.paraiso-valor-6-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-valor-adquisicion",
+          "segment": "2421-2437"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2438-2442.paraiso-valor-6-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-porcentaje-participacion",
+          "segment": "2438-2442"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2443-2443.paraiso-valor-7-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-tipo",
+          "segment": "2443-2443"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2444-2503.paraiso-valor-7-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-entidad",
+          "segment": "2444-2503"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2524-2525.paraiso-valor-7-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-clave-pais",
+          "segment": "2524-2525"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2526-2542.paraiso-valor-7-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-valor-adquisicion",
+          "segment": "2526-2542"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2543-2547.paraiso-valor-7-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-porcentaje-participacion",
+          "segment": "2543-2547"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2548-2548.paraiso-valor-8-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-tipo",
+          "segment": "2548-2548"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2549-2608.paraiso-valor-8-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-entidad",
+          "segment": "2549-2608"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2629-2630.paraiso-valor-8-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-clave-pais",
+          "segment": "2629-2630"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2631-2647.paraiso-valor-8-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-valor-adquisicion",
+          "segment": "2631-2647"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2648-2652.paraiso-valor-8-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-porcentaje-participacion",
+          "segment": "2648-2652"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2653-2653.paraiso-valor-9-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-tipo",
+          "segment": "2653-2653"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2654-2713.paraiso-valor-9-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-entidad",
+          "segment": "2654-2713"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2734-2735.paraiso-valor-9-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-clave-pais",
+          "segment": "2734-2735"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2736-2752.paraiso-valor-9-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-valor-adquisicion",
+          "segment": "2736-2752"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2753-2757.paraiso-valor-9-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-porcentaje-participacion",
+          "segment": "2753-2757"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2758-2758.paraiso-valor-10-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-tipo",
+          "segment": "2758-2758"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2759-2818.paraiso-valor-10-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-entidad",
+          "segment": "2759-2818"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2839-2840.paraiso-valor-10-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-clave-pais",
+          "segment": "2839-2840"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2841-2857.paraiso-valor-10-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-valor-adquisicion",
+          "segment": "2841-2857"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2858-2862.paraiso-valor-10-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-porcentaje-participacion",
+          "segment": "2858-2862"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2863-2863.paraiso-valor-11-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-tipo",
+          "segment": "2863-2863"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2864-2923.paraiso-valor-11-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-entidad",
+          "segment": "2864-2923"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2944-2945.paraiso-valor-11-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-clave-pais",
+          "segment": "2944-2945"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2946-2962.paraiso-valor-11-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-valor-adquisicion",
+          "segment": "2946-2962"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2963-2967.paraiso-valor-11-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-porcentaje-participacion",
+          "segment": "2963-2967"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2968-2968.paraiso-valor-12-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-tipo",
+          "segment": "2968-2968"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.2969-3028.paraiso-valor-12-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-entidad",
+          "segment": "2969-3028"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.3049-3050.paraiso-valor-12-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-clave-pais",
+          "segment": "3049-3050"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.3051-3067.paraiso-valor-12-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-valor-adquisicion",
+          "segment": "3051-3067"
+        },
+        {
+          "edition": "2016-2017",
+          "old_id": "modelo-232.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-porcentaje-participacion",
+          "segment": "3068-3072"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.144-158.vinculada-1-nif",
+          "new_id": "modelo-232.page_01.vinculada-1-nif",
+          "segment": "144-158"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.159-159.vinculada-1-fjo",
+          "new_id": "modelo-232.page_01.vinculada-1-fjo",
+          "segment": "159-159"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.160-219.vinculada-1-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-1-razon-social",
+          "segment": "160-219"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.240-240.vinculada-1-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-1-tipo-vinculacion",
+          "segment": "240-240"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.241-242.vinculada-1-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-1-provincia-pais",
+          "segment": "241-242"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.243-244.vinculada-1-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-1-tipo-operacion",
+          "segment": "243-244"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.245-245.vinculada-1-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-1-ingreso-pago",
+          "segment": "245-245"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.246-247.vinculada-1-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-1-metodo-valoracion",
+          "segment": "246-247"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.248-264.vinculada-1-importe",
+          "new_id": "modelo-232.page_01.vinculada-1-importe",
+          "segment": "248-264"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.265-279.vinculada-2-nif",
+          "new_id": "modelo-232.page_01.vinculada-2-nif",
+          "segment": "265-279"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.280-280.vinculada-2-fjo",
+          "new_id": "modelo-232.page_01.vinculada-2-fjo",
+          "segment": "280-280"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.281-340.vinculada-2-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-2-razon-social",
+          "segment": "281-340"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.361-361.vinculada-2-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-2-tipo-vinculacion",
+          "segment": "361-361"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.362-363.vinculada-2-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-2-provincia-pais",
+          "segment": "362-363"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.364-365.vinculada-2-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-2-tipo-operacion",
+          "segment": "364-365"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.366-366.vinculada-2-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-2-ingreso-pago",
+          "segment": "366-366"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.367-368.vinculada-2-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-2-metodo-valoracion",
+          "segment": "367-368"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.369-385.vinculada-2-importe",
+          "new_id": "modelo-232.page_01.vinculada-2-importe",
+          "segment": "369-385"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.386-400.vinculada-3-nif",
+          "new_id": "modelo-232.page_01.vinculada-3-nif",
+          "segment": "386-400"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.401-401.vinculada-3-fjo",
+          "new_id": "modelo-232.page_01.vinculada-3-fjo",
+          "segment": "401-401"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.402-461.vinculada-3-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-3-razon-social",
+          "segment": "402-461"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.482-482.vinculada-3-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-3-tipo-vinculacion",
+          "segment": "482-482"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.483-484.vinculada-3-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-3-provincia-pais",
+          "segment": "483-484"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.485-486.vinculada-3-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-3-tipo-operacion",
+          "segment": "485-486"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.487-487.vinculada-3-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-3-ingreso-pago",
+          "segment": "487-487"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.488-489.vinculada-3-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-3-metodo-valoracion",
+          "segment": "488-489"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.490-506.vinculada-3-importe",
+          "new_id": "modelo-232.page_01.vinculada-3-importe",
+          "segment": "490-506"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.507-521.vinculada-4-nif",
+          "new_id": "modelo-232.page_01.vinculada-4-nif",
+          "segment": "507-521"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.522-522.vinculada-4-fjo",
+          "new_id": "modelo-232.page_01.vinculada-4-fjo",
+          "segment": "522-522"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.523-582.vinculada-4-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-4-razon-social",
+          "segment": "523-582"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.603-603.vinculada-4-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-4-tipo-vinculacion",
+          "segment": "603-603"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.604-605.vinculada-4-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-4-provincia-pais",
+          "segment": "604-605"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.606-607.vinculada-4-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-4-tipo-operacion",
+          "segment": "606-607"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.608-608.vinculada-4-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-4-ingreso-pago",
+          "segment": "608-608"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.609-610.vinculada-4-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-4-metodo-valoracion",
+          "segment": "609-610"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.611-627.vinculada-4-importe",
+          "new_id": "modelo-232.page_01.vinculada-4-importe",
+          "segment": "611-627"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.628-642.vinculada-5-nif",
+          "new_id": "modelo-232.page_01.vinculada-5-nif",
+          "segment": "628-642"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.643-643.vinculada-5-fjo",
+          "new_id": "modelo-232.page_01.vinculada-5-fjo",
+          "segment": "643-643"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.644-703.vinculada-5-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-5-razon-social",
+          "segment": "644-703"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.724-724.vinculada-5-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-5-tipo-vinculacion",
+          "segment": "724-724"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.725-726.vinculada-5-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-5-provincia-pais",
+          "segment": "725-726"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.727-728.vinculada-5-tipo-operacion",
+          "new_id": "modelo-232.page_01.vinculada-5-tipo-operacion",
+          "segment": "727-728"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.729-729.vinculada-5-ingreso-pago",
+          "new_id": "modelo-232.page_01.vinculada-5-ingreso-pago",
+          "segment": "729-729"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.730-731.vinculada-5-metodo-valoracion",
+          "new_id": "modelo-232.page_01.vinculada-5-metodo-valoracion",
+          "segment": "730-731"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.732-748.vinculada-5-importe",
+          "new_id": "modelo-232.page_01.vinculada-5-importe",
+          "segment": "732-748"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.749-763.matriz-nif",
+          "new_id": "modelo-232.page_01.matriz-nif",
+          "segment": "749-763"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.764-823.matriz-razon-social",
+          "new_id": "modelo-232.page_01.matriz-razon-social",
+          "segment": "764-823"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.824-838.vinculada-metodo-1-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-nif",
+          "segment": "824-838"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.839-839.vinculada-metodo-1-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-fjo",
+          "segment": "839-839"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.840-899.vinculada-metodo-1-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-razon-social",
+          "segment": "840-899"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.920-921.vinculada-metodo-1-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-provincia-pais",
+          "segment": "920-921"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.922-922.vinculada-metodo-1-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-tipo-vinculacion",
+          "segment": "922-922"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.923-939.vinculada-metodo-1-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-1-importe",
+          "segment": "923-939"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.940-954.vinculada-metodo-2-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-nif",
+          "segment": "940-954"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.955-955.vinculada-metodo-2-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-fjo",
+          "segment": "955-955"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.956-1015.vinculada-metodo-2-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-razon-social",
+          "segment": "956-1015"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1036-1037.vinculada-metodo-2-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-provincia-pais",
+          "segment": "1036-1037"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1038-1038.vinculada-metodo-2-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-tipo-vinculacion",
+          "segment": "1038-1038"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1039-1055.vinculada-metodo-2-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-2-importe",
+          "segment": "1039-1055"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1056-1070.vinculada-metodo-3-nif",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-nif",
+          "segment": "1056-1070"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1071-1071.vinculada-metodo-3-fjo",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-fjo",
+          "segment": "1071-1071"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1072-1131.vinculada-metodo-3-razon-social",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-razon-social",
+          "segment": "1072-1131"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1152-1153.vinculada-metodo-3-provincia-pais",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-provincia-pais",
+          "segment": "1152-1153"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1154-1154.vinculada-metodo-3-tipo-vinculacion",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-tipo-vinculacion",
+          "segment": "1154-1154"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_01.1155-1171.vinculada-metodo-3-importe",
+          "new_id": "modelo-232.page_01.vinculada-metodo-3-importe",
+          "segment": "1155-1171"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.13-62.paraiso-operacion-1-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-descripcion",
+          "segment": "13-62"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.63-122.paraiso-operacion-1-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-persona",
+          "segment": "63-122"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.143-143.paraiso-operacion-1-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-fjo",
+          "segment": "143-143"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.144-145.paraiso-operacion-1-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-clave-pais",
+          "segment": "144-145"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.146-162.paraiso-operacion-1-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-1-importe",
+          "segment": "146-162"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.163-212.paraiso-operacion-2-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-descripcion",
+          "segment": "163-212"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.213-272.paraiso-operacion-2-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-persona",
+          "segment": "213-272"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.293-293.paraiso-operacion-2-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-fjo",
+          "segment": "293-293"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.294-295.paraiso-operacion-2-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-clave-pais",
+          "segment": "294-295"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.296-312.paraiso-operacion-2-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-2-importe",
+          "segment": "296-312"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.313-362.paraiso-operacion-3-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-descripcion",
+          "segment": "313-362"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.363-422.paraiso-operacion-3-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-persona",
+          "segment": "363-422"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.443-443.paraiso-operacion-3-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-fjo",
+          "segment": "443-443"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.444-445.paraiso-operacion-3-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-clave-pais",
+          "segment": "444-445"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.446-462.paraiso-operacion-3-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-3-importe",
+          "segment": "446-462"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.463-512.paraiso-operacion-4-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-descripcion",
+          "segment": "463-512"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.513-572.paraiso-operacion-4-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-persona",
+          "segment": "513-572"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.593-593.paraiso-operacion-4-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-fjo",
+          "segment": "593-593"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.594-595.paraiso-operacion-4-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-clave-pais",
+          "segment": "594-595"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.596-612.paraiso-operacion-4-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-4-importe",
+          "segment": "596-612"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.613-662.paraiso-operacion-5-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-descripcion",
+          "segment": "613-662"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.663-722.paraiso-operacion-5-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-persona",
+          "segment": "663-722"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.743-743.paraiso-operacion-5-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-fjo",
+          "segment": "743-743"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.744-745.paraiso-operacion-5-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-clave-pais",
+          "segment": "744-745"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.746-762.paraiso-operacion-5-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-5-importe",
+          "segment": "746-762"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.763-812.paraiso-operacion-6-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-descripcion",
+          "segment": "763-812"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.813-872.paraiso-operacion-6-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-persona",
+          "segment": "813-872"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.893-893.paraiso-operacion-6-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-fjo",
+          "segment": "893-893"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.894-895.paraiso-operacion-6-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-clave-pais",
+          "segment": "894-895"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.896-912.paraiso-operacion-6-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-6-importe",
+          "segment": "896-912"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.913-962.paraiso-operacion-7-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-descripcion",
+          "segment": "913-962"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.963-1022.paraiso-operacion-7-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-persona",
+          "segment": "963-1022"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1043-1043.paraiso-operacion-7-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-fjo",
+          "segment": "1043-1043"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1044-1045.paraiso-operacion-7-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-clave-pais",
+          "segment": "1044-1045"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1046-1062.paraiso-operacion-7-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-7-importe",
+          "segment": "1046-1062"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1063-1112.paraiso-operacion-8-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-descripcion",
+          "segment": "1063-1112"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1113-1172.paraiso-operacion-8-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-persona",
+          "segment": "1113-1172"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1193-1193.paraiso-operacion-8-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-fjo",
+          "segment": "1193-1193"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1194-1195.paraiso-operacion-8-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-clave-pais",
+          "segment": "1194-1195"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1196-1212.paraiso-operacion-8-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-8-importe",
+          "segment": "1196-1212"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1213-1262.paraiso-operacion-9-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-descripcion",
+          "segment": "1213-1262"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1263-1322.paraiso-operacion-9-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-persona",
+          "segment": "1263-1322"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1343-1343.paraiso-operacion-9-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-fjo",
+          "segment": "1343-1343"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1344-1345.paraiso-operacion-9-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-clave-pais",
+          "segment": "1344-1345"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1346-1362.paraiso-operacion-9-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-9-importe",
+          "segment": "1346-1362"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1363-1412.paraiso-operacion-10-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-descripcion",
+          "segment": "1363-1412"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1413-1472.paraiso-operacion-10-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-persona",
+          "segment": "1413-1472"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1493-1493.paraiso-operacion-10-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-fjo",
+          "segment": "1493-1493"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1494-1495.paraiso-operacion-10-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-clave-pais",
+          "segment": "1494-1495"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1496-1512.paraiso-operacion-10-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-10-importe",
+          "segment": "1496-1512"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1513-1562.paraiso-operacion-11-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-descripcion",
+          "segment": "1513-1562"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1563-1622.paraiso-operacion-11-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-persona",
+          "segment": "1563-1622"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1643-1643.paraiso-operacion-11-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-fjo",
+          "segment": "1643-1643"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1644-1645.paraiso-operacion-11-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-clave-pais",
+          "segment": "1644-1645"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1646-1662.paraiso-operacion-11-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-11-importe",
+          "segment": "1646-1662"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1663-1712.paraiso-operacion-12-descripcion",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-descripcion",
+          "segment": "1663-1712"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1713-1772.paraiso-operacion-12-persona",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-persona",
+          "segment": "1713-1772"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1793-1793.paraiso-operacion-12-fjo",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-fjo",
+          "segment": "1793-1793"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1794-1795.paraiso-operacion-12-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-clave-pais",
+          "segment": "1794-1795"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1796-1812.paraiso-operacion-12-importe",
+          "new_id": "modelo-232.page_02.paraiso-operacion-12-importe",
+          "segment": "1796-1812"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1813-1813.paraiso-valor-1-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-tipo",
+          "segment": "1813-1813"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1814-1873.paraiso-valor-1-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-entidad",
+          "segment": "1814-1873"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1894-1895.paraiso-valor-1-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-clave-pais",
+          "segment": "1894-1895"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1896-1912.paraiso-valor-1-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-valor-adquisicion",
+          "segment": "1896-1912"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1913-1917.paraiso-valor-1-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-1-porcentaje-participacion",
+          "segment": "1913-1917"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1918-1918.paraiso-valor-2-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-tipo",
+          "segment": "1918-1918"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1919-1978.paraiso-valor-2-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-entidad",
+          "segment": "1919-1978"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.1999-2000.paraiso-valor-2-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-clave-pais",
+          "segment": "1999-2000"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2001-2017.paraiso-valor-2-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-valor-adquisicion",
+          "segment": "2001-2017"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2018-2022.paraiso-valor-2-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-2-porcentaje-participacion",
+          "segment": "2018-2022"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2023-2023.paraiso-valor-3-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-tipo",
+          "segment": "2023-2023"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2024-2083.paraiso-valor-3-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-entidad",
+          "segment": "2024-2083"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2104-2105.paraiso-valor-3-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-clave-pais",
+          "segment": "2104-2105"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2106-2122.paraiso-valor-3-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-valor-adquisicion",
+          "segment": "2106-2122"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2123-2127.paraiso-valor-3-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-3-porcentaje-participacion",
+          "segment": "2123-2127"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2128-2128.paraiso-valor-4-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-tipo",
+          "segment": "2128-2128"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2129-2188.paraiso-valor-4-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-entidad",
+          "segment": "2129-2188"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2209-2210.paraiso-valor-4-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-clave-pais",
+          "segment": "2209-2210"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2211-2227.paraiso-valor-4-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-valor-adquisicion",
+          "segment": "2211-2227"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2228-2232.paraiso-valor-4-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-4-porcentaje-participacion",
+          "segment": "2228-2232"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2233-2233.paraiso-valor-5-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-tipo",
+          "segment": "2233-2233"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2234-2293.paraiso-valor-5-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-entidad",
+          "segment": "2234-2293"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2314-2315.paraiso-valor-5-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-clave-pais",
+          "segment": "2314-2315"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2316-2332.paraiso-valor-5-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-valor-adquisicion",
+          "segment": "2316-2332"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2333-2337.paraiso-valor-5-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-5-porcentaje-participacion",
+          "segment": "2333-2337"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2338-2338.paraiso-valor-6-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-tipo",
+          "segment": "2338-2338"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2339-2398.paraiso-valor-6-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-entidad",
+          "segment": "2339-2398"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2419-2420.paraiso-valor-6-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-clave-pais",
+          "segment": "2419-2420"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2421-2437.paraiso-valor-6-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-valor-adquisicion",
+          "segment": "2421-2437"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2438-2442.paraiso-valor-6-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-6-porcentaje-participacion",
+          "segment": "2438-2442"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2443-2443.paraiso-valor-7-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-tipo",
+          "segment": "2443-2443"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2444-2503.paraiso-valor-7-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-entidad",
+          "segment": "2444-2503"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2524-2525.paraiso-valor-7-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-clave-pais",
+          "segment": "2524-2525"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2526-2542.paraiso-valor-7-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-valor-adquisicion",
+          "segment": "2526-2542"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2543-2547.paraiso-valor-7-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-7-porcentaje-participacion",
+          "segment": "2543-2547"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2548-2548.paraiso-valor-8-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-tipo",
+          "segment": "2548-2548"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2549-2608.paraiso-valor-8-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-entidad",
+          "segment": "2549-2608"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2629-2630.paraiso-valor-8-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-clave-pais",
+          "segment": "2629-2630"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2631-2647.paraiso-valor-8-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-valor-adquisicion",
+          "segment": "2631-2647"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2648-2652.paraiso-valor-8-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-8-porcentaje-participacion",
+          "segment": "2648-2652"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2653-2653.paraiso-valor-9-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-tipo",
+          "segment": "2653-2653"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2654-2713.paraiso-valor-9-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-entidad",
+          "segment": "2654-2713"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2734-2735.paraiso-valor-9-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-clave-pais",
+          "segment": "2734-2735"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2736-2752.paraiso-valor-9-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-valor-adquisicion",
+          "segment": "2736-2752"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2753-2757.paraiso-valor-9-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-9-porcentaje-participacion",
+          "segment": "2753-2757"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2758-2758.paraiso-valor-10-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-tipo",
+          "segment": "2758-2758"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2759-2818.paraiso-valor-10-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-entidad",
+          "segment": "2759-2818"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2839-2840.paraiso-valor-10-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-clave-pais",
+          "segment": "2839-2840"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2841-2857.paraiso-valor-10-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-valor-adquisicion",
+          "segment": "2841-2857"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2858-2862.paraiso-valor-10-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-10-porcentaje-participacion",
+          "segment": "2858-2862"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2863-2863.paraiso-valor-11-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-tipo",
+          "segment": "2863-2863"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2864-2923.paraiso-valor-11-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-entidad",
+          "segment": "2864-2923"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2944-2945.paraiso-valor-11-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-clave-pais",
+          "segment": "2944-2945"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2946-2962.paraiso-valor-11-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-valor-adquisicion",
+          "segment": "2946-2962"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2963-2967.paraiso-valor-11-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-11-porcentaje-participacion",
+          "segment": "2963-2967"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2968-2968.paraiso-valor-12-tipo",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-tipo",
+          "segment": "2968-2968"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.2969-3028.paraiso-valor-12-entidad",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-entidad",
+          "segment": "2969-3028"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.3049-3050.paraiso-valor-12-clave-pais",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-clave-pais",
+          "segment": "3049-3050"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.3051-3067.paraiso-valor-12-valor-adquisicion",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-valor-adquisicion",
+          "segment": "3051-3067"
+        },
+        {
+          "edition": "2018-y-siguientes",
+          "old_id": "modelo-232.page_02.3068-3072.paraiso-valor-12-porcentaje-participacion",
+          "new_id": "modelo-232.page_02.paraiso-valor-12-porcentaje-participacion",
+          "segment": "3068-3072"
+        }
+      ],
+      "collisions": [],
+      "refused": [],
+      "stranded_export_trees": [
+        "2016-2017",
+        "2018-y-siguientes"
+      ],
+      "locale_mentions": {},
+      "test_mentions": {
+        "dev/registry/tests/test_rename_edition_year_collapse.py": {
+          "modelo-232.page_01.144-158.vinculada-1-nif": 4,
+          "modelo-232.page_01.159-159.vinculada-1-fjo": 1
+        }
+      }
+    }
+  }
+}

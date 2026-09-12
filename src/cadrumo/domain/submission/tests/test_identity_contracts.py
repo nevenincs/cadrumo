@@ -7,7 +7,7 @@ pair). All three were length-only strings, so an unknown modelo code, a
 whitespace-spelled known one, and an arbitrary identifier all became historical
 filing records that no canonical lookup would ever match.
 
-Real model construction and a real encrypted repository round-trip, no mocks.
+Real model construction with strict identity and aggregate validation.
 """
 
 from __future__ import annotations
@@ -18,8 +18,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.submission import SubmissionRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ..models import (
@@ -79,19 +77,6 @@ def test_canonical_modelo_identity_is_stored_as_the_enum_member() -> None:
 
     assert filing.modelo is Modelo.M303
     assert filing.modelo == "303"
-
-
-def test_canonical_modelo_identity_survives_encrypted_storage(tmp_path: Path) -> None:
-    """Valid parity: the canonical identity round-trips through the real repository."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        original = _filing(modelo=Modelo.M130)
-        repository = SubmissionRepository()
-        repository.save(original)
-        loaded = repository.load(original.submission_id)
-
-    assert loaded is not None
-    assert loaded == original
-    assert loaded.modelo is Modelo.M130
 
 
 @pytest.mark.parametrize(

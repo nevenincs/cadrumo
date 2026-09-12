@@ -5,9 +5,8 @@ four heavy domain types it composes (:class:`CalculationRevision`,
 ``WorkUnit``, ``Transaction``, :class:`ModeloRecord`) and their transitive
 registry-parse cost do not enter ``sys.modules`` at user-profile package
 init. The :class:`UserProfileRecord` is included via the ``profile`` field
-of :class:`UserProfilePortableExport`. This module is the canonical
-definition site; :mod:`domain.user_profile` exposes the same class
-through lazy ``__getattr__`` resolution so package import stays light.
+of :class:`UserProfilePortableExport`. This module is the canonical definition
+site; the package initializer is inert and provides no alternate import path.
 """
 
 from __future__ import annotations

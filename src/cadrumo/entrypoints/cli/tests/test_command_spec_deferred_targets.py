@@ -91,4 +91,4 @@ def test_every_declared_command_target_resolves() -> None:
 def test_the_resolver_rejects_a_dangling_target(module: str, qualname: str) -> None:
     """Anti-tautology: prove the resolver this gate leans on actually refuses."""
     with pytest.raises((RuntimeError, ImportError)):
-        resolve_deferred_target(DeferredTarget(module, qualname, __package__))
+        resolve_deferred_target(DeferredTarget(module, qualname))

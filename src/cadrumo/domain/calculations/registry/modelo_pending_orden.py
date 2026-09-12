@@ -27,8 +27,9 @@ outlive the window rather than by the cadence alone.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
-from typing import Annotated, Mapping
+from typing import Annotated
 
 from pydantic import BeforeValidator, Field, model_validator
 

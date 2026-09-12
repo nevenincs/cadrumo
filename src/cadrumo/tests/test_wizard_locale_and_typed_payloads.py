@@ -1,34 +1,19 @@
-"""Wizard locale routing and typed-payload boundary contracts.
+"""Wizard locale routing contracts.
 
-- The wizard catalogue materializes bounded dynamic choice translation
-  keys in its runtime descriptors.
-- ``OAuthClientPayload`` TypedDict and ``_OAuthClientWrapper`` pydantic
-  model validate the Cloud Console Desktop envelope.
-- Orphan namespace ``__init__`` modules carry intent documentation.
+The wizard catalogue materializes bounded dynamic choice translation keys in
+its runtime descriptors.
 
 See Also:
     :mod:`~application.wizard`
         Wizard descriptor package whose bounded dynamic locale keys are
         materialized at runtime.
-    :class:`~entrypoints.cli.OAuthClientPayload`
-        CLI Google OAuth payload boundary validated from Cloud Console JSON.
-
-These locale and typed-boundary contracts group the wizard's dynamic-key
-materialization with the OAuth payload boundary it shares.
 """
 
 from __future__ import annotations
 
-import pathlib
-
 import pytest
 
-from ..application import storage as application_storage
-from ..domain import calculations as domain_calculations
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_SRC_ROOT = pathlib.Path(__file__).parent.parent
 
 
 def _wizard_descriptor_translation_keys() -> set[str]:
@@ -82,27 +67,3 @@ def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
     }
 
     assert expected <= keys
-
-
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Orphan __init__ modules remain namespace containers
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "module",
-    (application_storage, domain_calculations),
-)
-def test_namespace_init_modules_document_intent_without_reexports(module: object) -> None:
-    """Namespace package roots must document intent and expose no public aggregation API."""
-    module_name = module.__name__
-    assert "namespace" in (getattr(module, "__doc__", None) or "").lower(), (
-        f"{module_name} must document its namespace-container intent"
-    )
-    public_exports = sorted(
-        name
-        for name, value in vars(module).items()
-        if not name.startswith("_") and value.__class__.__module__ != "__future__"
-    )
-    assert public_exports == [], f"{module_name} unexpectedly re-exports public names: {public_exports}"

@@ -5,7 +5,7 @@ Concrete transports live in child packages, currently the Typer CLI under
 marker so importing :mod:`entrypoints` does not initialise command trees,
 locale catalogues, browser integrations, or storage sessions.
 
-Entrypoints translate process-level concerns into application-facade calls. They
+Entrypoints translate process-level concerns into application use-case calls. They
 own presentation, command parsing, exit-code mapping, and terminal error
 contracts; business decisions stay in :mod:`application` and
 :mod:`domain`.
