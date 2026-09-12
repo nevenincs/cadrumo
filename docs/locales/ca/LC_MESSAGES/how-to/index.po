@@ -483,18 +483,11 @@ msgstr ""
 
 #: ../../how-to/index.md:317
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Publica l'autoritat d'execució"
 
 #: ../../how-to/index.md:321
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
-
-#~ msgid ""
-#~ "Set up a recovery key, change or"
-#~ " recover your passphrase, log out, or"
-#~ " reset."
-#~ msgstr ""
-#~ "Configura una clau de recuperació, "
-#~ "canvia o recupera la contrasenya, "
-#~ "bloqueja o restableix."
+"Publica i verifica una autoritat de registre signada com a operador de "
+"llançament."
 

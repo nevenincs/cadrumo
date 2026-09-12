@@ -162,7 +162,6 @@ Submodules
    cadrumo.core.revision_review
    cadrumo.core.schema_family_disposition
    cadrumo.core.secure_object_write
-   cadrumo.core.setup_answers
    cadrumo.core.source_locator
    cadrumo.core.spanish_postcode
    cadrumo.core.spanish_stemming

@@ -8,6 +8,7 @@ import io
 import json
 import re
 import tomllib
+import unicodedata
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from difflib import SequenceMatcher
@@ -32,10 +33,84 @@ from .manager import (
 _DOTTED_KEY_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_-]+)+\Z")
 _LOCALES: Final[tuple[str, ...]] = ("ca", "en", "es", "hu")
 _LANGUAGE_CORE_FIELDS: Final[frozenset[str]] = frozenset({"definition", "scope_note", "short_description"})
-_TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"%\{[^{}]*\}|\{[^{}]*\}")
+_TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(
+    r"%\{[^{}\r\n]*\}|%\([A-Za-z_][A-Za-z0-9_.]*\)[#0\- +]?"
+    r"(?:\d+|\*)?(?:\.\d+|\.\*)?(?:[hlL])?[diouxXeEfFgGcrsa%]|"
+    r"\$\{[^{}\r\n]*\}|\{[^{}\r\n]*\}"
+)
 _TRANSLATION_CODE_RE: Final[re.Pattern[str]] = re.compile(
     r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?:=[^][,;\s]+)?|"
     r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b|\[\d{1,4}\]"
+)
+_TRANSLATION_MARKDOWN_LINK_RE: Final[re.Pattern[str]] = re.compile(
+    r"\[(?P<label>[^\]\r\n]+)\]\(\s*(?:<[^>\r\n]*>|[^)\r\n]*)\)"
+)
+_TRANSLATION_RST_LINK_RE: Final[re.Pattern[str]] = re.compile(
+    r"`(?P<label>[^`\r\n<>]*?)\s*<(?P<target>[^>\r\n]+)>\s*`_?"
+)
+_TRANSLATION_RST_ROLE_RE: Final[re.Pattern[str]] = re.compile(
+    r":[A-Za-z][A-Za-z0-9_-]*:`(?P<target>[^`\r\n]+)`"
+)
+_TRANSLATION_MYST_ROLE_RE: Final[re.Pattern[str]] = re.compile(
+    r"\{[A-Za-z][A-Za-z0-9_-]*\}`(?P<target>[^`\r\n]+)`"
+)
+_TRANSLATION_LITERAL_RE: Final[re.Pattern[str]] = re.compile(
+    r"```[\s\S]*?```|``[^`\r\n]*``|`[^`\r\n]*`"
+)
+_TRANSLATION_BRACKET_REFERENCE_RE: Final[re.Pattern[str]] = re.compile(
+    r"\[(?:\d+|(?=[^\]\r\n]*[=+\-*/])[A-Za-z0-9_.+*/=-]+)\]"
+)
+_TRANSLATION_URL_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?i)(?<![\w])(?:https?|ftp|file|mailto):[^\s<>()\[\]{}]+|"
+    r"(?<![\w])www\.[^\s<>()\[\]{}]+"
+)
+_TRANSLATION_PATH_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])(?:[A-Za-z]:[\\/]|\\\\|\.{1,2}[\\/])[^\s<>()\[\]{}]+|"
+    r"(?<![\w])(?:[\w.-]+[\\/])+[\w./-]+|"
+    r"(?<![\w])[\w-]+(?:\.[\w-]+)+(?=[\s,;:!?)]|$)"
+)
+_TRANSLATION_FORMULA_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_]*|\d+(?:[.,]\d+)?)(?:\s*(?:=|[+\-*/×÷<>≤≥])\s*"
+    r"(?:[A-Za-z_][A-Za-z0-9_]*|\d+(?:[.,]\d+)?))+(?![\w])"
+)
+_TRANSLATION_NUMERIC_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])\d+(?:[.,]\d+)*(?:%)?(?![\w])"
+)
+_TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])--[A-Za-z][A-Za-z0-9-]*(?:=[^\s,;:()[\]{}]+)?|"
+    r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
+)
+_TRANSLATION_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_]*(?:_[A-Za-z0-9_]+)+|"
+    r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|"
+    r"[A-Za-z_]*\d[A-Za-z0-9_]*|"
+    r"[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+){2,})(?![\w])"
+)
+_TRANSLATION_ROLE_MARKER_RE: Final[re.Pattern[str]] = re.compile(
+    r":[A-Za-z][A-Za-z0-9_-]*:|\{[A-Za-z][A-Za-z0-9_-]*\}"
+)
+_SPELLING_SURFACES: Final[tuple[str, ...]] = ("docs_po", "generated_docs", "runtime", "toml")
+_NEAR_ECHO_THRESHOLD: Final[float] = 0.90
+_ECHO_SAMPLE_LIMIT: Final[int] = 20
+_INVARIANT_ECHO_REASONS: Final[tuple[str, ...]] = (
+    "inline_code",
+    "modelo_form",
+    "platform_format",
+    "canonical_product_identity",
+    "target_dictionary_shared_term",
+)
+_MODELO_FORM_RE: Final[re.Pattern[str]] = re.compile(r"(?i)\b(?:modelo|form)\s+\d{1,4}\b")
+_PLATFORM_FORMAT_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?:\b[A-Z][A-Z0-9]{1,}\b|(?<![\w])\.[A-Za-z0-9]{1,8}(?![\w]))"
+)
+_VERSION_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])v?(?:\d+|[xXyYzZ])(?:[._-](?:\d+|[xXyYzZ])){1,3}(?![\w])"
+)
+_PLATFORM_LABEL_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])(?P<label>[A-Z][A-Za-z0-9]*)\s*\((?P<details>[^()\r\n]*)\)"
+)
+_ARCHITECTURE_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])(?:[A-Za-z]{1,4}[-_]?\d{1,3}(?:[-_][A-Za-z0-9]{1,4})*|\d{1,3}[-_x]\d{1,3})(?![\w])"
 )
 
 
@@ -84,6 +159,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         or parallel_inventory["invalid_data_files"]
         or parallel_inventory["docs_extraction_failures"]
         or parallel_inventory["docs_source_drift_pages"]
+        or parallel_inventory["docs_translation_source_echo"]
         or parallel_inventory["docs_orphan_catalogue_files"]
         or parallel_inventory["docs_missing_catalogue_files"]
         or parallel_inventory["docs_generated_source_failures"]
@@ -126,6 +202,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         + parallel_inventory["invalid_data_files"]
         + parallel_inventory["docs_extraction_failures"]
         + parallel_inventory["docs_source_drift_pages"]
+        + parallel_inventory["docs_translation_source_echo"]
         + parallel_inventory["docs_orphan_catalogue_files"]
         + parallel_inventory["docs_missing_catalogue_files"]
         + parallel_inventory["docs_generated_source_failures"]
@@ -310,14 +387,18 @@ def _spellcheck_catalogues(
     repository: Path,
     *,
     additional_values: dict[str, dict[str, str]] | None = None,
-) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, int], list[dict[str, object]]]:
+) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, object], list[dict[str, object]]]:
     """Check authored prose with pinned Hunspell dictionaries through spylls."""
     unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
     keys_by_word: dict[str, dict[str, set[str]]] = {}
     cell_words: dict[tuple[str, str], frozenset[str]] = {}
+    cell_excluded_structural_tokens: dict[tuple[str, str], int] = {}
     cell_text: dict[tuple[str, str], str] = {}
+    excluded_by_surface_locale: Counter[tuple[str, str]] = Counter()
     checked_cells = 0
-    for locale, leaves in sorted(locale_leaves.items()):
+    locales = set(locale_leaves) | set(additional_values or {})
+    for locale in sorted(locales):
+        leaves = locale_leaves.get(locale, {})
         locale_words: dict[str, set[str]] = defaultdict(set)
         values = {key: leaves.get(key) for key in required_keys}
         values.update((additional_values or {}).get(locale, {}))
@@ -326,10 +407,13 @@ def _spellcheck_catalogues(
                 continue
             cell = (locale, value)
             if cell not in cell_words:
+                filtered_text, excluded_tokens = _filtered_translation_text(value)
                 cell_words[cell] = frozenset(
-                    word for word in _translation_words(_human_translation_text(value)) if len(word) > 1
+                    word for word in _translation_words(filtered_text) if len(word) > 1
                 )
+                cell_excluded_structural_tokens[cell] = excluded_tokens
             words = cell_words[cell]
+            excluded_by_surface_locale[(_spelling_surface(key), locale)] += cell_excluded_structural_tokens[cell]
             cell_text[(locale, key)] = value
             if words:
                 checked_cells += 1
@@ -377,6 +461,7 @@ def _spellcheck_catalogues(
                 "spelling_unknown_cells": 0,
                 "spelling_unknown_words": 0,
                 "spelling_tool_failures": 1,
+                **_excluded_structural_inventory(excluded_by_surface_locale),
             },
             [failure],
         )
@@ -387,6 +472,7 @@ def _spellcheck_catalogues(
             "spelling_unknown_cells": len(unknown_by_cell),
             "spelling_unknown_words": len(unknown_words),
             "spelling_tool_failures": 0,
+            **_excluded_structural_inventory(excluded_by_surface_locale),
         },
         [],
     )
@@ -517,20 +603,87 @@ def _human_translation_text(value: str) -> str:
     """Return prose after removing interpolation and transport syntax.
 
     Similarity and spelling signals are intended to review copied prose, not
-    the stable syntax embedded in a message.  CLI commands, option names,
-    structured ``FIELD=value`` input, snake-case enum members, casilla
-    references, and interpolation placeholders are therefore excluded before
+    the stable syntax embedded in a message.  Links preserve their visible
+    labels while their targets, code/literal spans, paths, options, structured
+    identifiers, formulas, and interpolation placeholders are excluded before
     either signal inspects the text.  The original value remains untouched for
     placeholder parity and rendering checks.
     """
-    without_placeholders = _TRANSLATION_PLACEHOLDER_RE.sub(" ", value)
-    without_references = re.sub(
-        r"\[([^\[\]\r\n]+)\]",
-        lambda match: " " if _is_bracket_reference(match.group(1)) else match.group(0),
-        without_placeholders,
-    )
-    without_code = _TRANSLATION_CODE_RE.sub(" ", without_references)
-    return " ".join(without_code.casefold().split())
+    return _filtered_translation_text(value)[0]
+
+
+def _filtered_translation_text(value: str) -> tuple[str, int]:
+    """Return prose and the number of syntax spans excluded from spelling.
+
+    This is intentionally syntax-only: no locale vocabulary or product-term
+    allowlist is consulted.  Link and role callbacks retain explicit visible
+    labels, while targets remain outside the dictionary surface.
+    """
+    text = value
+    excluded = 0
+    for pattern, replacement in (
+        (_TRANSLATION_MARKDOWN_LINK_RE, _visible_link_label),
+        (_TRANSLATION_RST_LINK_RE, _visible_link_label),
+        (_TRANSLATION_RST_ROLE_RE, _visible_role_label),
+        (_TRANSLATION_MYST_ROLE_RE, _visible_role_label),
+        (_TRANSLATION_LITERAL_RE, " "),
+        (_TRANSLATION_BRACKET_REFERENCE_RE, " "),
+        (_TRANSLATION_PLACEHOLDER_RE, " "),
+        (_TRANSLATION_URL_RE, " "),
+        (_TRANSLATION_PATH_RE, " "),
+        (_TRANSLATION_OPTION_RE, " "),
+        (_TRANSLATION_FORMULA_RE, " "),
+        (_TRANSLATION_NUMERIC_RE, " "),
+        (_TRANSLATION_IDENTIFIER_RE, " "),
+        (_TRANSLATION_CODE_RE, " "),
+        (_TRANSLATION_ROLE_MARKER_RE, " "),
+    ):
+        text, matches = pattern.subn(replacement, text)
+        excluded += matches
+    text = re.sub(r"[,;]+", " ", text)
+    return " ".join(text.casefold().split()), excluded
+
+
+def _visible_link_label(match: re.Match[str]) -> str:
+    """Keep a rendered link label while excluding its target syntax."""
+    label = match.group("label").strip()
+    return f" {label} " if label else " "
+
+
+def _visible_role_label(match: re.Match[str]) -> str:
+    """Keep an explicit role label while excluding its target."""
+    target = match.group("target").strip()
+    if "<" not in target or not target.endswith(">"):
+        return " "
+    label = target.rsplit("<", 1)[0].strip()
+    return f" {label} " if label else " "
+
+
+def _spelling_surface(key: str) -> str:
+    """Classify a spelling cell by its authored source surface."""
+    if not key.startswith("parallel:"):
+        return "runtime"
+    relative = key.removeprefix("parallel:")
+    if relative.startswith("src/"):
+        return "toml"
+    if relative.startswith("docs/locales/") or (
+        not relative.startswith("docs/cli/") and not relative.startswith("docs/_generated/")
+    ):
+        return "docs_po"
+    return "generated_docs"
+
+
+def _excluded_structural_inventory(excluded: Counter[tuple[str, str]]) -> dict[str, object]:
+    """Return stable structural-exclusion totals for every surface/locale."""
+    by_surface_locale = {
+        f"{surface}/{locale}": excluded[(surface, locale)]
+        for surface in _SPELLING_SURFACES
+        for locale in _LOCALES
+    }
+    return {
+        "excluded_structural_tokens": sum(excluded.values()),
+        "excluded_structural_tokens_by_surface_locale": by_surface_locale,
+    }
 
 
 def _translation_words(value: str) -> tuple[str, ...]:
@@ -595,7 +748,7 @@ def _parallel_localization_inventory(
     repository: Path,
     *,
     spelling_values: dict[str, dict[str, str]] | None = None,
-) -> tuple[dict[str, int], list[dict[str, object]]]:
+) -> tuple[dict[str, object], list[dict[str, object]]]:
     counts = Counter[str]()
     findings: list[dict[str, object]] = []
     data_root = repository / "src" / "cadrumo" / "_data"
@@ -653,6 +806,7 @@ def _parallel_localization_inventory(
 
     docs_root = repository / "docs" / "locales"
     docs_messages: dict[tuple[str, str], dict[str, bool]] = defaultdict(dict)
+    docs_translations: dict[tuple[str, str], dict[str, tuple[str, ...]]] = defaultdict(dict)
     docs_obsolete: dict[tuple[str, str], set[str]] = defaultdict(set)
     docs_catalogue_files: set[tuple[str, str]] = set()
     for path in sorted(docs_root.rglob("*.po")) if docs_root.is_dir() else ():
@@ -682,6 +836,8 @@ def _parallel_localization_inventory(
                 bool(translations) and all(value.strip() for value in translations) and "fuzzy" not in message.flags
             )
             docs_messages[(catalogue, message_id)][locale] = translated
+            if translated:
+                docs_translations[(catalogue, message_id)][locale] = translations
             counts["parallel_localization_cells"] += 1
             if spelling_values is not None and translated:
                 for index, value in enumerate(translations):
@@ -707,6 +863,7 @@ def _parallel_localization_inventory(
         docs_messages,
         catalogue_files=docs_catalogue_files,
         catalogue_obsolete=docs_obsolete,
+        catalogue_translations=docs_translations,
         spelling_values=spelling_values,
     )
     findings.extend(docs_findings)
@@ -729,8 +886,9 @@ def _documentation_source_inventory(
     *,
     catalogue_files: set[tuple[str, str]] | None = None,
     catalogue_obsolete: dict[tuple[str, str], set[str]] | None = None,
+    catalogue_translations: dict[tuple[str, str], dict[str, tuple[str, ...]]] | None = None,
     spelling_values: dict[str, dict[str, str]] | None = None,
-) -> tuple[dict[str, int], list[dict[str, object]]]:
+) -> tuple[dict[str, object], list[dict[str, object]]]:
     """Validate cached source extraction and compare it with every PO.
 
     The committed catalogues are not a source authority: a newly authored
@@ -749,7 +907,14 @@ def _documentation_source_inventory(
 
     counts = Counter[str]()
     findings: list[dict[str, object]] = []
+    source_echo_samples: list[dict[str, object]] = []
+    invariant_echo_samples: list[dict[str, object]] = []
+    near_echo_samples: list[dict[str, object]] = []
+    echo_dictionaries: dict[str, object] | None = None
+    echo_dictionaries_unavailable = False
+    platform_identity_terms = _platform_identity_terms(repository)
     catalogue_obsolete = catalogue_obsolete or {}
+    catalogue_translations = catalogue_translations or {}
     for (locale, _catalogue), identities in catalogue_obsolete.items():
         counts["docs_catalogue_messages_obsolete"] += len(identities)
         counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
@@ -885,6 +1050,91 @@ def _documentation_source_inventory(
                     spelling_values.setdefault("en", {})[f"parallel:docs/{page}:{identity}"] = source_text
             page_drifted = False
             for locale in TARGET_LANGUAGES:
+                translated_messages = {
+                    identity: values
+                    for (candidate, identity), localized in catalogue_translations.items()
+                    if candidate == catalogue and (values := localized.get(locale)) is not None
+                }
+                for identity, translations in sorted(translated_messages.items()):
+                    source_text = source_messages.get(identity)
+                    if source_text is None:
+                        continue
+                    source_forms = tuple(source_text.split("\x04"))
+                    for index, (source_form, translation_form) in enumerate(
+                        zip(source_forms, translations, strict=False)
+                    ):
+                        counts["docs_translation_comparisons"] += 1
+                        counts[f"docs_translation_comparisons_{locale}"] += 1
+                        source_normalized = _translation_echo_normalize(source_form)
+                        translation_normalized = _translation_echo_normalize(translation_form)
+                        ratio = _translation_similarity(source_normalized, translation_normalized)
+                        form = "singular" if len(source_forms) == 1 else f"plural[{index}]"
+                        location = f"docs/locales/{locale}/LC_MESSAGES/{catalogue}"
+                        evidence = {
+                            "domain": "docs",
+                            "form": form,
+                            "locale": locale,
+                            "message_id": identity,
+                            "path": location,
+                            "ratio": round(ratio, 6),
+                            "source": source_form,
+                            "translation": translation_form,
+                        }
+                        if source_normalized == translation_normalized:
+                            if echo_dictionaries is None and not echo_dictionaries_unavailable:
+                                try:
+                                    echo_dictionaries = cast(dict[str, object], load_dictionaries(repository))
+                                except SpellingToolError:
+                                    echo_dictionaries_unavailable = True
+                            reason = _translation_invariant_echo_reason(
+                                source_form,
+                                locale,
+                                dictionary=(echo_dictionaries or {}).get(locale),
+                                source_dictionary=(echo_dictionaries or {}).get("en"),
+                                platform_terms=platform_identity_terms,
+                            )
+                            if reason is None:
+                                counts["docs_translation_source_echo"] += 1
+                                counts[f"docs_translation_source_echo_{locale}"] += 1
+                                finding = {
+                                    "classification": "blocking",
+                                    "kind": "docs_translation_source_echo",
+                                    **evidence,
+                                    "next_action": (
+                                        "replace the source echo with an accented target-language translation"
+                                    ),
+                                }
+                                findings.append(finding)
+                                if len(source_echo_samples) < _ECHO_SAMPLE_LIMIT:
+                                    source_echo_samples.append(evidence)
+                            else:
+                                counts["docs_translation_invariant_echo"] += 1
+                                counts[f"docs_translation_invariant_echo_{locale}"] += 1
+                                counts[f"docs_translation_invariant_echo_reason_{reason}"] += 1
+                                counts[f"docs_translation_invariant_echo_{locale}_{reason}"] += 1
+                                invariant_evidence = {**evidence, "reason": reason}
+                                findings.append(
+                                    {
+                                        "classification": "advisory",
+                                        "kind": "docs_translation_invariant_echo",
+                                        **invariant_evidence,
+                                        "next_action": "retain the independently classified invariant spelling",
+                                    }
+                                )
+                                if len(invariant_echo_samples) < _ECHO_SAMPLE_LIMIT:
+                                    invariant_echo_samples.append(invariant_evidence)
+                        elif ratio >= _NEAR_ECHO_THRESHOLD:
+                            counts["docs_translation_near_echo"] += 1
+                            counts[f"docs_translation_near_echo_{locale}"] += 1
+                            finding = {
+                                "classification": "advisory",
+                                "kind": "docs_translation_near_echo",
+                                **evidence,
+                                "next_action": "review whether this translation is sufficiently localized",
+                            }
+                            findings.append(finding)
+                            if len(near_echo_samples) < _ECHO_SAMPLE_LIMIT:
+                                near_echo_samples.append(evidence)
                 catalogue_ids = {
                     message_id
                     for (candidate, message_id), states in catalogue_messages.items()
@@ -919,7 +1169,12 @@ def _documentation_source_inventory(
     except Exception as exc:  # Manifest and filesystem failures must fail closed.
         counts["docs_extraction_failures"] += 1
         findings.append(_docs_extraction_finding(docs_root, exc))
-    return _documentation_counts(counts), findings
+    return _documentation_counts(
+        counts,
+        source_echo_samples=source_echo_samples,
+        invariant_echo_samples=invariant_echo_samples,
+        near_echo_samples=near_echo_samples,
+    ), findings
 
 
 def _read_gettext_messages(path: Path) -> dict[str, str] | None:
@@ -942,8 +1197,75 @@ def _po_message_identity(message: object) -> str:
     return f"{context}\x1f{message_id}" if isinstance(context, str) and context else message_id
 
 
-def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
+def _translation_echo_normalize(value: str) -> str:
+    """Normalize a translation/source pair for semantic echo comparison."""
+    normalized = unicodedata.normalize("NFKC", value)
+    normalized = " ".join(normalized.split()).casefold()
+    normalized = "".join(
+        " " if unicodedata.category(char).startswith("P") else char
+        for char in normalized
+    )
+    return " ".join(normalized.split())
+
+
+def _translation_similarity(left: str, right: str) -> float:
+    """Return a normalized similarity ratio using rapidfuzz when installed."""
+    try:
+        from rapidfuzz.fuzz import ratio
+    except ImportError:
+        return SequenceMatcher(None, left, right).ratio()
+    return ratio(left, right) / 100
+
+
+def _translation_invariant_echo_reason(
+    source: str,
+    locale: str,
+    *,
+    dictionary: object | None,
+) -> str | None:
+    """Classify an exact echo only when its invariance is independently provable."""
+    from cadrumo.core.product_identity import PRODUCT_IDENTITY
+
+    normalized = _translation_echo_normalize(source)
+    product_names = {
+        _translation_echo_normalize(value)
+        for value in PRODUCT_IDENTITY
+        if isinstance(value, str)
+    }
+    if normalized in product_names:
+        return "canonical_product_identity"
+    if _MODELO_FORM_RE.search(source):
+        return "modelo_form"
+    words = _translation_words(source)
+    if words and all(word.isupper() or not word.isalpha() for word in words):
+        return "platform_format"
+    if _PLATFORM_FORMAT_RE.search(source) and len(words) <= 2:
+        return "platform_format"
+    filtered, excluded = _filtered_translation_text(source)
+    if excluded and not any(character.isalpha() for character in filtered):
+        return "inline_code"
+    lookup = getattr(dictionary, "lookup", None)
+    if locale != "en" and len(words) == 1 and callable(lookup) and lookup(words[0]):
+        return "target_dictionary_shared_term"
+    return None
+
+
+def _ratio(value: int, total: int) -> float:
+    """Return a stable zero-safe ratio for an inventory counter."""
+    return round(value / total, 6) if total else 0.0
+
+
+def _documentation_counts(
+    counts: Counter[str],
+    *,
+    source_echo_samples: list[dict[str, object]] | None = None,
+    invariant_echo_samples: list[dict[str, object]] | None = None,
+    near_echo_samples: list[dict[str, object]] | None = None,
+) -> dict[str, object]:
     """Return the stable user-document inventory schema, including zeroes."""
+    source_echo_samples = source_echo_samples or []
+    invariant_echo_samples = invariant_echo_samples or []
+    near_echo_samples = near_echo_samples or []
     return {
         "docs_source_pages": counts["docs_source_pages"],
         "docs_source_messages": counts["docs_source_messages"],
@@ -953,6 +1275,22 @@ def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
         "docs_source_messages_missing": counts["docs_source_messages_missing"],
         "docs_catalogue_messages_stale": counts["docs_catalogue_messages_stale"],
         "docs_catalogue_messages_obsolete": counts["docs_catalogue_messages_obsolete"],
+        "docs_translation_comparisons": counts["docs_translation_comparisons"],
+        "docs_translation_source_echo": counts["docs_translation_source_echo"],
+        "docs_translation_source_echo_ratio": _ratio(
+            counts["docs_translation_source_echo"], counts["docs_translation_comparisons"]
+        ),
+        "docs_translation_source_echo_samples": source_echo_samples,
+        "docs_translation_invariant_echo": counts["docs_translation_invariant_echo"],
+        "docs_translation_invariant_echo_ratio": _ratio(
+            counts["docs_translation_invariant_echo"], counts["docs_translation_comparisons"]
+        ),
+        "docs_translation_invariant_echo_samples": invariant_echo_samples,
+        "docs_translation_near_echo": counts["docs_translation_near_echo"],
+        "docs_translation_near_echo_ratio": _ratio(
+            counts["docs_translation_near_echo"], counts["docs_translation_comparisons"]
+        ),
+        "docs_translation_near_echo_samples": near_echo_samples,
         "docs_extraction_failures": counts["docs_extraction_failures"],
         "docs_orphan_catalogue_files": counts["docs_orphan_catalogue_files"],
         "docs_missing_catalogue_files": counts["docs_missing_catalogue_files"],
@@ -975,6 +1313,35 @@ def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
         },
         **{
             f"docs_catalogue_messages_obsolete_{locale}": counts[f"docs_catalogue_messages_obsolete_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_translation_comparisons_{locale}": counts[f"docs_translation_comparisons_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_translation_source_echo_{locale}": counts[f"docs_translation_source_echo_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_translation_invariant_echo_{locale}": counts[f"docs_translation_invariant_echo_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
+        **{
+            f"docs_translation_invariant_echo_reason_{reason}": counts[
+                f"docs_translation_invariant_echo_reason_{reason}"
+            ]
+            for reason in _INVARIANT_ECHO_REASONS
+        },
+        **{
+            f"docs_translation_invariant_echo_{locale}_{reason}": counts[
+                f"docs_translation_invariant_echo_{locale}_{reason}"
+            ]
+            for locale in ("ca", "es", "hu")
+            for reason in _INVARIANT_ECHO_REASONS
+        },
+        **{
+            f"docs_translation_near_echo_{locale}": counts[f"docs_translation_near_echo_{locale}"]
             for locale in ("ca", "es", "hu")
         },
     }
@@ -1121,8 +1488,11 @@ def _domain_summaries(
             "next_action": None,
         }
         rows.append(unassigned)
-    unassigned["inventory_violations"] = len(inventory_findings)
-    if inventory_findings:
+    blocking_inventory_findings = [
+        finding for finding in inventory_findings if finding.get("classification") == "blocking"
+    ]
+    unassigned["inventory_violations"] = len(blocking_inventory_findings)
+    if blocking_inventory_findings:
         unassigned["state"] = "inventory_open"
         unassigned["next_action"] = "canonicalize production presentation declarations"
     order = {"inventory_open": 0, "translate": 1, "repair": 2, "review": 3, "stale": 4, "complete": 5}

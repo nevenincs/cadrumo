@@ -37,7 +37,7 @@ _M130_CASILLA_15_SOURCE = (
 )
 
 
-from ._authority_fixtures import authority
+from .registry_authority_fixture import authority
 
 __all__ = ["authority"]
 

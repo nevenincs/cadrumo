@@ -58,7 +58,7 @@ msgstr ""
 
 #: ../../how-to/troubleshooting.md:15
 msgid "\"This operation requires an active profile\""
-msgstr "«This operation requires an active profile»"
+msgstr "«Aquesta operació requereix un perfil actiu»"
 
 #: ../../how-to/troubleshooting.md:17
 msgid ""
@@ -91,8 +91,8 @@ msgid ""
 msgstr ""
 "L'ordre de neteja és una reparació destructiva i només és adequada "
 "després que la inspecció informi d'un punter actiu il·legible. Després, "
-"l'inici de sessió demana la frase de contrasenya d'aquell perfil; qui "
-"la cridi sense interfície ha d'utilitzar un canal explícit de secret de "
+"l'inici de sessió demana la frase de contrasenya d'aquell perfil; qui la "
+"cridi sense interfície ha d'utilitzar un canal explícit de secret de "
 "màquina en lloc de posar la frase de contrasenya a la línia d'ordres."
 
 #: ../../how-to/troubleshooting.md:38

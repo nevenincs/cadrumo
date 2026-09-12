@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"POT-Creation-Date: 2026-09-12 16:11+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -108,20 +108,18 @@ msgstr "Artefacto de autoridad de ejecución"
 
 #: ../../reference/registry-legal-api.md:24
 msgid ""
-"The runtime authority artifact is the versioned, digest-checked "
-"publication of the validated AEAT registry intended for installed "
-"calculations and filing exports. It is generated output. "
-"`bundled_authority()` reads the packaged "
-"`registry/authority/authority.json` and checks its schema version and "
-"content digest before reconstructing typed authority data."
+"The runtime authority artifact is the digest-checked publication of the "
+"validated AEAT registry intended for installed calculations and filing "
+"exports. It is generated output. `bundled_authority()` reads the packaged"
+" `registry/authority/authority.json` and checks its content digest before"
+" reconstructing typed authority data."
 msgstr ""
-"El artefacto de autoridad de ejecución es la publicación versionada, cuyo"
-" resumen criptográfico se verifica, del registro validado de la AEAT, "
+"El artefacto de autoridad de ejecución es la publicación del registro de "
+"la AEAT validado, comprobada mediante un resumen criptográfico y "
 "destinada a los cálculos instalados y a las exportaciones de "
 "declaraciones. Es una salida generada. `bundled_authority()` lee el "
-"`registry/authority/authority.json` empaquetado y comprueba su versión de"
-" esquema y su resumen de contenido antes de reconstruir los datos de "
-"autoridad tipados."
+"archivo empaquetado `registry/authority/authority.json` y comprueba su "
+"resumen de contenido antes de reconstruir los datos de autoridad tipados."
 
 #: ../../reference/registry-legal-api.md
 msgid "Term"
@@ -173,31 +171,19 @@ msgstr ""
 "La publicación JSON escrita de forma atómica que contiene la autoridad "
 "resuelta."
 
-#: ../../reference/registry-legal-api.md
-msgid "Schema version"
-msgstr "Versión del esquema"
-
-#: ../../reference/registry-legal-api.md
-msgid "The artifact format identifier. Runtime refuses an unsupported version."
-msgstr ""
-"El identificador del formato del artefacto. El entorno de ejecución "
-"rechaza una versión no compatible."
-
-#: ../../reference/registry-legal-api.md:38
+#: ../../reference/registry-legal-api.md:37
 msgid ""
-"The artifact is one canonical JSON object with exactly three members: "
-"`schema_version`, `payload`, and `payload_sha256`. `payload_sha256` is "
-"the SHA-256 digest of the canonical JSON of `schema_version` and "
-"`payload` together. The digest detects a truncated, corrupted, or hand-"
-"edited file."
+"The artifact is one canonical JSON object with exactly two members: "
+"`payload` and `payload_sha256`. `payload_sha256` is the SHA-256 digest of"
+" the canonical JSON of `payload`. The digest detects a truncated, "
+"corrupted, or hand-edited file."
 msgstr ""
-"El artefacto es un único objeto JSON canónico con exactamente tres "
-"miembros: `schema_version`, `payload` y `payload_sha256`. "
-"`payload_sha256` es el resumen SHA-256 del JSON canónico formado "
-"conjuntamente por `schema_version` y `payload`. El resumen detecta si el "
-"archivo está truncado, dañado o editado manualmente."
+"El artefacto es un único objeto JSON canónico con exactamente dos "
+"miembros: `payload` y `payload_sha256`. `payload_sha256` es el resumen "
+"SHA-256 del JSON canónico de `payload`. El resumen detecta si el archivo "
+"está truncado, dañado o editado manualmente."
 
-#: ../../reference/registry-legal-api.md:43
+#: ../../reference/registry-legal-api.md:41
 msgid ""
 "The identity digest folds, for every registry file and every source-"
 "evidence file, its path relative to its root and the SHA-256 of its "
@@ -214,33 +200,32 @@ msgstr ""
 "tamaños y las marcas de tiempo nunca contribuyen, por lo que una copia de"
 " trabajo idéntica obtiene la misma identidad en cualquier ubicación."
 
-#: ../../reference/registry-legal-api.md:49
+#: ../../reference/registry-legal-api.md:47
 msgid ""
-"The current format is `cadrumo-authority-artifact-v4`. Its payload is a "
-"compact projection of the complete typed authority. Required fields are "
-"always written; a field is omitted only when its typed value equals the "
-"default declared by its schema. Strict rehydration restores those "
-"defaults. Discriminators and authored union spellings remain on the wire,"
-" so compaction never guesses which typed variant to construct. Decimals "
-"and dates are JSON strings where the schema types a field as a decimal or"
-" a date. A governed-fact value can be text, an integer, a decimal, a "
-"boolean, or a date, and JSON cannot tell those apart by value alone. "
-"Every non-text fact value is therefore written as an object with one tag "
-"that names its type:"
+"The payload is a compact projection of the complete typed authority. "
+"Required fields are always written; a field is omitted only when its "
+"typed value equals the default declared by its schema. Strict rehydration"
+" restores those defaults. Discriminators and authored union spellings "
+"remain on the wire, so compaction never guesses which typed variant to "
+"construct. Decimals and dates are JSON strings where the schema types a "
+"field as a decimal or a date. A governed-fact value can be text, an "
+"integer, a decimal, a boolean, or a date, and JSON cannot tell those "
+"apart by value alone. Every non-text fact value is therefore written as "
+"an object with one tag that names its type:"
 msgstr ""
-"El formato actual es `cadrumo-authority-artifact-v4`. Su contenido es una"
-" proyección compacta de la autoridad tipada completa. Los campos "
-"obligatorios siempre se escriben; un campo solo se omite cuando su valor "
-"tipado coincide con el valor predeterminado declarado por su esquema. La "
-"rehidratación estricta restaura esos valores predeterminados. Los "
-"discriminadores y las grafías de las uniones tal como se autorizaron "
-"permanecen en la representación serializada, de modo que la compactación "
-"nunca tiene que adivinar qué variante tipada construir. Los decimales y "
-"las fechas son cadenas JSON cuando el esquema tipa un campo como decimal "
-"o fecha. Un valor de hecho gobernado puede ser texto, un entero, un "
-"decimal, un booleano o una fecha, y JSON no puede distinguirlos solo por "
-"su valor. Por ello, todo valor de hecho que no sea texto se escribe como "
-"un objeto con una etiqueta que identifica su tipo:"
+"El contenido es una proyección compacta de la autoridad tipada completa. "
+"Los campos obligatorios siempre se escriben; un campo solo se omite "
+"cuando su valor tipado coincide con el valor predeterminado declarado por"
+" su esquema. La rehidratación estricta restaura esos valores "
+"predeterminados. Los discriminadores y las grafías de las uniones "
+"definidas por la autoría permanecen en la representación transmitida, por"
+" lo que la compactación nunca tiene que adivinar qué variante tipada debe"
+" construir. Los decimales y las fechas son cadenas JSON cuando el esquema"
+" tipa un campo como decimal o fecha. Un valor de hecho gobernado puede "
+"ser texto, un entero, un decimal, un booleano o una fecha, y JSON no "
+"puede distinguirlos solo por su valor. Por tanto, todo valor de hecho no "
+"textual se escribe como un objeto con una etiqueta que identifica su "
+"tipo:"
 
 #: ../../reference/registry-legal-api.md
 msgid "Fact value"
@@ -294,30 +279,28 @@ msgstr "Texto"
 msgid "The bare JSON string, for example `\"0.40\"`"
 msgstr "La cadena JSON sin etiqueta, por ejemplo `\"0.40\"`"
 
-#: ../../reference/registry-legal-api.md:68
+#: ../../reference/registry-legal-api.md:66
 msgid ""
 "Runtime decodes the payload under the same strict schema the development "
 "compiler uses. It refuses an unknown tag, a malformed or non-canonical "
 "tagged value, and an untagged non-text fact value; it never infers a type"
-" from the shape of a string. It refuses every superseded v1, v2, or v3 "
-"artifact and names the v4 format to republish in."
+" from the shape of a string."
 msgstr ""
-"El entorno de ejecución decodifica el contenido conforme al mismo esquema"
-" estricto que utiliza el compilador de desarrollo. Rechaza una etiqueta "
-"desconocida, un valor etiquetado malformado o no canónico y un valor de "
-"hecho no textual sin etiqueta; nunca infiere un tipo a partir de la forma"
-" de una cadena. Rechaza todos los artefactos v1, v2 o v3 sustituidos e "
-"indica que deben volver a publicarse en el formato v4."
+"El entorno de ejecución descodifica la carga útil conforme al mismo "
+"esquema estricto que utiliza el compilador de desarrollo. Rechaza una "
+"etiqueta desconocida, un valor etiquetado malformado o no canónico y un "
+"valor de hecho no textual sin etiqueta; nunca infiere un tipo a partir de"
+" la forma de una cadena."
 
-#: ../../reference/registry-legal-api.md:74
+#: ../../reference/registry-legal-api.md:71
 msgid ""
 "The compiler, not the product runtime, expands authoring deltas into "
 "complete canonical revisions. The artifact also carries typed runtime "
 "catalogues for IVA regulations, place-of-supply rules, country aliases, "
 "Spanish postal territories, territorial carve-outs, recargo bands, and "
 "apoderamiento scopes. These are frozen schema records, not embedded TOML "
-"bytes or an untyped JSON bag. A v4 write or read refuses an authority "
-"when any required runtime catalogue is empty."
+"bytes or an untyped JSON bag. A write or read refuses an authority when "
+"any required runtime catalogue is empty."
 msgstr ""
 "El compilador, y no el entorno de ejecución del producto, expande las "
 "diferencias de autoría en revisiones canónicas completas. El artefacto "
@@ -330,7 +313,7 @@ msgstr ""
 "autoridad cuando cualquiera de los catálogos obligatorios del entorno de "
 "ejecución está vacío."
 
-#: ../../reference/registry-legal-api.md:81
+#: ../../reference/registry-legal-api.md:78
 msgid ""
 "Modelo and tax-domain types validate stable identifier syntax without "
 "loading the authored tree. The compiled authority owns membership and "
@@ -347,7 +330,7 @@ msgstr ""
 "`hard_ceiling` opcional— que se utiliza para admitir coordenadas "
 "compatibles."
 
-#: ../../reference/registry-legal-api.md:87
+#: ../../reference/registry-legal-api.md:84
 msgid ""
 "The `bundled_authority()` artifact-loading path has no source "
 "compilation, raw authored-tree loader, repair path, or parallel runtime-"
@@ -367,7 +350,7 @@ msgstr ""
 "ocurren antes de que continúen los cálculos o las declaraciones que "
 "dependen de la autoridad."
 
-#: ../../reference/registry-legal-api.md:94
+#: ../../reference/registry-legal-api.md:91
 msgid ""
 "Development tooling publishes with `uv run --no-sync python -m "
 "dev.registry.pipeline publish-authority`, or programmatically through the"
@@ -379,7 +362,7 @@ msgstr ""
 "mediante la API exclusiva de desarrollo "
 "`dev.registry.pipeline.cli.publish_authority_candidate_workflow`:"
 
-#: ../../reference/registry-legal-api.md:107
+#: ../../reference/registry-legal-api.md:104
 msgid ""
 "`python -m dev.registry.conformance integrity` refuses an artifact whose "
 "recorded identity digest differs from the identity of the live registry "
@@ -392,11 +375,11 @@ msgstr ""
 "ejecución validada](../how-to/publish-runtime-authority.md) para conocer "
 "el flujo de trabajo y la ruta de recuperación."
 
-#: ../../reference/registry-legal-api.md:112
+#: ../../reference/registry-legal-api.md:109
 msgid "Filing-input contract shapes"
 msgstr "Formas del contrato de entrada de la presentación"
 
-#: ../../reference/registry-legal-api.md:114
+#: ../../reference/registry-legal-api.md:111
 msgid ""
 "The validated registry snapshot is the read-model authority for one "
 "modelo, filing year, and period. It defines the casillas, formulas, "
@@ -465,7 +448,7 @@ msgstr "Operandos tipados y operación fundamentada en referencias del registro"
 msgid "A calculated casilla observation"
 msgstr "Una observación de casilla calculada"
 
-#: ../../reference/registry-legal-api.md:125
+#: ../../reference/registry-legal-api.md:122
 msgid ""
 "A binding is not an attachable data blob. It is the contract by which an "
 "enrolled source resolver projects an owned source record into one of "
@@ -483,25 +466,24 @@ msgstr ""
 "ningún resolvedor de cálculo inscrito para el `InventoryLedger` cifrado, "
 "por lo que sigue siendo un registro empresarial independiente."
 
-#: ../../reference/registry-legal-api.md:132
-#, fuzzy, python-brace-format
+#: ../../reference/registry-legal-api.md:129
+#, python-brace-format
 msgid ""
 "Use the generated [application command reference](../cli/app.rst) to look"
 " up modelo calculation, description, verification-report, and audit "
 "surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-"
 "facing definitions."
 msgstr ""
-"Usa la [referencia de comandos de la aplicación](../cli/app.rst) generada"
-" para consultar las superficies de inspección del registro, descripción "
-"de modelos, fórmulas, informes de verificación y auditoría. Usa el "
-"{doc}`glosario </_generated/glossary>` para las definiciones de cara al "
-"contribuyente."
+"Consulta la [referencia de comandos de la aplicación](../cli/app.rst) "
+"generada para consultar las funciones de cálculo, descripción, informe de"
+" verificación y auditoría de Modelo. Usa el {doc}`glossary "
+"</_generated/glossary>` para las definiciones dirigidas a contribuyentes."
 
-#: ../../reference/registry-legal-api.md:136
+#: ../../reference/registry-legal-api.md:133
 msgid "Python public API lookup"
 msgstr "Consulta de la API pública de Python"
 
-#: ../../reference/registry-legal-api.md:138
+#: ../../reference/registry-legal-api.md:135
 msgid ""
 "The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
 "point for Python lookup. Public consumers import from `cadrumo` and its "
@@ -514,7 +496,7 @@ msgstr ""
 "paquetes generado enumera las superficies admitidas de adaptadores, "
 "aplicación, núcleo, dominio, punto de entrada y locales."
 
-#: ../../reference/registry-legal-api.md:143
+#: ../../reference/registry-legal-api.md:140
 msgid ""
 "There is no `aeat` Python import compatibility package. Names containing "
 "`aeat` inside the `cadrumo` package identify the external authority "

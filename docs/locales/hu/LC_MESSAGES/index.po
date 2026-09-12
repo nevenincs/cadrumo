@@ -127,11 +127,11 @@ msgstr "A benyújtási munkafolyamat"
 
 #: ../../index.md:164
 msgid "Modelo 036 (censo)"
-msgstr "Modelo 036 (censo)"
+msgstr "Modelo 036 (censo) – a censo-nyilvántartás"
 
 #: ../../index.md:164
 msgid "Modelo 100 (Renta)"
-msgstr "Modelo 100 (Renta)"
+msgstr "Modelo 100 (Renta) – a Renta-űrlap"
 
 #: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
@@ -139,7 +139,7 @@ msgstr "Modelo 130 (IRPF-előleg)"
 
 #: ../../index.md:164
 msgid "Modelo 303 (IVA)"
-msgstr "Modelo 303 (IVA)"
+msgstr "Modelo 303 (IVA) – az IVA-űrlap"
 
 #: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
@@ -179,7 +179,7 @@ msgstr "Hibaelhárítás"
 
 #: ../../index.md:182
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Futásidejű hatóság közzététele"
 
 #: ../../index.md:182
 msgid "Disclaimer"

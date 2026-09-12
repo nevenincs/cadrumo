@@ -198,8 +198,8 @@ msgid ""
 "rather than producing a partial file:"
 msgstr ""
 "Kíséreld meg az ellenőrzött bevallás exportját. A jelenlegi hiteles "
-"elrendezés nem képes minden alkalmazandó kötelező mezőt kódolni, ezért "
-"a parancs részleges fájl előállítása helyett visszautasítja a kérést:"
+"elrendezés nem képes minden alkalmazandó kötelező mezőt kódolni, ezért a "
+"parancs részleges fájl előállítása helyett visszautasítja a kérést:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -221,9 +221,9 @@ msgid ""
 "export as a finish line."
 msgstr ""
 "A jelölő választható, és csak addig alkalmazható, amíg a kötelezettségi "
-"időablak nyitva van. Amíg a kötelező mezők elrendezése nem teljes, "
-"olvasd vissza az ellenőrzött értékeket és nyújtsd be őket az AEAT "
-"portálján; a részleges exportot ne tekintsd célvonalnak."
+"időablak nyitva van. Amíg a kötelező mezők elrendezése nem teljes, olvasd"
+" vissza az ellenőrzött értékeket és nyújtsd be őket az AEAT portálján; a "
+"részleges exportot ne tekintsd célvonalnak."
 
 #: ../../how-to/modelo-349.md:103
 msgid ""
@@ -262,18 +262,4 @@ msgstr "[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 #: ../../how-to/modelo-349.md:114
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Benyújtás egyeztetése](reconcile.md)"
-
-#~ msgid "Export the verified declaration:"
-#~ msgstr "Exportálja az ellenőrzött bevallást:"
-
-#~ msgid ""
-#~ "The marker is optional and only "
-#~ "applies while the obligation window is"
-#~ " open; export is the local finish "
-#~ "line."
-#~ msgstr ""
-#~ "A jelölő opcionális, és csak addig "
-#~ "alkalmazható, amíg a kötelezettségi ablak "
-#~ "nyitva van; az export a helyi "
-#~ "célvonal."
 

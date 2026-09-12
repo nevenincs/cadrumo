@@ -483,18 +483,11 @@ msgstr ""
 
 #: ../../how-to/index.md:317
 msgid "Publish runtime authority"
-msgstr ""
+msgstr "Publicar la autoridad de ejecución"
 
 #: ../../how-to/index.md:321
 msgid "Publish and verify a signed registry authority as a release operator."
 msgstr ""
-
-#~ msgid ""
-#~ "Set up a recovery key, change or"
-#~ " recover your passphrase, log out, or"
-#~ " reset."
-#~ msgstr ""
-#~ "Configura una clave de recuperación, "
-#~ "cambia o recupera tu frase de "
-#~ "contraseña, bloquea o restablece."
+"Publica y verifica una autoridad de registro firmada como operador de "
+"publicación."
 

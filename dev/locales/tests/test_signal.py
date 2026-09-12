@@ -12,6 +12,7 @@ from .._signal import (
     _documentation_source_inventory,
     _domain_summaries,
     _dynamic_key_families,
+    _filtered_translation_text,
     _headline,
     _human_translation_text,
     _parallel_localization_inventory,
@@ -110,6 +111,94 @@ def test_translation_matrix_refuses_dropped_expansion_and_casilla_tokens() -> No
 
 def test_spelling_prose_excludes_long_casilla_and_formula_references() -> None:
     assert _human_translation_text("Import de [00230] quan [base_total=casella1+casella2].") == "import de quan ."
+
+
+def test_spelling_filter_excludes_transport_syntax_but_keeps_visible_labels() -> None:
+    tick = chr(96)
+    value = (
+        "Open https://example.test/docs/guide.md or docs/locales/hu/index.po; "
+        "[Guide](https://example.test/guide) :ref:"
+        + tick
+        + "Visible guide <how-to/quickstart>"
+        + tick
+        + " {term}"
+        + tick
+        + "modelo 100"
+        + tick
+        + " "
+        + tick
+        + "internal_token"
+        + tick
+        + " %{amount} base_total=c1+c2 2025."
+    )
+
+    filtered, excluded = _filtered_translation_text(value)
+
+    assert filtered == "open or guide visible guide ."
+    assert excluded == 10
+
+
+def test_spelling_filter_keeps_plain_prose_and_removes_file_extensions() -> None:
+    filtered, excluded = _filtered_translation_text("Olvassa el a guide.md fájlt, majd folytassa.")
+
+    assert filtered == "olvassa el a fájlt majd folytassa."
+    assert excluded == 1
+
+
+def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    tick = chr(96)
+
+    class _Dictionary:
+        def lookup(self, _word: str) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        signal_module,
+        "load_dictionaries",
+        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+    )
+    spelling, inventory, findings = _spellcheck_catalogues(
+        {"runtime.value"},
+        {"ca": {"runtime.value": "2025 + 2026"}},
+        tmp_path,
+        additional_values={
+            "ca": {
+                "parallel:src/cadrumo/_data/labels.toml:label_ca": "Lásd docs/guide.po https://example.test",
+                "parallel:docs/locales/ca/LC_MESSAGES/guide.po:message": "[Guide](https://example.test)",
+            },
+            "en": {
+                "parallel:docs/cli/guide.rst:line[1]": "{term}"
+                + tick
+                + "modelo 100"
+                + tick
+                + " --dry-run",
+            },
+        },
+    )
+
+    assert spelling == {}
+    assert findings == []
+    assert inventory["excluded_structural_tokens"] == 6
+    assert inventory["excluded_structural_tokens_by_surface_locale"] == {
+        "docs_po/ca": 1,
+        "docs_po/en": 0,
+        "docs_po/es": 0,
+        "docs_po/hu": 0,
+        "generated_docs/ca": 0,
+        "generated_docs/en": 2,
+        "generated_docs/es": 0,
+        "generated_docs/hu": 0,
+        "runtime/ca": 1,
+        "runtime/en": 0,
+        "runtime/es": 0,
+        "runtime/hu": 0,
+        "toml/ca": 2,
+        "toml/en": 0,
+        "toml/es": 0,
+        "toml/hu": 0,
+    }
 
 
 def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> None:
@@ -405,6 +494,132 @@ def test_documentation_inventory_enumerates_source_to_catalogue_drift(tmp_path) 
     assert {finding["kind"] for finding in findings} == {"docs_source_catalogue_drift"}
     assert all(finding["missing_message_ids"] == ["Current source"] for finding in findings)
     assert all(finding["stale_message_ids"] == ["Old source"] for finding in findings)
+
+
+def test_documentation_inventory_separates_source_echo_and_near_echo(tmp_path) -> None:
+    docs = tmp_path / "docs"
+    _write_docs_source_cache(
+        docs,
+        "guide.md",
+        "# Filing guide\n\nReview the current return.\n\nOne return.\n",
+        'msgid ""\nmsgstr ""\n\n'
+        'msgid "Filing guide"\nmsgstr ""\n\n'
+        'msgid "Review the current return."\nmsgstr ""\n\n'
+        'msgid "One return"\nmsgid_plural "Many returns"\nmsgstr[0] ""\nmsgstr[1] ""\n',
+    )
+    catalogue_messages = {
+        ("guide.po", "Filing guide"): {"ca": True, "es": True, "hu": True},
+        ("guide.po", "Review the current return."): {"ca": True, "es": True, "hu": True},
+        ("guide.po", "One return\x04Many returns"): {"ca": True, "es": True, "hu": True},
+    }
+    catalogue_translations = {
+        ("guide.po", "Review the current return."): {
+            "ca": ("Review the current returns.",),
+            "es": (" Review   THE current return! ",),
+        },
+        ("guide.po", "One return\x04Many returns"): {
+            "ca": ("One return", "Many returns"),
+        },
+    }
+
+    inventory, findings = _documentation_source_inventory(
+        tmp_path,
+        catalogue_messages,
+        catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
+        catalogue_translations=catalogue_translations,
+    )
+
+    assert inventory["docs_translation_comparisons"] == 4
+    assert inventory["docs_translation_source_echo"] == 3
+    assert inventory["docs_translation_source_echo_ratio"] == 0.75
+    assert inventory["docs_translation_near_echo"] == 1
+    assert inventory["docs_translation_near_echo_ratio"] == 0.25
+    assert inventory["docs_translation_source_echo_ca"] == 2
+    assert inventory["docs_translation_source_echo_es"] == 1
+    assert inventory["docs_translation_near_echo_ca"] == 1
+    assert len(inventory["docs_translation_source_echo_samples"]) == 3
+    assert len(inventory["docs_translation_near_echo_samples"]) == 1
+    exact = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
+    near = [finding for finding in findings if finding["kind"] == "docs_translation_near_echo"]
+    assert len(exact) == 3
+    assert len(near) == 1
+    assert all(finding["classification"] == "blocking" for finding in exact)
+    assert near[0]["classification"] == "advisory"
+    assert near[0]["ratio"] >= 0.9
+
+
+def test_documentation_inventory_classifies_only_provable_invariant_echoes(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    class _Dictionary:
+        def lookup(self, word: str) -> bool:
+            return word.casefold() == "manual"
+
+    monkeypatch.setattr(
+        signal_module,
+        "load_dictionaries",
+        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+    )
+    docs = tmp_path / "docs"
+    messages = (
+        "Download",
+        "Review the current return",
+        "`--help`",
+        "Modelo 303",
+        "PDF",
+        "Cadrumo",
+        "Manual",
+    )
+    pot = 'msgid ""\nmsgstr ""\n\n' + "\n".join(
+        f'msgid "{message}"\nmsgstr ""\n' for message in messages
+    )
+    _write_docs_source_cache(docs, "guide.md", "# Echo classification\n", pot)
+    catalogue_messages = {
+        ("guide.po", message): {"ca": True, "es": True, "hu": True} for message in messages
+    }
+    catalogue_translations = {
+        ("guide.po", "Download"): {"ca": ("Download",)},
+        ("guide.po", "Review the current return"): {"es": ("Review the current return",)},
+        ("guide.po", "`--help`"): {"ca": ("`--help`",)},
+        ("guide.po", "Modelo 303"): {"es": ("Modelo 303",)},
+        ("guide.po", "PDF"): {"es": ("PDF",)},
+        ("guide.po", "Cadrumo"): {"ca": ("Cadrumo",)},
+        ("guide.po", "Manual"): {"ca": ("Manual",)},
+    }
+
+    inventory, findings = _documentation_source_inventory(
+        tmp_path,
+        catalogue_messages,
+        catalogue_files={(locale, "guide.po") for locale in ("ca", "es", "hu")},
+        catalogue_translations=catalogue_translations,
+    )
+
+    assert inventory["docs_translation_comparisons"] == 7
+    assert inventory["docs_translation_source_echo"] == 2
+    assert inventory["docs_translation_invariant_echo"] == 5
+    assert inventory["docs_translation_invariant_echo_ca"] == 3
+    assert inventory["docs_translation_invariant_echo_es"] == 2
+    assert inventory["docs_translation_invariant_echo_hu"] == 0
+    for reason in (
+        "inline_code",
+        "modelo_form",
+        "platform_format",
+        "canonical_product_identity",
+        "target_dictionary_shared_term",
+    ):
+        assert inventory[f"docs_translation_invariant_echo_reason_{reason}"] == 1
+    blocking = [finding for finding in findings if finding["kind"] == "docs_translation_source_echo"]
+    invariant = [finding for finding in findings if finding["kind"] == "docs_translation_invariant_echo"]
+    assert {finding["source"] for finding in blocking} == {"Download", "Review the current return"}
+    assert all(finding["classification"] == "blocking" for finding in blocking)
+    assert {finding["reason"] for finding in invariant} == {
+        "inline_code",
+        "modelo_form",
+        "platform_format",
+        "canonical_product_identity",
+        "target_dictionary_shared_term",
+    }
+    assert all(finding["classification"] == "advisory" for finding in invariant)
 
 
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:

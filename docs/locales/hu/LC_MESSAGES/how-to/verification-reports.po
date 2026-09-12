@@ -479,9 +479,8 @@ msgstr ""
 "Az ellenőrzött-teljes állapot szükséges, de nem elégséges. A 303-as "
 "modelo exportja akkor is visszautasítja a kérést, ha az ellenőrzés "
 "engedélyt ad, de nincs ellenőrzött termék/szoftverazonossági hatáskör; "
-"ennek kódja `FAIL_MODELO_EXPORT`. Ellenőrizd, hol tart a benyújtás, "
-"majd olvasd vissza az ellenőrzött számokat, és add meg őket az AEAT "
-"portálján:"
+"ennek kódja `FAIL_MODELO_EXPORT`. Ellenőrizd, hol tart a benyújtás, majd "
+"olvasd vissza az ellenőrzött számokat, és add meg őket az AEAT portálján:"
 
 #: ../../how-to/verification-reports.md:190
 msgid "More than one filing matches"
@@ -604,7 +603,4 @@ msgstr ""
 #: ../../how-to/verification-reports.md:235
 msgid "[CLI reference](../cli/index.rst): every command and option."
 msgstr "[CLI-referencia](../cli/index.rst): minden parancs és opció."
-
-#~ msgid "Export refuses because no verified calculation exists"
-#~ msgstr "Az export elutasít, mert nem létezik ellenőrzött számítás"
 

@@ -24,11 +24,13 @@ msgstr "Azonosság és elnevezés"
 
 #: ../../reference/identity-and-naming.md:3
 msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) is the external tax authority. CLI means command-line "
-"interface. MCP means Model Context Protocol."
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
 msgstr ""
-"Az Agencia Estatal de Administración Tributaria (AEAT) a külső adóhatóság. A CLI a parancssori felületet jelenti. Az "
-"MCP a Model Context Protocolt jelenti."
+"Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
+"adóhatóság. A CLI a parancssori felületet jelenti. Az MCP a Model Context"
+" Protocolt jelenti."
 
 #: ../../reference/identity-and-naming.md:6
 msgid "Canonical product identity"
@@ -48,7 +50,7 @@ msgstr "Megjelenítendő név"
 
 #: ../../reference/identity-and-naming.md
 msgid "`Cadrumo`"
-msgstr "`Cadrumo`"
+msgstr "A `Cadrumo` termék neve"
 
 #: ../../reference/identity-and-naming.md
 msgid "Python package"
@@ -56,7 +58,7 @@ msgstr "Python-csomag"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo`"
-msgstr "`cadrumo`"
+msgstr "A `cadrumo` kisbetűs névalak"
 
 #: ../../reference/identity-and-naming.md
 msgid "Root distribution"
@@ -68,7 +70,7 @@ msgstr "Emberi CLI-végrehajtható"
 
 #: ../../reference/identity-and-naming.md
 msgid "`aeat`"
-msgstr "`aeat`"
+msgstr "Az `aeat` parancs neve"
 
 #: ../../reference/identity-and-naming.md
 msgid "Repository"
@@ -76,7 +78,7 @@ msgstr "Tároló"
 
 #: ../../reference/identity-and-naming.md
 msgid "`nevenincs/cadrumo`"
-msgstr "`nevenincs/cadrumo`"
+msgstr "A `nevenincs/cadrumo` tárházazonosító"
 
 #: ../../reference/identity-and-naming.md
 msgid "MCP server identity"
@@ -108,7 +110,7 @@ msgstr "Termék környezeti előtag"
 
 #: ../../reference/identity-and-naming.md
 msgid "`CADRUMO_`"
-msgstr "`CADRUMO_`"
+msgstr "A `CADRUMO_` környezeti változó-előtag"
 
 #: ../../reference/identity-and-naming.md
 msgid "Companion distributions"
@@ -116,7 +118,7 @@ msgstr "Kísérő terjesztések"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo-data-manuals`, `cadrumo-data-official`"
-msgstr "`cadrumo-data-manuals`, `cadrumo-data-official`"
+msgstr "A `cadrumo-data-manuals` és `cadrumo-data-official` adatcsomagok"
 
 #: ../../reference/identity-and-naming.md
 msgid "Companion Python namespace"
@@ -124,11 +126,15 @@ msgstr "Kísérő Python-névtér"
 
 #: ../../reference/identity-and-naming.md
 msgid "`cadrumo_data`"
-msgstr "`cadrumo_data`"
+msgstr "A `cadrumo_data` adatkönyvtár"
 
 #: ../../reference/identity-and-naming.md:24
-msgid "These values identify one product. There is no alternate human CLI spelling or Python import alias."
-msgstr "Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi CLI-írásmód vagy Python-importalias."
+msgid ""
+"These values identify one product. There is no alternate human CLI "
+"spelling or Python import alias."
+msgstr ""
+"Ezek az értékek egyetlen terméket azonosítanak. Nincs alternatív emberi "
+"CLI-írásmód vagy Python-importalias."
 
 #: ../../reference/identity-and-naming.md:27
 msgid "Product and authority names"
@@ -155,8 +161,12 @@ msgid "`Cadrumo` or the canonical identifier in the identity table"
 msgstr "`Cadrumo` vagy a kanonikus azonosító az azonosságtáblában"
 
 #: ../../reference/identity-and-naming.md
-msgid "Cadrumo CLI, Cadrumo profile, `cadrumo` package, `CADRUMO_LOCAL_STORAGE_ROOT`"
-msgstr "Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, `CADRUMO_LOCAL_STORAGE_ROOT`"
+msgid ""
+"Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
+"`CADRUMO_LOCAL_STORAGE_ROOT`"
+msgstr ""
+"Cadrumo CLI, Cadrumo-profil, `cadrumo` csomag, "
+"`CADRUMO_LOCAL_STORAGE_ROOT`"
 
 #: ../../reference/identity-and-naming.md
 msgid "Spanish tax authority"
@@ -164,36 +174,25 @@ msgstr "Spanyol adóhatóság"
 
 #: ../../reference/identity-and-naming.md
 msgid "`AEAT`"
-msgstr "`AEAT`"
+msgstr "Az `AEAT` rövidítés"
 
 #: ../../reference/identity-and-naming.md
-msgid "AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, AEAT taxonomy"
-msgstr "AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás, AEAT-taxonómia"
+msgid ""
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
+"AEAT taxonomy"
+msgstr ""
+"AEAT-portál, AEAT-hitelesítő adatok, AEAT hivatalos fájl, AEAT jogforrás,"
+" AEAT-taxonómia"
 
 #: ../../reference/identity-and-naming.md:34
 msgid ""
-"AEAT is an external authority and counterparty, not the application name. Authority-owned terms such as *modelo*, "
-"*casilla*, *justificante*, and official period or classification tokens keep their AEAT meaning inside Cadrumo."
+"AEAT is an external authority and counterparty, not the application name."
+" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"official period or classification tokens keep their AEAT meaning inside "
+"Cadrumo."
 msgstr ""
-"Az AEAT külső hatóság és partner, nem az alkalmazás neve. A hivatal tulajdonában lévő fogalmak, mint a *modelo*, a "
-"*casilla*, a *justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a Cadrumón belül megtartják "
-"AEAT-jelentésüket."
-
-#~ msgid "MCP server identity"
-#~ msgstr "MCP-kiszolgáló azonossága"
-
-#~ msgid "MCP executable"
-#~ msgstr "MCP-végrehajtható"
-
-#~ msgid "`cadrumo-mcp`"
-#~ msgstr "`cadrumo-mcp`"
-
-#~ msgid "MCP tool prefix"
-#~ msgstr "MCP-eszközelőtag"
-
-#~ msgid "MCP resource scheme"
-#~ msgstr "MCP-erőforrásséma"
-
-#~ msgid "Plugin identifier"
-#~ msgstr "Beépülő azonosítója"
+"Az AEAT külső hatóság és partner, nem az alkalmazás neve. A hivatal "
+"tulajdonában lévő fogalmak, mint a *modelo*, a *casilla*, a "
+"*justificante*, valamint a hivatalos időszak- vagy osztályozási jelölők a"
+" Cadrumón belül megtartják AEAT-jelentésüket."
 

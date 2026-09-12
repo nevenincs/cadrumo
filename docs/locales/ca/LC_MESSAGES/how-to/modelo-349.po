@@ -196,9 +196,9 @@ msgid ""
 " cannot encode every applicable required casilla, so the command refuses "
 "rather than producing a partial file:"
 msgstr ""
-"Intenta exportar la declaració verificada. El disseny autoritatiu "
-"actual no pot codificar totes les caselles obligatòries aplicables, de "
-"manera que l'ordre es nega en lloc de produir un fitxer parcial:"
+"Intenta exportar la declaració verificada. El disseny autoritatiu actual "
+"no pot codificar totes les caselles obligatòries aplicables, de manera "
+"que l'ordre es nega en lloc de produir un fitxer parcial:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -262,18 +262,4 @@ msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 #: ../../how-to/modelo-349.md:114
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
-
-#~ msgid "Export the verified declaration:"
-#~ msgstr "Exporta la declaració verificada:"
-
-#~ msgid ""
-#~ "The marker is optional and only "
-#~ "applies while the obligation window is"
-#~ " open; export is the local finish "
-#~ "line."
-#~ msgstr ""
-#~ "El marcador és opcional i només "
-#~ "s'aplica mentre la finestra d'obligació "
-#~ "és oberta; l'exportació és la línia "
-#~ "d'arribada local."
 

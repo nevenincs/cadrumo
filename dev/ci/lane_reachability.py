@@ -24,7 +24,7 @@ as a marker expression yields nonsense that happens to parse.
 Collecting only ``pytestmark`` would call a file unmarked when its tests carry
 their own decorators. But unioning module-level and per-test markers into a
 single set is just as wrong in the other direction, and it produced a real false
-positive: ``src/cadrumo/tests/test_secure_sql.py`` is module-marked ``unit`` and
+positive: ``src/cadrumo/adapters/persistence/storage/tests/test_secure_sql.py`` is module-marked ``unit`` and
 carries ONE test decorated ``os_keychain``, and every lane excludes
 ``os_keychain`` -- so the flattened set matched no lane and the whole file read
 as unreachable while most of its tests run in the unit lane every day. The unit
