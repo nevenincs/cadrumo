@@ -19,6 +19,7 @@ def _assert_core_validation(operation: object, message: str) -> None:
         operation()  # type: ignore[operator]
     assert isinstance(caught.value, ValueError)
     assert isinstance(caught.value, CadrumoError)
+    assert caught.value.code.code == "INTEGRITY_CADRUMO_CORE_VALIDATION"
 
 
 def test_empty_modelo_csv_uses_typed_core_validation() -> None:
