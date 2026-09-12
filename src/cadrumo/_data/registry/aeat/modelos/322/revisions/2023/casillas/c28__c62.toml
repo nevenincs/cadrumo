@@ -98,8 +98,11 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2023".casillas]]
 id = "36"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-base-imponible"
+continuidad_origin = "seeded"
 number = "36"
 section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_base_imponible"
 data_type = "money"
 required = false
 input_kind = "manual"
@@ -107,8 +110,11 @@ legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:
 
 [[revisions."2023".casillas]]
 id = "37"
+continuidad_id = "m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-del-recargo-de-equivalencia-cuota"
+continuidad_origin = "seeded"
 number = "37"
 section = ["iva", "regimen_general", "recargo"]
+semantic_role = "m322_liquidacion_iva_devengado_modificacion_bases_y_cuotas_del_recargo_de_equivalencia_cuota"
 data_type = "money"
 required = false
 input_kind = "manual"

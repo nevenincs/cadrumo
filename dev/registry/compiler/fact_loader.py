@@ -1,4 +1,9 @@
-"""Strict TOML parsing for one-file-per-concept governed facts."""
+"""Strict TOML parsing for one-file-per-concept governed facts.
+
+This module deliberately knows nothing about ``ModeloDefinition`` or revision
+validation.  A facts publication can therefore parse and validate its source
+tree before any unrelated Modelo compiler is involved.
+"""
 
 from __future__ import annotations
 
@@ -76,7 +81,11 @@ def load_governed_facts(facts_dir: Path) -> tuple[GovernedFact, ...]:
         return ()
     facts: list[GovernedFact] = []
     source_by_fact_id: dict[str, Path] = {}
-    for path in scan_directory(resolved, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES):
+    paths = sorted(
+        scan_directory(resolved, pattern="*.toml", recursive=True, select=DirectoryEntryKind.FILES),
+        key=lambda path: path.relative_to(resolved).as_posix(),
+    )
+    for path in paths:
         fact = load_governed_fact_file(path)
         previous = source_by_fact_id.get(fact.fact_id)
         if previous is not None:

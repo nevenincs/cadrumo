@@ -1,36 +1,60 @@
-"""Canonical provider registration and directory ownership for governed facts."""
+"""Canonical provider registration and directory ownership for governed facts.
+
+The authored-facts boundary in this module is intentionally independent of the
+Modelo compiler.  ``compile_authored_fact_catalogue`` is the production-facing
+entry point for a facts-only publication: it reads only ``<registry>/facts``,
+validates every declaration through the governed-fact schema, and returns a
+deterministically keyed catalogue.  The broader provider function remains
+available for the full registry compiler, where Modelo projections are
+explicitly supplied by the caller.
+"""
 
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from .fact_loader import is_governed_fact_filename, load_governed_facts
 from .loader_cache import toml_file_fingerprint
 from .loader_fingerprints import RegistryPathFingerprints
 
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+
 __all__ = [
+    "AUTHORED_FACT_PROVIDER_ID",
+    "FACTS_CANDIDATE_SCHEMA",
     "FACT_PROVIDER_REGISTRATIONS",
     "FactProviderCompiler",
     "FactProviderRegistration",
+    "compile_authored_fact_catalogue",
     "collect_registered_fact_provider_fingerprints",
     "compile_registered_fact_providers",
+    "deterministic_fact_index",
+    "fact_catalogue_digest",
     "registered_fact_provider_directories",
     "reset_registered_fact_providers",
+    "serialize_fact_catalogue",
     "validate_fact_provider_directory_ownership",
     "validate_fact_provider_registrations",
 ]
 
 
 _PROVIDER_ID = re.compile(r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$")
+AUTHORED_FACT_PROVIDER_ID = "authored-facts"
+"""The provider identity attached to directly authored fact declarations."""
+
+FACTS_CANDIDATE_SCHEMA = "cadrumo-governed-facts-candidate-v1"
+"""Versioned schema marker for the deterministic facts-only candidate bytes."""
 
 
 class FactProviderCompiler(Protocol):
@@ -61,6 +85,85 @@ class FactProviderRegistration:
     project_modelos: ModeloFactProjector | None = None
     lifecycle_components: tuple[str, ...] = ()
     inherited_identity_domains: tuple[str, ...] = ()
+
+
+def deterministic_fact_index(
+    facts: Mapping[str, GovernedFact] | Iterable[GovernedFact],
+) -> dict[str, GovernedFact]:
+    """Return a semantic-ID keyed fact index in stable lexical order.
+
+    The source loader preserves filename order for review and duplicate-error
+    reporting.  Publication must not depend on that incidental order, so the
+    candidate boundary rekeys every fact by its semantic ``fact_id`` and sorts
+    those IDs before constructing the catalogue payload.
+
+    A mapping is accepted for callers that already have a catalogue; an
+    iterable is accepted for the authored loader.  In both forms, duplicate
+    semantic identities and mismatched mapping keys fail closed.
+    """
+    if isinstance(facts, Mapping):
+        entries = tuple(facts.items())
+        for key, fact in entries:
+            if key != fact.fact_id:
+                raise RegistryValidationError(
+                    f"governed fact catalogue key {key!r} does not match fact_id {fact.fact_id!r}",
+                )
+    else:
+        entries = tuple((fact.fact_id, fact) for fact in facts)
+    indexed: dict[str, GovernedFact] = {}
+    for fact_id, fact in sorted(entries, key=lambda item: item[0]):
+        if fact_id in indexed:
+            raise RegistryValidationError(f"governed fact {fact_id!r} is declared more than once")
+        indexed[fact_id] = fact
+    return indexed
+
+
+def compile_authored_fact_catalogue(registry_root: Path) -> GovernedFactCatalogue:
+    """Compile only directly authored facts, without loading any Modelo data.
+
+    ``registry_root`` is the canonical ``.../registry/aeat`` root.  The facts
+    directory must exist and contain at least one declaration: a facts-only
+    publication must never turn missing source data into an empty successful
+    candidate.  Each file is parsed by :func:`load_governed_facts`, which
+    applies the complete governed-fact Pydantic schema and refuses generated
+    variants in authored files.
+
+    The returned catalogue carries compiler-owned provider provenance and is
+    keyed deterministically by semantic fact ID.  No Modelo revision loader,
+    projection, or validation is reachable from this function.
+    """
+    facts_dir = registry_root.resolve() / "facts"
+    if not facts_dir.is_dir():
+        raise RegistryLoadError(f"authored governed-facts directory is missing: {facts_dir}")
+    authored = load_governed_facts(facts_dir)
+    if not authored:
+        raise RegistryLoadError(f"authored governed-facts directory contains no TOML declarations: {facts_dir}")
+    indexed = deterministic_fact_index(
+        fact.model_copy(update={"provider_id": AUTHORED_FACT_PROVIDER_ID}) for fact in authored
+    )
+    return GovernedFactCatalogue(facts=indexed)
+
+
+def serialize_fact_catalogue(catalogue: GovernedFactCatalogue) -> bytes:
+    """Serialize a deterministic facts-only candidate payload for publication.
+
+    This is a candidate projection, not the full authority artifact.  The
+    authority publisher remains the owner of the artifact envelope and its
+    unrelated catalogues; this byte representation gives that publisher an
+    auditable facts index and a stable digest without requiring Modelo input.
+    """
+    indexed = deterministic_fact_index(catalogue.facts)
+    return canonical_json_bytes(
+        {
+            "schema": FACTS_CANDIDATE_SCHEMA,
+            "facts": {fact_id: fact.model_dump(mode="json") for fact_id, fact in indexed.items()},
+        },
+    )
+
+
+def fact_catalogue_digest(catalogue: GovernedFactCatalogue) -> str:
+    """Return the lowercase SHA-256 digest of the canonical facts candidate."""
+    return sha256_hex(serialize_fact_catalogue(catalogue))
 
 
 def validate_fact_provider_registrations(
@@ -133,7 +236,7 @@ def compile_registered_fact_providers(
                 )
             owner_by_fact_id[fact.fact_id] = registration.provider_id
             facts[fact.fact_id] = fact.model_copy(update={"provider_id": registration.provider_id})
-    return GovernedFactCatalogue(facts=facts)
+    return GovernedFactCatalogue(facts=deterministic_fact_index(facts))
 
 
 def collect_registered_fact_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
@@ -254,7 +357,7 @@ def _modelo_parameter_projection_registration() -> FactProviderRegistration:
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
-            provider_id="authored-facts",
+            provider_id=AUTHORED_FACT_PROVIDER_ID,
             owned_directories=("facts",),
             compile=_compile_authored_facts,
             collect_fingerprints=_collect_authored_fact_fingerprints,
