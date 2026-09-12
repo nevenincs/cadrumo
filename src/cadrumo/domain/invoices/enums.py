@@ -11,11 +11,15 @@ The IVA facade is the sole legal-grade authority for which rates existed when.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
+from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.schema_base import DateAxis
 from ..iva.errors import IvaRateNotFoundError
 from ..iva.lookup import rate_kinds_for_declared_rate, rate_table_covers, resolve_iva_rate
 from ..iva.rates import iva_rate_record_from_fact
@@ -173,27 +177,35 @@ class InvoiceLegalMention(StrEnum):
     CASH_ACCOUNTING_REGIME = "CASH_ACCOUNTING_REGIME"
 
 
-_IVA_RATE_TO_IVA_KIND: dict[IvaRate, IvaRateKind] = {
-    IvaRate.RATE_0: IvaRateKind.ZERO,
-    IvaRate.RATE_2: IvaRateKind.SUPER_REDUCED,
-    IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
-    IvaRate.RATE_5: IvaRateKind.REDUCED,
-    IvaRate.RATE_7_5: IvaRateKind.REDUCED,
-    IvaRate.RATE_10: IvaRateKind.REDUCED,
-    IvaRate.RATE_21: IvaRateKind.GENERAL,
-    IvaRate.EXEMPT: IvaRateKind.EXEMPT,
-}
+_IVA_RATE_SLOT_FACT_ID = "iva-rate-slot-catalogue"
 
-_IVA_RATE_TO_RATE_ROLE: dict[IvaRate, str] = {
-    IvaRate.RATE_2: "coexisting-2",
-    IvaRate.RATE_4: "ordinary",
-    IvaRate.RATE_5: "coexisting-5",
-    IvaRate.RATE_7_5: "coexisting-7.5",
-    IvaRate.RATE_10: "ordinary",
-    IvaRate.RATE_21: "ordinary",
-}
 
-_NON_NUMERIC_IVA_RATES = frozenset((IvaRate.EXEMPT, IvaRate.NOT_SUBJECT))
+def _iva_rate_slot_registry_declarations(rate: IvaRate, on_date: date) -> Mapping[str, str]:
+    """Resolve one slot's taxonomy from the dated IVA slot catalogue."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_IVA_RATE_SLOT_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=on_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("IVA rate slot catalogue must resolve as a mapping fact")
+    values = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    prefix = f"slot.{rate.value}."
+    required = ("category", "substrate_kind", "numeric", "rate_role")
+    try:
+        return {key: values[f"{prefix}{key}"] for key in required}
+    except KeyError as exc:
+        raise RegistryValidationError(f"IVA rate slot catalogue is missing {prefix}{exc.args[0]}") from exc
+
+
+def _iva_rate_slot_kind(declarations: Mapping[str, str]) -> IvaRateKind:
+    """Parse the registry-declared substrate kind without a Python fallback."""
+    try:
+        return IvaRateKind(declarations["substrate_kind"])
+    except (KeyError, ValueError) as exc:
+        raise RegistryValidationError("IVA rate slot catalogue has an invalid substrate kind") from exc
 
 
 def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
@@ -204,13 +216,15 @@ def resolve_iva_rate_slot_fact(rate: IvaRate, on_date: date):
     no single rate-fact variant to return.  EXEMPT and NOT_SUBJECT are likewise
     nonnumeric taxonomy members.
     """
-    if rate in _NON_NUMERIC_IVA_RATES or rate is IvaRate.RATE_0:
+    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+    if declarations["numeric"] != "true" or rate is IvaRate.RATE_0:
         return None
+    kind = _iva_rate_slot_kind(declarations)
     return resolve_iva_rate(
         EUMemberState.ES,
-        _IVA_RATE_TO_IVA_KIND[rate],
+        kind,
         on_date,
-        rate_role=_IVA_RATE_TO_RATE_ROLE[rate],
+        rate_role=declarations["rate_role"],
     )
 
 
@@ -257,9 +271,10 @@ def iva_rate_percentage(rate: IvaRate, on_date: date) -> Decimal | None:
             the rate table cannot express, so its silence there is incomplete
             coverage rather than a statement that zero-rating was unlawful.
     """
-    if rate in _NON_NUMERIC_IVA_RATES:
+    declarations = _iva_rate_slot_registry_declarations(rate, on_date)
+    if declarations["numeric"] != "true":
         return None
-    kind = _IVA_RATE_TO_IVA_KIND[rate]
+    kind = _iva_rate_slot_kind(declarations)
     if rate is IvaRate.RATE_0:
         if kind not in rate_kinds_for_declared_rate(EUMemberState.ES, Decimal("0"), on_date):
             raise IvaRateNotFoundError("zero IVA slot is not accepted by the IVA authority")
@@ -307,9 +322,12 @@ def iva_rate_kind(rate: IvaRate) -> IvaRateKind | None:
     ``NOT_SUBJECT`` has no OSS/IOSS rate tier because it is outside the
     taxable-supply universe; callers that need a Modelo 369 candidate should
     skip or reject it explicitly. Numeric and exempt slots return their
-    corresponding :class:`IvaRateKind`.
+    corresponding :class:`IvaRateKind`; nonnumeric slots return ``None``.
     """
-    return _IVA_RATE_TO_IVA_KIND.get(rate)
+    declarations = _iva_rate_slot_registry_declarations(rate, date.today())
+    if declarations["numeric"] != "true":
+        return None
+    return _iva_rate_slot_kind(declarations)
 
 
 def resolve_iva_rate_slot(percentage: Decimal | None, on_date: date) -> IvaRate:

@@ -1,0 +1,31 @@
+[fact]
+fact_id = "legal-reference-schema-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "legal-reference-schema-vocabulary:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["rd-1065-2007:art-25"]
+source_refs = ["aeat-modelo-036-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-036-procedure"
+required_text = ["número de identificación fiscal"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "legal.source_kind.ley", value = "ley" },
+  { key = "legal.source_kind.real_decreto", value = "reglamento" },
+  { key = "legal.source_kind.real_decreto_legislativo", value = "real_decreto_legislativo" },
+  { key = "legal.source_kind.real_decreto_ley", value = "reglamento" },
+  { key = "legal.source_kind.orden", value = "orden" },
+  { key = "legal.source_kind.reglamento", value = "reglamento" },
+  { key = "legal.source_kind.manual", value = "manual" },
+  { key = "legal.source_kind.instruction", value = "instruction" },
+  { key = "legal.dictionary_casilla_id_grammar.numeric", value = "numeric" },
+  { key = "legal.dictionary_casilla_id_grammar.numeric_or_single_uppercase_letter", value = "numeric_or_single_uppercase_letter" },
+]

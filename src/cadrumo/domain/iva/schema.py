@@ -14,7 +14,7 @@ locale-resolved form.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -113,8 +113,6 @@ class IvaCategory(StrEnum):
     :attr:`INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`, which is the goods
     counterpart resting on arts. 13/15.
     """
-    EXPORT_THIRD_COUNTRY_ZERO_RATED = "export_third_country_zero_rated"
-    EXPORT_ASSIMILATED_ZERO_RATED = "export_assimilated_zero_rated"
     IMPORT_THIRD_COUNTRY = "import_third_country"
     RECARGO_EQUIVALENCIA = "recargo_equivalencia"
     REGIMEN_SIMPLIFICADO = "regimen_simplificado"
@@ -134,7 +132,6 @@ class IvaCashAccountingTreatment(StrEnum):
     """
 
     NONE = "none"
-    TAXPAYER_REGIME = "taxpayer_regime"
     SUPPLIER_REGIME = "supplier_regime"
 
 
@@ -224,9 +221,6 @@ class IvaCashAccountingPaymentEvidence(BaseModel):
 #   imponible (Ley 37/1992 art. 7).
 # - INTRA_COMMUNITY_SUPPLY: entrega intracomunitaria exenta — zero cuota,
 #   declared as base only (Ley 37/1992 art. 25, casilla 59).
-# - EXPORT_THIRD_COUNTRY_ZERO_RATED / EXPORT_ASSIMILATED_ZERO_RATED:
-#   exportación u operación asimilada exenta — zero cuota, base only
-#   (Ley 37/1992 arts. 21-22, casilla 60).
 # - INTRA_COMMUNITY_SERVICE_SUPPLY: a B2B service supplied to a business in
 #   another Member State — no Spanish cuota because art. 69.Uno.1.o locates
 #   the operation where the recipient is established, so it is NO SUJETA here
@@ -253,8 +247,6 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.OPERACION_NO_SUJETA,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
         IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-        IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
         IvaCategory.REGIMEN_SIMPLIFICADO,
         # REAGP_COMPENSATION: a farmer under the régimen especial does not
@@ -501,6 +493,27 @@ class IvaRateKind(StrEnum):
     SUPER_REDUCED = "super_reduced"
     ZERO = "zero"
     EXEMPT = "exempt"
+
+
+_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID = "iva-statutory-schema-vocabulary"
+
+
+def iva_statutory_schema_vocabulary(on_date: date | None = None) -> Mapping[str, str]:
+    """Resolve statutory IVA schema vocabulary from the dated registry fact."""
+    from ..calculations.registry.authority import bundled_authority
+    from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ..calculations.registry.schema_base import DateAxis
+
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_IVA_STATUTORY_SCHEMA_VOCABULARY_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=on_date or date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise IvaValidationError("IVA statutory schema vocabulary must resolve as a mapping fact")
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
 _RegistryLegalRef = Annotated[

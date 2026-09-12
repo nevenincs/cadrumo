@@ -18,7 +18,7 @@ from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryFailureClassification, RegistryFailureCondition
-from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact, ScalarFactQuery
 from .ids import LegalRefId
 from .schema_base import DateAxis
 
@@ -27,13 +27,7 @@ if TYPE_CHECKING:
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
-_MODELO_202_MODALITY_LEGAL_REFS: tuple[LegalRefId, ...] = (
-    "ley-27-2014:art-40",
-    "ley-27-2014:art-40-3",
-)
-"""Scoped registry citation keys grounding the Modelo 202 modality gate."""
-
-_MODELO_202_ART_40_3_INCN_THRESHOLD_FACT_ID = "lis-art-40-3-incn-threshold"
+_MODELO_202_APPLICABILITY_FACT_ID = "modelo-202-applicability-catalogue"
 
 
 class Modelo202Modality(StrEnum):
@@ -58,33 +52,52 @@ class Modelo202ModalityVerdict(BaseModel):
     """Resolved statutory threshold, including the authority provenance used."""
 
 
-_MODELO_202_ART_40_3_MANDATORY_REASON = (
-    "Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone "
-    "el método de la base imponible (3 / 9 / 11 primeros meses) cuando el "
-    "importe neto de la cifra de negocios de los doce meses anteriores ha "
-    "superado los 6.000.000 €. La modalidad del artículo 40.2 (cuota) no "
-    "está disponible."
-)
+def _modelo_202_applicability_declarations(
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority,
+) -> dict[str, str]:
+    """Resolve the dated Modelo 202 applicability catalogue."""
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_MODELO_202_APPLICABILITY_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        from .errors import RegistryValidationError
 
-_MODELO_202_ART_40_2_OPTIONAL_REASON = (
-    "Modelo 202 modalidad por defecto: el artículo 40.2 de la LIS permite "
-    "el método de la cuota (18 %) cuando el importe neto de la cifra de "
-    "negocios de los doce meses anteriores no ha superado los 6.000.000 €. "
-    "La modalidad del artículo 40.3 sigue siendo opcional."
-)
+        raise RegistryValidationError(
+            f"Modelo 202 applicability fact {_MODELO_202_APPLICABILITY_FACT_ID!r} must resolve to a mapping",
+        )
+    declarations = {
+        entry.key: entry.value
+        for entry in resolved.payload.entries
+        if isinstance(entry.key, str) and isinstance(entry.value, str)
+    }
+    required = {
+        "threshold.fact_id",
+        "reason.not_applicable",
+        "reason.incomplete",
+        f"reason.{Modelo202Modality.ART_40_3_MANDATORY.value}",
+        f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}",
+        f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}",
+    }
+    missing = sorted(required - declarations.keys())
+    if missing:
+        from .errors import RegistryValidationError
 
-_MODELO_202_INCOMPLETE_REASON = (
-    "No se puede determinar la modalidad del Modelo 202: el importe neto "
-    "de la cifra de negocios de los doce meses anteriores no está "
-    "declarado. Sin este dato el motor no infiere modalidad — un pago "
-    "fraccionado equivocado es peor que una respuesta incompleta."
-)
+        raise RegistryValidationError(
+            f"Modelo 202 applicability fact {_MODELO_202_APPLICABILITY_FACT_ID!r} is missing {missing!r}",
+        )
+    return declarations
 
-_MODELO_202_NOT_APPLICABLE_REASON = (
-    "Modalidad del Modelo 202 no aplicable: el perfil declarado no es un "
-    "contribuyente del Impuesto sobre Sociedades. La modalidad solo se "
-    "deriva para entidades jurídicas obligadas al pago fraccionado del IS."
-)
+
+def _modelo_202_legal_refs(declarations: dict[str, str]) -> tuple[LegalRefId, ...]:
+    """Materialise the catalogue's legal-reference tuple for a verdict."""
+    key = f"legal_refs.{Modelo202Modality.ART_40_3_MANDATORY.value}"
+    return tuple(cast(LegalRefId, item) for item in declarations[key].split("|") if item)
 
 
 def resolve_modelo_202_art_40_3_incn_threshold(
@@ -97,9 +110,13 @@ def resolve_modelo_202_art_40_3_incn_threshold(
         from .authority import bundled_authority
 
         authority = bundled_authority()
+    declarations = _modelo_202_applicability_declarations(
+        effective_date=effective_date,
+        authority=authority,
+    )
     resolved = authority.resolve_governed_fact(
         ScalarFactQuery(
-            fact_id=_MODELO_202_ART_40_3_INCN_THRESHOLD_FACT_ID,
+            fact_id=declarations["threshold.fact_id"],
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),
@@ -138,17 +155,26 @@ def modelo_202_modality_from_inputs(
         :class:`Modelo202ModalityVerdict`: Derived modality, explanation, and
         legal grounding.
     """
+    if authority is None:
+        from .authority import bundled_authority
+
+        authority = bundled_authority()
+    declarations = _modelo_202_applicability_declarations(
+        effective_date=effective_date,
+        authority=authority,
+    )
+    legal_refs = _modelo_202_legal_refs(declarations)
     if entity_type is None or entity_type is not EntityType.LEGAL_ENTITY:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
-            reason=_MODELO_202_NOT_APPLICABLE_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+            reason=declarations["reason.not_applicable"],
+            legal_refs=legal_refs,
         )
     if incn_prior_12_months is None:
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.INCOMPLETE,
-            reason=_MODELO_202_INCOMPLETE_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+            reason=declarations["reason.incomplete"],
+            legal_refs=legal_refs,
             failure=RegistryFailureClassification(
                 condition=RegistryFailureCondition.MODELO_202_INCN_DECLARED,
                 facts={
@@ -165,14 +191,14 @@ def modelo_202_modality_from_inputs(
     if incn_prior_12_months > modelo_202_incn_threshold_decimal(threshold_fact):
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.ART_40_3_MANDATORY,
-            reason=_MODELO_202_ART_40_3_MANDATORY_REASON,
-            legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+            reason=declarations[f"reason.{Modelo202Modality.ART_40_3_MANDATORY.value}"],
+            legal_refs=legal_refs,
             threshold_fact=threshold_fact,
         )
     return Modelo202ModalityVerdict(
         modality=Modelo202Modality.ART_40_2_OPTIONAL,
-        reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
-        legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+        reason=declarations[f"reason.{Modelo202Modality.ART_40_2_OPTIONAL.value}"],
+        legal_refs=legal_refs,
         threshold_fact=threshold_fact,
     )
 

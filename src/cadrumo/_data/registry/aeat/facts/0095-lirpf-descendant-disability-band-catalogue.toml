@@ -1,0 +1,31 @@
+[fact]
+fact_id = "lirpf-descendant-disability-band-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-descendant-disability-band-catalogue:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+legal_refs = ["ley-35-2006:art-60", "rd-439-2007:art-72"]
+source_refs = ["lirpf-cuota-chain-authority", "aeat-renta-2024-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["con discapacidad"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Mínimo por discapacidad"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "catalogue.ids", value = "0,33,65" },
+    { key = "accepted_grades", value = "0,33,65" },
+    { key = "grade.0.band", value = "ordinary" },
+    { key = "grade.33.band", value = "33_to_64" },
+    { key = "grade.65.band", value = "65_or_more" },
+    { key = "grade.33.minimum_percent", value = "33" },
+    { key = "grade.65.minimum_percent", value = "65" },
+]

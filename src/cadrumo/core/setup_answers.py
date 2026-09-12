@@ -181,154 +181,33 @@ PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
 
 
-SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
-    "activity": SetupFieldSpec("activities.description", str),
-    "activity_start_date": SetupFieldSpec("censo.activity_start_date", str),
-    "address_postcode": SetupFieldSpec("contact.postcode", str),
-    "art109_activity_income_withholding_ge_70pct": SetupFieldSpec(
-        "irpf.art109_activity_income_withholding_ge_70pct",
-        bool,
-        "false",
-    ),
-    "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
-    "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
-    "declaration_roles": SetupFieldSpec("taxpayer_type.declaration_roles", str),
-    "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
-    "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
-    "enrollment_public_administration_budget_gt_6000000": SetupFieldSpec(
-        "censo.public_administration_budget_gt_6000000",
-        bool,
-        "false",
-    ),
-    "entity_type": SetupFieldSpec("taxpayer_type.entity_type", str),
-    "family_descendants_eu_eea_deduction": SetupFieldSpec("renta_family.descendants_eu_eea_deduction", bool, "false"),
-    "family_minor_children_in_unit": SetupFieldSpec("renta_family.minor_children_in_unit", bool, "false"),
-    "fiscal_residency": SetupFieldSpec("taxpayer_type.fiscal_residency", str, "resident_irpf"),
-    "google_export": SetupFieldSpec("capabilities.google_export", bool, "true"),
-    "has_employees": SetupFieldSpec("withholding.has_employees", bool, "false"),
-    # No default: the Modelo 111 producer refuses an undeclared value rather
-    # than assert "not a concerted school" on the operator's behalf, so an
-    # unanswered question must stay unanswered here.
-    "colegio_concertado": SetupFieldSpec("withholding.colegio_concertado", bool),
-    "incn_prior_12_months": SetupFieldSpec("taxpayer_type.incn_prior_12_months", str),
-    "irpf_estimation_regime": SetupFieldSpec("irpf.estimation_regime", str),
-    "irpf_activity_kind": SetupFieldSpec("irpf.activity_kind", str),
-    "irpf_income_categories": SetupFieldSpec("taxpayer_type.irpf_income_categories", str),
-    "irpf_special_regime": SetupFieldSpec("irpf.special_regime", str),
-    "irpf_special_regime_start_date": SetupFieldSpec("irpf.special_regime_start_date", str),
-    "iva_group_dominant_entity_enrolled": SetupFieldSpec("iva.group_dominant_entity_enrolled", bool),
-    "iva_group_member_enrolled": SetupFieldSpec("iva.group_member_enrolled", bool),
-    "iva_intracommunity_operations_exceed_50000_eur": SetupFieldSpec(
-        "iva.intracommunity_operations_exceed_50000_eur",
-        bool,
-    ),
-    "iva_oss_enrolled": SetupFieldSpec("iva.oss_enrolled", bool),
-    "iva_redeme_enrolled": SetupFieldSpec("iva.redeme_enrolled", bool),
-    "iva_regime": SetupFieldSpec("iva.regime", str),
-    "iva_roi_enrolled": SetupFieldSpec("iva.roi_enrolled", bool),
-    "iva_sii_enrolled": SetupFieldSpec("iva.sii_enrolled", bool),
-    "iva_m303_regime_composition": SetupFieldSpec("iva.m303_regime_composition", str),
-    "iva_cash_accounting_regime_enrolled": SetupFieldSpec("iva.cash_accounting_regime_enrolled", bool),
-    "iva_voluntary_sii_enrolled": SetupFieldSpec("iva.voluntary_sii_enrolled", bool),
-    "iva_hydrocarbon_deposit_advance_payment_deduction_entitled": SetupFieldSpec(
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-        bool,
-    ),
-    "legal_entity_form": SetupFieldSpec("taxpayer_type.legal_entity_form", str),
-    "legal_name": SetupFieldSpec("identity.legal_name", str),
-    "ley_49_2002_option_date": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_option_date", str),
-    "ley_49_2002_option_declared": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_option_declared", bool),
-    "ley_49_2002_renunciation_date": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_renunciation_date", str),
-    "ley_49_2002_renunciation_declared": SetupFieldSpec(
-        "taxpayer_type.ley_49_2002_special_regime_renunciation_declared",
-        bool,
-    ),
-    "llm_vision": SetupFieldSpec("capabilities.llm_vision", bool, "true"),
-    "modelo_111_no_retenciones_periods": SetupFieldSpec("withholding.modelo_111_no_retenciones_periods", str),
-    "monedas_virtuales_extranjero_above_threshold": SetupFieldSpec(
-        "obligations.monedas_virtuales_extranjero_above_threshold",
-        bool,
-        "false",
-    ),
-    "name": SetupFieldSpec("identity.name", str),
-    "new_entity_first_two_profit_periods": SetupFieldSpec("taxpayer_type.new_entity_first_two_profit_periods", bool),
-    "notes": SetupFieldSpec("identity.notes", str),
-    "objective_estimation_modulos_iae_epigraph": SetupFieldSpec("irpf.objective_estimation_modulos_iae_epigraph", str),
-    "objective_estimation_modulos_module_1_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_1_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_2_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_2_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_3_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_3_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_4_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_4_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_5_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_5_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_6_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_6_units",
-        str,
-    ),
-    "objective_estimation_modulos_module_7_units": SetupFieldSpec(
-        "irpf.objective_estimation_modulos_module_7_units",
-        str,
-    ),
-    "output_language": SetupFieldSpec(PROFILE_OUTPUT_LANGUAGE_PATH, str, "es"),
-    "pays_capital_income_with_retencion": SetupFieldSpec(
-        "withholding.pays_capital_income_with_retencion",
-        bool,
-        "false",
-    ),
-    "pays_professionals_with_retencion": SetupFieldSpec("withholding.pays_professionals_with_retencion", bool, "false"),
-    "pays_rent_with_retencion": SetupFieldSpec("withholding.pays_rent_with_retencion", bool, "false"),
-    # No setup question ever collected this, so the engine read the model
-    # default and a taxpayer who HAD declared the fact was still scheduled
-    # as though they had not — the flag governs Modelo 130 applicability.
-    # The schema has always declared the path and named this very field in
-    # its model selector; only the projection was missing.
-    "professional_income_withholding_ge_70pct": SetupFieldSpec(
-        "irpf.professional_income_withholding_ge_70pct",
-        bool,
-        "false",
-    ),
-    "representante_fiscal_nif": SetupFieldSpec("taxpayer_type.representante_fiscal_nif", str),
-    "representante_fiscal_nombre": SetupFieldSpec("taxpayer_type.representante_fiscal_nombre", str),
-    "situacion_familiar": SetupFieldSpec("renta_family.situacion_familiar", str),
-    "spouse_birth_date": SetupFieldSpec("renta_spouse.birth_date", str),
-    "spouse_disability_grade": SetupFieldSpec("renta_spouse.disability_grade", str),
-    "spouse_eu_eea_country": SetupFieldSpec("renta_spouse.eu_eea_country", str),
-    "spouse_eu_eea_resident": SetupFieldSpec("renta_spouse.eu_eea_resident", bool, "false"),
-    "spouse_name": SetupFieldSpec("renta_spouse.name", str),
-    "spouse_non_resident_irpf": SetupFieldSpec("renta_spouse.non_resident_irpf", bool, "false"),
-    "spouse_sex": SetupFieldSpec("renta_spouse.sex", str),
-    "spouse_surnames": SetupFieldSpec("renta_spouse.surnames", str),
-    "spouse_tax_id": SetupFieldSpec("renta_spouse.tax_id", str),
-    "surnames": SetupFieldSpec("identity.surnames", str),
-    "tax_id": SetupFieldSpec("identity.tax_id", str),
-    "tax_residence_ccaa": SetupFieldSpec("tax_residence.ccaa", str, "madrid"),
-    "tax_residence_jurisdiction_scope": SetupFieldSpec("tax_residence.jurisdiction_scope", str),
-    "taxation_type": SetupFieldSpec("renta_filing.declaration_type", str),
-    "taxpayer_birth_date": SetupFieldSpec("renta_taxpayer.birth_date", str),
-    "taxpayer_death_date": SetupFieldSpec("renta_taxpayer.death_date", str),
-    "taxpayer_disability_grade": SetupFieldSpec("renta_taxpayer.disability_grade", str),
-    "taxpayer_marital_status": SetupFieldSpec("renta_taxpayer.marital_status", str),
-    "taxpayer_marriage_date": SetupFieldSpec("renta_taxpayer.marriage_date", str),
-    "taxpayer_sex": SetupFieldSpec("renta_taxpayer.sex", str),
-    "third_party_transactions_above_347_threshold": SetupFieldSpec(
-        "obligations.third_party_transactions_above_347_threshold",
-        bool,
-        "false",
-    ),
-}
+class _RegistrySetupAnswerFields(Mapping[str, SetupFieldSpec]):
+    """Lazy mapping view over the governed setup-field catalogue."""
+
+    def __init__(self) -> None:
+        self._resolved: dict[str, SetupFieldSpec] | None = None
+
+    def _values(self) -> dict[str, SetupFieldSpec]:
+        if self._resolved is None:
+            from ..domain.calculations.registry.setup_profile_bindings import setup_answer_declarations
+
+            self._resolved = {
+                field: SetupFieldSpec(path, answer_type, default)
+                for field, (path, answer_type, default) in setup_answer_declarations().items()
+            }
+        return self._resolved
+
+    def __getitem__(self, key: str) -> SetupFieldSpec:
+        return self._values()[key]
+
+    def __iter__(self):
+        return iter(self._values())
+
+    def __len__(self) -> int:
+        return len(self._values())
+
+
+SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = _RegistrySetupAnswerFields()
 """Every :class:`SetupAnswers` field a persisted profile record can fill.
 
 A field absent from this table is filled by some other route (the
@@ -476,13 +355,13 @@ class SetupAnswers(BaseModel):
     new_entity_first_two_profit_periods: Any = ""
     """Optional three-state bool for LIS Art. 29 new-entity rate."""
     ley_49_2002_option_declared: Any = ""
-    """Optional three-state bool for the Ley 49/2002 Title II option."""
+    """Optional three-state bool for the governed special-regime option."""
     ley_49_2002_option_date: str = ""
-    """ISO-8601 date declared for the Ley 49/2002 Title II option."""
+    """ISO-8601 date declared for the governed special-regime option."""
     ley_49_2002_renunciation_declared: Any = ""
-    """Optional three-state bool for Ley 49/2002 Title II renunciation."""
+    """Optional three-state bool for governed special-regime renunciation."""
     ley_49_2002_renunciation_date: str = ""
-    """ISO-8601 date declared for the Ley 49/2002 Title II renunciation."""
+    """ISO-8601 date declared for governed special-regime renunciation."""
     irpf_income_categories: str = ""
     """Comma-separated set of IrpfIncomeCategory tokens."""
     declaration_roles: str = ""

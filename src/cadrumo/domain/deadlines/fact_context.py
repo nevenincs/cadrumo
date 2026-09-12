@@ -25,11 +25,7 @@ from ..calculations.registry.schema_base import DateAxis
 if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority
 
-_DEADLINE_FACT_DATE_AXES: dict[str, DateAxis] = {
-    "lirpf-multiple-pagadores-secondary-threshold": DateAxis.FILING_PERIOD,
-    "lirpf-work-income-multiple-pagadores-reduced-limit": DateAxis.FILING_PERIOD,
-    "dehu-tacit-rejection-natural-days": DateAxis.SUBMISSION_DATE,
-}
+_DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID = "deadline-fact-date-axis-mapping"
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,10 +85,31 @@ class DeadlineFactResolutionContext:
         return resolved
 
     def _date_axis(self, fact_id: str) -> DateAxis:
-        try:
-            return _DEADLINE_FACT_DATE_AXES[fact_id]
-        except KeyError as exc:
-            raise RegistryValidationError(f"unregistered deadline governed fact {fact_id!r}") from exc
+        resolved = self.authority.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id=_DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=self.filing_period,
+            ),
+        )
+        if not isinstance(resolved, ResolvedMappingFact):
+            raise RegistryValidationError(
+                f"deadline fact {_DEADLINE_FACT_DATE_AXIS_MAPPING_FACT_ID!r} must resolve to a mapping",
+            )
+        for entry in resolved.payload.entries:
+            if entry.key != fact_id:
+                continue
+            if not isinstance(entry.value, str):
+                raise RegistryValidationError(
+                    f"deadline fact {fact_id!r} date axis must be a string",
+                )
+            try:
+                return DateAxis(entry.value)
+            except ValueError as exc:
+                raise RegistryValidationError(
+                    f"deadline fact {fact_id!r} has unknown date axis {entry.value!r}",
+                ) from exc
+        raise RegistryValidationError(f"unregistered deadline governed fact {fact_id!r}")
 
     def _coordinate(self, axis: DateAxis) -> date:
         if axis is DateAxis.FILING_PERIOD:

@@ -165,9 +165,10 @@ References are rewritten in the same pass -- casilla ``binding`` and
 ``dependency_classifications`` ``binding_refs``, verification expectations, and
 the ``dev/registry/mappings`` semantic maps -- and the generated-export-tree
 guard fires where a published tree quotes a stripped id. Locale prose is
-reported, never hand-edited. Modelo 714 is withheld entirely: its within-edition
-collisions are repetition groups whose surviving names need the generator's
-repetition index.
+reported, never hand-edited. Where an id's slot is a separator-bounded prefix of
+its provider's ``field``, the surviving name restores that field in full: the
+dropped segments carry the repetition index of a repeated record block, and the
+provider states it already, so nothing is invented.
 
 Modes. ``--measure`` (the default) parses every in-scope declaration, reports
 the embedding counts, checks the renamed ids for collisions within a
@@ -1877,11 +1878,21 @@ def rewrite_identifier_references(
 # Fourth rule: the fixed-width span strip (bindings only).
 # ---------------------------------------------------------------------------
 
-#: Modelo 714 is withheld from this pass entirely. Its 128 within-edition
-#: collisions are repetition groups -- the same field of a repeated record block
-#: -- so the surviving name needs the generator's repetition index, which this
-#: rule does not have and must not invent. A separate step carries it.
-SPAN_STRIP_EXCLUDED_MODELOS: frozenset[str] = frozenset({"714"})
+#: The slot an id spells is normally its provider's ``field`` verbatim. Where it
+#: is instead a SEPARATOR-BOUNDED prefix of that field, the id dropped whole
+#: trailing segments -- and for a repeated record block those segments are the
+#: repetition index, so the truncated slots of one block are indistinguishable
+#: once the address leaves. The index is not missing and must not be invented:
+#: the row's own ``provider.field`` still carries it, so the surviving name
+#: restores the field in full rather than keeping the lossy prefix. The test is
+#: deliberately separator-bounded, so a slot truncated MID-WORD -- which is a
+#: display cap rather than a dropped segment, and whose remainder names no
+#: repetition -- is left to the plain strip exactly as before.
+#:
+#: Measured over the bundled corpus: 153 ids carry a separator-bounded truncated
+#: slot, every one of them modelo 714 (33 in its 2021 edition, 30 in each of
+#: 2022-2025). Restoring the field leaves 0 within-edition collisions in all five
+#: editions. The 32 mid-word cases are all modelo 390 and are unaffected.
 
 #: A fixed-width address spelled into an identifier: ``<from>-<to>``. The
 #: internal ``-`` is itself an identifier separator, so this is a segment RUN
@@ -1992,6 +2003,34 @@ def strip_span_segment(identifier: str, start: int, end: int) -> str:
     return prefix + suffix
 
 
+def restore_truncated_field_slot(new_id: str, slot: str, member: Mapping[str, Any]) -> str:
+    """Return *new_id* with a truncated trailing *slot* restored to the provider's whole ``field``.
+
+    *slot* is what the id spells after the address segment leaves. Where the
+    row's ``provider.field`` EXTENDS it across an identifier separator, the id
+    is carrying a prefix of a name the provider states in full, and the dropped
+    segments may be the repetition index that tells one member of a repeated
+    record block from another. Restoring the field is therefore not a rename:
+    it is the same name, un-truncated, taken from the row's own typed
+    declaration rather than invented by this rule.
+
+    Anything else is returned unchanged -- no provider ``field``, a slot that
+    already equals it, or a prefix that breaks mid-word, which is a display cap
+    whose remainder this rule cannot prove names a repetition.
+    """
+    provider = member.get("provider")
+    if not isinstance(provider, Mapping):
+        return new_id
+    declared = provider.get("field")
+    if not isinstance(declared, str) or declared == slot or not slot:
+        return new_id
+    if not declared.startswith(slot) or declared[len(slot)] not in _IDENTIFIER_SEPARATORS:
+        return new_id
+    if not new_id.endswith(slot):
+        return new_id
+    return new_id[: len(new_id) - len(slot)] + declared
+
+
 def edition_declared_families(revision_dir: Path, revision_id: str) -> dict[str, list[dict[str, Any]]]:
     """Merge every authored fragment below one edition into one member list per declared family.
 
@@ -2035,10 +2074,6 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
     """
     plan = SpanStripPlan(modelo=modelo)
     modelo_dir = modelos_root / modelo
-    if modelo in SPAN_STRIP_EXCLUDED_MODELOS:
-        plan.refusals.append(f"{modelo}: withheld from the span strip; its collisions need a repetition index")
-        plan.refused_modelo = True
-        return plan
     if not modelo_dir.is_dir():
         plan.refusals.append(f"{modelo}: no such modelo directory under {modelos_root}")
         plan.refused_modelo = True
@@ -2081,6 +2116,7 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 continue
             start, end, _low, _high = matching[0]
             new_id = strip_span_segment(identifier, start, end)
+            new_id = restore_truncated_field_slot(new_id, identifier[end + 1 :], member)
             if not new_id:
                 plan.refusals.append(f"{modelo} {edition} bindings {identifier}: the whole identifier is the span")
                 continue

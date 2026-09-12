@@ -1,0 +1,36 @@
+[fact]
+fact_id = "tax-domain-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "tax-domain-catalogue:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = ["ley-35-2006:art-1"]
+source_refs = ["aeat-modelo-100-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "catalogue.codes", value = "censo,irpf,iae,informative,iva,is,irnr,patrimonio,cross_tax,idsd,itf,juego,plastico,iedmt" },
+  { key = "tax_domain.censo.description", value = "Censo / structural registrations (modelo 036, 037)." },
+  { key = "tax_domain.irpf.description", value = "Impuesto sobre la Renta de las Personas Físicas." },
+  { key = "tax_domain.iae.description", value = "Impuesto sobre Actividades Económicas." },
+  { key = "tax_domain.informative.description", value = "Informative-only filings (no own liquidación)." },
+  { key = "tax_domain.iva.description", value = "Impuesto sobre el Valor Añadido." },
+  { key = "tax_domain.is.description", value = "Impuesto sobre Sociedades." },
+  { key = "tax_domain.irnr.description", value = "Impuesto sobre la Renta de no Residentes." },
+  { key = "tax_domain.patrimonio.description", value = "Impuesto sobre el Patrimonio (modelo 714)." },
+  { key = "tax_domain.cross_tax.description", value = "Retenciones / pagos a cuenta that feed both IRPF and IS." },
+  { key = "tax_domain.idsd.description", value = "Impuesto sobre Determinados Servicios Digitales (modelo 490)." },
+  { key = "tax_domain.itf.description", value = "Impuesto sobre las Transacciones Financieras (modelo 604)." },
+  { key = "tax_domain.juego.description", value = "Impuesto sobre actividades de juego (modelo 763)." },
+  { key = "tax_domain.plastico.description", value = "Impuesto especial sobre envases de plástico no reutilizables (modelo 592)." },
+  { key = "tax_domain.iedmt.description", value = "Impuesto Especial sobre Determinados Medios de Transporte (modelo 576)." },
+]

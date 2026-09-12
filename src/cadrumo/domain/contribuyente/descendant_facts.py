@@ -15,7 +15,7 @@ Stored fact paths per descendant (n = 0-based index)::
   renta_family.descendiente.{n}.acogimiento_resolucion  ISO-8601 date string or absent
   renta_family.descendiente.{n}.fallecimiento          ISO-8601 date string or absent (absent means the
                                                         descendant did not die)
-  renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
+  renta_family.descendiente.{n}.discapacidad            registry-declared grade token or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
   renta_family.descendiente.{n}.dependencia_economica   "true" / "false" or absent (absent means unset)
   renta_family.descendiente.{n}.custodia_compartida     "true" / "false" (absent means False)
@@ -49,10 +49,10 @@ refuse the whole batch rather than persist a second, divergent copy.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal, TypedDict
+from typing import Final, TypedDict
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -61,6 +61,9 @@ from ...core.identity.tax_id import tax_id_identity_token
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.text_bounds import is_calendar_month
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.schema_base import DateAxis
 from .descendant import DescendantInfo
 from .family_types import GuarderiaMonthSpend
 from .guarderia_mensual import (
@@ -81,6 +84,7 @@ _RENTAS_GRAMMAR_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
+_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-band-catalogue"
 
 _DESCENDIENTE_FLAG_KEYS = frozenset(
     {
@@ -132,16 +136,36 @@ familiar at all.
 """
 
 
-def _discapacidad_grade(value: int | None) -> Literal[0, 33, 65] | None:
-    match value:
-        case 0:
-            return 0
-        case 33:
-            return 33
-        case 65:
-            return 65
-        case _:
-            return None
+def _disability_band_declarations() -> Mapping[str, str]:
+    """Resolve descendant disability-grade vocabulary from the dated registry fact."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_DISABILITY_BAND_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ProfileAnswerTypeError("descendant disability catalogue must resolve as a mapping fact")
+    return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+
+
+def _accepted_disability_grades() -> frozenset[int]:
+    declarations = _disability_band_declarations()
+    try:
+        accepted = declarations["accepted_grades"]
+    except KeyError as exc:
+        raise ProfileAnswerTypeError("descendant disability catalogue is missing accepted_grades") from exc
+    try:
+        return frozenset(int(token.strip()) for token in accepted.split(",") if token.strip())
+    except ValueError as exc:
+        raise ProfileAnswerTypeError("descendant disability catalogue has invalid accepted_grades") from exc
+
+
+def _discapacidad_grade(value: int | None) -> int | None:
+    if value is None:
+        return None
+    return value if value in _accepted_disability_grades() else None
 
 
 def descendant_facts_from_list(
@@ -274,7 +298,7 @@ class _CivilFields(TypedDict):
     inscripcion_registro_civil_date: date | None
     acogimiento_resolucion_date: date | None
     death_date: date | None
-    discapacidad_grado: Literal[0, 33, 65] | None
+    discapacidad_grado: int | None
 
 
 class _FamilyFields(TypedDict):
@@ -389,8 +413,8 @@ def _stored_civil_fields(row: dict[str, str]) -> _CivilFields:
     fallecimiento_raw = row.get("fallecimiento")
     discapacidad_raw = row.get("discapacidad")
     disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
-    if disc_val is not None and disc_val not in (0, 33, 65):
-        disc_val = 0
+    if disc_val is not None and disc_val not in _accepted_disability_grades():
+        raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
     return {
         "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
         "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
@@ -657,7 +681,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              permanente placement, and retained on an adoptado
                              record so a fostered-then-adopted child's window
                              is capped at three periods rather than restarted.
-      DISCAPACIDAD=0|33|65   (optional) discapacidad grade
+      DISCAPACIDAD=<registry-declared-grade>   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
       DEPENDENCIA=true|false (optional) the taxpayer contributes to this
                              descendant's upkeep without cohabiting. Omit to
@@ -728,8 +752,10 @@ def _flag_civil_fields(parts: dict[str, str]) -> _CivilFields:
     fallecimiento_raw = parts.get("FALLECIMIENTO")
     disc_raw = parts.get("DISCAPACIDAD")
     discapacidad_grado: int | None = int(disc_raw) if disc_raw is not None else None
-    if discapacidad_grado not in (None, 0, 33, 65):
-        raise ProfileAnswerTypeError(f"DISCAPACIDAD must be 0, 33, or 65; got {discapacidad_grado!r}")
+    if discapacidad_grado is not None and discapacidad_grado not in _accepted_disability_grades():
+        raise ProfileAnswerTypeError(
+            f"DISCAPACIDAD carries an unsupported governed grade: {discapacidad_grado!r}",
+        )
     return {
         "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
         "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
