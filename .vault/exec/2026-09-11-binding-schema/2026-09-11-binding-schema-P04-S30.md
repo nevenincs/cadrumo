@@ -101,3 +101,19 @@ path for the screen to read is
 - `verify:` `uv run --no-sync ruff check` + `ruff format` on both files -> `pass` (exit 0)
 - `verify:` `uv run --no-sync ty check` on both files -> `All checks passed` (exit 0)
 - `verify:` `uv run --no-sync python -m dev.registry.strip_restated_bindings --all --dry-run --report ...` -> removable=523, kept_differs=1701, restated_after_lifting=1265, restated_ignoring_refs=1911, refusals=45 (exit 0)
+
+- deferred bindings editions closed and modelo 180 lifted: the four editions reported
+  underivable for bindings now carry an explicit `source_default_dispositions.bindings`
+  disposition, and 180/2023-y-siguientes was lifted through the owning tool for both the
+  bindings and formulas families.
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/revision.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/revision.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2019-2022/revision.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/202/revisions/2023-2024/revision.toml`
+- `M` `src/cadrumo/_data/registry/aeat/modelos/180/revisions/2023-y-siguientes/revision.toml`
+- `verify:` `lift_family_source_defaults --dry-run` over 151 and 202 -> 4 refusals, all
+  `no leading source_refs run is shared by two rows` for bindings (exit 0)
+- `verify:` `lift_family_source_defaults --apply --modelo 180` -> manifest carries
+  `binding_source_refs` and `formula_source_refs`; re-run plans 0 (exit 0)
+- `verify:` `load_modelo_directory` over modelos 151, 202, 180 -> all load (exit 0)
+- `verify:` `edition_delta_status` -> `family_default_undeclared` clean (exit 0)

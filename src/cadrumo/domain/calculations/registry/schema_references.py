@@ -42,6 +42,7 @@ __all__ = [
     "DateSupportEnvelope",
     "LegalReference",
     "OrderedSupportEnvelope",
+    "PeriodOverride",
     "PeriodScopedValidityWindow",
     "PeriodSelector",
     "RegistryExternalLink",
@@ -197,13 +198,60 @@ def _validate_period_selector_years(
     _validate_period_selector_year_bounds(year_from, year_to)
 
 
+class PeriodOverride(RegistryModel):
+    """The period surface one covered filing year serves, in place of the flat tuple.
+
+    Authored when a legal boundary falls inside a year rather than between two
+    of them: a design that applies from a monthly period but only from a later
+    quarterly one serves a strict subset of its own periods in the transition
+    year, and a single flat tuple cannot state that.
+    """
+
+    year: int
+    periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
+
+    @field_validator("periods")
+    @classmethod
+    def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("period_override periods must be unique")
+        return value
+
+
+def _validate_period_overrides(selector: PeriodSelector) -> None:
+    """Reject repeated override years and any override outside the covered span."""
+    seen: set[int] = set()
+    for override in selector.period_overrides:
+        if override.year in seen:
+            raise RegistryValidationError(
+                f"period_selector period_overrides must declare each year once; got {override.year} twice"
+            )
+        seen.add(override.year)
+        if not selector.includes_year(override.year):
+            raise RegistryValidationError(
+                f"period_selector period_overrides year {override.year} lies outside the selector's covered years"
+            )
+
+
 class PeriodSelector(RegistryModel):
-    """Select filing years and periods using explicit years or an inclusive range."""
+    """Select filing years and periods using explicit years or an inclusive range.
+
+    ``periods`` is the surface every covered year serves. A year named by
+    ``period_overrides`` REPLACES that tuple with its own -- typically a strict
+    subset, for a mid-year legal boundary -- and the override's periods need not
+    be a subset of ``periods``, because a transition year can also gain a token
+    the steady state does not carry. Every override year must itself be covered
+    by ``years`` or the ``year_from``/``year_to`` range, and no year may be
+    overridden twice. Read the surface through :meth:`periods_for_year`
+    wherever the filing year is known; ``declared_periods`` is the union for the
+    year-less token lookups.
+    """
 
     years: tuple[int, ...] = ()
     year_from: int | None = None
     year_to: int | None = None
     periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
+    period_overrides: tuple[PeriodOverride, ...] = ()
 
     @field_validator("periods")
     @classmethod
@@ -215,6 +263,7 @@ class PeriodSelector(RegistryModel):
     @model_validator(mode="after")
     def _validate_year_selector(self) -> PeriodSelector:
         _validate_period_selector_years(years=self.years, year_from=self.year_from, year_to=self.year_to)
+        _validate_period_overrides(self)
         return self
 
     def includes_year(self, year: int) -> bool:
@@ -224,6 +273,23 @@ class PeriodSelector(RegistryModel):
         if self.year_from is None:
             return False
         return year >= self.year_from and (self.year_to is None or year <= self.year_to)
+
+    def periods_for_year(self, year: int) -> tuple[RegistrySelectorPeriodCode, ...]:
+        """Return the period surface this selector serves in one filing year."""
+        for override in self.period_overrides:
+            if override.year == year:
+                return override.periods
+        return self.periods
+
+    @property
+    def declared_periods(self) -> tuple[RegistrySelectorPeriodCode, ...]:
+        """Every period token this selector declares in any covered year, in declared order."""
+        if not self.period_overrides:
+            return self.periods
+        seen = dict.fromkeys(self.periods)
+        for override in self.period_overrides:
+            seen.update(dict.fromkeys(override.periods))
+        return tuple(seen)
 
 
 class RegistryValidityWindow(RegistryModel):
