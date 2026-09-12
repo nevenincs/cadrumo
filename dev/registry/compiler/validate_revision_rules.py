@@ -21,9 +21,8 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_deadlines import filing_schedule_period_kind_mismatches
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.temporal import select_revision
-
-from .validate_relation_periods import period_selectors_overlap as _period_selectors_overlap
 
 _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"
 
@@ -37,7 +36,7 @@ def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
                 # Later revisions are ordered by valid_from, so no subsequent
                 # revision can overlap this bounded earlier window either.
                 break
-            if _period_selectors_overlap(earlier.period_selector, later.period_selector):
+            if period_selectors_overlap(earlier.period_selector, later.period_selector):
                 failures.append(
                     f"modelo {modelo.id}: revisions {earlier.id!r} and {later.id!r} overlap on period selector",
                 )
@@ -230,10 +229,6 @@ def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
         if revision.formulas:
             failures.append(
                 f"{prefix}: informative modelo must not declare calculation formulas (got {len(revision.formulas)})",
-            )
-        if revision.relations:
-            failures.append(
-                f"{prefix}: informative modelo must not declare cross-model relations (got {len(revision.relations)})",
             )
         for casilla in revision.casillas:
             if casilla.input_kind not in {InputKind.INFORMATIONAL, InputKind.MANUAL}:

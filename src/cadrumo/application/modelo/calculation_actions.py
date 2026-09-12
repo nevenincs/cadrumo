@@ -79,6 +79,7 @@ from ...domain.calculations.registry.ids import (
 from ...domain.calculations.registry.iva_wallet_carry_targets import (
     iva_wallet_owned_binding_ids_for_revision,
 )
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
@@ -1936,4 +1937,3 @@ def _calculation_revision_in_repository_bucket(
             context={"calculation_revision_id": calculation_revision_id},
         )
     return revision, work_unit
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
