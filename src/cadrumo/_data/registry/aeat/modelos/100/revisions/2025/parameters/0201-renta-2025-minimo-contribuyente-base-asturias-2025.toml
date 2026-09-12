@@ -3,7 +3,7 @@
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
 # incrementos por edad autonómicos todavía no se modelan en esta revisión.
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-contribuyente-base-asturias-2025"
+id = "renta-minimo-contribuyente-base-asturias"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["asturias-dl-2-2014:art-2-bis"]

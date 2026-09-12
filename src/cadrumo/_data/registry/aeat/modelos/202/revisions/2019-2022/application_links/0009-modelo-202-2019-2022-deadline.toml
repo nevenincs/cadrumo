@@ -1,5 +1,5 @@
 [[revisions.2019-2022.application_links]]
-id = "modelo-202-2019-2022-deadline"
+id = "modelo-202-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true

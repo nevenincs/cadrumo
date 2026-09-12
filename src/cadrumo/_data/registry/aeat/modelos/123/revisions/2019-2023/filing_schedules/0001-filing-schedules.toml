@@ -4,7 +4,7 @@
 # it ("Grandes empresas: ... 123 ...") is out of this revision's scope rather
 # than a schedule it could express.
 [[revisions."2019-2023".filing_schedules]]
-id = "modelo-123-2019-2023-trimestral"
+id = "modelo-123-trimestral"
 period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 profile_condition_mode = "all"

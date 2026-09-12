@@ -1095,6 +1095,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        ("cadrumo.adapters.persistence.profile.calculation_revision_override_migration.OrphanedRelationOverrideError"),
+        ErrorCode(
+            code="REFUSED_MODELO_CALCULATION_OVERRIDE_UNRESOLVABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.fail.fail_modelo_calculation_revision_persistence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",

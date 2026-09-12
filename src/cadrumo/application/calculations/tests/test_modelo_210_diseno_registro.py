@@ -43,7 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO = "210"
 _YEAR = 2025
-_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _DR_SOURCE = "boe-modelo-210-diseno-registro-2011"
 
 # The official numbered liquidación boxes on record T21001, page 2.

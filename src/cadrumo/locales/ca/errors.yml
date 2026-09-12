@@ -71,6 +71,12 @@ errors:
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
       no té exercici de declaració.'
+    binding_channel_ambiguous: Els vincles {binding_ids} s'han proporcionat tant pel
+      canal booleà com pel canal Decimal.
+    binding_channel_not_boolean: Els vincles {binding_ids} s'han proporcionat pel
+      canal booleà, però no declaren el contracte de valor booleà.
+    binding_relation_channel_conflict: El vincle {binding_id} té valors incompatibles
+      als canals de vincle i de relació.
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.

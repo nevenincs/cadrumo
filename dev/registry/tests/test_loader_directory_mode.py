@@ -335,7 +335,7 @@ reviewed_by = "registry-test"
 """.lstrip(),
         encoding="utf-8",
     )
-    write_minimal_shared_catalogues(legal_dir, years=(2026,))
+    write_minimal_shared_catalogues(legal_dir, floor=2026, horizon=2026)
 
     parameters = load_shared_catalogues(tmp_path).parameters
 
@@ -394,7 +394,7 @@ def test_registry_tree_cache_invalidates_when_a_revision_directory_is_added_insi
     legal_dir = registry_root / "legal"
     legal_dir.mkdir(parents=True)
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2025]\n\n"
+        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
         "[sociedades_annual_manual_coverage]\n"
         'dispositions = [{ year = 2025, status = "unpublished", '
         'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '

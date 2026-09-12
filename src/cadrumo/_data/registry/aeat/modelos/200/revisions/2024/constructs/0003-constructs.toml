@@ -1,5 +1,5 @@
 [[revisions."2024".constructs]]
-id = "modelo-200-2024-foundation"
+id = "modelo-200-foundation"
 
 casilla_ids = [
     "01949",

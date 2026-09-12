@@ -1,5 +1,5 @@
 [[revisions.2023-2024.application_links]]
-id = "modelo-202-2023-2024-approval"
+id = "modelo-202-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true

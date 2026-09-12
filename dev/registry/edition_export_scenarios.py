@@ -30,6 +30,15 @@ capital-goods regularisation parameters (for the scenario period's last day,
 which lies inside the edition's window) and the prior year's snapshot the
 prorrata register carries forward.
 
+Modelo 390
+----------
+The annual resumen anual files one period, ``0A``, so each edition is rendered
+for its own year. Its repeated page rows are source-shaped arrivals the
+producer snapshot owns rather than draft inputs, and none is supplied: every
+repeated record is therefore empty, and the compared bytes judge the edition's
+base layout and envelope. The 2023 edition names no predecessor, so the gate
+does not require its bytes.
+
 Where it stops
 --------------
 - One quarterly period per edition. A period whose facts would change which
@@ -117,9 +126,11 @@ from .edition_round_trip import SYNTHETIC_TAX_ID, EditionExportScenario
 __all__ = [
     "M131_SCENARIO_PERIODS",
     "M303_SCENARIO_PERIODS",
+    "M390_SCENARIO_PERIODS",
     "edition_export_scenarios",
     "m131_export_scenario",
     "m303_export_scenario",
+    "m390_export_scenario",
 ]
 
 #: The quarter each Modelo 303 edition is rendered for; each selects exactly that edition.
@@ -130,6 +141,12 @@ M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "1T"),
     "2026-y-siguientes": Period.from_year_and_code(2026, "1T"),
 }
+#: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
+M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2022": Period.from_year_and_code(2022, "0A"),
+    "2024": Period.from_year_and_code(2024, "0A"),
+    "2025": Period.from_year_and_code(2025, "0A"),
+}
 #: The quarter each Modelo 131 edition is rendered for.
 M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2025": Period.from_year_and_code(2025, "1T"),
@@ -139,6 +156,11 @@ _PRESENTER: Final = PresenterIdentity(tax_id="00000000T", full_name="Gestoría P
 _TAXPAYER: Final = TaxpayerIdentityFacts(legal_name=None, given_name="Ana", surnames="Prueba", full_name="Ana Prueba")
 #: The Spanish IBAN published as a format example; it identifies no real account.
 _CHARGE_IBAN: Final = "ES9121000418450200051332"
+_M390_PRODUCT_SOFTWARE_IDENTITY: Final = AeatProductSoftwareIdentity(
+    program_identifier="C390",
+    developer_tax_id="Y0000001S",
+    evidence=(AeatProductSoftwareEvidence(reference="edition-round-trip:m390-software", digest="b" * 64),),
+)
 _PRODUCT_SOFTWARE_IDENTITY: Final = AeatProductSoftwareIdentity(
     program_identifier="C303",
     developer_tax_id="Y0000001S",
@@ -378,6 +400,46 @@ def _m303_differentiated_contributions() -> tuple[IvaDifferentiatedDeductionCont
     )
 
 
+# ── modelo 390 ───────────────────────────────────────────────────────────────
+
+
+def m390_export_scenario(period: Period) -> EditionExportScenario:
+    """A Modelo 390 annual scenario: the resumen anual's own declared figures.
+
+    390 is the annual IVA summary. It carries no payment or refund, so the
+    filing disposition is the neutral one and no account is selected; the
+    repeated page rows are the source-shaped arrivals the producer snapshot
+    owns, and none is supplied here, so every repeated record is empty and the
+    bytes judge the edition's base layout.
+    """
+    return EditionExportScenario(
+        period=period,
+        inputs={},
+        producer_snapshot=_m390_producer_snapshot,
+        product_software_identity=_M390_PRODUCT_SOFTWARE_IDENTITY,
+    )
+
+
+def _m390_producer_snapshot() -> FilingProducerSnapshot:
+    return build_filing_producer_snapshot(
+        modelo=Modelo.M390,
+        taxpayer_tax_id=SYNTHETIC_TAX_ID,
+        taxpayer_identity=_TAXPAYER,
+        presenter=_PRESENTER,
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.NEGATIVA,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
 # ── modelo 131 ──────────────────────────────────────────────────────────────
 
 
@@ -388,11 +450,11 @@ def m131_export_scenario(period: Period) -> EditionExportScenario:
         inputs={
             "03": Decimal("1000"),
             "05": Decimal("500"),
-            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
-            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.dpa.013-016.epigrafe-iae": ["722"],
-            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
-            "modelo-131.did.012-045.iban": _CHARGE_IBAN,
+            "modelo-131.page1.actividad-1-epigrafe": "722",
+            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.dpa.epigrafe-iae": ["722"],
+            "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
+            "modelo-131.did.iban": _CHARGE_IBAN,
         },
         producer_snapshot=_m131_producer_snapshot,
     )
@@ -422,4 +484,5 @@ def _m131_producer_snapshot() -> FilingProducerSnapshot:
 _DECLARED_SCENARIOS: Final[Mapping[str, tuple[Callable[[Period], EditionExportScenario], Mapping[str, Period]]]] = {
     str(Modelo.M303): (m303_export_scenario, M303_SCENARIO_PERIODS),
     str(Modelo.M131): (m131_export_scenario, M131_SCENARIO_PERIODS),
+    str(Modelo.M390): (m390_export_scenario, M390_SCENARIO_PERIODS),
 }

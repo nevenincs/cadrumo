@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from ...core.modelo import Modelo
 from ...core.period import StandardPeriodCode
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import (
@@ -32,10 +34,6 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.modelos.work_unit import WorkUnit
-
-_M210_AGRUPACION_LEGAL_REF = "orden-eha-3316-2010:art-2"
-_M210_AGRUPACION_SOURCE_REF = "boe-modelo-210-2024-form-layout"
-
 
 def validate_m210_agrupacion_renta_rows_for_calculation(
     *,
@@ -122,6 +120,12 @@ def m210_agrupacion_renta_verification_findings(
             m210_official_tipo_renta_code=revision.m210_official_tipo_renta_code,
         )
     except ModeloError as exc:
+        modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M210.value)
+        selected_revision = select_revision(
+            modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        )
         return (
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -132,8 +136,8 @@ def m210_agrupacion_renta_verification_findings(
                     "modelo_id": str(work_unit.modelo),
                     "period_code": work_unit.period.registry_token,
                 },
-                legal_refs=(_M210_AGRUPACION_LEGAL_REF,),
-                source_refs=(_M210_AGRUPACION_SOURCE_REF,),
+                legal_refs=tuple(selected_revision.legal_refs),
+                source_refs=tuple(selected_revision.source_refs),
             ),
         )
     return ()

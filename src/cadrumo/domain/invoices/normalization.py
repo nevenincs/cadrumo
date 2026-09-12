@@ -12,6 +12,7 @@ from decimal import Decimal
 from typing import Final, cast
 
 from ...core.decimal.coercion import coerce_decimal
+from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
@@ -205,7 +206,7 @@ def raise_first_invoice_violation(violations: Iterable[tuple[bool, str]]) -> Non
 
 def require_optional_non_negative(value: Decimal | None, message: str) -> None:
     """Raise ``message`` when ``value`` is present and negative."""
-    if value is not None and value < Decimal("0"):
+    if value is not None and value < ZERO:
         raise InvoiceValidationError(message)
 
 

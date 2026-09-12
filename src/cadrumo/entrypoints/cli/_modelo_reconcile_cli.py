@@ -126,6 +126,12 @@ def reconcile_pull_verb(
         capture_justificante_snapshot,
         reconcile_capture,
     )
+    from ._app_live_justificante_composition import (
+        build_justificante_authenticity_verifier,
+        build_justificante_capture_service,
+        build_justificante_live_read_port,
+        build_justificante_registration_ports,
+    )
 
     resolved_actor = actor.strip() if actor else _resolve_default_actor_value()
     _require_profile()
@@ -134,7 +140,14 @@ def reconcile_pull_verb(
     )
     snapshot = asyncio.run(
         capture_justificante_snapshot(
-            bucket_id=unit.bucket_id, modelo=str(unit.modelo), year=unit.filing_year, period=unit.period
+            bucket_id=unit.bucket_id,
+            modelo=str(unit.modelo),
+            year=unit.filing_year,
+            period=unit.period,
+            service=build_justificante_capture_service(unit.bucket_id),
+            read_port=build_justificante_live_read_port(),
+            registration_ports=build_justificante_registration_ports(),
+            verifier=build_justificante_authenticity_verifier(),
         )
     )
     report = reconcile_capture(work_unit_id=unit.work_unit_id, snapshot=snapshot, actor=resolved_actor)

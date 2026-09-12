@@ -837,8 +837,7 @@ class ModeloRevision(RegistryModel):
     verification_predicates: Annotated[tuple[VerificationPredicateDefinition, ...], SCHEMA_FAMILY] = ()
     continuidad_validation: ContinuidadValidationModeField = ContinuidadValidationMode.ADVISORY
     casilla_continuidad_evolutions: Annotated[tuple[CasillaContinuidadEvolutionDefinition, ...], CHAIN_FAMILY] = ()
-    binding_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
-    formula_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
+    identifier_evolutions: Annotated[tuple[IdentifierEvolution, ...], CHAIN_FAMILY] = ()
     authority_grade: Annotated[RegistryAuthorityGradeField | None, MANIFEST_ONLY] = None
     family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
@@ -1154,18 +1153,59 @@ def _union_across_expectations[T](
 
 
 class SupportedFilingYearsCatalogue(RegistryModel):
-    """The registry's sole declaration of filing years the product supports."""
+    """The registry's sole declaration of the filing years the product supports.
 
-    years: tuple[int, ...] = Field(min_length=1)
+    Authored as bounds rather than an enumeration, because the two ends of the
+    span do not carry the same force. ``floor`` is a hard gate: nothing resolves
+    below it, and a request below it is outside what the product claims rather
+    than a coverage gap somebody should close. ``horizon`` is the last year the
+    corpus carries authored coverage for, and is deliberately not a gate -- a
+    year above it remains answerable by carrying the newest declared revision
+    forward, which a list of years has no way to say. ``hard_ceiling`` closes
+    that open end where the product must stop somewhere, and stays absent where
+    it need not.
 
-    @field_validator("years")
-    @classmethod
-    def _years_are_unique_and_ordered(cls, value: tuple[int, ...]) -> tuple[int, ...]:
-        if any(year < 2000 or year > 2099 for year in value):
-            raise RegistryValidationError("supported filing years must be between 2000 and 2099")
-        if tuple(sorted(set(value))) != value:
-            raise RegistryValidationError("supported filing years must be unique and in ascending order")
-        return value
+    The span is contiguous by construction. A product that supports 2022 and
+    2024 but not 2023 is not a state the law produces; the enumerated form could
+    express it only by accident, and nothing ever did.
+
+    :attr:`years` still enumerates the span, derived now rather than authored,
+    so a consumer asking which years are supported keeps asking the same way. It
+    is a plain property rather than a computed field on purpose: the published
+    artifact is re-validated against this model on every read, and a serialised
+    derivation would be refused there as an unexpected member.
+    """
+
+    floor: FilingYear
+    horizon: FilingYear
+    hard_ceiling: FilingYear | None = None
+
+    @model_validator(mode="after")
+    def _bounds_are_ordered(self) -> SupportedFilingYearsCatalogue:
+        if self.horizon < self.floor:
+            raise RegistryValidationError("supported filing years horizon must be on or after floor")
+        if self.hard_ceiling is not None and self.hard_ceiling <= self.horizon:
+            raise RegistryValidationError(
+                "supported filing years hard_ceiling must be after horizon; a ceiling at or below "
+                "the horizon would close a span the corpus already declares coverage for"
+            )
+        return self
+
+    @property
+    def years(self) -> tuple[int, ...]:
+        """Enumerate the supported span, both bounds inclusive."""
+        return tuple(range(self.floor, self.horizon + 1))
+
+    def admits_filing_year(self, filing_year: int) -> bool:
+        """Return whether a filing year is inside the product's hard gates.
+
+        Above :attr:`horizon` is admitted while no ``hard_ceiling`` is declared:
+        the newest revision carries forward, so the year is answerable even
+        though no revision names it. Below :attr:`floor` is never admitted.
+        """
+        if filing_year < self.floor:
+            return False
+        return self.hard_ceiling is None or filing_year <= self.hard_ceiling
 
 
 class SociedadesAnnualManualCoverageStatus(StrEnum):

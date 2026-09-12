@@ -10,6 +10,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ..compiler.authority import compile_registry_tree
 from ..compiler.validator import RegistryValidator
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 
 def test_validator_rejects_missing_relationless_direct_settlement_classification() -> None:
     """The direct same-modelo carries cannot lose their declared settlement treatment."""
@@ -37,6 +39,6 @@ def test_validator_rejects_missing_relationless_direct_settlement_classification
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"previous_filing source modelo '130' has no dependency classification",
+        match=r"binding source modelo '130' has no dependency classification",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)

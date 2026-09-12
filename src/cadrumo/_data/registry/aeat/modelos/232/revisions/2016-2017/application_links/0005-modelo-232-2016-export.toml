@@ -1,5 +1,5 @@
 [[revisions."2016-2017".application_links]]
-id = "modelo-232-2016-export"
+id = "modelo-232-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true

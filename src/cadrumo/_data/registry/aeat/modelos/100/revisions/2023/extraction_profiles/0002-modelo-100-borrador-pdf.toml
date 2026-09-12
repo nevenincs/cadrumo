@@ -1,5 +1,5 @@
 [[revisions."2023".extraction_profiles]]
-id = "modelo-100-2023-borrador-pdf"
+id = "modelo-100-borrador-pdf"
 surface = "borrador_pdf"
 artefact_kind = "modelo_100_renta_borrador"
 accepted_artefact_kinds = ["declaration_pdf"]

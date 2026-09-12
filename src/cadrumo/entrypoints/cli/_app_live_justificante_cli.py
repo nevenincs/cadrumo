@@ -39,6 +39,12 @@ def justificante_pull(
     same application boundary before emitting :class:`JustificanteCaptureResult`.
     """
     from ...application.live.justificante import capture_justificante_snapshot_outcome
+    from ._app_live_justificante_composition import (
+        build_justificante_authenticity_verifier,
+        build_justificante_capture_service,
+        build_justificante_live_read_port,
+        build_justificante_registration_ports,
+    )
     from ._app_live_justificante_payloads import JustificanteCaptureResult
 
     bucket_id = active_bucket_id_or_refuse()
@@ -49,6 +55,10 @@ def justificante_pull(
             modelo=modelo,
             year=year,
             period=_period_option(period, year=year),
+            service=build_justificante_capture_service(bucket_id),
+            read_port=build_justificante_live_read_port(),
+            registration_ports=build_justificante_registration_ports(),
+            verifier=build_justificante_authenticity_verifier(),
         ),
     )
     persisted = outcome.snapshot
@@ -102,11 +112,11 @@ def justificante_list(ctx: typer.Context) -> None:
     Rows are :class:`JustificanteSnapshotSummaryPayload` projections emitted in
     a :class:`JustificanteListResult` envelope.
     """
-    from ...application.live.justificante import JustificanteCaptureSnapshotService
+    from ._app_live_justificante_composition import build_justificante_capture_service
     from ._app_live_justificante_payloads import JustificanteListResult, JustificanteSnapshotSummaryPayload
 
     bucket_id = active_bucket_id_or_refuse()
-    rows = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
+    rows = build_justificante_capture_service(bucket_id).list_snapshots()
     result = JustificanteListResult(
         bucket_id=bucket_id,
         count=len(rows),
@@ -141,11 +151,11 @@ def justificante_view(
     The snapshot is resolved through :class:`JustificanteCaptureSnapshotService`
     and projected as :class:`JustificanteViewResult`.
     """
-    from ...application.live.justificante import JustificanteCaptureSnapshotService
+    from ._app_live_justificante_composition import build_justificante_capture_service
     from ._app_live_justificante_payloads import JustificanteViewResult
 
     bucket_id = active_bucket_id_or_refuse()
-    record = JustificanteCaptureSnapshotService(bucket_id=bucket_id).show(snapshot_id)
+    record = build_justificante_capture_service(bucket_id).show(snapshot_id)
     result = JustificanteViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,

@@ -8,7 +8,7 @@
 # FILENAME rather than in a field, which is the same gap from the other side.
 
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-descendiente-edad-maxima"
+id = "renta-minimo-descendiente-edad-maxima"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-58"]
@@ -25,7 +25,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-menor-tres-edad-maxima"
+id = "renta-minimo-menor-tres-edad-maxima"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-58"]
@@ -42,7 +42,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-custodia-compartida-prorrata"
+id = "renta-minimo-custodia-compartida-prorrata"
 data_type = "ratio"
 unit = "fraction"
 legal_refs = ["ley-35-2006:art-61"]
@@ -59,7 +59,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-descendientes-named-detail-limit"
+id = "renta-minimo-descendientes-named-detail-limit"
 data_type = "integer"
 unit = "diagnostic_items"
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]

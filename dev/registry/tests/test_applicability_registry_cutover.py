@@ -166,7 +166,7 @@ def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
     # filing years, so a scratch tree omitting it fails to load before the
     # applicability rule this test mutates can be observed at all.
     (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nyears = [2025]\n\n"
+        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
         "[sociedades_annual_manual_coverage]\n"
         'dispositions = [{ year = 2025, status = "unpublished", official_locator = "https://example.com/manuals", observed_at = 2026-09-10, acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
         encoding="utf-8",

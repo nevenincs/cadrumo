@@ -321,8 +321,8 @@ def test_modelo_193_relation_prefill_aggregates_123_quarters(tmp_path: Path) -> 
     # RET-1: decl.total-perceptores is now a distinct-NIF count from the retención
     # store, so the perceptores relation is retired; only base/retenciones sum M123.
     assert "modelo-193-rel-123-perceptores-anual" not in resolved
-    assert resolved["modelo-193-rel-123-base-anual"] == expected[_M123_BASE_TOTAL_CASILLA]
-    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected[_M123_RETENCIONES_TOTAL_CASILLA]
+    assert resolved["modelo-193-123-base-anual"] == expected[_M123_BASE_TOTAL_CASILLA]
+    assert resolved["modelo-193-123-retenciones-anual"] == expected[_M123_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_193_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
@@ -343,8 +343,8 @@ def test_modelo_193_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         item.relation: item.value for item in prefill.values if item.value is not None
     }
     assert "modelo-193-rel-123-perceptores-anual" not in resolved
-    assert resolved["modelo-193-rel-123-base-anual"] == expected_n1[_M123_BASE_TOTAL_CASILLA]
-    assert resolved["modelo-193-rel-123-retenciones-anual"] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
+    assert resolved["modelo-193-123-base-anual"] == expected_n1[_M123_BASE_TOTAL_CASILLA]
+    assert resolved["modelo-193-123-retenciones-anual"] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 
 
 def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:

@@ -43,7 +43,7 @@ See Also:
         continues from.
     ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0294-renta-2025-eo-agraria-reducciones-fase-4a.toml``
         Registry-authored Fase 4ª formula chain under test.
-    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-2025-eo-agraria-reduccion-irregularidad.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0295-renta-eo-agraria-reduccion-irregularidad.toml``
         Registry-authored Fase 5ª irregularidad reduction chain under test.
 """
 
@@ -58,6 +58,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..formula_runtime import calculate_registry_snapshot
+from ..relations import relation_prefill_bindings_for_period
 from ._published_authority import artifact_components
 from .snapshot_support import build_snapshot
 
@@ -119,7 +120,7 @@ def _neutral_binding_values() -> dict[str, Decimal]:
         # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-marriage-full-year": Decimal("0"),
         "renta-profile-marriage-month-start": Decimal("0"),
@@ -158,9 +159,12 @@ def _run_calculation(
         snapshot,
         inputs=inputs,
         binding_values=_neutral_binding_values(),
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        relation_values={relation.id: Decimal("0") for relation in revision.relations},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            binding.id: Decimal("0")
+            for binding, _provider in relation_prefill_bindings_for_period(revision, period=snapshot.period)
+        },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
         date_context={"filing_period": date(2025, 12, 31)},
     )
     return calculation.values

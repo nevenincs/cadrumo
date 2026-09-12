@@ -1,5 +1,5 @@
 [[revisions."2023".workbook_parity_refs]]
-id = "modelo-100-2023-record-design-layout"
+id = "modelo-100-record-design-layout"
 workbook_source = "aeat-dr-100-2023-xsd"
 fixture_id = "modelo-100-2023-record-design"
 formula_coverage = "record_design_layout"

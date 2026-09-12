@@ -54,7 +54,6 @@ from .errors import DeadlineValidationError
 
 HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
 HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publication"
-_HOLIDAY_SHIFT_LEGAL_REF = "ley-39-2015:art-30.5"
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import ValidatedRegistryAuthority

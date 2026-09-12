@@ -62,6 +62,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -209,7 +210,10 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"
     }
     binding_values.update(carry)
-    relation_values: dict[RelationId, Decimal] = {relation.id: Decimal("0") for relation in snapshot.revision.relations}
+    relation_values: dict[RelationId, Decimal] = {
+        binding.id: Decimal("0")
+        for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+    }
 
     work_repo = WorkUnitCatalogueRepository()
     calc_repo = CalculationRevisionCatalogueRepository()

@@ -80,8 +80,8 @@ def _profile_bindings() -> list[Any]:
 def _full_m100_profile() -> UserProfileRecord:
     """A UserProfileRecord populated for every profile_key appearing in M100 2025 bindings.
 
-    The ``profile_keys`` / display-name bindings (0007 renta-2025-profile-display-name,
-    0014 renta-2025-profile-spouse-display-name) require multiple keys; both
+    The ``profile_keys`` / display-name bindings (0007 renta-profile-display-name,
+    0014 renta-profile-spouse-display-name) require multiple keys; both
     ``identity.surnames`` / ``identity.name`` and ``renta_spouse.surnames`` /
     ``renta_spouse.name`` are included.
 
@@ -94,46 +94,46 @@ def _full_m100_profile() -> UserProfileRecord:
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
-            # 0006 renta-2025-profile-tax-id
+            # 0006 renta-profile-tax-id
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            # 0007 renta-2025-profile-display-name (profile_keys form)
+            # 0007 renta-profile-display-name (profile_keys form)
             UserProfileFact(path="identity.surnames", value="García López"),
             UserProfileFact(path="identity.name", value="Ana"),
-            # 0008 renta-2025-profile-tax-residence-ccaa (profile_model form)
+            # 0008 renta-profile-tax-residence-ccaa (profile_model form)
             UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
             # 0009 renta-profile-declaration-type
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            # 0010 renta-2025-profile-taxpayer-sex
+            # 0010 renta-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
-            # 0011 renta-2025-profile-marital-status
+            # 0011 renta-profile-marital-status
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             # 0045 renta-profile-marriage-full-year (derived from marriage_date at bind time)
             # 0046 renta-profile-marriage-month-start
             # 0047 renta-profile-marriage-month-end
             UserProfileFact(path="renta_taxpayer.marriage_date", value=date(2023, 6, 15)),
-            # 0012 renta-2025-profile-taxpayer-birth-date
+            # 0012 renta-profile-taxpayer-birth-date
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            # 0013 renta-2025-profile-spouse-tax-id
+            # 0013 renta-profile-spouse-tax-id
             UserProfileFact(path="renta_spouse.tax_id", value="98765432B"),
-            # 0014 renta-2025-profile-spouse-display-name (profile_keys form)
+            # 0014 renta-profile-spouse-display-name (profile_keys form)
             UserProfileFact(path="renta_spouse.surnames", value="Martínez"),
             UserProfileFact(path="renta_spouse.name", value="Carlos"),
-            # 0015 renta-2025-profile-spouse-birth-date
+            # 0015 renta-profile-spouse-birth-date
             UserProfileFact(path="renta_spouse.birth_date", value=date(1978, 7, 22)),
-            # 0016 renta-2025-profile-spouse-sex
+            # 0016 renta-profile-spouse-sex
             UserProfileFact(path="renta_spouse.sex", value="M"),
-            # 0017 renta-2025-profile-taxpayer-disability-grade
+            # 0017 renta-profile-taxpayer-disability-grade
             UserProfileFact(path="renta_taxpayer.disability_grade", value="0"),
-            # 0018 renta-2025-profile-taxpayer-death-date (omitted — anti-tautology target)
-            # 0019 renta-2025-profile-spouse-disability-grade
+            # 0018 renta-profile-taxpayer-death-date (omitted — anti-tautology target)
+            # 0019 renta-profile-spouse-disability-grade
             UserProfileFact(path="renta_spouse.disability_grade", value="0"),
-            # 0020 renta-2025-profile-spouse-non-resident-irpf
+            # 0020 renta-profile-spouse-non-resident-irpf
             UserProfileFact(path="renta_spouse.non_resident_irpf", value=False),
-            # 0021 renta-2025-profile-spouse-eu-eea-resident
+            # 0021 renta-profile-spouse-eu-eea-resident
             UserProfileFact(path="renta_spouse.eu_eea_resident", value=False),
-            # 0022 renta-2025-profile-spouse-eu-eea-country
+            # 0022 renta-profile-spouse-eu-eea-country
             UserProfileFact(path="renta_spouse.eu_eea_country", value="DE"),
-            # 0023 renta-2025-profile-family-descendants-eu-eea-deduction
+            # 0023 renta-profile-family-descendants-eu-eea-deduction
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             # 0024 renta-profile-family-minor-children-in-unit
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
@@ -223,7 +223,7 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     inject_derived_autonomic_deduccion_facts(fact_index, _YEAR)
 
     # Deliberately absent binding — tested separately.
-    absent = "renta-2025-profile-taxpayer-death-date"
+    absent = "renta-profile-taxpayer-death-date"
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:
@@ -277,7 +277,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     ecivil_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == "ECIVIL")
     ecivil_binding_id = ecivil_casilla.binding
     assert ecivil_casilla.data_type == "text"
-    assert ecivil_binding_id == "renta-2025-profile-marital-status"
+    assert ecivil_binding_id == "renta-profile-marital-status"
 
     ecivil_binding = next(binding for binding in snapshot.revision.bindings if binding.id == ecivil_binding_id)
     selector = ecivil_binding.selector
@@ -356,9 +356,9 @@ def test_typed_values_match_expected_python_types() -> None:
 
     # bool-typed profile facts
     for binding_id, _expected_type in [
-        ("renta-2025-profile-spouse-non-resident-irpf", bool),
-        ("renta-2025-profile-spouse-eu-eea-resident", bool),
-        ("renta-2025-profile-family-descendants-eu-eea-deduction", bool),
+        ("renta-profile-spouse-non-resident-irpf", bool),
+        ("renta-profile-spouse-eu-eea-resident", bool),
+        ("renta-profile-family-descendants-eu-eea-deduction", bool),
         # Declared boolean in the schema, and the fixture now says so too. It
         # sat in the Decimal group below only because the fixture wrote
         # Decimal("0") into a boolean-declared field. The art. 84 reducción
@@ -374,8 +374,8 @@ def test_typed_values_match_expected_python_types() -> None:
 
     # date-typed profile facts
     for binding_id in [
-        "renta-2025-profile-taxpayer-birth-date",
-        "renta-2025-profile-spouse-birth-date",
+        "renta-profile-taxpayer-birth-date",
+        "renta-profile-spouse-birth-date",
     ]:
         binding = binding_map[binding_id]
         value = resolve_profile_binding_value(binding, fact_index)
@@ -385,10 +385,10 @@ def test_typed_values_match_expected_python_types() -> None:
     # str-typed profile facts — values that cannot be parsed as Decimal
     # (tax ids, sex codes, CCAA codes, EU country codes).
     for binding_id in [
-        "renta-2025-profile-tax-id",  # "12345678Z" — not numeric
-        "renta-2025-profile-taxpayer-sex",  # "H" — not numeric
-        "renta-2025-profile-spouse-sex",  # "M" — not numeric
-        "renta-2025-profile-spouse-eu-eea-country",  # "DE" — not numeric
+        "renta-profile-tax-id",  # "12345678Z" — not numeric
+        "renta-profile-taxpayer-sex",  # "H" — not numeric
+        "renta-profile-spouse-sex",  # "M" — not numeric
+        "renta-profile-spouse-eu-eea-country",  # "DE" — not numeric
     ]:
         if binding_id not in binding_map:
             continue
@@ -401,8 +401,8 @@ def test_typed_values_match_expected_python_types() -> None:
     # declaration_type = "1" arrives as Decimal("1") after coercion.
     for binding_id in [
         "renta-profile-declaration-type",  # "1" → Decimal("1")
-        "renta-2025-profile-taxpayer-disability-grade",  # "0" → Decimal("0")
-        "renta-2025-profile-spouse-disability-grade",  # "0" → Decimal("0")
+        "renta-profile-taxpayer-disability-grade",  # "0" → Decimal("0")
+        "renta-profile-spouse-disability-grade",  # "0" → Decimal("0")
     ]:
         if binding_id not in binding_map:
             continue
@@ -425,7 +425,7 @@ def test_absent_fact_resolves_to_none_anti_tautology() -> None:
     fact_index = profile_fact_index(record, schema)
 
     profile_bindings = _profile_bindings()
-    death_date_binding = next(b for b in profile_bindings if str(b.id) == "renta-2025-profile-taxpayer-death-date")
+    death_date_binding = next(b for b in profile_bindings if str(b.id) == "renta-profile-taxpayer-death-date")
     value = resolve_profile_binding_value(death_date_binding, fact_index)
     assert value is None, f"expected None for deliberately absent death-date binding, got {value!r}"
 
@@ -440,7 +440,7 @@ def test_ccaa_binding_selector_yields_model_selector_string() -> None:
     would silently fail.
     """
     profile_bindings = _profile_bindings()
-    ccaa_binding = next(b for b in profile_bindings if str(b.id) == "renta-2025-profile-tax-residence-ccaa")
+    ccaa_binding = next(b for b in profile_bindings if str(b.id) == "renta-profile-tax-residence-ccaa")
     selectors = list(profile_binding_selectors(ccaa_binding.selector))
     assert selectors == ["TaxResidenceProfile.ccaa"], f"expected ['TaxResidenceProfile.ccaa'], got {selectors!r}"
 

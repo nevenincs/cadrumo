@@ -48,4 +48,4 @@ casilla_ids = [
     "sp.telefono-contacto",
 ]
 application_links = ["modelo-604-filing", "modelo-604-export"]
-workbook_parity_refs = ["modelo-604-2021-2023-static-layout"]
+workbook_parity_refs = ["modelo-604-static-layout"]

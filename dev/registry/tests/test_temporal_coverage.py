@@ -155,7 +155,7 @@ def test_temporal_coverage_uses_the_catalogue_horizon_not_a_copied_year_list(
     shortened_catalogues = registry_authority.catalogues.model_copy(
         update={
             "supported_filing_years": registry_authority.catalogues.supported_filing_years.model_copy(
-                update={"years": original_years[:-1]},
+                update={"horizon": original_years[-2]},
             ),
         },
     )

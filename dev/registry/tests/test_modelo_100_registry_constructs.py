@@ -178,7 +178,6 @@ def test_modelo_100_dependent_modelos_construct_covers_dependency_members() -> N
         if binding.source in {"previous_filing", "relation_prefill"}
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
-    assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
 
 
 def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_refs() -> None:
@@ -189,7 +188,6 @@ def test_modelo_100_2025_member_grounded_constructs_do_not_declare_extra_legal_r
         "casilla": {item.id: item for item in revision.casillas},
         "formula": {item.id: item for item in revision.formulas},
         "binding": {item.id: item for item in revision.bindings},
-        "relation": {item.id: item for item in revision.relations},
         "dependency classification": {item.id: item for item in revision.dependency_classifications},
     }
     offenders: dict[str, list[str]] = {}
@@ -227,9 +225,6 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
         if binding.source in {"previous_filing", "relation_prefill"}
         and selector_as_dict(binding).get("source_modelo") in payment_source_modelos
     }
-    expected_relations = {
-        relation.id for relation in snapshot.revision.relations if relation.source_modelo in payment_source_modelos
-    }
     expected_classifications = {
         classification.id
         for classification in snapshot.dependency_classifications.values()
@@ -237,7 +232,6 @@ def test_modelo_100_payments_retentions_construct_covers_classified_payment_memb
     }
 
     assert set(payments_retentions.bindings) == expected_bindings
-    assert set(payments_retentions.relations) == expected_relations
     assert set(payments_retentions.dependency_classifications) == expected_classifications
     assert "renta-base-liquidable-negativa-general-anterior" not in payments_retentions.bindings
     assert (
@@ -264,42 +258,42 @@ def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classif
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
     assert (
-        "renta-2025-dep-100"
+        "renta-dep-100"
         in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].dependency_classifications
     )
 
 
 _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
-    ("DPNIF_D", "renta-2025-profile-tax-id"),
-    ("DP_APENOM_D", "renta-2025-profile-display-name"),
-    ("ZCCAD", "renta-2025-profile-tax-residence-ccaa"),
+    ("DPNIF_D", "renta-profile-tax-id"),
+    ("DP_APENOM_D", "renta-profile-display-name"),
+    ("ZCCAD", "renta-profile-tax-residence-ccaa"),
     ("TIPOTRIBUTACION", "renta-profile-declaration-type"),
-    ("SEXO_D", "renta-2025-profile-taxpayer-sex"),
-    ("ECIVIL", "renta-2025-profile-marital-status"),
-    ("DPFNAC_D", "renta-2025-profile-taxpayer-birth-date"),
-    ("DPNIF_C", "renta-2025-profile-spouse-tax-id"),
-    ("DP_APENOM_C", "renta-2025-profile-spouse-display-name"),
-    ("DPFNAC_C", "renta-2025-profile-spouse-birth-date"),
-    ("SEXO_C", "renta-2025-profile-spouse-sex"),
-    ("DPGMIN_D", "renta-2025-profile-taxpayer-disability-grade"),
-    ("DECFAL", "renta-2025-profile-taxpayer-death-date"),
-    ("DPGMIN_C", "renta-2025-profile-spouse-disability-grade"),
-    ("NORESIDENTE", "renta-2025-profile-spouse-non-resident-irpf"),
-    ("RESIDENTEUE", "renta-2025-profile-spouse-eu-eea-resident"),
-    ("ZRUE2", "renta-2025-profile-spouse-eu-eea-country"),
-    ("HIJOSUE", "renta-2025-profile-family-descendants-eu-eea-deduction"),
+    ("SEXO_D", "renta-profile-taxpayer-sex"),
+    ("ECIVIL", "renta-profile-marital-status"),
+    ("DPFNAC_D", "renta-profile-taxpayer-birth-date"),
+    ("DPNIF_C", "renta-profile-spouse-tax-id"),
+    ("DP_APENOM_C", "renta-profile-spouse-display-name"),
+    ("DPFNAC_C", "renta-profile-spouse-birth-date"),
+    ("SEXO_C", "renta-profile-spouse-sex"),
+    ("DPGMIN_D", "renta-profile-taxpayer-disability-grade"),
+    ("DECFAL", "renta-profile-taxpayer-death-date"),
+    ("DPGMIN_C", "renta-profile-spouse-disability-grade"),
+    ("NORESIDENTE", "renta-profile-spouse-non-resident-irpf"),
+    ("RESIDENTEUE", "renta-profile-spouse-eu-eea-resident"),
+    ("ZRUE2", "renta-profile-spouse-eu-eea-country"),
+    ("HIJOSUE", "renta-profile-family-descendants-eu-eea-deduction"),
     ("PH18", "renta-profile-family-minor-children-in-unit"),
-    ("NIFDLG", "renta-2025-family-descendant-tax-id"),
-    ("APENOMDLG", "renta-2025-family-descendant-display-name"),
-    ("FNACDLG", "renta-2025-family-descendant-birth-date"),
-    ("MINUSDLG", "renta-2025-family-descendant-disability-grade"),
-    ("FALLDLG", "renta-2025-family-descendant-death-date"),
-    ("DNIASDLG", "renta-2025-family-ascendant-tax-id"),
-    ("APENOMDLG_ASC", "renta-2025-family-ascendant-display-name"),
-    ("ANOASDLG", "renta-2025-family-ascendant-birth-date"),
-    ("PCTMINASDLG", "renta-2025-family-ascendant-disability-grade"),
-    ("CONVASDLG", "renta-2025-family-ascendant-cohabiting-descendant-count"),
-    ("FALLASDLG", "renta-2025-family-ascendant-death-date"),
+    ("NIFDLG", "renta-family-descendant-tax-id"),
+    ("APENOMDLG", "renta-family-descendant-display-name"),
+    ("FNACDLG", "renta-family-descendant-birth-date"),
+    ("MINUSDLG", "renta-family-descendant-disability-grade"),
+    ("FALLDLG", "renta-family-descendant-death-date"),
+    ("DNIASDLG", "renta-family-ascendant-tax-id"),
+    ("APENOMDLG_ASC", "renta-family-ascendant-display-name"),
+    ("ANOASDLG", "renta-family-ascendant-birth-date"),
+    ("PCTMINASDLG", "renta-family-ascendant-disability-grade"),
+    ("CONVASDLG", "renta-family-ascendant-cohabiting-descendant-count"),
+    ("FALLASDLG", "renta-family-ascendant-death-date"),
 )
 """Maps each personal/family casilla id to the profile binding that feeds it.
 
@@ -310,45 +304,45 @@ Adding a new profile-bound casilla means adding one row here.
 """
 
 _PROFILE_KEY_BINDINGS: tuple[str, ...] = (
-    "renta-2025-profile-tax-id",
+    "renta-profile-tax-id",
     "renta-profile-declaration-type",
-    "renta-2025-profile-taxpayer-sex",
-    "renta-2025-profile-marital-status",
-    "renta-2025-profile-taxpayer-birth-date",
-    "renta-2025-profile-spouse-tax-id",
-    "renta-2025-profile-spouse-birth-date",
-    "renta-2025-profile-spouse-sex",
-    "renta-2025-profile-taxpayer-disability-grade",
-    "renta-2025-profile-taxpayer-death-date",
-    "renta-2025-profile-spouse-disability-grade",
-    "renta-2025-profile-spouse-non-resident-irpf",
-    "renta-2025-profile-spouse-eu-eea-resident",
-    "renta-2025-profile-spouse-eu-eea-country",
-    "renta-2025-profile-family-descendants-eu-eea-deduction",
+    "renta-profile-taxpayer-sex",
+    "renta-profile-marital-status",
+    "renta-profile-taxpayer-birth-date",
+    "renta-profile-spouse-tax-id",
+    "renta-profile-spouse-birth-date",
+    "renta-profile-spouse-sex",
+    "renta-profile-taxpayer-disability-grade",
+    "renta-profile-taxpayer-death-date",
+    "renta-profile-spouse-disability-grade",
+    "renta-profile-spouse-non-resident-irpf",
+    "renta-profile-spouse-eu-eea-resident",
+    "renta-profile-spouse-eu-eea-country",
+    "renta-profile-family-descendants-eu-eea-deduction",
     "renta-profile-family-minor-children-in-unit",
 )
 """Bindings whose selector carries a single ``profile_key`` (vs ``profile_keys`` tuple)."""
 
 _SPOUSE_REQUIRED_BINDINGS: tuple[str, ...] = (
-    "renta-2025-profile-spouse-tax-id",
-    "renta-2025-profile-spouse-display-name",
-    "renta-2025-profile-spouse-birth-date",
-    "renta-2025-profile-spouse-sex",
+    "renta-profile-spouse-tax-id",
+    "renta-profile-spouse-display-name",
+    "renta-profile-spouse-birth-date",
+    "renta-profile-spouse-sex",
 )
 """Bindings whose ``required_when_*`` selector is keyed on declaration type == joint."""
 
 _FAMILY_ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
-    "renta-2025-family-descendant-tax-id": ("descendants", "tax_id"),
-    "renta-2025-family-descendant-display-name": ("descendants", "display_name"),
-    "renta-2025-family-descendant-birth-date": ("descendants", "birth_date"),
-    "renta-2025-family-descendant-disability-grade": ("descendants", "disability_grade"),
-    "renta-2025-family-descendant-death-date": ("descendants", "death_date"),
-    "renta-2025-family-ascendant-tax-id": ("ascendants", "tax_id"),
-    "renta-2025-family-ascendant-display-name": ("ascendants", "display_name"),
-    "renta-2025-family-ascendant-birth-date": ("ascendants", "birth_date"),
-    "renta-2025-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
-    "renta-2025-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
-    "renta-2025-family-ascendant-death-date": ("ascendants", "death_date"),
+    "renta-family-descendant-tax-id": ("descendants", "tax_id"),
+    "renta-family-descendant-display-name": ("descendants", "display_name"),
+    "renta-family-descendant-birth-date": ("descendants", "birth_date"),
+    "renta-family-descendant-disability-grade": ("descendants", "disability_grade"),
+    "renta-family-descendant-death-date": ("descendants", "death_date"),
+    "renta-family-ascendant-tax-id": ("ascendants", "tax_id"),
+    "renta-family-ascendant-display-name": ("ascendants", "display_name"),
+    "renta-family-ascendant-birth-date": ("ascendants", "birth_date"),
+    "renta-family-ascendant-disability-grade": ("ascendants", "disability_grade"),
+    "renta-family-ascendant-cohabiting-descendant-count": ("ascendants", "cohabiting_descendant_count"),
+    "renta-family-ascendant-death-date": ("ascendants", "death_date"),
 }
 """Family row bindings → (collection name on RentaFamilyProfile, field name on the row model)."""
 
@@ -404,7 +398,7 @@ def _assert_selector_profile_keys(
     for binding_id in _PROFILE_KEY_BINDINGS:
         selector_key = selector_as_dict(bindings_by_id[binding_id])["profile_key"]
         assert selector_key in profile_keys, f"{binding_id}: selector profile_key {selector_key!r} is unknown"
-    for binding_id in ("renta-2025-profile-display-name", "renta-2025-profile-spouse-display-name"):
+    for binding_id in ("renta-profile-display-name", "renta-profile-spouse-display-name"):
         many_keys = cast(tuple[str, ...], selector_as_dict(bindings_by_id[binding_id])["profile_keys"])
         unknown = set(many_keys) - profile_keys
         assert not unknown, f"{binding_id}: selector profile_keys outside known set: {sorted(unknown)}"
@@ -424,17 +418,17 @@ def _assert_spouse_joint_gating(bindings_by_id: Mapping[str, BindingDefinition])
 
 def _assert_eu_eea_gating(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """The two EU-EEA bindings chain their gating predicates correctly."""
-    eu_resident_selector = selector_as_dict(bindings_by_id["renta-2025-profile-spouse-eu-eea-resident"])
+    eu_resident_selector = selector_as_dict(bindings_by_id["renta-profile-spouse-eu-eea-resident"])
     assert eu_resident_selector["required_when_profile_key"] == "renta_spouse.non_resident_irpf"
     assert eu_resident_selector["required_when_value"] == "true"
-    eu_country_selector = selector_as_dict(bindings_by_id["renta-2025-profile-spouse-eu-eea-country"])
+    eu_country_selector = selector_as_dict(bindings_by_id["renta-profile-spouse-eu-eea-country"])
     assert eu_country_selector["required_when_profile_key"] == "renta_spouse.eu_eea_resident"
     assert eu_country_selector["required_when_value"] == "true"
 
 
 def _assert_tax_residence_selector(bindings_by_id: Mapping[str, BindingDefinition]) -> None:
     """The tax-residence-ccaa binding's selector targets the TaxResidenceProfile model."""
-    selector = selector_as_dict(bindings_by_id["renta-2025-profile-tax-residence-ccaa"])
+    selector = selector_as_dict(bindings_by_id["renta-profile-tax-residence-ccaa"])
     assert selector["profile_model"] == "TaxResidenceProfile"
     assert selector["field"] in TaxResidenceProfile.model_fields
 
@@ -500,19 +494,19 @@ def test_modelo_100_constructs_declare_their_revision_members() -> None:
     }
 
     assert set(_members_of_kind(dependencies, "binding")) == filed_dependency_binding_ids
-    assert set(_members_of_kind(dependencies, "relation")) == {relation.id for relation in revision.relations}
     assert "renta-modelo-100-estimacion-directa-es-normal" in _members_of_kind(economic_activities, "binding")
 
 
 def test_modelo_100_renta_section_constructs_classify_registered_relation_sources() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
-    relations_by_id = {relation.id: relation for relation in revision.relations}
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
     constructs = {construct.id: construct for construct in revision.constructs}
     source_modelos_by_construct = {
         construct_id: {
-            relations_by_id[member_id].source_modelo
-            for member_id in _members_of_kind(constructs[construct_id], "relation")
+            selector_as_dict(bindings_by_id[member_id])["source_modelo"]
+            for member_id in _members_of_kind(constructs[construct_id], "binding")
+            if bindings_by_id[member_id].source == "relation_prefill"
         }
         for construct_id in (
             "renta-work-income",
@@ -530,24 +524,27 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
     }
     real_estate = constructs["renta-real-estate-capital"]
     assert "0598" in _members_of_kind(real_estate, "casilla")
-    assert "renta-2025-retenciones-arrendamientos-urbanos" in _members_of_kind(real_estate, "formula")
+    assert "renta-retenciones-arrendamientos-urbanos" in _members_of_kind(real_estate, "formula")
 
 
 def test_modelo_100_dependency_classifications_cover_registered_relation_sources() -> None:
     snapshot = _modelo_100_snapshot()
-    relations_by_source: dict[str, set[str]] = {}
-    for relation in snapshot.revision.relations:
-        relations_by_source.setdefault(relation.source_modelo, set()).add(relation.id)
+    bindings_by_source: dict[str, set[str]] = {}
+    for binding in snapshot.revision.bindings:
+        if binding.source != "relation_prefill":
+            continue
+        source_modelo = selector_as_dict(binding)["source_modelo"]
+        bindings_by_source.setdefault(str(source_modelo), set()).add(binding.id)
     classifications_by_source = {
         classification.source_modelo: classification
         for classification in snapshot.revision.dependency_classifications
-        if classification.relation_refs
+        if classification.binding_refs
     }
 
-    assert set(classifications_by_source) == set(relations_by_source)
-    for source_modelo, relation_ids in relations_by_source.items():
+    assert set(classifications_by_source) == set(bindings_by_source)
+    for source_modelo, binding_ids in bindings_by_source.items():
         classification = classifications_by_source[source_modelo]
-        assert set(classification.relation_refs) == relation_ids
+        assert set(classification.binding_refs) == binding_ids
         assert "renta-dependent-modelos" in classification.target_constructs
         assert all(construct_id in snapshot.constructs for construct_id in classification.target_constructs)
 
@@ -778,7 +775,7 @@ def test_validator_rejects_construct_legal_refs_without_legal_authority() -> Non
 def test_validator_rejects_construct_member_outside_revision() -> None:
     modelo, revision = _modelo_100_revision_2025()
     construct = next(item for item in revision.constructs if item.id == "renta-dependent-modelos")
-    mutated_construct = construct.model_copy(update={"relations": (*construct.relations, "missing-relation")})
+    mutated_construct = construct.model_copy(update={"bindings": (*construct.bindings, "missing-binding")})
     mutated_revision = revision.model_copy(
         update={
             "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs),
@@ -786,7 +783,7 @@ def test_validator_rejects_construct_member_outside_revision() -> None:
     )
     mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="references unknown relation")
+    _assert_registry_validation_error(mutated_modelo, match="references unknown binding")
 
 
 def test_validator_rejects_construct_dependency_classification_outside_revision() -> None:
@@ -813,7 +810,7 @@ def test_validator_rejects_dependency_classification_source_drift() -> None:
     )
     mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="does not match relation")
+    _assert_registry_validation_error(mutated_modelo, match="does not match .*binding")
 
 
 def test_validator_rejects_unclassified_relation_source() -> None:
@@ -829,14 +826,14 @@ def test_validator_rejects_unclassified_relation_source() -> None:
 
     _assert_registry_validation_error(
         mutated_modelo,
-        match="relation source modelo '130' has no dependency classification",
+        match="binding source modelo '130' has no dependency classification",
     )
 
 
 def test_validator_rejects_partial_dependency_classification_relation_coverage() -> None:
     modelo, revision = _modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "111")
-    mutated_classification = classification.model_copy(update={"relation_refs": classification.relation_refs[:1]})
+    mutated_classification = classification.model_copy(update={"binding_refs": classification.binding_refs[:1]})
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -847,23 +844,23 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
     )
     mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
 
-    _assert_registry_validation_error(mutated_modelo, match="does not cover relation refs")
+    _assert_registry_validation_error(mutated_modelo, match="does not cover binding refs")
 
 
-def test_schema_accepts_direct_previous_filing_classification_without_relation_refs() -> None:
+def test_schema_accepts_direct_previous_filing_classification_without_binding_refs() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
     assert classification.treatment == "direct_annual_settlement"
-    assert classification.relation_refs == ()
+    assert classification.binding_refs == ()
     assert classification.__class__.model_validate(classification.model_dump(mode="python")) == classification
 
 
 def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
     modelo, revision = _modelo_100_revision_2025()
     classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
-    mutated_classification = classification.model_copy(update={"relation_refs": ()})
+    mutated_classification = classification.model_copy(update={"binding_refs": ()})
     mutated_revision = revision.model_copy(
         update={
             "dependency_classifications": tuple(
@@ -876,7 +873,7 @@ def test_validator_rejects_direct_dependency_classification_without_relation_or_
 
     _assert_registry_validation_error(
         mutated_modelo,
-        match="must declare relation refs or cover direct previous_filing bindings",
+        match="must declare binding refs or cover direct previous_filing bindings",
     )
 
 

@@ -266,8 +266,8 @@ def _unresolved_rate_outcome(
         op="irnr_resolve_tipo_gravamen",
         operand_refs=(
             "tipo_renta",
-            "m210-tipo-gravamen-2025",
-            "m210-2025-profile-country-of-fiscal-residence",
+            "m210-tipo-gravamen",
+            "m210-profile-country-of-fiscal-residence",
         ),
         operand_casilla_refs=("tipo_renta",),
         legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
@@ -276,8 +276,8 @@ def _unresolved_rate_outcome(
             "tipo_renta": tipo_renta,
             "country": country,
             "filing_year": "2025",
-            "baseline_parameter": "m210-tipo-gravamen-2025",
-            "country_binding": "m210-2025-profile-country-of-fiscal-residence",
+            "baseline_parameter": "m210-tipo-gravamen",
+            "country_binding": "m210-profile-country-of-fiscal-residence",
         },
     )
 

@@ -45,7 +45,7 @@ expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "1548" }, { literal = "0" }] },
     { op = "percent", args = [
         { casilla_id = "1548" },
-        { parameter = "renta-2025-estimacion-objetiva-reduccion-general-rate" },
+        { parameter = "renta-estimacion-objetiva-reduccion-general-rate" },
     ] },
     { literal = "0" },
 ] }
@@ -63,7 +63,7 @@ expression = { op = "if_then_else", args = [
     { op = "greater_than", args = [{ casilla_id = "AJ" }, { literal = "0" }] },
     { op = "percent", args = [
         { casilla_id = "1550" },
-        { parameter = "renta-2025-eo-agraria-reduccion-jovenes-rate" },
+        { parameter = "renta-eo-agraria-reduccion-jovenes-rate" },
     ] },
     { literal = "0" },
 ] }

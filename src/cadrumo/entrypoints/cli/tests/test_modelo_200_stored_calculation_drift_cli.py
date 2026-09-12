@@ -61,7 +61,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
             "--casilla", "DP200014:00547=0",
             "--casilla", "DP200014:01033=0",
             "--casilla", "DP200014:01034=0",
-            "--binding", "modelo-200-2024-profile-legal-entity-form=sa",
+            "--binding", "modelo-200-profile-legal-entity-form=sa",
             "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
@@ -103,5 +103,5 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
     assert error["code"] == "REFUSED_MODELO_WORKFLOW_GATE"
     assert error["category"] == "REFUSED"
     assert error["context"] == {"abort_code": "DRAFT_HAS_ERRORS", "stage": "ABORTED"}
-    assert "modelo-200-2024-rel-202-pagos-fraccionados" in error["message"]
+    assert "modelo-200-pagos-fraccionados-anuales" in error["message"]
     assert "recalculate" in error["message"]

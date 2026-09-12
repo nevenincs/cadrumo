@@ -47,6 +47,6 @@
 # importes: 166-171 carries THREE decimal digits, 458-462 carries two.
 
 [[revisions."2022-y-siguientes".export_layouts]]
-id = "modelo-181-fichero-2022"
+id = "modelo-181-fichero"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-181-2022"]

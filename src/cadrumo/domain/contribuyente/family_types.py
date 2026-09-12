@@ -13,14 +13,12 @@ from the factual profile records.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
-
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ...core.identity.tax_id import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
-from ...core.text_bounds import CalendarMonth
+from ...core.text_bounds import CalendarMonth, NonNegativeDecimal
 from .errors import ProfileValidationError
 
 
@@ -95,8 +93,8 @@ class MinimoDescendientesThresholds(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    rentas_anuales_limite: Decimal = Field(ge=Decimal("0"))
-    declaracion_propia_rentas_limite: Decimal = Field(ge=Decimal("0"))
+    rentas_anuales_limite: NonNegativeDecimal
+    declaracion_propia_rentas_limite: NonNegativeDecimal
 
 
 class GuarderiaMonthSpend(BaseModel):

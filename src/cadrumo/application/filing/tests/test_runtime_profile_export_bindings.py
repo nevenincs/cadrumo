@@ -36,7 +36,7 @@ def _modelo_100_bindings(filing_year: int):
 def test_every_projected_binding_declares_an_export_address(filing_year: int) -> None:
     """The discriminator holds: nothing lands here without somewhere to land."""
     for binding in _modelo_100_bindings(filing_year):
-        assert getattr(binding.selector, "dictionary_field", None), binding.id
+        assert getattr(binding.provider, "dictionary_field", None), binding.id
 
 
 @pytest.mark.parametrize("filing_year", range(2020, 2026))

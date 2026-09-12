@@ -18,7 +18,7 @@ from ..compiler.loader import (
     load_shared_catalogues,
 )
 from ..compiler.validator import RegistryValidator
-from ._ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -95,7 +95,7 @@ def test_modelo_309_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2023-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-309-iva-no-periodica")
-    assert "modelo-309-dr-2023" in construct.workbook_parity_refs
+    assert "modelo-309-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-309-ad-hoc",)
 
 

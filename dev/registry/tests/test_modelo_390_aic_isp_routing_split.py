@@ -45,7 +45,7 @@ from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, Iva
 
 from ..compiler.loader import load_registry_tree
 from ._gate_support import fragment_declaring
-from ._ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

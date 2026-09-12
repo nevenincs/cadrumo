@@ -74,6 +74,9 @@ aggregation:
         az érintett szektorokban nincs előző évi különleges nyilvántartási állapot.
       prorrata_transition_contradictory_evidence: A különleges arányosítási átmeneti
         tételek ellentmondanak a bejelentett átmenetnek.
+      prorrata_transition_declarations_unavailable: A kiválasztott 303-as modell revíziója
+        nem deklarál benyújtási ütemtervet vagy időszaki átvitt kötést, ezért az arányosítási
+        átmeneti időszak nem határozható meg.
       prorrata_transition_entry_without_evidence: Egy különleges arányosítási átmeneti
         tétel nem hordoz átmeneti bizonyítékot.
       prorrata_transition_evidence_without_declared_transition: A különleges arányosítási

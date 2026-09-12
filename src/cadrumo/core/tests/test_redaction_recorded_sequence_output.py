@@ -158,7 +158,7 @@ def test_the_work_unit_naming_the_corpus_carries_reaches_the_operator_intact() -
         "100-2026-0A",
         "184-2026-0A",
         "349-2026-4T",
-        "modelo-202-2025-y-siguientes-rel-cuota-base-1p",
+        "modelo-202-cuota-base-ejercicio-anterior",
     ]
 
     for name in names:

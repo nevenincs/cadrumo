@@ -8,7 +8,6 @@ from datetime import date
 
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
 
@@ -27,7 +26,6 @@ class LedgerIrpfCategoryDescriptor:
 def _registry_taxonomy_declarations() -> Mapping[str, str]:
     """Resolve the dated IRPF ledger category taxonomy."""
     authority = bundled_authority()
-    model_report = RegistryQueryService(authority).describe_modelo("100")
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="irpf-ledger-category-taxonomy",
@@ -37,7 +35,6 @@ def _registry_taxonomy_declarations() -> Mapping[str, str]:
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise ValueError("IRPF ledger category taxonomy must resolve as a mapping fact")
-    del model_report
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 

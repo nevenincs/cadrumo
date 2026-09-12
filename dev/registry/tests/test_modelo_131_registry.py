@@ -278,33 +278,29 @@ def test_modelo_100_cross_modelo_131_refs_use_approval_article_3() -> None:
 
     revision_2024 = modelo_100.revisions["2024"]
     binding_refs_2024 = _refs_by_id(revision_2024.bindings)
-    relation_refs_2024 = _refs_by_id(revision_2024.relations)
     dependency_refs_2024 = _refs_by_id(revision_2024.dependency_classifications)
     formula_refs_2024 = _refs_by_id(revision_2024.formulas)
     construct_refs_2024 = _refs_by_id(revision_2024.constructs)
 
     for refs in (
-        binding_refs_2024["renta-2024-modelo-131-pagos-fraccionados"],
-        relation_refs_2024["renta-2024-rel-131-pagos-fraccionados"],
-        dependency_refs_2024["renta-2024-dep-131"],
+        binding_refs_2024["renta-modelo-131-pagos-fraccionados"],
+        dependency_refs_2024["renta-dep-131"],
     ):
         assert _ORDEN_EHA_672_ART_3 in refs
         assert _ORDEN_EHA_672_ART_1 not in refs
     assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(
-        formula_refs_2024["renta-2024-pagos-fraccionados-ingresados"]
+        formula_refs_2024["renta-pagos-fraccionados-ingresados"]
     )
-    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_2024["renta-2024-dependent-modelos"])
+    assert {_ORDEN_EHA_672_ART_1, _ORDEN_EHA_672_ART_3}.issubset(construct_refs_2024["renta-dependent-modelos"])
 
     revision_2025 = modelo_100.revisions["2025"]
     binding_refs_2025 = _refs_by_id(revision_2025.bindings)
-    relation_refs_2025 = _refs_by_id(revision_2025.relations)
     dependency_refs_2025 = _refs_by_id(revision_2025.dependency_classifications)
     construct_refs_2025 = _refs_by_id(revision_2025.constructs)
 
     for refs in (
-        binding_refs_2025["renta-2025-modelo-131-pagos-fraccionados"],
-        relation_refs_2025["renta-2025-rel-131-pagos-fraccionados"],
-        dependency_refs_2025["renta-2025-dep-131"],
+        binding_refs_2025["renta-modelo-131-pagos-fraccionados"],
+        dependency_refs_2025["renta-dep-131"],
     ):
         assert _ORDEN_EHA_672_ART_3 in refs
         assert _ORDEN_EHA_672_ART_1 not in refs

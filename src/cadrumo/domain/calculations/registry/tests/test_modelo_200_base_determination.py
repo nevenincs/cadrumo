@@ -43,7 +43,7 @@ from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
+_DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
@@ -90,8 +90,8 @@ def _calculate(inputs: dict[CasillaId, Decimal]):
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )

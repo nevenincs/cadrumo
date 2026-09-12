@@ -2,7 +2,7 @@
 
 Before the fix, ``_decimal_inputs_for_ids`` attempted to coerce every formula
 binding value through ``Decimal()``. String-valued enum bindings (e.g.
-``modelo-200-2024-profile-legal-entity-form="sl"``) triggered a
+``modelo-200-profile-legal-entity-form="sl"``) triggered a
 ``ModeloBuilderError`` because ``Decimal("sl")`` raises ``InvalidOperation``.
 
 The fix routes enum-consumed bindings via the ``enum_binding_values`` channel
@@ -78,7 +78,7 @@ def test_enum_consumed_binding_ids_identifies_legal_entity_form() -> None:
     """
     snap = _m200_snapshot()
     enum_ids = enum_consumed_binding_ids(snap.revision)
-    assert "modelo-200-2024-profile-legal-entity-form" in enum_ids
+    assert "modelo-200-profile-legal-entity-form" in enum_ids
 
 
 def test_string_inputs_for_ids_extracts_enum_binding() -> None:
@@ -86,7 +86,7 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
     from ....domain.filing.protocols import ModeloInputs
 
     inputs: ModeloInputs = {
-        "modelo-200-2024-profile-legal-entity-form": "sl",
+        "modelo-200-profile-legal-entity-form": "sl",
         "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
         "modelo-200-profile-new-entity-flag": Decimal("0"),
     }
@@ -94,7 +94,7 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
     enum_ids = enum_consumed_binding_ids(snap.revision)
     result = _string_inputs_for_ids(inputs, enum_ids)
 
-    assert result == {"modelo-200-2024-profile-legal-entity-form": "sl"}
+    assert result == {"modelo-200-profile-legal-entity-form": "sl"}
 
 
 def test_filing_binding_values_skips_enum_bindings() -> None:
@@ -103,7 +103,7 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
     bindings = {binding.id: binding for binding in snap.revision.bindings}
     enum_ids = enum_consumed_binding_ids(snap.revision)
     inputs = {
-        "modelo-200-2024-profile-legal-entity-form": "sl",
+        "modelo-200-profile-legal-entity-form": "sl",
         "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
         "modelo-200-profile-new-entity-flag": Decimal("0"),
     }
@@ -113,7 +113,7 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
 
     # The enum binding should be absent from the returned binding values
     binding_ids = {bv.binding_id for bv in binding_values}
-    assert "modelo-200-2024-profile-legal-entity-form" not in binding_ids
+    assert "modelo-200-profile-legal-entity-form" not in binding_ids
     # Decimal bindings are still present
     assert "modelo-200-profile-incn-prior-12-months" in binding_ids
 
@@ -148,11 +148,11 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
-            "modelo-200-2024-profile-legal-entity-form": "sl",
+            "modelo-200-profile-legal-entity-form": "sl",
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
     )
 
@@ -197,11 +197,11 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
-            "modelo-200-2024-profile-legal-entity-form": "sl",
+            "modelo-200-profile-legal-entity-form": "sl",
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
     )
 

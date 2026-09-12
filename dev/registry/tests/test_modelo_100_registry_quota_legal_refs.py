@@ -150,7 +150,7 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
             _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
         }
         revision = _revision_for(filing_year)
-        formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
+        formula_id = "renta-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -173,7 +173,7 @@ def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
             _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
         }
         revision = _revision_for(filing_year)
-        formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
+        formula_id = "renta-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -209,9 +209,9 @@ _SEPARATE_ESCALA_MODELLED_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025}
 def _autonomic_separate_escala_formula_ids(filing_year: int) -> frozenset[str]:
     return frozenset(
         {
-            f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general",
-            f"renta-{filing_year}-cuota-escala-autonomica-sobre-minimo-personal-familiar",
-            f"renta-{filing_year}-cuota-base-liquidable-general-autonomica",
+            "renta-cuota-escala-autonomica-sobre-base-liquidable-general",
+            "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar",
+            "renta-cuota-base-liquidable-general-autonomica",
         },
     )
 
@@ -227,36 +227,36 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
         art_76_ref = _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR[filing_year]
         regime_refs = {art_75_ref} if regime_modelled else set()
         expected_refs_by_formula = {
-            f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-general": {
+            "renta-tipo-medio-gravamen-autonomico-base-liquidable-general": {
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
             },
-            f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-ahorro": {
+            "renta-tipo-medio-gravamen-autonomico-base-liquidable-ahorro": {
                 art_76_ref,
             },
-            f"renta-{filing_year}-minimo-personal-base-liquidable-ahorro-autonomica": {
+            "renta-minimo-personal-base-liquidable-ahorro-autonomica": {
                 _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
                 art_76_ref,
                 *form_order_refs,
             },
-            f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general": {
+            "renta-cuota-escala-autonomica-sobre-base-liquidable-general": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
-            f"renta-{filing_year}-cuota-escala-autonomica-sobre-minimo-personal-familiar": {
+            "renta-cuota-escala-autonomica-sobre-minimo-personal-familiar": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
-            f"renta-{filing_year}-cuota-base-liquidable-general-autonomica": {
+            "renta-cuota-base-liquidable-general-autonomica": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 *regime_refs,
                 *form_order_refs,
             },
-            f"renta-{filing_year}-cuota-integra-autonomica": {
+            "renta-cuota-integra-autonomica": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
                 art_76_ref,

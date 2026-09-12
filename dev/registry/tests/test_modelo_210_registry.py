@@ -363,7 +363,7 @@ def test_modelo_210_2026_order_is_bundled_and_referenced_by_current_surfaces() -
 def test_modelo_210_interest_rate_is_grounded_in_unconditional_art_25_1_f() -> None:
     modelo, catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
-    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen-2025")
+    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
 
     assert rates["interest"] == Decimal("0.19")
@@ -394,7 +394,7 @@ def test_modelo_210_dividend_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     """
     modelo, catalogues = _load_modelo_210()
     revision = modelo.revisions["2025"]
-    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen-2025")
+    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
 
     assert rates["dividend"] == Decimal("0.19")
@@ -439,16 +439,16 @@ def test_modelo_210_imputed_real_estate_art_13_1_h_is_catalogued_for_deferred_br
     assert "2 por ciento" not in corpus_paragraph
     assert "1,1 por ciento" not in corpus_paragraph
 
-    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen-2025")
+    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
     assert rates["inmobiliaria"] == Decimal("0.24")
     assert "trlirnr-rdleg-5-2004:art-25.1.a" in parameter.legal_refs
     assert "trlirnr-rdleg-5-2004:art-13.1.h" not in parameter.legal_refs
 
     imputation_params = {param.id: param for param in revision.parameters}
-    assert imputation_params["m210-imputacion-rate-recent-revision-2025"].values[0].value == Decimal("0.011")
-    assert imputation_params["m210-imputacion-rate-old-or-no-revision-2025"].values[0].value == Decimal("0.02")
-    assert imputation_params["m210-imputacion-no-catastral-base-fraction-2025"].values[0].value == Decimal("0.50")
+    assert imputation_params["m210-imputacion-rate-recent-revision"].values[0].value == Decimal("0.011")
+    assert imputation_params["m210-imputacion-rate-old-or-no-revision"].values[0].value == Decimal("0.02")
+    assert imputation_params["m210-imputacion-no-catastral-base-fraction"].values[0].value == Decimal("0.50")
 
 
 def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> None:
@@ -467,7 +467,7 @@ def test_modelo_210_imputed_real_estate_aeat_guidance_source_is_available() -> N
     assert "sin deducir ning&uacute;n tipo de gasto" in source_text
     assert "El <strong>tipo de gravamen</strong> es el general vigente" in source_text
 
-    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen-2025")
+    parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     assert "aeat-irnr-renta-imputada-inmueble-urbano" not in parameter.source_refs
 
 
@@ -486,7 +486,7 @@ def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
         "trlirnr-rdleg-5-2004:art-25.1.b",
     )
 
-    tariff = next(param for param in revision.parameters if param.id == "m210-pension-tarifa-2025")
+    tariff = next(param for param in revision.parameters if param.id == "m210-pension-tarifa")
     assert tariff.data_type == "bracket_table"
     assert tariff.legal_refs == ("trlirnr-rdleg-5-2004:art-25.1.b",)
     assert [

@@ -5,7 +5,11 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
+import pytest
+
 from ..compiler.loader import load_registry_tree
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_mutation_reverting_154_to_manual_reds_the_gate(tmp_path: Path) -> None:

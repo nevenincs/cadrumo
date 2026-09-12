@@ -9,6 +9,7 @@ from typing import cast
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.text_bounds import CALENDAR_MONTH_MAX
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo
 from .errors import ProfileValidationError
@@ -288,7 +289,7 @@ class RentaFamilyProfile(BaseModel):
             )
             if meses <= 0:
                 continue
-            prorated_cap = round_to_cents(cap_anual / Decimal(12) * Decimal(meses))
+            prorated_cap = round_to_cents(cap_anual / Decimal(CALENDAR_MONTH_MAX) * Decimal(meses))
             spend = Decimal(descendant.guarderia_contributing_spend(filing_year, context=context))
             total += min(prorated_cap, spend)
         return total
@@ -696,4 +697,4 @@ class RentaFamilyProfile(BaseModel):
         and the trigger stays advisory-only otherwise (fail-closed, no
         over-claim).
         """
-        return Decimal("0")
+        return Decimal()

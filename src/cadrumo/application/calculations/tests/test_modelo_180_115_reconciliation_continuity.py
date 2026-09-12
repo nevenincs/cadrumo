@@ -289,8 +289,8 @@ def test_modelo_180_relation_prefill_aggregates_115_quarters(tmp_path: Path) -> 
     # a distinct-NIF count from the dedicated retención store, so the perceptores
     # relation is retired; only the monetary base/retenciones totals still sum M115.
     assert "modelo-180-rel-115-perceptores-anual" not in resolved
-    assert resolved["modelo-180-rel-115-base-anual"] == expected[_M115_BASE_CASILLA]
-    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected[_M115_RETENCIONES_CASILLA]
+    assert resolved["modelo-180-115-base-anual"] == expected[_M115_BASE_CASILLA]
+    assert resolved["modelo-180-115-retenciones-anual"] == expected[_M115_RETENCIONES_CASILLA]
 
 
 def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Path) -> None:
@@ -312,8 +312,8 @@ def test_modelo_180_year_isolation_ignores_prior_year_observations(tmp_path: Pat
         item.relation: item.value for item in prefill.values if item.value is not None
     }
     assert "modelo-180-rel-115-perceptores-anual" not in resolved
-    assert resolved["modelo-180-rel-115-base-anual"] == expected_n1[_M115_BASE_CASILLA]
-    assert resolved["modelo-180-rel-115-retenciones-anual"] == expected_n1[_M115_RETENCIONES_CASILLA]
+    assert resolved["modelo-180-115-base-anual"] == expected_n1[_M115_BASE_CASILLA]
+    assert resolved["modelo-180-115-retenciones-anual"] == expected_n1[_M115_RETENCIONES_CASILLA]
 
 
 def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> None:

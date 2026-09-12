@@ -28,6 +28,7 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
+from ..relations import relation_prefill_bindings_for_period
 from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ._published_authority import artifact_components
 from .snapshot_support import build_snapshot
@@ -116,10 +117,10 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
     revision = snapshot.revision
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
-    assert casillas_by_id[_M100_GASTO_SS_CASILLA].binding == "renta-2025-ledger-expense-0186-deductible"
-    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == ("renta-2025-ledger-expense-0192-deductible")
-    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == ("renta-2025-ledger-expense-0199-deductible")
-    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == ("renta-2025-ledger-expense-0203-deductible")
+    assert casillas_by_id[_M100_GASTO_SS_CASILLA].binding == "renta-ledger-expense-0186-deductible"
+    assert casillas_by_id[_M100_GASTO_ARRENDAMIENTOS_CASILLA].binding == ("renta-ledger-expense-0192-deductible")
+    assert casillas_by_id[_M100_GASTO_OTROS_CONCEPTOS_CASILLA].binding == ("renta-ledger-expense-0199-deductible")
+    assert casillas_by_id[_M100_GASTO_AMORTIZACIONES_CASILLA].binding == ("renta-ledger-expense-0203-deductible")
 
     observations = (
         _expense_observation(
@@ -205,7 +206,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # taxpayer_type.irpf_income_categories.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
             # TIPOTRIBUTACION code 1; the joint-filing code is 2)
             "renta-profile-declaration-type": Decimal("1"),
@@ -230,19 +231,22 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        relation_values={relation.id: Decimal("0") for relation in revision.relations},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        relation_values={
+            binding.id: Decimal("0")
+            for binding, _provider in relation_prefill_bindings_for_period(revision, period=snapshot.period)
+        },
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
         date_context={"filing_period": date(2025, 12, 31)},
     )
 
     # Calculation threading: the snapshot calculator must thread
     # binding values into casilla.values rather than computing fresh
     # aggregates.
-    assert calculation.values[_M100_GASTO_SS_CASILLA] == binding_values["renta-2025-ledger-expense-0186-deductible"]
+    assert calculation.values[_M100_GASTO_SS_CASILLA] == binding_values["renta-ledger-expense-0186-deductible"]
     assert (
         calculation.values[_M100_GASTO_OTROS_CONCEPTOS_CASILLA]
-        == binding_values["renta-2025-ledger-expense-0199-deductible"]
+        == binding_values["renta-ledger-expense-0199-deductible"]
     )
 
 

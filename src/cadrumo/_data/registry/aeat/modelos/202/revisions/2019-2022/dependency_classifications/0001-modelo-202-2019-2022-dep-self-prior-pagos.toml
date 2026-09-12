@@ -1,8 +1,8 @@
 [[revisions.2019-2022.dependency_classifications]]
-id = "modelo-202-2019-2022-dep-self-prior-pagos"
+id = "modelo-202-dep-self-prior-pagos"
 source_modelo = "202"
 treatment = "factual_evidence"
-target_constructs = ["modelo-202-2019-2022-foundation"]
+target_constructs = ["modelo-202-foundation"]
 binding_refs = [
     "modelo-202-pagos-fraccionados-anteriores",
 ]

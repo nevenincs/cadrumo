@@ -82,8 +82,8 @@ _M193_TOTAL_PERCEPTORES_CASILLA: CasillaId = validated_casilla_id("decl.total-pe
 # test_modelo_193_123_reconciliation_continuity.py), so the relation values
 # are supplied directly.
 _RELATION_VALUES: dict[RelationId, Decimal] = {
-    "modelo-193-rel-123-base-anual": Decimal("12000.50"),
-    "modelo-193-rel-123-retenciones-anual": Decimal("2280.10"),
+    "modelo-193-123-base-anual": Decimal("12000.50"),
+    "modelo-193-123-retenciones-anual": Decimal("2280.10"),
 }
 
 # Two per-perceptor retención observations (Orden HAC/56/2024 Diseño de

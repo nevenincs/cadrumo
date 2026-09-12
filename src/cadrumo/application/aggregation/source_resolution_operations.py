@@ -118,6 +118,7 @@ class _SourceResolutionMergeState:
     binding_values: dict[BindingId, Decimal] = field(default_factory=dict)
     enum_binding_values: dict[BindingId, str] = field(default_factory=dict)
     date_binding_values: dict[BindingId, date] = field(default_factory=dict)
+    boolean_binding_values: dict[BindingId, bool] = field(default_factory=dict)
     row_binding_values: dict[RowBindingKey, str | Decimal | int | bool] = field(default_factory=dict)
     row_source_identities: dict[RowBindingKey, RowSourceIdentity] = field(default_factory=dict)
     row_casilla_values: dict[RowCasillaKey, Decimal] = field(default_factory=dict)
@@ -184,6 +185,7 @@ class _SourceResolutionMergeState:
         self.binding_values.update(resolution.binding_values)
         self.enum_binding_values.update(resolution.enum_binding_values)
         self.date_binding_values.update(resolution.date_binding_values)
+        self.boolean_binding_values.update(resolution.boolean_binding_values)
 
     def _absorb_precedence_row_bindings(self, resolution: CalculationSourceResolution) -> None:
         for row_binding_key in resolution.row_binding_values:
@@ -221,6 +223,10 @@ class _SourceResolutionMergeState:
             _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
             self.date_binding_values[binding_id] = value
             self.unresolved_binding_ids.discard(binding_id)
+        for binding_id, value in resolution.boolean_binding_values.items():
+            _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
+            self.boolean_binding_values[binding_id] = value
+            self.unresolved_binding_ids.discard(binding_id)
 
     def _absorb_row_binding_values(self, resolution: CalculationSourceResolution) -> None:
         for row_binding_key, value in resolution.row_binding_values.items():
@@ -256,6 +262,7 @@ class _SourceResolutionMergeState:
                     self.binding_values,
                     self.enum_binding_values,
                     self.date_binding_values,
+                    self.boolean_binding_values,
                     row_binding_ids,
                 ),
             ),
@@ -268,6 +275,7 @@ class _SourceResolutionMergeState:
             binding_values=self.binding_values,
             enum_binding_values=self.enum_binding_values,
             date_binding_values=self.date_binding_values,
+            boolean_binding_values=self.boolean_binding_values,
             row_binding_values=self.row_binding_values,
             row_source_identities=self.row_source_identities,
             row_casilla_values=self.row_casilla_values,

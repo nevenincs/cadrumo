@@ -23056,7 +23056,7 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
                 százalékok számítása - Állami közigazgatás [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 és következő)
                   - részletfizetések deduction chain
@@ -45342,7 +45342,7 @@ modelo:
               label: Állami és tartományi adóhatóságok együttes adóztatása - Adóztatási
                 százalékok számítása - Állami közigazgatás [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 és következő)
                   - részletfizetések deduction chain

@@ -23,6 +23,7 @@ import pytest
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..calc_sheets_pull import compute_from_pull
@@ -112,9 +113,8 @@ def _relation_edits_for(snapshot) -> tuple[RelationEdit, ...]:
     """
 
     return tuple(
-        RelationEdit(relation=relation.id, value=Decimal("0"))
-        for relation in snapshot.revision.relations
-        if not relation.target_periods or snapshot.period in relation.target_periods
+        RelationEdit(relation=binding.id, value=Decimal("0"))
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
 
 

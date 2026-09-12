@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
 
+from ...core.decimal.constants import ZERO
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG
 
@@ -218,7 +219,7 @@ def invoice_line_to_iva_observation(
     iva_amount: Decimal,
     deduction_fact_kind: IvaDeductionFactKind | None,
     deduction_provenance: IvaDeductionClassificationProvenance | None,
-    recargo_amount: Decimal = Decimal("0"),
+    recargo_amount: Decimal = ZERO,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
 ) -> IvaLedgerObservation:

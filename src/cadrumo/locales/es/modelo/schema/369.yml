@@ -29,7 +29,7 @@ modelo:
               label: Cuota IVA repercutido al destino DE - servicios prestados (Esquema
                 Exterior)
           construct:
-            modelo-369-esquema-exterior:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Exterior (regimen especial servicios prestados
                   por no establecidos)
@@ -59,7 +59,7 @@ modelo:
               label: Cuota IVA IOSS al destino DE - ventas a distancia de bienes importados
                 ≤ 150 EUR (LIVA art 163 quinvicies)
           construct:
-            modelo-369-esquema-importacion:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Importacion (regimen especial IOSS)
           field:
@@ -97,7 +97,7 @@ modelo:
               label: Cuota IVA OSS Unión al destino FR - servicios prestados (LIVA
                 art 163 unvicies)
           construct:
-            modelo-369-esquema-union:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Union (regimen especial OSS Union)
           field:

@@ -28,6 +28,7 @@ import pytest
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
@@ -48,16 +49,18 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
     snapshot = bundled_authority().snapshot(Modelo.M390.value, filing_year=2025, period="0A")
-    relation = next(
-        item for item in snapshot.revision.relations if item.id == "modelo-390-rel-303-cuota-devengada-total"
+    binding = next(
+        item
+        for item, _provider in relation_prefill_bindings_for_period(snapshot.revision)
+        if item.id == "modelo-390-prev-303-cuota-devengada-total"
     )
-    target = next(item for item in snapshot.revision.casillas if item.binding == relation.target_binding)
+    target = next(item for item in snapshot.revision.casillas if item.binding == binding.id)
     revised_target = CasillaDefinition.model_validate(
         {
             **target.model_dump(),
             "localization_keys": target.localization_keys,
             "binding": "modelo-390-prev-303-cuota-deducible-total",
-            "alternate_bindings": (relation.target_binding,),
+            "alternate_bindings": (binding.id,),
         },
     )
     revision = snapshot.revision.model_copy(
@@ -66,8 +69,8 @@ def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
         },
     )
 
-    assert relation.target_binding not in {item.binding for item in revision.casillas}
-    assert relation_consumption_channels(relation, relation_consumption_index(revision))
+    assert binding.id not in {item.binding for item in revision.casillas}
+    assert relation_consumption_channels(binding.id, relation_consumption_index(revision))
 
 
 def test_no_inert_value_feeding_cross_period_relations() -> None:
@@ -83,19 +86,19 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
     gaps: list[str] = []
     for modelo in modelos:
         for revision_id, revision in modelo.revisions.items():
-            relations = revision.relations
-            if not relations:
+            bindings = relation_prefill_bindings_for_period(revision)
+            if not bindings:
                 continue
             index = relation_consumption_index(revision)
-            for relation in relations:
-                role = getattr(relation, "dependency_role", None)
+            for binding, provider in bindings:
+                role = provider.dependency_role
                 if role not in _VALUE_FEEDING_ROLES:
                     continue
-                if not relation_consumption_channels(relation, index):
+                if not relation_consumption_channels(binding.id, index):
                     gaps.append(
-                        f"{modelo.id}/{revision_id}: relation {relation.id!r} "
+                        f"{modelo.id}/{revision_id}: binding {binding.id!r} "
                         f"(role={role!r}, target_binding="
-                        f"{getattr(relation, 'target_binding', None)!r}) is unconsumed"
+                        f"{binding.id!r}) is unconsumed"
                     )
 
     assert not gaps, (
@@ -116,13 +119,13 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
     unconsumed_roles: set[str] = set()
     for modelo in modelos:
         for _revision_id, revision in modelo.revisions.items():
-            relations = revision.relations
-            if not relations:
+            bindings = relation_prefill_bindings_for_period(revision)
+            if not bindings:
                 continue
             index = relation_consumption_index(revision)
-            for relation in relations:
-                if not relation_consumption_channels(relation, index):
-                    unconsumed_roles.add(relation.dependency_role)
+            for binding, provider in bindings:
+                if not relation_consumption_channels(binding.id, index):
+                    unconsumed_roles.add(provider.dependency_role)
 
     assert unconsumed_roles <= {_EVIDENCE_ROLE}, (
         f"Unconsumed relations carry unexpected roles {unconsumed_roles - {_EVIDENCE_ROLE}!r}; "

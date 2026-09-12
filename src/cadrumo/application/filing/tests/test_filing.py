@@ -390,9 +390,9 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             "modelo-131-resultados-negativos-anteriores": Decimal("0"),
             _M131_CASILLA_12: Decimal("0"),
             _M131_CASILLA_14: Decimal("0"),
-            "modelo-131.dpa.013-016.epigrafe-iae": "722",
-            "modelo-131.dpa.031-032.vehiculos-afectos": "2",
-            "modelo-131.did.012-045.iban": "ES9121000418450200051332",
+            "modelo-131.dpa.epigrafe-iae": "722",
+            "modelo-131.dpa.vehiculos-afectos": "2",
+            "modelo-131.did.iban": "ES9121000418450200051332",
         },
         schema_provider=_period_schema_provider(),
     )
@@ -403,9 +403,9 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
     assert draft.schema_version == "registry:131:2026"
     assert _M131_CASILLA_15 in values
-    assert binding_values["modelo-131.dpa.013-016.epigrafe-iae"] == "722"
-    assert binding_values["modelo-131.dpa.031-032.vehiculos-afectos"] == 2
-    assert binding_values["modelo-131.did.012-045.iban"] == "ES9121000418450200051332"
+    assert binding_values["modelo-131.dpa.epigrafe-iae"] == "722"
+    assert binding_values["modelo-131.dpa.vehiculos-afectos"] == 2
+    assert binding_values["modelo-131.did.iban"] == "ES9121000418450200051332"
 
 
 def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() -> None:
@@ -416,18 +416,18 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
         inputs={
             _M131_CASILLA_03: Decimal("1000"),
             _M131_CASILLA_05: Decimal("500"),
-            "modelo-131.dpa.013-016.epigrafe-iae": ["722", "845"],
-            "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2", "2": "3"},
+            "modelo-131.dpa.epigrafe-iae": ["722", "845"],
+            "modelo-131.dpa.vehiculos-afectos": {"1": "2", "2": "3"},
         },
         schema_provider=_period_schema_provider(),
     )
 
     rows = {(value.binding_id, value.row_index): value.value for value in draft.binding_values}
 
-    assert rows[("modelo-131.dpa.013-016.epigrafe-iae", 1)] == "722"
-    assert rows[("modelo-131.dpa.013-016.epigrafe-iae", 2)] == "845"
-    assert rows[("modelo-131.dpa.031-032.vehiculos-afectos", 1)] == 2
-    assert rows[("modelo-131.dpa.031-032.vehiculos-afectos", 2)] == 3
+    assert rows[("modelo-131.dpa.epigrafe-iae", 1)] == "722"
+    assert rows[("modelo-131.dpa.epigrafe-iae", 2)] == "845"
+    assert rows[("modelo-131.dpa.vehiculos-afectos", 1)] == 2
+    assert rows[("modelo-131.dpa.vehiculos-afectos", 2)] == 3
 
 
 def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -> None:
@@ -438,24 +438,24 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
         inputs={
             _M131_CASILLA_03: Decimal("1000"),
             _M131_CASILLA_05: Decimal("500"),
-            "modelo-131.page1.109-109.discapacidad-33": "yes",
-            "modelo-131.page1.110-113.actividad-1-epigrafe": "722",
-            "modelo-131.page1.114-130.actividad-1-rendimiento-neto": Decimal("1200.50"),
-            "modelo-131.page1.131-135.actividad-1-porcentaje": Decimal("2"),
-            "modelo-131.page1.692-692.declaracion-complementaria": "no",
-            "modelo-131.page1.693-705.justificante-anterior": "1234567890123",
+            "modelo-131.page1.discapacidad-33": "yes",
+            "modelo-131.page1.actividad-1-epigrafe": "722",
+            "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
+            "modelo-131.page1.actividad-1-porcentaje": Decimal("2"),
+            "modelo-131.page1.declaracion-complementaria": "no",
+            "modelo-131.page1.justificante-anterior": "1234567890123",
         },
         schema_provider=_period_schema_provider(),
     )
 
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
 
-    assert binding_values["modelo-131.page1.109-109.discapacidad-33"] is True
-    assert binding_values["modelo-131.page1.110-113.actividad-1-epigrafe"] == "722"
-    assert binding_values["modelo-131.page1.114-130.actividad-1-rendimiento-neto"] == Decimal("1200.50")
-    assert binding_values["modelo-131.page1.131-135.actividad-1-porcentaje"] == Decimal("2")
-    assert binding_values["modelo-131.page1.692-692.declaracion-complementaria"] is False
-    assert binding_values["modelo-131.page1.693-705.justificante-anterior"] == "1234567890123"
+    assert binding_values["modelo-131.page1.discapacidad-33"] is True
+    assert binding_values["modelo-131.page1.actividad-1-epigrafe"] == "722"
+    assert binding_values["modelo-131.page1.actividad-1-rendimiento-neto"] == Decimal("1200.50")
+    assert binding_values["modelo-131.page1.actividad-1-porcentaje"] == Decimal("2")
+    assert binding_values["modelo-131.page1.declaracion-complementaria"] is False
+    assert binding_values["modelo-131.page1.justificante-anterior"] == "1234567890123"
 
 
 def test_validator_reports_schema_version_mismatch_against_registry_schema() -> None:

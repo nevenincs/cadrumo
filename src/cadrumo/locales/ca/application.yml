@@ -1217,6 +1217,12 @@ application:
         al perfil actiu.
     profile_binding:
       errors:
+        boolean_value_channel_mismatch: El fet del perfil per al vincle {binding_id}
+          és booleà, però el vincle declara el canal de valor {declared_channel}.
+        boolean_value_type_invalid: El fet del perfil per al vincle booleà {binding_id}
+          no és booleà; s'ha rebut el tipus {value_type}.
+        channel_declaration_conflict: El vincle {binding_id} declara el canal {declared_channel},
+          incompatible amb el canal consumidor {consumer_channel}.
         date_value_type_invalid: La dada de perfil per al binding de data %{binding_id}
           ha de ser una data; s'ha rebut %{value_type}.
         decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal

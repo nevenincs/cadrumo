@@ -41,7 +41,7 @@ modelo:
             label: IAE heading of the activity under the objective estimation (módulos)
               regime. For headings 659.4 and 691.9, which group two different activities
               under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-              according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+              according to the activity - see the coefficient parameter m131-modulos-coeficientes
               for the exact assignment.
           irpf-pf-modulos-indice-inicio-actividad:
             help: Tax information for casilla of Modelo 131.
@@ -178,7 +178,7 @@ modelo:
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
           construct:
-            modelo-131-2019-2023-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — tax information
           field:
@@ -270,12 +270,12 @@ modelo:
               help: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
             modulos-indice-inicio-actividad:
               help: Tax information for casilla of Modelo 131.
@@ -343,7 +343,7 @@ modelo:
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
           construct:
-            modelo-131-2024-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — tax information
           field:
@@ -435,12 +435,12 @@ modelo:
               help: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2025
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
             modulos-indice-inicio-actividad:
               help: Tax information for casilla of Modelo 131.
@@ -508,7 +508,7 @@ modelo:
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
           construct:
-            modelo-131-2025-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — tax information
           field:
@@ -600,12 +600,12 @@ modelo:
               help: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2024
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
               label: IAE heading of the activity under the objective estimation (módulos)
                 regime. For headings 659.4 and 691.9, which group two different activities
                 under the same code, use the suffix "a" or "b" (e.g. "659.4a", "691.9b")
-                according to the activity - see the coefficient parameter m131-modulos-coeficientes-2026
+                according to the activity - see the coefficient parameter m131-modulos-coeficientes
                 for the exact assignment.
             modulos-minoracion-inversion:
               help: Tax information for casilla of Modelo 131.
@@ -636,7 +636,7 @@ modelo:
               label: Negative balance carried forward to later periods (max. 0, -box
                 10)
           construct:
-            modelo-131-2026-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — tax information
           field:

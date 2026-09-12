@@ -289,7 +289,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
     )
     assert gates[EvidenceTier.OFFICIAL_SOURCE_GUIDANCE].source_refs == ("enrolled-modelo-038-procedure",)
     assert gates[EvidenceTier.LAYOUT_AUTHORITY].source_refs == ("aeat-dr-038-2024",)
-    assert gates[EvidenceTier.LAYOUT_AUTHORITY].workbook_refs == ("modelo-038-2024-static-layout",)
+    assert gates[EvidenceTier.LAYOUT_AUTHORITY].workbook_refs == ("modelo-038-static-layout",)
 
     # Keep the full selector-derived denominator and every mandatory tier
     # visible. M038's inspection projection is deliberately non-filing, but

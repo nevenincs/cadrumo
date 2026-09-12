@@ -1218,6 +1218,12 @@ application:
         al perfil activo.
     profile_binding:
       errors:
+        boolean_value_channel_mismatch: El dato del perfil para el vínculo {binding_id}
+          es booleano, pero el vínculo declara el canal de valor {declared_channel}.
+        boolean_value_type_invalid: El dato del perfil para el vínculo booleano {binding_id}
+          no es booleano; se recibió el tipo {value_type}.
+        channel_declaration_conflict: El vínculo {binding_id} declara el canal {declared_channel},
+          incompatible con el canal consumidor {consumer_channel}.
         date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
           debe ser una fecha; se recibió %{value_type}.
         decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal

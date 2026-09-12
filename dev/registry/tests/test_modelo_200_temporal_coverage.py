@@ -5,9 +5,13 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from cadrumo.domain.calculations.registry.schema_formula import BracketEntry, ParameterDefinition
 
 from ..compiler.validate_parameter_temporal import bracket_coverage_gaps
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_coverage_validator_fires_on_deliberate_gap() -> None:

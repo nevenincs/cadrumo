@@ -44,9 +44,9 @@ _YEAR = 2025
 _PERIOD = "0A"
 _RESOLVED_BINDING_IDS = frozenset(
     {
-        "renta-2025-profile-tax-residence-ccaa",
+        "renta-profile-tax-residence-ccaa",
         "renta-profile-declaration-type",
-        "renta-2025-profile-taxpayer-birth-date",
+        "renta-profile-taxpayer-birth-date",
         "renta-profile-family-minor-children-in-unit",
         "renta-profile-has-economic-activity",
         "renta-profile-anualidades-sin-minimo-descendientes",

@@ -379,8 +379,7 @@ def _not_applicable_relation_zero_inputs(
 
 def _active_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
     return frozenset(
-        binding.id
-        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+        binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
 
 

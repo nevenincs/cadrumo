@@ -7,7 +7,7 @@
 # legal_refs/source_refs (04, 05: DA 33 LIRPF + art. tercero Orden HAC/763/2018;
 # 07: art. 11 Orden HAP/70/2013 + art. tercero Orden HAC/763/2018).
 [[revisions."2026".verification_expectations]]
-id = "modelo-136-2026-reconcile-when-present"
+id = "modelo-136-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "04",

@@ -13,7 +13,9 @@ from __future__ import annotations
 import argparse
 import ast
 import configparser
+import hashlib
 import itertools
+import json
 import os
 import re
 import sys
@@ -24,6 +26,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN
+from cadrumo.tests.module_target_inventory import MetadataTargetSetError, load_all_target_sets, load_target_set
 
 _DOTTED_NAME: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
 _LAYER_NAME: Final[re.Pattern[str]] = re.compile(r"^(?:\(([A-Za-z_]\w*)\)|([A-Za-z_]\w*))$")
@@ -57,6 +60,7 @@ class Authority:
     root_packages: tuple[str, ...]
     roots: tuple[RootPackage, ...]
     classifications: tuple[tuple[str, tuple[str, ...]], ...]
+    forbidden_contracts: tuple[ForbiddenContract, ...] = ()
 
     @property
     def root_names(self) -> frozenset[str]:
@@ -85,6 +89,48 @@ class AuthorityRead:
 
 
 @dataclass(frozen=True)
+class ForbiddenContract:
+    """One dependency-direction contract derived from Import Linter authority."""
+
+    key: str
+    name: str
+    source_modules: tuple[str, ...]
+    forbidden_modules: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class ImportOccurrence:
+    """One normalized direct first-party import that violates a contract."""
+
+    fingerprint: str
+    source_module: str
+    target_module: str
+    imported_symbols: tuple[str, ...]
+    import_form: str
+    lexical_scope: str
+    contract: str
+    path: Path
+    lineno: int
+
+    def as_dict(self, repository: Path) -> dict[str, object]:
+        """Return the stable identity plus movable source-location evidence."""
+        try:
+            path = self.path.relative_to(repository).as_posix()
+        except ValueError:
+            path = self.path.as_posix()
+        return {
+            "contract": self.contract,
+            "fingerprint": self.fingerprint,
+            "import_form": self.import_form,
+            "imported_symbols": list(self.imported_symbols),
+            "lexical_scope": self.lexical_scope,
+            "location": {"line": self.lineno, "path": path},
+            "source_module": self.source_module,
+            "target_module": self.target_module,
+        }
+
+
+@dataclass(frozen=True)
 class Finding:
     """One subordinate checker diagnostic."""
 
@@ -93,6 +139,7 @@ class Finding:
     path: Path | None = None
     lineno: int | None = None
     fatal: bool = False
+    advisory: bool = False
 
     def render(self, repository: Path) -> str:
         """Render a stable category and repository-relative location."""
@@ -107,7 +154,8 @@ class Finding:
             if self.lineno is not None:
                 location += f":{self.lineno}"
             location += ": "
-        return f"[{self.category}] {location}{self.message}"
+        prefix = f"[ADVISORY:{self.category}]" if self.advisory else f"[{self.category}]"
+        return f"{prefix} {location}{self.message}"
 
 
 @dataclass(frozen=True)
@@ -116,17 +164,41 @@ class CheckResult:
 
     findings: tuple[Finding, ...]
     files_scanned: int
+    occurrences: tuple[ImportOccurrence, ...] = ()
 
     @property
     def returncode(self) -> int:
         """Return a finding code or a tool-broken code for an incomplete scan."""
         if any(finding.fatal for finding in self.findings):
             return TOOL_BROKEN
-        return FAILED if self.findings else 0
+        return FAILED if any(not finding.advisory for finding in self.findings) else 0
 
     def render(self, repository: Path) -> str:
         """Render diagnostics in deterministic order."""
         return "\n".join(finding.render(repository) for finding in self.findings)
+
+    def as_dict(self, repository: Path) -> dict[str, object]:
+        """Return complete machine-readable checker evidence."""
+        return {
+            "files_scanned": self.files_scanned,
+            "findings": [
+                {
+                    "advisory": finding.advisory,
+                    "category": finding.category,
+                    "fatal": finding.fatal,
+                    "line": finding.lineno,
+                    "message": finding.message,
+                    "path": (
+                        finding.path.relative_to(repository).as_posix()
+                        if finding.path is not None and finding.path.is_relative_to(repository)
+                        else finding.path.as_posix() if finding.path is not None else None
+                    ),
+                }
+                for finding in self.findings
+            ],
+            "occurrences": [occurrence.as_dict(repository) for occurrence in self.occurrences],
+            "schema_version": 2,
+        }
 
 
 def read_authority(repository: Path, config_path: Path | None = None) -> AuthorityRead:
@@ -183,12 +255,32 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
     _check_undeclared_top_level_roots(repository, root_packages, findings)
 
     classifications: list[tuple[str, tuple[str, ...]]] = []
+    forbidden_contracts: list[ForbiddenContract] = []
     classified_containers: set[str] = set()
     for name in parser.sections():
         contract = parser[name]
         if not name.startswith("importlinter:contract:"):
             continue
-        if contract.get("type", "").strip().lower() != "layers":
+        contract_type = contract.get("type", "").strip().lower()
+        if contract_type == "forbidden":
+            sources = tuple(_split_words(contract.get("source_modules", "")))
+            forbidden = tuple(_split_words(contract.get("forbidden_modules", "")))
+            display_name = contract.get("name", name.removeprefix("importlinter:contract:")).strip()
+            contract_key = name.removeprefix("importlinter:contract:")
+            if not sources:
+                findings.append(f"[AUTHORITY_CONFIG] forbidden contract {name!r} has no source_modules")
+            if not forbidden:
+                findings.append(f"[AUTHORITY_CONFIG] forbidden contract {name!r} has no forbidden_modules")
+            forbidden_contracts.append(
+                ForbiddenContract(
+                    key=contract_key,
+                    name=display_name,
+                    source_modules=tuple(sorted(sources)),
+                    forbidden_modules=tuple(sorted(forbidden)),
+                )
+            )
+            continue
+        if contract_type != "layers":
             continue
 
         containers = _split_words(contract.get("containers", ""))
@@ -238,6 +330,7 @@ def read_authority(repository: Path, config_path: Path | None = None) -> Authori
         root_packages=root_packages,
         roots=tuple(roots),
         classifications=tuple(sorted(classifications)),
+        forbidden_contracts=tuple(sorted(forbidden_contracts, key=lambda item: item.key)),
     )
     return AuthorityRead(authority, tuple(findings))
 
@@ -389,8 +482,11 @@ def check_authority(authority: Authority) -> CheckResult:
             return _result(findings, 0, authority.repository)
         _check_initializers(authority, modules, findings)
         _check_static_imports(authority, modules, findings)
-        _check_dynamic_imports(authority, modules, findings)
-        return _result(findings, len(modules), authority.repository)
+        known = frozenset((*modules, *authority.root_packages))
+        closed_attribute_targets = _closed_attribute_targets(modules, authority.root_names, known)
+        _check_dynamic_imports(authority, modules, findings, closed_attribute_targets)
+        occurrences = _collect_import_occurrences(authority, modules, closed_attribute_targets)
+        return _result(findings, len(modules), authority.repository, occurrences)
     except Exception as exc:  # broad: the checker boundary must fail closed
         return CheckResult(
             (Finding("INTERNAL_CHECKER", f"subordinate checker aborted: {exc}", fatal=True),),
@@ -398,7 +494,12 @@ def check_authority(authority: Authority) -> CheckResult:
         )
 
 
-def _result(findings: list[Finding], files_scanned: int, repository: Path) -> CheckResult:
+def _result(
+    findings: list[Finding],
+    files_scanned: int,
+    repository: Path,
+    occurrences: Sequence[ImportOccurrence] = (),
+) -> CheckResult:
     """Sort diagnostics before returning the component result."""
     ordered = sorted(
         findings,
@@ -409,7 +510,15 @@ def _result(findings: list[Finding], files_scanned: int, repository: Path) -> Ch
             finding.message,
         ),
     )
-    return CheckResult(tuple(ordered), files_scanned)
+    ordered_occurrences = sorted(
+        occurrences,
+        key=lambda occurrence: (
+            occurrence.fingerprint,
+            occurrence.path.as_posix(),
+            occurrence.lineno,
+        ),
+    )
+    return CheckResult(tuple(ordered), files_scanned, tuple(ordered_occurrences))
 
 
 def _read_modules(authority: Authority) -> tuple[dict[str, _Module], list[Finding]]:
@@ -452,6 +561,239 @@ def _read_modules(authority: Authority) -> tuple[dict[str, _Module], list[Findin
     for module in modules.values():
         _collect_bindings(module, authority.root_names)
     return modules, findings
+
+
+def _collect_import_occurrences(
+    authority: Authority,
+    modules: Mapping[str, _Module],
+    closed_attribute_targets: frozenset[str],
+) -> tuple[ImportOccurrence, ...]:
+    """Collect direct, occurrence-level violations from the declared authority."""
+    known = frozenset((*modules, *authority.root_packages))
+    occurrences: list[ImportOccurrence] = []
+    for module in modules.values():
+        visitor = _OccurrenceVisitor(
+            authority=authority,
+            module=module,
+            modules=modules,
+            known=known,
+            closed_attribute_targets=closed_attribute_targets,
+            occurrences=occurrences,
+        )
+        visitor.visit(module.tree)
+    return tuple(occurrences)
+
+
+class _OccurrenceVisitor(ast.NodeVisitor):
+    """Traverse one module while retaining scope and TYPE_CHECKING context."""
+
+    def __init__(
+        self,
+        *,
+        authority: Authority,
+        module: _Module,
+        modules: Mapping[str, _Module],
+        known: frozenset[str],
+        closed_attribute_targets: frozenset[str],
+        occurrences: list[ImportOccurrence],
+    ) -> None:
+        self.authority = authority
+        self.module = module
+        self.modules = modules
+        self.known = known
+        self.closed_attribute_targets = closed_attribute_targets
+        self.occurrences = occurrences
+        self.context = _EvaluationContext(module.tree, module.name)
+        self.import_module_names, self.importlib_names, self.raw_import_names = _dynamic_aliases(module)
+        self.scopes: list[str] = []
+        self.type_checking_depth = 0
+
+    def visit_If(self, node: ast.If) -> None:
+        is_type_checking = _is_type_checking_guard(node.test)
+        self.visit(node.test)
+        if is_type_checking:
+            self.type_checking_depth += 1
+        for statement in node.body:
+            self.visit(statement)
+        if is_type_checking:
+            self.type_checking_depth -= 1
+        for statement in node.orelse:
+            self.visit(statement)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_scope(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_scope(node)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self._visit_scope(node)
+
+    def _visit_scope(self, node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) -> None:
+        self.scopes.append(node.name)
+        for statement in node.body:
+            self.visit(statement)
+        self.scopes.pop()
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            if _is_first_party(alias.name, self.authority.root_names):
+                self._record(alias.name, (), node.lineno, self._static_form())
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        target = _resolve_from(self.module.name, self.module.is_package, node.level, node.module)
+        if target is None or not _is_first_party(target, self.authority.root_names):
+            return
+        for alias in node.names:
+            child = f"{target}.{alias.name}"
+            if alias.name != "*" and _is_package(target, self.modules, self.authority.root_names) and child in self.known:
+                self._record(child, (), node.lineno, self._static_form())
+            else:
+                self._record(target, (alias.name,), node.lineno, self._static_form())
+
+    def visit_Call(self, node: ast.Call) -> None:
+        qualified = _qualified_name(node.func)
+        is_import_module = qualified in self.import_module_names or (
+            isinstance(node.func, ast.Attribute)
+            and node.func.attr == "import_module"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id in self.importlib_names
+        )
+        is_raw_import = qualified in self.raw_import_names or qualified in {"__import__", "builtins.__import__"}
+        if is_import_module or is_raw_import:
+            target_node = (
+                node.args[0]
+                if node.args
+                else next((keyword.value for keyword in node.keywords if keyword.arg == "name"), None)
+            )
+            if target_node is not None:
+                targets = self.context.values_for(target_node, node.lineno)
+                if targets is None or not targets:
+                    targets = _metadata_target_set_targets(
+                        target_node,
+                        node.lineno,
+                        self.module,
+                        self.context,
+                        self.authority.repository,
+                    )
+                if targets is None or not targets:
+                    targets = _computed_attribute_targets(
+                        target_node,
+                        node.lineno,
+                        self.context,
+                        self.closed_attribute_targets,
+                    )
+                for target in sorted(targets or ()):
+                    resolved = _dynamic_target(self.module, target, node, self.context)
+                    if resolved and resolved in self.known and _is_first_party(resolved, self.authority.root_names):
+                        self._record(resolved, (), node.lineno, "dynamic")
+        self.generic_visit(node)
+
+    def _static_form(self) -> str:
+        if self.type_checking_depth:
+            return "type_checking"
+        return "local" if self.scopes else "static"
+
+    def _record(self, target: str, symbols: tuple[str, ...], lineno: int, import_form: str) -> None:
+        lexical_scope = ".".join(self.scopes) if self.scopes else "<module>"
+        for contract in self.authority.forbidden_contracts:
+            if not _matches_any_module(self.module.name, contract.source_modules):
+                continue
+            if _matches_any_module(self.module.name, contract.forbidden_modules):
+                continue
+            if not _matches_any_module(target, contract.forbidden_modules):
+                continue
+            fingerprint = import_occurrence_fingerprint(
+                source_module=self.module.name,
+                target_module=target,
+                imported_symbols=symbols,
+                import_form=import_form,
+                lexical_scope=lexical_scope,
+                contract=contract.key,
+            )
+            self.occurrences.append(
+                ImportOccurrence(
+                    fingerprint=fingerprint,
+                    source_module=self.module.name,
+                    target_module=target,
+                    imported_symbols=tuple(sorted(symbols)),
+                    import_form=import_form,
+                    lexical_scope=lexical_scope,
+                    contract=contract.key,
+                    path=self.module.path,
+                    lineno=lineno,
+                )
+            )
+        source_lane = _adapter_lane(self.module.name)
+        target_lane = _adapter_lane(target)
+        if source_lane is not None and target_lane is not None and source_lane != target_lane:
+            contract = "advisory:adapter-top-level-coupling"
+            fingerprint = import_occurrence_fingerprint(
+                source_module=self.module.name,
+                target_module=target,
+                imported_symbols=symbols,
+                import_form=import_form,
+                lexical_scope=lexical_scope,
+                contract=contract,
+            )
+            self.occurrences.append(
+                ImportOccurrence(
+                    fingerprint=fingerprint,
+                    source_module=self.module.name,
+                    target_module=target,
+                    imported_symbols=tuple(sorted(symbols)),
+                    import_form=import_form,
+                    lexical_scope=lexical_scope,
+                    contract=contract,
+                    path=self.module.path,
+                    lineno=lineno,
+                )
+            )
+
+
+def _is_type_checking_guard(node: ast.AST) -> bool:
+    """Recognize the conventional static-only import guard."""
+    if isinstance(node, ast.Name):
+        return node.id == "TYPE_CHECKING"
+    if isinstance(node, ast.Attribute):
+        return node.attr == "TYPE_CHECKING"
+    if isinstance(node, ast.BoolOp):
+        return any(_is_type_checking_guard(value) for value in node.values)
+    return False
+
+
+def _matches_any_module(module: str, prefixes: Sequence[str]) -> bool:
+    return any(module == prefix or module.startswith(f"{prefix}.") for prefix in prefixes)
+
+
+def _adapter_lane(module: str) -> str | None:
+    """Return the top-level adapter namespace without asserting peer legality."""
+    prefix = "cadrumo.adapters."
+    if not module.startswith(prefix):
+        return None
+    tail = module.removeprefix(prefix)
+    return tail.partition(".")[0] or None
+
+
+def import_occurrence_fingerprint(
+    *,
+    source_module: str,
+    target_module: str,
+    imported_symbols: Sequence[str],
+    import_form: str,
+    lexical_scope: str,
+    contract: str,
+) -> str:
+    """Return the stable identity of one occurrence-contract record."""
+    identity = {
+        "contract": contract,
+        "import_form": import_form,
+        "imported_symbols": sorted(imported_symbols),
+        "lexical_scope": lexical_scope,
+        "source_module": source_module,
+        "target_module": target_module,
+    }
+    return hashlib.sha256(json.dumps(identity, sort_keys=True, separators=(",", ":")).encode(UTF_8)).hexdigest()
 
 
 def _module_name(path: Path, root: RootPackage) -> str:
@@ -721,9 +1063,10 @@ def _check_absolute_spelling(
         findings.append(
             Finding(
                 "ABSOLUTE_INTRA_CADRUMO",
-                f"use relative syntax for {target!r}",
+                f"absolute canonical import of {target!r}; relative spelling is optional style",
                 module.path,
                 node.lineno,
+                advisory=True,
             )
         )
 
@@ -795,9 +1138,13 @@ def _is_package(name: str, modules: Mapping[str, _Module], root_names: frozenset
     return name in root_names or (name in modules and modules[name].is_package)
 
 
-def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module], findings: list[Finding]) -> None:
+def _check_dynamic_imports(
+    authority: Authority,
+    modules: Mapping[str, _Module],
+    findings: list[Finding],
+    closed_attribute_targets: frozenset[str],
+) -> None:
     known = frozenset((*modules, *authority.root_packages))
-    closed_attribute_targets = _closed_attribute_targets(modules, authority.root_names, known)
     for module in modules.values():
         context = _EvaluationContext(module.tree, module.name)
         import_module_names, importlib_names, raw_import_names = _dynamic_aliases(module)
@@ -833,7 +1180,11 @@ def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module],
                 )
                 continue
             targets = context.values_for(target_node, node.lineno)
-            computed_projection = False
+            metadata_backed = False
+            if targets is None or not targets:
+                targets = _metadata_target_set_targets(target_node, node.lineno, module, context, authority.repository)
+                metadata_backed = targets is not None
+            computed_projection = metadata_backed
             if targets is None or not targets:
                 targets = _computed_attribute_targets(target_node, node.lineno, context, closed_attribute_targets)
                 computed_projection = targets is not None
@@ -882,9 +1233,10 @@ def _check_dynamic_imports(authority: Authority, modules: Mapping[str, _Module],
                     findings.append(
                         Finding(
                             "ABSOLUTE_INTRA_CADRUMO",
-                            f"use a relative dynamic target for {resolved!r}",
+                            f"absolute canonical dynamic target {resolved!r}; relative spelling is optional style",
                             module.path,
                             node.lineno,
+                            advisory=True,
                         )
                     )
                 _check_private(module, resolved, resolved.rsplit(".", 1)[-1], modules, authority, findings, node.lineno)
@@ -1024,6 +1376,103 @@ def _computed_attribute_targets(
         ):
             return closed_attribute_targets
     return None
+
+
+def _metadata_target_set_targets(
+    target_node: ast.AST,
+    lineno: int,
+    module: _Module,
+    context: _EvaluationContext,
+    repository: Path,
+) -> frozenset[str] | None:
+    """Resolve a generic declared-metadata target-set loader call.
+
+    The loader's checked-in JSON is the finite authority.  This deliberately
+    recognises the reusable loader origin rather than a caller, artifact path,
+    or target-set name, so any governed module can use a declared inventory.
+    """
+    targets: set[str] = set()
+    resolved_any = False
+    for candidate in _metadata_target_set_candidate_nodes(target_node, lineno, context, set()):
+        if not isinstance(candidate, ast.Call):
+            continue
+        loader = _metadata_target_set_loader(module, candidate.func)
+        if loader is None:
+            continue
+        path_node = _call_argument(candidate, "metadata_path", positional_index=0)
+        paths = context.values_for(path_node, candidate.lineno)
+        if paths is None:
+            return None
+        resolved_any = True
+        try:
+            for path in paths:
+                if loader == "all":
+                    targets.update(load_all_target_sets(path, repository=repository))
+                else:
+                    set_node = _call_argument(candidate, "target_set", positional_index=1)
+                    names = context.values_for(set_node, candidate.lineno)
+                    if names is None:
+                        return None
+                    for name in names:
+                        targets.update(load_target_set(path, name, repository=repository))
+        except MetadataTargetSetError:
+            return None
+        if len(targets) > _MAX_CLOSED_DYNAMIC_TARGETS:
+            return None
+    return frozenset(targets) if resolved_any and targets else None
+
+
+def _metadata_target_set_candidate_nodes(
+    node: ast.AST,
+    lineno: int,
+    context: _EvaluationContext,
+    resolving: set[tuple[int, str]],
+) -> Iterable[ast.AST]:
+    """Yield *node* and the finite assignment chain that can name its loader call."""
+    yield node
+    if not isinstance(node, ast.Name):
+        return
+    scope = context._nearest_function(node)
+    key = (id(scope) if scope is not None else 0, node.id)
+    if key in resolving:
+        return
+    assignments = context._latest_values(node.id, lineno, scope)
+    if not assignments:
+        return
+    resolving.add(key)
+    for assignment in assignments:
+        yield from _metadata_target_set_candidate_nodes(assignment.value, assignment.lineno - 1, context, resolving)
+    resolving.remove(key)
+
+
+def _call_argument(node: ast.Call, name: str, *, positional_index: int) -> ast.AST | None:
+    """Return a named or positional call argument without caller-specific syntax."""
+    for keyword in node.keywords:
+        if keyword.arg == name:
+            return keyword.value
+    return node.args[positional_index] if len(node.args) > positional_index else None
+
+
+def _metadata_target_set_loader(module: _Module, function: ast.AST) -> str | None:
+    """Return the generic metadata loader kind resolved by *function*."""
+    qualified = _qualified_name(function)
+    if qualified is None:
+        return None
+    expected = {
+        "cadrumo.tests.module_target_inventory.load_all_target_sets": "all",
+        "cadrumo.tests.module_target_inventory.load_target_set": "named",
+    }
+    if qualified in expected:
+        return expected[qualified]
+    head, separator, tail = qualified.partition(".")
+    binding = module.bindings.get(head)
+    if binding is None or binding.target is None:
+        return None
+    if not separator:
+        resolved = f"{binding.target}.{binding.imported_name}"
+    else:
+        resolved = f"{binding.target}.{tail}"
+    return expected.get(resolved)
 
 
 def _is_module_projection_expression(
@@ -1542,6 +1991,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--internal", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--root", type=Path, default=None, help="repository/source root to scan")
     parser.add_argument("--config", type=Path, default=None, help="Import Linter configuration path")
+    parser.add_argument("--report", type=Path, default=None, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if not args.internal:
         print("[INTERNAL_CHECKER] subordinate checker is internal; use just check-import-boundaries")
@@ -1557,6 +2007,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(finding)
         return TOOL_BROKEN
     result = check_authority(read.authority)
+    if args.report is not None:
+        args.report.write_text(
+            json.dumps(result.as_dict(read.authority.repository), indent=2, sort_keys=True) + "\n",
+            encoding=UTF_8,
+            newline="\n",
+        )
     for finding in read.findings:
         print(finding)
     if result.findings:
@@ -1576,10 +2032,13 @@ __all__ = [
     "Authority",
     "AuthorityRead",
     "CheckResult",
+    "ForbiddenContract",
     "Finding",
+    "ImportOccurrence",
     "RootPackage",
     "check_authority",
     "has_architectural_warning",
+    "import_occurrence_fingerprint",
     "main",
     "read_authority",
 ]

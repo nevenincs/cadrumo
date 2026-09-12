@@ -1,5 +1,5 @@
 [[revisions."2016-2018".workbook_parity_refs]]
-id = "modelo-308-dr-2016-2018-static-layout"
+id = "modelo-308-dr-static-layout"
 workbook_source = "aeat-dr-308-2016"
 fixture_id = "modelo-308-2016-2018-record-design"
 formula_coverage = "static_layout"

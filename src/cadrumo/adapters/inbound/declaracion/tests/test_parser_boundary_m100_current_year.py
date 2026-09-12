@@ -68,8 +68,8 @@ _M100_CURRENT_YEAR_EXPECTED_VALUES: dict[str, Decimal] = {
 @pytest.mark.parametrize(
     ("year", "profile_id"),
     [
-        (2024, "modelo-100-2024-declaracion-pdf"),
-        (2025, "modelo-100-2025-declaracion-pdf"),
+        (2024, "modelo-100-declaracion-pdf"),
+        (2025, "modelo-100-declaracion-pdf"),
     ],
     ids=["2024", "2025"],
 )

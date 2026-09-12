@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-atribucion-rentas-rate-pass-through"
+id = "renta-atribucion-rentas-rate-pass-through"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-35-2006:art-87", "ley-35-2006:art-89"]

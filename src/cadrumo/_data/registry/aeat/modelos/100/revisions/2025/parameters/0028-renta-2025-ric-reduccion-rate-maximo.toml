@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-ric-reduccion-rate-maximo"
+id = "renta-ric-reduccion-rate-maximo"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-19-1994:art-27"]

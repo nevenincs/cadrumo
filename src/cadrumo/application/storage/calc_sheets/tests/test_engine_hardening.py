@@ -10,7 +10,11 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.config import override_settings
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.authority import bundled_authority
-from .....domain.calculations.registry.relations import relation_requirement_index, relation_source_requirements
+from .....domain.calculations.registry.relations import (
+    relation_prefill_bindings_for_period,
+    relation_requirement_index,
+    relation_source_requirements,
+)
 from .....domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .....tests.registry_snapshot import build_snapshot
@@ -66,7 +70,9 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
     plan = build_export_plan(snapshot, relation_values=RelationValues())
 
     assert plan.relation_provenance is not None
-    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    relations_by_id = {
+        binding.id: provider for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
+    }
     requirements_by_relation = relation_requirement_index(
         relation_source_requirements(snapshot.revision, filing_year=snapshot.filing_year, period=snapshot.period),
     )

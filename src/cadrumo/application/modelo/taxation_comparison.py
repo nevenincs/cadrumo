@@ -53,6 +53,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
+from ...core.decimal.constants import MONEY_ZERO, ONE
 from ...core.errors.hierarchy import CoreError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -210,6 +211,7 @@ def compare_taxation_modes(
     enum_binding_values: Mapping[BindingId, str],
     relation_values: Mapping[RelationId, Decimal] | None = None,
     date_binding_values: Mapping[BindingId, date] | None = None,
+    boolean_binding_values: Mapping[BindingId, bool] | None = None,
     date_context: Mapping[str, date] | None = None,
 ) -> TaxationComparisonResult:
     """Run the registry engine for conjunta and individual, then diff the results.
@@ -230,6 +232,8 @@ def compare_taxation_modes(
         enum_binding_values: Pre-resolved string enum binding values.
         relation_values: Optional cross-revision aggregation values.
         date_binding_values: Optional date-typed binding values.
+        boolean_binding_values: Optional truth values for bindings whose
+            registry value contract declares the boolean channel.
         date_context: Optional date context for temporal casilla resolution.
 
     Returns:
@@ -267,6 +271,7 @@ def compare_taxation_modes(
 
     resolved_relations = dict(relation_values or {})
     resolved_dates = dict(date_binding_values or {})
+    resolved_booleans = dict(boolean_binding_values or {})
     resolved_date_ctx: dict[str, date] = dict(date_context or {})
 
     def _run(declaration_type: Literal[1, 2]) -> Mapping[CasillaId, Decimal]:
@@ -279,6 +284,7 @@ def compare_taxation_modes(
             enum_binding_values=enum_binding_values,
             relation_values=resolved_relations,
             date_binding_values=resolved_dates or None,
+            boolean_binding_values=resolved_booleans or None,
             # The individual/joint cuota differential is an IRPF comparison, so
         )
         return result.values
@@ -286,15 +292,15 @@ def compare_taxation_modes(
     conjunta_values = _run(2)
     individual_values = _run(1)
 
-    conjunta_cuota = conjunta_values.get(cuota_casilla, Decimal("0"))
-    individual_cuota = individual_values.get(cuota_casilla, Decimal("0"))
-    conjunta_resultado = conjunta_values.get(resultado_casilla, Decimal("0"))
-    individual_resultado = individual_values.get(resultado_casilla, Decimal("0"))
+    conjunta_cuota = conjunta_values.get(cuota_casilla, MONEY_ZERO)
+    individual_cuota = individual_values.get(cuota_casilla, MONEY_ZERO)
+    conjunta_resultado = conjunta_values.get(resultado_casilla, MONEY_ZERO)
+    individual_resultado = individual_values.get(resultado_casilla, MONEY_ZERO)
 
     # delta > 0 → conjunta is cheaper (individual is more expensive)
     delta = individual_resultado - conjunta_resultado
 
-    threshold = Decimal("1")  # differences below €1 are treated as indifferent
+    threshold = ONE  # application materiality identity; not a tax-law rate or limit
     if delta > threshold:
         recommendation = TaxationRecommendation.CONJUNTA
         reason = (
@@ -309,7 +315,10 @@ def compare_taxation_modes(
         )
     else:
         recommendation = TaxationRecommendation.INDIFFERENT
-        reason = f"difference is {delta:.2f} € (below the €1 materiality threshold); either filing mode is acceptable"
+        reason = (
+            f"difference is {delta:.2f} € (below the {threshold:.0f} € materiality threshold); "
+            "either filing mode is acceptable"
+        )
 
     return TaxationComparisonResult(
         filing_year=snapshot.filing_year,
@@ -448,6 +457,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
         enum_binding_values=resolution.enum_binding_values,
         relation_values={},
         date_binding_values=resolution.date_binding_values or None,
+        boolean_binding_values=resolution.boolean_binding_values or None,
         date_context={"filing_period": period_date},
     )
 

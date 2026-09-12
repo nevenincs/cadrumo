@@ -99,8 +99,8 @@ casilla_ids = [
     "sustituto.nif",
     "sustituto.apellidos-razon-social",
 ]
-workbook_parity_refs = ["modelo-349-dr-pdf-2020"]
-export_layouts = ["modelo-349-fichero-2020"]
+workbook_parity_refs = ["modelo-349-dr-pdf"]
+export_layouts = ["modelo-349-fichero"]
 extraction_profiles = ["modelo-349-declaracion-pdf", "modelo-349-submitted-file"]
 live_cross_references = [
     "modelo-349-static-documentation",

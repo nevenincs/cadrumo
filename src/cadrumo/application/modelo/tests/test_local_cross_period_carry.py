@@ -63,10 +63,10 @@ from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationS
 from ...aggregation.source_resolution_operations import merge_source_resolutions
 from ...calculations.observations_repository import APP_FILING_SOURCE_KIND, CalculationObservationRepository
 from ..calculation_actions import (
-    _resolve_bucket_source_mesh,
     _source_resolution_excluding_iva_compensation,
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+    resolve_bucket_source_mesh,
 )
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..work_lifecycle import create_work_unit
@@ -557,7 +557,6 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
             modelo_id=str(snapshot.modelo.id),
             revision_id=str(snapshot.revision.id),
-            relations=snapshot.revision.relations,
         ),
     ).resolve(context)
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in filtered.binding_values
@@ -588,7 +587,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     _persist_prior_303(CalculationObservationRepository())
 
     snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
-    resolution = _resolve_bucket_source_mesh(
+    resolution = resolve_bucket_source_mesh(
         snapshot,
         work_unit_303,
         transaction_repository=None,
@@ -598,8 +597,8 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     )
 
     assert MODELO_303_IVA_COMPENSATION_BINDING_ID not in resolution.binding_values
-    assert "modelo-303-rel-self-compensacion-anteriores" not in resolution.relation_values
-    assert all("modelo-303-rel-self-compensacion-anteriores" not in item.source_ref for item in resolution.provenance)
+    assert "modelo-303-compensacion-pendiente-anteriores" not in resolution.relation_values
+    assert all("modelo-303-compensacion-pendiente-anteriores" not in item.source_ref for item in resolution.provenance)
 
 
 def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
@@ -607,7 +606,7 @@ def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate()
 
     snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
-    reused_relation_id = "modelo-303-rel-self-compensacion-anteriores"
+    reused_relation_id = "modelo-303-compensacion-pendiente-anteriores"
     resolution = merge_source_resolutions(
         (
             CalculationSourceResolution(

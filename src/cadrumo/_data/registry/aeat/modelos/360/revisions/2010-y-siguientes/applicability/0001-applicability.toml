@@ -15,7 +15,7 @@
 # already bore.
 
 [[revisions."2010-y-siguientes".applicability]]
-id = "modelo-360-2010-no-establecido"
+id = "modelo-360-no-establecido"
 applicable_entity_types = ["natural_person", "legal_entity", "attribution_entity"]
 applicable_reason = "Modelo 360: un empresario o profesional no establecido en el territorio de aplicacion del impuesto solicita la devolucion de las cuotas de IVA soportadas en dicho territorio, relacionando las facturas y documentos de importacion que las soportaron."
 not_applicable_reason = "Modelo 360 no aplica: la solicitud de devolucion a no establecidos corresponde unicamente a quien no esta establecido en el territorio de aplicacion del impuesto. Un empresario establecido deduce sus cuotas soportadas en su propia autoliquidacion periodica (Modelo 303), no por este procedimiento."

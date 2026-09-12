@@ -80,7 +80,7 @@ modelo:
               help: 'Review the casilla information: Result a ingresar.'
               label: Result payable
           construct:
-            modelo-123-2019-capital-withholding:
+            modelo-123-capital-withholding:
               field:
                 title: Modelo 123 — tax information
           field:

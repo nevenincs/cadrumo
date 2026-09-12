@@ -15,9 +15,11 @@ from pathlib import Path
 
 import pytest
 
+from ..coverage_dispositions import CoverageDisposition, load_coverage_dispositions
 from ..edition_delta_status import (
     CONDITIONS,
     COVERAGE_CONDITIONS,
+    LINEAGE_SCOPES,
     MEASUREMENTS,
     _artifacts_dir,
     _signal_lines,
@@ -26,6 +28,7 @@ from ..edition_delta_status import (
     coverage_gaps,
     edges,
     modelo_signals,
+    render_report,
     scan_registry,
     supported_filing_years,
 )
@@ -35,9 +38,8 @@ def _write_promise(root: Path, years: tuple[int, ...]) -> None:
     """Write the registry-wide supported-filing-years catalogue."""
     legal = root / "legal"
     legal.mkdir(parents=True, exist_ok=True)
-    rendered = ", ".join(str(year) for year in years)
     (legal / "supported-filing-years.toml").write_text(
-        f"[supported_filing_years]\nyears = [{rendered}]\n",
+        f"[supported_filing_years]\nfloor = {min(years)}\nhorizon = {max(years)}\n",
         encoding="utf-8",
     )
 
@@ -535,6 +537,211 @@ class TestEdges:
         assert second.predecessor_rows == 2
 
 
+class TestUnionFamilies:
+    """The union rule measured per family, planted and detected."""
+
+    _FIRST = 'valid_from = 2024-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]'
+    _NEXT = 'valid_from = 2025-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]'
+
+    def _bindings_edition(self, root: Path, edition: str, manifest: str, binding_rows: str) -> None:
+        _write_edition(
+            root,
+            "999",
+            edition,
+            manifest=manifest,
+            casillas=f'[[revisions."{edition}".casillas]]\nid = "{edition}"\ncontinuidad_id = "c{edition}"\n',
+        )
+        bindings = root / "modelos" / "999" / "revisions" / edition / "bindings"
+        bindings.mkdir()
+        (bindings / "0001-bindings.toml").write_text(binding_rows, encoding="utf-8")
+
+    def test_an_identical_binding_restated_by_a_successor_is_named(self, tmp_path: Path) -> None:
+        row = 'id = "b1"\nprovider = { kind = "manual" }\nvalue = { data_type = "money", channel = "decimal" }\n'
+        self._bindings_edition(tmp_path, "2024", self._FIRST, f'[[revisions."2024".bindings]]\n{row}')
+        self._bindings_edition(tmp_path, "2025", self._NEXT, f'[[revisions."2025".bindings]]\n{row}')
+        report = build_report(tmp_path)
+        (edge,) = report.edges
+        assert dict(edge.restated_members) == {"bindings": 1}
+        assert any(
+            f.kind == "member_restated" and f.locus == "bindings/b1" for s in report.statuses for f in s.findings
+        )
+        assert any(line.startswith("family bindings members=2 restated=1") for line in _signal_lines(report))
+
+    def test_a_binding_that_differs_is_not_restated(self, tmp_path: Path) -> None:
+        self._bindings_edition(
+            tmp_path, "2024", self._FIRST, '[[revisions."2024".bindings]]\nid = "b1"\nprovider = { kind = "manual" }\n'
+        )
+        self._bindings_edition(
+            tmp_path, "2025", self._NEXT, '[[revisions."2025".bindings]]\nid = "b1"\nprovider = { kind = "profile" }\n'
+        )
+        (edge,) = build_report(tmp_path).edges
+        assert edge.restated_members == ()
+
+    def test_a_binding_differing_only_in_refs_is_restated(self, tmp_path: Path) -> None:
+        """References are lifted before comparison: they are what restatement is made of."""
+        self._bindings_edition(
+            tmp_path,
+            "2024",
+            self._FIRST,
+            '[[revisions."2024".bindings]]\nid = "b1"\nprovider = { kind = "manual" }\nsource_refs = ["dr-2024"]\n',
+        )
+        self._bindings_edition(
+            tmp_path,
+            "2025",
+            self._NEXT,
+            '[[revisions."2025".bindings]]\nid = "b1"\nprovider = { kind = "manual" }\nsource_refs = ["dr-2025"]\n',
+        )
+        (edge,) = build_report(tmp_path).edges
+        assert dict(edge.restated_members) == {"bindings": 1}
+
+    def test_a_derivable_binding_default_the_manifest_lacks_is_named(self, tmp_path: Path) -> None:
+        rows = (
+            '[[revisions."2024".bindings]]\nid = "b1"\nsource_refs = ["dr-2024"]\n\n'
+            '[[revisions."2024".bindings]]\nid = "b2"\nsource_refs = ["dr-2024"]\n'
+        )
+        self._bindings_edition(tmp_path, "2024", self._FIRST, rows)
+        kinds = [(f.kind, f.locus) for s in scan_registry(tmp_path) for f in s.findings]
+        assert ("family_default_undeclared", "bindings") in kinds
+
+    def test_a_declared_binding_default_is_not_named(self, tmp_path: Path) -> None:
+        rows = (
+            '[[revisions."2024".bindings]]\nid = "b1"\nsource_refs = ["dr-2024"]\n\n'
+            '[[revisions."2024".bindings]]\nid = "b2"\nsource_refs = ["dr-2024"]\n'
+        )
+        self._bindings_edition(tmp_path, "2024", self._FIRST + '\nbinding_source_refs = ["dr-2024"]', rows)
+        assert "family_default_undeclared" not in _kinds(tmp_path)
+
+    def test_a_family_without_an_identity_field_is_named_once(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest=self._FIRST,
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        section = tmp_path / "modelos" / "999" / "revisions" / "2024" / "projection_endpoints"
+        section.mkdir()
+        (section / "0001.toml").write_text(
+            '[[revisions."2024".projection_endpoints]]\ncasilla_id = "01"\n\n'
+            '[[revisions."2024".projection_endpoints]]\ncasilla_id = "02"\n',
+            encoding="utf-8",
+        )
+        findings = [f for s in scan_registry(tmp_path) for f in s.findings if f.kind == "family_without_identity"]
+        assert [(f.locus, f.detail.split(" ")[0]) for f in findings] == [("projection_endpoints", "2")]
+
+    def test_casillas_under_a_root_are_measured_and_under_a_predecessor_are_not(self, tmp_path: Path) -> None:
+        """Inheritance is what removes restatement; a root inherits nothing, so its copies count."""
+        row = 'id = "01"\ncontinuidad_id = "c1"\ndata_type = "money"\n'
+        _write_edition(tmp_path, "999", "2024", manifest=self._FIRST, casillas=f'[[revisions."2024".casillas]]\n{row}')
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest=(
+                self._NEXT + '\n[revisions."2025".predecessor.none]\nreason = "Stated in full: this edition cannot be '
+                'materialised exactly from the edition before it (predecessor row without lineage)."'
+            ),
+            casillas=f'[[revisions."2025".casillas]]\n{row}',
+        )
+        report = build_report(tmp_path)
+        (edge,) = report.edges
+        assert edge.state == "dispositioned"
+        assert edge.root_kind == "root_pending_lineage"
+        assert dict(edge.restated_members) == {"casillas": 1}
+        (signal,) = modelo_signals(report)
+        assert signal.state == "rooted"
+        assert signal.outstanding == 2
+
+    def test_a_root_by_law_is_terminal(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest=self._FIRST,
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest=self._NEXT + '\n[revisions."2025".predecessor.none]\nreason = "parallel scheme variant"',
+            casillas='[[revisions."2025".casillas]]\nid = "02"\ncontinuidad_id = "c2"\n',
+        )
+        report = build_report(tmp_path)
+        (edge,) = report.edges
+        assert edge.root_kind == "root_by_law"
+        (signal,) = modelo_signals(report)
+        assert signal.state == "done"
+        assert signal.outstanding == 0
+
+
+class TestRenderedReport:
+    """The human-readable form carries the same facts as the record lines, grouped and aligned."""
+
+    def test_the_report_is_grouped_and_deterministic(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest='valid_from = 2025-01-01\nauthority_grade = "filing"',
+            casillas=(
+                '[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\nsource_refs = ["src-a"]\n\n'
+                '[[revisions."2025".casillas]]\nid = "02"\ncontinuidad_id = "c2"\nsource_refs = ["src-a"]\n'
+            ),
+        )
+        report = build_report(tmp_path)
+        text = render_report(report)
+        assert text == render_report(report)
+        for heading in (
+            "EDITION DELTA STATUS",
+            "EDGES",
+            "ACTIONS",
+            "SHAPE CONDITIONS",
+            "FAMILIES",
+            "MODELOS",
+            "WORKLIST",
+        ):
+            assert f"\n{heading}" in text or text.startswith(heading)
+        assert "edition_default_undeclared" in text
+        assert "999" in text
+
+    def test_totals_only_omits_the_per_modelo_blocks(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2025",
+            manifest='valid_from = 2025-01-01\nauthority_grade = "filing"\ncasilla_source_refs = ["src-a"]',
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        text = render_report(build_report(tmp_path), totals_only=True)
+        assert "FAMILIES" in text
+        assert "MODELOS" not in text
+        assert "WORKLIST" not in text
+
+
+class TestYearAsMemberData:
+    """A year the member declares as its own field is data, not an edition key."""
+
+    def test_a_deadline_window_named_by_its_own_filing_year_is_not_keyed(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2013-2014",
+            manifest='casilla_source_refs = ["src-a"]\nvalid_from = 2013-01-01',
+            casillas='[[revisions."2013-2014".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        windows = tmp_path / "modelos" / "999" / "revisions" / "2013-2014" / "deadline_windows"
+        windows.mkdir()
+        (windows / "0001.toml").write_text(
+            '[[revisions."2013-2014".deadline_windows]]\nid = "modelo-999-2013-1t"\nfiling_year = 2013\n\n'
+            '[[revisions."2013-2014".deadline_windows]]\nid = "modelo-999-2014-1t"\nfiling_year = 2014\n\n'
+            '[[revisions."2013-2014".deadline_windows]]\nid = "modelo-999-2013-legacy"\nfiling_year = 2014\n',
+            encoding="utf-8",
+        )
+        keyed = [f.locus for s in scan_registry(tmp_path) for f in s.findings if f.kind == "edition_keyed_identifier"]
+        assert keyed == ["modelo-999-2013-legacy"]
+
+
 class TestLiveCorpus:
     """One invariant over the shipped tree, stated so it cannot decay into a count."""
 
@@ -602,6 +809,8 @@ class TestSignal:
             "uncovered",
             "ready",
             "blocked",
+            "family",
+            "limitation",
         }
         emitted = {line.split(" ", 1)[0] for line in _signal_lines(build_report(tmp_path))}
         assert emitted <= declared, f"undeclared record types: {sorted(emitted - declared)}"
@@ -795,3 +1004,284 @@ class TestPersistedDetail:
     def test_nothing_is_written_without_a_directory(self, tmp_path: Path) -> None:
         """A screen invoked by hand prints its signal and leaves no files behind."""
         assert _artifacts_dir(None) is None or os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
+
+
+def _kinds_of(report) -> list[str]:
+    """Finding kinds from a built report, which is where lineage scoping happens.
+
+    _kinds reads scan_registry alone and cannot see the scopes: an
+    edition knows its own rows but not what succeeds it, so the scope is
+    assigned once the edges are derived.
+    """
+    return [finding.kind for status in report.statuses for finding in status.findings]
+
+
+class TestLineageScope:
+    """A missing chain is scoped by whether an edge is waiting on it.
+
+    The flat ``row_missing_lineage`` count answers a corpus question and was
+    excluded from the verdict for that reason, which left the campaign's own
+    share of it -- the rows a successor cannot inherit today -- invisible in
+    every number a reader would act on.
+    """
+
+    def _sequence(self, root: Path, *, successor_manifest: str) -> None:
+        """Two editions of one modelo, each carrying one unchained row."""
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=successor_manifest,
+            casillas='[[revisions."2025".casillas]]\nid = "01"\n',
+        )
+
+    def test_a_row_in_a_predecessor_edition_is_scoped_to_the_edge(self, tmp_path: Path) -> None:
+        self._sequence(tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"')
+        kinds = _kinds_of(build_report(tmp_path))
+        assert kinds.count("row_missing_lineage_on_edge") == 1
+        assert kinds.count("row_missing_lineage_terminal") == 1
+
+    def test_a_row_in_a_modelo_with_one_edition_is_scoped_apart(self, tmp_path: Path) -> None:
+        """Nothing inherits from a modelo with no edge, so its gap is not this campaign's."""
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert kinds.count("row_missing_lineage_unedged") == 1
+        assert "row_missing_lineage_on_edge" not in kinds
+
+    def test_the_three_scopes_account_for_every_missing_chain(self, tmp_path: Path) -> None:
+        """The decomposition is checkable: a scope that drifts leaves rows unaccounted for."""
+        self._sequence(tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"')
+        _write_edition(
+            tmp_path,
+            "888",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert sum(kinds.count(scope) for scope in LINEAGE_SCOPES) == kinds.count("row_missing_lineage")
+
+    def test_a_chained_row_is_in_no_scope(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        kinds = _kinds_of(build_report(tmp_path))
+        assert not [kind for kind in kinds if kind.startswith("row_missing_lineage")]
+
+    def test_the_scoped_gap_reaches_the_outstanding_count(self, tmp_path: Path) -> None:
+        """A modelo whose only remaining work is unchained rows must not read as converged."""
+        self._sequence(tmp_path, successor_manifest='valid_from = 2025-01-01\nauthority_grade = "filing"')
+        (signal,) = modelo_signals(build_report(tmp_path))
+        assert signal.lineage_gap_on_edge == 1
+        assert signal.outstanding >= signal.lineage_gap_on_edge
+
+
+class TestRootsDoNotSuppressCauses:
+    """A root declared for want of lineage must not hide what stops the edge.
+
+    ``edges`` once computed blockers only for states it called outstanding, so
+    an edition that rooted away from its predecessor reported no cause at all
+    -- and the corpus printed no blocker while such roots held thousands of
+    rows no successor could inherit.
+    """
+
+    _PENDING_ROOT = 'predecessor = { none = { reason = "Stated in full: predecessor row without lineage." } }'
+    _BY_LAW_ROOT = 'predecessor = { none = { reason = "Parallel scheme variants sharing one window." } }'
+
+    def _rooted(self, root: Path, *, reason: str) -> None:
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=f'valid_from = 2025-01-01\nauthority_grade = "filing"\n{reason}',
+            casillas='[[revisions."2025".casillas]]\nid = "01"\n',
+        )
+
+    def test_a_root_pending_lineage_still_names_its_cause(self, tmp_path: Path) -> None:
+        self._rooted(tmp_path, reason=self._PENDING_ROOT)
+        (edge,) = edges(scan_registry(tmp_path))
+        assert edge.state == "dispositioned"
+        assert edge.rooted_pending_lineage
+        assert any(blocker.startswith("predecessor_lineage_missing") for blocker in edge.blockers)
+
+    def test_a_root_by_law_names_none(self, tmp_path: Path) -> None:
+        """No cause of ours is what stops a parallel variant, so none is computed."""
+        self._rooted(tmp_path, reason=self._BY_LAW_ROOT)
+        (edge,) = edges(scan_registry(tmp_path))
+        assert edge.state == "dispositioned"
+        assert not edge.rooted_pending_lineage
+        assert edge.blockers == ()
+
+    def test_the_blocker_tally_counts_a_rooted_edge(self, tmp_path: Path) -> None:
+        self._rooted(tmp_path, reason=self._PENDING_ROOT)
+        lines = _signal_lines(build_report(tmp_path))
+        (blocker_line,) = [line for line in lines if line.startswith("blocker ")]
+        assert "predecessor_lineage_missing=1" in blocker_line
+
+    def test_an_edge_awaiting_lineage_is_counted_once(self, tmp_path: Path) -> None:
+        """The rooted count and the blocker tally name the same edge; the action must not add them."""
+        self._rooted(tmp_path, reason=self._PENDING_ROOT)
+        lines = _signal_lines(build_report(tmp_path))
+        (action_line,) = [line for line in lines if line.startswith("action ")]
+        assert "seed_lineage=1" in action_line
+
+    def test_the_rooted_edge_has_a_record_of_its_own(self, tmp_path: Path) -> None:
+        """Seeding a chain behind a root once moved no line in the diffable signal."""
+        self._rooted(tmp_path, reason=self._PENDING_ROOT)
+        lines = _signal_lines(build_report(tmp_path))
+        (rooted_line,) = [line for line in lines if line.startswith("rooted ")]
+        assert "predecessor_rows=1" in rooted_line
+        assert "unchained=1" in rooted_line
+        assert "shared_chains=0" in rooted_line
+
+
+def _write_dispositions(path: Path, body: str) -> Path:
+    path.write_text(body, encoding="utf-8")
+    return path
+
+
+class TestCoverageDispositionLoader:
+    """The declaration refuses what would quietly widen the exempt set."""
+
+    def test_an_absent_file_disposes_of_nothing(self, tmp_path: Path) -> None:
+        """A corpus whose coverage nobody has adjudicated has disposed of nothing."""
+        assert load_coverage_dispositions(tmp_path / "absent.toml") == {}
+
+    def test_a_signed_entry_is_keyed_by_its_coordinate(self, tmp_path: Path) -> None:
+        path = _write_dispositions(
+            tmp_path / "d.toml",
+            '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+            'kind = "promised_year_unserved"\nreason = "no design published"\nauthority = "orden-x:art-1"\n',
+        )
+        loaded = load_coverage_dispositions(path)
+        assert set(loaded) == {("303", 2026, "*")}
+        assert loaded[("303", 2026, "*")].authority == "orden-x:art-1"
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            pytest.param(
+                '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+                'kind = "promised_year_unserved"\nreason = "r"\n',
+                id="no authority",
+            ),
+            pytest.param(
+                '[[disposition]]\nmodelo = "303"\nperiod = "*"\n'
+                'kind = "promised_year_unserved"\nreason = "r"\nauthority = "a"\n',
+                id="no filing year",
+            ),
+            pytest.param(
+                '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+                'kind = "looks_fine_to_me"\nreason = "r"\nauthority = "a"\n',
+                id="unknown kind",
+            ),
+        ],
+    )
+    def test_a_malformed_entry_is_refused(self, tmp_path: Path, body: str) -> None:
+        with pytest.raises(ValueError):
+            load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", body))
+
+    def test_a_coordinate_named_twice_is_refused(self, tmp_path: Path) -> None:
+        """Two entries for one coordinate is how a later, weaker reason silently wins."""
+        entry = (
+            '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+            'kind = "promised_year_unserved"\nreason = "r"\nauthority = "a"\n'
+        )
+        with pytest.raises(ValueError, match="a second time"):
+            load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", entry * 2))
+
+
+class TestCoverageDispositions:
+    """An unclassified gap stays outstanding; only a signed one leaves the count."""
+
+    def _one_gap(self, root: Path) -> None:
+        """A modelo serving 2024 only, against a promise of 2024 and 2025."""
+        _write_promise(root, (2024, 2025))
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest=(
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
+                'period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }'
+            ),
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+
+    def test_an_unclassified_gap_is_outstanding(self, tmp_path: Path) -> None:
+        self._one_gap(tmp_path)
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path))
+        assert gap.kind == "promised_year_unserved"
+        assert not gap.disposed
+
+    def test_a_signed_disposition_classifies_its_own_coordinate(self, tmp_path: Path) -> None:
+        self._one_gap(tmp_path)
+        signed = {
+            ("999", 2025, "*"): CoverageDisposition(
+                coordinate=("999", 2025, "*"),
+                kind="promised_year_unserved",
+                reason="AEAT approved no design for this ejercicio",
+                authority="orden-x:art-1",
+            )
+        }
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path), signed)
+        assert gap.disposed
+        assert gap.disposition.startswith("AEAT approved no design")
+
+    def test_a_disposition_written_for_another_kind_does_not_absorb_this_one(self, tmp_path: Path) -> None:
+        """An entry written for an unserved year must not cover the opposite failure."""
+        self._one_gap(tmp_path)
+        signed = {
+            ("999", 2025, "*"): CoverageDisposition(
+                coordinate=("999", 2025, "*"),
+                kind="coordinate_served_twice",
+                reason="two editions overlap here",
+                authority="orden-x:art-1",
+            )
+        }
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path), signed)
+        assert not gap.disposed
+
+    def test_a_disposition_for_another_coordinate_does_not_reach_this_one(self, tmp_path: Path) -> None:
+        self._one_gap(tmp_path)
+        signed = {
+            ("999", 2026, "*"): CoverageDisposition(
+                coordinate=("999", 2026, "*"),
+                kind="promised_year_unserved",
+                reason="a different year entirely",
+                authority="orden-x:art-1",
+            )
+        }
+        (gap,) = coverage_gaps(scan_registry(tmp_path), supported_filing_years(tmp_path), signed)
+        assert not gap.disposed
+
+    def test_coverage_never_enters_the_shape_verdict(self, tmp_path: Path) -> None:
+        """Migration cannot move a coverage gap, so it must not hold the shape signal hostage."""
+        self._one_gap(tmp_path)
+        (signal,) = modelo_signals(build_report(tmp_path))
+        assert signal.coverage_gaps_undisposed == 1
+        assert signal.outstanding == 0

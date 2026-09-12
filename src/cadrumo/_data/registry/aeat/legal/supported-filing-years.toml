@@ -1,5 +1,20 @@
-# One registry-wide declaration. A year is admitted here only after the
-# coverage audit enumerates its unresolved modelo/period prerequisites; the
-# audit remains advisory until the separately authorised enforcement flip.
+# One registry-wide declaration, authored as bounds rather than a list of years.
+#
+# `floor` is a hard gate. Nothing resolves below it, and a request for an
+# earlier year is refused as outside what the product claims rather than
+# recorded as a gap somebody should close. Where a single modelo begins later
+# than this floor, that is the modelo's own declaration to make, not this one's.
+#
+# `horizon` is the last year the corpus carries authored coverage for. It is not
+# a gate: a year above it stays answerable by carrying the newest declared
+# revision forward, and a list of years had no way to say that.
+#
+# `hard_ceiling` is optional and absent here, which leaves the span open above
+# the horizon. Declare it only when the product must stop at a known year.
+#
+# A year is admitted into this span only after the coverage audit enumerates its
+# unresolved modelo/period prerequisites; the audit remains advisory until the
+# separately authorised enforcement flip.
 [supported_filing_years]
-years = [2022, 2023, 2024, 2025, 2026]
+floor = 2022
+horizon = 2026

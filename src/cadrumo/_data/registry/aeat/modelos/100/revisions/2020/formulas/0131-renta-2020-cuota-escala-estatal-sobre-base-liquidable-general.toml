@@ -9,7 +9,7 @@
 # two casilla conditions already hold (short-circuit), leaving the ordinary
 # escala(0505) branch byte-identical for every non-anualidades filer. The
 # shared-custody negation rides on the derived profile flag (default eligible;
-# 0 when custody is shared and the payer retains the mínimo por descendientes).
+# false when custody is shared and the payer retains the mínimo por descendientes).
 [[revisions."2020".formulas]]
 id = "renta-cuota-escala-estatal-sobre-base-liquidable-general"
 target_casilla_id = "0528"
@@ -22,26 +22,26 @@ expression = { op = "if_then_else", args = [
             { op = "add", args = [
                 { op = "lookup_bracket", args = [
                     { casilla_id = "0527" },
-                    { parameter = "renta-2020-escala-estatal-base-general" },
+                    { parameter = "renta-escala-estatal-base-general" },
                 ] },
                 { op = "lookup_bracket", args = [
                     { op = "subtract", args = [{ casilla_id = "0505" }, { casilla_id = "0527" }] },
-                    { parameter = "renta-2020-escala-estatal-base-general" },
+                    { parameter = "renta-escala-estatal-base-general" },
                 ] },
             ] },
             { op = "lookup_bracket", args = [
                 { casilla_id = "0505" },
-                { parameter = "renta-2020-escala-estatal-base-general" },
+                { parameter = "renta-escala-estatal-base-general" },
             ] },
         ] },
         { op = "lookup_bracket", args = [
             { casilla_id = "0505" },
-            { parameter = "renta-2020-escala-estatal-base-general" },
+            { parameter = "renta-escala-estatal-base-general" },
         ] },
     ] },
     { op = "lookup_bracket", args = [
         { casilla_id = "0505" },
-        { parameter = "renta-2020-escala-estatal-base-general" },
+        { parameter = "renta-escala-estatal-base-general" },
     ] },
 ] }
 rounding = "money-2"

@@ -172,7 +172,7 @@ def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_sal
     work_unit = _work_unit(modelo="100", filing_year=2025, period_code="0A")
     revision = _revision(
         work_unit,
-        relation_overrides={"renta-2025-rel-130-pagos-fraccionados": "123.45"},
+        relation_overrides={"renta-modelo-130-pagos-fraccionados": "123.45"},
     )
     profile = TaxpayerProfile(
         tax_id="12345678Z",
@@ -187,8 +187,8 @@ def test_revision_replay_inputs_zero_not_applicable_m100_pagos_relations_for_sal
         workflow_profile=profile,
     )
 
-    assert replay_inputs["renta-2025-rel-130-pagos-fraccionados"] == "123.45"
-    assert replay_inputs["renta-2025-rel-131-pagos-fraccionados"] == "0"
+    assert replay_inputs["renta-modelo-130-pagos-fraccionados"] == "123.45"
+    assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
 
 
 def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved() -> None:
@@ -208,8 +208,8 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
         workflow_profile=profile,
     )
 
-    assert "renta-2025-rel-130-pagos-fraccionados" not in replay_inputs
-    assert replay_inputs["renta-2025-rel-131-pagos-fraccionados"] == "0"
+    assert "renta-modelo-130-pagos-fraccionados" not in replay_inputs
+    assert replay_inputs["renta-modelo-131-pagos-fraccionados"] == "0"
 
 
 def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_2024_0596() -> None:
@@ -233,8 +233,8 @@ def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_va
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         relation_overrides={
-            "renta-2024-rel-130-pagos-fraccionados": "1520.00",
-            "renta-2024-rel-131-pagos-fraccionados": "0",
+            "renta-modelo-130-pagos-fraccionados": "1520.00",
+            "renta-modelo-131-pagos-fraccionados": "0",
         },
         casilla_values={
             _M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00"),
@@ -246,7 +246,7 @@ def test_revision_replay_inputs_recover_m100_2024_0596_from_verified_revision_va
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
     assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
-    assert replay_inputs["renta-2024-rel-130-pagos-fraccionados"] == "1520.00"
+    assert replay_inputs["renta-modelo-130-pagos-fraccionados"] == "1520.00"
     assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 

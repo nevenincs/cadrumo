@@ -52,7 +52,6 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
                     ("formula", revision.formulas),
                     ("parameter", revision.parameters),
                     ("binding", revision.bindings),
-                    ("relation", revision.relations),
                 )
                 for declaration in declarations
             }
@@ -78,7 +77,6 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
                 ("formula", revision.formulas),
                 ("parameter", revision.parameters),
                 ("binding", revision.bindings),
-                ("relation", revision.relations),
             ):
                 for declaration in declarations:
                     row = by_coordinate[(kind, declaration.id)]
@@ -134,9 +132,7 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
 
     for m038_revision in m038_revisions:
         m038_ledger = ledgers_by_coordinate[(m038.id, m038_revision.id)]
-        assert not (
-            m038_revision.formulas or m038_revision.parameters or m038_revision.bindings or m038_revision.relations
-        )
+        assert not (m038_revision.formulas or m038_revision.parameters or m038_revision.bindings)
         assert m038_ledger.authority_scope == "inspection_only"
         assert m038_ledger.rows == ()
         assert m038_ledger.gaps == ()

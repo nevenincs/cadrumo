@@ -112,7 +112,7 @@ def test_committed_modelo_349_is_informative_static_documentation_only() -> None
     # rejected at registry-build time; the schema default ("filing") is correct here.
     assert modelo.calculation_class == "filing"
     assert snapshot.revision.formulas == ()
-    assert snapshot.revision.relations == ()
+    assert not any(binding.source.value == "relation_prefill" for binding in snapshot.revision.bindings)
     assert {casilla.input_kind for casilla in snapshot.revision.casillas} == {InputKind.MANUAL, InputKind.BOUND}
     assert decision.surface == "static_official_documentation"
     assert decision.requires_authentication is False
@@ -520,7 +520,7 @@ def test_committed_modelo_349_export_layout_declares_three_fixed_width_records()
     revision = _modelo_349_revision()
     assert len(revision.export_layouts) == 1
     layout = revision.export_layouts[0]
-    assert layout.id == "modelo-349-fichero-2020"
+    assert layout.id == "modelo-349-fichero"
     assert layout.format is ExportLayoutFormat.FIXED_WIDTH
 
     record_types = {record.record_type: record for record in layout.records}

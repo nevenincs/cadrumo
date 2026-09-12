@@ -1,5 +1,5 @@
 [[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-130"
+id = "renta-dep-130"
 source_modelo = "130"
 treatment = "direct_annual_settlement"
 conditional_on_economic_activity = true

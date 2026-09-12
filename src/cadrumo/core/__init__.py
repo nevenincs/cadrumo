@@ -14,10 +14,7 @@ include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`RegistryAuthorityGrade` with its fail-closed
 :data:`UNDECLARED_REGISTRY_AUTHORITY_GRADE` floor, and
 the lazily resolved :class:`BindingSourceKind` registry-source taxonomy.
-Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
-:data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
-coverage report reads to distinguish product-scope exclusions from
-registry gaps. :func:`pid_is_alive` is the shared
+:func:`pid_is_alive` is the shared
 cross-platform PID-liveness probe consumed by every crash-recoverable
 lockfile (bucket lockfile, auth-acquisition lock), and :func:`unlink_lockfile`
 is the matching shared removal primitive those same locks use to survive the

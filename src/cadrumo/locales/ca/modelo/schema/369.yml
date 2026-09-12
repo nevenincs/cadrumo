@@ -27,7 +27,7 @@ modelo:
               label: Quota d'IVA repercutit a la destinació DE - serveis prestats
                 (Règim exterior)
           construct:
-            modelo-369-esquema-exterior:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Exterior (règim especial serveis prestados
                   per no establecidos)
@@ -53,7 +53,7 @@ modelo:
               label: Quota d'IVA IOSS a la destinació DE - vendes a distància de béns
                 importats ≤ 150 EUR (LIVA art. 163 quinvicies)
           construct:
-            modelo-369-esquema-importacion:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Importacion (règim especial IOSS)
           field:
@@ -89,7 +89,7 @@ modelo:
               label: Quota d'IVA OSS Unió a la destinació FR - serveis prestats (LIVA
                 art. 163 unvicies)
           construct:
-            modelo-369-esquema-union:
+            modelo-369:
               field:
                 title: Modelo 369 - Esquema Union (règim especial OSS Union)
           field:

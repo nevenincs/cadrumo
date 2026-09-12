@@ -19,6 +19,6 @@ casilla_ids = [
     "wire.codigo-cuenta-cliente",
     "wire.observaciones",
 ]
-export_layouts = ["modelo-341-fichero-2005-2015"]
+export_layouts = ["modelo-341-fichero"]
 application_links = ["modelo-341-filing", "modelo-341-deadline", "modelo-341-export"]
-workbook_parity_refs = ["modelo-341-2005-2015-record-design"]
+workbook_parity_refs = ["modelo-341-record-design"]

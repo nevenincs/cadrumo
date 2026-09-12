@@ -231,7 +231,7 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
             },
         ),
         date_context={"filing_period": filing_period},
-        binding_values={f"modelo-131-{revision_id}-resultados-negativos-anteriores": Decimal("10")},
+        binding_values={"modelo-131-resultados-negativos-anteriores": Decimal("10")},
     )
 
     assert snapshot.revision.id == revision_id
@@ -288,13 +288,13 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
-            "modelo-180-rel-115-base-anual": (
+            "modelo-180-115-base-anual": (
                 Decimal("250.10"),
                 Decimal("749.90"),
                 Decimal("1200.00"),
                 Decimal("-50.25"),
             ),
-            "modelo-180-rel-115-retenciones-anual": (
+            "modelo-180-115-retenciones-anual": (
                 Decimal("47.52"),
                 Decimal("142.48"),
                 Decimal("228.00"),
@@ -314,8 +314,8 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert set(entries) == {"decl.base-total", "decl.retenciones-total"}
     assert result.values["decl.total-perceptores"] == binding_values["modelo-180-115-perceptores-anual"]
-    assert entries["decl.base-total"].operand_refs == ("modelo-180-rel-115-base-anual",)
-    assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-rel-115-retenciones-anual",)
+    assert entries["decl.base-total"].operand_refs == ("modelo-180-115-base-anual",)
+    assert entries["decl.retenciones-total"].operand_refs == ("modelo-180-115-retenciones-anual",)
 
 
 _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {

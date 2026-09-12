@@ -19,7 +19,7 @@ expression = { op = "m131_resolve_modulos_previo", args = [
     { casilla_id = "modulos-5-unidades" },
     { casilla_id = "modulos-6-unidades" },
     { casilla_id = "modulos-7-unidades" },
-    { parameter = "m131-modulos-coeficientes-2024" },
+    { parameter = "m131-modulos-coeficientes" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31", "orden-hfp-1359-2023:art-4"]
@@ -54,9 +54,9 @@ expression = { op = "subtract", args = [
             { casilla_id = "modulos-epigrafe" },
             { casilla_id = "modulos-1-unidades" },
             { casilla_id = "modulos-1-unidades-anterior" },
-            { parameter = "m131-modulos-coeficientes-2024" },
-            { parameter = "m131-modulos-coeficiente-tramos-asalariados-2024" },
-            { parameter = "m131-modulos-coeficiente-incremento-asalariados-2024" },
+            { parameter = "m131-modulos-coeficientes" },
+            { parameter = "m131-modulos-coeficiente-tramos-asalariados" },
+            { parameter = "m131-modulos-coeficiente-incremento-asalariados" },
         ] },
         { casilla_id = "modulos-minoracion-inversion" },
     ] },
@@ -94,8 +94,8 @@ expression = { op = "m131_resolve_modulos_indices_generales", args = [
     { casilla_id = "modulos-indice-pequena-dimension" },
     { casilla_id = "modulos-indice-temporada" },
     { casilla_id = "modulos-indice-inicio-actividad" },
-    { parameter = "m131-modulos-cuantia-exceso-2024" },
-    { parameter = "m131-modulos-indice-exceso-2024" },
+    { parameter = "m131-modulos-cuantia-exceso" },
+    { parameter = "m131-modulos-indice-exceso" },
 ] }
 rounding = "money-2"
 legal_refs = [
@@ -156,7 +156,7 @@ expression = { op = "subtract", args = [
     { casilla_id = "modulos-rendimiento-neto-modulos" },
     { op = "percent", args = [
         { casilla_id = "modulos-rendimiento-neto-modulos" },
-        { parameter = "m131-modulos-reduccion-general-2024" },
+        { parameter = "m131-modulos-reduccion-general" },
     ] },
 ] }
 rounding = "money-2"

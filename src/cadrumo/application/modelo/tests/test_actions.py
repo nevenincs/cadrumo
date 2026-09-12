@@ -906,15 +906,14 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     relation_values = {
-        "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-        "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-        "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-        "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-        "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-        "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
-    enum_binding_values = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
-    date_binding_values = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+    enum_binding_values = {"renta-profile-tax-residence-ccaa": "madrid"}
+    date_binding_values = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
     result = calculate_registry_snapshot(
         snapshot,
         inputs={_M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: Decimal("10000")},

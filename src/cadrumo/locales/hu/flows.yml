@@ -152,7 +152,6 @@ flows:
         relation_channel:
           alternate_binding: Alternatív kötés
           formula_binding: Képletkötés
-          formula_relation: Képletkapcsolat
           primary_binding: Elsődleges kötés
   modelo_select:
     column:

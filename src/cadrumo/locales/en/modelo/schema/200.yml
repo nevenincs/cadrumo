@@ -22243,7 +22243,7 @@ modelo:
               label: Joint taxation, State and regional (foral) administrations -
                 Calculation of taxation percentages - State Administration [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 and following)
                   - instalment payments deduction chain
@@ -43517,7 +43517,7 @@ modelo:
               label: Joint taxation, State and regional (foral) administrations -
                 Calculation of taxation percentages - State Administration [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 and following)
                   - instalment payments deduction chain

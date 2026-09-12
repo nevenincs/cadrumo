@@ -1,6 +1,6 @@
-"""The setup wizard and the core answer table must describe the same fields.
+"""The setup wizard and domain answer table must describe the same fields.
 
-The core :data:`SETUP_ANSWER_FIELDS` table is what the deadline engine
+The domain :data:`SETUP_ANSWER_FIELDS` table is what the deadline engine
 projects a taxpayer profile through, and it is deliberately independent of
 this package: a schedule is computed from stored facts and must not need an
 interactive surface to exist. While the wizard still ships, both
@@ -20,10 +20,9 @@ import pytest
 
 from ....core.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
-    SETUP_ANSWER_FIELDS,
     SetupAnswers,
-    project_setup_answers,
 )
+from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
 from ..catalogue import SETUP_FLOW
 from ..models import WizardQuestion
 from ..persistence import project_answers

@@ -3,7 +3,7 @@
 # Importe general, es decir el aplicable al contribuyente menor de 65 años; los
 # incrementos por edad autonómicos todavía no se modelan en esta revisión.
 [[revisions."2025".parameters]]
-id = "renta-2025-minimo-contribuyente-base-andalucia-2025"
+id = "renta-minimo-contribuyente-base-andalucia"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["andalucia-ley-5-2021:art-23-bis"]

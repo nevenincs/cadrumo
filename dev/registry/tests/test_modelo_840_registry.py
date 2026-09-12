@@ -77,7 +77,7 @@ def test_committed_modelo_840_is_informative_only() -> None:
     )
     for revision in modelo.revisions.values():
         assert revision.formulas == (), revision.id
-        assert revision.relations == (), revision.id
+        assert not any(binding.source.value == "relation_prefill" for binding in revision.bindings), revision.id
         for casilla in revision.casillas:
             assert casilla.input_kind in {InputKind.INFORMATIONAL, InputKind.MANUAL}, casilla.id
 

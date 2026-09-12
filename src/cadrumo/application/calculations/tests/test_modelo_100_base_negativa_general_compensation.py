@@ -31,6 +31,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId, RelationId
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
@@ -49,8 +50,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
 _GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
 _SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
-_APLICADA_MAXIMA_FORMULA_ID = "renta-2025-base-liquidable-negativa-general-2024-aplicada-maxima"
-_COMPENSACION_TOTAL_FORMULA_ID = "renta-2025-base-liquidable-negativa-general-compensacion-total"
+_APLICADA_MAXIMA_FORMULA_ID = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
+_COMPENSACION_TOTAL_FORMULA_ID = "renta-base-liquidable-negativa-general-compensacion-total"
 _ANEXO_C_BASE_NEGATIVA_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
 
 _MODELO = "100"
@@ -145,7 +146,10 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
 
 def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
     binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"}
-    relation_values = {relation.id: Decimal("0") for relation in snapshot.revision.relations}
+    relation_values = {
+        binding.id: Decimal("0")
+        for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
+    }
     return binding_values, relation_values
 
 

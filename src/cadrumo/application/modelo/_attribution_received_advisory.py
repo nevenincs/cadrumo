@@ -40,6 +40,7 @@ from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict
+from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -54,17 +55,12 @@ from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_ro
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.ids import LegalRefId
+    from ...domain.calculations.registry.ids import SourceRefId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.work_unit import WorkUnit
 
 _ATRIBUCION_ACT_ECO_ROLE = "irpf_rendimiento_act_eco_atribuido_rdto_neto"
 _RECEIVED_FACT_RE = re.compile(r"^attribution_received\.(?P<index>[0-9]+)\.(?P<field>[a-z][a-z0-9_]*)$")
-_ATRIBUCION_LEGAL_REFS: tuple[LegalRefId, ...] = (
-    "ley-35-2006:art-86",
-    "ley-35-2006:art-87",
-    "ley-35-2006:art-88",
-    "ley-35-2006:art-89",
-)
 
 
 def _attribution_received_omission_advisory_findings(
@@ -103,7 +99,9 @@ def _attribution_received_omission_advisory_findings(
         return ()
 
     casilla_value = casilla_values.get(casilla_id)
-    casilla_has_value = casilla_value is not None and casilla_value != Decimal("0")
+    casilla_has_value = casilla_value is not None and casilla_value != ZERO
+
+    legal_refs, source_refs = _attribution_provenance(snapshot, casilla_id)
 
     record = profile_record
     if record is None:
@@ -116,10 +114,26 @@ def _attribution_received_omission_advisory_findings(
     facts_present = total_base is not None
 
     if facts_present and not casilla_has_value:
-        return (_attribution_received_unfolded_finding(work_unit, casilla_id, total_base),)
+        return (
+            _attribution_received_unfolded_finding(
+                work_unit,
+                casilla_id,
+                total_base,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        )
 
     if casilla_has_value and not facts_present:
-        return (_attribution_received_uncaptured_finding(work_unit, casilla_id, casilla_value),)
+        return (
+            _attribution_received_uncaptured_finding(
+                work_unit,
+                casilla_id,
+                casilla_value,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        )
 
     return ()
 
@@ -128,6 +142,9 @@ def _attribution_received_unfolded_finding(
     work_unit: WorkUnit,
     casilla_id: CasillaId,
     total_base: Decimal,
+    *,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
@@ -139,8 +156,8 @@ def _attribution_received_unfolded_finding(
             "total_base": total_base,
             "casilla_id": casilla_id,
         },
-        legal_refs=_ATRIBUCION_LEGAL_REFS,
-        source_refs=(),
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -148,6 +165,9 @@ def _attribution_received_uncaptured_finding(
     work_unit: WorkUnit,
     casilla_id: CasillaId,
     casilla_value: Decimal | None,
+    *,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
 ) -> ModeloVerificationFinding:
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.ADVISORY,
@@ -159,9 +179,20 @@ def _attribution_received_uncaptured_finding(
             "filing_year": work_unit.filing_year,
             "casilla_value": casilla_value if casilla_value is not None else "absent",
         },
-        legal_refs=_ATRIBUCION_LEGAL_REFS,
-        source_refs=(),
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
+
+
+def _attribution_provenance(
+    snapshot: RegistrySnapshot,
+    casilla_id: CasillaId,
+) -> tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
+    """Return provenance declared by the selected attribution casilla."""
+    casilla = next((candidate for candidate in snapshot.revision.casillas if candidate.id == casilla_id), None)
+    if casilla is None:
+        return tuple(snapshot.revision.legal_refs), tuple(snapshot.revision.source_refs)
+    return tuple(casilla.legal_refs), tuple(casilla.source_refs)
 
 
 def _received_fact_parts(fact: UserProfileFact) -> tuple[int, str, object] | None:
@@ -214,7 +245,7 @@ def _sum_received_bases_for_year(
     filing_year: int,
 ) -> Decimal | None:
     """Sum parseable attributed bases from rows matching the filing year."""
-    total = Decimal("0")
+    total = ZERO
     matched = False
     for row in grouped.values():
         if not _row_matches_filing_year(row, filing_year):

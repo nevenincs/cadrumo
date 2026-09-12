@@ -29,6 +29,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import NoRevisionForPeriodError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from .....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.period import calculation_filing_date
 from ..calc_sheets_pull import compute_from_pull
@@ -136,9 +137,8 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
             BindingEdit(binding=binding.id, value=Decimal("0")) for binding in snapshot.revision.bindings
         ),
         relation_edits=tuple(
-            RelationEdit(relation=relation.id, value=Decimal("0"))
-            for relation in snapshot.revision.relations
-            if not relation.target_periods or snapshot.period in relation.target_periods
+            RelationEdit(relation=binding.id, value=Decimal("0"))
+            for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
         ),
         metadata=PullMetadata(
             modelo_id=snapshot.modelo.id,
@@ -236,9 +236,8 @@ def test_modelo_369_exterior_export_pull_matches_normal_calculation_reference(
     operator_edits = _operator_edits_from_export_plan(plan, snapshot)
     binding_edits = tuple(BindingEdit(binding=binding.id, value=Decimal("0")) for binding in snapshot.revision.bindings)
     relation_edits = tuple(
-        RelationEdit(relation=relation.id, value=Decimal("0"))
-        for relation in snapshot.revision.relations
-        if not relation.target_periods or snapshot.period in relation.target_periods
+        RelationEdit(relation=binding.id, value=Decimal("0"))
+        for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     )
     pull = PullResult(
         spreadsheet_id=f"modelo-369-{period_code}-export-plan",

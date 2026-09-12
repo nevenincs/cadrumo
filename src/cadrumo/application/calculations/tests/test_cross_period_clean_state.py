@@ -208,11 +208,11 @@ def test_cross_period_requirements_include_relation_rollups(tmp_path: Path) -> N
         and requirement.source_modelo == "115"
         and requirement.period == Period.from_year_and_code(2026, "1T")
     )
-    source_relation = next(
-        relation for relation in snapshot.revision.relations if relation.id == relation_requirement.origin_ids[0]
+    source_binding = next(
+        binding for binding in snapshot.revision.bindings if binding.id == relation_requirement.origin_ids[0]
     )
-    assert set(relation_requirement.legal_refs) == set(source_relation.legal_refs)
-    assert set(relation_requirement.source_refs) == set(source_relation.source_refs)
+    assert set(relation_requirement.legal_refs) == set(source_binding.legal_refs)
+    assert set(relation_requirement.source_refs) == set(source_binding.source_refs)
 
 
 def test_cross_period_requirements_preserve_previous_filing_presence_policy() -> None:

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from babel.messages.pofile import read_po
+from spylls.hunspell import Dictionary
 
 from cadrumo.core.i18n.render import extract_placeholders
 from dev._paths import REPO_ROOT, UTF_8
@@ -29,38 +30,9 @@ _LOCALES: Final[tuple[str, ...]] = ("ca", "en", "es", "hu")
 _LANGUAGE_CORE_FIELDS: Final[frozenset[str]] = frozenset({"definition", "scope_note", "short_description"})
 _TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"%\{[^{}]*\}|\{[^{}]*\}")
 _TRANSLATION_CODE_RE: Final[re.Pattern[str]] = re.compile(
-    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]*(?:=[^][,;\s]+)?|"
+    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?:=[^][,;\s]+)?|"
     r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b|\[\d{1,4}\]"
 )
-_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
-    "ca": frozenset(
-        {
-            "administracio",
-            "bonificacio",
-            "declaracio",
-            "descripcio",
-            "exencio",
-            "informacio",
-            "numero",
-            "provincia",
-            "telefon",
-            "variacio",
-        }
-    ),
-    "es": frozenset(
-        {
-            "administracion",
-            "autoliquidacion",
-            "declaracion",
-            "deduccion",
-            "descripcion",
-            "informacion",
-            "numero",
-            "retencion",
-            "telefono",
-        }
-    ),
-}
 
 
 def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[str, object]:
@@ -89,15 +61,24 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
     required_keys.update(
         key for leaves in locale_leaves.values() for key in leaves if _covered_by_namespace(key, namespace_prefixes)
     )
-    matrix = _translation_matrix(required_keys, locale_leaves)
+    parallel_values: dict[str, dict[str, str]] = defaultdict(dict)
+    parallel_inventory, parallel_findings = _parallel_localization_inventory(
+        repository, spelling_values=parallel_values
+    )
+    spelling, spelling_inventory, spelling_findings = _spellcheck_catalogues(
+        required_keys, locale_leaves, repository, additional_values=parallel_values
+    )
+    matrix = _translation_matrix(required_keys, locale_leaves, spelling)
     source_inventory, source_findings = _source_inventory(manager)
-    parallel_inventory, parallel_findings = _parallel_localization_inventory(repository)
-    inventory_findings = [*discovery_findings, *source_findings, *parallel_findings]
+    inventory_findings = [*discovery_findings, *source_findings, *parallel_findings, *spelling_findings]
     inventory_open = bool(
         discovery_findings
         or source_inventory["invalid_tr_calls"]
         or source_inventory["naked_presentation_sites"]
+        or source_inventory["unread_or_invalid_sources"]
         or parallel_inventory["parallel_localization_declarations"]
+        or parallel_inventory["invalid_data_files"]
+        or spelling_inventory["spelling_tool_failures"]
         or unresolved_families
     )
     domains = _domain_summaries(
@@ -140,6 +121,18 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
     catalogue_key_cells = sum(len(leaves) for leaves in locale_leaves.values())
     catalogue_keys_unique = len({key for leaves in locale_leaves.values() for key in leaves})
     catalogue_only_keys = {key for leaves in locale_leaves.values() for key in leaves if key not in required_keys}
+    catalogue_only_findings = [
+        {
+            "classification": "blocking",
+            "kind": "catalogue_only_key",
+            "domain": _domain(key),
+            "key": key,
+            "locales": sorted(locale for locale, leaves in locale_leaves.items() if key in leaves),
+            "cells": sum(1 for leaves in locale_leaves.values() if key in leaves),
+            "next_action": "remove the stale key through locales-remove-batch",
+        }
+        for key in sorted(catalogue_only_keys)
+    ]
     finite_dynamic_keys = {key for values in finite_families.values() for key in values}
     summary = {
         "inventory": {
@@ -151,6 +144,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
             "catalogue_duplicate_declarations": 0,
             **source_inventory,
             **parallel_inventory,
+            **spelling_inventory,
             "required_keys": len(required_keys),
             "dynamic_key_families": len(namespace_markers),
             "finite_key_families": len(finite_families),
@@ -177,6 +171,19 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         *inventory_findings,
         *(finding for finding in catalogue_findings if finding.get("key") not in required_keys),
         *matrix["findings"],
+        *(
+            {
+                "classification": "blocking",
+                "kind": "translation_spelling_unknown",
+                "locale": locale,
+                "location": key.removeprefix("parallel:"),
+                "unknown_words": list(words),
+                "next_action": "correct the localized prose in its authoritative data source",
+            }
+            for (locale, key), words in sorted(spelling.items())
+            if key.startswith("parallel:")
+        ),
+        *catalogue_only_findings,
         *(
             {
                 "classification": "blocking",
@@ -279,10 +286,108 @@ def _catalogue_leaves(
     return leaves_by_locale, findings
 
 
+def _spellcheck_catalogues(
+    required_keys: set[str],
+    locale_leaves: dict[str, dict[str, object]],
+    repository: Path,
+    *,
+    additional_values: dict[str, dict[str, str]] | None = None,
+) -> tuple[dict[tuple[str, str], tuple[str, ...]], dict[str, int], list[dict[str, object]]]:
+    """Check authored prose with pinned Hunspell dictionaries through spylls."""
+    dictionary_roots = {
+        locale: repository / "node_modules" / package / "index"
+        for locale, package in {
+            "ca": "dictionary-ca",
+            "en": "dictionary-en-gb",
+            "es": "dictionary-es",
+            "hu": "dictionary-hu",
+        }.items()
+    }
+    if any(
+        not root.with_suffix(".aff").is_file() or not root.with_suffix(".dic").is_file()
+        for root in dictionary_roots.values()
+    ):
+        return (
+            {},
+            {
+                "spellchecked_cells": 0,
+                "spelling_unknown_cells": 0,
+                "spelling_unknown_words": 0,
+                "spelling_tool_failures": 1,
+            },
+            [
+                {
+                    "classification": "blocking",
+                    "kind": "spelling_tool_unavailable",
+                    "detail": "one or more pinned Hunspell dictionaries are unavailable",
+                    "next_action": "run just setup-locale-spelling to restore the pinned dictionaries",
+                }
+            ],
+        )
+
+    unknown_by_cell: dict[tuple[str, str], set[str]] = defaultdict(set)
+    keys_by_word: dict[str, dict[str, set[str]]] = {}
+    checked_cells = 0
+    for locale, leaves in sorted(locale_leaves.items()):
+        locale_words: dict[str, set[str]] = defaultdict(set)
+        values = {key: leaves.get(key) for key in required_keys}
+        values.update((additional_values or {}).get(locale, {}))
+        for key, value in sorted(values.items()):
+            if not isinstance(value, str):
+                continue
+            words = {word for word in _translation_words(_human_translation_text(value)) if len(word) > 1}
+            if words:
+                checked_cells += 1
+            for word in words:
+                locale_words[word].add(key)
+        keys_by_word[locale] = locale_words
+    try:
+        dictionaries = {locale: Dictionary.from_files(str(root)) for locale, root in dictionary_roots.items()}
+    except (OSError, UnicodeError, ValueError) as exc:
+        failure = {
+            "classification": "blocking",
+            "kind": "spelling_tool_failure",
+            "error_type": type(exc).__name__,
+            "detail": str(exc),
+            "next_action": "repair the pinned spylls invocation or Hunspell dictionary",
+        }
+        return (
+            {},
+            {
+                "spellchecked_cells": checked_cells,
+                "spelling_unknown_cells": 0,
+                "spelling_unknown_words": 0,
+                "spelling_tool_failures": 1,
+            },
+            [failure],
+        )
+    unknown_words: set[tuple[str, str]] = set()
+    for locale, words in keys_by_word.items():
+        dictionary = dictionaries[locale]
+        for word, keys in words.items():
+            if dictionary.lookup(word):
+                continue
+            unknown_words.add((locale, word.casefold()))
+            for key in keys:
+                unknown_by_cell[(locale, key)].add(word)
+    return (
+        {cell: tuple(sorted(words, key=str.casefold)) for cell, words in unknown_by_cell.items()},
+        {
+            "spellchecked_cells": checked_cells,
+            "spelling_unknown_cells": len(unknown_by_cell),
+            "spelling_unknown_words": len(unknown_words),
+            "spelling_tool_failures": 0,
+        },
+        [],
+    )
+
+
 def _translation_matrix(
     required_keys: set[str],
     locale_leaves: dict[str, dict[str, object]],
+    spelling: dict[tuple[str, str], tuple[str, ...]] | None = None,
 ) -> dict[str, object]:
+    spelling = spelling or {}
     counts = Counter[str]()
     backlog: list[dict[str, object]] = []
     findings: list[dict[str, object]] = []
@@ -306,8 +411,8 @@ def _translation_matrix(
                             if locale != "es"
                             and source_placeholders is not None
                             and _translation_tokens(value) != source_placeholders
-                            else ("needs_review", "translation_spelling_suspect")
-                            if _has_unaccented_word(locale, value)
+                            else ("needs_review", "translation_spelling_unknown")
+                            if (locale, key) in spelling
                             else ("needs_review", "translation_too_similar")
                             if locale in review_locales
                             else ("ready", None)
@@ -333,6 +438,8 @@ def _translation_matrix(
                     else "repair_translation"
                 ),
             }
+            if reason == "translation_spelling_unknown":
+                item["unknown_words"] = list(spelling[(locale, key)])
             backlog.append(item)
             findings.append({"classification": "blocking", "kind": reason, **item})
     required_cells = len(required_keys) * len(locale_leaves)
@@ -394,14 +501,6 @@ def _suspicious_translation_locales(
         if SequenceMatcher(None, source_words, target_words).ratio() >= 0.985:
             suspicious.add(locale)
     return suspicious
-
-
-def _has_unaccented_word(locale: str, value: str) -> bool:
-    normalized = _human_translation_text(value)
-    if len(normalized) < 20:
-        return False
-    words = set(_translation_words(normalized))
-    return not words.isdisjoint(_UNACCENTED_WORDS.get(locale, frozenset()))
 
 
 def _human_translation_text(value: str) -> str:
@@ -479,6 +578,8 @@ def _source_inventory(
 
 def _parallel_localization_inventory(
     repository: Path,
+    *,
+    spelling_values: dict[str, dict[str, str]] | None = None,
 ) -> tuple[dict[str, int], list[dict[str, object]]]:
     counts = Counter[str]()
     findings: list[dict[str, object]] = []
@@ -499,6 +600,9 @@ def _parallel_localization_inventory(
             if match:
                 suffix_groups[match.group(1)].add(match.group(2))
                 counts["parallel_localization_cells"] += 1
+                if spelling_values is not None:
+                    locale = match.group(2)
+                    spelling_values.setdefault(locale, {})[f"parallel:{path.relative_to(repository)}:{dotted}"] = value
         for base, present in sorted(suffix_groups.items()):
             for locale in sorted(set(_LOCALES) - present):
                 counts["parallel_localization_declarations"] += 1
@@ -519,6 +623,10 @@ def _parallel_localization_inventory(
                     value = languages.get(locale, {}).get(field)
                     counts["parallel_localization_cells"] += 1
                     if isinstance(value, str) and value.strip():
+                        if spelling_values is not None:
+                            spelling_values.setdefault(locale, {})[
+                                f"parallel:{path.relative_to(repository)}:language.{locale}.{field}"
+                            ] = value
                         continue
                     counts["parallel_localization_declarations"] += 1
                     findings.append(
@@ -542,6 +650,10 @@ def _parallel_localization_inventory(
             translated = bool(message.string) and "fuzzy" not in message.flags
             docs_messages[(catalogue, message_id)][locale] = translated
             counts["parallel_localization_cells"] += 1
+            if spelling_values is not None and translated and isinstance(message.string, str):
+                spelling_values.setdefault(locale, {})[f"parallel:{path.relative_to(repository)}:{message_id}"] = (
+                    message.string
+                )
     for (catalogue, message_id), states in docs_messages.items():
         for locale in ("ca", "es", "hu"):
             if states.get(locale):

@@ -60,10 +60,10 @@ formulas = [
     "renta-total-pagos-a-cuenta",
 ]
 dependency_classifications = [
-    "renta-2025-dep-111",
-    "renta-2025-dep-123",
-    "renta-2025-dep-130",
-    "renta-2025-dep-131",
-    "renta-2025-dep-190",
-    "renta-2025-dep-193",
+    "renta-dep-111",
+    "renta-dep-123",
+    "renta-dep-130",
+    "renta-dep-131",
+    "renta-dep-190",
+    "renta-dep-193",
 ]

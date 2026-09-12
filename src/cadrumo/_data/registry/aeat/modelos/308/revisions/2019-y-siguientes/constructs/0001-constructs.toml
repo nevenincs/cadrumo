@@ -13,7 +13,7 @@ source_refs = [
     "boe-modelo-308-2008-form",
 ]
 casilla_ids = ["decl.ejercicio", "decl.tipo-solicitud"]
-workbook_parity_refs = ["modelo-308-dr-2019"]
+workbook_parity_refs = ["modelo-308-dr"]
 live_cross_references = [
     "modelo-308-static-documentation",
     "modelo-308-filed-declarations-read",

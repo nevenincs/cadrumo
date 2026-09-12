@@ -207,11 +207,14 @@ def _create_manual_add_transaction(
     """Persist the canonical add command with the configured FX provider."""
     from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
+    from ..ledger_action_composition import compose_ledger_action_ports
+
+    ports = compose_ledger_action_ports(bucket_id=command.bucket_id)
 
     try:
         return create_manual_transaction(
             command,
-            transaction_repository=transaction_repository,
+            ports=ports,
             currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
         )
     except ValidationError as exc:
@@ -482,6 +485,8 @@ def ledger_update(
     """Correct editable transaction facts through the bucket-scoped backend."""
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    from ..ledger_action_composition import compose_ledger_action_ports
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     # A leaked `pydantic.ValidationError` (negative amount, illegal field
     # combination) would be swallowed by the generic CLI boundary into an
@@ -508,7 +513,7 @@ def ledger_update(
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger update",
-            transaction_repository=transaction_repository,
+            ports=ports,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -713,6 +718,8 @@ def ledger_classify(
         return
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    from ..ledger_action_composition import compose_ledger_action_ports
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
 
     if _dispatch_bulk_classification_route(
         ctx,
@@ -765,7 +772,7 @@ def ledger_classify(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger classify",
             reaffirm=reaffirm,
-            transaction_repository=transaction_repository,
+            ports=ports,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -796,6 +803,8 @@ def ledger_allocate(
     """Record business/private proportionality through the ledger backend."""
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    from ..ledger_action_composition import compose_ledger_action_ports
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     validated_category_id = validate_category_id(category_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
@@ -823,7 +832,7 @@ def ledger_allocate(
             ),
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger allocate",
-            transaction_repository=transaction_repository,
+            ports=ports,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -867,17 +876,17 @@ def ledger_link(
     actor: str | None = None,
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
-    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
     from ...application.ledger.actions_manual import link_manual_transaction_invoice
     from ...domain.invoices.errors import InvoiceLinkError
+    from ..ledger_action_composition import compose_ledger_action_ports
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     bucket_id = transaction_repository.bucket_id
+    ports = compose_ledger_action_ports(bucket_id=bucket_id)
     actor_label = (actor or "operator").strip() or "operator"
 
-    invoice_repo = InvoiceCatalogueRepository()
     try:
         link_manual_transaction_invoice(
             bucket_id=bucket_id,
@@ -885,8 +894,7 @@ def ledger_link(
             invoice_id=invoice_id,
             actor=actor_label,
             source_command="aeat app ledger link",
-            transaction_repository=transaction_repository,
-            invoice_repository=invoice_repo,
+            ports=ports,
         )
     except InvoiceLinkError as exc:
         # The writer owns the missing/cross-bucket policy and refuses before it

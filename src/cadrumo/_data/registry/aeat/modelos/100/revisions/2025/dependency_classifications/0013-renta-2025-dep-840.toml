@@ -1,5 +1,5 @@
 [[revisions."2025".dependency_classifications]]
-id = "renta-2025-dep-840"
+id = "renta-dep-840"
 source_modelo = "840"
 treatment = "factual_evidence"
 target_constructs = ["renta-dependent-modelos", "renta-economic-activities"]

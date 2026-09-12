@@ -50,6 +50,7 @@ from .actions_common import (
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
 )
+from .action_ports import LedgerActionPorts
 from .models import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,
@@ -70,10 +71,7 @@ def archive_manual_transaction(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger archive",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Mark one bucket-scoped ledger transaction as archived.
@@ -89,10 +87,7 @@ def archive_manual_transaction(
         actor=actor,
         reason=reason,
         source_command=source_command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=bucket_event_repository,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
 
@@ -104,10 +99,7 @@ def stash_manual_transaction(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger stash",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Mark one active bucket-scoped ledger transaction as stashed.
@@ -123,10 +115,7 @@ def stash_manual_transaction(
         actor=actor,
         reason=reason,
         source_command=source_command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=bucket_event_repository,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
 
@@ -138,10 +127,7 @@ def restore_manual_transaction(
     actor: str,
     reason: str = "",
     source_command: str = "aeat app ledger restore",
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Restore one stashed or archived ledger transaction to active.
@@ -169,7 +155,7 @@ def restore_manual_transaction(
             when a finalized-modelo reference blocks the restore.
         TransactionNotFoundError: when no transaction matches ``transaction_id``.
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
     if current.lifecycle_state is TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
@@ -197,10 +183,7 @@ def restore_manual_transaction(
         actor=actor,
         reason=reason,
         source_command=source_command,
-        transaction_repository=repository,
-        bucket_event_repository=bucket_event_repository,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
+        ports=ports,
         occurred_at=occurred_at,
     )
 

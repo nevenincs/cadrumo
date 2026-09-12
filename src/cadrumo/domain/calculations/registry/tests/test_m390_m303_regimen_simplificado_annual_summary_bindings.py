@@ -63,7 +63,7 @@ def test_live_m390_revision_declares_one_exact_ten_endpoint_handoff() -> None:
         binding.source is not BindingSourceKind.RELATION_PREFILL or binding.id != _RETIRED_BINDING_ID
         for binding in revision.bindings
     )
-    assert _RETIRED_RELATION_ID not in {relation.id for relation in revision.relations}
+    assert _RETIRED_RELATION_ID not in {binding.id for binding in revision.bindings}
 
 
 def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:

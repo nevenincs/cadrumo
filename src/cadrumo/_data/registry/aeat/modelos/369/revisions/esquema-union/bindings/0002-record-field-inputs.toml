@@ -4,840 +4,840 @@
 # Offsets and lengths read from the bundled design.
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.13-17.tipo-y-cierre"
+id = "modelo-369-union-fichero.tipo-y-cierre"
 provider = { kind = "manual_input", record = "modelo-369-union-envelope", field = "tipo-y-cierre", offset = 13, length = 5, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.9-13.regimen"
+id = "modelo-369-union-fichero.regimen"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "regimen", offset = 9, length = 5, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.14-14.categoria"
+id = "modelo-369-union-fichero.categoria"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "categoria", offset = 14, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.15-15.tipo-de-pago"
+id = "modelo-369-union-fichero.tipo-de-pago"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "tipo-de-pago", offset = 15, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.16-37.nrc-pago"
+id = "modelo-369-union-fichero.nrc-pago"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "nrc-pago", offset = 16, length = 22, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.38-54.importe-pagado"
+id = "modelo-369-union-fichero.importe-pagado"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "importe-pagado", offset = 38, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.56-57.1-declarante-pais"
+id = "modelo-369-union-fichero.1-declarante-pais"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "1-declarante-pais", offset = 56, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.198-201.2-ejercicio-y-periodo-ejercicio"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-ejercicio"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-ejercicio", offset = 198, length = 4, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.202-202.2-ejercicio-y-periodo-tipo-de-periodo"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-tipo-de-periodo"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-tipo-de-periodo", offset = 202, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.203-204.2-ejercicio-y-periodo-periodo"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-periodo"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-periodo", offset = 203, length = 2, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.205-212.2-ejercicio-y-periodo-fecha-desde"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-fecha-desde"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-fecha-desde", offset = 205, length = 8, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.213-220.2-ejercicio-y-periodo-fecha-hasta"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-fecha-hasta"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-fecha-hasta", offset = 213, length = 8, data_type = "integer" }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.221-221.2-ejercicio-y-periodo-declaracion-sin-actividad"
+id = "modelo-369-union-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "2-ejercicio-y-periodo-declaracion-sin-actividad", offset = 221, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.222-223.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai", offset = 222, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.224-228.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1", offset = 224, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.229-229.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-1"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-1"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-1", offset = 229, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.230-246.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl", offset = 230, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.247-263.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-1"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-1"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-1", offset = 247, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.264-265.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-2", offset = 264, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.266-270.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2", offset = 266, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.271-271.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-2", offset = 271, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.272-288.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-2", offset = 272, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.289-305.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-2", offset = 289, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.306-307.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-3", offset = 306, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.308-312.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-3", offset = 308, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.313-313.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-3", offset = 313, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.314-330.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-3", offset = 314, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.331-347.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-3", offset = 331, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.348-349.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-4", offset = 348, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.350-354.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-4", offset = 350, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.355-355.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-4", offset = 355, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.356-372.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-4", offset = 356, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.373-389.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-4", offset = 373, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.390-391.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-5", offset = 390, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.392-396.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-5", offset = 392, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.397-397.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-5", offset = 397, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.398-414.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-5", offset = 398, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.415-431.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-5", offset = 415, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.432-433.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-6", offset = 432, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.434-438.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-6", offset = 434, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.439-439.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-6", offset = 439, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.440-456.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-6", offset = 440, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.457-473.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-6", offset = 457, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.474-475.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-7", offset = 474, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.476-480.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-7", offset = 476, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.481-481.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-7", offset = 481, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.482-498.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-7", offset = 482, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.499-515.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-7", offset = 499, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.516-517.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-8", offset = 516, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.518-522.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-8", offset = 518, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.523-523.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-8", offset = 523, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.524-540.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-8", offset = 524, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.541-557.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-8", offset = 541, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.558-559.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-9", offset = 558, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.560-564.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-9", offset = 560, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.565-565.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-9", offset = 565, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.566-582.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-9", offset = 566, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.583-599.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-9", offset = 583, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.600-601.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-10"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-10"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-10", offset = 600, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.602-606.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-2", offset = 602, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.607-607.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-10"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-10"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-10", offset = 607, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.608-624.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-10"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-10"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-10", offset = 608, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.625-641.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-10"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-10"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-10", offset = 625, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.642-643.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-11"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-11"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-11", offset = 642, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.644-648.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-3", offset = 644, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.649-649.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-11"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-11"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-11", offset = 649, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.650-666.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-11"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-11"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-11", offset = 650, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.667-683.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-11"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-11"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-11", offset = 667, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.684-685.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-12"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-12"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-12", offset = 684, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.686-690.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-4", offset = 686, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.691-691.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-12"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-12"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-12", offset = 691, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.692-708.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-12"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-12"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-12", offset = 692, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.709-725.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-12"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-12"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-12", offset = 709, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.726-727.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-13"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-13"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-13", offset = 726, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.728-732.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-5"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-5"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-5", offset = 728, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.733-733.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-13"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-13"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-13", offset = 733, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.734-750.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-13"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-13"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-13", offset = 734, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.751-767.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-13"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-13"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-13", offset = 751, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.768-769.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-14"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-14"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-14", offset = 768, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.770-774.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-6"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-6"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-6", offset = 770, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.775-775.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-14"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-14"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-14", offset = 775, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.776-792.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-14"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-14"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-14", offset = 776, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.793-809.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-14"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-14"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-14", offset = 793, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.810-811.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-15"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-15"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-15", offset = 810, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.812-816.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-7"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-7"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-7", offset = 812, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.817-817.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-15"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-15"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-15", offset = 817, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.818-834.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-15"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-15"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-15", offset = 818, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.835-851.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-15"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-15"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-15", offset = 835, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.852-853.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-16"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-16"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-16", offset = 852, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.854-858.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-8"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-8"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-8", offset = 854, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.859-859.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-16"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-16"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-16", offset = 859, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.860-876.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-16"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-16"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-16", offset = 860, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.877-893.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-16"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-16"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-16", offset = 877, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.894-895.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-17"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-17"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-17", offset = 894, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.896-900.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-9"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-9"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-9", offset = 896, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.901-901.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-17"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-17"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-17", offset = 901, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.902-918.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-17"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-17"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-17", offset = 902, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.919-935.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-17"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-17"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-17", offset = 919, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.936-937.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-18"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-18"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-18", offset = 936, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.938-942.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-10"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-10"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-10", offset = 938, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.943-943.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-18"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-18"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-18", offset = 943, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.944-960.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-18"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-18"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-18", offset = 944, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.961-977.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-18"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-18"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-18", offset = 961, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.978-979.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-19"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-19"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-19", offset = 978, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.980-984.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-11"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-11"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-1-11", offset = 980, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.985-985.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-19"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-19"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-19", offset = 985, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.986-1002.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-19"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-19"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-19", offset = 986, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1003-1019.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-19"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-19"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-19", offset = 1003, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1020-1021.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-20"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-20"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-20", offset = 1020, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1022-1026.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-2"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-2"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-2", offset = 1022, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1027-1027.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-20"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-20"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-20", offset = 1027, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1028-1044.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-20"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-20"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-20", offset = 1028, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1045-1061.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-20"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-20"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-20", offset = 1045, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1062-1063.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-21"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-21"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-21", offset = 1062, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1064-1068.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-3"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-3"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-3", offset = 1064, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1069-1069.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-21"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-21"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-iva-21", offset = 1069, length = 1, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1070-1086.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-21"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-21"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-base-imponibl-21", offset = 1070, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1087-1103.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-21"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-21"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-cuota-iva-21", offset = 1087, length = 17, data_type = "money" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1104-1105.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-22"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-22"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-codigo-de-pai-22", offset = 1104, length = 2, data_type = "text" }
 value = { data_type = "text", channel = "text" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
-id = "modelo-369-union-fichero.1106-1110.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-4"
+id = "modelo-369-union-fichero.3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-4"
 provider = { kind = "manual_input", record = "modelo-369-union-t36904", field = "3-prestaciones-de-servicios-desde-el-emid-espana-y-desde-tipo-de-iva-2-4", offset = 1106, length = 5, data_type = "decimal", decimals = 2 }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2", "orden-hac-610-2021:art-3", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies", "ley-37-1992:art-163-tervicies", "ley-37-1992:art-163-quatervicies"]

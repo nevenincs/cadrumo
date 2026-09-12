@@ -67,7 +67,7 @@ semantic_role = "m353_cuotas_a_compensar"
 data_type = "money"
 required = false
 input_kind = "computed"
-formula = "modelo-353-2026-compensar-pendientes-posteriores"
+formula = "modelo-353-compensar-pendientes-posteriores"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 
 [[revisions."2026-desde-02".casillas]]
@@ -80,7 +80,7 @@ semantic_role = "m353_resultado"
 data_type = "money"
 required = false
 input_kind = "computed"
-formula = "modelo-353-2026-resultado"
+formula = "modelo-353-resultado"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 
 [[revisions."2026-desde-02".casillas]]
@@ -121,5 +121,5 @@ semantic_role = "m353_resultado"
 data_type = "money"
 required = false
 input_kind = "computed"
-formula = "modelo-353-2026-resultado-autoliquidacion"
+formula = "modelo-353-resultado-autoliquidacion"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]

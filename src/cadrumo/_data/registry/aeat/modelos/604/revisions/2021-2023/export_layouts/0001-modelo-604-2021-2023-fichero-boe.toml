@@ -23,7 +23,7 @@
 # copied here.
 
 [[revisions."2021-2023".export_layouts]]
-id = "modelo-604-2021-2023-fichero-boe"
+id = "modelo-604-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-604-2021"]

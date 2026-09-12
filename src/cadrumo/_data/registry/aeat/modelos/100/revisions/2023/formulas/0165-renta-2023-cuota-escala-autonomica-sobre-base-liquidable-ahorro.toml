@@ -3,7 +3,7 @@ id = "renta-cuota-escala-autonomica-sobre-base-liquidable-ahorro"
 target_casilla_id = "0537"
 expression = { op = "lookup_bracket", args = [
     { casilla_id = "0510" },
-    { parameter = "renta-2023-escala-autonomica-base-ahorro" },
+    { parameter = "renta-escala-autonomica-base-ahorro" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-76-2023"]

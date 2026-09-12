@@ -1,5 +1,5 @@
 [[revisions."2025".extraction_profiles]]
-id = "modelo-131-2025-declaracion-pdf"
+id = "modelo-131-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]

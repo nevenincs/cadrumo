@@ -49,7 +49,7 @@
 # an identical tuple of rows; this is a pure authoring-density change, not a
 # schema or semantic change.
 [[revisions."2026".parameters]]
-id = "m131-modulos-coeficientes-2026"
+id = "m131-modulos-coeficientes"
 data_type = "keyed_bracket_table"
 unit = "euro_per_unit"
 legal_refs = ["orden-hac-1425-2025:art-4"]
@@ -821,7 +821,7 @@ required_text = [
 # 3 confirming its application to the 2026 pagos fraccionados. Same 5 por
 # ciento figure as the 2025 revision's disposición adicional primera.
 [[revisions."2026".parameters]]
-id = "m131-modulos-reduccion-general-2026"
+id = "m131-modulos-reduccion-general"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["orden-hac-1425-2025:da-1"]
@@ -846,7 +846,7 @@ valid_to = 2026-12-31
 # revision, cross-checked byte-identical against the bundled Orden
 # HAC/1425/2025 Anexo II text.
 [[revisions."2026".parameters]]
-id = "m131-modulos-coeficiente-incremento-asalariados-2026"
+id = "m131-modulos-coeficiente-incremento-asalariados"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-2-a"]
@@ -874,7 +874,7 @@ valid_to = 2026-12-31
 # Same tramos schedule as the 2025 revision, cross-checked byte-identical
 # against the bundled Orden HAC/1425/2025 Anexo II text.
 [[revisions."2026".parameters]]
-id = "m131-modulos-coeficiente-tramos-asalariados-2026"
+id = "m131-modulos-coeficiente-tramos-asalariados"
 data_type = "bracket_table"
 unit = "coefficient"
 bracket_axis = "filing_period"
@@ -932,7 +932,7 @@ valid_to = 2026-12-31
 # revision, cross-checked byte-identical against the bundled Orden
 # HAC/1425/2025 Anexo II text.
 [[revisions."2026".parameters]]
-id = "m131-modulos-indice-exceso-2026"
+id = "m131-modulos-indice-exceso"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"]
@@ -966,7 +966,7 @@ valid_to = 2026-12-31
 # unchanged (see _m131_modulos_cuantia_exceso docstring) — never a silent
 # fabricated cuantía.
 [[revisions."2026".parameters]]
-id = "m131-modulos-cuantia-exceso-2026"
+id = "m131-modulos-cuantia-exceso"
 data_type = "keyed_bracket_table"
 unit = "euro"
 legal_refs = ["orden-hac-1425-2025:instruccion-2-3-b-3"]

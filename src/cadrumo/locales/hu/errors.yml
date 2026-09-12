@@ -69,6 +69,12 @@ errors:
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'
+    binding_channel_ambiguous: A(z) {binding_ids} kötések a logikai és a Decimal csatornán
+      is meg lettek adva.
+    binding_channel_not_boolean: A(z) {binding_ids} kötések a logikai csatornán lettek
+      megadva, de nem deklarálnak logikai értékszerződést.
+    binding_relation_channel_conflict: A(z) {binding_id} kötés értékei ütköznek a
+      kötési és a relációs csatornán.
     binding_value_missing: A(z) {binding_id} kötésnek nincs megadott értéke.
     bound_casilla_binding_value_missing: A(z) {binding_id} kötésnek nincs megadott
       értéke.

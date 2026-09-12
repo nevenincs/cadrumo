@@ -174,7 +174,10 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
         )
         assert {str(formula.target_casilla_id) for formula in revision.formulas}.isdisjoint(_ENDPOINTS)
         assert {
-            str(relation.source_casilla_id) for relation in revision.relations if relation.source_casilla_id is not None
+            str(casilla_id)
+            for binding in revision.bindings
+            if binding.source == "relation_prefill"
+            for casilla_id in binding.provider.declared_source_casilla_ids
         }.isdisjoint(_ENDPOINTS)
         # No PARALLEL producer on the export axis either: each endpoint owns
         # exactly one export field and no two endpoints share one. This asserted

@@ -1,5 +1,5 @@
 [[revisions."2024".workbook_parity_refs]]
-id = "modelo-721-dr-2024"
+id = "modelo-721-dr"
 workbook_source = "boe-modelo-721-2024-layout"
 fixture_id = "modelo-721-record-design-layout-2024"
 formula_coverage = "record_design_layout"

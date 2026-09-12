@@ -150,8 +150,8 @@ def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, per
 
 
 _DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
-    "modelo-180-rel-115-base-anual": Decimal("0"),
-    "modelo-180-rel-115-retenciones-anual": Decimal("0"),
+    "modelo-180-115-base-anual": Decimal("0"),
+    "modelo-180-115-retenciones-anual": Decimal("0"),
 }
 _DEFAULT_180_BINDING_VALUES: dict[str, Decimal] = {
     "modelo-180-115-perceptores-anual": Decimal("0"),

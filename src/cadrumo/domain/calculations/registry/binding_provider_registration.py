@@ -833,19 +833,72 @@ def _absolute_coordinate_leaves(annotation: object) -> bool:
     return issubclass(annotation, (int, date))
 
 
+def _nested_models(annotation: object) -> tuple[type[BaseModel], ...]:
+    """Return every :class:`BaseModel` class reachable from one resolved annotation.
+
+    A provider that nests its coordinate one model deep is exactly as pinned as
+    one that declares it at the top level, so the walk follows the type rather
+    than stopping at the first structured field.
+    """
+    origin = get_origin(annotation)
+    if origin is Literal:
+        return ()
+    if origin is not None:
+        return tuple(model for arg in get_args(annotation) for model in _nested_models(arg))
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        return (annotation,)
+    return ()
+
+
 def absolute_coordinate_offenders(label: str, model: type[BaseModel]) -> tuple[str, ...]:
     """Return one diagnostic per field of ``model`` that pins a filing coordinate.
+
+    The walk descends into nested models, reporting a dotted field path, because
+    a coordinate reached through a structured field is still a coordinate: a
+    provider declaring ``window: Window`` where ``Window`` carries a ``year``
+    would otherwise pass a check that only ever looked one level down. The
+    ``temporal`` field is skipped at every depth for the reason its own constant
+    states, and each model is visited once so a self-referential shape
+    terminates.
+
+    Both exemptions -- the record-layout integer names and the ``temporal`` field
+    -- are granted to the PROVIDER MODEL ITSELF and to nothing below it. Each is
+    a statement about one specific declared surface: ``offset`` on a provider is
+    an authored fixed-width address, and ``temporal`` on a provider is the union
+    built to carry relative coordinates. A field of the same name on some nested
+    model is a different field with a different contract, and an exemption that
+    followed the name down would let any nested structure re-admit an absolute
+    coordinate by calling it ``offset``.
 
     Pure and model-agnostic, so the guard can be exercised against a fabricated
     provider class without touching the enrolled table.
     """
-    return tuple(
-        f"{label} declares absolute coordinate field {name!r}"
-        for name, field_info in sorted(model.model_fields.items())
-        if name != TEMPORAL_PROVIDER_FIELD_NAME
-        and name not in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES
-        and _absolute_coordinate_leaves(field_info.annotation)
-    )
+    return _absolute_coordinate_offenders(label, model, seen=frozenset(), top_level=True)
+
+
+def _absolute_coordinate_offenders(
+    label: str,
+    model: type[BaseModel],
+    *,
+    seen: frozenset[type[BaseModel]],
+    top_level: bool,
+) -> tuple[str, ...]:
+    """Walk one model's fields, recursing into nested models not already visited."""
+    if model in seen:
+        return ()
+    visited = seen | {model}
+    offenders: list[str] = []
+    for name, field_info in sorted(model.model_fields.items()):
+        if top_level and name == TEMPORAL_PROVIDER_FIELD_NAME:
+            continue
+        exempt = top_level and name in AUTHORED_LAYOUT_INTEGER_FIELD_NAMES
+        if not exempt and _absolute_coordinate_leaves(field_info.annotation):
+            offenders.append(f"{label} declares absolute coordinate field {name!r}")
+        for nested in _nested_models(field_info.annotation):
+            offenders.extend(
+                _absolute_coordinate_offenders(f"{label}.{name}", nested, seen=visited, top_level=False),
+            )
+    return tuple(offenders)
 
 
 def require_relative_provider_coordinates(

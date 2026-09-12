@@ -50,22 +50,20 @@ def _m100_2024_deduccion_maternidad_bindings() -> dict[str, Decimal]:
 
 # Relation values required by the 2024 snapshot (zero - not exercised).
 _REL_2024 = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 # Relation values required by the 2025 snapshot (zero - not exercised).
 _REL_2025 = {
-    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -98,9 +96,9 @@ def _calc_2024(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # BIN-pendiente fresh-filer baseline.
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2024,
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": birth_date},
+        date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
     )
     return result.values
 
@@ -118,7 +116,7 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
             # taxpayer_type.irpf_income_categories, so a directa scenario is 1.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 1 (individual) -> 0461 computed = 0
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -134,9 +132,9 @@ def _calc_2025(birth_date: date) -> Mapping[CasillaId, Decimal]:
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": birth_date},
+        date_binding_values={"renta-profile-taxpayer-birth-date": birth_date},
     )
     return result.values
 

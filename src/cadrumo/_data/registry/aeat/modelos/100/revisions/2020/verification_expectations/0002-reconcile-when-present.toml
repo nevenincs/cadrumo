@@ -7,7 +7,7 @@
 # legitimate filing's verdict (min_coverage = 0). Grounded in the
 # revision's AEAT DR / framework-law refs (reused from modelo-100-2020-cuota-chain-verification).
 [[revisions."2020".verification_expectations]]
-id = "modelo-100-2020-reconcile-when-present"
+id = "modelo-100-reconcile-when-present"
 computed_casilla_ids = []
 # Casillas whose engine value is independently checked against an
 # AEAT-authoritative oracle, not only the app's own engine: 0226

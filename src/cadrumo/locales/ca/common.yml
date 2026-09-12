@@ -78,6 +78,9 @@ aggregation:
         no té estat de registre especial de l'exercici anterior per als sectors afectats.
       prorrata_transition_contradictory_evidence: Les entrades de transició de prorrata
         especial contradiuen la transició declarada.
+      prorrata_transition_declarations_unavailable: La revisió seleccionada del model
+        303 no declara calendari de presentació ni vincle d'arrossegament periòdic,
+        per la qual cosa no es pot determinar el període de transició de prorrata.
       prorrata_transition_entry_without_evidence: Una entrada de transició de prorrata
         especial no aporta evidència de transició.
       prorrata_transition_evidence_without_declared_transition: S'ha aportat evidència

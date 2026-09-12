@@ -1112,6 +1112,12 @@ application:
         profile before seeding.
     profile_binding:
       errors:
+        boolean_value_channel_mismatch: The profile fact for binding {binding_id}
+          is boolean, but the binding declares the {declared_channel} value channel.
+        boolean_value_type_invalid: The profile fact for boolean binding {binding_id}
+          is not boolean; received value type {value_type}.
+        channel_declaration_conflict: Binding {binding_id} declares the {declared_channel}
+          channel, which conflicts with consumer channel {consumer_channel}.
         date_value_type_invalid: Profile fact for date-channel binding %{binding_id}
           must be a date; got %{value_type}.
         decimal_value_type_invalid: Profile fact for Decimal-channel binding %{binding_id}

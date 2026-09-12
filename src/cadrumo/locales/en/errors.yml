@@ -66,6 +66,12 @@ errors:
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'
+    binding_channel_ambiguous: Bindings {binding_ids} were supplied through both the
+      boolean and Decimal channels.
+    binding_channel_not_boolean: Bindings {binding_ids} were supplied through the
+      boolean channel but do not declare a boolean value contract.
+    binding_relation_channel_conflict: Binding {binding_id} has conflicting values
+      on the binding and relation channels.
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: Binding {binding_id} has no supplied value.
     bound_input_smuggled_without_binding_value: 'Internal error: bound input field

@@ -22591,7 +22591,7 @@ modelo:
               label: Tributació conjunta Estat i Adm. Forals - Càlcul de percentatges
                 de tributació - Adm. de l'Estat [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 i següents)
                   - pagaments fraccionats deduction chain
@@ -44591,7 +44591,7 @@ modelo:
               label: Tributació conjunta Estat i Adm. Forals - Càlcul de percentatges
                 de tributació - Adm. de l'Estat [00625]
           construct:
-            modelo-200-2024-foundation:
+            modelo-200-foundation:
               field:
                 title: Modelo 200 IS annual settlement foundation (2024 i següents)
                   - pagaments fraccionats deduction chain

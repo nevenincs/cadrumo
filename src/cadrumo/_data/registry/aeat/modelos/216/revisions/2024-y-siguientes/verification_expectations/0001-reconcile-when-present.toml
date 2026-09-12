@@ -4,7 +4,7 @@
 # never lower coverage or flip a legitimate filing's verdict. Grounded in the
 # casillas' own declared legal_refs/source_refs.
 [[revisions."2024-y-siguientes".verification_expectations]]
-id = "modelo-216-2024-y-siguientes-reconcile-when-present"
+id = "modelo-216-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "10",

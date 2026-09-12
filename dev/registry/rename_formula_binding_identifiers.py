@@ -139,6 +139,36 @@ Scope. The collapse runs only for modelos named explicitly with ``--modelo``,
 because it is an auditable per-modelo operation whose refusal list a reader is
 expected to read before applying.
 
+Fourth rule: the fixed-width span strip (``--strip-spans``, bindings only). A
+binding id such as ``modelo-131.page1.109-112.actividad-1-epigrafe`` names a
+slot AND the fixed-width address of that slot, and the address is already
+stated -- typed, and the only copy anything reads -- by the row's own
+``provider.offset`` and ``provider.length``. The id's copy is a restatement that
+goes stale the moment a record design moves the field, which is exactly the
+moment an identifier must not change, so the segment is removed and the id is
+left naming a timeless slot.
+
+The proof is per row. A separator-bounded ``<digits>-<digits>`` run is stripped
+only when it EQUALS the member's own provider address, ``offset`` through
+``offset + length - 1``. An id carrying a span-shaped run no provider declares
+is refused and listed rather than guessed at: such a run may be a year range, a
+legal-norm pair or a repetition group, and each would mean something different.
+An id carrying no span-shaped run at all is simply untouched -- a dotted id is
+not a candidate for stating a dot.
+
+Refusal is per modelo. The post-strip image of each edition's whole authored
+namespace is computed before anything is written, and two members of one edition
+landing on one name withdraw the entire modelo with the pairs listed. A half
+applied edition would be spelled under a rule no reader could reapply by hand.
+References are rewritten in the same pass -- casilla ``binding`` and
+``alternate_bindings``, formula operands, export field bindings, constructs,
+``dependency_classifications`` ``binding_refs``, verification expectations, and
+the ``dev/registry/mappings`` semantic maps -- and the generated-export-tree
+guard fires where a published tree quotes a stripped id. Locale prose is
+reported, never hand-edited. Modelo 714 is withheld entirely: its within-edition
+collisions are repetition groups whose surviving names need the generator's
+repetition index.
+
 Modes. ``--measure`` (the default) parses every in-scope declaration, reports
 the embedding counts, checks the renamed ids for collisions within a
 revision's combined primary-id namespace, and lists the generated export
@@ -154,11 +184,12 @@ import re
 import sys
 import tomllib
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterator, Mapping, Sequence, Set
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any
+from types import UnionType
+from typing import Annotated, Any, Protocol, Union, get_args, get_origin
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_MODELOS_ROOT = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
@@ -172,7 +203,11 @@ from cadrumo.domain.calculations.registry.identifier_lineage import (  # noqa: E
 )
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector  # noqa: E402
 
-from .analysis.edition_delta_status import supported_filing_years  # noqa: E402
+# The edition-delta signal is imported lazily by the two rules that consult it.
+# It reaches the whole registry domain, and the fourth rule below (the span
+# strip) consults nothing but a member's own provider table, so a module-level
+# import would make an independent rule unavailable whenever the domain's own
+# import graph is mid-change.
 
 EXCLUDED_MODELOS: frozenset[str] = frozenset({"185", "222", "347"})
 
@@ -709,6 +744,8 @@ def _year_horizon(modelos_root: Path, modelo_dir: Path) -> int | None:
     the registry itself names: the product's promised filing years, widened by
     any bound this modelo's own editions declare beyond them.
     """
+    from .analysis.edition_delta_status import supported_filing_years
+
     candidates: list[int] = list(supported_filing_years(modelos_root.parent))
     for revision_dir in iter_revision_dirs(modelo_dir):
         selector = _selector(revision_dir)
@@ -1137,6 +1174,1041 @@ def apply_collapse(
     return touched
 
 
+# ---------------------------------------------------------------------------
+# Third rule: the family-wide edition-token collapse (every id-keyed family).
+# ---------------------------------------------------------------------------
+
+#: Casillas key on ``continuidad_id`` rather than on a token-bearing name, and
+#: their ids are box numbers the official record design owns, so they never
+#: enter this collapse even though ``CasillaDefinition`` declares an ``id``.
+_COLLAPSE_EXCLUDED_FAMILIES: frozenset[str] = frozenset({"casillas"})
+
+#: An export layout the generator writes, named from the modelo and the edition
+#: it renders. Renaming one would rename the generator's own output under it, so
+#: it is reported and skipped rather than collapsed.
+_GENERATED_EXPORT_LAYOUT_ID = re.compile(r"^generated-modelo-.+-fichero$")
+
+#: A four-digit year pair. An occurrence of a token inside such a range is an
+#: offset or validity window carried by the box rather than the edition
+#: restating itself, and the signal's tokeniser excludes it; the removal below
+#: must exclude the same spans or it would cut a range in half.
+_YEAR_RANGE_SPAN = re.compile(r"(?<![0-9])\d{4}-\d{4}(?![0-9])")
+
+
+class FamilyWithoutIdentityError(Exception):
+    """A named family's member model declares no ``id``, so it cannot be collapsed."""
+
+    def __init__(self, family: str) -> None:
+        """Record the family whose element model carries no identity field."""
+        super().__init__(
+            f"family {family!r} is not an id-keyed schema family; the collapse keys on a member's own id "
+            f"and the enrolled families are {', '.join(id_keyed_families())}"
+        )
+        self.family = family
+
+
+def id_keyed_families() -> tuple[str, ...]:
+    """Return every ``SCHEMA_FAMILY`` collection whose member model declares an ``id``.
+
+    Read off the shipped ``ModeloRevision`` rather than listed here, so a family
+    added to the schema is collapsed without this tool being edited to notice
+    it, and a family whose element model carries no ``id`` is refused rather
+    than silently skipped.
+    """
+    import typing
+
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
+    from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
+
+    found: list[str] = []
+    for name, info in ModeloRevision.model_fields.items():
+        if not any(marker is SCHEMA_FAMILY for marker in info.metadata) or name in _COLLAPSE_EXCLUDED_FAMILIES:
+            continue
+        (element, *_rest) = typing.get_args(info.annotation) or (None,)
+        candidates = [element] if hasattr(element, "model_fields") else list(typing.get_args(element))
+        if any("id" in getattr(candidate, "model_fields", {}) for candidate in candidates):
+            found.append(name)
+    return tuple(found)
+
+
+def _bounded_token_spans(identifier: str, token: str) -> tuple[tuple[int, int], ...]:
+    """Return the spans where ``token`` sits as a whole, separator-bounded segment run.
+
+    Bounded on both sides by an identifier separator or by the end of the
+    identifier, so ``2024`` does not match inside ``20240`` and a whole
+    qualified edition id such as ``2024-desde-09-y-3t`` matches as one token.
+    Spans lying inside a ``NNNN-NNNN`` range that is not the token itself are
+    dropped: the signal's tokeniser does not count them, and cutting one in half
+    would rewrite a validity window into nonsense.
+    """
+    ranged = [match.span() for match in _YEAR_RANGE_SPAN.finditer(identifier) if match.group() != token]
+    spans: list[tuple[int, int]] = []
+    start = identifier.find(token)
+    while start != -1:
+        end = start + len(token)
+        before_ok = start == 0 or identifier[start - 1] in _IDENTIFIER_SEPARATORS
+        after_ok = end == len(identifier) or identifier[end] in _IDENTIFIER_SEPARATORS
+        # A range the occurrence CONTAINS is part of the token itself --
+        # edition ``2009-2011-junio`` spelled whole inside an identifier --
+        # and only a range the occurrence cuts across disqualifies it.
+        inside_range = any(low < end and start < high and not (start <= low and high <= end) for low, high in ranged)
+        if before_ok and after_ok and not inside_range:
+            spans.append((start, end))
+        start = identifier.find(token, start + 1)
+    return tuple(spans)
+
+
+def strip_identifier_token(identifier: str, token: str) -> str:
+    """Return ``identifier`` with its single bounded ``token`` segment and one separator removed.
+
+    The separator immediately before the token is preferred, falling back to the
+    one immediately after when the token opens the identifier, which is the rule
+    :func:`strip_edition_key` applies to the whole-revision case, so the two
+    produce one spelling rather than two.
+
+    Every bounded occurrence is removed, right to left. An identifier such as
+    ``renta-2020-minimo-contribuyente-base-2020`` restates its edition twice and
+    both statements are the same fact the containing directory already names, so
+    removing one and keeping the other would leave the condition half met under
+    a name no rule could explain. The result is uniquely determined, and a
+    collapse that lands on an identifier the edition already owns is refused by
+    the caller's collision gate rather than guessed at here.
+
+    Raises:
+        AmbiguousRenameError: When the token appears nowhere as a whole,
+            separator-bounded segment run -- the tokeniser saw it as a bare
+            substring, which is not a statement the edition made.
+    """
+    spans = _bounded_token_spans(identifier, token)
+    if not spans:
+        raise AmbiguousRenameError(identifier, token, 0)
+    collapsed = identifier
+    for start, end in reversed(spans):
+        prefix, suffix = collapsed[:start], collapsed[end:]
+        if prefix and prefix[-1] in _IDENTIFIER_SEPARATORS:
+            collapsed = prefix[:-1] + suffix
+        elif suffix and suffix[0] in _IDENTIFIER_SEPARATORS:
+            collapsed = prefix + suffix[1:]
+        else:
+            collapsed = prefix + suffix
+    return collapsed
+
+
+@dataclass(frozen=True)
+class MemberRename:
+    """One member id the collapse would rewrite, with the token it carries."""
+
+    modelo: str
+    edition: str
+    family: str
+    old_id: str
+    new_id: str
+    token: str
+
+
+@dataclass
+class FamilyCollapsePlan:
+    """One modelo's family-wide collapse: what it rewrites, skips and refuses."""
+
+    modelo: str
+    families: tuple[str, ...] = ()
+    renames: list[MemberRename] = field(default_factory=list)
+    collisions: list[str] = field(default_factory=list)
+    refusals: list[str] = field(default_factory=list)
+    generated_skipped: list[str] = field(default_factory=list)
+    stranded_export_trees: tuple[str, ...] = ()
+
+    @property
+    def rename_map(self) -> dict[str, str]:
+        """The accepted ``old id -> new id`` map, keyed by old id."""
+        return {rename.old_id: rename.new_id for rename in self.renames}
+
+    def withdraw(self, identifiers: Set[str]) -> None:
+        """Drop every planned rename whose source id is in *identifiers*."""
+        self.renames = [rename for rename in self.renames if rename.old_id not in identifiers]
+
+    def per_family(self) -> dict[str, int]:
+        """How many members the plan rewrites, per family."""
+        counts: dict[str, int] = defaultdict(int)
+        for rename in self.renames:
+            counts[rename.family] += 1
+        return dict(sorted(counts.items()))
+
+
+def _filing_coordinate_scalars(annotation: object) -> Iterator[object]:
+    """Yield the scalar types one field annotation can resolve to.
+
+    ``Annotated`` wrappers and optional unions are transparent -- they qualify a
+    type without changing what the field holds -- while a container is NOT
+    descended into. ``tuple[PeriodCode, ...]`` is the set of periods a row
+    COVERS, not the coordinate that identifies it, and reading it as identity
+    would withhold a filing schedule whose id names no period at all.
+    """
+    yield annotation
+    origin, args = get_origin(annotation), get_args(annotation)
+    if origin is Annotated:
+        yield from _filing_coordinate_scalars(args[0])
+    elif origin in {Union, UnionType}:
+        for argument in args:
+            yield from _filing_coordinate_scalars(argument)
+
+
+def is_filing_coordinate_annotation(annotation: object) -> bool:
+    """Whether a field's declared TYPE makes it a filing coordinate.
+
+    Structural, not nominal: the question is whether the field holds a filing
+    year or a filing period, which the shipped type answers. A field named
+    ``anio_devengo`` typed ``FilingYear`` is a coordinate and a field named
+    ``period_kind`` typed as a cadence enum is not, and neither answer depends
+    on how the field happens to be spelled.
+    """
+    from cadrumo.core.filing_year import FilingYear
+    from cadrumo.core.period import Period, RegistrySelectorPeriodCode
+    from cadrumo.domain.calculations.registry.schema_scalars import PeriodCode
+
+    aliases = (FilingYear, PeriodCode, RegistrySelectorPeriodCode)
+    for candidate in _filing_coordinate_scalars(annotation):
+        if any(candidate == alias for alias in aliases):
+            return True
+        if isinstance(candidate, type) and issubclass(candidate, Period):
+            return True
+    return False
+
+
+def family_data_fields(family: str) -> tuple[str, ...]:
+    """Return the typed filing-coordinate fields a family's member model declares.
+
+    A member may state a year as its own datum -- ``DeadlineWindowDefinition``
+    declares ``filing_year``, and modelo 763's ``modelo-763-2013-1t`` names the
+    quarter of a filing year its multi-year edition covers. That year is what
+    the row is ABOUT, not the edition restating itself, so the collapse must
+    leave it alone; stripping it would merge four windows of one edition into
+    one name and lose three filing years.
+
+    A field earns the exemption by its declared TYPE -- the ``FilingYear`` alias,
+    the ``Period`` model, or a registry period-code alias -- and never by its
+    name. A name test asks whether the author happened to spell ``year`` or
+    ``period`` into the field, which a Spanish-named ``ejercicio`` coordinate
+    fails while an unrelated ``grace_period`` duration passes; the type is the
+    thing the schema actually guarantees. Read off the shipped model, so a
+    family that gains such a field is exempted without this tool being edited to
+    notice it.
+    """
+    import typing
+
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
+
+    info = ModeloRevision.model_fields.get(family)
+    if info is None:
+        return ()
+    (element, *_rest) = typing.get_args(info.annotation) or (None,)
+    candidates = [element] if hasattr(element, "model_fields") else list(typing.get_args(element))
+    found: set[str] = set()
+    for candidate in candidates:
+        fields = getattr(candidate, "model_fields", None)
+        if not fields:
+            continue
+        hints = typing.get_type_hints(candidate, include_extras=True)
+        found.update(name for name in fields if is_filing_coordinate_annotation(hints.get(name)))
+    return tuple(sorted(found))
+
+
+def data_keyed_families() -> tuple[str, ...]:
+    """Return the families whose members are identified by a filing coordinate they state.
+
+    ``DeadlineWindowDefinition`` declares ``filing_year`` and ``period``, so a
+    window IS a ``(year, period)`` cell and its id spells that cell:
+    ``modelo-763-2018-4t`` under the edition ``2018-4t`` names the fourth
+    quarter of 2018, and the year is the datum whichever rule matches it --
+    the edition id and the filing year coincide there precisely BECAUSE the
+    edition is that one cell. Collapsing such an id merges distinct cells, so
+    the whole family is withheld from the rename rather than protected member by
+    member. Read off the model, so a family that gains a filing coordinate
+    leaves the pass without this tool being edited to notice it.
+    """
+    return tuple(family for family in id_keyed_families() if family_data_fields(family))
+
+
+def member_declared_years(member: Mapping[str, Any], family: str) -> frozenset[str]:
+    """Return the four-digit years a member states in its own typed year fields."""
+    years: set[str] = set()
+    for name in family_data_fields(family):
+        value = member.get(name)
+        if isinstance(value, int):
+            years.add(f"{value:04d}")
+        elif isinstance(value, str) and len(value) == 4 and value.isdigit():
+            years.add(value)
+    return frozenset(years)
+
+
+def planned_token(family: str, identifier: str, member: Mapping[str, Any], edition: str) -> str | None:
+    """Return the edition token a member would lose, or ``None`` when it loses none.
+
+    The token itself is the signal's own decision, imported rather than copied.
+    The one thing added here is the datum exemption: a year the member states in
+    its own typed year field is what the row is about, so it stays.
+    """
+    from .analysis.edition_delta_status import edition_token_in_identifier
+
+    token = edition_token_in_identifier(identifier, edition)
+    if token is None or token in member_declared_years(member, family):
+        return None
+    return token
+
+
+def _is_generated_path(path: Path, root: Path) -> bool:
+    """Whether a file sits inside a generator-owned ``export`` tree."""
+    return any(part == "export" for part in path.relative_to(root).parts)
+
+
+def edition_sections(revision_dir: Path, revision_id: str, families: Sequence[str]) -> dict[str, list[dict[str, Any]]]:
+    """Merge every authored fragment below one edition into one member list per family.
+
+    Mirrors the loader's own merge across fragment files and reads only the
+    authored tree: a generator-owned ``export`` subtree is collected separately
+    so its ids can be reported as skipped rather than silently renamed.
+    """
+    merged: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for path in sorted(revision_dir.rglob("*.toml")):
+        if _is_generated_path(path, revision_dir):
+            continue
+        table = _load_toml(path).get("revisions", {}).get(revision_id)
+        if not isinstance(table, dict):
+            continue
+        for family in families:
+            declared = table.get(family)
+            if isinstance(declared, list):
+                merged[family].extend(entry for entry in declared if isinstance(entry, dict))
+    return dict(merged)
+
+
+def generated_layout_ids(revision_dir: Path, revision_id: str) -> list[str]:
+    """Return the generator-owned export layout ids published under one edition."""
+    found: list[str] = []
+    for path in sorted(revision_dir.rglob("*.toml")):
+        if not _is_generated_path(path, revision_dir):
+            continue
+        table = _load_toml(path).get("revisions", {}).get(revision_id)
+        if not isinstance(table, dict):
+            continue
+        declared = table.get("export_layouts")
+        for entry in declared if isinstance(declared, list) else ():
+            if isinstance(entry, dict) and isinstance(entry.get("id"), str):
+                found.append(entry["id"])
+    return found
+
+
+def plan_family_collapse(
+    modelo: str,
+    families: Sequence[str] = (),
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+) -> FamilyCollapsePlan:
+    """Decide which of one modelo's id-keyed family members lose their edition token.
+
+    The qualifying test is the signal's own ``edition_token_in_identifier``,
+    imported rather than reimplemented so the screen that reports the condition
+    and the tool that clears it can never disagree about what carries a token.
+    A member whose id carries one is renamed to the token-free spelling; a member
+    with a stable id is untouched, which is why modelo 131's parameters, mixing
+    both shapes, come through half rewritten.
+
+    Raises:
+        FamilyWithoutIdentityError: When ``families`` names a family whose
+            member model declares no ``id``.
+    """
+    from .analysis.edition_delta_status import edition_token_in_identifier
+
+    enrolled = id_keyed_families()
+    for family in families:
+        if family not in enrolled:
+            raise FamilyWithoutIdentityError(family)
+    withheld = set(data_keyed_families())
+    selected = tuple(family for family in (families or enrolled) if family not in withheld)
+    plan = FamilyCollapsePlan(modelo=modelo, families=selected)
+    for family in sorted(withheld.intersection(families or enrolled)):
+        plan.refusals.append(
+            f"{modelo} {family}: members are identified by the filing coordinate they state "
+            f"({', '.join(family_data_fields(family))}), so no id in this family is a rename candidate"
+        )
+    modelo_dir = modelos_root / modelo
+    if not modelo_dir.is_dir():
+        plan.refusals.append(f"{modelo}: no such modelo directory under {modelos_root}")
+        return plan
+
+    inventory: dict[str, list[tuple[str, str]]] = {}
+    for revision_dir in iter_revision_dirs(modelo_dir):
+        edition = revision_dir.name
+        sections = edition_sections(revision_dir, edition, selected)
+        # The edition's whole authored namespace, so a collapse landing on an id
+        # another family already owns is refused rather than quietly merged.
+        owned: dict[str, str] = {}
+        for family, members in edition_sections(revision_dir, edition, (*enrolled, "casillas")).items():
+            for member in members:
+                if isinstance(member.get("id"), str):
+                    owned.setdefault(member["id"], family)
+        for layout_id in generated_layout_ids(revision_dir, edition):
+            owned.setdefault(layout_id, "export_layouts")
+            entry = f"{modelo} {edition} export_layouts {layout_id}"
+            # One generated layout is written across several fragment files, so
+            # the id repeats; the skip list names the declaration, not its parts.
+            if edition_token_in_identifier(layout_id, edition) is not None and entry not in plan.generated_skipped:
+                plan.generated_skipped.append(entry)
+        inventory[edition] = sorted((identifier, family) for identifier, family in owned.items())
+
+        # A family the loader merges by id across fragment files states one
+        # declaration in several places; a repeated id there is fragmentation,
+        # not a second member, and reading it as one would report every
+        # fragmented layout as colliding with itself.
+        candidates: list[tuple[str, str, dict[str, Any]]] = []
+        seen: set[tuple[str, str]] = set()
+        for family in selected:
+            for member in sections.get(family, ()):
+                identifier = member.get("id")
+                if not isinstance(identifier, str) or not identifier or (family, identifier) in seen:
+                    continue
+                seen.add((family, identifier))
+                candidates.append((family, identifier, member))
+
+        # Two members of one edition may collapse onto one name -- modelo 184's
+        # 2019 and 2021 deadline windows under the edition 2019-2021 both become
+        # ``modelo-184-0a``. Neither is more entitled to the surviving name than
+        # the other, so BOTH are refused: picking the first read would make the
+        # result depend on fragment order, and the year is carrying real meaning
+        # wherever this happens.
+        contenders: dict[str, list[str]] = defaultdict(list)
+        for family, identifier, member in candidates:
+            token = planned_token(family, identifier, member, edition)
+            if token is None:
+                continue
+            try:
+                contenders[strip_identifier_token(identifier, token)].append(f"{family}:{identifier}")
+            except AmbiguousRenameError:
+                continue
+
+        for family, identifier, member in candidates:
+            if family == "export_layouts" and _GENERATED_EXPORT_LAYOUT_ID.match(identifier):
+                entry = f"{modelo} {edition} {family} {identifier}"
+                if entry not in plan.generated_skipped:
+                    plan.generated_skipped.append(entry)
+                continue
+            token = planned_token(family, identifier, member, edition)
+            if token is None:
+                continue
+            try:
+                new_id = strip_identifier_token(identifier, token)
+            except AmbiguousRenameError as exc:
+                plan.refusals.append(f"{modelo} {edition} {family} {identifier}: {exc}")
+                continue
+            if not new_id:
+                plan.refusals.append(
+                    f"{modelo} {edition} {family} {identifier}: the whole identifier is the edition token"
+                )
+                continue
+            if new_id in owned:
+                plan.collisions.append(
+                    f"{modelo} {edition} {family}: {identifier} -> {new_id} already declared by "
+                    f"{owned[new_id]} in the same edition"
+                )
+                continue
+            if len(contenders.get(new_id, ())) > 1:
+                plan.collisions.append(
+                    f"{modelo} {edition} {family}: {identifier} -> {new_id} contested by "
+                    f"{', '.join(sorted(contenders[new_id]))} in the same edition"
+                )
+                continue
+            plan.renames.append(
+                MemberRename(
+                    modelo=modelo,
+                    edition=edition,
+                    family=family,
+                    old_id=identifier,
+                    new_id=new_id,
+                    token=token,
+                )
+            )
+    _refuse_post_image_collisions(plan, inventory)
+    plan.stranded_export_trees = stranded_generated_trees(modelo_dir, plan.rename_map)
+    return plan
+
+
+class PostImageRefusablePlan(Protocol):
+    """The surface :func:`_refuse_post_image_collisions` needs from a rename plan.
+
+    Both the family collapse and the span strip produce a corpus-wide textual
+    rewrite from a per-edition plan, so both are exposed to the same
+    cross-edition post-image collision and both are screened by the same
+    function rather than by two drifting copies of the projection.
+    """
+
+    modelo: str
+    collisions: list[str]
+
+    @property
+    def rename_map(self) -> dict[str, str]:
+        """The accepted ``old id -> new id`` map, keyed by old id."""
+        ...
+
+    def withdraw(self, identifiers: Set[str]) -> None:
+        """Drop every planned rename whose source id is in *identifiers*."""
+        ...
+
+
+def _refuse_post_image_collisions(
+    plan: PostImageRefusablePlan,
+    inventory: Mapping[str, list[tuple[str, str]]],
+) -> None:
+    """Drop every rename that would leave two members of one edition sharing a name.
+
+    The per-edition gate above cannot see this on its own, because the rewrite
+    is TEXTUAL and corpus-wide while the plan is per-edition: modelo 210 spells
+    ``modelo-210-procedure-2025`` and ``modelo-210-procedure-2026`` in BOTH its
+    editions, each edition collapses the one that carries its own year, and the
+    rewrite of either lands on the other edition's copy as well. Only the
+    modelo's whole post-image shows it, so the map is projected over every
+    edition's full id inventory and any name two members would then share
+    withdraws every rename that produced it.
+    """
+    renames = plan.rename_map
+    if not renames:
+        return
+    contested: dict[str, set[str]] = defaultdict(set)
+    for edition, declared in inventory.items():
+        after: dict[str, list[str]] = defaultdict(list)
+        for identifier, family in declared:
+            after[renames.get(identifier, identifier)].append(f"{family}:{identifier}")
+        for collapsed, owners in after.items():
+            if len(owners) > 1:
+                plan.collisions.append(
+                    f"{plan.modelo} {edition}: {collapsed} would be shared by {', '.join(sorted(owners))} "
+                    "after the rewrite; every rename onto it is withdrawn"
+                )
+                contested[collapsed].update(
+                    identifier for identifier, _family in declared if renames.get(identifier) == collapsed
+                )
+    plan.withdraw({identifier for group in contested.values() for identifier in group})
+
+
+def stranded_generated_trees(modelo_dir: Path, renames: Mapping[str, str]) -> tuple[str, ...]:
+    """Return the editions whose generated export tree quotes an id this plan renames."""
+    found: list[str] = []
+    for export_dir in sorted(modelo_dir.glob("revisions/*/export")):
+        for path in sorted(export_dir.rglob("*")):
+            if not path.is_file() or path.suffix not in {".toml", ".json"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            if any(old_id in text for old_id in renames):
+                found.append(export_dir.parent.name)
+                break
+    return tuple(found)
+
+
+def rewritable_files(modelos_root: Path = REGISTRY_MODELOS_ROOT, mappings_root: Path = MAPPINGS_ROOT) -> list[Path]:
+    """Every authored registry file a reference rewrite may touch.
+
+    Corpus-wide rather than one modelo's subtree: a construct, dependency
+    classification or cross-reference in another modelo may quote a renamed id,
+    and a rewrite scoped to the declaring modelo would leave that reference
+    dangling. Generator-owned ``export`` trees are excluded here and handled by
+    the republish guard instead.
+    """
+    candidates = [path for path in modelos_root.rglob("*.toml") if not _is_generated_path(path, modelos_root)]
+    if mappings_root.is_dir():
+        candidates.extend(sorted(mappings_root.rglob("*.toml")))
+    return sorted(candidates)
+
+
+def code_reference_files(repo_root: Path = REPO_ROOT) -> list[Path]:
+    """Non-test Python modules that may quote a registry identifier by literal.
+
+    A registry id reaches beyond the TOML corpus: a projection or diagnostic
+    module may name a parameter directly, and a rename that stops at the corpus
+    boundary leaves such a module pointing at a declaration that no longer
+    exists. Test modules are deliberately excluded -- they are owned by whoever
+    is editing them, and a rename that rewrites another contributor's test under
+    them is not this tool's call to make; the caller is handed the list instead.
+    """
+    found: list[Path] = []
+    for root in (repo_root / "src" / "cadrumo", repo_root / "dev"):
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*.py")):
+            parts = path.relative_to(root).parts
+            if "tests" in parts or "__pycache__" in parts or path.name.startswith("test_"):
+                continue
+            found.append(path)
+    return found
+
+
+LOCALES_ROOT = REPO_ROOT / "src" / "cadrumo" / "locales"
+
+
+def locale_mentions(renames: Mapping[str, str], locales_root: Path = LOCALES_ROOT) -> dict[str, dict[str, int]]:
+    """Return the locale catalogue cells that still name a renamed identifier.
+
+    Reported rather than rewritten. A catalogue is owned by the locale
+    authority, and the supported mutation is a manifest applied through
+    ``dev.locales set-batch``; editing the YAML here would be exactly the
+    hand-edit the locale contract forbids, and it would also skip the parity
+    gate that proves every locale moved together. So the pass ends by naming the
+    catalogues and the ids they still carry, which is the input that manifest
+    is built from.
+    """
+    found: dict[str, dict[str, int]] = {}
+    if not locales_root.is_dir():
+        return found
+    for path in sorted(locales_root.rglob("*.yml")):
+        text = path.read_text(encoding="utf-8")
+        counts = {old_id: text.count(old_id) for old_id in renames if old_id in text}
+        if counts:
+            found[str(path.relative_to(REPO_ROOT).as_posix())] = counts
+    return found
+
+
+def test_mentions(renames: Mapping[str, str], repo_root: Path = REPO_ROOT) -> dict[str, dict[str, int]]:
+    """Return the test modules that still name a renamed identifier.
+
+    :func:`code_reference_files` deliberately excludes test modules from the
+    rewrite -- they belong to whoever is editing them, and rewriting another
+    contributor's test under them is not this tool's call. That exclusion is
+    only honest if the caller is actually HANDED the list, so it is reported
+    here: a test naming an id the corpus no longer declares is a failure waiting
+    to happen, and the owner needs to see it in the same run that causes it.
+    """
+    found: dict[str, dict[str, int]] = {}
+    for root in (repo_root / "src" / "cadrumo", repo_root / "dev"):
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*.py")):
+            parts = path.relative_to(root).parts
+            if "__pycache__" in parts or not ("tests" in parts or path.name.startswith("test_")):
+                continue
+            text = path.read_text(encoding="utf-8")
+            counts = {old_id: text.count(old_id) for old_id in renames if old_id in text}
+            if counts:
+                found[str(path.relative_to(repo_root).as_posix())] = counts
+    return found
+
+
+def apply_family_collapse(
+    plan: FamilyCollapsePlan,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    *,
+    code_files: Sequence[Path] | None = None,
+    export_republish_acknowledged: bool = False,
+) -> tuple[list[Path], int]:
+    """Rewrite every declaration and reference of a planned rename; return touched files and hits.
+
+    One textual pass over the authored corpus, so comments, ordering and
+    hand-authored formatting survive. Both quote styles are rewritten: the
+    authored corpus spells a reference in double quotes and the semantic maps
+    spell it in either, and matching one style silently leaves the other behind.
+
+    Raises:
+        GeneratedExportTreeStaleError: When a published export tree quotes an id
+            this plan renames and the caller has not stated that the same change
+            republishes it.
+    """
+    renames = plan.rename_map
+    if not renames:
+        return [], 0
+    if plan.stranded_export_trees and not export_republish_acknowledged:
+        raise GeneratedExportTreeStaleError(plan.modelo, plan.stranded_export_trees)
+    return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files)
+
+
+class ChainedRenameMapError(Exception):
+    """A rename map whose target is also one of its own sources."""
+
+
+def rewrite_identifier_references(
+    renames: Mapping[str, str],
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    *,
+    code_files: Sequence[Path] | None = None,
+) -> tuple[list[Path], int]:
+    """Rewrite every quoted occurrence of a renamed id across the authored corpus and code.
+
+    One textual pass, so comments, ordering and hand-authored formatting survive,
+    and it is deliberately id-shaped rather than field-shaped: a declaration, a
+    casilla ``binding``/``alternate_bindings`` entry, a formula operand, an
+    export layout's field binding, a construct member, a dependency
+    classification's ``binding_refs`` and a verification expectation all spell
+    the same id the same way, so matching the quoted id reaches every one of
+    them without a per-field inventory that could go stale.
+
+    Raises:
+        ChainedRenameMapError: When any rename target is also a rename source.
+            One pass cannot apply such a map: ``a -> b`` followed by ``b -> c``
+            would carry ``a`` all the way to ``c`` while ``a -> b`` alone lands
+            on ``b``, and the longest-first ordering decides which happens. The
+            caller must compose the map before it gets here.
+    """
+    chained = sorted(set(renames.values()) & set(renames))
+    if chained:
+        pairs = ", ".join(f"{old_id} -> {renames[old_id]}" for old_id in chained)
+        message = (
+            "refusing a chained rename map: the rewrite is one textual pass over each file, so a "
+            "target that is itself a source is rewritten again and the result depends on which "
+            f"pair the pass reaches first; chained pairs: {pairs}"
+        )
+        raise ChainedRenameMapError(message)
+    ordered = sorted(renames.items(), key=lambda pair: len(pair[0]), reverse=True)
+    touched: list[Path] = []
+    hits = 0
+    code = list(code_reference_files()) if code_files is None else list(code_files)
+    for path in [*rewritable_files(modelos_root, mappings_root), *code]:
+        original = path.read_text(encoding="utf-8")
+        updated = original
+        for old_id, new_id in ordered:
+            for quote in ('"', "'"):
+                needle = f"{quote}{old_id}{quote}"
+                if needle in updated:
+                    hits += updated.count(needle)
+                    updated = updated.replace(needle, f"{quote}{new_id}{quote}")
+        if updated != original:
+            path.write_text(updated, encoding="utf-8")
+            touched.append(path)
+    return touched, hits
+
+
+# ---------------------------------------------------------------------------
+# Fourth rule: the fixed-width span strip (bindings only).
+# ---------------------------------------------------------------------------
+
+#: Modelo 714 is withheld from this pass entirely. Its 128 within-edition
+#: collisions are repetition groups -- the same field of a repeated record block
+#: -- so the surviving name needs the generator's repetition index, which this
+#: rule does not have and must not invent. A separate step carries it.
+SPAN_STRIP_EXCLUDED_MODELOS: frozenset[str] = frozenset({"714"})
+
+#: A fixed-width address spelled into an identifier: ``<from>-<to>``. The
+#: internal ``-`` is itself an identifier separator, so this is a segment RUN
+#: rather than one segment, matched with the same both-sides boundary test the
+#: edition-token rule uses.
+_SPAN_RUN = re.compile(r"(?<![0-9])(?P<low>\d+)-(?P<high>\d+)(?![0-9])")
+
+
+class SpanProviderMismatchError(Exception):
+    """A binding id spells a fixed-width span that its own provider does not declare."""
+
+    def __init__(self, modelo: str, edition: str, identifier: str, candidates: tuple[str, ...], address: str) -> None:
+        """Record the identifier, the span-shaped runs it carries, and the provider address."""
+        super().__init__(
+            f"{modelo} {edition} bindings {identifier}: spells span-shaped {', '.join(candidates)} but its "
+            f"provider addresses {address}; the id does not name this provider's own span, so the strip "
+            "would remove a segment whose meaning it has not established"
+        )
+        self.identifier = identifier
+
+
+@dataclass(frozen=True)
+class SpanStrip:
+    """One binding id the span strip would rewrite, with the address segment it loses."""
+
+    modelo: str
+    edition: str
+    old_id: str
+    new_id: str
+    segment: str
+
+
+@dataclass
+class SpanStripPlan:
+    """One modelo's span strip: what it rewrites, what it refuses, and why."""
+
+    modelo: str
+    strips: list[SpanStrip] = field(default_factory=list)
+    refusals: list[str] = field(default_factory=list)
+    collisions: list[str] = field(default_factory=list)
+    stranded_export_trees: tuple[str, ...] = ()
+    #: True once a within-edition collision withdrew the whole modelo.
+    refused_modelo: bool = False
+
+    @property
+    def rename_map(self) -> dict[str, str]:
+        """The accepted ``old id -> new id`` map, empty while the modelo is refused."""
+        if self.refused_modelo:
+            return {}
+        return {strip.old_id: strip.new_id for strip in self.strips}
+
+    def withdraw(self, identifiers: Set[str]) -> None:
+        """Drop every planned strip whose source id is in *identifiers*."""
+        self.strips = [strip for strip in self.strips if strip.old_id not in identifiers]
+
+
+def provider_address(member: Mapping[str, Any]) -> tuple[int, int] | None:
+    """Return a binding provider's ``(first, last)`` fixed-width offsets, or ``None``.
+
+    The address is ``offset`` through ``offset + length - 1`` inclusive, which is
+    exactly the span an id spells. A provider stating no offset or no positive
+    length carries no address, and a candidate id beside one is refused rather
+    than stripped: its span cannot be proven to restate anything.
+    """
+    provider = member.get("provider")
+    if not isinstance(provider, Mapping):
+        return None
+    offset, length = provider.get("offset"), provider.get("length")
+    if isinstance(offset, bool) or isinstance(length, bool):
+        return None
+    if not isinstance(offset, int) or not isinstance(length, int) or length < 1:
+        return None
+    return offset, offset + length - 1
+
+
+def span_runs(identifier: str) -> tuple[tuple[int, int, int, int], ...]:
+    """Return every separator-bounded ``<digits>-<digits>`` run as ``(start, end, low, high)``.
+
+    Bounded on both sides by an identifier separator or by the identifier's own
+    end, so the run is a segment the id states rather than digits found inside a
+    longer word. The test is deliberately shape-only: whether a run is an
+    address or an edition's year range is decided by comparing it with the
+    member's provider, not by guessing from the numbers.
+    """
+    found: list[tuple[int, int, int, int]] = []
+    for match in _SPAN_RUN.finditer(identifier):
+        start, end = match.span()
+        before_ok = start == 0 or identifier[start - 1] in _IDENTIFIER_SEPARATORS
+        after_ok = end == len(identifier) or identifier[end] in _IDENTIFIER_SEPARATORS
+        if before_ok and after_ok:
+            found.append((start, end, int(match.group("low")), int(match.group("high"))))
+    return tuple(found)
+
+
+def strip_span_segment(identifier: str, start: int, end: int) -> str:
+    """Return ``identifier`` with the run at ``[start, end)`` and one adjacent separator removed.
+
+    The separator immediately before the run is preferred, falling back to the
+    one immediately after when the run opens the identifier -- the same rule
+    :func:`strip_edition_key` and :func:`strip_identifier_token` apply, so all
+    four rules produce one spelling rather than four.
+    """
+    prefix, suffix = identifier[:start], identifier[end:]
+    if prefix and prefix[-1] in _IDENTIFIER_SEPARATORS:
+        return prefix[:-1] + suffix
+    if suffix and suffix[0] in _IDENTIFIER_SEPARATORS:
+        return prefix + suffix[1:]
+    return prefix + suffix
+
+
+def edition_declared_families(revision_dir: Path, revision_id: str) -> dict[str, list[dict[str, Any]]]:
+    """Merge every authored fragment below one edition into one member list per declared family.
+
+    Reads the families the edition actually declares rather than a list taken
+    from the typed model, so the collision gate sees the whole authored
+    namespace -- including a family this tool has never heard of -- and needs no
+    import beyond ``tomllib``. Generator-owned ``export`` subtrees are collected
+    separately by :func:`generated_layout_ids`.
+    """
+    merged: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for path in sorted(revision_dir.rglob("*.toml")):
+        if _is_generated_path(path, revision_dir):
+            continue
+        table = _load_toml(path).get("revisions", {}).get(revision_id)
+        if not isinstance(table, dict):
+            continue
+        for family, declared in table.items():
+            if isinstance(declared, list):
+                merged[family].extend(entry for entry in declared if isinstance(entry, dict))
+    return dict(merged)
+
+
+def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> SpanStripPlan:
+    """Decide which of one modelo's binding ids lose the fixed-width span they spell.
+
+    A binding id such as ``modelo-131.page1.109-112.actividad-1-epigrafe`` names
+    a slot AND its address, and the address is already stated -- typed, and the
+    only copy anything reads -- by the row's own ``provider.offset``/``length``.
+    The id's copy is therefore a restatement that goes stale the moment a record
+    design moves a field, which is precisely when an identifier must not change.
+    So the segment is removed, and only where the provider PROVES it is the
+    address: a span-shaped run no provider declares is refused and listed rather
+    than guessed at, because a run this rule cannot explain may be a year range,
+    a legal-norm pair, or a repetition group, and each would mean something
+    different.
+
+    Refusal is per modelo where two of one edition's members would collapse onto
+    one name. A partial application would leave the edition half converted under
+    a rule no reader could apply by hand, so the modelo stays whole and the
+    colliding pairs are listed for the step that resolves them.
+    """
+    plan = SpanStripPlan(modelo=modelo)
+    modelo_dir = modelos_root / modelo
+    if modelo in SPAN_STRIP_EXCLUDED_MODELOS:
+        plan.refusals.append(f"{modelo}: withheld from the span strip; its collisions need a repetition index")
+        plan.refused_modelo = True
+        return plan
+    if not modelo_dir.is_dir():
+        plan.refusals.append(f"{modelo}: no such modelo directory under {modelos_root}")
+        plan.refused_modelo = True
+        return plan
+
+    inventory: dict[str, list[tuple[str, str]]] = {}
+    for revision_dir in iter_revision_dirs(modelo_dir):
+        edition = revision_dir.name
+        sections = edition_declared_families(revision_dir, edition)
+        owned: dict[str, str] = {}
+        for family, members in sorted(sections.items()):
+            for member in members:
+                if isinstance(member.get("id"), str):
+                    owned.setdefault(member["id"], family)
+        for layout_id in generated_layout_ids(revision_dir, edition):
+            owned.setdefault(layout_id, "export_layouts")
+
+        edition_strips: list[SpanStrip] = []
+        seen: set[str] = set()
+        for member in sections.get("bindings", ()):
+            identifier = member.get("id")
+            if not isinstance(identifier, str) or not identifier or identifier in seen:
+                continue
+            seen.add(identifier)
+            runs = span_runs(identifier)
+            if not runs:
+                continue
+            address = provider_address(member)
+            matching = [] if address is None else [run for run in runs if (run[2], run[3]) == address]
+            if address is None or not matching:
+                candidates = tuple(identifier[start:end] for start, end, _low, _high in runs)
+                rendered = "no offset/length" if address is None else f"{address[0]}-{address[1]}"
+                plan.refusals.append(str(SpanProviderMismatchError(modelo, edition, identifier, candidates, rendered)))
+                continue
+            if len(matching) > 1:
+                plan.refusals.append(
+                    f"{modelo} {edition} bindings {identifier}: spells its provider address "
+                    f"{address[0]}-{address[1]} more than once; refusing to choose which run to remove"
+                )
+                continue
+            start, end, _low, _high = matching[0]
+            new_id = strip_span_segment(identifier, start, end)
+            if not new_id:
+                plan.refusals.append(f"{modelo} {edition} bindings {identifier}: the whole identifier is the span")
+                continue
+            edition_strips.append(
+                SpanStrip(
+                    modelo=modelo,
+                    edition=edition,
+                    old_id=identifier,
+                    new_id=new_id,
+                    segment=identifier[start:end],
+                )
+            )
+
+        # The post-strip image of this edition's WHOLE authored namespace, so a
+        # stripped id landing on a name another family already owns is caught
+        # alongside two stripped bindings landing on each other.
+        stripped = {strip.old_id: strip.new_id for strip in edition_strips}
+        after: dict[str, list[str]] = defaultdict(list)
+        for identifier, family in sorted(owned.items()):
+            after[stripped.get(identifier, identifier)].append(f"{family}:{identifier}")
+        for collapsed, owners in sorted(after.items()):
+            if len(owners) > 1:
+                plan.collisions.append(f"{modelo} {edition}: {collapsed} would be shared by {', '.join(owners)}")
+        plan.strips.extend(edition_strips)
+        inventory[edition] = sorted(owned.items())
+
+    # The same cross-edition projection the family collapse runs: the strip is
+    # planned per edition but rewritten textually corpus-wide, so a stripped id
+    # may land on a name a DIFFERENT edition already declares. Only the modelo's
+    # whole post-image shows it.
+    _refuse_post_image_collisions(plan, inventory)
+
+    if plan.collisions:
+        plan.refused_modelo = True
+        plan.refusals.append(
+            f"{modelo}: {len(plan.collisions)} within-edition collisions after the strip; the whole modelo is "
+            "refused rather than half applied"
+        )
+    plan.stranded_export_trees = stranded_generated_trees(modelo_dir, plan.rename_map)
+    return plan
+
+
+def apply_span_strip(
+    plan: SpanStripPlan,
+    modelos_root: Path = REGISTRY_MODELOS_ROOT,
+    mappings_root: Path = MAPPINGS_ROOT,
+    *,
+    code_files: Sequence[Path] | None = None,
+    export_republish_acknowledged: bool = False,
+) -> tuple[list[Path], int]:
+    """Rewrite every declaration and reference of a planned span strip.
+
+    Raises:
+        GeneratedExportTreeStaleError: When a published export tree quotes an id
+            this plan renames and the caller has not stated that the same change
+            republishes it.
+    """
+    renames = plan.rename_map
+    if not renames:
+        return [], 0
+    if plan.stranded_export_trees and not export_republish_acknowledged:
+        raise GeneratedExportTreeStaleError(plan.modelo, plan.stranded_export_trees)
+    return rewrite_identifier_references(renames, modelos_root, mappings_root, code_files=code_files)
+
+
+def _run_span_strip(
+    modelos: Sequence[str],
+    *,
+    write: bool,
+    emit_json: bool,
+    report_path: Path | None,
+    export_republish_acknowledged: bool,
+) -> int:
+    """Report, and with ``--apply`` perform, the span strip for each named modelo."""
+    report: dict[str, Any] = {"span_strip": {}}
+    exit_code = 0
+    for modelo in modelos:
+        plan = plan_span_strip(modelo)
+        entry = {
+            "stripped_count": len(plan.rename_map),
+            "candidates": len(plan.strips),
+            "refused_modelo": plan.refused_modelo,
+            "strips": [
+                {"edition": s.edition, "old_id": s.old_id, "new_id": s.new_id, "segment": s.segment}
+                for s in plan.strips
+            ],
+            "collisions": plan.collisions,
+            "refused": plan.refusals,
+            "stranded_export_trees": list(plan.stranded_export_trees),
+            "locale_mentions": locale_mentions(plan.rename_map),
+            "test_mentions": test_mentions(plan.rename_map),
+        }
+        report["span_strip"][modelo] = entry
+        if not emit_json:
+            print(f"Span strip {modelo}: {len(plan.rename_map)} binding ids, {len(plan.strips)} candidates")
+            for collision in plan.collisions:
+                print(f"  COLLISION {collision}")
+            for refusal in plan.refusals:
+                print(f"  REFUSED {refusal}")
+            for revision in plan.stranded_export_trees:
+                print(f"  STRANDS generated export tree {modelo}/{revision}; republish must land in this change")
+            for catalogue, counts in sorted(entry["locale_mentions"].items()):
+                print(
+                    f"  LOCALE {catalogue} names {len(counts)} stripped ids; move them with "
+                    "`uv run --no-sync python -m dev.locales set-batch <manifest>`"
+                )
+            for module, counts in sorted(entry["test_mentions"].items()):
+                print(f"  TEST {module} names {len(counts)} stripped ids; owned by its author, not rewritten here")
+        if plan.refused_modelo:
+            exit_code = 1
+            continue
+        if write:
+            try:
+                touched, hits = apply_span_strip(plan, export_republish_acknowledged=export_republish_acknowledged)
+            except GeneratedExportTreeStaleError as exc:
+                print(f"Refusing to apply {modelo}: {exc}", file=sys.stderr)
+                return 1
+            entry["files_touched"] = len(touched)
+            entry["references_rewritten"] = hits
+            print(f"Span strip {modelo}: {hits} references rewritten, {len(touched)} files touched")
+    if emit_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    if report_path is not None:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    return exit_code
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the measurement pass and, with ``--apply``, the rewrite; return the process exit code."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1150,6 +2222,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--report", type=Path, default=None, help="Write the JSON summary to this path.")
     parser.add_argument(
+        "--family",
+        action="append",
+        default=[],
+        help=(
+            "Restrict the family-wide collapse to this id-keyed schema family; repeatable. "
+            "Naming it also disables the older formula/binding-only rules, which it subsumes."
+        ),
+    )
+    parser.add_argument(
+        "--strip-spans",
+        action="store_true",
+        help=(
+            "Run only the fixed-width span strip: remove a binding id's <from>-<to> segment where the row's "
+            "own provider offset/length proves it is that address. Requires --modelo."
+        ),
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Report what --apply would rewrite and write nothing; the default when --apply is absent.",
+    )
+    parser.add_argument(
         "--export-republish-acknowledged",
         action="store_true",
         help="Apply even though a generated export tree quotes a renamed id; only within a change that republishes it.",
@@ -1157,8 +2251,23 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     selected = tuple(args.modelo)
+    selected_families = tuple(args.family)
+    if args.dry_run and args.apply:
+        parser.error("--dry-run and --apply state opposite intents; pass one")
+    write = args.apply and not args.dry_run
 
     _check_separator_set_matches_identifier_lineage()
+
+    if args.strip_spans:
+        if not selected:
+            parser.error("--strip-spans is a per-modelo, auditable pass; name at least one --modelo")
+        return _run_span_strip(
+            selected,
+            write=write,
+            emit_json=args.json,
+            report_path=args.report,
+            export_republish_acknowledged=args.export_republish_acknowledged,
+        )
 
     measurements, failures = measure(selected)
 
@@ -1202,7 +2311,11 @@ def main(argv: list[str] | None = None) -> int:
     # runs only for modelos named explicitly. Its refusals do NOT gate the
     # whole-revision rule below: a refused identifier is a finding about two
     # editions that genuinely differ, not a defect in the corpus.
-    collapse_plans = [plan_edition_year_collapse(modelo) for modelo in selected]
+    # The family-wide collapse subsumes both older rules -- its qualifying test
+    # is the signal's tokeniser, which recognises the whole edition id and the
+    # edition's own year alike -- so naming a family retires them for this run
+    # rather than letting two rules rewrite one identifier in sequence.
+    collapse_plans = [] if selected_families else [plan_edition_year_collapse(modelo) for modelo in selected]
     report["edition_year_collapse"] = {
         plan.modelo: {
             "valid_from_years": plan.valid_from_years,
@@ -1219,6 +2332,35 @@ def main(argv: list[str] | None = None) -> int:
             },
         }
         for plan in collapse_plans
+    }
+
+    try:
+        family_plans = [plan_family_collapse(modelo, selected_families) for modelo in selected]
+    except FamilyWithoutIdentityError as exc:
+        print(f"Refusing: {exc}", file=sys.stderr)
+        return 1
+    report["family_collapse"] = {
+        plan.modelo: {
+            "families": list(plan.families),
+            "renamed_count": len(plan.renames),
+            "per_family": plan.per_family(),
+            "renames": [
+                {
+                    "edition": rename.edition,
+                    "family": rename.family,
+                    "old_id": rename.old_id,
+                    "new_id": rename.new_id,
+                    "token": rename.token,
+                }
+                for rename in plan.renames
+            ],
+            "collisions": plan.collisions,
+            "refused": plan.refusals,
+            "generated_skipped": plan.generated_skipped,
+            "stranded_export_trees": list(plan.stranded_export_trees),
+            "locale_mentions": locale_mentions(plan.rename_map),
+        }
+        for plan in family_plans
     }
 
     if args.json:
@@ -1266,7 +2408,37 @@ def main(argv: list[str] | None = None) -> int:
         print("Refusing to apply: unresolved collisions or ambiguous renames reported above.", file=sys.stderr)
         return 1
 
-    if args.apply:
+    for plan in family_plans:
+        print(f"Family collapse {plan.modelo}: {len(plan.renames)} identifiers, per family {plan.per_family()}")
+        for collision in plan.collisions:
+            print(f"  COLLISION {collision}")
+        for refusal in plan.refusals:
+            print(f"  REFUSED {refusal}")
+        for skipped in plan.generated_skipped:
+            print(f"  SKIPPED generated {skipped}")
+        for revision in plan.stranded_export_trees:
+            print(f"  STRANDS generated export tree {plan.modelo}/{revision}")
+        for catalogue, counts in sorted(locale_mentions(plan.rename_map).items()):
+            print(
+                f"  LOCALE {catalogue} names {len(counts)} renamed ids; move them with "
+                f"`uv run --no-sync python -m dev.locales set-batch <manifest>`"
+            )
+
+    if write:
+        for plan in family_plans:
+            try:
+                touched, hits = apply_family_collapse(
+                    plan, export_republish_acknowledged=args.export_republish_acknowledged
+                )
+            except GeneratedExportTreeStaleError as exc:
+                print(f"Refusing to apply {plan.modelo}: {exc}", file=sys.stderr)
+                return 1
+            print(
+                f"Family collapse {plan.modelo}: {len(plan.renames)} identifiers renamed, "
+                f"{hits} references rewritten, {len(touched)} files touched"
+            )
+
+    if write:
         for plan in collapse_plans:
             try:
                 touched = apply_collapse(plan, export_republish_acknowledged=args.export_republish_acknowledged)
@@ -1277,7 +2449,7 @@ def main(argv: list[str] | None = None) -> int:
                 f"Edition-year collapse {plan.modelo}: "
                 f"{plan.collapsed_count} identifiers collapsed, {len(touched)} files touched"
             )
-        files_touched = apply_renames(measurements)
+        files_touched = apply_renames(measurements) if not selected_families else {}
         total_files = sum(files_touched.values())
         print(f"Applied renames across {total_files} files in {len(files_touched)} modelos.")
         for modelo, count in sorted(files_touched.items()):

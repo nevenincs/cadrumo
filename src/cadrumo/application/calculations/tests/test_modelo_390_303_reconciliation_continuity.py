@@ -259,7 +259,9 @@ def _calculate_390_annual(
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
-    relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values_map, period="0A")
+    relation_binding_values = relation_prefill_values_as_binding_values(
+        snapshot.revision, relation_values_map, period="0A"
+    )
     annual_partition = IvaCompensationAnnualPartitionSourceResolver(
         repository=repository,
         registry_snapshot=snapshot,

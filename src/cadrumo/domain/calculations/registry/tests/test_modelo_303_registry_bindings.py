@@ -75,7 +75,7 @@ def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> No
     assert "modelo-303-extractor" in construct.application_links
     assert "modelo-303-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-303-trimestral",)
-    assert "modelo-303-dr-2022" in construct.workbook_parity_refs
+    assert "modelo-303-dr" in construct.workbook_parity_refs
 
 
 def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings() -> None:

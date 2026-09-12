@@ -759,7 +759,7 @@ def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar
     )
     assert requirement.source_casilla_ids == _SOURCE_CASILLA_IDS
     assert "modelo-390-rel-303-cuota-devengada-simplificado" not in {
-        relation.id for relation in snapshot.revision.relations
+        binding.id for binding in snapshot.revision.bindings
     }
     assert "modelo-390-prev-303-cuota-devengada-simplificado" not in {
         binding.id for binding in snapshot.revision.bindings

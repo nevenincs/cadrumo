@@ -6,7 +6,7 @@ target_casilla_id = "0511"
 # Edad 65–74: +1.150 €  (Art. 57.1.b primer tramo)
 # Edad ≥ 75:  +1.150 € + 1.400 €  (Art. 57.1.b segundo tramo)
 expression = { op = "sum", args = [
-    { parameter = "renta-2024-minimo-contribuyente-base-2024" },
+    { parameter = "renta-minimo-contribuyente-base" },
     { op = "if_then_else", args = [
         { op = "greater_equal", args = [
             { op = "age_at_year_end", args = [{ date_binding = "renta-profile-taxpayer-birth-date" }] },
@@ -18,10 +18,10 @@ expression = { op = "sum", args = [
                 { literal = "75" }
             ] },
             { op = "sum", args = [
-                { parameter = "renta-2024-minimo-contribuyente-edad-65-74-2024" },
-                { parameter = "renta-2024-minimo-contribuyente-edad-75-2024" }
+                { parameter = "renta-minimo-contribuyente-edad-65-74" },
+                { parameter = "renta-minimo-contribuyente-edad-75" }
             ] },
-            { parameter = "renta-2024-minimo-contribuyente-edad-65-74-2024" }
+            { parameter = "renta-minimo-contribuyente-edad-65-74" }
         ] },
         { literal = "0" }
     ] }

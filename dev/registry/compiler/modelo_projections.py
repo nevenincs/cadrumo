@@ -41,12 +41,12 @@ _TARGETS = (
         "347",
         "modelo-347-tercero-anual-threshold-eur",
     ),
-    _ProjectionTarget(ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION, "100", "renta-2025-maternidad-mensual"),
-    _ProjectionTarget(ModeloParameterFact.MATERNITY_ANNUAL_CAP, "100", "renta-2025-maternidad-cap-anual"),
+    _ProjectionTarget(ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION, "100", "renta-maternidad-mensual"),
+    _ProjectionTarget(ModeloParameterFact.MATERNITY_ANNUAL_CAP, "100", "renta-maternidad-cap-anual"),
     _ProjectionTarget(
         ModeloParameterFact.MATERNITY_POST_ENROLLMENT_INCREMENT,
         "100",
-        "renta-2025-maternidad-alta-posterior-incremento",
+        "renta-maternidad-alta-posterior-incremento",
     ),
 )
 

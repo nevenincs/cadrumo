@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-eo-agraria-reduccion-jovenes-rate"
+id = "renta-eo-agraria-reduccion-jovenes-rate"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]

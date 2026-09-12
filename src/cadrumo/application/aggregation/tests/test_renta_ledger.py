@@ -92,10 +92,10 @@ def _m100_2025_renta_expense_revision() -> ModeloRevision:
         legal_refs=("ley-35-2006:art-28", "ley-35-2006:art-30"),
         source_refs=("aeat-renta-2025-manual-parte1",),
         bindings=(
-            _m100_renta_expense_binding("renta-2025-ledger-expense-0186-deductible", "0186"),
-            _m100_renta_expense_binding("renta-2025-ledger-expense-0192-deductible", "0192"),
-            _m100_renta_expense_binding("renta-2025-ledger-expense-0199-deductible", "0199"),
-            _m100_renta_expense_binding("renta-2025-ledger-expense-0203-deductible", "0203"),
+            _m100_renta_expense_binding("renta-ledger-expense-0186-deductible", "0186"),
+            _m100_renta_expense_binding("renta-ledger-expense-0192-deductible", "0192"),
+            _m100_renta_expense_binding("renta-ledger-expense-0199-deductible", "0199"),
+            _m100_renta_expense_binding("renta-ledger-expense-0203-deductible", "0203"),
         ),
     )
 
@@ -322,10 +322,10 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     )
     binding_values = resolution.binding_values
 
-    assert binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("121.00")
-    assert binding_values["renta-2025-ledger-expense-0186-deductible"] == Decimal("0")
-    assert binding_values["renta-2025-ledger-expense-0192-deductible"] == Decimal("0")
-    assert binding_values["renta-2025-ledger-expense-0203-deductible"] == Decimal("0")
+    assert binding_values["renta-ledger-expense-0199-deductible"] == Decimal("121.00")
+    assert binding_values["renta-ledger-expense-0186-deductible"] == Decimal("0")
+    assert binding_values["renta-ledger-expense-0192-deductible"] == Decimal("0")
+    assert binding_values["renta-ledger-expense-0203-deductible"] == Decimal("0")
 
 
 def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_expenses(
@@ -374,7 +374,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     )
 
     assert resolution.diagnostics == ()
-    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("780.00")
+    assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("780.00")
 
 
 def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
@@ -416,7 +416,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
     )
 
     assert resolution.diagnostics == ()
-    assert resolution.binding_values["renta-2025-ledger-expense-0199-deductible"] == Decimal("60.50")
+    assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("60.50")
     assert resolution.source_transaction_ids == (phone.transaction_id,)
 
 

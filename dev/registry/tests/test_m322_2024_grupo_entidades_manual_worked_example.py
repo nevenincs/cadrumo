@@ -84,7 +84,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
-from ._ledger_iva_aggregation_support import _deduction_provenance
+from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -40,6 +40,7 @@ from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amoun
 from ._evidence_field_notices import field_degradation_notices
 from ._ledger_business_invoice_cli import catalogue_invoice_shared_fields
 from ._ledger_evidence_confirm_notices import confirm_resolution_lines, confirm_resolution_notices
+from ._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from ._ledger_evidence_review_cli import parse_finding_resolution
 from ._ledger_support import ledger_invoice_validation_no_recovery
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
@@ -346,6 +347,7 @@ def _extract_evidence_draft(
         attachment_id=attachment_id,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
+        ports=invoice_draft_extraction_ports(),
     )
 
 
@@ -700,6 +702,7 @@ def _run_evidence_confirm(
             series=series,
             notes=notes,
             resolutions=resolutions,
+            extraction_ports=invoice_draft_extraction_ports(),
         )
     except (InvoiceValidationError, ValidationError) as exc:
         if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:

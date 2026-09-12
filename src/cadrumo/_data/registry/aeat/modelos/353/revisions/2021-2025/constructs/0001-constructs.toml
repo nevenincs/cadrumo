@@ -58,7 +58,7 @@ bindings = [
     "modelo-353-prev-322-resultado-regimen-general",
 ]
 dependency_classifications = ["modelo-353-dep-322"]
-workbook_parity_refs = ["modelo-353-dr-2026"]
+workbook_parity_refs = ["modelo-353-dr"]
 live_cross_references = [
     "modelo-353-static-documentation",
     "modelo-353-filed-declarations-read",

@@ -14,26 +14,26 @@ expression = { op = "if_then_else", args = [
             { op = "add", args = [
                 { op = "lookup_bracket", args = [
                     { casilla_id = "0527" },
-                    { parameter = "renta-2025-escala-estatal-base-general" },
+                    { parameter = "renta-escala-estatal-base-general" },
                 ] },
                 { op = "lookup_bracket", args = [
                     { op = "subtract", args = [{ casilla_id = "0505" }, { casilla_id = "0527" }] },
-                    { parameter = "renta-2025-escala-estatal-base-general" },
+                    { parameter = "renta-escala-estatal-base-general" },
                 ] },
             ] },
             { op = "lookup_bracket", args = [
                 { casilla_id = "0505" },
-                { parameter = "renta-2025-escala-estatal-base-general" },
+                { parameter = "renta-escala-estatal-base-general" },
             ] },
         ] },
         { op = "lookup_bracket", args = [
             { casilla_id = "0505" },
-            { parameter = "renta-2025-escala-estatal-base-general" },
+            { parameter = "renta-escala-estatal-base-general" },
         ] },
     ] },
     { op = "lookup_bracket", args = [
         { casilla_id = "0505" },
-        { parameter = "renta-2025-escala-estatal-base-general" },
+        { parameter = "renta-escala-estatal-base-general" },
     ] },
 ] }
 rounding = "money-2"

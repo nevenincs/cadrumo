@@ -1,5 +1,5 @@
 [[revisions.2019-2022.application_links]]
-id = "modelo-202-2019-2022-review"
+id = "modelo-202-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true

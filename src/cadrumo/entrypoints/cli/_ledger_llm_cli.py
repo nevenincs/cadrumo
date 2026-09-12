@@ -23,7 +23,7 @@ from typing import TypedDict
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...adapters.outbound.llm.suggestions import (
+from ...application.ledger.llm_classification_ports import (
     LLMClassificationSuggestion,
     LLMSaturatedSuggestion,
     LLMSplitApplyResult,
@@ -47,6 +47,7 @@ from ...application.ledger.llm_review_workflow import (
 from ...application.ledger.models import ManualLedgerTransactionResult
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...core.bucket_pointer import resolve_active_bucket_id
+from ...core.config import load_settings
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.provenance_stamp import provenance_stamp_transport
@@ -60,6 +61,7 @@ from ._ledger_support import (
     parse_decimal_option,
     resolve_id,
 )
+from ._ledger_llm_composition import LedgerLlmComposition, compose_ledger_llm
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 __all__ = [
@@ -82,7 +84,8 @@ def emit_llm_rejection(
     bucket_id: str,
     reason: str,
     actor: str | None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    composition: LedgerLlmComposition,
 ) -> None:
     """Record an explicit rejection of an LLM suggestion and emit the result.
 
@@ -106,6 +109,7 @@ def emit_llm_rejection(
         reason=reason,
         actor=actor or resolve_active_bucket_id() or "operator",
         transaction_repository=transaction_repository,
+        bucket_event_repository=composition.bucket_event_repository,
     )
     if not isinstance(result, LLMSuggestionRejectionResult):
         raise TransactionValidationError(
@@ -259,7 +263,7 @@ def dispatch_autosplit(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository = prologue
+    suggestion, transaction_repository, composition = prologue
     bucket_id = transaction_repository.bucket_id
 
     if suggestion.recommends_split:
@@ -270,6 +274,7 @@ def dispatch_autosplit(
             apply=apply,
             actor=actor,
             transaction_repository=transaction_repository,
+            composition=composition,
         )
         return
     _emit_single(
@@ -280,6 +285,7 @@ def dispatch_autosplit(
         actor=actor,
         result_models=(LedgerClassifyLlmSuggestResult, LedgerClassifySingleResult),
         transaction_repository=transaction_repository,
+        composition=composition,
     )
 
 
@@ -291,6 +297,7 @@ def _emit_split(
     apply: bool,
     actor: str | None,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    composition: LedgerLlmComposition,
 ) -> None:
     """Preview or apply the multi-child evidence-driven split for the auto-split route.
 
@@ -332,6 +339,7 @@ def _emit_split(
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -370,6 +378,7 @@ def _emit_single(
     actor: str | None,
     result_models: tuple[type[BaseModel], type[BaseModel]],
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    composition: LedgerLlmComposition,
 ) -> None:
     """Preview or apply the in-place single-line classification (no-split verdict).
 
@@ -410,6 +419,7 @@ def _emit_single(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -623,7 +633,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     vision_model: str | None,
     reject: bool,
     reason: str,
-) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol] | None:
+) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol, LedgerLlmComposition] | None:
     """Shared classify/saturate prologue: validate options, resolve, suggest, handle ``--reject``.
 
     Returns ``(suggestion, transaction_repository)`` for the caller to preview or
@@ -641,6 +651,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
 
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
+    composition = compose_ledger_llm(bucket_id=transaction_repository.bucket_id, settings=load_settings())
     resolved_id = resolve_id(transaction_repository, validated_transaction_id)
     suggestion = suggest_fn(
         bucket_id=transaction_repository.bucket_id,
@@ -648,6 +659,8 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
         transaction_repository=transaction_repository,
         read_evidence=read_evidence,
         vision_model=vision_model,
+        settings=load_settings(),
+        ports=composition.ports,
     )
 
     if reject:
@@ -659,9 +672,10 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
             reason=reason,
             actor=actor,
             transaction_repository=transaction_repository,
+            composition=composition,
         )
         return None
-    return suggestion, transaction_repository
+    return suggestion, transaction_repository, composition
 
 
 class LedgerLlmRouteArguments(TypedDict):
@@ -726,7 +740,7 @@ def ledger_classify_llm(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository = prologue
+    suggestion, transaction_repository, composition = prologue
 
     if not apply:
         _render_classify_llm_preview(ctx, suggestion=suggestion)
@@ -741,6 +755,7 @@ def ledger_classify_llm(
             business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -796,7 +811,7 @@ def ledger_saturate_llm(
     )
     if prologue is None:
         return
-    suggestion, transaction_repository = prologue
+    suggestion, transaction_repository, composition = prologue
 
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
 
@@ -813,6 +828,7 @@ def ledger_saturate_llm(
             business_pct=parse_decimal_option(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None
@@ -867,6 +883,7 @@ def _derive_operator_iva(
 ) -> OperatorIvaDerivationResult:
     """Run the canonical application derivation and translate its refusals."""
     try:
+        composition = compose_ledger_llm(bucket_id=bucket_id, settings=load_settings())
         return derive_operator_iva_substrate(
             bucket_id=bucket_id,
             transaction_id=transaction_id,
@@ -874,6 +891,7 @@ def _derive_operator_iva(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command=LlmReviewInvocationOrigin.CLASSIFY_IVA_CATEGORY_SATURATE.source_command,
             transaction_repository=transaction_repository,
+            bucket_event_repository=composition.bucket_event_repository,
         )
     except TransactionValidationError as exc:
         raise ledger_transaction_validation_no_recovery(exc) from None

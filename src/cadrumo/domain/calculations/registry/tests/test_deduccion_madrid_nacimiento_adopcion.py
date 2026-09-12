@@ -11,7 +11,7 @@ Ground truth (bundled AEAT Renta 2025 manual, parte 2, deducciones autonómicas)
     Prorrateo por partes iguales cuando el hijo convive con ambos padres que
     tributan de forma individual.
 
-The registry formula ``renta-2025-deduccion-madrid-nacimiento-adopcion`` receives
+The registry formula ``renta-deduccion-madrid-nacimiento-adopcion`` receives
 the prorrateo-weighted eligible-descendant count and the unidad-familiar
 otros-miembros base through two profile bindings the ``_inject_derived_autonomic_
 deduccion_facts`` injector supplies; here the bindings are supplied directly so
@@ -33,7 +33,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..authority import ValidatedRegistryAuthority
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
@@ -57,7 +57,7 @@ _BASE_BINDINGS = {
     # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
     "renta-profile-has-economic-activity": Decimal("1"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("0"),
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
@@ -65,12 +65,11 @@ _BASE_BINDINGS = {
 }
 
 _REL = {
-    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -96,10 +95,10 @@ def _scenario(
             "renta-profile-madrid-nacimiento-adopcion-eligible-count": eligible_count,
             "renta-profile-unidad-familiar-otros-miembros-base": unidad_familiar_otros_miembros_base,
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": ccaa},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": ccaa},
         relation_values=_REL,
         date_context={"filing_period": date(2025, 12, 31)},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(
                 target_casilla_id=_CASILLA_1039,
@@ -216,7 +215,7 @@ def test_cuantia_parameter_is_721_70_grounded_in_the_madrid_law(
     cuantia = next(
         parameter
         for parameter in revision.parameters
-        if parameter.id == "renta-2025-deduccion-madrid-nacimiento-adopcion-cuantia"
+        if parameter.id == "renta-deduccion-madrid-nacimiento-adopcion-cuantia"
     )
     assert [value.value for value in cuantia.values] == [Decimal("721.70")]
     assert "ley-35-2006:art-77" in cuantia.legal_refs

@@ -16,11 +16,11 @@ from functools import lru_cache
 import pytest
 
 # Importing the renta package registers the first-slice routing cross-domain
-# snapshot check required by Modelo 100 parity scenarios run via _scenarios.
+# snapshot check required by Modelo 100 parity scenarios run via scenarios.
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ._published_authority import artifact_components
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     assert_registry_scenario_matches,
@@ -81,13 +81,12 @@ _C0584 = validated_casilla_id("0584", surface="test_renta_chain_behaviour casill
 _C1585 = validated_casilla_id("1585", surface="test_renta_chain_behaviour casilla id")
 
 _RELATION_ZERO_VALUES_2025 = {
-    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
-    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-190-retenciones-anuales": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
 }
 
 
@@ -138,7 +137,7 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         _C0429: Decimal("0"),
         # 0424 is now computed via the ganancias-patrimoniales saldo formula
         # (max(0422-0423, 0)) and cannot be supplied as input.
-        # 0461 is now computed via renta-2025-reduccion-art-84-conjunta
+        # 0461 is now computed via renta-reduccion-art-84-conjunta
         # (declaration_type + minor_children_in_unit binding) and cannot be supplied as input.
         _C0506: Decimal("0"),
         _C0507: Decimal("0"),
@@ -153,7 +152,7 @@ def _base_2025_inputs() -> dict[CasillaId, Decimal]:
         _C0516: Decimal("0"),
         _C0517: Decimal("0"),
         _C0518: Decimal("0"),
-        # 0505 is now computed via renta-2025-base-liquidable-general-sometida-a-gravamen
+        # 0505 is now computed via renta-base-liquidable-general-sometida-a-gravamen
         # (max(0, 0500 - 0527)) and cannot be supplied as input.
         # 0528, 0529, 0530, and 0531 are now computed via lookup_bracket
         # / lookup_bracket_by_ccaa against the state and Madrid autonomic
@@ -200,7 +199,7 @@ def _scenario_2025(
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -214,10 +213,10 @@ def _scenario_2025(
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
         # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=expected,
     )
 
@@ -318,7 +317,7 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
 def test_base_liquidable_general_applies_reductions() -> None:
     """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable.
 
-    0461 is now computed by renta-2025-reduccion-art-84-conjunta from binding values.
+    0461 is now computed by renta-reduccion-art-84-conjunta from binding values.
     declaration_type = 2 (conjunta) + minor_children_in_unit = 0 (tipo-1 matrimonio) → 0461 = €3,400.
     """
     base_inputs = _base_2025_inputs()
@@ -340,7 +339,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
         binding_values={
             "renta-profile-has-economic-activity": Decimal("0"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration_type = 2 (conjunta) + minor_children_in_unit = 0 → 0461 = 3400
             "renta-profile-declaration-type": Decimal("2"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -354,10 +353,10 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
         # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=(
             _expected_output(target_casilla_id=_C0435, value=Decimal("40000.00")),
             _expected_output(target_casilla_id=_C0461, value=Decimal("3400.00")),

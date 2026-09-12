@@ -1166,6 +1166,12 @@ application:
         az aktív profilhoz a vetőösszeg létrehozása előtt.
     profile_binding:
       errors:
+        boolean_value_channel_mismatch: A(z) {binding_id} kötés profiladata logikai
+          érték, de a kötés {declared_channel} értékcsatornát deklarál.
+        boolean_value_type_invalid: 'A(z) {binding_id} logikai kötés profiladata nem
+          logikai érték; a kapott típus: {value_type}.'
+        channel_declaration_conflict: A(z) {binding_id} kötés {declared_channel} csatornát
+          deklarál, amely ütközik a(z) {consumer_channel} fogyasztói csatornával.
         date_value_type_invalid: 'A(z) %{binding_id} dátumcsatornás kötés profiladata
           dátum kell legyen; kapott típus: %{value_type}.'
         decimal_value_type_invalid: 'A(z) %{binding_id} decimális csatornás kötés

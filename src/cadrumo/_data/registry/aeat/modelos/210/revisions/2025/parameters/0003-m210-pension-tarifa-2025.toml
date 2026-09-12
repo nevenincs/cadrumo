@@ -6,7 +6,7 @@
 # calculation path produces the same cuota as this bracket table.
 
 [[revisions."2025".parameters]]
-id = "m210-pension-tarifa-2025"
+id = "m210-pension-tarifa"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

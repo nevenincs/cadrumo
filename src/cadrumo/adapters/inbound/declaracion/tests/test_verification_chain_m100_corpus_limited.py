@@ -76,11 +76,11 @@ def test_verification_chain_m100_engine_corpus_limited() -> None:
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     enum_binding_values = {
-        "renta-2022-profile-tax-residence-ccaa": "cataluna",
+        "renta-profile-tax-residence-ccaa": "cataluna",
     }
     relation_values = {
-        "renta-2022-rel-130-pagos-fraccionados": Decimal("0"),
-        "renta-2022-rel-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
     }
     engine_values = _calculate_engine_values_from_inputs(
         modelo="100",

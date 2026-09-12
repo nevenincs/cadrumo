@@ -2,17 +2,17 @@
 
 The annual IRPF declaration (Modelo 100) casilla ``0604`` ("Pagos fraccionados
 ingresados") is a *computed* casilla whose registry formula
-``renta-2024-pagos-fraccionados-ingresados`` sums two cross-model relations:
+``renta-pagos-fraccionados-ingresados`` sums two cross-model relations:
 
-* ``renta-2024-rel-130-pagos-fraccionados`` — ``source_modelo='130'``,
+* ``renta-modelo-130-pagos-fraccionados`` — ``source_modelo='130'``,
   ``source_casilla_id='19'``, ``source_periods=('1T','2T','3T','4T')``.
-* ``renta-2024-rel-131-pagos-fraccionados`` — ``source_modelo='131'``,
+* ``renta-modelo-131-pagos-fraccionados`` — ``source_modelo='131'``,
   ``source_casilla_id='15'``, same four periods. A direct-estimation taxpayer
   does not file M131, so that mutually exclusive leg resolves as explicit zero
   without synthetic filings.
 
 Each relation materialises into its declared ``target_binding``
-(``renta-2024-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
+(``renta-modelo-130-pagos-fraccionados`` / ``-131-``), whose registry
 binding declares ``source='relation_prefill'`` with a ``sum`` aggregation over
 ``source_casilla_id``. :class:`RelationPrefillSourceResolver` is enrolled in the
 live source mesh, making the relation canonical for cross-modelo fold-in. This
@@ -87,9 +87,9 @@ _RELATION_PREFILL_SOURCE = "relation_prefill"
 _OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
     {"renta-certificado-trabajo-retenciones"},
 )
-_M130_PAGOS_BINDING_ID: BindingId = "renta-2024-modelo-130-pagos-fraccionados"
-_M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"
-_M131_PAGOS_RELATION_ID = "renta-2024-rel-131-pagos-fraccionados"
+_M130_PAGOS_BINDING_ID: BindingId = "renta-modelo-130-pagos-fraccionados"
+_M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
+_M131_PAGOS_RELATION_ID = "renta-modelo-131-pagos-fraccionados"
 
 
 def _seed_m130_quarters(

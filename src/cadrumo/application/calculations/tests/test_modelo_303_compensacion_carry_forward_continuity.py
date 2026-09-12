@@ -11,7 +11,7 @@ flows into the *next* period's casilla 110 ("Cuotas a compensar pendientes
 de periodos anteriores") and is applied there.
 
 The registry models this as the self-relation
-``modelo-303-rel-self-compensacion-anteriores``: a ``previous_period``
+``modelo-303-compensacion-pendiente-anteriores``: a ``previous_period``
 relation with ``source_period_offset_from_target = -1`` whose
 ``source_casilla_id`` (``iva.compensacion-disponible-fin-periodo``) feeds the
 ``target_binding`` ``modelo-303-compensacion-pendiente-anteriores`` (casilla
@@ -90,7 +90,7 @@ _LATE_2024_REVISION = "2024-desde-09-y-3t"
 
 #: The relation that carries the prior-period saldo into casilla 110, and the
 #: binding/casilla it targets. Declared in the 303 2023+ revision.
-_CARRY_RELATION: RelationId = "modelo-303-rel-self-compensacion-anteriores"
+_CARRY_RELATION: RelationId = "modelo-303-compensacion-pendiente-anteriores"
 _CARRY_BINDING = "modelo-303-compensacion-pendiente-anteriores"
 
 

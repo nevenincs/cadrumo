@@ -218,7 +218,7 @@ def test_developer_metadata_pairs_preserve_relation_grounding() -> None:
         relation_provenance=RelationValues(
             values=(
                 RelationValue(
-                    relation="modelo-180-rel-115-base-anual",
+                    relation="modelo-180-115-base-anual",
                     value=Decimal("190.00"),
                     provenance="local_filing",
                     source_modelo="115",
@@ -236,7 +236,7 @@ def test_developer_metadata_pairs_preserve_relation_grounding() -> None:
 
     pairs = dict(_developer_metadata_pairs(plan))
 
-    assert pairs["cadrumo_relation:modelo-180-rel-115-base-anual"] == (
+    assert pairs["cadrumo_relation:modelo-180-115-base-anual"] == (
         "value=190.00; provenance=local_filing; source_modelo=115; source_filing_year=2026; "
         "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
         f"source_refs=boe-modelo-180-2023-form; resolved_at={resolved_at.isoformat()}"
@@ -259,7 +259,7 @@ def test_developer_metadata_pairs_preserve_blank_relation_grounding() -> None:
         relation_provenance=RelationValues(
             values=(
                 RelationValue(
-                    relation="modelo-180-rel-115-base-anual",
+                    relation="modelo-180-115-base-anual",
                     value=None,
                     provenance="operator_manual",
                     source_modelo="115",
@@ -276,7 +276,7 @@ def test_developer_metadata_pairs_preserve_blank_relation_grounding() -> None:
 
     pairs = dict(_developer_metadata_pairs(plan))
 
-    assert pairs["cadrumo_relation:modelo-180-rel-115-base-anual"] == (
+    assert pairs["cadrumo_relation:modelo-180-115-base-anual"] == (
         "provenance=operator_manual; source_modelo=115; source_filing_year=2026; "
         "source_periods=1T+2T+3T+4T; source_casilla_ids=02; legal_refs=ley-35-2006:art-99; "
         "source_refs=boe-modelo-180-2023-form"

@@ -12,7 +12,7 @@
 # inputs that compose it.
 
 [[revisions."2025".parameters]]
-id = "renta-2025-maternidad-mensual"
+id = "renta-maternidad-mensual"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-81"]
@@ -29,7 +29,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
-id = "renta-2025-maternidad-cap-anual"
+id = "renta-maternidad-cap-anual"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-81"]
@@ -46,7 +46,7 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
-id = "renta-2025-maternidad-alta-posterior-incremento"
+id = "renta-maternidad-alta-posterior-incremento"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-81"]

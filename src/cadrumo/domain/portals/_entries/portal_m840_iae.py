@@ -1,10 +1,4 @@
-"""Registry entry for Modelo 840 - Impuesto sobre Actividades Economicas (IAE).
-
-Defines the :class:`PortalMetadata` record for :class:`Portal`
-``PORTAL_M840_IAE`` under :class:`PortalCategory` ``FILING``,
-exposed as :data:`ENTRY` and consumed by
-:data:`cadrumo.domain.portals.PORTAL_REGISTRY`.
-"""
+"""Portal metadata entry."""
 
 from __future__ import annotations
 
@@ -28,4 +22,3 @@ ENTRY: PortalMetadata = build_entry(
     label="entries.portal_m840_iae.label",
     purpose="entries.portal_m840_iae.purpose",
 )
-"""Portal entry for Modelo 840 (Impuesto sobre Actividades Económicas — IAE)."""

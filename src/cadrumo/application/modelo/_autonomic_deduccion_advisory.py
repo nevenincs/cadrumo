@@ -62,8 +62,8 @@ from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
 from .profile_binding import (
-    MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR,
     is_indeterminate_unidad_familiar,
+    is_madrid_autonomic_deduccion_filing_year,
     is_madrid_resident,
     madrid_nacimiento_adopcion_candidate_weighted_count,
 )
@@ -106,7 +106,7 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
     does not declare the casilla-1039 semantic role, or any of the firing
     conditions above is not met.
     """
-    if snapshot.filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
+    if not is_madrid_autonomic_deduccion_filing_year(snapshot.filing_year):
         return None
 
     try:

@@ -2,21 +2,32 @@
 
 Per-section walkers that traverse the typed-ID fields of a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision` and call into an
-:class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+:class:`~cadrumo.domain.calculations.registry.reference_checker.IdReferenceChecker`
 to accumulate dangling-reference diagnostics.
 
 See Also:
     :func:`domain.calculations.registry.reference_checks.check_all_id_references`
         Snapshot-level referential-integrity gate that invokes these walkers.
-    :mod:`cadrumo.domain.calculations.registry._validate_reference_checker`
+    :mod:`cadrumo.domain.calculations.registry.reference_checker`
         Accumulator that owns the per-kind typed-id sets used here.
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from .reference_checker import IdReferenceChecker
+
+#: Families whose members lift ``source_refs`` to an edition-level default on
+#: the revision manifest, paired with that manifest field. Declared as pairs so a
+#: section can never be defaulted from another family's grounding: a modelo's
+#: bindings cite its record design, its formulas the approving orden's
+#: instructions, and the two are different documents.
+FAMILY_SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
+    ("bindings", "binding_source_refs"),
+    ("formulas", "formula_source_refs"),
+)
+
 
 if TYPE_CHECKING:
     from .schema import ModeloRevision
@@ -44,7 +55,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     construct declarations. The
-    :class:`~cadrumo.domain.calculations.registry._validate_reference_checker.IdReferenceChecker`
+    :class:`~cadrumo.domain.calculations.registry.reference_checker.IdReferenceChecker`
     supplies the typed member-id sets and legal/source-ref closure checks.
     """
     for construct in revision.constructs:

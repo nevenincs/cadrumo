@@ -6,7 +6,7 @@ from per-perceptor withholding observations into scalar values or row outputs.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -40,98 +40,10 @@ __all__ = [
     "validate_withholding_binding_selector_shape",
 ]
 
-_WithholdingRowField = Literal[
-    "perceptor_tax_id",
-    "perceptor_legal_name",
-    "country_code",
-    "province_code",
-    "territorial_deduction_clave",
-    "perceptor_birth_year",
-    "perceptor_situacion_familiar",
-    "representative_tax_id",
-    "spouse_or_unit_titular_tax_id",
-    "disability_clave",
-    "contract_relation_clave",
-    "unit_convivencia_titular_clave",
-    "geographic_mobility_clave",
-    "clave",
-    "subclave",
-    "percibido_dinerario",
-    "percibido_especie",
-    "retencion_practicada",
-    "ingreso_a_cuenta",
-    "ingreso_a_cuenta_repercutido",
-    "accrual_year",
-    "reducciones_aplicables",
-    "gastos_deducibles",
-    "pension_compensatoria",
-    "anualidades_alimentos",
-    "descendants_under_3_total",
-    "descendants_under_3_whole",
-    "descendants_rest_total",
-    "descendants_rest_whole",
-    "descendants_disabled_33_65_total",
-    "descendants_disabled_33_65_whole",
-    "descendants_disabled_mobility_total",
-    "descendants_disabled_mobility_whole",
-    "descendants_disabled_65_plus_total",
-    "descendants_disabled_65_plus_whole",
-    "ascendants_under_75_total",
-    "ascendants_under_75_whole",
-    "ascendants_75_plus_total",
-    "ascendants_75_plus_whole",
-    "ascendants_disabled_33_65_total",
-    "ascendants_disabled_33_65_whole",
-    "ascendants_disabled_mobility_total",
-    "ascendants_disabled_mobility_whole",
-    "ascendants_disabled_65_plus_total",
-    "ascendants_disabled_65_plus_whole",
-    "first_child_compute",
-    "second_child_compute",
-    "third_child_compute",
-    "housing_loan_communication_clave",
-    "incapacity_cash_perception",
-    "incapacity_cash_withholding",
-    "incapacity_kind_value",
-    "incapacity_kind_ingreso_a_cuenta",
-    "incapacity_kind_repercutido",
-    "complemento_infancia_clave",
-    "foral_retention_estatal",
-    "foral_retention_navarra",
-    "foral_retention_araba",
-    "foral_retention_gipuzkoa",
-    "foral_retention_bizkaia",
-    "emerging_stock_excess_clave",
-    "startup_fund_rendimientos_clave",
-    "pension_prestacion_jubilacion",
-    "pension_prestacion_viudedad",
-    "pension_prestacion_incapacidad",
-    "pension_prestacion_no_contributiva",
-    "pension_prestacion_resto",
-    "perceptor_mediador_flag",
-    "clave_codigo",
-    "codigo_emisor",
-    "naturaleza",
-    "pago",
-    "tipo_codigo",
-    "codigo_cuenta",
-    "pendiente_flag",
-    "tipo_percepcion",
-    "reducciones",
-    "base_retenciones",
-    "porcentaje_retencion",
-    "penalizaciones",
-    "isin_code",
-    "naturaleza_declarante",
-    "fecha_inicio_prestamo",
-    "fecha_vencimiento_prestamo",
-    "compensaciones",
-    "garantias",
-    "nif_pagador_anterior",
-    "fecha_devengo",
-    "clave_mercado",
-    "numero_orden",
-]
+# Row-field membership is authored by the selected revision bindings.  The
+# provider remains generic so adding a governed row field does not require a
+# second catalogue in this mechanics module.
+_WithholdingRowField = str
 WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 
 
@@ -163,21 +75,6 @@ _WITHHOLDING_FACTS: Final[frozenset[_WithholdingFactKind]] = frozenset(_Withhold
 The selector field's comment below says this set and that type mirror each other. They
 did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held only
 while someone maintained both. It is now one declaration and two views of it."""
-
-
-IDENTIFICATION_BLOCK_CLAVES: Final[frozenset[RetencionClave]] = frozenset(
-    {RetencionClave.A, RetencionClave.B, RetencionClave.D},
-)
-"""The claves whose rows carry the Modelo 190 identification block.
-
-A narrowing of :class:`~....core.aggregation.RetencionClave`, held as members so a
-change to that catalogue cannot leave this subset naming a letter it no longer has. The
-letters are the ones the record design gives that block; their meanings live with the
-enum, which cites the Orden.
-
-Spelled out at four sites in two modules before this existed, three of them assigning
-the same local ``clave_abd`` and one testing the same three letters inline.
-"""
 
 
 class WithholdingObservation(BaseModel):
@@ -330,41 +227,20 @@ class WithholdingObservation(BaseModel):
     """Whether the perceptor communicated vivienda-habitual loan amounts at some
     point in the exercise (design position 254, art. 86.1 RIRPF last paragraph):
     clave 0 never applied, 1 applied -- both are recorded facts, never defaults."""
-    incapacity_cash_perception: Decimal = Decimal("0")
-    """Dineraria incapacidad-laboral percepciones paid directly by the payer
-    (design positions 256-268); the design's own zeros when none."""
-    incapacity_cash_withholding: Decimal = Decimal("0")
-    """Retentions on the position-256 percepciones (design positions 269-281);
-    the design's own zeros when none -- a perceptor who suffered no retention
-    carries zeros by the design's own rule."""
-    incapacity_kind_value: Decimal = Decimal("0")
-    """Valoracion of in-kind incapacidad-laboral prestaciones under art. 43
-    (design positions 283-295); the design's own zeros when none."""
-    incapacity_kind_ingreso_a_cuenta: Decimal = Decimal("0")
-    """Ingresos a cuenta efectuados on the position-283 prestaciones (design
-    positions 296-308); the design's own zeros when none."""
-    incapacity_kind_repercutido: Decimal = Decimal("0")
-    """The part of the position-296 ingresos a cuenta repercutido to the
-    perceptor (design positions 309-321); the design's own zeros when none."""
+    incapacity_cash_perception: Decimal
+    incapacity_cash_withholding: Decimal
+    incapacity_kind_value: Decimal
+    incapacity_kind_ingreso_a_cuenta: Decimal
+    incapacity_kind_repercutido: Decimal
     complemento_infancia_clave: int | None = Field(default=None, ge=1, le=2)
     """Whether any mensualidad of the L.29 prestacion included the IMV complemento
     de ayuda para la infancia (design position 322): clave 1 included, 2 not --
     both are recorded facts, never defaults."""
-    foral_retention_estatal: Decimal = Decimal("0")
-    """Clave E retentions and ingresos a cuenta ingresados to the Hacienda Estatal
-    (design positions 323-335); the design's own zeros when none."""
-    foral_retention_navarra: Decimal = Decimal("0")
-    """Clave E retentions and ingresos a cuenta ingresados to the Comunidad Foral
-    de Navarra (design positions 336-348); the design's own zeros when none."""
-    foral_retention_araba: Decimal = Decimal("0")
-    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
-    de Araba/Alava (design positions 349-361); the design's own zeros when none."""
-    foral_retention_gipuzkoa: Decimal = Decimal("0")
-    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
-    de Gipuzkoa (design positions 362-374); the design's own zeros when none."""
-    foral_retention_bizkaia: Decimal = Decimal("0")
-    """Clave E retentions and ingresos a cuenta ingresados to the Diputacion Foral
-    de Bizkaia (design positions 375-387); the design's own zeros when none."""
+    foral_retention_estatal: Decimal
+    foral_retention_navarra: Decimal
+    foral_retention_araba: Decimal
+    foral_retention_gipuzkoa: Decimal
+    foral_retention_bizkaia: Decimal
     emerging_stock_excess_clave: int | None = Field(default=None, ge=0, le=1)
     """Whether the row's in-kind percepciones include emerging-company stock over
     the art. 42.3.f) exempt amount (design position 388): clave 1 yes, 0 the rest
@@ -421,9 +297,7 @@ class WithholdingObservation(BaseModel):
     reducciones: Decimal = Decimal("0")
     """Modelo 193 art. 26.2 reductions (positions 139-151) applied when the
     perceptor is an IRPF contribuyente; the design's own zeros when none."""
-    base_retenciones: Decimal = Decimal("0")
-    """Modelo 193 base de retenciones e ingresos a cuenta (positions 152-164);
-    the design's own zeros when no content."""
+    base_retenciones: Decimal
     porcentaje_retencion: Percentage = PERCENTAGE_MIN
     """Modelo 193 retention/ingreso-a-cuenta percentage applied (positions
     165-168), generally 19 with the design's clave-naturaleza specific rates;
@@ -461,9 +335,6 @@ class WithholdingObservation(BaseModel):
     """Modelo 193 clave de mercado (position 339), always recorded for claves
     A, B and D."""
     numero_orden: int | None = Field(default=None, ge=1, le=9999999)
-    """Modelo 193 numero de orden (positions 315-321): the sequential record
-    number the design assigns each perceptor record. Derived by the resolver
-    from the row order; a supplied value must not disagree."""
 
     _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
@@ -630,18 +501,67 @@ def percibido_total(observations: Iterable[WithholdingObservation]) -> Decimal:
     )
 
 
-def _retenciones_ingresadas_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum the 169-181 retentions for the rows design position 175 folds in.
+def _withholding_role_declarations(effective_date: date) -> dict[str, tuple[str, ...]]:
+    """Resolve the selected withholding role mapping without Python facts."""
+    from .authority import bundled_authority
+    from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from .schema_base import DateAxis
 
-    The declarante's RETENCIONES E INGRESOS A CUENTA INGRESADOS field is the
-    design's own declared sum: the retenciones e ingresos a cuenta of every
-    perceptor row whose clave de percepcion is C, plus the A/B/D rows whose
-    pago is 1 (emisor) or 3 (mediador de valor extranjero).
-    """
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="modelo-190-193-withholding-binding-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("withholding role declarations must resolve as a mapping fact")
+    declarations: dict[str, tuple[str, ...]] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("withholding role declarations must be string mappings")
+        tokens = tuple(token.strip() for token in entry.value.split(",") if token.strip())
+        if not tokens:
+            raise RegistryValidationError(f"withholding role declaration {entry.key!r} is empty")
+        if entry.key in declarations:
+            raise RegistryValidationError(f"duplicate withholding role declaration {entry.key!r}")
+        declarations[entry.key] = tokens
+    return declarations
+
+
+def _required_withholding_role(
+    declarations: Mapping[str, tuple[str, ...]],
+    key: str,
+) -> frozenset[str]:
+    values = declarations.get(key)
+    if not values:
+        raise RegistryValidationError(f"withholding role declaration {key!r} is missing")
+    return frozenset(values)
+
+
+def _required_withholding_payment_values(
+    declarations: Mapping[str, tuple[str, ...]],
+    key: str,
+) -> frozenset[int]:
+    values = _required_withholding_role(declarations, key)
+    try:
+        return frozenset(int(value) for value in values)
+    except ValueError as exc:
+        raise RegistryValidationError(f"withholding payment declaration {key!r} is not numeric") from exc
+
+
+def _retenciones_ingresadas_total(
+    observations: Iterable[WithholdingObservation],
+    *,
+    payment_claves: frozenset[str],
+    direct_claves: frozenset[str],
+    payment_values: frozenset[int],
+) -> Decimal:
+    """Fold the registry-declared direct and payment-gated retention roles."""
     total = Decimal("0")
     for observation in observations:
         clave_code = str(observation.clave)
-        if clave_code == "C" or (clave_code in IDENTIFICATION_BLOCK_CLAVES and observation.pago in (1, 3)):
+        if clave_code in direct_claves or (clave_code in payment_claves and observation.pago in payment_values):
             total += observation.retencion_practicada + observation.ingreso_a_cuenta
     return total
 
@@ -678,6 +598,7 @@ def resolve_withholding_binding_values(
     """
     available = tuple(observations)
     resolved: dict[BindingId, Decimal] = {}
+    role_declarations: dict[str, tuple[str, ...]] | None = None
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.WITHHOLDING:
             continue
@@ -694,7 +615,23 @@ def resolve_withholding_binding_values(
         elif selector.fact == "retencion_sum":
             resolved[binding.id] = retencion_total(scope_filtered)
         elif selector.fact == "retenciones_ingresadas_sum":
-            resolved[binding.id] = _retenciones_ingresadas_total(scope_filtered)
+            if role_declarations is None:
+                role_declarations = _withholding_role_declarations(revision.valid_from)
+            resolved[binding.id] = _retenciones_ingresadas_total(
+                scope_filtered,
+                payment_claves=_required_withholding_role(
+                    role_declarations,
+                    "identification_block_claves",
+                ),
+                direct_claves=_required_withholding_role(
+                    role_declarations,
+                    "retenciones_ingresadas.direct_claves",
+                ),
+                payment_values=_required_withholding_payment_values(
+                    role_declarations,
+                    "retenciones_ingresadas.payment_values",
+                ),
+            )
         else:  # pragma: no cover - guarded by validator
             raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
     return resolved

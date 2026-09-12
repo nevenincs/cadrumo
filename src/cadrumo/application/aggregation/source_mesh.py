@@ -9,7 +9,7 @@ relation prefill, and other registry-declared sources. A
 members and returns a :class:`CalculationSourceResolution`.
 
 ``CalculationSourceResolution`` is the single resolved-source carrier consumed
-by modelo calculation. It carries decimal, enum, date, row-indexed binding,
+by modelo calculation. It carries decimal, enum, date, boolean, row-indexed binding,
 relation, bound-casilla, detail-row, transaction-id, diagnostic, and provenance
 channels. Exclusive merges use :func:`merge_source_resolutions`; precedence overlays use
 :func:`merge_source_resolutions_by_precedence`; and
@@ -106,6 +106,21 @@ CalculationSourceDiagnosticReason = Literal[
     # registration and the route table, not an authored deferral.
     "deferred_binding_source",
     "unresolved_derived_binding",
+    # An operator-supplied override whose key names nothing the active revision
+    # declares: no binding carries it, so the value is folded into a channel
+    # nothing ever reads. Distinct from "unresolved_binding", which says a
+    # binding the revision DOES declare received no value -- the inverse, and
+    # the reason the two must not be collapsed: there the gap is visible on the
+    # binding, here there is no binding to be visible on, so the override's
+    # disappearance is indistinguishable from the operator never having entered
+    # it. Retired relation ids are the concrete source: relations were absorbed
+    # into binding providers, the override channel is keyed by binding id now,
+    # and an override persisted under the pre-absorption vocabulary stops
+    # applying without a word. Advisory rather than blocking, because the
+    # figure it names may be genuinely obsolete -- but never silent, because an
+    # operator who entered a figure and sees it absent from the result is owed
+    # the reason.
+    "orphaned_override",
     # The resolved provenance graph does not show the terminal origin the
     # binding's declaration -- authored, or derived from its provider
     # registration -- says the value must rest on: a class the declaration does
@@ -771,6 +786,19 @@ class CalculationSourceResolution(BaseModel):
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
+    boolean_binding_values: Mapping[BindingId, bool] = Field(default_factory=dict)
+    """Truth values for bindings whose value contract declares the boolean channel.
+
+    Its own channel rather than a ``Decimal("1")``/``Decimal("0")`` pair on
+    ``binding_values``, because the two readings a collapsed encoding produces
+    are not the same fact: "this taxpayer holds no right to the mínimo por
+    descendientes" and "this taxpayer's figure is zero euros" arrive
+    indistinguishable, and the second is a filing-grade amount the first never
+    asserted. A binding whose contract declares
+    :attr:`~domain.calculations.registry.BindingValueChannel.BOOLEAN` travels
+    here or it does not travel; a Decimal arriving for that contract, or a truth
+    value arriving on the Decimal channel, is refused rather than coerced.
+    """
     row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=_empty_row_binding_values)
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] = Field(
         default_factory=empty_row_source_identities,
@@ -861,6 +889,11 @@ class CalculationSourceResolution(BaseModel):
     @field_validator("date_binding_values")
     @classmethod
     def _freeze_date_binding_values(cls, value: Mapping[BindingId, date]) -> Mapping[BindingId, date]:
+        return MappingProxyType(dict(sorted(value.items())))
+
+    @field_validator("boolean_binding_values")
+    @classmethod
+    def _freeze_boolean_binding_values(cls, value: Mapping[BindingId, bool]) -> Mapping[BindingId, bool]:
         return MappingProxyType(dict(sorted(value.items())))
 
     @field_validator("row_binding_values", mode="before")
@@ -1093,6 +1126,10 @@ class CalculationSourceResolution(BaseModel):
 
     @field_serializer("date_binding_values")
     def _serialize_date_binding_values(self, value: Mapping[BindingId, date]) -> dict[BindingId, date]:
+        return dict(value)
+
+    @field_serializer("boolean_binding_values")
+    def _serialize_boolean_binding_values(self, value: Mapping[BindingId, bool]) -> dict[BindingId, bool]:
         return dict(value)
 
     @field_serializer("row_binding_values")

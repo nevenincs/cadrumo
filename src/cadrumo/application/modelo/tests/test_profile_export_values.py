@@ -68,7 +68,7 @@ def _export_bindings() -> tuple[BindingDefinition, ...]:
         binding
         for binding in snapshot.revision.bindings
         if binding.source == BindingSourceKind.PROFILE
-        and getattr(binding.selector, "dictionary_field", None) is not None
+        and getattr(binding.provider, "dictionary_field", None) is not None
     )
 
 
@@ -252,9 +252,9 @@ def test_the_repeating_family_slots_are_a_known_structural_gap() -> None:
     decision should be revisited.
     """
     repeating = {
-        str(getattr(binding.selector, "dictionary_field", ""))
+        str(getattr(binding.provider, "dictionary_field", ""))
         for binding in _export_bindings()
-        if getattr(binding.selector, "repeating", False)
+        if getattr(binding.provider, "repeating", False)
     }
     values = _resolve(
         *_DECLARANTE,

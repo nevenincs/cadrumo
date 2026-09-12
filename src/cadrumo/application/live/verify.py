@@ -1,8 +1,8 @@
 """Bucket-scoped verify service.
 
 Wraps the two read-only AEAT verify oracles into a bucket-scoped
-audit log. Verify observations are persisted through a
-:class:`SecureObjectRepository` scoped to the active profile bucket.
+audit log. Verify observations are persisted through an application-owned
+observation persistence port supplied by the outer composition.
 
   * NIF-IVA (VIES) — intracomunitario counterparty validation
   * TGVI / GROI    — intra-community operator (registered Spanish NIF)
@@ -11,8 +11,9 @@ Both surfaces are on-demand single-shot checks. The service records
 each check as a typed observation tied to the active bucket so the
 operator can audit which NIFs were verified, when, and against what
 verdict. Subsequent invocations against the same NIF produce a new
-observation row; history is never overwritten. Each observation is
-wrapped in an :class:`Envelope` before being written to the secure store.
+observation row; history is never overwritten. The persistence implementation
+decides how each observation is protected and addressed at rest; this use case
+consumes only its application-level contract.
 
 Structurally read-only:
   * the service has no submit / mutate verb;
@@ -27,22 +28,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from hmac import compare_digest
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.persistence.storage.crypto.encrypted_columns import HashedLookup
-from ...adapters.persistence.storage.envelope.contract import Envelope
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.schema_lineage import (
-    inner_envelope_classification_is_expected,
-    inner_envelope_version_is_current,
-)
-from ...adapters.persistence.storage.secure_object_namespaces import LIVE_VERIFY_OBSERVATION_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_object_records import SecureObjectRecord
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.identity.bucket import BucketId
@@ -52,6 +40,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from .errors import LiveApplicationInputError
+from .verify_ports import VerifyObservationPersistencePort
 
 
 class VerifySurface(StrEnum):
@@ -142,180 +131,6 @@ def _derive_observation_id(
     return sha256_hex(canonical.encode("utf-8"))
 
 
-class VerifyObservationRepository:
-    """Secure-object repository for bucket-scoped verify observations."""
-
-    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        """Initialize this public contract."""
-        trimmed = bucket_id.strip()
-        if not trimmed:
-            raise LiveApplicationInputError(
-                translated_message="application.live.verify.errors.bucket_id_blank",
-            )
-        self._bucket_id = trimmed
-        self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
-
-    @property
-    def bucket_id(self) -> str:
-        """Execute this public contract operation."""
-        return self._bucket_id
-
-    def load(self, observation_id: str) -> VerifyObservation | None:
-        """Return the :class:`VerifyObservation` for ``observation_id``, or ``None`` if absent.
-
-        Args:
-            observation_id: The full 64-character SHA-256 hex observation id.
-
-        Raises:
-            LiveApplicationInputError: When the loaded observation's
-                ``bucket_id`` or ``observation_id`` does not match the
-                repository's own bucket or the requested id.
-        """
-        record = self._objects.load(
-            LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
-            verify_observation_object_key(self._bucket_id, observation_id),
-            expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-            max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-        )
-        if record is None:
-            return None
-        observation = self._observation_from_record(record, requested_observation_id=observation_id)
-        if observation.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                translated_message="application.live.verify.errors.observation_bucket_mismatch",
-                context={
-                    "observation_bucket": observation.bucket_id,
-                    "repository_bucket": self._bucket_id,
-                },
-            )
-        if observation.observation_id != observation_id:
-            raise LiveApplicationInputError(
-                translated_message="application.live.verify.errors.observation_id_mismatch",
-                context={
-                    "observation_id": observation.observation_id,
-                    "requested_observation_id": observation_id,
-                },
-            )
-        return observation
-
-    def list_observations(self) -> tuple[VerifyObservation, ...]:
-        """Return all stored observations as a tuple of :class:`VerifyObservation` sorted by check time.
-
-        Every row is re-addressed before it is returned: the natural key is
-        recomputed from the decrypted payload and compared with the row key
-        the store actually holds it under. ``load`` already refuses an
-        observation whose id does not match the one requested, so without the
-        same check here enumeration would be the weaker door — a valid
-        observation re-encrypted under another observation's key would reach
-        history, ``show``, and ``latest_for_nif`` while a targeted ``load``
-        of that key refused it.
-
-        Raises:
-            LiveApplicationInputError: When a row's payload bucket differs
-                from the repository's bucket, or when its content address
-                does not agree with the key it is stored under.
-        """
-        observations: list[VerifyObservation] = []
-        for record in self._objects.list_records(
-            LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
-            expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-            max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-        ):
-            observation = self._observation_from_record(record)
-            if observation.bucket_id != self._bucket_id:
-                raise LiveApplicationInputError(
-                    translated_message="application.live.verify.errors.observation_bucket_mismatch",
-                    context={
-                        "observation_bucket": observation.bucket_id,
-                        "repository_bucket": self._bucket_id,
-                    },
-                )
-            self._assert_addressed_by_its_own_key(record, observation)
-            observations.append(observation)
-        return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
-
-    def _assert_addressed_by_its_own_key(
-        self,
-        record: SecureObjectRecord,
-        observation: VerifyObservation,
-    ) -> None:
-        """Refuse an observation stored under a key that is not its own.
-
-        The stored ``object_key`` is a :class:`HashedLookup` digest and the
-        plaintext key is not recoverable from it, so the check recomputes the
-        digest of the key this observation *should* occupy and compares the
-        two. ``compare_digest`` keeps the comparison constant-time.
-        """
-        expected_key = HashedLookup.compute(
-            verify_observation_object_key(self._bucket_id, observation.observation_id),
-        )
-        if not compare_digest(expected_key, record.object_key):
-            raise LiveApplicationInputError(
-                translated_message="application.live.verify.errors.observation_key_mismatch",
-                context={"observation_id": observation.observation_id},
-            )
-
-    def save(self, observation: VerifyObservation) -> None:
-        """Persist ``observation`` as an encrypted :class:`Envelope` in the object store.
-
-        Args:
-            observation: The :class:`VerifyObservation` to persist. Its
-                ``bucket_id`` must match the repository's own bucket.
-
-        Raises:
-            LiveApplicationInputError: When ``observation.bucket_id`` does
-                not match the repository's bucket id.
-        """
-        if observation.bucket_id != self._bucket_id:
-            raise LiveApplicationInputError(
-                translated_message="application.live.verify.errors.observation_bucket_mismatch",
-                context={
-                    "observation_bucket": observation.bucket_id,
-                    "repository_bucket": self._bucket_id,
-                },
-            )
-        envelope = Envelope[VerifyObservation](
-            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-            written_at=now(),
-            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-            payload=observation,
-        )
-        self._objects.save(
-            namespace=LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
-            object_key=verify_observation_object_key(self._bucket_id, observation.observation_id),
-            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode("utf-8"),
-        )
-
-    @staticmethod
-    def _observation_from_record(
-        record: SecureObjectRecord,
-        requested_observation_id: str | None = None,
-    ) -> VerifyObservation:
-        envelope = Envelope[VerifyObservation].model_validate_json(record.payload.decode("utf-8"))
-        if not inner_envelope_classification_is_expected(
-            envelope.classification,
-            LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
-        ):
-            observation_label = requested_observation_id or envelope.payload.observation_id
-            raise ClassificationError(
-                f"verify observation {observation_label!r} has classification {envelope.classification}; "
-                f"consumer expected {LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity}",
-            )
-        if not inner_envelope_version_is_current(
-            envelope.schema_version,
-            LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
-        ):
-            observation_label = requested_observation_id or envelope.payload.observation_id
-            raise EnvelopeVersionError(
-                f"verify observation {observation_label!r} is at version {envelope.schema_version}; "
-                f"consumer supports up to {LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version}",
-            )
-        return envelope.payload
-
-
 class VerifyService:
     """Bucket-scoped audit log of NIF verify checks.
 
@@ -325,15 +140,9 @@ class VerifyService:
     records observations the drivers produce.
     """
 
-    def __init__(self, settings: Settings | None = None) -> None:
-        """Initialize this public contract."""
-        self._settings = settings or load_settings()
-
-    def _repository_for(self, bucket_id: str) -> VerifyObservationRepository:
-        return VerifyObservationRepository(
-            bucket_id=bucket_id,
-            objects=secure_object_repository_for_bucket(bucket_id, self._settings),
-        )
+    def __init__(self, *, persistence: VerifyObservationPersistencePort) -> None:
+        """Initialize this public contract with composed observation persistence."""
+        self._persistence = persistence
 
     def record(
         self,
@@ -370,11 +179,10 @@ class VerifyService:
             raw_evidence_locator=raw_evidence_locator,
             persisted_at=now(),
         )
-        repository = self._repository_for(bucket_id)
-        existing = repository.load(observation_id)
+        existing = self._persistence.load(bucket_id=bucket_id, observation_id=observation_id)
         if existing is not None:
             return existing
-        repository.save(observation)
+        self._persistence.save(observation)
         return observation
 
     def list_observations(
@@ -385,7 +193,7 @@ class VerifyService:
         nif: str | None = None,
     ) -> tuple[VerifyObservation, ...]:
         """Return all :class:`VerifyObservation` records in capture order. Optional filters."""
-        observations = list(self._repository_for(bucket_id).list_observations())
+        observations = list(self._persistence.list_observations(bucket_id=bucket_id))
         if surface is not None:
             observations = [o for o in observations if o.surface is surface]
         if nif is not None:
@@ -401,7 +209,7 @@ class VerifyService:
         """Look up and return the :class:`VerifyObservation` for the given full id or unambiguous prefix."""
         matches = [
             o
-            for o in self._repository_for(bucket_id).list_observations()
+            for o in self._persistence.list_observations(bucket_id=bucket_id)
             if o.observation_id == observation_id or o.observation_id.startswith(observation_id)
         ]
         if not matches:
@@ -425,7 +233,9 @@ class VerifyService:
     ) -> VerifyObservation | None:
         """Return the most recent :class:`VerifyObservation` for (surface, nif), or None."""
         matches = [
-            o for o in self._repository_for(bucket_id).list_observations() if o.surface is surface and o.nif == nif
+            o
+            for o in self._persistence.list_observations(bucket_id=bucket_id)
+            if o.surface is surface and o.nif == nif
         ]
         if not matches:
             return None
@@ -435,7 +245,6 @@ class VerifyService:
 __all__ = [
     "VerifyObservation",
     "VerifyObservationNotFoundError",
-    "VerifyObservationRepository",
     "VerifyService",
     "VerifySurface",
     "verify_observation_object_key",

@@ -294,16 +294,14 @@ class TestModulos2024DateAxisBoundaries:
     def test_2024_coefficient_parameters_are_scoped_to_calendar_year_2024(self) -> None:
         snapshot = artifact_snapshot("131", 2024, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         coeficientes = next(
-            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes-2024"
+            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-coeficientes"
         )
         for row in coeficientes.keyed_brackets:
             assert row.valid_from == date(2024, 1, 1)
             assert row.valid_to == date(2024, 12, 31)
 
         reduccion_general = next(
-            parameter
-            for parameter in snapshot.revision.parameters
-            if parameter.id == "m131-modulos-reduccion-general-2024"
+            parameter for parameter in snapshot.revision.parameters if parameter.id == "m131-modulos-reduccion-general"
         )
         for value in reduccion_general.values:
             assert value.valid_from == date(2024, 1, 1)
@@ -316,7 +314,7 @@ class TestModulos2024DateAxisBoundaries:
         snapshot_2025 = artifact_snapshot("131", 2025, "1T", grade=RegistryAuthorityGrade.CALCULATION)
         ids_2024 = {parameter.id for parameter in snapshot_2024.revision.parameters}
         ids_2025 = {parameter.id for parameter in snapshot_2025.revision.parameters}
-        assert "m131-modulos-coeficientes-2024" in ids_2024
-        assert "m131-modulos-coeficientes-2024" not in ids_2025
-        assert "m131-modulos-coeficientes-2025" in ids_2025
-        assert "m131-modulos-coeficientes-2025" not in ids_2024
+        assert "m131-modulos-coeficientes" in ids_2024
+        assert "m131-modulos-coeficientes" not in ids_2025
+        assert "m131-modulos-coeficientes" in ids_2025
+        assert "m131-modulos-coeficientes" not in ids_2024

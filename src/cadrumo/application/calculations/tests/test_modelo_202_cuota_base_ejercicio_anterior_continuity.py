@@ -5,7 +5,7 @@ LIS computes the instalment base (casilla 01) from the cuota líquida of a
 prior Modelo 200 (IS annual) filing. The 2P (October) and 3P (December)
 instalments take the immediately prior year's M200 cuota líquida
 (``DP200014B:00592``, semantic_role ``is_cuota_liquida``); the cross-model
-relation ``modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p`` declares
+relation ``modelo-202-cuota-base-ejercicio-anterior`` declares
 ``filing_year_delta = -1`` for those periods and feeds the new binding
 ``modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior`` that casilla
 01 consumes. Casilla 03 ("Mod. 40.2 a ingresar") is the pre-existing formula
@@ -266,9 +266,9 @@ def test_modelo_202_1p_base_resolves_from_two_years_back_m200_cuota(tmp_path: Pa
             obs_repo=obs_repo,
         )
 
-    assert resolved["modelo-202-2025-y-siguientes-rel-cuota-base-1p"] == _M200_1P_SOURCE_TWO_BACK
-    assert resolved["modelo-202-2025-y-siguientes-rel-cuota-base-1p"] != _M200_1P_NEAR_PRIOR
-    assert "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p" not in resolved
+    assert resolved["modelo-202-cuota-base-ejercicio-anterior"] == _M200_1P_SOURCE_TWO_BACK
+    assert resolved["modelo-202-cuota-base-ejercicio-anterior"] != _M200_1P_NEAR_PRIOR
+    assert "modelo-202-cuota-base-ejercicio-anterior" not in resolved
 
 
 def test_modelo_202_2p_base_resolves_from_prior_year_m200_cuota(tmp_path: Path) -> None:

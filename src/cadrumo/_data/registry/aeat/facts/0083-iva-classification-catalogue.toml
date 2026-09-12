@@ -27,6 +27,7 @@ entries = [
   { key = "rate_categories.super_reduced", value = "domestic_super_reduced" },
   { key = "rate_categories.zero", value = "domestic_zero" },
   { key = "rate_categories.exempt", value = "domestic_exempt" },
+  { key = "counterparty.export_categories", value = "export_third_country_zero_rated,export_assimilated_zero_rated" },
   { key = "rate_territories", value = "es_mainland,es_canarias,es_ceuta_melilla" },
   { key = "rule.R01_construction_reverse_charge.priority", value = "1" },
   { key = "rule.R01_construction_reverse_charge.predicate", value = "issuer=es_mainland;customer=es_mainland;status=b2b_or_public;kind=construction_reverse_charge" },

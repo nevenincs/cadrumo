@@ -27,7 +27,7 @@ bindings = []
 export_layouts = []
 extraction_profiles = []
 verification_expectations = []
-workbook_parity_refs = ["modelo-721-dr-2023"]
+workbook_parity_refs = ["modelo-721-dr"]
 live_cross_references = []
 application_links = [
     "modelo-721-portal",

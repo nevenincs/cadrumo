@@ -1,5 +1,5 @@
 [[revisions."2021".parameters]]
-id = "renta-2021-minimo-descendientes-segundo-hijo-2021"
+id = "renta-minimo-descendientes-segundo-hijo"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-58"]

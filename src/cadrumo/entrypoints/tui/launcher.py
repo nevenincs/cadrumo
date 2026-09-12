@@ -171,6 +171,9 @@ def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSub
 
     async def submit(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
         from ...application.ledger.actions_manual import update_manual_transaction_fields
+        from ..ledger_action_composition import compose_ledger_action_ports
+
+        ports = compose_ledger_action_ports(bucket_id=profile_id)
 
         return update_manual_transaction_fields(
             bucket_id=profile_id,
@@ -178,6 +181,7 @@ def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSub
             patch=submission.patch,
             actor="operator",
             source_command=str(submission.action.action_id),
+            ports=ports,
         )
 
     return submit
@@ -196,7 +200,10 @@ def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
 
     async def submit(submission: LedgerLinkSubmissionV1) -> LedgerLinkResultV1:
         from ...application.ledger.actions_manual import link_manual_transaction_invoice
+        from ..ledger_action_composition import compose_ledger_action_ports
         from .ledger.models import LedgerLinkResultV1 as _LedgerLinkResultV1
+
+        ports = compose_ledger_action_ports(bucket_id=profile_id)
 
         result = link_manual_transaction_invoice(
             bucket_id=profile_id,
@@ -204,6 +211,7 @@ def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
             invoice_id=submission.invoice_id,
             actor="operator",
             source_command=str(submission.action.action_id),
+            ports=ports,
         )
         return _LedgerLinkResultV1(transaction_id=result.transaction_id, invoice_id=result.invoice_id)
 

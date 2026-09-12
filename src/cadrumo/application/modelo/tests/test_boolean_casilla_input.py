@@ -24,6 +24,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from .._registry_helpers import validate_casilla_input_ids
 
@@ -58,10 +59,10 @@ def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> 
         date_context={"filing_year_end": date(_YEAR, 12, 31)},
         binding_values={binding.id: Decimal(0) for binding in revision.bindings},
         enum_binding_values={
-            "renta-2024-profile-tax-residence-ccaa": "madrid",
-            "renta-2024-rental-reduccion-art-23-2-tier": "tier-50",
+            "renta-profile-tax-residence-ccaa": "madrid",
+            "renta-rental-reduccion-art-23-2-tier": "tier-50",
         },
-        relation_values={relation.id: Decimal(0) for relation in revision.relations},
+        relation_values={binding.id: Decimal(0) for binding, _ in relation_prefill_bindings_for_period(revision)},
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
         text_inputs={},
     )

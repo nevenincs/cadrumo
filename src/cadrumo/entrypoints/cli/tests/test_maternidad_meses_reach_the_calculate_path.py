@@ -74,8 +74,8 @@ _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
     "--binding", "renta-modelo-111-retenciones-periodicas=0",
     "--binding", "renta-modelo-123-retenciones-periodicas=0",
     "--binding", "renta-modelo-193-retenciones-anuales=0",
-    "--binding", "renta-2024-modelo-130-pagos-fraccionados=0",
-    "--binding", "renta-2024-modelo-131-pagos-fraccionados=0",
+    "--binding", "renta-modelo-130-pagos-fraccionados=0",
+    "--binding", "renta-modelo-131-pagos-fraccionados=0",
     "--binding", "renta-profile-family-minor-children-in-unit=0",
     "--binding", "renta-profile-guarderia-gastos-reales=0",
     "--binding", "renta-profile-cotizaciones-ss-madre=0",
@@ -276,7 +276,7 @@ def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRun
 
     assert exit_code == 0, output
     observation = _casilla_0611_observation(output)
-    assert observation["formula_id"] == "renta-2024-deduccion-maternidad-0611"
+    assert observation["formula_id"] == "renta-deduccion-maternidad-0611"
     assert observation["legal_refs"] == ["ley-35-2006:art-81"]
     source_refs = observation["source_refs"]
     assert isinstance(source_refs, list)

@@ -239,7 +239,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
-            "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
+            "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             # Estado-share porcentaje for IS cuota; 100 means full estado share
@@ -253,7 +253,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
-            "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
+            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -579,7 +579,7 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
 ) -> None:
     """An enum-channel ``--binding`` carries its non-numeric value verbatim.
 
-    ``modelo-200-2024-profile-legal-entity-form`` is consumed by a dispatch op
+    ``modelo-200-profile-legal-entity-form`` is consumed by a dispatch op
     as a string enum key, so its ``--binding`` override is a string (``sl``).
     The hardened router classifies it by the declared enum channel (not by
     parse failure), so a non-numeric enum value is accepted and the calculate
@@ -612,14 +612,14 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200014:00547=0.00",
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
-            "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
+            "--binding", "modelo-200-profile-legal-entity-form=sl",
             "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
             "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
-            "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
+            "--relation", "modelo-200-pagos-fraccionados-anuales=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output

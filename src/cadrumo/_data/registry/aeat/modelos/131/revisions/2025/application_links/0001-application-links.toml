@@ -1,61 +1,61 @@
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-calculation"
+id = "modelo-131-calculation"
 surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-filing"
+id = "modelo-131-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-export"
+id = "modelo-131-export"
 surface = "export"
 consumer = "cadrumo.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-extractor"
+id = "modelo-131-extractor"
 surface = "extractor"
 consumer = "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-review"
+id = "modelo-131-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-approval"
+id = "modelo-131-approval"
 surface = "approval"
 consumer = "cadrumo.application.workflow.approval"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-reconciliation"
+id = "modelo-131-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2025", "aeat-modelo-131-instructions"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-filed-declarations-observation"
+id = "modelo-131-filed-declarations-observation"
 surface = "portal"
 consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 [[revisions."2025".application_links]]
-id = "modelo-131-2025-workflow"
+id = "modelo-131-workflow"
 surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true

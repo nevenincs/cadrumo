@@ -41,6 +41,9 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
+if TYPE_CHECKING:
+    from .iva_remote_state_ports import IvaRemoteStatePort
+
 from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.outbound.aeat.sede.declarations import (
@@ -54,7 +57,6 @@ from ...adapters.outbound.aeat.sede.declarations_capture import (
     capture_relation_source_observations,
 )
 from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
@@ -101,6 +103,7 @@ from .filed_observation_persistence import (
     filed_observation_identity_key,
     import_complete_filed_observation_baseline,
 )
+from .filed_observation_ports import FiledObservationPersistencePorts
 from .remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
@@ -475,7 +478,7 @@ class _CaptureAccumulator:
         self,
         observation: FiledDeclaracionObservation,
         *,
-        store: FiledDeclaracionObservationStore,
+        ports: FiledObservationPersistencePorts,
         bucket_id: str,
         output_root: Path,
         dry_run: bool = False,
@@ -506,7 +509,7 @@ class _CaptureAccumulator:
             # Everything past this point writes. The divergence read above is
             # the preview's whole answer and it has already happened.
             return
-        manifest_path = store.persist_observation(observation)
+        manifest_path = ports.observation_persistence.persist_observation(observation)
         self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
         self.artefact_refs.extend(
             storage_ref
@@ -514,7 +517,7 @@ class _CaptureAccumulator:
             for storage_ref in (artefact.storage_ref,)
             if storage_ref is not None
         )
-        enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        enrollment = enroll_filed_justificante_evidence(observation, ports=ports, bucket_id=bucket_id)
         self.justificante_csvs.extend(enrollment.justificante_csvs)
         self.justificante_csvs_by_observation[filed_observation_identity_key(observation)] = (
             enrollment.justificante_csvs
@@ -532,6 +535,7 @@ class _CaptureAccumulator:
             observation,
             bucket_id=bucket_id,
             justificante_csvs=enrollment.justificante_csvs,
+            ports=ports,
         )
         if imported_baseline is not None:
             self.filing_record_ids.append(imported_baseline.filing_record_id)
@@ -668,6 +672,7 @@ async def capture_filed_data(
     modelo: str,
     year: int,
     output_root: Path,
+    ports: FiledObservationPersistencePorts,
     period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
@@ -681,7 +686,6 @@ async def capture_filed_data(
     """
     session, settings = await active_verified_session()
     walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
-    store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     bucket_id = require_active_bucket_id()
 
@@ -707,14 +711,15 @@ async def capture_filed_data(
         for declaration in selected:
             observation = await register.capture_observation(
                 declaration,
-                artefact_sink=store.persist_artefact,
+                artefact_sink=ports.observation_persistence.persist_artefact,
             )
-            accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
+            accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
 
     finalization = finalize_filed_capture(
         tuple(accumulator.observations_for_calculation),
         justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.FAIL_FAST,
+        ports=ports,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
 
@@ -753,7 +758,7 @@ async def _absorb_declarations(
     *,
     opened_register: DeclaracionesRegisterSession,
     accumulator: _CaptureAccumulator,
-    store: FiledDeclaracionObservationStore,
+    ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
     dry_run: bool,
@@ -781,7 +786,7 @@ async def _absorb_declarations(
         try:
             observation = await opened_register.capture_observation(
                 declaration,
-                artefact_sink=None if dry_run else store.persist_artefact,
+                artefact_sink=None if dry_run else ports.observation_persistence.persist_artefact,
             )
         except Exception as exc:
             failures.append(
@@ -796,7 +801,7 @@ async def _absorb_declarations(
         else:
             accumulator.absorb(
                 observation,
-                store=store,
+                ports=ports,
                 bucket_id=bucket_id,
                 output_root=output_root,
                 dry_run=dry_run,
@@ -875,7 +880,7 @@ async def _capture_filed_data_query_pair(
     opened_register: DeclaracionesRegisterSession,
     walk_timeout_ms: int,
     accumulator: _CaptureAccumulator,
-    store: FiledDeclaracionObservationStore,
+    ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
     limit: int | None,
@@ -922,7 +927,7 @@ async def _capture_filed_data_query_pair(
         within_limit,
         opened_register=opened_register,
         accumulator=accumulator,
-        store=store,
+        ports=ports,
         bucket_id=bucket_id,
         output_root=output_root,
         dry_run=dry_run,
@@ -939,7 +944,7 @@ async def _capture_filed_data_query_pairs(
     *,
     register: DeclaracionesRegisterSession | None,
     accumulator: _CaptureAccumulator,
-    store: FiledDeclaracionObservationStore,
+    ports: FiledObservationPersistencePorts,
     bucket_id: str,
     output_root: Path,
     limit: int | None,
@@ -965,7 +970,7 @@ async def _capture_filed_data_query_pairs(
                 opened_register=opened_register,
                 walk_timeout_ms=walk_timeout_ms,
                 accumulator=accumulator,
-                store=store,
+                ports=ports,
                 bucket_id=bucket_id,
                 output_root=output_root,
                 limit=limit,
@@ -1016,12 +1021,14 @@ def _persisted_bulk_filed_capture_report(
     failures: list[FiledDataCaptureFailureRow],
     bucket_id: str,
     sync_run_repository: SyncRunRecordRepositoryProtocol,
+    ports: FiledObservationPersistencePorts,
 ) -> BulkFiledDataCaptureReport:
     """Finalize persisted observations, then record the completed sweep provenance."""
     finalization = finalize_filed_capture(
         tuple(accumulator.observations_for_calculation),
         justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+        ports=ports,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
     failures.extend(finalization.failures)
@@ -1099,6 +1106,7 @@ async def capture_filed_data_bulk(
     year_from: int,
     year_to: int,
     output_root: Path,
+    ports: FiledObservationPersistencePorts,
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
     register: DeclaracionesRegisterSession | None = None,
@@ -1117,6 +1125,7 @@ async def capture_filed_data_bulk(
         year_from: First filing year to query.
         year_to: Last filing year to query.
         output_root: Root the captured observations and artefacts persist under.
+        ports: Composed filed-observation persistence and transformation ports.
         modelos: Modelo codes to walk; every registry modelo when omitted.
         limit: Cap on captured observations; unbounded when omitted.
         register: An already-open register to walk instead of resolving a session,
@@ -1140,7 +1149,6 @@ async def capture_filed_data_bulk(
         )
 
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in bundled_authority().modelos)
-    store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
     pair_total = await _announce_bulk_capture_plan(
@@ -1167,7 +1175,7 @@ async def capture_filed_data_bulk(
         query_pairs,
         register=register,
         accumulator=accumulator,
-        store=store,
+        ports=ports,
         bucket_id=bucket_id,
         output_root=output_root,
         limit=limit,
@@ -1203,6 +1211,7 @@ async def capture_filed_data_bulk(
         failures=failures,
         bucket_id=bucket_id,
         sync_run_repository=sync_run_repository,
+        ports=ports,
     )
 
 
@@ -1212,6 +1221,7 @@ async def capture_source_filed_data(
     year: int,
     period: Period,
     output_root: Path,
+    ports: FiledObservationPersistencePorts,
 ) -> SourceFiledDataCaptureReport:
     """Capture source observations and return a :class:`SourceFiledDataCaptureReport`.
 
@@ -1229,7 +1239,6 @@ async def capture_source_filed_data(
         )
         .revision
     )
-    store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
@@ -1243,7 +1252,7 @@ async def capture_source_filed_data(
                 period=period,
                 settings=settings,
                 playwright=playwright,
-                artefact_sink=store.persist_artefact,
+                artefact_sink=ports.observation_persistence.persist_artefact,
             )
         ) + (
             await capture_relation_source_observations(
@@ -1253,7 +1262,7 @@ async def capture_source_filed_data(
                 period=period,
                 settings=settings,
                 playwright=playwright,
-                artefact_sink=store.persist_artefact,
+                artefact_sink=ports.observation_persistence.persist_artefact,
             )
         )
     for observation in observations:
@@ -1266,12 +1275,13 @@ async def capture_source_filed_data(
         if key in seen:
             continue
         seen.add(key)
-        accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
+        accumulator.absorb(observation, ports=ports, bucket_id=bucket_id, output_root=output_root)
 
     finalization = finalize_filed_capture(
         tuple(accumulator.observations_for_calculation),
         justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.FAIL_FAST,
+        ports=ports,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
 
@@ -1992,6 +2002,7 @@ async def _capture_discovered_filed_history(
     walk_pairs: Sequence[tuple[str, int]],
     *,
     output_root: Path,
+    ports: FiledObservationPersistencePorts,
     limit: int | None,
     dry_run: bool,
     register: DeclaracionesRegisterSession | None,
@@ -2005,6 +2016,7 @@ async def _capture_discovered_filed_history(
         year_from=min(years),
         year_to=max(years),
         output_root=output_root,
+        ports=ports,
         modelos=modelos,
         limit=limit,
         register=register,
@@ -2024,6 +2036,7 @@ class _FiledHistoryIvaWalletStage:
 
 async def _capture_filed_history_iva_wallet(
     *,
+    iva_remote_state_port: IvaRemoteStatePort,
     resolved_today: date,
     output_root: Path,
     events: OperationEventEmitter | None = None,
@@ -2033,6 +2046,7 @@ async def _capture_filed_history_iva_wallet(
         from .iva_remote_state import capture_iva_compensation_wallet
 
         wallet = await capture_iva_compensation_wallet(
+            ports=iva_remote_state_port,
             target_year=resolved_today.year,
             target_period=Period.from_year_and_code(resolved_today.year, "1T"),
             output_root=output_root,
@@ -2083,6 +2097,8 @@ async def _capture_filed_history_notifications(
 
 async def pull_filed_history(
     *,
+    iva_remote_state_port: IvaRemoteStatePort,
+    ports: FiledObservationPersistencePorts,
     output_root: Path,
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
@@ -2109,7 +2125,9 @@ async def pull_filed_history(
     failure would waste a long authenticated sweep.
 
     Args:
+        iva_remote_state_port: Composed IVA wallet acquisition and persistence port.
         output_root: Root the capture writes its encrypted stores under.
+        ports: Composed filed-observation persistence and transformation ports.
         profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
             discovery signal. ``None`` yields a run with no taxpayer-specific
             denominator, reported as such.
@@ -2152,6 +2170,7 @@ async def pull_filed_history(
     capture = await _capture_discovered_filed_history(
         walk_pairs,
         output_root=output_root,
+        ports=ports,
         limit=limit,
         dry_run=dry_run,
         register=register,
@@ -2166,6 +2185,7 @@ async def pull_filed_history(
         if profile is not None:
             await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_IVA_WALLET)
             iva_wallet = await _capture_filed_history_iva_wallet(
+                iva_remote_state_port=iva_remote_state_port,
                 resolved_today=resolved_today,
                 output_root=output_root,
                 events=events,

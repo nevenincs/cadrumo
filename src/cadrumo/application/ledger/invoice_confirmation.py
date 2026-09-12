@@ -102,6 +102,7 @@ from .evidence_draft import (
 )
 from .evidence_reference import find_bytes_bearing_evidence_record, refuse_reference_without_document_bytes
 from .invoice_draft_extraction import extract_invoice_draft_from_evidence
+from .invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from .invoice_draft_records import DraftDiscrepancyFinding, FieldProvenance, InvoiceDraft
 
 if TYPE_CHECKING:
@@ -493,6 +494,7 @@ def _prepare_invoice_confirmation(
     retention_rate: Decimal | None,
     retention_amount: Decimal | None,
     recargo_amount: Decimal | None,
+    extraction_ports: InvoiceDraftExtractionPorts,
 ) -> _InvoiceConfirmationPreparation:
     """Extract, gate, and resolve the document-side confirmation authorities."""
     from .confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
@@ -507,6 +509,7 @@ def _prepare_invoice_confirmation(
         evidence_id=evidence_id,
         attachment_id=attachment_id,
         settings=resolved_settings,
+        ports=extraction_ports,
     )
     # A contradiction is a normal blocker, so it must be stamped before the gate.
     draft = _with_direction_contradiction(draft, kind=kind)
@@ -788,6 +791,7 @@ def confirm_invoice_draft_from_evidence(
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
+    extraction_ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceConfirmationResult:
     """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
 
@@ -920,6 +924,7 @@ def confirm_invoice_draft_from_evidence(
         retention_rate=retention_rate,
         retention_amount=retention_amount,
         recargo_amount=recargo_amount,
+        extraction_ports=extraction_ports,
     )
     candidate = _build_confirmed_invoice_candidate(
         bucket_id=bucket_id,

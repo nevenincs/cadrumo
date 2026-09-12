@@ -847,6 +847,7 @@ def overview_pipeline(
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.verification_report import VerificationReport
     from ._ledger_payloads import LedgerStatusResult
+    from ..ledger_action_composition import compose_ledger_action_ports
 
     current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
@@ -858,7 +859,7 @@ def overview_pipeline(
     ledger_report = summarize_manual_transactions(
         bucket_id=bucket_id,
         period=canonical_period,
-        transaction_repository=transaction_repository,
+        ports=compose_ledger_action_ports(bucket_id=bucket_id),
     )
 
     all_work_units = list_work_units(

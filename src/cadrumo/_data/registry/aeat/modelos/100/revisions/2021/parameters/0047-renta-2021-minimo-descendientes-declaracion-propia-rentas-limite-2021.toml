@@ -5,7 +5,7 @@
 # descendant's OWN filing, not their income alone.
 
 [[revisions."2021".parameters]]
-id = "renta-2021-minimo-descendientes-declaracion-propia-rentas-limite-2021"
+id = "renta-minimo-descendientes-declaracion-propia-rentas-limite"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]

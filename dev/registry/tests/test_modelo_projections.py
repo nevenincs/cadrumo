@@ -54,14 +54,14 @@ def test_query_contract_names_exact_modelo_parameter_coordinates() -> None:
         effective_date=date(2025, 12, 31),
         selectors=(
             FactSelector(name="modelo", value="100"),
-            FactSelector(name="parameter_id", value="renta-2025-maternidad-cap-anual"),
+            FactSelector(name="parameter_id", value="renta-maternidad-cap-anual"),
         ),
     )
 
     assert query.fact_id == "renta.maternity.annual-cap"
     assert {(selector.name, selector.value) for selector in query.selectors} == {
         ("modelo", "100"),
-        ("parameter_id", "renta-2025-maternidad-cap-anual"),
+        ("parameter_id", "renta-maternidad-cap-anual"),
     }
 
 
@@ -101,10 +101,10 @@ def test_identical_parameter_copies_across_revisions_project_once() -> None:
 
 def _modelo_100() -> ModeloDefinition:
     parameters = (
-        _parameter("renta-2025-maternidad-mensual", "100", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
-        _parameter("renta-2025-maternidad-cap-anual", "1200", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+        _parameter("renta-maternidad-mensual", "100", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
+        _parameter("renta-maternidad-cap-anual", "1200", valid_from=date(2025, 1, 1), valid_to=date(2025, 12, 31)),
         _parameter(
-            "renta-2025-maternidad-alta-posterior-incremento",
+            "renta-maternidad-alta-posterior-incremento",
             "150",
             valid_from=date(2025, 1, 1),
             valid_to=date(2025, 12, 31),

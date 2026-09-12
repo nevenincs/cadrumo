@@ -65,7 +65,7 @@ required_text = ["tipo de gravamen"]
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-new-entity-flag"
 provider = { kind = "profile", profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
-value = { data_type = "money", channel = "decimal" }
+value = { data_type = "boolean", channel = "boolean" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
 source_refs = ["aeat-modelo-200-manual-2025"]

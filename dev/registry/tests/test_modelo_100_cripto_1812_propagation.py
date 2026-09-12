@@ -6,7 +6,7 @@ the aggregators 1813/1814 received zero and the entire crypto gain disappeared
 from base imponible del ahorro.
 
 After contract, 1812 is ``input_kind = "computed"`` with formula
-``renta-2024-ganancia-cripto-imputable`` (identity copy from 1811).  The AEAT
+``renta-ganancia-cripto-imputable`` (identity copy from 1811).  The AEAT
 form default is: 1812 equals 1811 unless the taxpayer defers under Art. 14.2.d
 LIRPF (multi-year deferral); that override path is out of scope here.
 
@@ -35,6 +35,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
 from ._modelo_100_registry_support import (
@@ -88,21 +89,20 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
 
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
 def _enum_binding_values_2024() -> dict[BindingId, str]:
-    return {"renta-2024-profile-tax-residence-ccaa": "madrid"}
+    return {"renta-profile-tax-residence-ccaa": "madrid"}
 
 
 def _date_binding_values_2024() -> dict[BindingId, date]:
-    return {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+    return {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 
 
 def _run_2024(snapshot: RegistrySnapshot, valor_1804: Decimal):
@@ -133,7 +133,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
 
     assert result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA] == Decimal("8500.00"), (
         f"casilla 1811 = {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}; expected 8500.00.  "
-        "Formula renta-2024-criptomonedas-ganancia-no-exenta should compute "
+        "Formula renta-criptomonedas-ganancia-no-exenta should compute "
         "1811 = 1804 - 1806 - 1810 = 8500 - 0 - 0."
     )
     assert (
@@ -141,7 +141,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
     ), (
         f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}. "
-        "Formula renta-2024-ganancia-cripto-imputable must copy 1811 to 1812 "
+        "Formula renta-ganancia-cripto-imputable must copy 1811 to 1812 "
         "(regression: before the fix 1812 stayed at 0)."
     )
 
@@ -200,7 +200,7 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
@@ -222,23 +222,22 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
 def _relation_values_2025() -> dict[RelationId, Decimal]:
     # All retenciones/pagos relations zero — no retenciones scenario.
     return {
-        "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-        "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-        "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-        "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-        "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-        "renta-2025-rel-184-atribucion-actividades-economicas": Decimal("0"),
-        "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
-        "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-modelo-190-retenciones-anuales": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
     }
 
 
 def _enum_binding_values_2025() -> dict[BindingId, str]:
-    return {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+    return {"renta-profile-tax-residence-ccaa": "madrid"}
 
 
 def _date_binding_values_2025() -> dict[BindingId, date]:
-    return {"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)}
+    return {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 
 
 def _run_2025(snapshot: RegistrySnapshot, valor_1804: Decimal):
@@ -262,7 +261,7 @@ def test_2025_1812_identity_copy_standard_gain(m100_2025_snapshot: RegistrySnaps
     ), (
         f"2025: casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r} (= 1811).  "
-        "Formula renta-2025-ganancia-cripto-imputable must copy 1811 to 1812."
+        "Formula renta-ganancia-cripto-imputable must copy 1811 to 1812."
     )
 
 
@@ -295,7 +294,8 @@ def _run_prior_year(snapshot: RegistrySnapshot, filing_year: int, valor_1804: De
     typed_ids = set(enum_binding_values) | set(date_binding_values)
     binding_values = {b.id: Decimal("0") for b in revision.bindings if b.id not in typed_ids}
     relation_values = {
-        r.id: Decimal("0") for r in revision.relations if not r.target_periods or snapshot.period in r.target_periods
+        binding.id: Decimal("0")
+        for binding, _provider in relation_prefill_bindings_for_period(revision, period=snapshot.period)
     }
     return calculate_registry_snapshot(
         snapshot,

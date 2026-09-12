@@ -1,18 +1,10 @@
-"""Registry-backed loaders for RIRPF/LIRPF retención rate facts.
+"""Registry-backed loaders for withholding parameter facts.
 
-Two independent rate families live here, one per module. RD 439/2007 (RIRPF)
-art. 95 fixes rates for rendimientos de actividades económicas — 15 % general
-and 7 % inicio-de-actividades for actividades profesionales (apartado 1), plus
-the sectoral 2 % agrícola/ganadera plus its 1 % engorde de porcino y avicultura
-carve-out (apartado 4), 2 % forestal (apartado 5) and 1 % estimación objetiva
-(apartado 6.1.º). LIRPF art. 101.2, developed by RIRPF art. 80.1.3.º, fixes the
-administrador/consejero rate: 35 % general, dropping to 19 % when the paying
-entity's importe neto de la cifra de negocios is below 100.000 euros. Both are
-regulatory values, so the rates this module consumes live in source-cited
+The rate families and their legal applicability are authored in source-cited
 governed-fact fragments under ``registry/aeat/facts``. Python consumers read
-them from here rather than from a bare ``Decimal(...)`` literal, where neither
-the figure nor its legal basis was auditable. Separate, unprojected legal
-declarations remain only for consumers that have not yet migrated.
+the selected values from the validated authority rather than restating a
+figure, category, or legal rule in this adapter. Separate legal declarations
+remain only for consumers that have not yet migrated.
 
 The loaders resolve typed scalar facts through ``ValidatedRegistryAuthority``
 at an explicit filing-period coordinate, then project only the values needed
@@ -20,15 +12,11 @@ by their frozen pydantic records. The authority owns validation, fingerprinting
 and lifecycle identity; this module keeps neither a legacy parser nor
 a local value cache.
 
-What the art. 95 rates are *for*: :attr:`RirpfArt95RetencionRates.general_rate`
-is the upper bound on a **bounded inference**, not a rate the system ever
-applies. A retención is declared by the operator or inferred as invoice gross
-minus cash and then capped; no path may invert a rate to reconstruct a base
-from cash, because selecting the applicable rate for a row is a per-row legal
-fact the system cannot determine. The administrador rates, by contrast, ARE
-applied directly: an administrador/consejero row's withheld amount is compared
-against ``base * general_rate`` and ``base * reduced_rate`` to confirm it
-matches one of the two statutory figures.
+The activity-rate projection supplies a governed upper bound for bounded
+inference, while the administrator projection supplies the selected rate and
+turnover condition for an advisory comparison. This module performs only
+authority resolution, typed projection, and generic numeric validation; it
+does not choose a legal category for a transaction.
 
 See Also:
     :mod:`domain.iva.components`
@@ -54,28 +42,13 @@ if TYPE_CHECKING:
 
 
 class RirpfArt95RetencionRates(BaseModel):
-    """Frozen record of the RIRPF art. 95 retención rates.
+    """Frozen projection of the authority's activity withholding rates.
 
     Attributes:
-        general_rate: 15 % applied to the ingresos íntegros satisfechos when
-            the rendimiento is the contraprestación of an actividad
-            profesional (RIRPF art. 95.1, first paragraph).
-        inicio_actividad_rate: 7 % applied in the período impositivo of inicio
-            de actividades profesionales and the two following, provided no
-            professional activity was carried on in the preceding year
-            (RIRPF art. 95.1, second paragraph).
-        agricola_ganadera_rate: 2 % applied to rendimientos of an actividad
-            agrícola o ganadera in the general case (RIRPF art. 95.4.2.º).
-        ganadera_engorde_rate: 1 % applied to actividades ganaderas de engorde
-            de porcino y avicultura — an express carve-out from the 2 % above,
-            not a separate regime (RIRPF art. 95.4.1.º).
-        forestal_rate: 2 % applied to rendimientos of an actividad forestal
-            (RIRPF art. 95.5). Equal in value to
-            :attr:`agricola_ganadera_rate` but fixed by a different apartado,
-            so it is carried as its own field rather than aliased.
-        estimacion_objetiva_rate: 1 % applied when the rendimiento neto is
-            determined under estimación objetiva for one of the IAE
-            groups/epígrafes listed in art. 95.6.2.º (RIRPF art. 95.6.1.º).
+        Each field is a named projection of one registry-declared activity
+        withholding family. The field names preserve the consumer contract;
+        the selected values, legal references, and applicability remain in
+        the registry authority.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -95,7 +68,7 @@ _GANADERA_ENGORDE_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-gana
 _FORESTAL_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-forestales"
 _ESTIMACION_OBJETIVA_FACT_ID: Final[str] = "rirpf-art-95:retencion-actividades-estimacion-objetiva"
 
-#: Every art. 95 fact this module resolves, in apartado order.
+#: Every activity-withholding fact this module resolves, in authority order.
 #:
 #: Declared once so the rate loader and the grounding lookup below cannot drift:
 #: a fact added to one and not the other would produce a rate set whose
@@ -187,7 +160,7 @@ def load_retencion_actividades_rates(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> RirpfArt95RetencionRates:
-    """Return the RIRPF art. 95 retención rates from the registry catalogue.
+    """Return the authority-selected activity withholding rates.
 
     Returns:
         A :class:`RirpfArt95RetencionRates` record with every rate value.
@@ -213,7 +186,7 @@ def rirpf_art95_retencion_legal_refs(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
-    """Return the registry legal references grounding the art. 95 rate set.
+    """Return legal references grounding the selected activity-rate set.
 
     Read off the facts this module already resolves rather than restated
     here, which is the whole point: an advisory that names an article from a
@@ -233,17 +206,15 @@ def rirpf_art95_retencion_legal_refs(
 
 
 def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
-    """Return every distinct retención rate RIRPF art. 95 fixes.
+    """Return every distinct authority-declared activity withholding rate.
 
-    The DISTINCT values, not one per apartado: art. 95.4.2.º and art. 95.5 both
-    fix 2 %, and art. 95.4.1.º and art. 95.6.1.º both fix 1 %, so the six
-    declared facts collapse to four figures. Callers that ask "is this
-    amount a statutory rate product?" want the value set; callers that need to
-    know WHICH apartado applies to a given row must read the named field
-    instead, because that is a per-row legal determination this set discards.
+    Distinct values are returned because callers use this surface only for
+    arithmetic matching. A consumer that needs the governing category must
+    resolve the named registry fact instead; this set deliberately discards
+    that legal selection.
 
     Returns:
-        The distinct art. 95 rates, currently 15 %, 7 %, 2 % and 1 %.
+        The distinct rates selected by the registry for the date.
     """
     rates = load_retencion_actividades_rates(effective_date=effective_date)
     return frozenset(
@@ -259,27 +230,24 @@ def statutory_activity_retencion_rates(*, effective_date: date) -> frozenset[Dec
 
 
 def professional_activity_retencion_rates(*, effective_date: date) -> frozenset[Decimal]:
-    """Return the art. 95.1 rates, those an actividad PROFESIONAL retains at.
+    """Return the authority-declared professional-classified rates.
 
-    Split out from the sectoral figures because a match on one of these is a
-    materially stronger claim than a match on 1 % or 2 %: 15 % and 7 % are large
-    enough that a fee or rounding gap does not land on them by accident, while
-    the sectoral rates are small enough that one routinely does.
+    This projection is separate because consumers assign different confidence
+    to a match by registry classification. The classification itself remains
+    registry-owned.
 
     Returns:
-        The art. 95.1 general and inicio-de-actividades rates.
+        The registry-declared professional rate subset.
     """
     rates = load_retencion_actividades_rates(effective_date=effective_date)
     return frozenset({rates.general_rate, rates.inicio_actividad_rate})
 
 
 def maximum_supported_activity_retencion_rate(*, effective_date: date) -> Decimal:
-    """Return the upper bound the withheld-amount inference is capped at.
+    """Return the authority-selected upper bound for amount inference.
 
-    The bound is the RIRPF art. 95.1 general rate: an inferred retención above
-    15 % of the taxable base is evidence that the recorded cash figure is the
-    invoice base without IVA rather than a net-of-retención payment, so the
-    inference is refused instead of persisting a fabricated withholding.
+    The inference refuses a result above the selected authority bound rather
+    than persisting a fabricated withholding.
 
     Returns:
         The maximum retención rate the activity inference will accept.
@@ -288,20 +256,13 @@ def maximum_supported_activity_retencion_rate(*, effective_date: date) -> Decima
 
 
 class AdministradorRetencionRates(BaseModel):
-    """Frozen record of the LIRPF art. 101.2 administrador/consejero rates.
+    """Frozen projection of authority-selected administrator withholding data.
 
     Attributes:
-        general_rate: 35 % fixed rate on rendimientos del trabajo perceived by
-            administradores y miembros de consejos de administración, de las
-            juntas que hagan sus veces, y demás miembros de otros órganos
-            representativos (LIRPF art. 101.2 primer inciso; RIRPF art.
-            80.1.3.º primer párrafo).
-        reduced_rate: 19 % rate that replaces :attr:`general_rate` when the
-            paying entity's importe neto de la cifra de negocios is below
-            :attr:`reduced_incn_threshold_eur` (LIRPF art. 101.2 segundo
-            inciso; RIRPF art. 80.1.3.º segundo párrafo).
-        reduced_incn_threshold_eur: The INCN ceiling, in euros, strictly below
-            which :attr:`reduced_rate` applies instead of :attr:`general_rate`.
+        ``general_rate`` and ``reduced_rate`` are authority-selected rate
+        projections; ``reduced_incn_threshold_eur`` is the selected turnover
+        condition. Their values and legal applicability remain in registry
+        facts.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -330,7 +291,7 @@ def load_administrador_retencion_rates(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> AdministradorRetencionRates:
-    """Return the LIRPF art. 101.2 administrador retención rates from the registry.
+    """Return authority-selected administrator withholding data.
 
     Returns:
         An :class:`AdministradorRetencionRates` record with every rate value.
@@ -358,7 +319,7 @@ def administrador_retencion_legal_refs(
     effective_date: date,
     authority: ValidatedRegistryAuthority | None = None,
 ) -> tuple[str, ...]:
-    """Return the registry legal references grounding the administrador rate set.
+    """Return legal references grounding the administrator-rate set.
 
     Read off the facts this module already resolves rather than restated
     here, for the same reason :func:`rirpf_art95_retencion_legal_refs` states:

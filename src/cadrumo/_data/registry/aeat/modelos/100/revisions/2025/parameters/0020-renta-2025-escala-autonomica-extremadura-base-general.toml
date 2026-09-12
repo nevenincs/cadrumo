@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-escala-autonomica-extremadura-base-general"
+id = "renta-escala-autonomica-extremadura-base-general"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

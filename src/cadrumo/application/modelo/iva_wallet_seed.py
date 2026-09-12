@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
@@ -145,7 +146,7 @@ class ModeloIvaWalletOverrideFreshWalletError(ModeloIvaWalletSeedError):
 
 def _require_non_negative_wallet_amount(amount: Decimal) -> None:
     """Refuse a negative opening, correction, or operator-override amount."""
-    if amount < Decimal("0"):
+    if amount < ZERO:
         raise ModeloIvaWalletSeedNegativeAmountError(
             translated_message="application.modelo.iva_wallet.seed_negative_amount",
             context={"amount": str(amount)},

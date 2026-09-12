@@ -1,5 +1,5 @@
 [[revisions."2020".parameters]]
-id = "renta-2020-minimo-discapacidad-grado-33-2020"
+id = "renta-minimo-discapacidad-grado-33"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-60"]

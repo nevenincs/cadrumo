@@ -113,14 +113,14 @@ def test_registry_formula_runtime_rejects_unknown_binding_values(
 def test_registry_formula_runtime_rejects_unknown_relation_values(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
-    with pytest.raises(RegistryValidationError, match="unknown registry relation ids"):
+    with pytest.raises(RegistryValidationError, match="unknown registry binding ids"):
         calculate_registry_snapshot(
             committed_modelo_180_snapshot,
             inputs={},
             date_context={"filing_period": date(2026, 12, 31)},
             relation_values={
-                "modelo-180-rel-115-base-anual": Decimal("550.00"),
-                "modelo-180-rel-115-retenciones-anual": Decimal("114.00"),
+                "modelo-180-115-base-anual": Decimal("550.00"),
+                "modelo-180-115-retenciones-anual": Decimal("114.00"),
                 "unknown-relation": Decimal("1"),
             },
         )
@@ -136,7 +136,7 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
             snapshot,
             inputs={},
             date_context={"filing_period": date(2026, 4, 20)},
-            relation_values={"modelo-180-rel-115-base-anual": Decimal("1")},
+            relation_values={"modelo-180-115-base-anual": Decimal("1")},
         )
 
 

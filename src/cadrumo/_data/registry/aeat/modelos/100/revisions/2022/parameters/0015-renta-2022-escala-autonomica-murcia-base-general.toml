@@ -15,7 +15,7 @@
 # FAITHFUL TO SOURCE en test_bracket_accumulated_cuota_continuity.py y las dos
 # pruebas que fijan el valor contra el manual empaquetado.
 [[revisions."2022".parameters]]
-id = "renta-2022-escala-autonomica-murcia-base-general"
+id = "renta-escala-autonomica-murcia-base-general"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

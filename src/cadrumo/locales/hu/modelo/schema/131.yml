@@ -42,7 +42,7 @@ modelo:
               A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet ugyanazon
               kód alatt csoportosítanak, esetén használja az "a" vagy "b" utótagot
               (pl. "659.4a", "691.9b") a tevékenységnek megfelelően - a pontos hozzárendeléshez
-              tekintse meg az m131-modulos-coeficientes-2024 együttható paramétert.
+              tekintse meg az m131-modulos-coeficientes együttható paramétert.
           irpf-pf-modulos-indice-inicio-actividad:
             help: A Modelo 131 . casilla adóügyi adatai.
             label: Casilla — adóügyi mező
@@ -178,7 +178,7 @@ modelo:
               help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
-            modelo-131-2019-2023-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — adóügyi információ
           field:
@@ -273,13 +273,13 @@ modelo:
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2024
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
               label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2024
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
             modulos-indice-inicio-actividad:
               help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
@@ -347,7 +347,7 @@ modelo:
               help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
-            modelo-131-2024-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — adóügyi információ
           field:
@@ -442,13 +442,13 @@ modelo:
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2024
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
               label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2025
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
             modulos-indice-inicio-actividad:
               help: 'A Modelo 131 . casilla adóügyi adatai: adóügyi információ.'
@@ -516,7 +516,7 @@ modelo:
               help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
-            modelo-131-2025-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — adóügyi információ
           field:
@@ -611,13 +611,13 @@ modelo:
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2024
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
               label: A tevékenység IAE-tételszáma az objektív becslési (modulos) rendszerben.
                 A 659.4 és 691.9 tételszámok, amelyek két különböző tevékenységet
                 ugyanazon kód alatt csoportosítanak, esetén használja az "a" vagy
                 "b" utótagot (pl. "659.4a", "691.9b") a tevékenységnek megfelelően
-                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes-2026
+                - a pontos hozzárendeléshez tekintse meg az m131-modulos-coeficientes
                 együttható paramétert.
             modulos-minoracion-inversion:
               help: A Modelo 131 . casilla adóügyi adatai.
@@ -646,7 +646,7 @@ modelo:
               help: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
               label: Későbbi időszakokra átvihető negatív egyenleg (max. 0, -10. rovat)
           construct:
-            modelo-131-2026-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — adóügyi információ
           field:

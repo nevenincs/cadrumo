@@ -1,5 +1,5 @@
 [[revisions."2023".parameters]]
-id = "renta-2023-minimo-contribuyente-edad-65-74-2023"
+id = "renta-minimo-contribuyente-edad-65-74"
 data_type = "money"
 unit = "EUR"
 legal_refs = ["ley-35-2006:art-57"]

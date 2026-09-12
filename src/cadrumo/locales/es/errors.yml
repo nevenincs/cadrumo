@@ -70,6 +70,12 @@ errors:
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
       no tiene ejercicio de declaración.'
+    binding_channel_ambiguous: Los vínculos {binding_ids} se proporcionaron tanto
+      por el canal booleano como por el canal Decimal.
+    binding_channel_not_boolean: Los vínculos {binding_ids} se proporcionaron por
+      el canal booleano, pero no declaran el contrato de valor booleano.
+    binding_relation_channel_conflict: El vínculo {binding_id} tiene valores incompatibles
+      en los canales de vínculo y de relación.
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
       asignado.

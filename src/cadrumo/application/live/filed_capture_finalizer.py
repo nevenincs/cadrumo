@@ -21,15 +21,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ...adapters.outbound.aeat.sede.declarations_observations import non_numeric_observed_casillas
-from ...adapters.outbound.aeat.sede.errors import SedeParseError
-from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation
-from .errors import LiveApplicationError, LiveApplicationInputError
+from .errors import LiveApplicationError
 from .filed_observation_persistence import (
     justificante_csvs_for_observation,
     persist_filed_calculation_observation,
     select_latest_filed_observations_in_history_order,
 )
+from .filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
 from .remote_state_models import FiledCasillaSkipRow, FiledDataCaptureFailureRow
 from .remote_state_outcomes import bounded_context_text
 
@@ -59,10 +57,11 @@ class FiledCaptureFinalization:
 
 
 def finalize_filed_capture(
-    observations: tuple[FiledDeclaracionObservation, ...],
+    observations: tuple[FiledObservationProtocol, ...],
     *,
     justificante_csvs_by_observation: Mapping[tuple[str, int, str, str], tuple[str, ...]] | None = None,
     policy: FiledCaptureFailurePolicy,
+    ports: FiledObservationPersistencePorts,
 ) -> FiledCaptureFinalization:
     """Persist the latest filed observation per period into calculation history.
 
@@ -78,7 +77,7 @@ def finalize_filed_capture(
     failures: list[FiledDataCaptureFailureRow] = []
     skips: list[FiledCasillaSkipRow] = []
     for observation in select_latest_filed_observations_in_history_order(observations):
-        skips.extend(_filed_casilla_skip_rows(observation))
+        skips.extend(_filed_casilla_skip_rows(observation, ports=ports))
         try:
             keys.append(
                 persist_filed_calculation_observation(
@@ -87,9 +86,10 @@ def finalize_filed_capture(
                         observation,
                         justificante_csvs_by_observation,
                     ),
+                    ports=ports,
                 ),
             )
-        except (LiveApplicationInputError, SedeParseError) as exc:
+        except LiveApplicationError as exc:
             failures.append(_filed_registry_enrollment_failure_row(observation, exc))
     finalization = FiledCaptureFinalization(tuple(keys), tuple(failures), tuple(skips))
     if policy is FiledCaptureFailurePolicy.FAIL_FAST:
@@ -98,7 +98,9 @@ def finalize_filed_capture(
 
 
 def _filed_casilla_skip_rows(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
+    *,
+    ports: FiledObservationPersistencePorts,
 ) -> tuple[FiledCasillaSkipRow, ...]:
     """Project the adapter's skip query onto the report's row shape.
 
@@ -117,12 +119,12 @@ def _filed_casilla_skip_rows(
             value_kind=skip.value_kind.value,
             reason=skip.reason,
         )
-        for skip in non_numeric_observed_casillas(observation)
+        for skip in ports.transformation.non_numeric_casillas(observation)
     )
 
 
 def _filed_registry_enrollment_failure_row(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     error: BaseException,
 ) -> FiledDataCaptureFailureRow:
     return FiledDataCaptureFailureRow(

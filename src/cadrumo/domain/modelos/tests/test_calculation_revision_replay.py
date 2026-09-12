@@ -327,7 +327,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
     from datetime import UTC, datetime
 
     created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
-    replay_id = "renta-2024-rel-130-pagos-fraccionados"
+    replay_id = "renta-modelo-130-pagos-fraccionados"
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
         input_values_by_casilla_id={},

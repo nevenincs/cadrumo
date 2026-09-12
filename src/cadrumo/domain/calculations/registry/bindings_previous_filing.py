@@ -30,6 +30,7 @@ from pydantic import BaseModel, field_validator, model_validator
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -38,10 +39,12 @@ from .binding_temporal import (
     FiledCurrentPeriod,
     FilingYearOffset,
     FilingYearOffsetByTargetPeriod,
+    NonCalculation,
     PriorQuarterExpandingSpan,
     SameFilingYearPeriods,
     SameTargetContext,
     TargetPeriodOffset,
+    TargetPeriods,
     temporal_max_year_delta,
     temporal_period_anchors,
 )
@@ -51,6 +54,7 @@ from .observation_fold import fold_sum_or_copy
 from .relation_dependency import (
     RelationDependencyTreatmentField,
 )
+from .relation_prefill_bindings import RelationPrefillProvider
 from .relations import RegistryFoldRequirement
 from .schema_base import filing_period_from_scope
 
@@ -152,6 +156,75 @@ def _direct_previous_filing_selectors(
         if not is_direct_previous_filing_binding(binding):
             continue
         yield binding, _previous_filing_selector(binding)
+
+
+def periodic_carry_bindings_for_period(
+    revision: ModeloRevision,
+    *,
+    period: str | None = None,
+) -> tuple[tuple[BindingDefinition, tuple[RegistrySelectorPeriodCode, ...]], ...]:
+    """Return the revision's periodic carry bindings with the periods they cover.
+
+    A periodic carry is a binding whose provider names a source modelo and a
+    PERIOD-RELATIVE temporal member -- the target-period offset or the prior-
+    quarter expanding span. Both members state a source window that moves with
+    the target period rather than naming a fixed one, which is what makes the
+    declaration a carry between consecutive filings of a periodic modelo.
+
+    The provider kind is deliberately not part of the test: the same carry may
+    be declared through a ``previous_filing`` provider or through a
+    ``relation_prefill`` one, and a consumer asking which periods a modelo
+    carries between filings must see both.
+
+    The covered periods come from the binding's own ``target_periods``
+    applicability when it declares one. When it does not, they are derived from
+    the revision's filing schedules: a schedule period is covered when the
+    temporal member yields a source anchor for it, so a member that cannot
+    interpret a cadence (the expanding span against a monthly code) simply does
+    not cover it rather than being assumed to.
+    """
+    schedule_periods = tuple(
+        dict.fromkeys(period_code for schedule in revision.filing_schedules for period_code in schedule.periods)
+    )
+    carries: list[tuple[BindingDefinition, tuple[RegistrySelectorPeriodCode, ...]]] = []
+    for binding in revision.bindings:
+        provider = binding.provider
+        if not isinstance(provider, PreviousFilingProvider | RelationPrefillProvider):
+            continue
+        if not isinstance(provider.temporal, TargetPeriodOffset | PriorQuarterExpandingSpan):
+            continue
+        covered = _carry_target_periods(binding, provider, schedule_periods)
+        if not covered or (period is not None and period not in covered):
+            continue
+        carries.append((binding, covered))
+    return tuple(carries)
+
+
+def _carry_target_periods(
+    binding: BindingDefinition,
+    provider: PreviousFilingProvider | RelationPrefillProvider,
+    schedule_periods: tuple[RegistrySelectorPeriodCode, ...],
+) -> tuple[RegistrySelectorPeriodCode, ...]:
+    """Return the target periods one periodic carry binding applies to."""
+    applicability = binding.applicability
+    if isinstance(applicability, NonCalculation):
+        return ()
+    if isinstance(applicability, TargetPeriods):
+        return applicability.periods
+    return tuple(period_code for period_code in schedule_periods if _carry_covers_period(provider, period_code))
+
+
+def _carry_covers_period(
+    provider: PreviousFilingProvider | RelationPrefillProvider,
+    period_code: str,
+) -> bool:
+    """Whether the provider's temporal member yields a source anchor for a period."""
+    try:
+        return bool(provider.required_period_anchors_for_target(period_code))
+    except RegistryValidationError:
+        # The member does not speak this cadence's period grammar, so it names
+        # no source window for it. That is a scope-out, not a missing anchor.
+        return False
 
 
 def _record_previous_filing_requirement(

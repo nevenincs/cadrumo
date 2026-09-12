@@ -1,5 +1,5 @@
 [[revisions."2019-2023".extraction_profiles]]
-id = "modelo-131-2019-2023-submitted-file"
+id = "modelo-131-submitted-file"
 surface = "export_record"
 artefact_kind = "submitted_file"
 accepted_artefact_kinds = ["submitted_file"]

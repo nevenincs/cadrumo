@@ -277,7 +277,7 @@ def test_profile_binding_selectors_resolves_a_real_hydrated_profile_selector() -
     """
     binding = BindingDefinition.model_validate(
         {
-            "id": "renta-2025-profile-tax-residence-ccaa",
+            "id": "renta-profile-tax-residence-ccaa",
             "provider": {
                 "kind": "profile",
                 "profile_model": "TaxResidenceProfile",

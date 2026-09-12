@@ -17,7 +17,7 @@
 # presenter nor the taxpayer. Modelo 390 writes presenter.tax_id at @101+9; that
 # is a known defect and is not copied here.
 [[revisions."2021".export_layouts]]
-id = "modelo-490-2021-fichero-boe"
+id = "modelo-490-fichero-boe"
 format = "fixed_width"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-490-2021"]

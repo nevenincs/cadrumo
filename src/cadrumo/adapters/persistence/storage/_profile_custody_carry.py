@@ -30,7 +30,6 @@ from ....application.ledger.extraction_draft_store import ExtractionDraftDocumen
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
 from ....application.live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
 from ....application.live.expedientes import PersistedExpedientesSnapshot, expedientes_snapshot_object_key
-from ....application.live.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ....application.live.justificante import JustificanteCaptureSnapshot, justificante_capture_snapshot_object_key
 from ....application.live.notifications import PersistedNotificationsSnapshot, notifications_snapshot_object_key
 from ....application.live.verify import VerifyObservation, verify_observation_object_key
@@ -55,6 +54,7 @@ from ...outbound.aeat.sede.observation_store import (
 )
 from ...outbound.aeat.sede.schema import FiledDeclaracionObservation, IvaCompensationWalletObservation
 from ..profile.filing_drafts import ModeloDraftRepository
+from ..profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.submission import SubmissionRepository

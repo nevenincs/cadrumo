@@ -89,7 +89,7 @@ _M100_2024_MATERNIDAD_BINDINGS = {
 # 0500. 57,500 nets to the intended 55,500 EUR base liquidable general.
 _BASE_LIQUIDABLE_GENERAL = Decimal("57500")
 _RETENCIONES_ARRENDAMIENTOS = Decimal("1824")
-_DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 _M100_TRABAJO_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
     "0003",
     surface="_M100_TRABAJO_RENDIMIENTO_NETO_CASILLA",
@@ -153,12 +153,11 @@ _EXPECTED_0670 = _EXPECTED_0610
 _TOLERANCE = Decimal("0.02")
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -199,7 +198,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
 
     contract regression guard: before the fix, 0587 had no formula in the 2024
     revision and defaulted to 0.  After contract the formula
-    ``renta-2024-cuota-liquida-incrementada-total`` computes 0587 = 0585 + 0586.
+    ``renta-cuota-liquida-incrementada-total`` computes 0587 = 0585 + 0586.
 
     Oracle: LIRPF 2024 Art. 63 estatal + Madrid CAM 2024 autonomic escala.
     See module docstring for step-by-step derivation.
@@ -210,7 +209,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
         # chain produces 0500 = 0505 = 55500 (same technique as contract tests).
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -219,7 +218,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
     assert result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA] != Decimal("0"), (
         "casilla 0587 (cuota líquida total) is 0.00; "
         "the formula regression has re-appeared: check "
-        "2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml "
+        "2024/formulas/0169-renta-cuota-liquida-incrementada-total.toml "
         "and 2024/casillas/c0587.toml (input_kind must be 'computed')."
     )
     assert abs(result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA] - _EXPECTED_0587) <= _TOLERANCE, (
@@ -234,9 +233,9 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
 def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: RegistrySnapshot) -> None:
     """After contract, casilla 0609 must aggregate retenciones including 0598.
 
-    The formula ``renta-2024-total-pagos-a-cuenta`` sums 0592-0606.  With only
+    The formula ``renta-total-pagos-a-cuenta`` sums 0592-0606.  With only
     0153 (arrendamientos retenciones) supplied, 0598 = 1,824 (copy formula
-    renta-2024-retenciones-arrendamientos-urbanos) and 0609 = 0598 = 1,824.
+    renta-retenciones-arrendamientos-urbanos) and 0609 = 0598 = 1,824.
 
     Oracle: direct — 0153 is the leaf manual retenciones casilla for
     capital inmobiliario arrendamientos urbanos.
@@ -245,7 +244,7 @@ def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: Regist
         m100_2024_snapshot,
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -254,12 +253,12 @@ def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: Regist
     assert result.values[_M100_RETENCIONES_ARRENDAMIENTOS_URBANOS_CASILLA] == _EXPECTED_0598, (
         f"casilla 0598 = {result.values[_M100_RETENCIONES_ARRENDAMIENTOS_URBANOS_CASILLA]!r}; "
         f"expected {_EXPECTED_0598!r}. "
-        f"Formula renta-2024-retenciones-arrendamientos-urbanos should copy casilla 0153."
+        f"Formula renta-retenciones-arrendamientos-urbanos should copy casilla 0153."
     )
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == _EXPECTED_0609, (
         f"casilla 0609 (total pagos a cuenta) = {result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA]!r}; "
         f"expected {_EXPECTED_0609!r}. "
-        f"Formula renta-2024-total-pagos-a-cuenta sums 0592-0606; "
+        f"Formula renta-total-pagos-a-cuenta sums 0592-0606; "
         f"with only 0598 non-zero the result must equal 0598."
     )
 
@@ -276,7 +275,7 @@ def test_0610_cuota_diferencial_computed(m100_2024_snapshot: RegistrySnapshot) -
         m100_2024_snapshot,
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -303,7 +302,7 @@ def test_0670_resultado_declaracion_computed(m100_2024_snapshot: RegistrySnapsho
         m100_2024_snapshot,
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -328,7 +327,7 @@ def test_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot: Registr
         m100_2024_snapshot,
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -363,7 +362,7 @@ def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Reg
         m100_2024_snapshot,
         inputs=_casilla_inputs(),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -373,7 +372,7 @@ def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Reg
         m100_2024_snapshot,
         inputs=_casilla_inputs(retenciones=_higher_retenciones),
         date_context={"filing_period": date(2024, 12, 31)},
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,

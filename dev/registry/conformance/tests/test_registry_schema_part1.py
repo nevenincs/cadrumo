@@ -174,23 +174,23 @@ def test_formula_expression_dispatch_table_entry_contract() -> None:
     expression = FormulaExpression.model_validate(
         {
             "dispatch_table_entries": [
-                {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
-                {"key": "cataluna", "parameter": "renta-2025-escala-autonomica-cataluna-base-general"},
+                {"key": "madrid", "parameter": "renta-escala-autonomica-madrid-base-general"},
+                {"key": "cataluna", "parameter": "renta-escala-autonomica-cataluna-base-general"},
             ],
         },
     )
 
     assert expression.dispatch_table == {
-        "madrid": "renta-2025-escala-autonomica-madrid-base-general",
-        "cataluna": "renta-2025-escala-autonomica-cataluna-base-general",
+        "madrid": "renta-escala-autonomica-madrid-base-general",
+        "cataluna": "renta-escala-autonomica-cataluna-base-general",
     }
 
     with pytest.raises(ValidationError, match="duplicate key 'madrid'"):
         FormulaExpression.model_validate(
             {
                 "dispatch_table_entries": [
-                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
-                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                    {"key": "madrid", "parameter": "renta-escala-autonomica-madrid-base-general"},
+                    {"key": "madrid", "parameter": "renta-escala-autonomica-madrid-base-general"},
                 ],
             },
         )
@@ -198,9 +198,9 @@ def test_formula_expression_dispatch_table_entry_contract() -> None:
     with pytest.raises(ValidationError, match="dispatch_table or dispatch_table_entries"):
         FormulaExpression.model_validate(
             {
-                "dispatch_table": {"madrid": "renta-2025-escala-autonomica-madrid-base-general"},
+                "dispatch_table": {"madrid": "renta-escala-autonomica-madrid-base-general"},
                 "dispatch_table_entries": [
-                    {"key": "madrid", "parameter": "renta-2025-escala-autonomica-madrid-base-general"},
+                    {"key": "madrid", "parameter": "renta-escala-autonomica-madrid-base-general"},
                 ],
             },
         )
@@ -235,7 +235,7 @@ def test_committed_snapshot_exposes_expected_metadata(
     # when present, excluded from the coverage denominator).
     assert tuple(modelo_130_snapshot.verification_expectations) == (
         "modelo-130-calculation-verification",
-        "modelo-130-2019-y-siguientes-reconcile-when-present",
+        "modelo-130-reconcile-when-present",
     )
     assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_COMMITTED_M130_DEADLINE_WINDOWS
     assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS

@@ -1,5 +1,5 @@
 [[revisions."2016-2017".application_links]]
-id = "modelo-232-2016-portal"
+id = "modelo-232-portal"
 surface = "portal"
 consumer = "portal_m232_operaciones_vinculadas"
 requires_snapshot = true

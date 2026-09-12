@@ -16,7 +16,7 @@ from ._parser_boundary_support import (
 
 _M123_PROFILE_TARGET_CASES: tuple[tuple[str, int, str, str, tuple[CasillaId, ...]], ...] = (
     ("current", 2026, "1T", "modelo-123-declaracion-pdf", _MODELO_123_CURRENT_EXPECTED_TARGETS),
-    ("historical", 2023, "4T", "modelo-123-2019-declaracion-pdf", _MODELO_123_HISTORICAL_EXPECTED_TARGETS),
+    ("historical", 2023, "4T", "modelo-123-declaracion-pdf", _MODELO_123_HISTORICAL_EXPECTED_TARGETS),
 )
 _M123_PROFILE_TARGET_CASE_IDS: tuple[str, ...] = tuple(
     case_id for case_id, _year, _period, _profile_id, _targets in _M123_PROFILE_TARGET_CASES

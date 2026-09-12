@@ -1,5 +1,5 @@
 [[revisions."2025".parameters]]
-id = "renta-2025-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
+id = "renta-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-31"]

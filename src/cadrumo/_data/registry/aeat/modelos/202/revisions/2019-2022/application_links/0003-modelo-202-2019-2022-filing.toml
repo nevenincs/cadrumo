@@ -1,5 +1,5 @@
 [[revisions.2019-2022.application_links]]
-id = "modelo-202-2019-2022-filing"
+id = "modelo-202-filing"
 surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true

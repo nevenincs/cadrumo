@@ -158,4 +158,4 @@ casilla_ids = [
     "resultado-a-deducir-18",
 ]
 application_links = ["modelo-490-filing", "modelo-490-export"]
-workbook_parity_refs = ["modelo-490-2021-static-layout"]
+workbook_parity_refs = ["modelo-490-static-layout"]

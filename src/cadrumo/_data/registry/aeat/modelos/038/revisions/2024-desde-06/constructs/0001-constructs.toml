@@ -4,7 +4,7 @@ legal_refs = ["orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "orden-hac-6
 source_refs = ["enrolled-modelo-038-procedure", "aeat-dr-038-2024"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
 application_links = ["modelo-038-filing", "modelo-038-deadline"]
-workbook_parity_refs = ["modelo-038-2024-static-layout"]
+workbook_parity_refs = ["modelo-038-static-layout"]
 deadline_windows = [
     "modelo-038-2024-06",
     "modelo-038-2024-07",

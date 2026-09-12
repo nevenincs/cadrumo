@@ -14,7 +14,7 @@
 # validate_source_year_coverage. At resolution a missing prior M200 yields a
 # zero-carry (a first-year filer has no prior cuota), never a wrong-year bind.
 [[revisions.2025-y-siguientes.dependency_classifications]]
-id = "modelo-202-2025-y-siguientes-dep-200-cuota-base"
+id = "modelo-202-dep-200-cuota-base"
 source_modelo = "200"
 treatment = "factual_evidence"
 target_constructs = ["modelo-202-foundation"]

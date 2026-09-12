@@ -59,7 +59,7 @@
 # Both forms parse to an identical tuple of rows; this is a pure
 # authoring-density change, not a schema or semantic change.
 [[revisions."2024".parameters]]
-id = "m131-modulos-coeficientes-2024"
+id = "m131-modulos-coeficientes"
 data_type = "keyed_bracket_table"
 unit = "euro_per_unit"
 legal_refs = ["orden-hfp-1359-2023:art-4"]
@@ -827,7 +827,7 @@ required_text = [
 # rendimiento neto de módulos obtenido en 2024 en un 5 por ciento"), apartado
 # 3 confirming its application to the 2024 pagos fraccionados.
 [[revisions."2024".parameters]]
-id = "m131-modulos-reduccion-general-2024"
+id = "m131-modulos-reduccion-general"
 data_type = "ratio"
 unit = "percent"
 legal_refs = ["orden-hfp-1359-2023:da-1"]
@@ -850,7 +850,7 @@ required_text = ["reducción general del 5 por 100"]
 # against the AEAT Manual práctico de Renta 2024 worked example (epígrafe
 # 673.1: incremento 0,66 x 0,40 = 0,264).
 [[revisions."2024".parameters]]
-id = "m131-modulos-coeficiente-incremento-asalariados-2024"
+id = "m131-modulos-coeficiente-incremento-asalariados"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hfp-1359-2023:instruccion-2-2-a"]
@@ -875,7 +875,7 @@ required_text = ["Coeficiente por incremento del número de personas asalariadas
 # ... equivalently 0,10 (hasta 1,00) + 0,15x(3,00-1,00) = 0,10+0,30 = 0,40,
 # matching the manual worked example (epígrafe 673.1, base_tramos=3,00).
 [[revisions."2024".parameters]]
-id = "m131-modulos-coeficiente-tramos-asalariados-2024"
+id = "m131-modulos-coeficiente-tramos-asalariados"
 data_type = "bracket_table"
 unit = "coefficient"
 bracket_axis = "filing_period"
@@ -929,7 +929,7 @@ required_text = ["Hasta 1,00 0,10", "Entre 1,01 y 3,00 0,15", "Entre 5,01 y 8,00
 # instrucción 2.3.b.3). Índice 1,30 aplicado al exceso del rendimiento neto
 # minorado sobre la cuantía tabulada por actividad.
 [[revisions."2024".parameters]]
-id = "m131-modulos-indice-exceso-2024"
+id = "m131-modulos-indice-exceso"
 data_type = "ratio"
 unit = "coefficient"
 legal_refs = ["orden-hfp-1359-2023:instruccion-2-3-b-3"]
@@ -960,7 +960,7 @@ required_text = ["índice corrector de exceso, debido"]
 # unchanged (see _m131_modulos_cuantia_exceso docstring) — never a silent
 # fabricated cuantía.
 [[revisions."2024".parameters]]
-id = "m131-modulos-cuantia-exceso-2024"
+id = "m131-modulos-cuantia-exceso"
 data_type = "keyed_bracket_table"
 unit = "euro"
 legal_refs = ["orden-hfp-1359-2023:instruccion-2-3-b-3"]

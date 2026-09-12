@@ -74,7 +74,7 @@ def test_casilla_0019_is_computed_and_grounded() -> None:
         assert casilla.input_kind == "computed", (
             f"M100 {year} casilla 0019 must be computed (art. 19.2.f auto-apply), found {casilla.input_kind!r}"
         )
-        assert casilla.formula == f"renta-{year}-trabajo-otros-gastos", year
+        assert casilla.formula == "renta-trabajo-otros-gastos", year
         assert "ley-35-2006:art-19" in casilla.legal_refs, year
 
         formula = _formula_for_target(revision, "0019")

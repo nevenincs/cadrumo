@@ -340,12 +340,11 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
         relation_values={
-            "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-            "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-            "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-            "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-            "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
     )
 
@@ -377,7 +376,7 @@ def test_every_revision_declares_the_autonomico_binding() -> None:
     for year in _ENGINE_FILING_YEARS:
         snapshot = _snapshot(year)
         binding_id = _binding_id_for_autonomico(snapshot)
-        assert binding_id == f"renta-{year}-profile-minimo-descendientes-autonomico"
+        assert binding_id == "renta-profile-minimo-descendientes-autonomico"
 
 
 def test_non_madrid_ccaa_autonomico_mirrors_estatal_for_two_descendants() -> None:

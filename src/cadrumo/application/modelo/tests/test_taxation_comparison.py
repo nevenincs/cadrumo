@@ -107,13 +107,12 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
 )
 
 _ZERO_RELATIONS = {
-    "renta-2025-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2025-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-190-retenciones-anuales": Decimal("0"),
-    "renta-2025-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-190-retenciones-anuales": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
 }
 
 _BASE_BINDINGS = {
@@ -121,7 +120,7 @@ _BASE_BINDINGS = {
     # These scenarios are salaried couples (trabajo income only, per the
     # module docstring), not economic-activity filers.
     "renta-profile-has-economic-activity": Decimal("0"),
-    "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+    "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # declaration_type is intentionally absent — compare_taxation_modes injects it.
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-profile-marriage-full-year": Decimal("1"),  # married full year
@@ -144,11 +143,11 @@ _BASE_BINDINGS = {
     "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
 }
 
-_BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
+_BASE_ENUM_BINDINGS = {"renta-profile-tax-residence-ccaa": "madrid"}
 
 _BASE_DATE_BINDINGS = {
     # Age 44 at year-end 2025 → mínimo contribuyente = €5,550 base.
-    "renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1),
+    "renta-profile-taxpayer-birth-date": date(1980, 1, 1),
 }
 
 

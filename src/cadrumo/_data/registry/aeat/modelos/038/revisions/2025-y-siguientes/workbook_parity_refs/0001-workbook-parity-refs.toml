@@ -5,7 +5,7 @@
 # without asserting a verified byte-position parity run.
 
 [[revisions."2025-y-siguientes".workbook_parity_refs]]
-id = "modelo-038-2024-static-layout"
+id = "modelo-038-static-layout"
 workbook_source = "aeat-dr-038-2024"
 fixture_id = "modelo-038-2024-layout"
 formula_coverage = "static_layout"

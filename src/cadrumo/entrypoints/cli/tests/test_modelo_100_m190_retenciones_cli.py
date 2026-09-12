@@ -131,13 +131,13 @@ def test_m100_2025_cli_m190_annual_retenciones_populates_0596(
             "--binding",
             "renta-modelo-100-estimacion-directa-es-normal=1",
             "--binding",
-            "renta-2025-modelo-184-atribucion-actividades-economicas=0",
+            "renta-modelo-184-atribucion-actividades-economicas=0",
             "--binding",
-            "renta-2025-modelo-190-retenciones-anuales=4200",
+            "renta-modelo-190-retenciones-anuales=4200",
             "--relation",
-            "renta-2025-rel-130-pagos-fraccionados=0",
+            "renta-modelo-130-pagos-fraccionados=0",
             "--relation",
-            "renta-2025-rel-131-pagos-fraccionados=0",
+            "renta-modelo-131-pagos-fraccionados=0",
         ],
     )
 

@@ -27,6 +27,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.ids import BindingId, RelationId
+from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ....domain.calculations.registry.schema_formula import FormulaExpression
 from ....domain.modelos.errors import ModeloError
@@ -48,7 +49,7 @@ _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025
 _PERIOD = "0A"
 _TYPED_PERIOD = Period.from_year_and_code(_YEAR, _PERIOD)
-_CCAA_BINDING: BindingId = "renta-2025-profile-tax-residence-ccaa"
+_CCAA_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING: BindingId = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
@@ -267,7 +268,7 @@ def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[Binding
 
 
 def _zero_relation_values(snapshot: RegistrySnapshot) -> dict[RelationId, Decimal]:
-    return {relation.id: Decimal("0") for relation in snapshot.revision.relations}
+    return {binding.id: Decimal("0") for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)}
 
 
 def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_input(

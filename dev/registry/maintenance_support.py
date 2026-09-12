@@ -1084,13 +1084,17 @@ def coverage_assessment_horizon(catalogues: RegistryCatalogues) -> int:
 
     The supported-filing-years catalogue is the registry's sole declaration of
     what the product currently claims to support.  A coverage derivation must
-    therefore stop at its latest year, rather than copying a clock year or a
-    modelo-specific year list into another authority surface.
+    therefore stop at its declared horizon, rather than copying a clock year or
+    a modelo-specific year list into another authority surface.
+
+    The horizon, not a hard ceiling: coverage work asks how far authored
+    declarations reach, and a year the product would still answer by carrying
+    the newest revision forward has no authored coverage to assess.
     """
     catalogue = catalogues.supported_filing_years
     if catalogue is None:
         raise RegistryValidationError("registry has no supported_filing_years catalogue for coverage assessment")
-    return catalogue.years[-1]
+    return catalogue.horizon
 
 
 def revision_selection_coordinates(

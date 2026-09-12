@@ -74,10 +74,10 @@ class TestFiledObservationRelations:
         # resolver's wiring contract only, and no bundled oracle reconciles
         # these relation ids against an AEAT-computed figure today.
         quarterly_aggregations = {
-            "renta-2025-rel-111-retenciones-trimestrales": Decimal("40"),  # max single quarter
-            "renta-2025-rel-123-retenciones-trimestrales": Decimal("24"),
-            "renta-2025-rel-130-pagos-fraccionados": Decimal("56"),
-            "renta-2025-rel-131-pagos-fraccionados": Decimal("88"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("40"),  # max single quarter
+            "renta-modelo-123-retenciones-periodicas": Decimal("24"),
+            "renta-modelo-130-pagos-fraccionados": Decimal("56"),
+            "renta-modelo-131-pagos-fraccionados": Decimal("88"),
         }
         for relation_id, max_single in quarterly_aggregations.items():
             assert relation_id in resolved, f"{relation_id} missing from resolution"
@@ -87,15 +87,15 @@ class TestFiledObservationRelations:
             )
 
         # Monthly relation: same INCLUSION property — value must exceed max month (12).
-        assert resolved["renta-2025-rel-111-retenciones-mensuales"] > Decimal("12")
+        assert resolved["renta-modelo-111-retenciones-periodicas"] > Decimal("12")
 
         # Annual receivers are op=copy passthroughs — assert the
         # fixture's literal threads through to the resolved relation
         # value unchanged.
         annual_copies = {
-            "renta-2025-rel-190-retenciones-anuales": Decimal("178"),
-            "renta-2025-rel-193-retenciones-anuales": Decimal("60"),
-            "renta-2025-rel-184-atribucion-actividades-economicas": Decimal("77"),
+            "renta-modelo-190-retenciones-anuales": Decimal("178"),
+            "renta-modelo-193-retenciones-anuales": Decimal("60"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("77"),
         }
         for relation_id, fixture_value in annual_copies.items():
             assert resolved[relation_id] == fixture_value, (
@@ -179,8 +179,8 @@ class TestFiledObservationRelations:
         )
 
         assert resolved == {
-            "modelo-180-rel-115-base-anual": sum(values[_M115_BASE_CASILLA] for values in quarterly_values.values()),
-            "modelo-180-rel-115-retenciones-anual": sum(
+            "modelo-180-115-base-anual": sum(values[_M115_BASE_CASILLA] for values in quarterly_values.values()),
+            "modelo-180-115-retenciones-anual": sum(
                 values[_M115_RETENCIONES_CASILLA] for values in quarterly_values.values()
             ),
         }
@@ -226,8 +226,8 @@ class TestFiledObservationRelations:
         )
 
         assert resolved == {
-            "modelo-193-rel-123-base-anual": sum(values[_M123_BASE_CASILLA] for values in quarterly_values.values()),
-            "modelo-193-rel-123-retenciones-anual": sum(
+            "modelo-193-123-base-anual": sum(values[_M123_BASE_CASILLA] for values in quarterly_values.values()),
+            "modelo-193-123-retenciones-anual": sum(
                 values[_M123_RETENCIONES_CASILLA] for values in quarterly_values.values()
             ),
         }

@@ -1,5 +1,5 @@
 [[revisions."2021".application_links]]
-id = "modelo-100-2021-reconciliation"
+id = "modelo-100-reconciliation"
 surface = "reconciliation"
 consumer = "cadrumo.application.reconciliation"
 requires_snapshot = true

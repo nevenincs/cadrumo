@@ -6,7 +6,7 @@ Decimal outcome — the only existing coverage was structural (selector
 shape, source kind taxonomy, precedence ladder membership). This file
 grounds it in the committed M210 ``2025`` registry revision, whose sole
 ``ledger_irnr_income_aggregation`` binding
-(``m210-2025-ledger-irnr-rendimientos-integros``) targets casilla
+(``m210-ledger-irnr-rendimientos-integros``) targets casilla
 ``rendimientos_integros`` per TRLIRNR art. 13.1 / art. 24. It also serves as
 the F15 regression net for this family's refactor onto the shared
 :func:`~....registry._ledger_binding_resolution.resolve_ledger_family_binding_values`
@@ -36,7 +36,7 @@ from ..conformance.registry_schema_support import committed_modelo as _committed
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_IRNR_INCOME_BINDING = "m210-2025-ledger-irnr-rendimientos-integros"
+_IRNR_INCOME_BINDING = "m210-ledger-irnr-rendimientos-integros"
 _M210_RENDIMIENTOS_CASILLA: CasillaId = validated_casilla_id(
     "rendimientos_integros",
     surface="_M210_RENDIMIENTOS_CASILLA",

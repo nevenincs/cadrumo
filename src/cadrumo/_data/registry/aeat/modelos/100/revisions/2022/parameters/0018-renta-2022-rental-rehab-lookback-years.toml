@@ -1,5 +1,5 @@
 [[revisions."2022".parameters]]
-id = "renta-2022-rental-rehab-lookback-years"
+id = "renta-rental-rehab-lookback-years"
 data_type = "integer"
 unit = "years"
 legal_refs = ["ley-35-2006:art-23"]

@@ -49,6 +49,7 @@ def _resolved_binding_ids(resolution: CalculationSourceResolution) -> frozenset[
             *resolution.binding_values,
             *resolution.enum_binding_values,
             *resolution.date_binding_values,
+            *resolution.boolean_binding_values,
             *row_binding_ids,
         },
     )

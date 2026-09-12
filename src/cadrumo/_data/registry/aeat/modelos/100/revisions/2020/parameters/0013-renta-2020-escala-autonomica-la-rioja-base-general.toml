@@ -1,5 +1,5 @@
 [[revisions."2020".parameters]]
-id = "renta-2020-escala-autonomica-la-rioja-base-general"
+id = "renta-escala-autonomica-la-rioja-base-general"
 data_type = "bracket_table"
 unit = "EUR"
 bracket_axis = "filing_period"

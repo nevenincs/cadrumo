@@ -7,7 +7,7 @@ formulas = ["modelo-180-base-total", "modelo-180-retenciones-total"]
 bindings = ["modelo-180-115-perceptores-anual", "modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"]
 extraction_profiles = ["modelo-180-export-record"]
 live_cross_references = ["modelo-180-static-official", "modelo-180-filed-declarations-read"]
-workbook_parity_refs = ["modelo-180-dr-pdf-2023"]
+workbook_parity_refs = ["modelo-180-dr-pdf"]
 verification_expectations = ["modelo-180-annual-summary-verification"]
 application_links = [
     "modelo-180-portal-cross-reference",

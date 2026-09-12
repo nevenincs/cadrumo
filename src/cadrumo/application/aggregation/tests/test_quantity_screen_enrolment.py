@@ -92,7 +92,7 @@ def _without_fact(revision: ModeloRevision, source: str, fact: str) -> ModeloRev
     kept = [
         binding
         for binding in revision.bindings
-        if not (binding.source.value == source and getattr(binding.selector, "fact", None) == fact)
+        if not (binding.source.value == source and getattr(binding.provider, "fact", None) == fact)
     ]
     return revision.model_copy(update={"bindings": tuple(kept)})
 

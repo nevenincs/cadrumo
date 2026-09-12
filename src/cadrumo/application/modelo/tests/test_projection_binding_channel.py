@@ -35,9 +35,9 @@ from ..projection import _parse_projection_binding_overrides
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FILING_YEAR = 2024
-_ENUM_BINDING = "renta-2024-profile-tax-residence-ccaa"
+_ENUM_BINDING = "renta-profile-tax-residence-ccaa"
 _DECIMAL_BINDING = "renta-certificado-trabajo-retenciones"
-_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
+_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 
 @pytest.fixture(scope="module")

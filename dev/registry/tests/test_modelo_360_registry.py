@@ -83,5 +83,5 @@ def test_modelo_360_construct_links_workbook_parity() -> None:
     modelo, _ = _load_modelo_360()
     revision = modelo.revisions["2010-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-360-iva-devolucion-ue")
-    assert "modelo-360-dr-2010" in construct.workbook_parity_refs
+    assert "modelo-360-dr" in construct.workbook_parity_refs
     assert construct.filing_schedules == ("modelo-360-ad-hoc",)

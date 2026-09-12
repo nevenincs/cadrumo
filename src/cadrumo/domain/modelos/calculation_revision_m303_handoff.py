@@ -11,7 +11,9 @@ from typing import Self
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
+from ...core.filing_projection_ref import M303RegimenSimplificadoFact
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
@@ -41,6 +43,21 @@ from .calculation_revision_m303_evidence import (
     M303RegimenSimplificadoCalculationResult,
 )
 from .errors import ModeloValidationError
+
+
+def _selected_m303_revision_declares_fact(*, filing_year: int, period: Period) -> bool:
+    """Read a simplified-regime fact declaration from the selected M303 revision."""
+    snapshot = bundled_authority().snapshot(
+        "303",
+        filing_year=filing_year,
+        period=period.registry_token,
+        on=date(filing_year, 12, 31),
+        grade=RegistryAuthorityGrade.APPLICABILITY,
+    )
+    return any(
+        getattr(endpoint.projection_ref, "fact", None) is M303RegimenSimplificadoFact.DANA_ELEGIBLE
+        for endpoint in snapshot.revision.projection_endpoints
+    )
 
 
 def _resolve_m303_m390_handoff_declarations(
@@ -425,9 +442,9 @@ class M303FilingInstanceEvidence(BaseModel):
             raise ModeloValidationError("M303 simplified calculation result must use the filing period")
         eligibility = self.regimen_simplificado.dana_2024_eligibility
         requires_dana_eligibility = (
-            self.period.filing_year == 2024
-            and is_last_filing_period_of_year(self.period)
+            is_last_filing_period_of_year(self.period)
             and not self.regimen_simplificado.scope_decision.is_not_claimed
+            and _selected_m303_revision_declares_fact(filing_year=self.period.filing_year, period=self.period)
         )
         if requires_dana_eligibility != (eligibility is not None):
             raise ModeloValidationError(

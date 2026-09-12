@@ -16,7 +16,7 @@
 [[revisions."2026-y-siguientes".bindings]]
 id = "m210-profile-country-of-fiscal-residence"
 provider = { kind = "profile", profile_model = "taxpayer", field = "country_of_fiscal_residence" }
-value = { data_type = "money", channel = "decimal" }
+value = { data_type = "enum", channel = "enum" }
 aggregation = { op = "copy" }
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-2",

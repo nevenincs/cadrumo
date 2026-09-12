@@ -84,8 +84,8 @@ def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> N
 def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revisions() -> None:
     for filing_year in range(2020, 2026):
         revision = _modelo_100_snapshot(filing_year).revision
-        general_formula_id = f"renta-{filing_year}-saldo-gp-base-general-cap-25"
-        savings_formula_id = f"renta-{filing_year}-saldo-gp-base-ahorro-cap-25"
+        general_formula_id = "renta-saldo-gp-base-general-cap-25"
+        savings_formula_id = "renta-saldo-gp-base-ahorro-cap-25"
         general_formula = next(formula for formula in revision.formulas if formula.id == general_formula_id)
         savings_formula = next(formula for formula in revision.formulas if formula.id == savings_formula_id)
         general_gyp_limit = next(
@@ -190,7 +190,7 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
 def test_modelo_100_2025_zec_reduced_rate_parameter_cites_special_rate_article() -> None:
     revision = _modelo_100_snapshot(2025).revision
     parameters_by_id = {parameter.id: parameter for parameter in revision.parameters}
-    parameter = parameters_by_id["renta-2025-zec-tipo-gravamen-reducido"]
+    parameter = parameters_by_id["renta-zec-tipo-gravamen-reducido"]
 
     assert parameter.legal_refs == ("ley-19-1994:art-43",)
     assert "ley-19-1994:art-50" not in parameter.legal_refs

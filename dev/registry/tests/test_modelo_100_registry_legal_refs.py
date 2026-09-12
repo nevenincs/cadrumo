@@ -58,17 +58,17 @@ def test_modelo_100_donation_deduction_surface_cites_art_68_3() -> None:
             for formula in revision.formulas
             if formula.id
             in {
-                f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento",
-                f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento",
+                "renta-deduccion-donativos-estatal-50-porciento",
+                "renta-deduccion-donativos-autonomica-50-porciento",
             }
         }
 
         assert set(formula_by_id) == {
-            f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento",
-            f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento",
+            "renta-deduccion-donativos-estatal-50-porciento",
+            "renta-deduccion-donativos-autonomica-50-porciento",
         }, filing_year
-        estatal = formula_by_id[f"renta-{filing_year}-deduccion-donativos-estatal-50-porciento"]
-        autonomica = formula_by_id[f"renta-{filing_year}-deduccion-donativos-autonomica-50-porciento"]
+        estatal = formula_by_id["renta-deduccion-donativos-estatal-50-porciento"]
+        autonomica = formula_by_id["renta-deduccion-donativos-autonomica-50-porciento"]
         assert _DONATION_DEDUCTION_ART_68_3_REF in estatal.legal_refs
         assert _STATE_DEDUCTION_ART_67_REF in estatal.legal_refs
         assert _BROAD_DEDUCTION_ART_68_REF not in estatal.legal_refs
@@ -225,7 +225,7 @@ def test_modelo_100_business_investment_deductions_cite_art_68_2() -> None:
         formula = next(
             formula
             for formula in revision.formulas
-            if formula.id == f"renta-{filing_year}-deduccion-incentivos-inversion-empresarial-total"
+            if formula.id == "renta-deduccion-incentivos-inversion-empresarial-total"
         )
         assert _BUSINESS_INVESTMENT_ART_68_2_REF in formula.legal_refs
         assert "ley-35-2006:art-68" not in formula.legal_refs
@@ -281,7 +281,7 @@ def test_modelo_100_energy_efficiency_deduction_formula_cites_da_50() -> None:
         formula = next(
             formula
             for formula in revision.formulas
-            if formula.id == f"renta-{filing_year}-deduccion-eficiencia-energetica-vivienda-suma"
+            if formula.id == "renta-deduccion-eficiencia-energetica-vivienda-suma"
         )
 
         assert _ENERGY_EFFICIENCY_DEDUCTION_DA_50_REF in casilla.legal_refs

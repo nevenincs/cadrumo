@@ -6,19 +6,40 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.ids import SourceRefId
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
     CrossPeriodDependencyEvidence,
     CrossPeriodDependencyOrigin,
     CrossPeriodDependencyRequirement,
 )
-from ..verification_cross_period import _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS, cross_period_clean_state_findings
+from ..verification_cross_period import cross_period_clean_state_findings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="not-applicable localization")
 _SOURCE_REF: SourceRefId = "aeat-modelo-303-procedure"
+
+
+def _cross_period_dependency_legal_refs() -> tuple[LegalRefId, ...]:
+    """Return the published LGT anchors for declarations and self-assessments."""
+    authority = bundled_authority()
+    refs = tuple(
+        dict.fromkeys(
+            reference_id
+            for reference_id, reference in authority.catalogues.legal.items()
+            if any(
+                marker in " ".join((reference.notes or "", *reference.required_text)).casefold()
+                for marker in (
+                    "todo documento presentado ante",
+                    "operaciones de calificación y cuantificación necesarias",
+                )
+            )
+        ),
+    )
+    assert refs, "published authority must carry cross-period declaration grounding"
+    return refs
 
 
 def test_not_applicable_verify_finding_is_locale_neutral() -> None:
@@ -32,7 +53,7 @@ def test_not_applicable_verify_finding_is_locale_neutral() -> None:
             source_casilla_ids=(_SOURCE_CASILLA_01,),
             origin=CrossPeriodDependencyOrigin.PREVIOUS_FILING_BINDING,
             origin_ids=("modelo-303-compensacion-pendiente-anteriores",),
-            legal_refs=("ley-58-2003:art-119",),
+            legal_refs=_cross_period_dependency_legal_refs(),
             source_refs=(_SOURCE_REF,),
         ),
         modelo_not_applicable_advisory=True,
@@ -52,5 +73,5 @@ def test_not_applicable_verify_finding_is_locale_neutral() -> None:
     assert finding.message_locale_key == "application.modelo.findings.cross_period_modelo_not_applicable.message"
     assert dict(finding.message_facts) == {"source_modelo_count": 1, "source_modelos": "303"}
     assert "next_action" not in finding.model_dump(mode="json")
-    assert set(_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS) <= set(finding.legal_refs)
+    assert set(_cross_period_dependency_legal_refs()) <= set(finding.legal_refs)
     assert tuple(finding.source_refs) == (_SOURCE_REF,)

@@ -6,7 +6,7 @@
 # or flip a legitimate filing's verdict. Grounded in the casilla's own
 # declared legal_refs/source_refs.
 [[revisions."2019-y-siguientes".verification_expectations]]
-id = "modelo-126-2019-y-siguientes-reconcile-when-present"
+id = "modelo-126-reconcile-when-present"
 computed_casilla_ids = []
 reconcile_when_present_casilla_ids = [
     "10",

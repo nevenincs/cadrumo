@@ -36,7 +36,6 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
                 ("formula", revision.formulas),
                 ("parameter", revision.parameters),
                 ("binding", revision.bindings),
-                ("relation", revision.relations),
             )
             for declaration in declarations
         }
@@ -62,7 +61,7 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
                 trace.reason,
                 None if trace.formula is None else trace.formula.id,
                 None if trace.binding is None else trace.binding.id,
-                None if trace.relation is None else trace.relation.id,
+                (None if trace.producer_kind.value != "relation" or trace.binding is None else trace.binding.id),
                 trace.casilla.legal_refs,
                 trace.casilla.source_refs,
                 trace.producer_legal_refs,

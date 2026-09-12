@@ -99,7 +99,7 @@ def test_validator_rejects_missing_factual_evidence_previous_filing_classificati
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"previous_filing source modelo '720' has no dependency classification",
+        match=r"binding source modelo '720' has no dependency classification",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
@@ -118,7 +118,7 @@ def test_validator_rejects_non_dependency_previous_filing_classification() -> No
         },
     )
     mutated_classification = classification.model_copy(
-        update={"treatment": "non_dependency", "target_constructs": (), "relation_refs": ()},
+        update={"treatment": "non_dependency", "target_constructs": (), "binding_refs": ()},
     )
     mutated_revision = revision.model_copy(
         update={
@@ -135,7 +135,7 @@ def test_validator_rejects_non_dependency_previous_filing_classification() -> No
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"previous_filing source modelo '720' cannot be classified as non_dependency",
+        match=r"binding source modelo '720' cannot be classified as non_dependency",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
@@ -175,8 +175,8 @@ def test_committed_modelo_720_is_informative_only() -> None:
             f"revision {revision.id!r} declares calculation formulas; "
             "Modelo 720 is informative-only and must not own filing-grade calculations"
         )
-        assert revision.relations == (), (
-            f"revision {revision.id!r} declares cross-model relations; Modelo 720 is informative-only"
+        assert not any(binding.source.value == "relation_prefill" for binding in revision.bindings), (
+            f"revision {revision.id!r} declares cross-model relation-prefill bindings; Modelo 720 is informative-only"
         )
         for casilla in revision.casillas:
             assert casilla.input_kind in {InputKind.INFORMATIONAL, InputKind.MANUAL}, casilla.id

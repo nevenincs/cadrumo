@@ -43,7 +43,7 @@ from ._published_authority import artifact_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_FORM_BINDING = "modelo-200-2024-profile-legal-entity-form"
+_FORM_BINDING = "modelo-200-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
 _ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
@@ -123,8 +123,8 @@ def _cuota_for(
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
         date_context={"filing_period": filing_period},
     )
@@ -529,8 +529,8 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
-            "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-            "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+            "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
     )
@@ -577,8 +577,8 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values={
-                "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
-                "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
+                "modelo-200-pagos-fraccionados-anuales": Decimal("0"),
+                "modelo-200-pagos-fraccionados-anuales-40-2": Decimal("0"),
             },
             date_context={"filing_period": date(2024, 12, 31)},
         )

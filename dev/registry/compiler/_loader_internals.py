@@ -39,6 +39,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
 )
+from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.revision_predecessor_forest import validate_predecessor_forest
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
@@ -88,22 +89,286 @@ _AUTHORITY_GRADE_FIELD: Final = "authority_grade"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
+_IDENTIFIER_EVOLUTIONS_SECTION: Final = "identifier_evolutions"
 _EDITION_SOURCE_DEFAULT_FIELD: Final = "casilla_source_refs"
 #: The family sections that lift a shared ``source_refs`` onto the manifest the
 #: same way casillas do, each with the manifest key that carries its default.
-#: Declared as a pair so a section can never be defaulted from another
-#: family's grounding: a modelo's bindings cite its record design, its formulas
-#: the approving orden's instructions, and the two are different documents.
-_FAMILY_SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
-    ("bindings", "binding_source_refs"),
-    ("formulas", "formula_source_refs"),
-)
 _EDITION_ORDEN_FIELD: Final = "orden_aplicabilidad"
 _ROW_SOURCE_FIELD: Final = "source_refs"
 _ROW_SOURCE_ADDITIONS_FIELD: Final = "additional_source_refs"
 _ROW_LEGAL_FIELD: Final = "legal_refs"
 _ROW_INHERITED_FROM_FIELD: Final = "inherited_from"
 _ROW_LINEAGE_CLAIM_FIELDS: Final = frozenset({"continuidad_origin", "continuidad_evidence"})
+
+
+@dataclass(frozen=True, slots=True)
+class _KeyedFamily:
+    """One collection family that a delta edition may inherit from its predecessor.
+
+    ``section`` is the raw table key the family declares under, ``identity``
+    the field whose value names the same member across editions, and
+    Retirements come from the one ``identifier_evolutions`` section, whose
+    entries name the collection they belong to in ``family``, so a family adds
+    no section of its own.
+
+    The casilla family is deliberately NOT described here. Its identity is a
+    lineage claim rather than the member's own id, which is why it can refuse a
+    repurpose that reuses an id without carrying the lineage, and it alone
+    carries label origins down the chain. Merging it through this mechanism
+    would lose both, so it keeps its own merge.
+    """
+
+    section: str
+    identity: str
+    identity_fields: tuple[str, ...] = ()
+    period_scoped: bool = False
+
+
+#: The families this loader inherits along a predecessor chain, beyond casillas.
+#:
+#: Enrolment is explicit rather than derived from ``collection_shaped_fields``,
+#: because carrying a collection has nothing to do with whether inheriting it is
+#: TRUE. A family is inheritable only when a member restated unchanged by a
+#: successor means the same thing as the predecessor's member; a family whose
+#: members are per-edition assertions about the edition that states them - the
+#: completeness manifest's graded closure claim is the worked example - would
+#: attest for the successor something nobody established, so it stays full copy
+#: however stable its ids are. Adding a family here is that judgement, made once
+#: and reviewed on its own, not a consequence of the field existing.
+_KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = (
+    _KeyedFamily(
+        section="formulas",
+        identity="id",
+        identity_fields=("target_casilla_id",),
+    ),
+    _KeyedFamily(section="applicability", identity="id"),
+    _KeyedFamily(section="filing_schedules", identity="id"),
+    _KeyedFamily(section="live_cross_references", identity="id"),
+    _KeyedFamily(section="extraction_profiles", identity="id"),
+    _KeyedFamily(section="dependency_classifications", identity="id"),
+    _KeyedFamily(section="constructs", identity="id"),
+    _KeyedFamily(section="application_links", identity="id"),
+    _KeyedFamily(section="parameters", identity="id", identity_fields=("data_type",)),
+    _KeyedFamily(section="deadline_windows", identity="id", period_scoped=True),
+)
+
+
+def _keyed_retirements(successor: Mapping[str, object], revision_id: str, family: _KeyedFamily) -> frozenset[str]:
+    """Return the identifiers ``family`` withdraws from ``revision_id``.
+
+    Both evolution kinds withdraw the identifier they name: ``retired`` ends it,
+    and ``replaced`` ends it in favour of a successor member the edition states
+    under the new identifier, so the old one must not also survive by
+    inheritance.
+    """
+    evolutions = as_toml_array(successor.get(_IDENTIFIER_EVOLUTIONS_SECTION, ())) or ()
+    retired: set[str] = set()
+    for raw_evolution in evolutions:
+        evolution = _as_toml_table(raw_evolution)
+        if evolution is None or evolution.get("to_revision") != revision_id:
+            continue
+        if evolution.get("family") != family.section:
+            continue
+        identifier = evolution.get("identifier")
+        if isinstance(identifier, str):
+            retired.add(identifier)
+    return frozenset(retired)
+
+
+def _inherit_keyed_family(
+    context: str,
+    *,
+    revision_id: str,
+    family: _KeyedFamily,
+    inherited: tuple[object, ...],
+    successor: Mapping[str, object],
+) -> tuple[object, ...]:
+    """Merge a predecessor's materialised members of one keyed family with the successor's stated ones.
+
+    An inherited member is kept unless the successor states one carrying the
+    same identity, which supersedes it in its position, or an evolution retires
+    it. A stated member whose identity matches nothing inherited is new and is
+    appended after the inherited members, in stated order. The resulting order
+    is therefore the predecessor's order with supersessions in place and new
+    members after, exactly as the casilla merge defines it.
+
+    Refused, because each would otherwise resolve to a guess: a member carrying
+    no identity at all, which cannot be superseded or inherited deterministically;
+    two stated members sharing an identity, so neither can be said to supersede;
+    two inherited members sharing one, so a stated member cannot say which it
+    supersedes; and a stated member carrying an identity the same edition
+    retires.
+    """
+    stated = as_toml_array(successor.get(family.section, ()))
+    if stated is None:
+        raise RegistryLoadError(f"{context}: {family.section} must be an array")
+    retired = _keyed_retirements(successor, revision_id, family)
+    superseders: dict[str, object] = {}
+    for member in stated:
+        identity = _member_identity(member, family)
+        if identity is None:
+            raise RegistryLoadError(
+                f"{context}: states a {family.section} member carrying no {family.identity!r}, so it can neither "
+                "supersede an inherited member nor be superseded by a later edition",
+            )
+        if identity in retired:
+            raise RegistryLoadError(
+                f"{context}: states {family.section} {identity!r}, which the same edition retires",
+            )
+        if identity in superseders:
+            raise RegistryLoadError(
+                f"{context}: states more than one {family.section} member with {family.identity} {identity!r}, "
+                "so neither can supersede the inherited member",
+            )
+        superseders[identity] = member
+    inherited_counts = Counter(
+        identity for member in inherited if (identity := _member_identity(member, family)) is not None
+    )
+    ambiguous = sorted(identity for identity in superseders if inherited_counts[identity] > 1)
+    if ambiguous:
+        raise RegistryLoadError(
+            f"{context}: the predecessor carries {family.section} {family.identity} {ambiguous!r} on more than "
+            "one member, so a stated member carrying it cannot say which one it supersedes",
+        )
+    members: list[object] = []
+    superseded: set[str] = set()
+    for member in inherited:
+        identity = _member_identity(member, family)
+        if identity is None:
+            raise RegistryLoadError(
+                f"{context}: the predecessor carries a {family.section} member with no {family.identity!r}, so it "
+                "cannot be inherited deterministically",
+            )
+        if identity in retired:
+            continue
+        if family.period_scoped and not _selector_covers(successor.get("period_selector"), member):
+            continue
+        if identity in superseders:
+            _refuse_undeclared_repurpose(context, family, identity, member, superseders[identity])
+            members.append(superseders[identity])
+            superseded.add(identity)
+            continue
+        members.append(member)
+    for member in stated:
+        identity = _member_identity(member, family)
+        if identity is not None and identity not in superseded:
+            members.append(member)
+    return tuple(members)
+
+
+def _raw_keyed_members(
+    source_path: Path,
+    revision_id: str,
+    table: Mapping[str, object],
+    family: _KeyedFamily,
+) -> tuple[object, ...]:
+    members = as_toml_array(table.get(family.section, ()))
+    if members is None:
+        raise RegistryLoadError(f"{source_path}: revision {revision_id!r} {family.section} must be an array")
+    return members
+
+
+def _refuse_undeclared_repurpose(
+    context: str,
+    family: _KeyedFamily,
+    identity: str,
+    inherited: object,
+    stated: object,
+) -> None:
+    """Refuse a supersession that changes what the member IS rather than what it declares.
+
+    Superseding in place is the ordinary way an edition restates a member: the
+    declaration changes and the identity carries. It is an undeclared repurpose
+    when a field carrying the member's identity changes under the same id - a
+    binding that changes its provider kind or value channel is no longer the
+    same binding, whatever its id says. Reusing an id for a different thing
+    makes every earlier edition's reference to it silently wrong, so it must be
+    declared as a ``replaced`` evolution naming a new id instead.
+
+    The identity-carrying fields are data on the family, not a branch per
+    family, so enrolling a family states its identity fields in one place.
+    """
+    for path in family.identity_fields:
+        before = _field_at(inherited, path)
+        after = _field_at(stated, path)
+        if before != after:
+            raise RegistryLoadError(
+                f"{context}: states {family.section} {identity!r} with {path} {after!r}, but the inherited member "
+                f"carries {before!r}; a change to a field carrying the member's identity is a repurpose, not a "
+                f"supersession, so declare it as a replaced evolution naming a new {family.identity}",
+            )
+
+
+def _field_at(member: object, path: str) -> object:
+    """Return the value at a dotted ``path`` within ``member``, or ``None`` where it does not resolve."""
+    current: object = member
+    for segment in path.split("."):
+        table = _as_toml_table(current)
+        if table is None:
+            return None
+        current = table.get(segment)
+    return current
+
+
+def _period_token(value: object) -> str | None:
+    """The comparable period token of a member's or selector's period value.
+
+    Members spell a period either bare (``"4T"``) or qualified by its year
+    (``"2025 01"``); a selector always spells it bare. Taking the last
+    whitespace-separated token and upper-casing it compares the two without
+    inventing a canonical form for either.
+    """
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return value.split()[-1].upper()
+
+
+def _selector_covers(selector: object, member: object) -> bool:
+    """Whether an edition's ``period_selector`` covers this member's own filing period.
+
+    A period-scoped family states one member per filing period, so a
+    predecessor's member is not withheld by a successor that simply files a
+    different period - it was never the successor's to state. Inheriting it
+    would give an edition a deadline for a period it does not file, which no
+    gate would catch because the member is individually valid.
+
+    Coverage is decided by the member's OWN declared ``filing_year`` and
+    ``period``, never by its identifier: the identifier is a name, and for this
+    family the year inside it is data that a rename can destroy.
+    """
+    table = _as_toml_table(selector)
+    member_table = _as_toml_table(member)
+    if table is None or member_table is None:
+        return True
+    year = member_table.get("filing_year")
+    if isinstance(year, int):
+        years = table.get("years")
+        if isinstance(years, list | tuple) and year not in years:
+            return False
+        year_from = table.get("year_from")
+        if isinstance(year_from, int) and year < year_from:
+            return False
+        year_to = table.get("year_to")
+        if isinstance(year_to, int) and year > year_to:
+            return False
+    period = _period_token(member_table.get("period"))
+    periods = table.get("periods")
+    if period is not None and isinstance(periods, list | tuple):
+        covered = {token for value in periods if (token := _period_token(value)) is not None}
+        if covered and period not in covered:
+            return False
+    return True
+
+
+def _member_identity(member: object, family: _KeyedFamily) -> str | None:
+    """Return ``member``'s identity value for ``family``, or ``None`` when it states none."""
+    table = _as_toml_table(member)
+    if table is None:
+        return None
+    identity = table.get(family.identity)
+    return identity if isinstance(identity, str) else None
+
+
 """A row's claims about its immediate predecessor, which an inheriting edition never carries forward."""
 _ROW_CONSTRAINTS_FIELD: Final = "constraints"
 _EXPORT_REFS_FIELD: Final = "export_refs"
@@ -441,7 +706,16 @@ def _materialise_revision(
             inherited_label_origins=predecessor.label_origins,
             successor=table,
         )
-        result = _MaterialisedRevision(table={**table, _INHERITED_SECTION: rows}, label_origins=label_origins)
+        merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
+        for family in _KEYED_FAMILIES:
+            merged[family.section] = _inherit_keyed_family(
+                f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
+                revision_id=revision_id,
+                family=family,
+                inherited=_raw_keyed_members(source_path, predecessor_id, predecessor.table, family),
+                successor=table,
+            )
+        result = _MaterialisedRevision(table=merged, label_origins=label_origins)
     resolved[revision_id] = result
     return result
 
@@ -638,7 +912,7 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
         )
         if any(new is not old for new, old in zip(defaulted, rows, strict=True)):
             filled[_INHERITED_SECTION] = defaulted
-    for section, default_field in _FAMILY_SOURCE_DEFAULT_FIELDS:
+    for section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS:
         section_rows = as_toml_array(table.get(section, ()))
         if not section_rows:
             continue

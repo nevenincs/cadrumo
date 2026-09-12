@@ -58,10 +58,12 @@ from ..bindings_previous_filing import resolve_previous_filing_binding_values
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
+    relation_prefill_bindings_for_period,
     relation_prefill_values_as_binding_values,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
+from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloRevision, RegistrySnapshot
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 from ._cross_dependency_calculation_support import (
@@ -176,19 +178,19 @@ _M190_RETENCIONES_PROBE_QUARTERS: tuple[Decimal, Decimal, Decimal, Decimal] = (
 #: exercised against more than one (perceptor, clave) pair. "A" is trabajo
 #: (empleados) against the fixture perceptor's "G" actividades profesionales.
 _M190_SECOND_CLAVE = "A"
-_M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-rel-111-actividades-dinerario-importe-anual"
-_M190_REL_111_RETENCIONES = "modelo-190-rel-111-retenciones-anual"
+_M190_REL_111_ACTIVIDADES_DINERARIO = "modelo-190-111-actividades-dinerario-importe-anual"
+_M190_REL_111_RETENCIONES = "modelo-190-111-retenciones-anual"
 _M190_EXPECTED_RELATION_IDS = frozenset(
     {
-        "modelo-190-rel-111-trabajo-dinerario-importe-anual",
-        "modelo-190-rel-111-trabajo-especie-importe-anual",
+        "modelo-190-111-trabajo-dinerario-importe-anual",
+        "modelo-190-111-trabajo-especie-importe-anual",
         _M190_REL_111_ACTIVIDADES_DINERARIO,
-        "modelo-190-rel-111-actividades-especie-importe-anual",
-        "modelo-190-rel-111-premios-dinerario-importe-anual",
-        "modelo-190-rel-111-premios-especie-importe-anual",
-        "modelo-190-rel-111-ganancias-dinerario-importe-anual",
-        "modelo-190-rel-111-ganancias-especie-importe-anual",
-        "modelo-190-rel-111-derechos-imagen-importe-anual",
+        "modelo-190-111-actividades-especie-importe-anual",
+        "modelo-190-111-premios-dinerario-importe-anual",
+        "modelo-190-111-premios-especie-importe-anual",
+        "modelo-190-111-ganancias-dinerario-importe-anual",
+        "modelo-190-111-ganancias-especie-importe-anual",
+        "modelo-190-111-derechos-imagen-importe-anual",
         _M190_REL_111_RETENCIONES,
     }
 )
@@ -317,7 +319,7 @@ def _m190_fixture_relation_source_value(
     percepciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
     retenciones_quarterly: tuple[Decimal, Decimal, Decimal, Decimal],
 ) -> Decimal:
-    relation_id = requirement.relation_ids[0]
+    relation_id = requirement.target_bindings[0]
     if relation_id == _M190_REL_111_ACTIVIDADES_DINERARIO:
         return percepciones_quarterly[period_index]
     if relation_id == _M190_REL_111_RETENCIONES:
@@ -348,9 +350,9 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
 ) -> None:
     for modelo in registry_authority.modelos:
         for revision in modelo.revisions.values():
-            if not revision.relations:
+            relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
+            if not relation_ids:
                 continue
-            relation_ids = {relation.id for relation in revision.relations}
             for filing_year, period in _full_relation_filing_year_periods(revision=revision, relation_ids=relation_ids):
                 _assert_relations_resolve_from_observations(
                     target_modelo=modelo.id,
@@ -378,9 +380,7 @@ def _full_relation_filing_year_periods(
     for filing_year in _revision_edge_years(revision):
         for period in revision.period_selector.periods:
             active_relation_ids = {
-                relation.id
-                for relation in revision.relations
-                if not relation.target_periods or period in relation.target_periods
+                binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=period)
             }
             if active_relation_ids == relation_ids:
                 yield filing_year, period
@@ -427,9 +427,9 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "2019-2022",
         _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
-        "modelo-180-rel-115-base-anual",
-        "modelo-180-rel-115-retenciones-anual",
+        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
+        "modelo-180-115-base-anual",
+        "modelo-180-115-retenciones-anual",
         id="modelo-180-historical",
     ),
     pytest.param(
@@ -438,9 +438,9 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "2023-y-siguientes",
         _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
-        "modelo-180-rel-115-base-anual",
-        "modelo-180-rel-115-retenciones-anual",
+        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
+        "modelo-180-115-base-anual",
+        "modelo-180-115-retenciones-anual",
         id="modelo-180-current",
     ),
     pytest.param(
@@ -449,9 +449,9 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "2023-y-siguientes",
         _m180_fixture_relation_source_values,
         "modelo-180-115-perceptores-anual",
-        frozenset({"modelo-180-rel-115-base-anual", "modelo-180-rel-115-retenciones-anual"}),
-        "modelo-180-rel-115-base-anual",
-        "modelo-180-rel-115-retenciones-anual",
+        frozenset({"modelo-180-115-base-anual", "modelo-180-115-retenciones-anual"}),
+        "modelo-180-115-base-anual",
+        "modelo-180-115-retenciones-anual",
         id="modelo-180-future",
     ),
     pytest.param(
@@ -464,9 +464,9 @@ _ANNUAL_SUMMARY_RELATION_CASES = (
         "2025-y-siguientes",
         _m193_relation_source_values,
         "modelo-193-123-perceptores-anual",
-        frozenset({"modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"}),
-        "modelo-193-rel-123-base-anual",
-        "modelo-193-rel-123-retenciones-anual",
+        frozenset({"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}),
+        "modelo-193-123-base-anual",
+        "modelo-193-123-retenciones-anual",
         id="modelo-193-current",
     ),
 )
@@ -662,7 +662,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     assert result.values[_M190_PERCEPCIONES_TOTAL_CASILLA] == expected_percepciones_annual
     assert result.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_retenciones_annual
     assert len(entries[_M190_PERCEPCIONES_TOTAL_CASILLA].operand_refs) == 9
-    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-rel-111-retenciones-anual",)
+    assert entries[_M190_RETENCIONES_TOTAL_CASILLA].operand_refs == ("modelo-190-111-retenciones-anual",)
 
 
 def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual_observations(
@@ -688,7 +688,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -700,24 +700,23 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
     assert set(relation_values) == {
-        "renta-2025-rel-111-retenciones-trimestrales",
-        "renta-2025-rel-111-retenciones-mensuales",
-        "renta-2025-rel-123-retenciones-trimestrales",
-        "renta-2025-rel-130-pagos-fraccionados",
-        "renta-2025-rel-131-pagos-fraccionados",
-        "renta-2025-rel-184-atribucion-actividades-economicas",
-        "renta-2025-rel-190-retenciones-anuales",
-        "renta-2025-rel-193-retenciones-anuales",
+        "renta-modelo-111-retenciones-periodicas",
+        "renta-modelo-123-retenciones-periodicas",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-pagos-fraccionados",
+        "renta-modelo-184-atribucion-actividades-economicas",
+        "renta-modelo-190-retenciones-anuales",
+        "renta-modelo-193-retenciones-anuales",
     }
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs == (
-        "renta-2025-rel-130-pagos-fraccionados",
-        "renta-2025-rel-131-pagos-fraccionados",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-pagos-fraccionados",
     )
 
 
@@ -732,7 +731,7 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
     ``tipo2.renta-atribuible-importe`` — folds into the partner's Modelo 100
     casilla 1577 (``Rendimiento neto de actividad economica atribuido por
     entidades en regimen de atribucion de rentas``) through the canonical
-    cross-modelo relation ``renta-2025-rel-184-atribucion-actividades-economicas``
+    cross-modelo relation ``renta-modelo-184-atribucion-actividades-economicas``
     whose ``relation_prefill`` target binding materialises the value.
 
     The expected 1577 value is the SEEDED Modelo 184 observation, NOT a registry
@@ -742,14 +741,14 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
     attributed amount end to end.
     """
     attributed_income = Decimal("777.77")
-    m184_relation = "renta-2025-rel-184-atribucion-actividades-economicas"
-    m184_target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
+    m184_relation = "renta-modelo-184-atribucion-actividades-economicas"
+    m184_target_binding = "renta-modelo-184-atribucion-actividades-economicas"
     casilla_1577 = validated_casilla_id("1577", surface="modelo-184 attribution fold-in target")
 
     snapshot = registry_snapshot("100", 2025, "0A")
 
     def _value_for(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
-        if requirement.relation_ids[0] == m184_relation:
+        if requirement.target_bindings[0] == m184_relation:
             return attributed_income
         return _renta_relation_observed_value(requirement, period_index)
 
@@ -796,8 +795,8 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
     assert result.values[casilla_1577] == attributed_income
@@ -860,7 +859,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
             "renta-profile-has-economic-activity": Decimal("1"),
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
             "renta-profile-family-minor-children-in-unit": Decimal("0"),
             "renta-profile-marriage-full-year": Decimal("0"),
@@ -872,13 +871,13 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING: Decimal("0"),
         },
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
-        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
-    assert "renta-2025-rel-130-pagos-fraccionados" in relation_values
-    assert "renta-2025-rel-130-pagos-fraccionados" in entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs
+    assert "renta-modelo-130-pagos-fraccionados" in relation_values
+    assert "renta-modelo-130-pagos-fraccionados" in entries[_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA].operand_refs
 
 
 def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
@@ -919,23 +918,23 @@ def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_060
     )
 
     # Relations must be present and resolved to their correct sums.
-    assert "renta-2024-rel-131-pagos-fraccionados" in relation_values
-    assert "renta-2024-rel-130-pagos-fraccionados" in relation_values
-    assert relation_values["renta-2024-rel-131-pagos-fraccionados"] == Decimal("1800")
-    assert relation_values["renta-2024-rel-130-pagos-fraccionados"] == Decimal("1000")
+    assert "renta-modelo-131-pagos-fraccionados" in relation_values
+    assert "renta-modelo-130-pagos-fraccionados" in relation_values
+    assert relation_values["renta-modelo-131-pagos-fraccionados"] == Decimal("1800")
+    assert relation_values["renta-modelo-130-pagos-fraccionados"] == Decimal("1000")
 
     # The pagos-fraccionados-ingresados formula must target 0604 and reference both relations.
-    formula = next(f for f in snapshot.revision.formulas if f.id == "renta-2024-pagos-fraccionados-ingresados")
+    formula = next(f for f in snapshot.revision.formulas if f.id == "renta-pagos-fraccionados-ingresados")
     assert formula.target_casilla_id == _M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA
     assert formula.expression.op is not None
-    relation_ids_in_formula = {arg.relation for arg in formula.expression.args if arg.relation is not None}
+    relation_ids_in_formula = set(expression_binding_refs(formula.expression))
     assert relation_ids_in_formula == {
-        "renta-2024-rel-130-pagos-fraccionados",
-        "renta-2024-rel-131-pagos-fraccionados",
+        "renta-modelo-130-pagos-fraccionados",
+        "renta-modelo-131-pagos-fraccionados",
     }
 
     # The binding for M131 must declare the correct source_modelo and source_casilla_id.
-    binding = next(b for b in snapshot.revision.bindings if b.id == "renta-2024-modelo-131-pagos-fraccionados")
+    binding = next(b for b in snapshot.revision.bindings if b.id == "renta-modelo-131-pagos-fraccionados")
     assert selector_as_dict(binding) == {
         "source_modelo": "131",
         "source_casilla_id": _M131_PAGOS_FRACCIONADOS_CASILLA,
@@ -966,7 +965,7 @@ def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_cha
         )
         rv = resolve_relation_values_from_observations(snapshot.revision, obs, filing_year=filing_year, period="0A")
         # 0604 = M130 sum + M131 sum = 4*100 + 4*m131_quarterly
-        return rv["renta-2024-rel-130-pagos-fraccionados"] + rv["renta-2024-rel-131-pagos-fraccionados"]
+        return rv["renta-modelo-130-pagos-fraccionados"] + rv["renta-modelo-131-pagos-fraccionados"]
 
     result_low = _resolve_0604_relations(Decimal("300"))
     result_high = _resolve_0604_relations(Decimal("450"))
@@ -1060,22 +1059,22 @@ def _revision_edge_years(revision: ModeloRevision) -> tuple[int, ...]:
 
 
 def _renta_relation_observed_value(requirement: RegistryFoldRequirement, period_index: int) -> Decimal:
-    relation_id = requirement.relation_ids[0]
-    if relation_id == "renta-2025-rel-111-retenciones-trimestrales":
+    relation_id = requirement.target_bindings[0]
+    if relation_id == "renta-modelo-111-retenciones-periodicas":
         return (Decimal("1"), Decimal("2"), Decimal("3"), Decimal("4"))[period_index]
-    if relation_id == "renta-2025-rel-111-retenciones-mensuales":
+    if relation_id == "renta-modelo-111-retenciones-periodicas":
         return Decimal(period_index + 1)
-    if relation_id == "renta-2025-rel-123-retenciones-trimestrales":
+    if relation_id == "renta-modelo-123-retenciones-periodicas":
         return Decimal("20")
-    if relation_id == "renta-2025-rel-130-pagos-fraccionados":
+    if relation_id == "renta-modelo-130-pagos-fraccionados":
         return (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))[period_index]
-    if relation_id == "renta-2025-rel-131-pagos-fraccionados":
+    if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("5")
-    if relation_id == "renta-2025-rel-190-retenciones-anuales":
+    if relation_id == "renta-modelo-190-retenciones-anuales":
         return Decimal("40")
-    if relation_id == "renta-2025-rel-193-retenciones-anuales":
+    if relation_id == "renta-modelo-193-retenciones-anuales":
         return Decimal("50")
-    if relation_id == "renta-2025-rel-184-atribucion-actividades-economicas":
+    if relation_id == "renta-modelo-184-atribucion-actividades-economicas":
         return Decimal("60")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
@@ -1087,18 +1086,17 @@ def _renta_2024_relation_observed_value(
     m130_quarterly_amounts: tuple[Decimal, Decimal, Decimal, Decimal],
     m131_quarterly_amounts: tuple[Decimal, Decimal, Decimal, Decimal],
 ) -> Decimal:
-    relation_id = requirement.relation_ids[0]
-    if relation_id == "renta-2024-rel-131-pagos-fraccionados":
+    relation_id = requirement.target_bindings[0]
+    if relation_id == "renta-modelo-131-pagos-fraccionados":
         return m131_quarterly_amounts[period_index]
-    if relation_id == "renta-2024-rel-130-pagos-fraccionados":
+    if relation_id == "renta-modelo-130-pagos-fraccionados":
         return m130_quarterly_amounts[period_index]
-    if relation_id == "renta-2024-rel-131-rendimiento-neto-modulos":
+    if relation_id == "renta-modelo-131-rendimiento-neto-modulos":
         return Decimal("0")
     if relation_id in {
-        "renta-2024-rel-111-retenciones-trimestrales",
-        "renta-2024-rel-111-retenciones-mensuales",
-        "renta-2024-rel-123-retenciones-trimestrales",
-        "renta-2024-rel-193-retenciones-anuales",
+        "renta-modelo-111-retenciones-periodicas",
+        "renta-modelo-123-retenciones-periodicas",
+        "renta-modelo-193-retenciones-anuales",
     }:
         return Decimal("0")
     raise AssertionError(f"unhandled 2024 relation requirement {relation_id}")
@@ -1109,11 +1107,11 @@ def _renta_relation_observed_value_from_modelo_130_results(
     period_index: int,
     modelo_130_results: dict[str, RegistryCalculationResult],
 ) -> Decimal:
-    relation_id = requirement.relation_ids[0]
-    if relation_id == "renta-2025-rel-130-pagos-fraccionados":
+    relation_id = requirement.target_bindings[0]
+    if relation_id == "renta-modelo-130-pagos-fraccionados":
         period = ("1T", "2T", "3T", "4T")[period_index]
         return modelo_130_results[period].values[_M130_A_INGRESAR_CASILLA]
-    if relation_id == "renta-2025-rel-131-pagos-fraccionados":
+    if relation_id == "renta-modelo-131-pagos-fraccionados":
         return Decimal("0")
     return Decimal("0")
 

@@ -26,29 +26,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
-from ...adapters.inbound.justificante.parser import parse_justificante_bytes
-from ...adapters.outbound.aeat.sede.declarations_observations import registry_observation_from_filed_declaration
-from ...adapters.outbound.aeat.sede.declarations_remote import extract_csv_from_url
-from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...adapters.outbound.aeat.sede.errors import SedeParseError
-from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...application.calculations.iva_compensation_history import (
-    IvaCompensationHistoryRepository,
-    persist_observation_envelope_and_iva_history,
-)
-from ...application.calculations.observations_repository import (
-    CalculationObservationRepository,
-    ObservationSourceKind,
-    observation_key,
-)
+from ...application.calculations.observations_repository import ObservationSourceKind, observation_key
 from ...core.aeat_csv import normalise_aeat_csv
 from ...core.hashing import sha256_hex
 from ...core.identity.tax_id import same_tax_identifier
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
@@ -65,16 +46,20 @@ from ...domain.modelos.filing_record import (
     is_justificante_backed_external_evidence,
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
-from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ..modelo.external_import_actions import (
     ExternalFilingBaselineSource,
-    import_external_filing_source,
 )
 from .errors import (
     LiveApplicationError,
     LiveApplicationInputError,
     LiveReadPrecondition,
     live_read_no_recovery_verdict,
+)
+from .filed_observation_ports import (
+    FiledDeclarationProtocol,
+    FiledObservationArtefactProtocol,
+    FiledObservationPersistencePorts,
+    FiledObservationProtocol,
 )
 
 logger = get_logger(__name__)
@@ -111,10 +96,11 @@ class FiledJustificanteUnreachedReason(StrEnum):
 
 
 def import_complete_filed_observation_baseline(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     *,
     bucket_id: str,
     justificante_csvs: tuple[str, ...],
+    ports: FiledObservationPersistencePorts,
 ) -> ModeloRecord | None:
     """Persist an amendable baseline when live capture carries complete content.
 
@@ -140,7 +126,7 @@ def import_complete_filed_observation_baseline(
                 "period": observation.period.registry_token,
             },
         )
-    return import_external_filing_source(
+    return ports.baseline_import.import_source(
         ExternalFilingBaselineSource(
             modelo=observation.modelo,
             filing_year=observation.ejercicio,
@@ -179,9 +165,9 @@ class FiledJustificanteEnrollmentResult:
 
 
 def persist_filed_calculation_observation(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     *,
-    repository: CalculationObservationRepository | None = None,
+    ports: FiledObservationPersistencePorts,
     justificante_csvs: tuple[str, ...] = (),
 ) -> str:
     """Promote one AEAT filed-declaration observation into calculation history.
@@ -210,8 +196,8 @@ def persist_filed_calculation_observation(
                 },
             ),
         )
-    registry_observation = registry_observation_from_filed_declaration(observation)
-    repo = repository if repository is not None else CalculationObservationRepository()
+    registry_observation = ports.transformation.registry_observation(observation)
+    repo = ports.calculation_repository
     payload = repo.prepare_observation_envelope(
         registry_observation,
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
@@ -231,12 +217,11 @@ def persist_filed_calculation_observation(
             (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
             None,
         )
-        persist_observation_envelope_and_iva_history(
+        ports.iva_observation_persistence.persist(
             observation_repository=repo,
-            history_repository=IvaCompensationHistoryRepository(objects=repo.secure_object_repository),
+            history_repository=ports.iva_history_repository,
             envelope=payload,
             taxpayer_nif=observation.authenticated_identity,
-            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             expediente_id=observation.expediente_id,
             status=observation.status,
             source_observation_key=(
@@ -253,8 +238,8 @@ def persist_filed_calculation_observation(
 
 
 def select_latest_filed_observations_in_history_order(
-    observations: tuple[FiledDeclaracionObservation, ...],
-) -> tuple[FiledDeclaracionObservation, ...]:
+    observations: tuple[FiledObservationProtocol, ...],
+) -> tuple[FiledObservationProtocol, ...]:
     """Return the latest observation per (modelo, year, period) in deterministic history order.
 
     "Latest" is by :func:`_filed_observation_rank` (an ALTA registration beats a
@@ -265,7 +250,7 @@ def select_latest_filed_observations_in_history_order(
     below and the filed-capture finalizer, so every capture route persists the same
     observations in the same order and cannot drift.
     """
-    latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[str, int, Period], FiledObservationProtocol] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
@@ -300,10 +285,11 @@ class _FilingStampOutcome:
 def _stamp_filing_with_filed_justificante(
     justificante: Justificante,
     *,
-    observation: FiledDeclaracionObservation,
-    artefact: FiledDeclaracionArtefact,
+    observation: FiledObservationProtocol,
+    artefact: FiledObservationArtefactProtocol,
     bucket_id: str,
     catalogue: ModeloRecordCatalogue,
+    ports: FiledObservationPersistencePorts,
 ) -> _FilingStampOutcome:
     """Stamp the current filing record with this justificante's evidence.
 
@@ -351,17 +337,16 @@ def _stamp_filing_with_filed_justificante(
         observation=observation,
         justificante=justificante,
         occurred_at=artefact.captured_at,
+        ports=ports,
     )
     return _FilingStampOutcome(updated, stamped_record_ids=(stamped.filing_record_id,))
 
 
 def enroll_filed_justificante_evidence(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     *,
-    store: FiledDeclaracionObservationStore,
+    ports: FiledObservationPersistencePorts,
     bucket_id: str,
-    justificante_repository: JustificanteRepository | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
 ) -> FiledJustificanteEnrollmentResult:
     """Persist matching justificante metadata and stamp matching current filings.
 
@@ -377,8 +362,8 @@ def enroll_filed_justificante_evidence(
     if not _is_active_filed_observation(observation):
         return FiledJustificanteEnrollmentResult()
 
-    justificante_repo = justificante_repository or JustificanteRepository()
-    filing_repo = filing_repository or ModeloRecordCatalogueRepository()
+    justificante_repo = ports.justificante_repository
+    filing_repo = ports.filing_repository
     saved_csvs: list[str] = []
     stamped_record_ids: list[str] = []
     conflicting_record_ids: list[str] = []
@@ -389,11 +374,11 @@ def enroll_filed_justificante_evidence(
     # enough for another caller's filing record to land and be discarded. The
     # parsed receipts are collected instead, and every stamping is applied inside
     # one guarded unit of work below.
-    stampable: list[tuple[Justificante, FiledDeclaracionArtefact]] = []
+    stampable: list[tuple[Justificante, FiledObservationArtefactProtocol]] = []
     for artefact in observation.artefacts:
         if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
             continue
-        parsed = _parse_matching_filed_justificante(observation, artefact, store)
+        parsed = _parse_matching_filed_justificante(observation, artefact, ports)
         if parsed.justificante is None:
             if parsed.reason is not None:
                 notices.append(_unreached_justificante_notice(observation, parsed.reason))
@@ -425,6 +410,7 @@ def enroll_filed_justificante_evidence(
                     artefact=artefact,
                     bucket_id=bucket_id,
                     catalogue=catalogue,
+                    ports=ports,
                 )
                 catalogue = outcome.catalogue
                 stamped_record_ids.extend(outcome.stamped_record_ids)
@@ -441,7 +427,9 @@ def enroll_filed_justificante_evidence(
 
 
 def persist_iva_compensation_history_observations_strict(
-    observations: tuple[FiledDeclaracionObservation, ...],
+    observations: tuple[FiledObservationProtocol, ...],
+    *,
+    ports: FiledObservationPersistencePorts,
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
     for observation in observations:
@@ -452,13 +440,13 @@ def persist_iva_compensation_history_observations_strict(
             )
 
     keys: list[str] = []
-    history_repo = IvaCompensationHistoryRepository()
+    history_repo = ports.iva_history_repository
     for observation in select_latest_filed_observations_in_history_order(observations):
         if not _is_active_filed_observation(observation):
             continue
         try:
-            key = persist_filed_calculation_observation(observation)
-        except SedeParseError as exc:
+            key = persist_filed_calculation_observation(observation, ports=ports)
+        except LiveApplicationError as exc:
             raise LiveApplicationError(
                 translated_message="application.live.filed_observations.errors.iva_history_promotion_failed",
                 context={"modelo": Modelo.M303.value, "period": str(observation.period)},
@@ -472,9 +460,11 @@ def persist_iva_compensation_history_observations_strict(
     return tuple(keys)
 
 
-def latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tuple[Declaracion, ...]:
-    """Return the latest :class:`Declaracion` per period from register rows."""
-    latest: dict[Period, Declaracion] = {}
+def latest_declarations_by_period(
+    declarations: tuple[FiledDeclarationProtocol, ...],
+) -> tuple[FiledDeclarationProtocol, ...]:
+    """Return the latest period-bearing declaration row per period."""
+    latest: dict[Period, FiledDeclarationProtocol] = {}
     for declaration in declarations:
         current = latest.get(declaration.period)
         if current is None:
@@ -497,9 +487,10 @@ def _emit_filed_justificante_evidence_event(
     *,
     bucket_id: str,
     filing: ModeloRecord,
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     justificante: Justificante,
     occurred_at: datetime,
+    ports: FiledObservationPersistencePorts,
 ) -> None:
     event_payload = {
         "work_unit_id": filing.work_unit_id,
@@ -512,7 +503,7 @@ def _emit_filed_justificante_evidence_event(
         "presented_at": observation.presented_at.isoformat(),
     }
     emit_bucket_event(
-        repository=BucketEventHistoryRepository(),
+        repository=ports.bucket_event_repository,
         bucket_id=bucket_id,
         event_type=BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED,
         occurred_at=occurred_at,
@@ -549,9 +540,9 @@ def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> t
 
 
 def _parse_matching_filed_justificante(
-    observation: FiledDeclaracionObservation,
-    artefact: FiledDeclaracionArtefact,
-    store: FiledDeclaracionObservationStore,
+    observation: FiledObservationProtocol,
+    artefact: FiledObservationArtefactProtocol,
+    ports: FiledObservationPersistencePorts,
 ) -> _FiledJustificanteParse:
     """Parse one stored justificante artefact, or name the reason there is no receipt.
 
@@ -570,7 +561,7 @@ def _parse_matching_filed_justificante(
     if storage_ref is None:
         return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.UNREADABLE_ARTEFACT)
     try:
-        body = store.load_artefact(storage_ref)
+        body = ports.observation_persistence.load_artefact(storage_ref)
     except Exception:
         logger.warning(
             "filed observation: ignored unreadable justificante artefact %s",
@@ -585,7 +576,7 @@ def _parse_matching_filed_justificante(
         )
         return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.MANIFEST_MISMATCH)
     try:
-        justificante = parse_justificante_bytes(body)
+        justificante = ports.parser.parse_justificante(body)
     except Exception:
         logger.warning(
             "filed observation: ignored unparsable justificante artefact %s",
@@ -594,8 +585,8 @@ def _parse_matching_filed_justificante(
         )
         return _FiledJustificanteParse(reason=FiledJustificanteUnreachedReason.UNPARSABLE_PDF)
     try:
-        captured_csv = extract_csv_from_url(str(artefact.source_url))
-    except SedeParseError:
+        captured_csv = ports.parser.csv_from_source_url(str(artefact.source_url))
+    except Exception:
         logger.warning(
             "filed observation: ignored justificante artefact %s whose source URL carries no recoverable csv",
             storage_ref,
@@ -624,7 +615,7 @@ def _parse_matching_filed_justificante(
 
 
 def _unreached_justificante_notice(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     reason: FiledJustificanteUnreachedReason,
 ) -> Notice:
     """Project one unreached-evidence reason onto the shared notice channel."""
@@ -648,7 +639,7 @@ def _unreached_justificante_notice(
 
 def _justificante_matches_filed_observation(
     justificante: Justificante,
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
 ) -> bool:
     return justificante.matches_filing_target(
         modelo=observation.modelo,
@@ -661,7 +652,7 @@ def _justificante_matches_filed_observation(
 def _filed_justificante_can_stamp_filing(
     justificante: Justificante,
     *,
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     filing: ModeloRecord,
 ) -> bool:
     from .justificante import expected_tax_id_for_filing_record, justificante_matches_filing_record
@@ -684,16 +675,16 @@ def _filed_justificante_can_stamp_filing(
     )
 
 
-def _is_active_filed_observation(observation: FiledDeclaracionObservation) -> bool:
+def _is_active_filed_observation(observation: FiledObservationProtocol) -> bool:
     return observation.status.strip().upper() == "ALTA"
 
 
-def _filed_observation_rank(observation: FiledDeclaracionObservation) -> tuple[bool, datetime, str]:
+def _filed_observation_rank(observation: FiledObservationProtocol) -> tuple[bool, datetime, str]:
     return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
 
 
 def _filed_observation_source_metadata(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     *,
     justificante_csvs: tuple[str, ...] = (),
 ) -> dict[str, str]:
@@ -739,7 +730,7 @@ def _filed_observation_source_metadata(
     return metadata
 
 
-def _filed_observation_identity_key(observation: FiledDeclaracionObservation) -> tuple[str, int, str, str]:
+def _filed_observation_identity_key(observation: FiledObservationProtocol) -> tuple[str, int, str, str]:
     return (
         observation.modelo,
         observation.ejercicio,
@@ -749,7 +740,7 @@ def _filed_observation_identity_key(observation: FiledDeclaracionObservation) ->
 
 
 def _justificante_csvs_for_observation(
-    observation: FiledDeclaracionObservation,
+    observation: FiledObservationProtocol,
     justificante_csvs_by_observation: Mapping[tuple[str, int, str, str], tuple[str, ...]] | None,
 ) -> tuple[str, ...]:
     if justificante_csvs_by_observation is None:

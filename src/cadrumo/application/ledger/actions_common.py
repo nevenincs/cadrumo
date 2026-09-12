@@ -1,8 +1,7 @@
 """Shared ledger action helpers for repositories, events, and guards.
 
-This module normalizes concrete :class:`TransactionCatalogueRepository`,
-:class:`InvoiceCatalogueRepository`, and :class:`BucketEventHistoryRepository`
-instances; builds :class:`~cadrumo.domain.buckets.BucketEvent` audit entries;
+This module validates injected ledger persistence ports; builds
+:class:`~cadrumo.domain.buckets.BucketEvent` audit entries;
 mutates :class:`TransactionCatalogue` and :class:`InvoiceCatalogue` snapshots
 atomically; and verifies evidence, attachment, usage-ratio, and
 finalized-modelo blockers for the public ledger action services.
@@ -24,27 +23,18 @@ from ...core.time.clock import now
 if TYPE_CHECKING:
     from ...core.secure_object_write import SecureObjectWrite
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
-from ...adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time.utc import coerce_utc_aware
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.models import BucketTransactionRef, Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import UsageRatioProfile, validate_usage_ratio_reference
 from .evidence import PurchaseInvoiceEvidence
@@ -63,6 +53,7 @@ from .protocols import (
     InvoiceCatalogueCoCommitWriterProtocol,
     TransactionCatalogueCoCommitWriterProtocol,
 )
+from .persistence_ports import LedgerPersistenceConflictError
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
@@ -80,24 +71,22 @@ _REMOVAL_ADVISORY_REVISION_STATES = frozenset(
 )
 
 
-def require_concrete_repository[RepositoryT](
-    repository: object,
-    concrete: type[RepositoryT],
+def require_repository[RepositoryT](
+    repository: RepositoryT | None,
     *,
     reason: str,
 ) -> RepositoryT:
-    """Return an injected repository once it is the concrete class this call needs.
+    """Require a port selected by an outer composition root.
 
-    These resolvers accept a Protocol so a caller can inject a stand-in, but
-    return the concrete repository because the write path uses methods the
-    Protocol does not declare. A stand-in that reaches here cannot serve the
-    call, so it is refused -- not asserted, because ``assert`` is stripped under
-    ``python -O`` and the substitution would then fail later, mid-write.
+    Ledger application services deliberately do not choose persistence
+    implementations.  Failing before any read/write preserves the prior
+    all-or-nothing action semantics while making an unwired production caller
+    explicit.
     """
-    if not isinstance(repository, concrete):
+    if repository is None:
         raise TransactionValidationError(
-            f"{reason} requires a concrete {concrete.__name__}",
-            context={"supplied_repository": type(repository).__name__},
+            f"{reason} requires an injected persistence port",
+            context={"supplied_repository": "none"},
         )
     return repository
 
@@ -105,47 +94,38 @@ def require_concrete_repository[RepositoryT](
 def resolve_transaction_repository(
     *,
     bucket_id: str,
-    repository: TransactionCatalogueRepository | TransactionCatalogueRepositoryProtocol | None,
-) -> TransactionCatalogueRepository:
-    if repository is None:
-        return TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> TransactionCatalogueCoCommitWriterProtocol:
+    repository = require_repository(repository, reason="the manual ledger transaction path")
     if repository.bucket_id != bucket_id:
         raise TransactionValidationError(
             "transaction repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    return require_concrete_repository(
-        repository, TransactionCatalogueRepository, reason="the manual ledger transaction path"
-    )
+    return repository
 
 
 def resolve_invoice_repository(
     *,
     bucket_id: str,
-    repository: InvoiceCatalogueRepositoryProtocol | None,
-) -> InvoiceCatalogueRepository:
-    if repository is None:
-        return InvoiceCatalogueRepository(bucket_id=bucket_id)
+    repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+) -> InvoiceCatalogueCoCommitWriterProtocol:
+    repository = require_repository(repository, reason="the manual ledger invoice path")
     if repository.bucket_id is not None and repository.bucket_id != bucket_id:
         raise TransactionValidationError(
             "invoice repository bucket_id does not match the manual ledger command bucket",
             context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
         )
-    return require_concrete_repository(repository, InvoiceCatalogueRepository, reason="the manual ledger invoice path")
+    return repository
 
 
 def resolve_bucket_event_repository(
     *,
     bucket_id: str,
-    repository: BucketEventHistoryRepositoryProtocol | None,
-) -> BucketEventHistoryRepository:
-    if repository is not None:
-        return require_concrete_repository(
-            repository, BucketEventHistoryRepository, reason="the bucket-event history path"
-        )
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-
-    return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+    repository: BucketEventHistoryCoCommitWriterProtocol | None,
+) -> BucketEventHistoryCoCommitWriterProtocol:
+    _ = bucket_id
+    return require_repository(repository, reason="the bucket-event history path")
 
 
 def require_actor(value: str, *, operation: str) -> str:
@@ -220,20 +200,6 @@ def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value
     return adapter.validate_python(value)
 
 
-def _default_calculation_repository() -> CalculationRevisionCatalogueRepositoryProtocol:
-    """Build the concrete catalogue only when the caller injected none.
-
-    The adapter module reaches the calculation registry, so importing it at
-    module scope made every consumer of this action layer pay for the registry
-    graph -- including CLI paths that resolve a ledger verb and never touch a
-    calculation. Only the protocol is needed to type the parameter, and the
-    concrete repository only when it is actually constructed.
-    """
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-
-    return CalculationRevisionCatalogueRepository()
-
-
 def blocking_modelo_references(
     *,
     bucket_id: str,
@@ -245,8 +211,8 @@ def blocking_modelo_references(
     if not transaction_ids:
         return ()
     wanted = set(transaction_ids)
-    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or _default_calculation_repository()).load()
+    work_units = require_repository(work_unit_repository, reason="the finalized-modelo guard").load()
+    revisions = require_repository(calculation_repository, reason="the finalized-modelo guard").load()
     blockers: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
         if revision.state not in SEALED_REVISION_STATES:
@@ -298,8 +264,8 @@ def draft_revision_advisories(
     if not transaction_ids:
         return ()
     wanted = set(transaction_ids)
-    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or _default_calculation_repository()).load()
+    work_units = require_repository(work_unit_repository, reason="the draft-modelo advisory").load()
+    revisions = require_repository(calculation_repository, reason="the draft-modelo advisory").load()
     advisories: list[LedgerRemovalBlocker] = []
     for revision in revisions.values():
         if revision.state not in _REMOVAL_ADVISORY_REVISION_STATES:
@@ -344,8 +310,8 @@ def blockers_by_source_transaction_id(
     without reloading the work-unit and calculation repositories on every row
     (the load-once half of the ``bulk_classify_from_csv`` batching contract).
     """
-    work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
-    revisions = (calculation_repository or _default_calculation_repository()).load()
+    work_units = require_repository(work_unit_repository, reason="the finalized-modelo guard").load()
+    revisions = require_repository(calculation_repository, reason="the finalized-modelo guard").load()
     out: dict[str, list[LedgerRemovalBlocker]] = {}
     for revision in revisions.values():
         if revision.state not in SEALED_REVISION_STATES:
@@ -451,11 +417,16 @@ def verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
     attachment_store: _AttachmentStoreProtocol | None,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
-        _verify_purchase_invoice_evidence(command, invoice_repository=invoice_repository)
+        _verify_purchase_invoice_evidence(
+            command,
+            invoice_repository=invoice_repository,
+            evidence_records=evidence_records,
+        )
     if command.attachment_ids:
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
@@ -463,40 +434,15 @@ def verify_evidence_references(
 def resolve_attachment_store(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> _AttachmentStoreProtocol:
-    """Resolve the shared attachment-store port for ledger action helpers.
-
-    The concrete fallback belongs to the persistence adapter. Keeping this
-    construction helper with the other shared ledger action infrastructure
-    prevents individual action modules from each reaching into storage.
-    """
-    from ...adapters.persistence.storage.attachment import resolve_attachment_store
-
-    return resolve_attachment_store(attachment_store)
-
-
-def purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
-    """Return the bucket's registered ``PurchaseInvoiceEvidence`` records.
-
-    Reads the bucket-scoped encrypted purchase-invoice evidence store written by
-    ``aeat app ledger evidence add``, distinct from the rich
-    :class:`InvoiceCatalogue` written by invoice-import flows. Local imports mirror
-    this module's existing deferred-import style.
-    """
-    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ...core.config import load_settings
-    from .evidence import PurchaseInvoiceEvidenceRepository
-
-    repository = PurchaseInvoiceEvidenceRepository(
-        objects=secure_object_repository_for_bucket(bucket_id, load_settings()),
-    )
-    document = repository.load(bucket_id)
-    return () if document is None else document.records
+    """Require the attachment store selected by the outer composition root."""
+    return require_repository(attachment_store, reason="the ledger attachment verification path")
 
 
 def _verify_purchase_invoice_evidence(
     command: ManualLedgerTransactionCommand,
     *,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    invoice_repository: InvoiceCatalogueCoCommitWriterProtocol | None,
+    evidence_records: tuple[PurchaseInvoiceEvidence, ...] = (),
 ) -> None:
     """Refuse a purchase-invoice evidence reference that no id space accepts.
 
@@ -513,7 +459,7 @@ def _verify_purchase_invoice_evidence(
     reference = classify_evidence_reference(
         evidence_id,
         bucket_id=command.bucket_id,
-        evidence_records=purchase_invoice_evidence_records(command.bucket_id),
+        evidence_records=evidence_records,
         invoices=resolve_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
     )
     if reference.is_acceptable:
@@ -606,7 +552,7 @@ def verify_usage_ratio_reference(
 ) -> None:
     if command.usage_ratio_id is None:
         return
-    profile = usage_ratio_profile or load_usage_ratios(bucket_id=command.bucket_id)
+    profile = require_repository(usage_ratio_profile, reason="the usage-ratio validation path")
     try:
         validate_usage_ratio_reference(
             profile,
@@ -667,7 +613,7 @@ def require_transaction(catalogue: TransactionCatalogue, transaction_id: str) ->
     if transaction is None:
         raise TransactionNotFoundError(
             f"transaction not found: {transaction_id}",
-            context={"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace, "transaction_id": transaction_id},
+            context={"transaction_id": transaction_id},
         )
     return transaction
 
@@ -940,19 +886,17 @@ def _commit_with_guarded_events(
         attempts: Maximum reads before the contention is surfaced.
 
     Raises:
-        SecureObjectRevisionConflictError: Contention persisted across every
+        LedgerPersistenceConflictError: Contention persisted across every
             attempt. Refusing beats the silent discard this replaced.
     """
-    from ...adapters.persistence.storage.errors import SecureObjectRevisionConflictError
-
-    last_conflict: SecureObjectRevisionConflictError | None = None
+    last_conflict: LedgerPersistenceConflictError | None = None
     for _attempt in range(attempts):
         event_catalogue, revision_id = event_repository.load_revisioned()
         for event in events:
             event_catalogue = append_bucket_event(event_catalogue, event)
         try:
             commit(event_repository.to_secure_object_write(event_catalogue, expected_revision_id=revision_id))
-        except SecureObjectRevisionConflictError as exc:
+        except LedgerPersistenceConflictError as exc:
             last_conflict = exc
             continue
         return

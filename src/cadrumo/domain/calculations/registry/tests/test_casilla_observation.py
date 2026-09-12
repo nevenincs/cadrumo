@@ -58,7 +58,7 @@ def test_casilla_observation_full_provenance() -> None:
     obs = CasillaObservation(
         casilla_id=_FULL_PROVENANCE_CASILLA,
         value=Decimal("5550"),
-        formula_id="renta-2025-minimo-personal-y-familiar-estatal",
+        formula_id="renta-minimo-personal-y-familiar-estatal",
         operand_refs=_OPERAND_CASILLAS,
         operand_casilla_refs=_OPERAND_CASILLAS,
         operand_values=(Decimal("5550"), Decimal("0"), Decimal("0"), Decimal("0")),
@@ -66,7 +66,7 @@ def test_casilla_observation_full_provenance() -> None:
         source_refs=("aeat-renta-2025-manual-parte1",),
     )
 
-    assert obs.formula_id == "renta-2025-minimo-personal-y-familiar-estatal"
+    assert obs.formula_id == "renta-minimo-personal-y-familiar-estatal"
     assert len(obs.operand_refs) == 4
     assert obs.operand_values[0] == Decimal("5550")
 
@@ -76,7 +76,7 @@ def test_casilla_observation_rejects_untraced_operand_casilla_refs() -> None:
         CasillaObservation(
             casilla_id=_FULL_PROVENANCE_CASILLA,
             value=Decimal("5550"),
-            formula_id="renta-2025-minimo-personal-y-familiar-estatal",
+            formula_id="renta-minimo-personal-y-familiar-estatal",
             operand_refs=("irpf.urban_rental_withholding_rate",),
             operand_casilla_refs=(_MINIMAL_CASILLA,),
             operand_values=(Decimal("0.19"),),

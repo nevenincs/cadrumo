@@ -20,12 +20,9 @@ gap is diagnosable from the failure alone.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import pytest
 
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
@@ -204,7 +201,11 @@ def test_every_declared_relation_prefill_resolves_to_a_real_source_casilla() -> 
                     )
                     continue
                 source_casillas = set(provider.declared_source_casilla_ids)
-                declared = {casilla.id for source_revision in source_modelo.revisions.values() for casilla in source_revision.casillas}
+                declared = {
+                    casilla.id
+                    for source_revision in source_modelo.revisions.values()
+                    for casilla in source_revision.casillas
+                }
                 missing = sorted(source_casillas.difference(declared))
                 if missing:
                     failures.append(

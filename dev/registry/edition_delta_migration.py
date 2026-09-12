@@ -72,13 +72,27 @@ the work directory is written by the migration; the command-line report is
 persisted separately under the repository's ``.logs/audit-runs`` evidence
 hierarchy.
 
+Two proofs, one per starting shape. A modelo that states every row in full is
+proven as above, against its own full copy. A modelo that already names
+predecessors has no full copy left to prove a change against, so it is proven
+against its chain instead: the staged edition is materialised through its
+predecessors and must be **byte-identical** to what the edition materialises to
+now, with the manifest defaults it declares inlined into the rows they fill, and
+must pass the same round-trip gate. Anything short of identity refuses.
+
+Because that proof compares the tree with itself, only one operation is admitted
+through it: **lifting in place**. On the chain path the tool may stop a row
+restating what it can inherit from a manifest default, and may declare a default
+the edition does not yet declare; it may not add, drop or reorder a member, and
+the identity of every casilla row and reference-family member is compared before
+and after to enforce that structurally. Predecessors, review stamps and row order
+are left exactly as authored.
+
 Determinism and idempotency. Every choice is a function of the input tree, taken
 in sorted or validity order, so two runs over the same tree write the same
-bytes. A modelo that already names predecessors is re-planned from its
-materialised editions; when the plan reproduces what is on disk the run is a
-no-op, and when it would change anything the run is refused, because a
-delta-authored tree has no full-copy form left to prove a further change
-against.
+bytes. Both paths report ``changed=False`` and stage nothing when planning
+reproduces what the editions already state and declare, so a run over an
+already-lifted tree is a clean no-op.
 
 Where it stops:
 
@@ -110,6 +124,7 @@ from typing import Final
 
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -117,12 +132,14 @@ from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
+from .source_default_rule import edition_source_default
 from .compiler.authority import compile_validated_authority
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
 from .edition_round_trip import (
     EditionExportScenario,
+    RoundTripFindingKind,
     RoundTripReport,
     RowKey,
     copy_registry_tree,
@@ -139,7 +156,6 @@ __all__ = [
     "MigrationPlan",
     "MigrationRefusedError",
     "PredecessorBasis",
-    "edition_source_default",
     "main",
     "migrate_modelo",
     "persist_migration_report",
@@ -192,6 +208,10 @@ class PredecessorBasis(StrEnum):
     DECLARED = "declared"
     DECLARED_ROOT = "declared_root"
     BLOCKED = "blocked"
+    #: The edition's inheritance is left exactly as authored and only its
+    #: restatement is lifted, because the modelo is already delta-authored and
+    #: is proven against its chain rather than against a full copy.
+    LIFT_ONLY = "lift_only"
 
 
 class BlockedCause(StrEnum):
@@ -310,11 +330,15 @@ class _EditionSource:
     revision_id: str
     manifest_text: str
     manifest: _Row
+    #: The edition's complete raw revision table, materialised through its
+    #: predecessor chain; ``manifest`` is the table it declares itself.
+    table: Mapping[str, object]
     fragments: tuple[_Fragment, ...]
     rows: tuple[_Row, ...]
     origins: tuple[str | None, ...]
     declarations: _Declarations
     retired: frozenset[str]
+    family_defaults: Mapping[str, tuple[str, ...]]
 
     def stated_rows(self) -> tuple[_Row, ...]:
         return tuple(block.row for fragment in self.fragments for block in fragment.blocks)
@@ -414,11 +438,17 @@ def _read_edition(modelo_dir: Path, revision_id: str) -> _EditionSource:
         revision_id=revision_id,
         manifest_text=manifest_text,
         manifest=_manifest_table(manifest_text, revision_id),
+        table=materialised.table,
         fragments=_read_fragments(edition_dir),
         rows=rows,
         origins=origins,
         declarations=_declarations(materialised.table, revision_id),
         retired=_retired_lineages(materialised.table, revision_id),
+        family_defaults={
+            key: default
+            for section, key in _FAMILY_SOURCE_DEFAULTS
+            if (default := _family_source_default(materialised.table, section)) is not None
+        },
     )
 
 
@@ -593,32 +623,6 @@ def _source_refs(table: Mapping[str, object]) -> tuple[str, ...] | None:
     return tuple(str(item) for item in value) if isinstance(value, list) else None
 
 
-def edition_source_default(rows: Sequence[Mapping[str, object]]) -> tuple[tuple[str, ...] | None, str | None]:
-    """The edition's shared leading ``source_refs`` run, or ``None`` and the reason none is declared.
-
-    A run counts for a row only when the row's references open with it and
-    repeat nothing, so the default followed by the rest reproduces them exactly.
-    This is the one definition of the rule: the status screen imports it, so a
-    row it counts as liftable is a row this tool will lift.
-    """
-    constraints = [table for row in rows if isinstance(table := row.get(_CONSTRAINTS), dict)]
-    if any(_ROW_SOURCE not in table for table in [*rows, *constraints]):
-        return None, "a row or constraints table states no source_refs, so a default would add references to it"
-    scores: Counter[tuple[str, ...]] = Counter()
-    for row in rows:
-        refs = _source_refs(row)
-        if refs and len(set(refs)) == len(refs):
-            scores.update(refs[:length] for length in range(1, len(refs) + 1))
-    if not scores or max(scores.values()) < 2:
-        return None, "no leading source_refs run is shared by two rows"
-    best = max(scores.values())
-    longest = max(len(run) for run, score in scores.items() if score == best)
-    candidates = sorted(run for run, score in scores.items() if score == best and len(run) == longest)
-    if len(candidates) > 1:
-        return None, f"{len(candidates)} leading source_refs runs of length {longest} tie at {best} rows"
-    return candidates[0], None
-
-
 def _table_lift(
     table: Mapping[str, object], *, source_default: tuple[str, ...] | None, orden: tuple[str, ...]
 ) -> _TableLift:
@@ -664,6 +668,56 @@ class _EditionWork:
     source: _EditionSource
     lifts: Mapping[str, _Lift]
     root_declaration: _Row | None
+
+
+@dataclass(frozen=True, slots=True)
+class _EditionLift:
+    """One edition's materialised rows, the default they share, and each row's lifted form."""
+
+    rows: tuple[_Row, ...]
+    source_default: tuple[str, ...] | None
+    withheld: str | None
+    lifts: Mapping[str, _Lift]
+    defaults: _Defaults
+
+
+def _effective_rows(source: _EditionSource) -> tuple[_Row, ...]:
+    """The edition's materialised rows as the loader finally holds them, with its declared defaults inlined."""
+    declared = _manifest_defaults(source.manifest)
+    effective = [
+        _effective(
+            row,
+            origin=origin,
+            revision_id=source.revision_id,
+            defaults=declared,
+            declarations=source.declarations,
+        )
+        for row, origin in zip(source.rows, source.origins, strict=True)
+    ]
+    if any(row is None for row in effective):
+        raise MigrationRefusedError(f"edition {source.revision_id!r}: an inherited reference does not resolve on input")
+    return tuple(row for row in effective if row is not None)
+
+
+def _edition_lift(source: _EditionSource) -> _EditionLift:
+    """Derive the edition's shared ``source_refs`` default and lift every materialised row against it.
+
+    A default the manifest already declares is the one the loader will apply, so
+    it is kept rather than re-derived: deriving a different run would rewrite
+    rows against a default the manifest does not state. No full-copy edition
+    declares one, so this only ever binds on the chain path.
+    """
+    declared = _manifest_defaults(source.manifest)
+    rows = _effective_rows(source)
+    derived, withheld = edition_source_default(rows)
+    source_default, withheld = (declared.source_refs, None) if declared.source_refs is not None else (derived, withheld)
+    return _EditionLift(
+        rows=rows,
+        source_default=source_default,
+        withheld=withheld,
+        lifts={_row_id(row): _lift(row, source_default=source_default, orden=declared.orden) for row in rows},
+        defaults=_Defaults(source_refs=source_default, orden=declared.orden),
+    )
 
 
 def _grade(manifest: Mapping[str, object]) -> RegistryAuthorityGrade:
@@ -748,29 +802,17 @@ def _plan(
 ) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
     ordered = ordered_revisions(definition)
     sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
-    already = any(_delta_authored(source.manifest) for source in sources.values())
+    if any(_delta_authored(source.manifest) for source in sources.values()):
+        return _plan_lift_in_place(definition, ordered, sources)
     materialised: dict[str, list[_Placed]] = {}
     work: list[_EditionWork] = []
     for position, revision in enumerate(ordered):
         revision_id = str(revision.id)
         source = sources[revision_id]
-        full = [
-            _effective(
-                row,
-                origin=origin,
-                revision_id=revision_id,
-                defaults=_manifest_defaults(source.manifest),
-                declarations=source.declarations,
-            )
-            for row, origin in zip(source.rows, source.origins, strict=True)
-        ]
-        if any(row is None for row in full):
-            raise MigrationRefusedError(f"edition {revision_id!r}: an inherited reference does not resolve on input")
-        full_rows = [row for row in full if row is not None]
-        source_default, withheld = edition_source_default(full_rows)
-        orden = _manifest_defaults(source.manifest).orden
-        lifts = {_row_id(row): _lift(row, source_default=source_default, orden=orden) for row in full_rows}
-        new_defaults = _Defaults(source_refs=source_default, orden=orden)
+        lift = _edition_lift(source)
+        full_rows = list(lift.rows)
+        source_default, withheld, lifts = lift.source_default, lift.withheld, lift.lifts
+        new_defaults = lift.defaults
 
         predecessor, basis, causes = _choose_predecessor(position, ordered, source)
         drops = set[str]()
@@ -840,7 +882,70 @@ def _plan(
         MigrationPlan(
             modelo_id=str(definition.id),
             editions=tuple(item.plan for item in work),
-            already_delta_authored=already,
+            already_delta_authored=False,
+        ),
+        tuple(work),
+    )
+
+
+def _plan_lift_in_place(
+    definition: ModeloDefinition,
+    ordered: Sequence[ModeloRevision],
+    sources: Mapping[str, _EditionSource],
+) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
+    """Plan the one operation a delta-authored modelo admits: lift each edition's restatement where it stands.
+
+    Every row the edition states stays stated, in the order it states it, and no
+    predecessor, review stamp or root declaration is authored. What may change is
+    a row that restates the manifest's default, and a default the manifest does
+    not yet declare. The chain proof in :func:`migrate_modelo` then requires the
+    result to materialise to the same bytes as the edition does now.
+
+    Raises:
+        MigrationRefusedError: When an edition states a row its own
+            materialisation does not hold, which would make the lift unprovable.
+    """
+    work: list[_EditionWork] = []
+    for revision in ordered:
+        revision_id = str(revision.id)
+        source = sources[revision_id]
+        lift = _edition_lift(source)
+        stated_ids = tuple(_row_id(block.row) for fragment in source.fragments for block in fragment.blocks)
+        unheld = sorted(row_id for row_id in stated_ids if row_id not in lift.lifts)
+        if unheld:
+            raise MigrationRefusedError(
+                f"edition {revision_id!r} states casillas {unheld!r} its materialisation does not hold",
+            )
+        stated = frozenset(stated_ids)
+        declared = source.manifest.get("predecessor")
+        work.append(
+            _EditionWork(
+                plan=EditionPlan(
+                    revision_id=revision_id,
+                    basis=PredecessorBasis.LIFT_ONLY,
+                    predecessor=declared if isinstance(declared, str) else None,
+                    blocked=(),
+                    source_default=lift.source_default,
+                    source_default_withheld=lift.withheld,
+                    rows_before=len(lift.rows),
+                    stated_ids=stated_ids,
+                    inherited_ids=tuple(row_id for row in lift.rows if (row_id := _row_id(row)) not in stated),
+                    lifted=_lift_counts(source, lift.lifts, stated),
+                    kept={},
+                    not_exact=(),
+                    comments_dropped=0,
+                    reviewed_against=None,
+                ),
+                source=source,
+                lifts=lift.lifts,
+                root_declaration=None,
+            )
+        )
+    return (
+        MigrationPlan(
+            modelo_id=str(definition.id),
+            editions=tuple(item.plan for item in work),
+            already_delta_authored=True,
         ),
         tuple(work),
     )
@@ -1110,6 +1215,30 @@ def _lifted_text(block: _Block, lift: _Lift) -> str:
     return text
 
 
+#: Families whose members carry ``source_refs`` and whose edition default is
+#: declared on the manifest under ``<family>_source_refs``. The derivation is
+#: :func:`edition_source_default`, unchanged: the status screen imports the same
+#: function, so a member it counts as liftable is a member this tool will lift.
+#: Only families whose manifest key already exists in the schema appear here;
+#: adding one is a schema change in the bindings lane, not a change here.
+_FAMILY_SOURCE_DEFAULTS: Final[tuple[tuple[str, str], ...]] = (("formulas", "formula_source_refs"),)
+
+
+def _family_members(table: Mapping[str, object], section: str) -> tuple[_Row, ...]:
+    """Return the edition's resolved members for ``section``, in declared order."""
+    raw = table.get(section, ())
+    return tuple(_as_row(member) for member in (raw if isinstance(raw, list | tuple) else ()))
+
+
+def _family_source_default(table: Mapping[str, object], section: str) -> tuple[str, ...] | None:
+    """The edition's shared leading ``source_refs`` run for ``section``, or ``None`` when none derives."""
+    members = _family_members(table, section)
+    if not members:
+        return None
+    default, _reason = edition_source_default(members)
+    return default
+
+
 def _write_manifest(path: Path, work: _EditionWork) -> None:
     plan = work.plan
     additions: dict[str, object] = {}
@@ -1119,6 +1248,9 @@ def _write_manifest(path: Path, work: _EditionWork) -> None:
         additions["predecessor"] = work.root_declaration
     if plan.source_default is not None and "casilla_source_refs" not in work.source.manifest:
         additions["casilla_source_refs"] = list(plan.source_default)
+    for key, default in sorted(work.source.family_defaults.items()):
+        if key not in work.source.manifest:
+            additions[key] = list(default)
     if plan.reviewed_against is not None and "reviewed_against" not in work.source.manifest:
         additions["reviewed_against"] = plan.reviewed_against
     if not additions:
@@ -1168,34 +1300,128 @@ def _write_edition(edition_dir: Path, work: _EditionWork) -> None:
     _write_manifest(edition_dir / _MANIFEST, work)
 
 
+def _undeclared_defaults(work: _EditionWork) -> bool:
+    """Whether writing this edition would add a manifest default it does not declare yet."""
+    plan, manifest = work.plan, work.source.manifest
+    if plan.source_default is not None and "casilla_source_refs" not in manifest:
+        return True
+    return any(key not in manifest for key in work.source.family_defaults)
+
+
 def _edition_changes(work: _EditionWork) -> bool:
     """Whether writing this edition's plan would change any byte of it."""
     plan = work.plan
+    if plan.basis is PredecessorBasis.LIFT_ONLY:
+        # The lift is the whole operation, so the edition is at its fixed point
+        # once every declared default is on the manifest and every stated row
+        # already holds the form the lift would give it.
+        stated = {_row_id(row): row for row in work.source.stated_rows()}
+        planned = {row_id: work.lifts[row_id].row for row_id in plan.stated_ids}
+        return bool(plan.lifted.total()) or _undeclared_defaults(work) or stated != planned
     return bool(
         plan.inherited_ids
         or plan.lifted.total()
         or plan.basis is PredecessorBasis.ADJACENT
         or work.root_declaration is not None
-        or (plan.source_default is not None and "casilla_source_refs" not in work.source.manifest)
+        or _undeclared_defaults(work)
     )
 
 
-def _is_fixed_point(works: Sequence[_EditionWork]) -> bool:
-    """Whether planning an already delta-authored tree reproduces exactly what each edition states and declares."""
-    for work in works:
-        plan, source = work.plan, work.source
-        if plan.basis in {PredecessorBasis.ADJACENT, PredecessorBasis.BLOCKED}:
-            return False
-        current = {_row_id(row): row for row in source.stated_rows()}
-        planned = {row_id: work.lifts[row_id].row for row_id in plan.stated_ids}
-        if current != planned:
-            return False
-        declared_default = source.manifest.get("casilla_source_refs")
-        if (list(plan.source_default) if plan.source_default else None) != declared_default:
-            return False
-        if plan.reviewed_against != source.manifest.get("reviewed_against"):
-            return False
-    return True
+# ── the chain proof ─────────────────────────────────────────────────────────
+
+#: Manifest keys the migration may declare. They are defaults: the loader folds
+#: them into the members they fill, so the chain proof inlines their effect and
+#: compares the members rather than the declaration.
+_DECLARED_DEFAULT_KEYS: Final[frozenset[str]] = frozenset(
+    {"casilla_source_refs", *(key for _section, key in _FAMILY_SOURCE_DEFAULTS)}
+)
+
+
+def _member_identities(source: _EditionSource) -> Mapping[str, tuple[str, ...]]:
+    """The identity of every member the edition materialises, by family, in materialised order."""
+    identities = {_CASILLAS: tuple(f"{_row_id(row)}|{_lineage(row)}" for row in source.rows)}
+    for section in sorted(set(_REFERENCE_SECTIONS.values())):
+        identities[section] = tuple(str(member.get("id")) for member in _family_members(source.table, section))
+    return identities
+
+
+def _chain_materialisation(source: _EditionSource) -> bytes:
+    """The edition as its chain materialises it, defaults inlined, rendered as comparable bytes.
+
+    Keys are emitted in sorted order and sequences in their own, so the
+    comparison is blind to where a declaration was inserted in a manifest and
+    exact about the order of members.
+    """
+    table = {key: _thaw(value) for key, value in source.table.items() if key not in _DECLARED_DEFAULT_KEYS}
+    table[_CASILLAS] = [dict(row) for row in _effective_rows(source)]
+    payload = {"revision": source.revision_id, "label_origins": list(source.origins), "table": table}
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")
+
+
+def _read_staged_edition(modelo_dir: Path, revision_id: str, *, side: str) -> _EditionSource:
+    try:
+        return _read_edition(modelo_dir, revision_id)
+    except RegistryError as exc:
+        raise MigrationRefusedError(
+            f"edition {revision_id!r}: the {side} tree does not materialise: {type(exc).__name__}: {exc}",
+        ) from exc
+
+
+def _prove_chain(
+    *,
+    reference_modelo_dir: Path,
+    staged_modelo_dir: Path,
+    revision_ids: Sequence[str],
+    report: RoundTripReport,
+) -> RoundTripReport:
+    """Require the staged delta tree to materialise exactly as the tree it was planned from.
+
+    A delta-authored modelo has no full copy left to prove a change against, so
+    the proof is identity against its own chain: each staged edition must hold
+    the same members, in the same order, and materialise to the same bytes. The
+    round-trip gate's typed, row-order, locale and export-byte comparisons run
+    on top of that, less two findings this path answers itself: its demand that
+    the reference be a full copy, which on this path it can never be, and a
+    typed difference proven to be confined to a manifest default the migration
+    declared.
+
+    Raises:
+        MigrationRefusedError: On any difference in member identity or in the
+            materialised bytes of any edition.
+    """
+    for revision_id in revision_ids:
+        before = _read_staged_edition(reference_modelo_dir, revision_id, side="reference")
+        after = _read_staged_edition(staged_modelo_dir, revision_id, side="staged")
+        reference_members, staged_members = _member_identities(before), _member_identities(after)
+        for section, members in reference_members.items():
+            staged_section = staged_members.get(section, ())
+            if staged_section != members:
+                raise MigrationRefusedError(
+                    f"edition {revision_id!r}: lifting changed the {section} members, which a lift may never do: "
+                    f"{len(members)} before, {len(staged_section)} after, first difference at "
+                    f"{_first_difference(members, staged_section)}",
+                )
+        if _chain_materialisation(before) != _chain_materialisation(after):
+            raise MigrationRefusedError(
+                f"edition {revision_id!r}: the staged tree materialises to different bytes than the tree it was "
+                "planned from, so the lift is not an identity and cannot be proven",
+            )
+    return RoundTripReport(
+        findings=tuple(
+            finding for finding in report.findings if finding.kind is not RoundTripFindingKind.REFERENCE_NOT_FULL_COPY
+        ),
+        byte_compared_revisions=report.byte_compared_revisions,
+    )
+
+
+def _first_difference(before: Sequence[str], after: Sequence[str]) -> str:
+    """Describe the first position at which two member-identity sequences diverge."""
+    for index, (left, right) in enumerate(zip(before, after, strict=False)):
+        if left != right:
+            return f"position {index}: {left!r} became {right!r}"
+    shared = min(len(before), len(after))
+    trailing = list(before[shared:]) or list(after[shared:])
+    return f"position {shared}: {trailing!r} on the {'reference' if len(before) > len(after) else 'staged'} side only"
 
 
 # ── the migration ───────────────────────────────────────────────────────────
@@ -1268,10 +1494,13 @@ def migrate_modelo(
     the production ``src`` tree. The unmigrated reference, staged migration,
     and any displaced target are written beneath it and left for inspection.
 
+    A modelo that already names predecessors is lifted in place and proven
+    against its chain: the staged tree must materialise to the same bytes, and
+    hold the same members in the same order, as the tree it was planned from.
+
     Raises:
         MigrationRefusedError: When the migration cannot be planned or written,
-            or ``apply`` is asked of a tree that is already delta-authored but
-            not a fixed point.
+            or a lift in place does not materialise identically.
     """
     registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
     modelo_dir = registry_root / _MODELOS / modelo_id
@@ -1279,13 +1508,6 @@ def migrate_modelo(
         raise MigrationRefusedError(f"{registry_root} holds no modelo {modelo_id!r}")
     definition = _load(registry_root, modelo_id)
     plan, works = _plan(modelo_dir, definition, declare_blocked_roots=declare_blocked_roots)
-    if plan.already_delta_authored:
-        if _is_fixed_point(works):
-            return MigrationOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
-        raise MigrationRefusedError(
-            f"modelo {modelo_id} already names predecessors and re-planning it would change it; a delta-authored "
-            "tree has no full-copy form to prove a further change against",
-        )
     if not any(_edition_changes(work) for work in works):
         return MigrationOutcome(plan=plan, staged_registry=None, report=None, applied=False, changed=False)
     reference = copy_registry_tree(
@@ -1318,6 +1540,13 @@ def migrate_modelo(
         modelo_id=modelo_id,
         export_scenarios=export_scenarios or {},
     )
+    if plan.already_delta_authored:
+        report = _prove_chain(
+            reference_modelo_dir=reference / _MODELOS / modelo_id,
+            staged_modelo_dir=staged / _MODELOS / modelo_id,
+            revision_ids=tuple(edition.revision_id for edition in plan.editions),
+            report=report,
+        )
     applied = False
     if apply and not report.findings:
         # Publication is a stronger boundary than planning: prove that the

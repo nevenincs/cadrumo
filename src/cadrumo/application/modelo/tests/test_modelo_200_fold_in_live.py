@@ -18,7 +18,7 @@ never on the operator's live calculate.
   limit). The prior ejercicio's casilla ``00671`` ("pendiente de aplicación en
   períodos futuros", a manual end-of-year stock) feeds this ejercicio's opening
   stock casilla ``00670`` ("pendiente de aplicación a principio del período").
-  Relation ``modelo-200-2024-rel-self-bin-pendiente-anterior`` (``source_casilla_id =
+  Relation ``modelo-200-bin-pendiente-ejercicios-anteriores`` (``source_casilla_id =
   '00671'``) drives binding
   ``modelo-200-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
   ``00670`` (``input_kind = bound``) consumes.
@@ -27,7 +27,7 @@ never on the operator's live calculate.
   because only the cumplido stock may be integrated. The prior ejercicio's saldo
   final ``01498`` (NO han cumplido condiciones) / ``01499`` (SÍ han cumplido) feed
   this ejercicio's saldo inicial ``01494`` / ``01495``. Relations
-  ``modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior``
+  ``modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores``
   (``source_casilla_id = '01498'``) and ``-cumplido-anterior`` (``01499``) drive
   bindings ``...saldo-no-cumplido-anteriores`` / ``...saldo-cumplido-anteriores``
   (``copy``), which casillas ``01494`` / ``01495`` (``input_kind = bound``) consume.
@@ -96,7 +96,7 @@ _M200 = "200"
 _M202 = "202"
 
 # The same-year M202 pagos-fraccionados c34 output the M200 cuota-diferencial
-# formula folds via relation ``modelo-200-2024-rel-202-pagos-fraccionados``
+# formula folds via relation ``modelo-200-pagos-fraccionados-anuales``
 # (filing_year_delta = 0). That relation is consumed DIRECTLY by a formula operand
 # (the cuota-diferencial subtraction), so an absent value RAISES on the live path
 # rather than resolving present-or-zero. It is NOT the cross-year
@@ -108,7 +108,7 @@ _M202_PAGO_OUTPUT_40_2: CasillaId = validated_casilla_id(
     surface="_M202_PAGO_OUTPUT_40_2",
 )  # modalidad cuota (art. 40.2); folds alongside casilla 34
 _M202_PAGO_PERIODS = ("1P", "2P", "3P")
-_M202_PAGO_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
+_M202_PAGO_RELATION = "modelo-200-pagos-fraccionados-anuales"
 _CASILLA_CUOTA_DIFERENCIAL: CasillaId = validated_casilla_id(
     "DP200014B:00611",
     surface="_CASILLA_CUOTA_DIFERENCIAL",
@@ -160,9 +160,9 @@ _RELATION_PREFILL_SOURCE = "relation_prefill"
 #: The three cross-year self-carries whose absence declares a zero opening stock.
 _M200_SELF_CARRY_RELATIONS = frozenset(
     {
-        "modelo-200-2024-rel-self-bin-pendiente-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior",
-        "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior",
+        "modelo-200-bin-pendiente-ejercicios-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores",
+        "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores",
     },
 )
 
@@ -265,7 +265,7 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
 def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None:
     """Seed same-year M202 instalments as zero c34 so the pagos relation resolves.
 
-    The M200 cuota-diferencial formula folds ``modelo-200-2024-rel-202-pagos-fraccionados``
+    The M200 cuota-diferencial formula folds ``modelo-200-pagos-fraccionados-anuales``
     (a same-year M202 pagos relation) as a DIRECT formula operand, which raises if
     unsupplied. This scenario declares no instalments, so each period's c34 is filed
     zero — the relation resolves to zero and the live calculate proceeds, leaving

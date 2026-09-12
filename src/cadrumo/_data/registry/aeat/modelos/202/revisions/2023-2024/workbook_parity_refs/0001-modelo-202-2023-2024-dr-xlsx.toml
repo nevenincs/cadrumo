@@ -1,5 +1,5 @@
 [[revisions.2023-2024.workbook_parity_refs]]
-id = "modelo-202-2023-2024-dr-xlsx"
+id = "modelo-202-dr-xlsx"
 workbook_source = "aeat-dr-202-2023"
 fixture_id = "modelo-202-2023-2024-record-design-layout"
 formula_coverage = "record_design_layout"

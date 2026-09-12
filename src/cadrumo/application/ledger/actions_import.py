@@ -26,7 +26,6 @@ from ...core.hashing import canonical_json_bytes, sha256_file, sha256_hex
 from ...core.i18n.render import tr
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_events
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import CurrencyNormalizationStatus, MonetaryAmount
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.transactions.errors import TransactionValidationError
@@ -39,7 +38,6 @@ from ...domain.transactions.models import (
     derive_transaction_id,
     existing_transaction_import_fingerprints,
 )
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawTransaction
 from ...domain.transactions.repository import ImportSummary
 from ..transactions.diagnostics import LedgerImportDiagnostic
@@ -60,7 +58,13 @@ from .models import (
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
 )
-from .protocols import FinancialProviderProtocol, ParsedLedgerRowProtocol, ProviderValidationProtocol
+from .protocols import (
+    BucketEventHistoryCoCommitWriterProtocol,
+    FinancialProviderProtocol,
+    ParsedLedgerRowProtocol,
+    ProviderValidationProtocol,
+    TransactionCatalogueCoCommitWriterProtocol,
+)
 
 
 class LedgerProviderID(StrEnum):
@@ -103,7 +107,7 @@ class _PreparedSourceImport(NamedTuple):
 class _LoadedSourceCatalogue(NamedTuple):
     """The optional repository and catalogue used for import previewing."""
 
-    repository: TransactionCatalogueRepositoryProtocol | None
+    repository: TransactionCatalogueCoCommitWriterProtocol | None
     catalogue: TransactionCatalogue
 
 
@@ -259,7 +263,7 @@ def _prepare_source_import(command: LedgerSourceImportCommand) -> _PreparedSourc
 
 def _load_source_catalogue(
     command: LedgerSourceImportCommand,
-    repository: TransactionCatalogueRepositoryProtocol | None,
+    repository: TransactionCatalogueCoCommitWriterProtocol | None,
 ) -> _LoadedSourceCatalogue:
     """Load the existing bucket catalogue when this invocation has one."""
     resolved_repository = (
@@ -331,8 +335,8 @@ def _persist_source_import(
     command: LedgerSourceImportCommand,
     bucket_id: str,
     parsed_rows: tuple[ParsedLedgerRowProtocol, ...],
-    repository: TransactionCatalogueRepositoryProtocol,
-    event_repository: BucketEventHistoryRepositoryProtocol,
+    repository: TransactionCatalogueCoCommitWriterProtocol,
+    event_repository: BucketEventHistoryCoCommitWriterProtocol,
     currency_normalizer: CurrencyNormalizationService | None,
     raw_diagnostics: tuple[LedgerImportDiagnostic, ...],
     validation: ProviderValidationProtocol,
@@ -384,8 +388,8 @@ def import_ledger_transactions(
     *,
     bucket_id: str,
     parsed_rows: Iterable[ParsedLedgerRowProtocol],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     actor: str = "operator",
     source_command: str = "aeat app ledger import",
     occurred_at: datetime | None = None,
@@ -476,8 +480,8 @@ def import_ledger_transactions(
 def import_ledger_source(
     command: LedgerSourceImportCommand,
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol | None = None,
     currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerSourceImportResult:
     """Validate, ingest, and optionally persist one ledger source file.

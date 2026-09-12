@@ -228,8 +228,7 @@ def _build_relation_value(
 
 def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputScenario) -> RelationValues:
     folds_by_id = {
-        binding.id: (binding, provider)
-        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
+        binding.id: (binding, provider) for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
     }
     requirements_by_relation = _relation_requirements_by_id(snapshot)
     unknown_relation_ids = sorted(set(scenario.relation_values).difference(folds_by_id))

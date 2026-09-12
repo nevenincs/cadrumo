@@ -21,7 +21,7 @@ from ..schema_formula import FormulaExpression
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M210_RATE_FORMULA_ID = "m210-tipo-gravamen-2025-resolve"
-_M210_COUNTRY_BINDING = "m210-2025-profile-country-of-fiscal-residence"
+_M210_COUNTRY_BINDING = "m210-profile-country-of-fiscal-residence"
 _M210_TIPO_RENTA_CASILLA = "tipo_renta"
 _M210_RENDIMIENTOS_INTEGROS_CASILLA = "rendimientos_integros"
 _M210_GASTOS_DEDUCIBLES_CASILLA = "gastos_deducibles"
@@ -43,8 +43,8 @@ def test_irnr_resolve_tipo_gravamen_args_accepts_current_five_arg_contract() -> 
 
     assert args.tipo_casilla_id == "tipo_renta"
     assert args.base_casilla_id == "base_imponible"
-    assert args.baseline_parameter == "m210-tipo-gravamen-2025"
-    assert args.pension_tariff_parameter == "m210-pension-tarifa-2025"
+    assert args.baseline_parameter == "m210-tipo-gravamen"
+    assert args.pension_tariff_parameter == "m210-pension-tarifa"
     assert args.country_binding == _M210_COUNTRY_BINDING
 
 
@@ -63,9 +63,9 @@ def test_irnr_resolve_tipo_gravamen_args_rejects_retired_convenio_parameter_cont
         args=(
             FormulaExpression.model_validate({"casilla_id": "tipo_renta"}),
             FormulaExpression.model_validate({"casilla_id": "base_imponible"}),
-            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen"}),
             FormulaExpression.model_validate({"parameter": "m210-convenio-rates"}),
-            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa"}),
             FormulaExpression.model_validate({"binding": _M210_COUNTRY_BINDING}),
         ),
     )
@@ -98,7 +98,7 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
     assert outcome.formula_id == _M210_RATE_FORMULA_ID
     assert outcome.operand_refs == (
         _M210_TIPO_RENTA_CASILLA,
-        "m210-tipo-gravamen-2025",
+        "m210-tipo-gravamen",
         _M210_COUNTRY_BINDING,
     )
     assert outcome.operand_casilla_refs == (_M210_TIPO_RENTA_CASILLA,)
@@ -162,9 +162,7 @@ def test_irnr_resolve_tipo_gravamen_retains_selected_treaty_fact_provenance() ->
 def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows() -> None:
     """A contradictory rate row must not silently replace Art. 25.1.f's 19% dividend rate."""
     snapshot = _current_m210_snapshot()
-    parameter = next(
-        parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen-2025"
-    )
+    parameter = next(parameter for parameter in snapshot.revision.parameters if parameter.id == "m210-tipo-gravamen")
     dividend = next(entry for entry in parameter.keyed_brackets if entry.key == "dividend")
 
     assert resolve_keyed_bracket(parameter, key="dividend", filing_year=2025) == Decimal("0.19")
@@ -181,7 +179,7 @@ def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows
         resolve_keyed_bracket(overlapping, key="dividend", filing_year=2025)
 
     assert exc_info.value.context == {
-        "parameter_id": "m210-tipo-gravamen-2025",
+        "parameter_id": "m210-tipo-gravamen",
         "key": "dividend",
         "filing_year": "2025",
         "match_count": "2",

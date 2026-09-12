@@ -27,6 +27,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
+from functools import lru_cache
 from typing import Final
 
 from pydantic import BaseModel
@@ -42,6 +43,10 @@ from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -145,21 +150,55 @@ def emit_catalogue_invoice_event(
     return (event.event_id,)
 
 
-#: The one IVA category that does NOT settle its Modelo 349 clave.
-#:
-#: Every other intra-community category determines its clave outright: the two
-#: service categories give S and I, and triangulation gives T. An entrega
-#: intracomunitaria de bienes does not, because claves M and H -- supplies
-#: following an exempt importation, LIVA art. 27.12 -- share this exact
-#: category with the ordinary clave E. No category predicate can separate the
-#: three, so the fact lives with the operator or nowhere.
-_CATEGORY_NEEDING_AN_EXPLICIT_CLAVE: Final = IvaCategory.INTRA_COMMUNITY_SUPPLY
+@lru_cache(maxsize=32)
+def _registry_m349_operation_type_requirement(
+    effective_date: date,
+) -> tuple[IvaCategory, tuple[IntracomOperationType, ...]]:
+    """Resolve the M349 category/clave ambiguity from registry data."""
+    authority = bundled_authority()
+    RegistryQueryService(authority).describe_modelo("349", as_of=effective_date)
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="m347-m349-counterpart-operation-catalogue",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise TypeError("counterpart operation declarations must resolve as a mapping fact")
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("counterpart operation mapping entries must be string-to-string")
+        if entry.key in entries:
+            raise ValueError(f"duplicate counterpart registry mapping key {entry.key!r}")
+        entries[entry.key] = entry.value
+
+    def required(key: str) -> str:
+        value = entries.get(key)
+        if value is None or not value.strip():
+            raise ValueError(f"counterpart registry mapping is missing {key!r}")
+        return value.strip()
+
+    try:
+        category = IvaCategory(required("modelo.349.operation_type_required_category"))
+    except ValueError as exc:
+        raise ValueError("counterpart registry declares an unknown operation-type category") from exc
+    tokens = tuple(token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip())
+    if not tokens or len(set(tokens)) != len(tokens):
+        raise ValueError("counterpart registry declares an empty or duplicate operation-type candidate set")
+    try:
+        candidates = tuple(IntracomOperationType(token) for token in tokens)
+    except ValueError as exc:
+        raise ValueError("counterpart registry declares an unknown Modelo 349 operation type") from exc
+    return category, candidates
 
 
 def _require_operation_type_where_the_category_cannot_settle_it(
     *,
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
+    effective_date: date,
 ) -> None:
     """Refuse an entrega intracomunitaria that does not state its clave.
 
@@ -183,15 +222,15 @@ def _require_operation_type_where_the_category_cannot_settle_it(
             the refusal tells the operator what to state rather than only that
             something is missing.
     """
-    if iva_category is not _CATEGORY_NEEDING_AN_EXPLICIT_CLAVE or operation_type is not None:
+    required_category, candidates = _registry_m349_operation_type_requirement(effective_date)
+    if iva_category is not required_category or operation_type is not None:
         return
+    candidate_labels = ", ".join(f"clave {candidate.value}" for candidate in candidates)
     raise InvoiceValidationError(
         "an intra-community supply must state its Modelo 349 operation type: the category alone "
-        "cannot distinguish an ordinary entrega intracomunitaria (clave E) from a supply following "
-        "an exempt importation (clave M, or H when made by a fiscal representative), because all "
-        "three carry this same IVA category",
+        f"cannot distinguish among {candidate_labels}, because all candidates carry this same IVA category",
         translated_message="application.invoices.creation.errors.intracom_operation_type_required",
-        context={"iva_category": _CATEGORY_NEEDING_AN_EXPLICIT_CLAVE.value},
+        context={"iva_category": required_category.value},
     )
 
 
@@ -278,6 +317,7 @@ def _apply_operator_asserted_invoice_facts(
     operation_date: date | None,
     retention_rate: Decimal | None,
     retention_amount: Decimal | None,
+    effective_date: date,
 ) -> None:
     if series is not None:
         invoice_payload["series"] = series
@@ -290,6 +330,7 @@ def _apply_operator_asserted_invoice_facts(
     _require_operation_type_where_the_category_cannot_settle_it(
         iva_category=iva_category,
         operation_type=operation_type,
+        effective_date=effective_date,
     )
     if operation_type is not None:
         invoice_payload["operation_type"] = operation_type.value
@@ -446,6 +487,7 @@ def build_catalogue_invoice(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
+        effective_date=devengo_date,
     )
     # The euro-conversion stamp. ``currency`` is already the canonical uppercase
     # ISO 4217 token (normalised once above), so the provider is queried with the

@@ -82,6 +82,9 @@ aggregation:
         afectados.
       prorrata_transition_contradictory_evidence: Las entradas de transición de prorrata
         especial contradicen la transición declarada.
+      prorrata_transition_declarations_unavailable: La revisión seleccionada del modelo
+        303 no declara calendario de presentación ni vínculo de arrastre periódico,
+        por lo que no puede determinarse el periodo de transición de prorrata.
       prorrata_transition_entry_without_evidence: Una entrada de transición de prorrata
         especial no aporta evidencia de transición.
       prorrata_transition_evidence_without_declared_transition: Se aportó evidencia

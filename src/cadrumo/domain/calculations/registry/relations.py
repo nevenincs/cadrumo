@@ -53,9 +53,9 @@ if TYPE_CHECKING:
 __all__ = [
     "RegistryFoldRequirement",
     "relation_prefill_bindings_for_period",
+    "relation_prefill_values_as_binding_values",
     "relation_requirement_index",
     "relation_source_requirements",
-    "relation_prefill_values_as_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
     "source_presence_gaps",

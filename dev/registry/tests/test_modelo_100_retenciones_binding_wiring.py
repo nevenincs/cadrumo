@@ -50,21 +50,20 @@ _M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
 _M100_CUOTA_DIFERENCIAL_CASILLA: CasillaId = validated_casilla_id("0610", surface="_M100_CUOTA_DIFERENCIAL_CASILLA")
 
 _DATE_CONTEXT_2024 = {"filing_period": date(2024, 12, 31)}
-_DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-2024-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_DATE_BINDINGS_2024: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 _DATE_CONTEXT_2025 = {"filing_period": date(2025, 12, 31)}
-_DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-2025-profile-taxpayer-birth-date": date(1975, 6, 15)}
+_DATE_BINDINGS_2025: dict[BindingId, date] = {"renta-profile-taxpayer-birth-date": date(1975, 6, 15)}
 
 _RELATION_VALUES_2024: dict[RelationId, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 _RELATION_VALUES_2025: dict[RelationId, Decimal] = {
-    "renta-2025-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2025-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -119,7 +118,7 @@ def _base_binding_values_2025(
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
         "renta-profile-has-economic-activity": Decimal("1"),
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        "renta-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-profile-declaration-type": Decimal("1"),
         "renta-profile-family-minor-children-in-unit": Decimal("0"),
         "renta-profile-marriage-full-year": Decimal("0"),
@@ -132,7 +131,7 @@ def _base_binding_values_2025(
     if m111 is not None:
         values["renta-modelo-111-retenciones-periodicas"] = m111
     if m190 is not None:
-        values["renta-2025-modelo-190-retenciones-anuales"] = m190
+        values["renta-modelo-190-retenciones-anuales"] = m190
     if certificado_trabajo is not None:
         values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
     if m123 is not None:
@@ -157,7 +156,7 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
         m100_2025_snapshot,
         inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
         date_context=_DATE_CONTEXT_2025,
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values_2025(m190=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
@@ -165,7 +164,7 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
         f"casilla 0596 = {result.values[_M100_RETENCIONES_M111_CASILLA]!r}; expected {annual_retenciones!r} "
-        "from equivalent binding renta-2025-modelo-190-retenciones-anuales."
+        "from equivalent binding renta-modelo-190-retenciones-anuales."
     )
     assert result.values[_M100_TOTAL_PAGOS_A_CUENTA_CASILLA] == annual_retenciones, (
         "0609 must include the M190-sourced work-retention credit instead of "
@@ -186,7 +185,7 @@ def test_salary_certificate_retenciones_binding_populates_2024_casilla_0596(
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(certificado_trabajo=suffered_retenciones),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -208,7 +207,7 @@ def test_conflicting_2024_m111_and_salary_certificate_retenciones_refuse_before_
             m100_2024_snapshot,
             inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("30000.00")},
             date_context=_DATE_CONTEXT_2024,
-            enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             binding_values=_base_binding_values(
                 m111=Decimal("4500.00"),
                 certificado_trabajo=Decimal("4499.99"),
@@ -228,7 +227,7 @@ def test_salary_certificate_retenciones_binding_populates_2025_casilla_0596(
         m100_2025_snapshot,
         inputs={"0003": Decimal("30000.00"), "0102": Decimal("9600")},
         date_context=_DATE_CONTEXT_2025,
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values_2025(certificado_trabajo=suffered_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
@@ -247,7 +246,7 @@ def test_conflicting_2025_m111_and_m190_retenciones_refuse_before_calculation(
             m100_2025_snapshot,
             inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
             date_context=_DATE_CONTEXT_2025,
-            enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             binding_values=_base_binding_values_2025(m111=Decimal("4200.00"), m190=Decimal("4100.00")),
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
@@ -264,7 +263,7 @@ def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
         m100_2025_snapshot,
         inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
         date_context=_DATE_CONTEXT_2025,
-        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values_2025(m193=annual_retenciones),
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
@@ -288,7 +287,7 @@ def test_conflicting_2025_m123_and_m193_retenciones_refuse_before_calculation(
             m100_2025_snapshot,
             inputs={"0003": Decimal("32000"), "0102": Decimal("9600")},
             date_context=_DATE_CONTEXT_2025,
-            enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             binding_values=_base_binding_values_2025(m123=Decimal("975.31"), m193=Decimal("975.30")),
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
@@ -310,7 +309,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=m123_retenciones),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -333,7 +332,7 @@ def test_m193_annual_retenciones_binding_populates_2024_casilla_0597(
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m193=annual_retenciones),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -357,7 +356,7 @@ def test_conflicting_2024_m123_and_m193_retenciones_refuse_before_calculation(
             m100_2024_snapshot,
             inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
             date_context=_DATE_CONTEXT_2024,
-            enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+            enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
             binding_values=_base_binding_values(m123=Decimal("864.20"), m193=Decimal("864.21")),
             relation_values=_RELATION_VALUES_2024,
             date_binding_values=_DATE_BINDINGS_2024,
@@ -376,7 +375,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m111=m111_retenciones),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -393,7 +392,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
 def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapshot: RegistrySnapshot) -> None:
     """M123 retenciones in 0597 must propagate through 0609 to reduce cuota diferencial.
 
-    The formula renta-2024-total-pagos-a-cuenta sums casillas 0592-0606 into
+    The formula renta-total-pagos-a-cuenta sums casillas 0592-0606 into
     0609.  With only M123 retenciones supplied, 0609 must equal the M123 amount.
 
     This exercises the full chain: binding → 0597 → formula → 0609.
@@ -403,7 +402,7 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=m123_retenciones),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -429,7 +428,7 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot: RegistrySnaps
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("0")),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -451,7 +450,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("1000.00")),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
@@ -460,7 +459,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         m100_2024_snapshot,
         inputs={_M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
         date_context=_DATE_CONTEXT_2024,
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
         binding_values=_base_binding_values(m123=Decimal("2000.00")),
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,

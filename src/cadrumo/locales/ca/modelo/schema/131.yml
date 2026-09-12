@@ -41,7 +41,7 @@ modelo:
             label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
               als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents sota
               un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-              segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+              segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
               per a l'assignació exacta.
           irpf-pf-modulos-indice-inicio-actividad:
             help: Informació fiscal de la casella del Modelo 131.
@@ -190,7 +190,7 @@ modelo:
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
           construct:
-            modelo-131-2019-2023-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — informació fiscal
           field:
@@ -282,12 +282,12 @@ modelo:
               help: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
             modulos-indice-inicio-actividad:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
@@ -362,7 +362,7 @@ modelo:
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
           construct:
-            modelo-131-2024-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — informació fiscal
           field:
@@ -454,12 +454,12 @@ modelo:
               help: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2025
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
             modulos-indice-inicio-actividad:
               help: Informació fiscal sobre informació fiscal de la casella  del Modelo
@@ -534,7 +534,7 @@ modelo:
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
           construct:
-            modelo-131-2025-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — informació fiscal
           field:
@@ -626,12 +626,12 @@ modelo:
               help: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2024
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
               label: Epígraf IAE de l'activitat en estimació objectiva (mòduls). Per
                 als epígrafs 659.4 i 691.9, que agrupen dues activitats diferents
                 sota un mateix codi, useu el sufix «a» o «b» (p. ex. «659.4a», «691.9b»)
-                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes-2026
+                segons l'activitat - consulteu el paràmetre de coeficients m131-modulos-coeficientes
                 per a l'assignació exacta.
             modulos-minoracion-inversion:
               help: Informació fiscal de la casella del Modelo 131.
@@ -665,7 +665,7 @@ modelo:
               label: Saldo negatiu trasladable a períodes posteriors (màx. 0, -casella
                 10)
           construct:
-            modelo-131-2026-objective-estimation-instalment:
+            modelo-131-objective-estimation-instalment:
               field:
                 title: Modelo 131 — informació fiscal
           field:

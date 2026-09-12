@@ -33,7 +33,11 @@ import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from ....domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
+from ....domain.calculations.registry.relations import (
+    RegistryFoldRequirement,
+    relation_prefill_bindings_for_period,
+    relation_source_requirements,
+)
 from ..binding_prefill import PrefilledBinding, _prefilled_bindings
 from ..relation_prefill import _relation_value_grounding
 
@@ -50,23 +54,23 @@ def _m100_2024() -> RegistrySnapshot:
     return bundled_authority().snapshot("100", filing_year=2024, period="0A")
 
 
-def _requirements_by_relation(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
-    """Map each relation id to the fold requirement that carries its treatment."""
+def _requirements_by_binding(snapshot: RegistrySnapshot) -> dict[str, RegistryFoldRequirement]:
+    """Map each provider-backed binding id to its fold requirement."""
     requirements = relation_source_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     )
-    return {relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids}
+    return {binding_id: requirement for requirement in requirements for binding_id in requirement.target_bindings}
 
 
 def _grounded_treatments(snapshot: RegistrySnapshot) -> dict[str, str]:
-    """Run the real join and collect the treatment it carries onto each relation."""
-    by_relation = _requirements_by_relation(snapshot)
+    """Run the real join and collect the treatment it carries onto each binding."""
+    by_binding = _requirements_by_binding(snapshot)
     treatments: dict[str, str] = {}
-    for relation in snapshot.revision.relations or ():
-        grounding = _relation_value_grounding(relation, by_relation.get(relation.id))
-        treatments[str(relation.id)] = grounding["dependency_treatment"]
+    for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period):
+        grounding = _relation_value_grounding(binding, provider, by_binding.get(binding.id))
+        treatments[str(binding.id)] = grounding["dependency_treatment"]
     return treatments
 
 
@@ -88,7 +92,7 @@ def test_the_join_carries_both_declared_treatments_and_they_differ() -> None:
     assert len(declared) >= 2, "the join collapsed the two classes into one value"
 
 
-def test_an_unresolved_relation_carries_no_treatment_rather_than_a_default_one() -> None:
+def test_an_unresolved_binding_carries_no_treatment_rather_than_a_default_one() -> None:
     """No requirement means no treatment, and that is not a treatment.
 
     The join is exercised with the requirement absent, which is what happens when
@@ -96,10 +100,14 @@ def test_an_unresolved_relation_carries_no_treatment_rather_than_a_default_one()
     treatment is the failure this pins.
     """
     snapshot = _m100_2024()
-    relation = next(iter(snapshot.revision.relations or ()), None)
-    assert relation is not None, "the revision declares no relation to exercise"
+    binding_and_provider = next(
+        iter(relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)),
+        None,
+    )
+    assert binding_and_provider is not None, "the revision declares no relation-prefill binding to exercise"
+    binding, provider = binding_and_provider
 
-    grounding = _relation_value_grounding(relation, None)
+    grounding = _relation_value_grounding(binding, provider, None)
 
     assert grounding["dependency_treatment"] == ""
     assert grounding["dependency_treatment"] != _SETTLEMENT

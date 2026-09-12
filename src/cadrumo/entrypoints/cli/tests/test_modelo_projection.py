@@ -529,7 +529,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # ``renta-{year}-pagos-fraccionados-ingresados`` sums the M130 + M131
     # relation channels). The oracle path supplies the same M130 total
     # through the relation map that the project verb threads. The
-    # `renta-2024-profile-taxpayer-birth-date` date_binding is required
+    # `renta-profile-taxpayer-birth-date` date_binding is required
     # by the ``age_at_year_end`` op used in mínimo del contribuyente; the
     # seeded profile fact `renta_taxpayer.birth_date = 1980-01-01` is the
     # source of truth, mirrored here on the oracle.
@@ -641,7 +641,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     maternidad = obs_by_id.get(str(_M100_DEDUCCION_MATERNIDAD_CASILLA))
     assert maternidad is not None, "project calculation must include computed 0611"
     assert Decimal(maternidad["value"]) == oracle_result.values[_M100_DEDUCCION_MATERNIDAD_CASILLA]
-    assert maternidad["formula_id"] == "renta-2024-deduccion-maternidad-0611"
+    assert maternidad["formula_id"] == "renta-deduccion-maternidad-0611"
     assert maternidad["legal_refs"] == ["ley-35-2006:art-81"]
     assert set(maternidad["source_refs"]) == {
         "aeat-renta-2024-manual-parte1",

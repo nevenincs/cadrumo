@@ -52,7 +52,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
-from ._scenarios import (
+from .scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
     run_registry_calculation_scenario,
@@ -109,12 +109,11 @@ def _bindings(*, retencion: str) -> dict[str, Decimal]:
 
 
 _REL_2024: dict[str, Decimal] = {
-    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
-    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
-    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
-    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
-    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-130-pagos-fraccionados": Decimal("0"),
+    "renta-modelo-131-pagos-fraccionados": Decimal("0"),
 }
 
 
@@ -130,10 +129,10 @@ def _scenario(*, retencion: str, scenario_id: str) -> RegistryCalculationScenari
             _BASE_LIQUIDABLE_AHORRO_LEAF: Decimal("2800.00"),
         },
         binding_values=_bindings(retencion=retencion),
-        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "aragon"},
+        enum_binding_values={"renta-profile-tax-residence-ccaa": "aragon"},
         relation_values=_REL_2024,
         date_context={"filing_period": date(2024, 12, 31)},
-        date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 6, 15)},
+        date_binding_values={"renta-profile-taxpayer-birth-date": date(1980, 6, 15)},
         # The harness requires at least one expected output; anchor it on the
         # manual-grounded cuota integra estatal (2.406,50, grounded in the
         # sibling escala test) so this scenario's own upstream anchor is

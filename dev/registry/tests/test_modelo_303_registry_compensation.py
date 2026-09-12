@@ -8,7 +8,11 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriodOffset
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.domain.calculations.registry.bindings_previous_filing import (
+    previous_filing_binding_source_casilla_ids,
+)
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.tests.registry_snapshot import build_snapshot
 
@@ -29,27 +33,26 @@ def test_modelo_303_compensation_chain_uses_current_record_design_casillas() -> 
     modelo, _ = load_modelo_303()
     revision = modelo.revisions["2022"]
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    relation = next(item for item in revision.relations if item.id == "modelo-303-rel-self-compensacion-anteriores")
+    binding = next(item for item in revision.bindings if item.id == "modelo-303-compensacion-pendiente-anteriores")
+    provider = binding.provider
 
     assert casillas[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA].number == "110"
     assert casillas[_M303_COMPENSACION_APLICADA_CASILLA].number == "78"
     assert casillas[_M303_POSTERIOR_CASILLA].number == "87"
     assert casillas[_M303_RESULTADO_CASILLA].number == "69"
-    assert relation.target_periods == ("1T", "2T", "3T", "4T")
-    assert relation.source_period_offset_from_target == -1
-    assert relation.source_periods == ()
-    assert relation.target_binding == "modelo-303-compensacion-pendiente-anteriores"
+    assert provider.kind == "previous_filing"
+    assert provider.source_modelo == "303"
+    assert previous_filing_binding_source_casilla_ids(binding) == (_M303_DISPONIBLE_CASILLA,)
+    assert isinstance(provider.temporal, TargetPeriodOffset)
+    assert provider.temporal.periods == -1
+    assert provider.temporal.within_filing_year is False
+    assert binding.applicability.kind == "all_revision_contexts"
 
 
 def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_casilla_id() -> None:
     from cadrumo.domain.calculations.registry.bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
-    )
-    from cadrumo.domain.calculations.registry.relations import (
-        relation_prefill_values_as_binding_values,
-        relation_source_requirements,
-        resolve_relation_values_from_observations,
     )
 
     modelo, _ = load_modelo_303()
@@ -68,26 +71,10 @@ def test_modelo_303_previous_quarter_compensation_binding_resolves_from_source_c
         (("1T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
-    relation_requirements = relation_source_requirements(revision, filing_year=2025, period="2T")
-    assert [(item.periods, item.source_casilla_ids) for item in relation_requirements] == [
-        (("1T",), (_M303_DISPONIBLE_CASILLA,)),
-    ]
-
     assert resolve_previous_filing_binding_values(
         revision,
         observations,
         filing_year=2025,
-        period="2T",
-    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
-    assert resolve_relation_values_from_observations(
-        revision,
-        observations,
-        filing_year=2025,
-        period="2T",
-    ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")}
-    assert relation_prefill_values_as_binding_values(
-        revision,
-        {"modelo-303-rel-self-compensacion-anteriores": Decimal("1200.00")},
         period="2T",
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
 
@@ -96,11 +83,6 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
     from cadrumo.domain.calculations.registry.bindings_previous_filing import (
         previous_filing_observation_requirements,
         resolve_previous_filing_binding_values,
-    )
-    from cadrumo.domain.calculations.registry.relations import (
-        relation_prefill_values_as_binding_values,
-        relation_source_requirements,
-        resolve_relation_values_from_observations,
     )
 
     modelo, _ = load_modelo_303()
@@ -119,26 +101,10 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
         (2025, ("4T",), (_M303_DISPONIBLE_CASILLA,)),
     ]
 
-    relation_requirements = relation_source_requirements(revision, filing_year=2026, period="1T")
-    assert [(item.filing_year, item.periods, item.source_casilla_ids) for item in relation_requirements] == [
-        (2025, ("4T",), (_M303_DISPONIBLE_CASILLA,)),
-    ]
-
     assert resolve_previous_filing_binding_values(
         revision,
         observations,
         filing_year=2026,
-        period="1T",
-    ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
-    assert resolve_relation_values_from_observations(
-        revision,
-        observations,
-        filing_year=2026,
-        period="1T",
-    ) == {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")}
-    assert relation_prefill_values_as_binding_values(
-        revision,
-        {"modelo-303-rel-self-compensacion-anteriores": Decimal("450.00")},
         period="1T",
     ) == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
 

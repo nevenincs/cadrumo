@@ -171,7 +171,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions["2022"]
-    parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr-2022")
+    parity = next(p for p in revision.workbook_parity_refs if p.id == "modelo-303-dr")
 
     assert parity.workbook_source == "aeat-dr-303-2022"
     assert parity.formula_coverage == "record_design_layout"
