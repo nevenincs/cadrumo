@@ -36,6 +36,52 @@ def test_command_run_preserves_failure_status(tmp_path: Path) -> None:
     assert status == 7
 
 
+def test_command_run_finalizes_metadata_when_interrupted(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class InterruptingOutput:
+        def __iter__(self) -> InterruptingOutput:
+            return self
+
+        def __next__(self) -> str:
+            raise KeyboardInterrupt
+
+    class InterruptingProcess:
+        stdout = InterruptingOutput()
+        terminated = False
+
+        def poll(self) -> None:
+            return None
+
+        def terminate(self) -> None:
+            self.terminated = True
+
+        def wait(self, timeout: float | None = None) -> int:
+            assert timeout == 5.0
+            return 130
+
+    process = InterruptingProcess()
+    monkeypatch.setattr("dev.test_runs.command.subprocess.Popen", lambda *args, **kwargs: process)
+
+    status = run(
+        (sys.executable, "-c", "print('never reached')"),
+        repository=tmp_path,
+        family="audit-runs",
+        label="audit-probe",
+    )
+
+    assert status == 130
+    assert process.terminated is True
+    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+    assert metadata["exit_status"] == 130
+    assert metadata["finished_at"]
+    transcript = (run_dir / "run.log").read_text(encoding="utf-8")
+    assert "INTERRUPTED exit=130" in transcript
+    assert "FINISH " in transcript
+
+
 def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
