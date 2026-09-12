@@ -27,7 +27,6 @@ _CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
     ("bindings", "binding_ids"),
-    ("relations", "relation_ids"),
     ("export_layouts", "export_layout_ids"),
     ("extraction_profiles", "extraction_profile_ids"),
     ("live_cross_references", "cross_reference_ids"),
@@ -56,16 +55,16 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
 
 
 def check_dependency_classification_refs(checker: IdReferenceChecker, revision: ModeloRevision) -> None:
-    """Check dependency-classification construct and relation refs.
+    """Check dependency-classification construct and binding refs.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
     dependency classifications. The checker verifies target constructs,
-    relation refs, and legal/source refs against the snapshot id sets.
+    binding refs, and legal/source refs against the snapshot id sets.
     """
     for classification in revision.dependency_classifications:
         dcp = f"dependency_classification {classification.id}"
         checker.chk_tuple(f"{dcp}.target_constructs", classification.target_constructs, checker.construct_ids)
-        checker.chk_tuple(f"{dcp}.relation_refs", classification.relation_refs, checker.relation_ids)
+        checker.chk_tuple(f"{dcp}.binding_refs", classification.binding_refs, checker.binding_ids)
         checker.chk_legal_source_refs(dcp, classification.legal_refs, classification.source_refs)
 
 
