@@ -12,6 +12,7 @@ from .._signal import (
     _documentation_source_inventory,
     _domain_summaries,
     _dynamic_key_families,
+    _embedded_document_language_prose,
     _filtered_translation_text,
     _headline,
     _human_translation_text,
@@ -203,6 +204,113 @@ def test_spellcheck_reports_structural_exclusions_by_surface_and_locale(tmp_path
     }
 
 
+def test_spellcheck_reconciles_enrolled_cells_with_prose_and_structural_cells(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    class _Dictionary:
+        def lookup(self, _word: str) -> bool:
+            return True
+
+    monkeypatch.setattr(
+        signal_module,
+        "load_dictionaries",
+        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+    )
+    _spelling, inventory, _findings = _spellcheck_catalogues(
+        {"runtime.prose", "runtime.syntax"},
+        {
+            "ca": {
+                "runtime.prose": "Visible prose",
+                "runtime.syntax": "2025 --dry-run",
+            },
+            "en": {"runtime.prose": "Visible prose"},
+        },
+        tmp_path,
+    )
+
+    assert inventory["spelling_cells_by_locale"] == {"ca": 2, "en": 1}
+    assert inventory["spellchecked_cells"] == sum(inventory["spelling_cells_by_locale"].values()) == 3
+    assert inventory["spelling_prose_cells_by_locale"] == {"ca": 1, "en": 1}
+    assert inventory["spelling_structural_only_cells_by_locale"] == {"ca": 1}
+    assert inventory["spelling_prose_cells"] + inventory["spelling_structural_only_cells"] == inventory[
+        "spellchecked_cells"
+    ]
+
+
+def test_spellcheck_returns_actionable_finding_for_each_unknown_parallel_cell(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    class _Dictionary:
+        def lookup(self, word: str) -> bool:
+            return word.casefold() == "known"
+
+    monkeypatch.setattr(
+        signal_module,
+        "load_dictionaries",
+        lambda _repository: {locale: _Dictionary() for locale in signal_module._LOCALES},
+    )
+    spelling, inventory, findings = _spellcheck_catalogues(
+        set(),
+        {},
+        tmp_path,
+        additional_values={"es": {"parallel:docs/locales/es/LC_MESSAGES/guide.po:message": "known typo"}},
+    )
+
+    assert spelling == {
+        ("es", "parallel:docs/locales/es/LC_MESSAGES/guide.po:message"): ("typo",)
+    }
+    assert inventory["spelling_unknown_cells"] == 1
+    assert findings == [
+        {
+            "classification": "blocking",
+            "kind": "translation_spelling_unknown",
+            "domain": "docs",
+            "locale": "es",
+            "location": "docs/locales/es/LC_MESSAGES/guide.po:message",
+            "unknown_words": ["typo"],
+            "next_action": "correct the localized prose in its authoritative data source",
+        }
+    ]
+
+
+def test_spellcheck_routes_lang_annotated_embedded_prose_to_declared_dictionary(tmp_path, monkeypatch) -> None:
+    from .. import _signal as signal_module
+
+    class _Dictionary:
+        def __init__(self, known: set[str]) -> None:
+            self.known = known
+
+        def lookup(self, word: str) -> bool:
+            return word.casefold() in self.known
+
+    monkeypatch.setattr(
+        signal_module,
+        "load_dictionaries",
+        lambda _repository: {
+            "ca": _Dictionary(set()),
+            "en": _Dictionary({"published"}),
+            "es": _Dictionary({"known"}),
+            "hu": _Dictionary(set()),
+        },
+    )
+    spelling, _inventory, _findings = _spellcheck_catalogues(
+        set(),
+        {},
+        tmp_path,
+        additional_values={
+            "en": {
+                "parallel:docs/_generated/legal/guide.rst:line[5]": (
+                    'Published <blockquote lang="es">known typo</blockquote>'
+                )
+            }
+        },
+    )
+
+    assert spelling == {
+        ("en", "parallel:docs/_generated/legal/guide.rst:line[5]"): ("typo",)
+    }
+
+
 def test_domain_summary_enumerates_every_domain_and_unassigned_inventory() -> None:
     required = {"cli.save", "modelo.title", "tui.home.title"}
     leaves = {
@@ -266,6 +374,36 @@ def test_source_inventory_reports_literal_key_set_reduction(tmp_path) -> None:
     assert inventory["literal_tr_keys_unique"] == 2
     assert inventory["literal_tr_reuse_occurrences"] == 1
     assert inventory["literal_tr_keys_reused"] == 1
+
+
+def test_source_inventory_reports_dot_key_uniqueness_and_semantic_duplicate_findings(tmp_path) -> None:
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "surface.py").write_text(
+        "from cadrumo.core.i18n.render import tr\n"
+        "def render(name):\n"
+        "    tr('cli.save')\n"
+        "    tr('cli.save', name=name)\n"
+        "    tr('cli.cancel')\n"
+        "    tr(f'cli.dynamic.{name}')\n",
+        encoding="utf-8",
+    )
+    locales = tmp_path / "locales"
+    locales.mkdir()
+
+    inventory, findings = _source_inventory(
+        LocaleManager(source, locales),
+        dynamic_resolved_keys=("cli.dynamic.one", "cli.save"),
+    )
+
+    assert inventory["raw_localization_key_occurrences"] == 5
+    assert inventory["dynamic_resolved_key_occurrences"] == 2
+    assert inventory["unique_dot_keys"] == 3
+    assert inventory["duplicate_key_occurrence_delta"] == 2
+    conflicts = [finding for finding in findings if finding["kind"] == "conflicting_duplicate_translation_key"]
+    assert len(conflicts) == inventory["conflicting_duplicate_declarations"] == 1
+    assert conflicts[0]["key"] == "cli.save"
+    assert [declaration["placeholders"] for declaration in conflicts[0]["declarations"]] == [[], ["name"], []]
 
 
 def test_source_inventory_ignores_non_translation_tr_alias(tmp_path) -> None:
@@ -398,6 +536,18 @@ def test_generated_user_doc_adapter_reads_visible_prose_not_option_or_literal_sy
     assert "Select the source record." in rendered
     assert all("--source" not in text for text in rendered)
     assert all("raw_internal_token" not in text for text in rendered)
+
+
+def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) -> None:
+    page = tmp_path / "legal.rst"
+    page.write_text(
+        "Legal reference\n===============\n\n"
+        ".. raw:: html\n\n"
+        "   <blockquote lang=\"es\"><p>Administracion Tributaria</p></blockquote>\n",
+        encoding="utf-8",
+    )
+
+    assert _embedded_document_language_prose(page) == ((6, "es", "administracion tributaria"),)
 
 
 def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
@@ -647,6 +797,15 @@ def test_translation_echo_invariants_use_identity_syntax_and_language_evidence()
     )
     assert (
         _translation_invariant_echo_reason(
+            "vX.Y.Z",
+            "es",
+            dictionary=target,
+            source_dictionary=english,
+        )
+        is None
+    )
+    assert (
+        _translation_invariant_echo_reason(
             "Windows (x86-64)",
             "es",
             dictionary=target,
@@ -687,6 +846,7 @@ def test_platform_identity_terms_follow_the_download_descriptor(tmp_path) -> Non
 
     assert {"macos", "linux", "windows"}.issubset(terms)
     assert "any" not in terms
+    assert "any platform with python 3 13+" not in terms
 
 
 def test_documentation_inventory_fails_closed_when_source_manifest_is_absent(tmp_path) -> None:

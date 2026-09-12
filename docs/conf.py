@@ -271,7 +271,7 @@ autodoc_typehints_format = "short"
 
 _PUBLIC_TYPE_ALIAS_TARGETS = {
     "CasillaId": "cadrumo.core.CasillaId",
-    "SubjectTaxId": "cadrumo.core.identity.tax_id.SubjectTaxId",
+    "SubjectTaxId": "cadrumo.domain.calculations.registry.tax_id_format.SubjectTaxId",
     "TaxIdIdentityToken": "cadrumo.core.identity.tax_id.TaxIdIdentityToken",
 }
 

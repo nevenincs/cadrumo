@@ -74,7 +74,7 @@ class Color(StrEnum):
     BLUE = "b"
 
 
-class Modelo(StrEnum):
+class FilingCode(StrEnum):
     M100 = "100"
     M303 = "303"
 
@@ -124,7 +124,7 @@ def orphan_fn() -> None: ...
 def run() -> None:
     helper()
     Widget(label="x").shown()
-    for modelo in Modelo:
+    for code in FilingCode:
         pass
     return Color.RED, MAX
 """
@@ -666,8 +666,8 @@ def test_filtering_away_every_finding_returns_a_clean_result(result: Unreachable
 
 
 def test_iterated_enum_members_are_not_individually_reported(result: UnreachableCodeResult) -> None:
-    """``for modelo in Modelo`` reaches every member, so neither M100 nor M303 is a finding."""
-    assert not any(finding.qualname.startswith("Modelo.") for finding in result.symbols)
+    """Iterating a closed fixture enum reaches each synthetic member."""
+    assert not any(finding.qualname.startswith("FilingCode.") for finding in result.symbols)
 
 
 def test_clean_tree_is_green(tmp_path: Path) -> None:

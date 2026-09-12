@@ -47,6 +47,8 @@ def _bound_names(tree: ast.Module) -> set[str]:
         elif isinstance(node, (ast.Assign, ast.AnnAssign)):
             targets = node.targets if isinstance(node, ast.Assign) else (node.target,)
             names.update(target.id for target in targets if isinstance(target, ast.Name))
+        elif isinstance(node, ast.TypeAlias) and isinstance(node.name, ast.Name):
+            names.add(node.name.id)
         elif isinstance(node, (ast.Import, ast.ImportFrom)):
             names.update(alias.asname or alias.name.rsplit(".", 1)[-1] for alias in node.names)
     return names
@@ -143,12 +145,19 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     manager.scaffold()
 
     core_api_text = (tmp_path / "api" / "cadrumo.core.casilla_id.rst").read_text(encoding="utf-8")
-    identity_api_text = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
+    digest_api_text = (tmp_path / "api" / "cadrumo.core.identity.digest.rst").read_text(encoding="utf-8")
+    tax_id_api_text = (tmp_path / "api" / "cadrumo.core.identity.tax_id.rst").read_text(encoding="utf-8")
+    tax_id_format_api_text = (tmp_path / "api" / "cadrumo.domain.calculations.registry.tax_id_format.rst").read_text(
+        encoding="utf-8"
+    )
     all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
     assert ".. py:data:: CasillaId\n   :module: cadrumo.core.casilla_id" in core_api_text
-    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity.tax_id" in identity_api_text
-    assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity.tax_id" in identity_api_text
-    assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity" in identity_api_text
+    assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity.tax_id" in tax_id_api_text
+    assert (
+        ".. py:data:: SubjectTaxId\n   :module: cadrumo.domain.calculations.registry.tax_id_format"
+        in tax_id_format_api_text
+    )
+    assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity.digest" in digest_api_text
     assert all_stub_text.count(".. py:data:: CasillaId\n") == 1
     assert all_stub_text.count(".. py:data:: TaxIdIdentityToken\n") == 1
     assert all_stub_text.count(".. py:data:: SubjectTaxId\n") == 1

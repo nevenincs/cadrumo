@@ -123,32 +123,17 @@ def _kebab(value: str) -> str:
 def _walk_modelos() -> Iterator[EnrolmentCandidate]:
     """Yield a candidate per REGISTRY-BACKED modelo.
 
-    ``Modelo`` is a typing device, not a glossary. It exists so production code
-    references a modelo through an enum member rather than a bare three-digit
-    literal, so it necessarily carries every code the codebase mentions --
-    including the retired and code-referenced-only forms the codebase itself
-    declares in ``NON_REGISTRY_MODELOS`` as having no registry definition.
-
-    Walking the whole enum conflated "identifier the code references" with
-    "concept a taxpayer looks up". The cost was measurable and invisible: 76 of
-    the enum's 149 members are non-registry, and enrolling them made the
-    Handbook report 118 unenrolled concepts instead of the registry-backed set,
-    produced entirely by a change made in a different subsystem.
-
-    Excluding them creates and deletes nothing. It narrows the candidate set to
-    the forms this product actually models, which is what
-    ``aeat-documentation`` asks of an approved concept.
+    ``Modelo`` validates identifier syntax only; published authority owns the
+    member set. Walking that authority therefore enrolls exactly the concepts
+    this product models, without maintaining a second closed catalogue here.
     """
-    from cadrumo.core.modelo import Modelo
-    from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    for modelo in sorted(Modelo, key=lambda member: member.value):
-        if modelo in NON_REGISTRY_MODELOS:
-            continue
+    for modelo in sorted(bundled_authority().modelos, key=lambda definition: definition.id):
         yield EnrolmentCandidate(
-            concept_id=f"modelo-{modelo.value}",
+            concept_id=f"modelo-{modelo.id}",
             domain=ConceptDomain.MODELO,
-            domain_refs=(f"modelo:{modelo.value}",),
+            domain_refs=(f"modelo:{modelo.id}",),
         )
 
 

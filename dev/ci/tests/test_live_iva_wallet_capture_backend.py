@@ -18,11 +18,8 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     read_db_at_rest_bytes,
 )
 from cadrumo.application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.application.calculations.observations_repository import (
-    CalculationObservationRepository,
-    IvaWalletDecisionRepository,
-    iva_wallet_decision_key,
-)
+from cadrumo.application.calculations.observations_repository import iva_wallet_decision_key
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository, IvaWalletDecisionRepository
 from cadrumo.application.live.iva_remote_state import list_iva_compensation_history
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance

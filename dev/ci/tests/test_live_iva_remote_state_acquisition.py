@@ -53,8 +53,8 @@ from cadrumo.application.live.remote_state_models import (
 )
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import Settings
-from cadrumo.core.identity.documents import nif_check_letter
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from cadrumo.entrypoints.live_state_composition import aggregate_iva_compensation_history_reports
 from cadrumo.tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 
@@ -632,7 +632,7 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
 
 
 def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path: Path) -> None:
-    sensitive_nif = f"12345678{nif_check_letter(12345678)}"
+    sensitive_nif = f"12345678{runtime_nif_check_letter(12345678)}"
     sensitive_support = "support-number-private-canary"
     sensitive_object_key = "wallet:private-object-key-canary"
     sensitive_profile_id = "123e4567-e89b-12d3-a456-426614174000"

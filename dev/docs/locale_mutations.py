@@ -38,7 +38,7 @@ from babel.messages.pofile import read_po, write_po
 
 from cadrumo.core.i18n.render import extract_placeholders
 from dev._paths import REPO_ROOT, UTF_8
-from dev.locales._write_guard import catalogue_write_guard
+from dev.locales.write_guard import catalogue_write_guard
 
 _SCHEMA_VERSION: Final[int] = 1
 _TARGET_LOCALES: Final[frozenset[str]] = frozenset({"ca", "es", "hu"})

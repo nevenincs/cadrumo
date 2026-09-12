@@ -29,7 +29,7 @@ from ._subtree_move import (
     normalise_key_prefix,
     plan_locale_subtree_move,
 )
-from ._write_guard import CatalogueWriteGuard, catalogue_write_guard
+from .write_guard import CatalogueWriteGuard, catalogue_write_guard
 from .errors import LocaleError
 from .wizard_translation_audit import wizard_descriptor_keys
 

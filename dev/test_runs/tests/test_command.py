@@ -215,6 +215,7 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
     assert "AuthorityArtifactFormatError" in log
     report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
     assert report["details"]["root_cause"] == finished["error"]
+    assert report["details"]["processor_error"].startswith("AuthorityArtifactFormatError: ")
     assert report["summary"]["translation_backlog"]["cells_to_translate"] is None
 
 

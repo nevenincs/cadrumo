@@ -90,7 +90,7 @@ from cadrumo.application.aggregation.renta_ledger import (
     aggregate_renta_ledger_expenses_from_repositories,
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
-from cadrumo.application.calculations.observations_repository import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
