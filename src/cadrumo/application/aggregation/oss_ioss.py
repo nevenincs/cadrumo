@@ -40,12 +40,14 @@ from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
     unsupported_ledger_oss_observations,
 )
+from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -344,10 +346,12 @@ def _assign_exterior_detail_bindings(
 ) -> None:
     """Copy matching generated selector values into their binding channels."""
     for binding in revision.bindings:
-        selector = binding.selector
-        if getattr(selector, "record", None) != "modelo-369-exterior-t36901":
+        provider = binding.provider
+        if not isinstance(provider, ManualInputProvider) or provider.record != "modelo-369-exterior-t36901":
             continue
-        field = getattr(selector, "field", None)
+        field = provider.field
+        if field is None:
+            continue
         if field in fields:
             enum_values[binding.id] = fields[field]
         elif field in decimals:
@@ -686,6 +690,7 @@ class OssIossLedgerSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.ledger_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 )
                 for observation in observations
             ),

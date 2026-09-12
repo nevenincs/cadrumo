@@ -387,7 +387,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             _M131_CASILLA_05: Decimal("500"),
             _M131_CASILLA_08: Decimal("0"),
             _M131_CASILLA_09: Decimal("0"),
-            "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
+            "modelo-131-resultados-negativos-anteriores": Decimal("0"),
             _M131_CASILLA_12: Decimal("0"),
             _M131_CASILLA_14: Decimal("0"),
             "modelo-131.dpa.013-016.epigrafe-iae": "722",

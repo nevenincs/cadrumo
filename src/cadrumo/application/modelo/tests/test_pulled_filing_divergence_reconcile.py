@@ -63,7 +63,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -156,7 +156,7 @@ def _law_resolved_revision() -> ModeloRevision:
     return bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD_CODE).revision
 
 
-def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, DataBindingDefinition]:
+def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, BindingDefinition]:
     """Return the casilla the comparison is opened on, and the binding that opens it.
 
     Chosen structurally rather than by hardcoded id: the lowest-ordered
@@ -165,7 +165,7 @@ def _subject_casilla(revision: ModeloRevision) -> tuple[CasillaDefinition, DataB
     while a carry binding would be evidence read back out of the filed store the
     comparison is measuring against.
     """
-    bindings_by_id: dict[BindingId, DataBindingDefinition] = {binding.id: binding for binding in revision.bindings}
+    bindings_by_id: dict[BindingId, BindingDefinition] = {binding.id: binding for binding in revision.bindings}
     for casilla in sorted(revision.casillas, key=lambda definition: definition.id):
         if casilla.input_kind is InputKind.INFORMATIONAL or casilla.binding is None:
             continue

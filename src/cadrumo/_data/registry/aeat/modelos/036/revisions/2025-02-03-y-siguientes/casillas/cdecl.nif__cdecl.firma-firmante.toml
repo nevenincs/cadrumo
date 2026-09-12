@@ -48,7 +48,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @28+125. Datos identificativos. Apellidos sin nombre si persona fisica, razon
 # social o denominacion si persona juridica. [102].
@@ -64,7 +64,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @383+25. Datos identificativos. Nombre, en el caso de personas fisicas. [103].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -79,7 +79,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @189+2 dia, @191+2 mes, @193+4 ano. Modificacion. Fecha efectiva del cese. [141].
 # ONE date casilla: the three fields are composite components of a single fecha.
@@ -95,7 +95,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @198+1. Baja. Causa. [151].
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -110,7 +110,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @199+2 dia, @201+2 mes, @203+4 ano. Baja. Fecha efectiva de la baja. [152].
 # ONE date casilla, as [141] above.
@@ -126,7 +126,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @207+40. Lugar, fecha y firma. Lugar. No box number in the diseno; slug.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -137,7 +137,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @247+2 dia, @249+2 mes, @251+4 ano. Lugar, fecha y firma. Fecha. ONE date
 # casilla; no box number in the diseno, so a slug.
@@ -149,7 +149,7 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @255+1. Lugar, fecha y firma. Firma en calidad de. No box number; slug.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -160,7 +160,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @256+125. Lugar, fecha y firma. Firmado, nombre y apellidos. No box number; slug.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -171,4 +171,4 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-1274-2007:art-1", "orden-hac-1526-2024:art-1"]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

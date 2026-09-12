@@ -96,10 +96,10 @@ _M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA: CasillaId = validated_casilla_id(
     "0604",
     surface="_M100_PAGOS_FRACCIONADOS_INGRESADOS_CASILLA",
 )
-_M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count"
-_M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-2025-profile-unidad-familiar-otros-miembros-base"
-_M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-2025-profile-minimo-descendientes-estatal"
-_M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING = "renta-2025-profile-minimo-descendientes-autonomico"
+_M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
+_M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING = "renta-profile-unidad-familiar-otros-miembros-base"
+_M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING = "renta-profile-minimo-descendientes-estatal"
+_M100_MINIMO_DESCENDIENTES_AUTONOMICO_BINDING = "renta-profile-minimo-descendientes-autonomico"
 _M131_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     "15",
     surface="_M131_PAGOS_FRACCIONADOS_CASILLA",
@@ -693,15 +693,15 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
-            "renta-2025-profile-has-economic-activity": Decimal("1"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
-            "renta-2025-profile-declaration-type": Decimal("1"),
-            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
-            "renta-2025-profile-marriage-full-year": Decimal("0"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
@@ -789,15 +789,15 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
-            "renta-2025-profile-has-economic-activity": Decimal("1"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             **materialized,
-            "renta-2025-profile-declaration-type": Decimal("1"),
-            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
-            "renta-2025-profile-marriage-full-year": Decimal("0"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),
@@ -865,15 +865,15 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         binding_values={
             # Production profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories; scenario models a directa filer.
-            "renta-2025-profile-has-economic-activity": Decimal("1"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
-            "renta-2025-profile-declaration-type": Decimal("1"),
-            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
-            "renta-2025-profile-marriage-full-year": Decimal("0"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             _M100_MADRID_NACIMIENTO_ADOPCION_ELIGIBLE_COUNT_BINDING: Decimal("0"),
             _M100_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_BINDING: Decimal("0"),
             _M100_MINIMO_DESCENDIENTES_ESTATAL_BINDING: Decimal("0"),

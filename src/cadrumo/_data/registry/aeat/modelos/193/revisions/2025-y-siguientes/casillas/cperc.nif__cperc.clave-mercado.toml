@@ -14,7 +14,6 @@ semantic_role = "payee_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-representante"
@@ -29,7 +28,6 @@ semantic_role = "representante_legal_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nombre"
@@ -44,7 +42,6 @@ semantic_role = "payee_name"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.mediador"
@@ -59,7 +56,6 @@ semantic_role = "payee_mediador_flag"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.provincia"
@@ -74,7 +70,6 @@ semantic_role = "payee_province"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave-codigo"
@@ -89,7 +84,6 @@ semantic_role = "payee_clave_codigo"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.codigo-emisor"
@@ -104,7 +98,6 @@ semantic_role = "payee_codigo_emisor"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave"
@@ -119,7 +112,6 @@ semantic_role = "payee_clave_percepcion"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.naturaleza"
@@ -134,7 +126,6 @@ semantic_role = "payee_naturaleza_percepcion"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.pago"
@@ -149,7 +140,6 @@ semantic_role = "payee_pago"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.tipo-codigo"
@@ -164,7 +154,6 @@ semantic_role = "payee_tipo_codigo"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.codigo-cuenta"
@@ -179,7 +168,6 @@ semantic_role = "payee_codigo_cuenta"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.pendiente"
@@ -194,7 +182,6 @@ semantic_role = "payee_pendiente_flag"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ejercicio-devengo"
@@ -209,7 +196,6 @@ semantic_role = "devengo_year"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.tipo-percepcion"
@@ -224,7 +210,6 @@ semantic_role = "payee_tipo_percepcion"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepciones"
@@ -237,10 +222,9 @@ data_type = "money"
 semantic_role = "payee_percepciones_193"
 # Design positions 123-135: the contraprestacion integra exigible o satisfecha.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.reducciones"
@@ -253,10 +237,9 @@ data_type = "money"
 semantic_role = "payee_reducciones_193"
 # Design positions 139-151: the art. 26.2 reductions applied for IRPF contribuyente perceptores.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.base"
@@ -269,10 +252,9 @@ data_type = "money"
 semantic_role = "payee_base_retenciones_193"
 # Design positions 152-164: the base de la retencion o ingreso a cuenta.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.porcentaje"
@@ -287,7 +269,6 @@ semantic_role = "payee_porcentaje_retencion"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones"
@@ -300,10 +281,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_193"
 # Design positions 169-181: the retenciones e ingresos a cuenta amount.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.penalizaciones"
@@ -316,10 +296,9 @@ data_type = "money"
 semantic_role = "payee_penalizaciones"
 # Design positions 182-192: the negative capital-mobiliario rendimientos from commercial-promotion breaches (claves B/D).
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.isin"
@@ -332,7 +311,6 @@ semantic_role = "payee_isin"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.naturaleza-declarante"
@@ -347,7 +325,6 @@ semantic_role = "payee_naturaleza_declarante"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-inicio-prestamo"
@@ -362,7 +339,6 @@ semantic_role = "payee_fecha_inicio_prestamo"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-vencimiento-prestamo"
@@ -377,7 +353,6 @@ semantic_role = "payee_fecha_vencimiento_prestamo"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.compensaciones"
@@ -390,10 +365,9 @@ data_type = "money"
 semantic_role = "payee_compensaciones"
 # Design positions 225-236, only for prestamo de valores.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.garantias"
@@ -406,10 +380,9 @@ data_type = "money"
 semantic_role = "payee_garantias"
 # Design positions 237-248, only for prestamo de valores.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-estatal"
@@ -422,10 +395,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_forales_estatal"
 # Design positions 249-261: HACIENDA ESTATAL foral split.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-navarra"
@@ -438,10 +410,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_forales_navarra"
 # Design positions 262-274: COMUNIDAD FORAL DE NAVARRA.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-araba"
@@ -454,10 +425,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_forales_araba"
 # Design positions 275-287: DIPUTACION FORAL DE ARABA/ALAVA.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-gipuzkoa"
@@ -470,10 +440,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_forales_gipuzkoa"
 # Design positions 288-300: DIPUTACION FORAL DE GIPUZKOA.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-forales-bizkaia"
@@ -486,10 +455,9 @@ data_type = "money"
 semantic_role = "payee_retenciones_forales_bizkaia"
 # Design positions 301-313: DIPUTACION FORAL DE BIZKAIA.
 required = true
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ceuta-melilla"
@@ -504,7 +472,6 @@ semantic_role = "payee_ceuta_melilla_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.numero-orden"
@@ -519,7 +486,6 @@ semantic_role = "payee_numero_orden_193"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-pagador-anterior"
@@ -534,7 +500,6 @@ semantic_role = "payee_nif_pagador_anterior"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.fecha-devengo"
@@ -549,7 +514,6 @@ semantic_role = "payee_fecha_devengo"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave-mercado"
@@ -564,4 +528,3 @@ semantic_role = "payee_clave_mercado"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]

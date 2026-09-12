@@ -1,0 +1,114 @@
+# Rate-specific box-layer casillas for the Reg. ordinario block. Each carries the
+# official AEAT box number read off the bundled 2024 Diseno de Registros
+# (apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota - Reg. ordin."),
+# stated explicitly rather than left implied by an export position, so the
+# casilla-to-box correspondence is readable without re-deriving it from offsets
+# and disambiguating the regimen segment.
+#
+# Each casilla owns its official box in the record: the fourteen consecutive
+# money fields at offsets 13-250 of page 2, base preceding cuota within each
+# rate. The rate-blind tier casillas that previously wrote 98/200/234 no longer
+# export, so no casilla both totals and asserts a rate.
+#
+# The tier casillas remain the TOTAL layer: rate-blind, feeding the annual
+# devengada total, keeping every row including those whose rate is unrecorded.
+# That layer sums to MORE than this one by exactly the rate-unrecorded amount,
+# which is why the export refuses on the difference rather than hiding it.
+
+# Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-7-5.base"
+number = "669"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_7_5"
+continuidad_id = "iva-base-imponible-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:143 (sha256 8be79bacc860) prints box [669]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [669] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Box [670] - "Tipo 7,5 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-7-5.cuota"
+number = "670"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_7_5"
+continuidad_id = "iva-cuota-repercutida-tipo-7-5"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:144 (sha256 8be79bacc860) prints box [670]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [670] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 7,5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Box [702] - "Tipo 5 % - Base imponible". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-5.base"
+number = "702"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_5"
+continuidad_id = "iva-base-imponible-repercutida-tipo-5"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-5-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Box [703] - "Tipo 5 % - Cuota". Vigencia: del 1 de julio al 30 de septiembre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-5.cuota"
+number = "703"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_5"
+continuidad_id = "iva-cuota-repercutida-tipo-5"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 5 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-5-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-2.base"
+number = "667"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_base_imponible_repercutida_tipo_2"
+continuidad_id = "iva-base-imponible-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:137 (sha256 8be79bacc860) prints box [667]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [667] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-2-base"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+
+# Box [668] - "Tipo 2 % - Cuota". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
+[[revisions."2024".casillas]]
+id = "iva.anual.repercutido.tipo-2.cuota"
+number = "668"
+section = ["iva", "anual", "devengado"]
+data_type = "money"
+semantic_role = "iva_cuota_repercutida_tipo_2"
+continuidad_id = "iva-cuota-repercutida-tipo-2"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:138 (sha256 8be79bacc860) prints box [668]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [668] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per rate; the 2 % tier is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-repercutido-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "real-decreto-ley-4-2024:art-1", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]

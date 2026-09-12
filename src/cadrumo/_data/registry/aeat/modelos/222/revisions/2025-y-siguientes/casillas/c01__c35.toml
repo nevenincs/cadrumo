@@ -21,7 +21,6 @@ semantic_role = "is_pf_grupo_mod_40_2_lis_base_del_pago_fraccionado"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "02"
@@ -32,7 +31,6 @@ semantic_role = "is_pf_grupo_mod_40_2_lis_resultado_de_la_declaracion_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "03"
@@ -44,7 +42,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-modalidad-40-2-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "04"
@@ -55,7 +53,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_suma_de_resultados_contables_individua
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "05"
@@ -66,7 +63,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_correccion_por_impuesto_sobre_sociedad
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "06"
@@ -77,7 +73,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_correccion_por_impuesto_sobre_sociedad
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "67"
@@ -88,7 +83,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_correccion_por_impuesto_complementario
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "37"
@@ -99,7 +93,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_reversion_del_30_del_importe_de_los_ga
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "07"
@@ -110,7 +103,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_resto_correcciones_al_resultado_contab
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "08"
@@ -121,7 +113,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_resto_correcciones_al_resultado_contab
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "38"
@@ -133,7 +124,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-total-correcciones-aumentos"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "39"
@@ -145,7 +136,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-total-correcciones-disminuciones"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "59"
@@ -156,7 +147,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_ajustes_para_la_determinacion_de_la_ba
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "60"
@@ -167,7 +157,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_ajustes_para_la_determinacion_de_la_ba
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "10"
@@ -179,7 +168,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-suma-bases-imponibles-individuales"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "11"
@@ -190,7 +179,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_correcciones_diferimiento_resultados_i
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "12"
@@ -201,7 +189,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_correcciones_diferimiento_resultados_i
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "13"
@@ -213,7 +200,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-base-imponible-previa"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "44"
@@ -224,7 +211,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_dotaciones_del_art_11_12_de_la_lis_del
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "45"
@@ -235,7 +221,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_dotaciones_del_art_11_12_de_la_lis_gen
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "46"
@@ -246,7 +231,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_remanente_reserva_de_capitalizacion_no
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "14"
@@ -257,7 +241,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_compensacion_de_bases_imponibles_negat
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "15"
@@ -268,7 +251,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_compensacion_de_bases_imponibles_negat
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "47"
@@ -279,7 +261,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_reserva_de_nivelacion_y_apliquen_el_ti
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "48"
@@ -290,7 +271,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_reserva_de_nivelacion_y_apliquen_el_ti
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "16"
@@ -302,7 +282,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-base-pago-fraccionado-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "17"
@@ -313,7 +293,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_porcentaje"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "49"
@@ -324,7 +303,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_dotaciones_del_art_11
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "50"
@@ -335,7 +313,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_dotaciones_del_art_11
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "51"
@@ -346,7 +323,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_compensacion_de_cuota
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "58"
@@ -357,7 +333,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_compensacion_de_cuota
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "52"
@@ -368,7 +343,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_reserva_de_nivelacion
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "53"
@@ -379,7 +353,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_1_caso_general_reserva_de_nivelacion
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "18"
@@ -391,7 +364,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-resultado-previo-b1"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "19"
@@ -403,7 +376,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-base-pago-fraccionado-b2"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "20"
@@ -416,7 +389,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "21"
@@ -429,7 +401,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "22"
@@ -443,7 +414,7 @@ formula = "modelo-222-importe-pago-fraccionado-b2-tipo-1"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "23"
@@ -456,7 +427,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "24"
@@ -469,7 +439,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "25"
@@ -483,7 +452,7 @@ formula = "modelo-222-importe-pago-fraccionado-b2-tipo-2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "61"
@@ -496,7 +465,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "62"
@@ -509,7 +477,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "63"
@@ -523,7 +490,7 @@ formula = "modelo-222-importe-pago-fraccionado-b2-tipo-3"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "64"
@@ -536,7 +503,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "65"
@@ -549,7 +515,6 @@ input_kind = "manual"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "66"
@@ -563,7 +528,7 @@ formula = "modelo-222-importe-pago-fraccionado-b2-tipo-4"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "54"
@@ -574,7 +539,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_dotaciones_del_a
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "57"
@@ -585,7 +549,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_dotaciones_del_a
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "42"
@@ -596,7 +559,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_compensacion_de_
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "43"
@@ -607,7 +569,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_compensacion_de_
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "55"
@@ -618,7 +579,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_reserva_de_nivelacion_y_apliquen_e
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "56"
@@ -629,7 +589,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_reserva_de_nivelacion_solo_grupos_
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40", "ley-27-2014:art-101", "ley-27-2014:art-105"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "26"
@@ -643,7 +602,7 @@ formula = "modelo-222-resultado-previo-b2"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "27"
@@ -654,7 +613,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_bonificaciones_c
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "28"
@@ -665,7 +623,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_retenciones_e_in
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "29"
@@ -676,7 +633,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_volumen_de_opera
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "30"
@@ -687,7 +643,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_pagos_fraccionad
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "31"
@@ -698,7 +653,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_casos_especificos_resultado_de_la_
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "32"
@@ -712,7 +666,7 @@ formula = "modelo-222-modalidad-40-3-resultado"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Mod. 40.3 LIS casos especificos declares four parallel rate tiers, each with its own base, porcentaje and importe, plus a resultado previo and a resultado. A group may be taxed at several rates, so each is its own box and appears once by construction."
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "33"
@@ -723,7 +677,6 @@ semantic_role = "is_pf_grupo_mod_40_3_lis_b_2_minimo_a_ingresar"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "34"
@@ -735,7 +688,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-222-cantidad-a-ingresar"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025", "aeat-modelo-222-instructions"]
+additional_source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "35"
@@ -746,4 +699,3 @@ semantic_role = "is_pf_grupo_informacion_adicional_resultado_consolidado_del_per
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-227-2017:art-2", "ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2025"]

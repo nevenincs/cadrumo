@@ -65,7 +65,7 @@ from cadrumo.domain.calculations.registry.ids import (
     WorkbookParityRefId,
 )
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -831,7 +831,7 @@ def _build_construct_evidence_ledger(
 
 
 def _declared_construct_evidence_row(
-    declaration: FormulaDefinition | ParameterDefinition | DataBindingDefinition | RelationDefinition,
+    declaration: FormulaDefinition | ParameterDefinition | BindingDefinition | RelationDefinition,
     *,
     kind: ConstructEvidenceKind,
     authority_proof: _AuthorityCheckProof | None,

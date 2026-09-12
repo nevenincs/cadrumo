@@ -185,13 +185,28 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
     edition = materialise_edition(source_modelo_root, revision)
     manifest = tomllib.loads((source_modelo_root / "revisions" / revision / "revision.toml").read_text("utf-8"))
     manifest_members = frozenset(manifest.get("revisions", {}).get(revision, {}))
-    staged_members = (manifest_members | frozenset(_CONTINUITY_SECTIONS)) - {_PREDECESSOR_DECLARATION}
-    table = {key: value for key, value in edition.table.items() if key in staged_members}
-    revisions_root = metadata_modelo_root / "revisions"
-    revisions_root.mkdir(exist_ok=True)
-    (revisions_root / f"{revision}.toml").write_bytes(
-        _render_toml_bytes(f"{revision}.toml", {"revisions": {revision: table}}),
+    manifest_table = {
+        key: value
+        for key, value in edition.table.items()
+        if key in manifest_members and key != _PREDECESSOR_DECLARATION
+    }
+    revisions_root = metadata_modelo_root / "revisions" / revision
+    revisions_root.mkdir(parents=True, exist_ok=True)
+    (revisions_root / "revision.toml").write_bytes(
+        _render_toml_bytes("revision.toml", {"revisions": {revision: manifest_table}}),
     )
+    for section in _CONTINUITY_SECTIONS:
+        value = edition.table.get(section)
+        if value is None:
+            continue
+        section_root = revisions_root / section
+        section_root.mkdir()
+        (section_root / "complete-edition.toml").write_bytes(
+            _render_toml_bytes(
+                f"{section}/complete-edition.toml",
+                {"revisions": {revision: {section: value}}},
+            ),
+        )
 
 
 #: Authority directories resolved BY NAME at registry load, beside `legal` and

@@ -26,7 +26,10 @@ from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
-from ....domain.calculations.registry.bindings import ProrrataRegularizacionOutput
+from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionOutput,
+    ProrrataRegularizacionProvider,
+)
 from ....domain.prorrata_register.register import ProrrataProvisionalResolution, ProrrataRegisterEntry
 from ..prorrata_regularizacion import (
     build_prorrata_missing_provisional_advisory,
@@ -59,7 +62,8 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
         casilla_id
         for binding in snapshot.revision.bindings
         if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
-        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+        and isinstance(binding.provider, ProrrataRegularizacionProvider)
+        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
         for casilla_id in casillas_by_binding(snapshot.revision)[binding.id]
     )
     assert diagnostic.casilla_id == canonical_target

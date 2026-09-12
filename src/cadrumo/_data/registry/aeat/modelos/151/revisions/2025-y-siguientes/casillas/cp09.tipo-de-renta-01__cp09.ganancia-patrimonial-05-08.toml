@@ -21,7 +21,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
@@ -36,7 +36,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -51,7 +51,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -66,7 +66,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -81,7 +81,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -96,7 +96,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
@@ -111,7 +111,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -126,7 +126,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -141,7 +141,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -156,7 +156,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -171,7 +171,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción de la ganancia patrimonial [66]
 [[revisions."2025-y-siguientes".casillas]]
@@ -186,7 +186,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Naturaleza [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -201,7 +201,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -216,7 +216,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -231,7 +231,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Ganancia patrimonial [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -246,7 +246,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Retención o ingreso a cuenta [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -261,7 +261,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total ganancias patrimoniales [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -276,7 +276,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total retencion o ingresos a cuenta [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -291,7 +291,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -306,7 +306,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
@@ -321,7 +321,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
@@ -336,7 +336,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
@@ -351,7 +351,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -366,7 +366,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -381,7 +381,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -396,7 +396,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -411,7 +411,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -426,7 +426,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
@@ -441,7 +441,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
@@ -456,7 +456,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
@@ -471,7 +471,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -486,7 +486,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -501,7 +501,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -516,7 +516,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -531,7 +531,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -546,7 +546,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
@@ -561,7 +561,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
@@ -576,7 +576,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
@@ -591,7 +591,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -606,7 +606,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -621,7 +621,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -636,7 +636,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -651,7 +651,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -666,7 +666,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
@@ -681,7 +681,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
@@ -696,7 +696,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
@@ -711,7 +711,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -726,7 +726,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -741,7 +741,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -756,7 +756,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -771,7 +771,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -786,7 +786,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Descripción del elemento patrimonial [67]
 [[revisions."2025-y-siguientes".casillas]]
@@ -801,7 +801,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [68]
 [[revisions."2025-y-siguientes".casillas]]
@@ -816,7 +816,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [69]
 [[revisions."2025-y-siguientes".casillas]]
@@ -831,7 +831,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -846,7 +846,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -861,7 +861,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -876,7 +876,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia patrimonial [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -891,4 +891,4 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]

@@ -24,7 +24,7 @@ from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
-from .ids import BindingId, ParameterId, RelationId
+from .ids import BindingId, ParameterId
 from .schema_base import (
     DateAxisField,
     FormulaOperator,
@@ -150,7 +150,6 @@ class FormulaExpression(RegistryModel):
     binding: BindingId | None = None
     date_binding: BindingId | None = None
     parameter: ParameterId | None = None
-    relation: RelationId | None = None
     literal: DecimalValue | None = None
     dispatch_table: Annotated[Mapping[str, ParameterId], FROZEN_MAPPING] | None = None
 
@@ -175,7 +174,6 @@ class FormulaExpression(RegistryModel):
             self.binding is not None,
             self.date_binding is not None,
             self.parameter is not None,
-            self.relation is not None,
             self.literal is not None,
             self.dispatch_table is not None,
         ]

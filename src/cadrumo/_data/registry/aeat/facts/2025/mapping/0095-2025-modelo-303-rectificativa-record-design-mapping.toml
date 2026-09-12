@@ -14,6 +14,16 @@ source_refs = [
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2024-late"
+required_text = ["xml"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2025"
+required_text = ["xml"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2026"
+required_text = ["xml"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

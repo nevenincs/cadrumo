@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from ...adapters.persistence.storage.errors import STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ..aggregation.source_mesh import (
@@ -19,6 +20,25 @@ from ..aggregation.source_resolution_operations import storage_degradation_resol
 from .observations_repository import CalculationObservationRepository
 
 STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
+
+
+if TYPE_CHECKING:
+    from .binding_prefill import PrefilledBinding
+
+
+def _prefill_source_ref(item: PrefilledBinding, unknown: str) -> str:
+    """Render one prefilled carry's source coordinate, naming each unknown axis.
+
+    A coordinate axis the prefill could not establish is carried as ``None``, so
+    it is rendered as an explicit unknown token: a blank segment would read as a
+    coordinate that was established and found empty.
+    """
+    periods = ",".join(item.source_periods)
+    return (
+        f"{item.source_modelo or unknown}:"
+        f"{item.source_filing_year if item.source_filing_year is not None else unknown}:"
+        f"{periods or unknown}:{item.binding_id}"
+    )
 
 
 class PreviousFilingSourceResolver:
@@ -44,7 +64,7 @@ class PreviousFilingSourceResolver:
         snapshot = self._registry_snapshot or bundled_authority().snapshot(
             context.modelo, filing_year=context.filing_year, period=context.period.registry_token
         )
-        from .binding_prefill import resolve_bindings_from_local_store
+        from .binding_prefill import UNKNOWN_SOURCE_COORDINATE, resolve_bindings_from_local_store
         from .relation_prefill import activity_start_date_for_bucket
 
         try:
@@ -89,11 +109,9 @@ class PreviousFilingSourceResolver:
                     contributor_source_kind="previous_filing",
                     contributor_binding_source=BindingSourceKind.PREVIOUS_FILING,
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=(
-                        f"{item.source_modelo}:{item.source_filing_year}:"
-                        f"{','.join(item.source_periods)}:{item.binding_id}"
-                    ),
+                    source_ref=_prefill_source_ref(item, UNKNOWN_SOURCE_COORDINATE),
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.FILED_MODELO_CASILLA,
                     dependency_treatment=item.dependency_treatment,
                 )
                 for item in report.prefilled

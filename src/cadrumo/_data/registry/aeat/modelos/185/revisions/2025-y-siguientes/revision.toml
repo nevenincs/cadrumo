@@ -1,4 +1,7 @@
 [revisions."2025-y-siguientes"]
+predecessor = "2003-2025"
+casilla_source_refs = ["aeat-dr-185-2026"]
+reviewed_against = "2003-2025"
 authority_grade = "applicability"
 # Modelo 185 declaración informativa. Approved by orden-hac-1197-2025 art 1
 # and its filing plazo grounded verbatim in orden-hac-1197-2025 art 4 (now the

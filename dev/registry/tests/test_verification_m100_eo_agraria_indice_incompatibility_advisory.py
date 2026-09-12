@@ -41,7 +41,7 @@ from functools import cache
 
 import pytest
 
-from cadrumo.application.modelo.tests._verification_substance_support import _workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_support import workflow_profile
 from cadrumo.application.modelo.verification_predicates import evaluate_verification_predicates
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -161,7 +161,7 @@ def test_medios_ajenos_personal_asalariado_both_positive_fires_advisory() -> Non
         _CASILLA_1541_PERSONAL_ASALARIADO: Decimal("0.90"),
     }
 
-    findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+    findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -175,7 +175,7 @@ def test_medios_ajenos_personal_asalariado_single_letra_holds() -> None:
     """Declaring only letra a), only letra b), or neither, never fires the advisory."""
     predicate = _predicate(_AB_PREDICATE_ID)
     for case_label, casilla_values in _AB_SINGLE_LETRA_CASES:
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], case_label
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], case_label
 
 
 def test_forestal_and_any_other_letra_both_positive_fires_advisory() -> None:
@@ -187,7 +187,7 @@ def test_forestal_and_any_other_letra_both_positive_fires_advisory() -> None:
             other_letra_casilla: Decimal("0.75"),
         }
 
-        findings = evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
+        findings = evaluate_verification_predicates((predicate,), casilla_values, workflow_profile())
 
         assert len(findings) == 1, other_letra_casilla
         assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY, other_letra_casilla
@@ -200,7 +200,7 @@ def test_forestal_alone_holds_for_every_pairing() -> None:
     casilla_values: dict[CasillaId, Decimal] = {_CASILLA_1547_FORESTAL: Decimal("0.80")}
     for predicate_id in _FORESTAL_PREDICATE_IDS:
         predicate = _predicate(predicate_id)
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], predicate_id
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], predicate_id
 
 
 def test_other_letra_alone_holds_for_every_pairing() -> None:
@@ -211,4 +211,4 @@ def test_other_letra_alone_holds_for_every_pairing() -> None:
         # single-casilla-positive case for exactly that pairing.
         other_id = next(cid for cid in _FORESTAL_OTHER_LETRA_CASILLAS if cid in predicate.expression)
         casilla_values: dict[CasillaId, Decimal] = {other_id: Decimal("0.75")}
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], predicate_id
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], predicate_id

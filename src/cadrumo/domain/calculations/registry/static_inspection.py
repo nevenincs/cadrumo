@@ -23,7 +23,7 @@ from ....core.revision_review import RevisionReviewStatus
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -33,7 +33,6 @@ from .schema_base import CorpusTierField, RegistryModel, RegistrySourceKind
 from .schema_exports import ProjectionEndpointDeclaration
 from .schema_formula import ParameterDefinition
 from .schema_references import SourceReference, source_window_applies_across
-from .schema_surfaces import RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 
 __all__ = [
@@ -234,8 +233,7 @@ class RegistryRevisionInspection(RegistryModel):
     # be passed to calculation, filing, or export APIs expecting a snapshot.
     formulas: tuple[FormulaDefinition, ...] = ()
     parameters: tuple[ParameterDefinition, ...] = ()
-    bindings: tuple[DataBindingDefinition, ...] = ()
-    relations: tuple[RelationDefinition, ...] = ()
+    bindings: tuple[BindingDefinition, ...] = ()
     workbook_parity_refs: tuple[WorkbookParityReference, ...] = ()
     live_cross_references: tuple[LiveCrossReferenceDecision, ...] = ()
 
@@ -290,7 +288,6 @@ class RegistryRevisionInspection(RegistryModel):
             formulas=revision.formulas,
             parameters=revision.parameters,
             bindings=revision.bindings,
-            relations=revision.relations,
             workbook_parity_refs=revision.workbook_parity_refs,
             live_cross_references=revision.live_cross_references,
         )

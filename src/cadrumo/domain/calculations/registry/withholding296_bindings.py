@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
@@ -24,12 +24,14 @@ from .binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition
 from .schema_exports import ExportFieldDataType
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "Withholding296Observation",
-    "_Withholding296Selector",
+    "Withholding296Provider",
     "validate_withholding296_binding_selector_shape",
 ]
 
@@ -129,8 +131,12 @@ class Withholding296Observation(BaseModel):
     transaction_date: date
 
 
-class _Withholding296Selector(BaseModel):
+class Withholding296Provider(BaseModel):
+    """The Modelo 296 non-resident withholding provider over its perceptor rows."""
+
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.WITHHOLDING296] = BindingSourceKind.WITHHOLDING296
 
     fact: _Withholding296Fact
     claves: tuple[str, ...] = ()
@@ -140,21 +146,21 @@ class _Withholding296Selector(BaseModel):
     data_type: ExportFieldDataType | None = None
 
 
-def _withholding296_selector(binding: DataBindingDefinition) -> _Withholding296Selector:
+def _withholding296_selector(binding: BindingDefinition) -> Withholding296Provider:
     try:
-        return _Withholding296Selector.model_validate(_selector_as_dict(binding))
+        return Withholding296Provider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding296 selector") from exc
 
 
-def validate_withholding296_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
+def validate_withholding296_binding_selector_shape(binding: BindingDefinition) -> list[str]:
     """Validate a ``withholding296`` binding's selector shape and fact/aggregation invariants."""
     try:
         selector = _withholding296_selector(binding)
     except ValueError as exc:
         return [
             f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{_Withholding296Selector.__name__}: {exc}",
+            f"{Withholding296Provider.__name__}: {exc}",
         ]
     try:
         op = binding_aggregation_op(binding)

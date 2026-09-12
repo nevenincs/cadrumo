@@ -85,7 +85,7 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-2024-certificado-trabajo-retenciones"},
+    {"renta-certificado-trabajo-retenciones"},
 )
 _M130_PAGOS_BINDING_ID: BindingId = "renta-2024-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-2024-rel-130-pagos-fraccionados"

@@ -49,7 +49,7 @@ from ..ledger_iva_bindings import (
     IvaLedgerObservation,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -374,8 +374,8 @@ def _with_applied_rates(
     """
     revision = _m390_revision()
 
-    def _rated(binding: DataBindingDefinition) -> DataBindingDefinition:
-        selector = binding.selector
+    def _rated(binding: BindingDefinition) -> BindingDefinition:
+        selector = binding.provider
         assert isinstance(selector, BaseModel), f"{binding.id} carries an untyped selector; nothing to mutate"
         return binding.model_copy(update={"selector": selector.model_copy(update={"applied_rates": applied_rates})})
 

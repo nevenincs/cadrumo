@@ -9,7 +9,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
 
 [[revisions."2026-y-siguientes".casillas]]
 id = "decl.periodo"
@@ -22,5 +21,3 @@ semantic_role = "filing_period"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2026"]
-

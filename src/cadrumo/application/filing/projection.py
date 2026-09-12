@@ -144,7 +144,7 @@ def _project_layout_records(
         refs = _record_projection_refs(record)
         if not refs:
             continue
-        record_contexts, record_values = _project_record(
+        record_contexts, record_values = project_filing_record(
             registry_snapshot=registry_snapshot,
             layout=layout,
             record=record,
@@ -175,7 +175,7 @@ def _record_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProje
     )
 
 
-def _project_record(
+def project_filing_record(
     *,
     registry_snapshot: RegistrySnapshot,
     layout: ExportLayoutDefinition,
@@ -249,7 +249,7 @@ def _project_prorrata_and_differentiated_record(
     The record layout owns the interleaving order.  Each canonical projector is
     called exactly once over only its closed family; this dispatcher then binds
     their typed results back to that authored order.  Any third family remains
-    outside this explicit composition and is refused by :func:`_project_record`.
+    outside this explicit composition and is refused by :func:`project_filing_record`.
     """
     prorrata_contexts, prorrata_values = _project_prorrata_record(
         registry_snapshot=registry_snapshot,
@@ -484,4 +484,5 @@ __all__ = [
     "FilingProjectionValue",
     "FilingRecordRenderContext",
     "build_m303_filing_projection_plan",
+    "project_filing_record",
 ]

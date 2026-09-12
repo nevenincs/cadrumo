@@ -1,4 +1,5 @@
 [revisions."2019"]
+casilla_source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 # Applicability-grade Modelo 194 record-design era. This revision models only
 # the five manual hoja-resumen fields grounded in the approving Orden; it does
 # not declare an export layout or infer any unbundled design year.
@@ -32,24 +33,3 @@ records anexo X amendments in 2016, 2019, 2023 and 2024 and NONE between 2020 an
 intermediate era is skipped. The five hoja-resumen casillas remain manual input, no export layout is \
 declared, and no authority grade is promoted."""
 reviewed_at = 2026-08-30
-
-[revisions."2019".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-No casilla continuity evolution is declared. This applicability-grade revision carries only the five manual hoja-resumen boxes, while the hash-pinned record design is used solely to bound the revision's era. A continuity stamp would assert box identity across record-design eras that this work has not compared field-by-field. Bounding this era at 2022 states which orden governs each ejercicio; it asserts no box-level identity across the 2023 amendment.
-"""
-legal_refs = [
-    "orden-1999-11-18:apartado-cuarto",
-    "orden-hac-1276-2019:art-primero",
-    "orden-hac-1276-2019:df-unica",
-]
-source_refs = [
-    "boe-modelo-194-form-layout",
-    "aeat-dr-194-2019",
-]
-
-# Reconcile-when-present for Modelo 194 revision 2019. The
-# hoja-resumen prints five declaration boxes and every one is operator input, so
-# none is engine-computed: each is reconciled against the filing WHEN the filing
-# prints it, and all are EXCLUDED from the coverage denominator
-# (min_coverage = 0), so enrollment can never lower coverage or flip a
-# legitimate filing's verdict.

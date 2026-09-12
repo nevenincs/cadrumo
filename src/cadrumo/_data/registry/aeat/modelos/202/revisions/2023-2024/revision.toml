@@ -1,4 +1,6 @@
 [revisions."2023-2024"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-dr-202-2023"] } }
+casilla_source_refs = ["aeat-dr-202-2023"]
 authority_grade = "filing"
 valid_from = 2023-01-01
 valid_to = 2024-12-31
@@ -36,10 +38,5 @@ source_refs = ["aeat-dr-202-2023"]
 reason = """
 An extraction profile matches printed labels in a filed artefact, and every label_pattern must be grounded against an AEAT-published document that PRINTS those labels -- never against the registry's own casilla labels, which would be self-reference. The bundled 202 artefacts are the disenos de registro, which describe the WIRE record and print no form labels, and the instructions pages, which carry no bracketed box numbers beside a label. Authoring patterns anyway would mean inventing the labels \
 a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
-legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
-source_refs = ["aeat-dr-202-2023"]
-
-[revisions."2023-2024".family_dispositions.casilla_continuidad_evolutions]
-reason = "Every casilla continuidad evolution names a continuidad_id, and no continuidad chain is declared for modelo 202 -- nor for any modelo in this registry, where every casilla_continuidad_evolutions family is a disposition and not one evolution has ever been authored. An entry here could name no chain. This revision DOES have a strictly-earlier sibling and its boxes DO continue across the split, so this is a deferral with a named unblocker, not a claim that nothing evolved."
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2023"]

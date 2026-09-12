@@ -6,10 +6,17 @@ family = "mapping"
 variant_id = "iva-deduction-applicability-catalogue:2022-01-01"
 date_axis = "filing_period"
 valid_from = 2022-01-01
-legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-93", "ley-37-1992:art-107"]
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-107"]
 source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["Modelo 303"]
 
 [fact.variants.payload]
 kind = "mapping"

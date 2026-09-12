@@ -34,8 +34,8 @@ from pydantic import ValidationError
 
 from .....application.modelo.reconciliation import (
     ModeloReconciliationCommand,
-    _reconcile_parsed_justificante,
     modelo_reconcile,
+    reconcile_parsed_justificante,
 )
 from .....application.modelo.reconciliation_records import (
     ModeloReconciliationAdvisory,
@@ -347,7 +347,7 @@ def test_reconciliation_with_no_persisted_revision_still_persists_and_reads_back
 
     work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
     assert work_unit is not None
-    report = _reconcile_parsed_justificante(
+    report = reconcile_parsed_justificante(
         work_unit=work_unit,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
         source_ref="test://m131-no-revision",

@@ -77,7 +77,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. Patrimonio neto. Capital. [00194]
 [[revisions."2024".casillas]]
@@ -89,7 +88,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. Patrimonio neto. Capital. Capital desembolsado. [00195]
 [[revisions."2024".casillas]]
@@ -101,7 +99,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. Patrimonio neto. Capital. Capital no desembolsado exigido. [00196]
 [[revisions."2024".casillas]]
@@ -113,7 +110,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. Patrimonio neto. Pro memoria: capital no exigido [00758]
 [[revisions."2024".casillas]]
@@ -125,7 +121,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. Patrimonio neto. Prima de emisión. [00197]
 [[revisions."2024".casillas]]
@@ -137,7 +132,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. Patrimonio neto. Instrumentos de patrimonio emitidos distintos del capital. [00198]
 [[revisions."2024".casillas]]
@@ -149,7 +143,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. Patrimonio neto. Componente de patrimonio neto de los instrumentos financieros compuestos. [00199]
 [[revisions."2024".casillas]]
@@ -161,7 +154,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. Patrimonio neto. Otros instrumentos de patrimonio emitidos. [00200]
 [[revisions."2024".casillas]]
@@ -173,7 +165,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. Patrimonio neto. Otros elementos de patrimonio neto. [00201]
 [[revisions."2024".casillas]]
@@ -185,7 +176,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. Patrimonio neto. Ganancias acumuladas [00202]
 [[revisions."2024".casillas]]
@@ -197,7 +187,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. Patrimonio neto. Reservas de revalorización [00203]
 [[revisions."2024".casillas]]
@@ -209,7 +198,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. Patrimonio neto. Otras reservas. [00204]
 [[revisions."2024".casillas]]
@@ -221,7 +209,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. Patrimonio neto. Reserva de capitalización. [00762]
 [[revisions."2024".casillas]]
@@ -233,7 +220,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. Patrimonio neto. Reserva de nivelación. [00763]
 [[revisions."2024".casillas]]
@@ -245,7 +231,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. Patrimonio neto. Reservas o pérdidas acumuladas de inversiones en negocios conjuntos y asociadas. [00205]
 [[revisions."2024".casillas]]
@@ -257,7 +242,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. Patrimonio neto. Otras. [00206]
 [[revisions."2024".casillas]]
@@ -269,7 +253,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. Patrimonio neto. (-) Acciones propias. [00207]
 [[revisions."2024".casillas]]
@@ -281,7 +264,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. Patrimonio neto. Resultado atribuible a los propietarios de la dominante. [00208]
 [[revisions."2024".casillas]]
@@ -293,7 +275,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. Patrimonio neto. (-) Dividendos a cuenta. [00209]
 [[revisions."2024".casillas]]
@@ -305,7 +286,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. Patrimonio neto. Otro resultado global acumulado. [00210]
 [[revisions."2024".casillas]]
@@ -317,7 +297,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 N. Patrimonio neto. Elementos que no se reclasificarán en resultados. [00211]
 [[revisions."2024".casillas]]
@@ -329,7 +308,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. Patrimonio neto. Ganancias o (-) pérdidas actuariales en planes de pensiones de prestaciones definidas. [00212]
 [[revisions."2024".casillas]]
@@ -341,7 +319,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 N. Patrimonio neto. Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta. [00213]
 [[revisions."2024".casillas]]
@@ -353,7 +330,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 N. Patrimonio neto. Participación en otros ingresos y gastos reconocidos de inversiones en negocios conjuntos y asociadas. [00660]
 [[revisions."2024".casillas]]
@@ -365,7 +341,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global. [0638]
 [[revisions."2024".casillas]]
@@ -377,7 +352,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 N. Patrimonio neto. Ineficacia de las coberturas de valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global. [0639]
 [[revisions."2024".casillas]]
@@ -389,7 +363,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global [elemento cubierto]. [0640]
 [[revisions."2024".casillas]]
@@ -401,7 +374,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de patrimonio valorados a valor razonable con cambios en otro resultado global [instrumento de cobertura]. [0641]
 [[revisions."2024".casillas]]
@@ -413,7 +385,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 N. Patrimonio neto. Cambios del valor razonable de los pasivos financieros a valor razonable con cambios en resultados atribuibles a cambios en el riesgo de crédito. [0642]
 [[revisions."2024".casillas]]
@@ -425,7 +396,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 N. Patrimonio neto. Elementos que pueden reclasificarse en resultados. [00216]
 [[revisions."2024".casillas]]
@@ -437,7 +407,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. Patrimonio neto. Cobertura de inversiones netas en negocios en el extranjero [parte eficaz]. [00217]
 [[revisions."2024".casillas]]
@@ -449,7 +418,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17 N. Patrimonio neto. Conversión de divisas. [00218]
 [[revisions."2024".casillas]]
@@ -461,7 +429,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+17 N. Patrimonio neto. Derivados de cobertura. Reserva de coberturas de flujos de efectivo [parte eficaz]. [00219]
 [[revisions."2024".casillas]]
@@ -473,7 +440,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @594+17 N. Patrimonio neto. Cambios del valor razonable de los instrumentos de deuda a valor razonable con cambios en otro resultado global. [00643]
 [[revisions."2024".casillas]]
@@ -485,7 +451,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @611+17 N. Patrimonio neto. Instrumentos de cobertura [elementos no designados]. [00644]
 [[revisions."2024".casillas]]
@@ -497,7 +462,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @628+17 N. Patrimonio neto. Activos no corrientes y grupos enajenables de elementos que se han clasificado como mantenidos para la venta. [00223]
 [[revisions."2024".casillas]]
@@ -509,7 +473,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @645+17 N. Patrimonio neto. Participación en otros ingresos y gastos reconocidos de inversiones en negocios conjuntos y asociadas. [00224]
 [[revisions."2024".casillas]]
@@ -521,7 +484,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @662+17 N. Patrimonio neto. Intereses minoritarios [participaciones no dominantes]. [00225]
 [[revisions."2024".casillas]]
@@ -533,7 +495,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @679+17 N. Patrimonio neto. Otro resultado global acumulado. [00226]
 [[revisions."2024".casillas]]
@@ -545,7 +506,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @696+17 N. Patrimonio neto. Otras partidas. [00227]
 [[revisions."2024".casillas]]
@@ -557,7 +517,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @713+17 N. Patrimonio neto. Total patrimonio neto. [00228]
 [[revisions."2024".casillas]]
@@ -569,7 +528,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @730+17 N. Patrimonio neto. Total patrimonio neto y pasivo. [00229]
 [[revisions."2024".casillas]]
@@ -581,7 +539,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @747+17 N. Patrimonio neto. Pro memoria: exposiciones fuera de balance. [00759]
 [[revisions."2024".casillas]]
@@ -593,7 +550,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @764+17 N. Patrimonio neto. Compromisos de préstamo concedidos. [00760]
 [[revisions."2024".casillas]]
@@ -605,7 +561,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @781+17 N. Patrimonio neto. Garantías financieras concedidas. [00761]
 [[revisions."2024".casillas]]
@@ -617,7 +572,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @798+17 N. Patrimonio neto. Otros compromisos concedidos. [00645]
 [[revisions."2024".casillas]]
@@ -629,4 +583,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

@@ -7,7 +7,6 @@ semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_perma
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03342"
 number = "03342"
@@ -17,7 +16,6 @@ semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_tempo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03343"
 number = "03343"
@@ -27,7 +25,6 @@ semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_tempo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03344"
 number = "03344"
@@ -37,7 +34,6 @@ semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_saldo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03345"
 number = "03345"
@@ -47,4 +43,3 @@ semantic_role = "is_correccion_reinversion_beneficios_extraordinarios_dt24_saldo
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

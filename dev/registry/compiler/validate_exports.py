@@ -48,7 +48,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_field_casilla import derive_casilla_export_refs
 from cadrumo.domain.calculations.registry.ids import BindingId
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_exports import (
     AuxiliaryEnvelopeHeaderDefinition,
@@ -92,7 +92,7 @@ def validate_export_layout_section(
     export layouts. Each layout must carry layout-authority evidence, and each
     nested record/field is validated against declared
     :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` and
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` ids from
+    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` ids from
     the revision validation context.
     """
     failures: list[str] = []
@@ -376,10 +376,10 @@ def _validate_export_record_binding_link(
     """Verify a binding-derived export record resolves to selector-closed bindings.
 
     The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` rows whose
+    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` rows whose
     export selectors may materialise fields for the record's ``binding_record``.
     """
-    matching_bindings: list[tuple[DataBindingDefinition, BindingExportSelector]] = []
+    matching_bindings: list[tuple[BindingDefinition, BindingExportSelector]] = []
     for binding in revision.bindings:
         try:
             selector = binding_export_selector(binding, revision=revision)

@@ -31,7 +31,7 @@ from ....core.period import Period
 from ....core.tipos_actividad import TipoActividad
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.irpf_categories import IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
+from ....domain.transactions.irpf_categories import ledger_irpf_category_catalogue
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
 from ....domain.transactions.volumen_ingresos import (
@@ -53,6 +53,11 @@ _ART_110_CONCEPTS = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agr
 
 _PERIOD = Period.from_year_and_code(2025, "1T")
 _IN_WINDOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC).date()
+_ACTIVITY_IRPF_CATEGORY = next(
+    descriptor.id
+    for descriptor in ledger_irpf_category_catalogue()
+    if descriptor.purpose == "activity_income_withholding"
+)
 
 
 def _row(
@@ -86,7 +91,7 @@ def _row(
             "business_pct": None,
             "purchase_invoice_evidence_id": None,
             "category_id": None,
-            "irpf_category": IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
+            "irpf_category": _ACTIVITY_IRPF_CATEGORY,
             "taxable_base": amount,
             "iva_rate": None,
             "iva_amount": Decimal("0.00"),

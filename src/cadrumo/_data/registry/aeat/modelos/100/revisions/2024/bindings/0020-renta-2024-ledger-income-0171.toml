@@ -11,8 +11,8 @@
 # where the annual M100 silently declared zero actividad-economica income.
 [[revisions."2024".bindings]]
 id = "renta-ledger-income-0171"
-source = "ledger_renta_income_aggregation"
-selector = { modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
+provider = { kind = "ledger_renta_income_aggregation", modelo = "100", target_casilla_id = "0171", fact = "ingresos_integros_sum" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]

@@ -25,18 +25,6 @@ bindings = [
     "modelo-190-perceptor-row-retencion-practicada",
     "modelo-190-perceptor-row-ingreso-a-cuenta",
 ]
-relations = [
-    "modelo-190-rel-111-trabajo-dinerario-importe-anual",
-    "modelo-190-rel-111-trabajo-especie-importe-anual",
-    "modelo-190-rel-111-actividades-dinerario-importe-anual",
-    "modelo-190-rel-111-actividades-especie-importe-anual",
-    "modelo-190-rel-111-premios-dinerario-importe-anual",
-    "modelo-190-rel-111-premios-especie-importe-anual",
-    "modelo-190-rel-111-ganancias-dinerario-importe-anual",
-    "modelo-190-rel-111-ganancias-especie-importe-anual",
-    "modelo-190-rel-111-derechos-imagen-importe-anual",
-    "modelo-190-rel-111-retenciones-anual",
-]
 extraction_profiles = ["modelo-190-declaracion-pdf"]
 live_cross_references = ["modelo-190-filed-declarations-read"]
 workbook_parity_refs = ["modelo-190-dr-pdf-2025"]

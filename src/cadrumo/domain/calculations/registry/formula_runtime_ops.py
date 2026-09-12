@@ -34,7 +34,6 @@ from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .ids import RevisionId
-from .schema import ModeloRevision
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
 from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
@@ -43,6 +42,7 @@ if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from .formula_runtime import EvalContext as _EvalContext
+    from .schema import ModeloRevision
 
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})

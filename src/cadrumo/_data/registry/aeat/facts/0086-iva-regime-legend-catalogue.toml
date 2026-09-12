@@ -7,9 +7,13 @@ variant_id = "iva-regime-legend-catalogue:2013-01-01"
 date_axis = "filing_period"
 valid_from = 2013-01-01
 legal_refs = ["rd-1619-2012:art-6.1.d"]
-source_refs = ["boe-rd-1619-2012-art-6"]
+source_refs = ["boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["Modelo 303"]
 
 [fact.variants.payload]
 kind = "mapping"

@@ -8,8 +8,8 @@ maps to a declared profile fact path.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING, Literal, cast
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
@@ -20,13 +20,14 @@ from .schema import (
 )
 
 if TYPE_CHECKING:
+    from ..calculations.registry.binding_provider import BindingProvider
     from ..calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.severity import BaseSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..calculations.registry.bindings import ProfileSelector
 from ..calculations.registry.ids import RevisionId
+from ..calculations.registry.profile_bindings import ProfileProvider
 
 
 class UserProfileRegistryContractIssue(BaseModel):
@@ -158,7 +159,7 @@ def _binding_issues(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.PROFILE:
             continue
-        selectors = tuple(profile_binding_selectors(binding.selector))
+        selectors = tuple(profile_binding_selectors(binding.provider))
         if not selectors:
             issues.append(
                 _issue(
@@ -283,25 +284,18 @@ def _export_issues(
     return ()
 
 
-def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tuple[str, ...]:
-    """Return the declared user-profile paths selected by one binding payload."""
-    if isinstance(selector, ProfileSelector):
-        # Every real caller passes the selector of an already-filtered
-        # ``source == BindingSourceKind.PROFILE`` binding, which the
-        # discriminated-union field validator on ``DataBindingDefinition``
-        # (``_coerce_selector`` -> ``ProfileSelector.model_validate``) has
-        # already hydrated into the typed model by construction time. The
-        # typed helper deliberately reads ATTRIBUTES rather than round-tripping
-        # through ``model_dump()`` so a renamed field fails loud.
-        return _deduplicate_profile_selectors(_typed_profile_selector_values(selector))
-    if isinstance(selector, BaseModel):
-        # A different binding-source family's typed selector; its shape never
-        # carries a profile key, so no read is needed.
+def profile_binding_selectors(provider: BindingProvider) -> tuple[str, ...]:
+    """Return the declared user-profile paths selected by one binding provider.
+
+    Only a :class:`ProfileProvider` names a profile path; every other union
+    member's shape carries none, so it yields the empty tuple.
+    """
+    if not isinstance(provider, ProfileProvider):
         return ()
-    return _deduplicate_profile_selectors(_mapping_profile_selector_values(selector))
+    return _deduplicate_profile_selectors(_typed_profile_selector_values(provider))
 
 
-def _typed_profile_selector_values(selector: ProfileSelector) -> list[str]:
+def _typed_profile_selector_values(selector: ProfileProvider) -> list[str]:
     """Read selector paths from an already-hydrated profile selector."""
     selectors: list[str] = []
     profile_key = selector.profile_key
@@ -321,41 +315,11 @@ def _typed_profile_selector_values(selector: ProfileSelector) -> list[str]:
     return selectors
 
 
-def _mapping_profile_selector_values(selector: Mapping[str, object]) -> list[str]:
-    """Read selector paths from a raw profile-selector mapping."""
-    selectors: list[str] = []
-    profile_key = selector.get("profile_key")
-    if isinstance(profile_key, str):
-        selectors.append(profile_key)
-    selectors.extend(_mapping_profile_keys(selector.get("profile_keys")))
-    required_when_profile_key = selector.get("required_when_profile_key")
-    if isinstance(required_when_profile_key, str):
-        selectors.append(required_when_profile_key)
-    model_selector = _profile_model_selector(
-        profile_model=selector.get("profile_model"),
-        collection=selector.get("collection"),
-        field=selector.get("field"),
-    )
-    if model_selector is not None:
-        selectors.append(model_selector)
-    return selectors
-
-
-def _mapping_profile_keys(value: object) -> tuple[str, ...]:
-    """Return string members from the mapping form's tuple-only key field."""
-    if not isinstance(value, tuple):
-        return ()
-    # CAST-RATIONALE-PROFILE-KEYS-TUPLE: isinstance narrows to tuple but not
-    # its element type; each item is filtered by isinstance below.
-    # nosemgrep: no-cast-in-domain-application
-    return tuple(item for item in cast(tuple[object, ...], value) if isinstance(item, str))
-
-
-def _profile_model_selector(*, profile_model: object, collection: object, field: object) -> str | None:
+def _profile_model_selector(*, profile_model: str | None, collection: str | None, field: str | None) -> str | None:
     """Build the canonical path for a typed profile-model field."""
-    if not isinstance(profile_model, str) or not isinstance(field, str):
+    if profile_model is None or field is None:
         return None
-    if isinstance(collection, str):
+    if collection is not None:
         return f"{profile_model}.{collection}.{field}"
     return f"{profile_model}.{field}"
 

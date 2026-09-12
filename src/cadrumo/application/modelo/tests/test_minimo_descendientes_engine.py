@@ -327,15 +327,15 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
             **resolution.binding_values,
-            "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-            "renta-2024-profile-incremento-guarderia": Decimal("0"),
-            "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-            "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("0"),
+            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-profile-descendientes-guarderia": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         },
         enum_binding_values=resolution.enum_binding_values,
         date_binding_values=resolution.date_binding_values,
@@ -349,8 +349,8 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
         },
     )
 
-    assert resolution.binding_values["renta-2024-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
-    assert resolution.binding_values["renta-2024-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
+    assert resolution.binding_values["renta-profile-minimo-descendientes-estatal"] == Decimal("7900.00")
+    assert resolution.binding_values["renta-profile-minimo-descendientes-autonomico"] == Decimal("7900.00")
     assert result.values[validated_casilla_id("0513", surface="test_minimo_descendientes_engine.casilla")] == Decimal(
         "7900.00"
     )

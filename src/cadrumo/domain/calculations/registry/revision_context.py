@@ -13,9 +13,9 @@ from typing import Protocol
 
 from ....core.casilla_id import CasillaId
 from .casilla_membership import casillas_by_id, declared_casilla_ids
-from .ids import BindingId, RelationId
+from .ids import BindingId
 from .schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloRevision,
 )
@@ -24,7 +24,7 @@ from .schema_exports import ExportLayoutDefinition
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_formula import ParameterDefinition
 from .schema_revision_members import ApplicationLinkDefinition, ConstructDefinition, DependencyClassificationDefinition
-from .schema_surfaces import CasillaDefinition, RelationDefinition
+from .schema_surfaces import CasillaDefinition
 from .schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
 from .validate_revision_identity import collect_record_id_lists
 
@@ -44,8 +44,7 @@ ConstructMemberObject = (
     CasillaDefinition
     | FormulaDefinition
     | ParameterDefinition
-    | DataBindingDefinition
-    | RelationDefinition
+    | BindingDefinition
     | ExportLayoutDefinition
     | ExtractionProfileDefinition
     | LiveCrossReferenceDecision
@@ -92,8 +91,7 @@ class RevisionValidationContext:
     filing_schedule_ids: list[str]
     casilla_by_id: dict[CasillaId, CasillaDefinition]
     formula_by_id: dict[str, FormulaDefinition]
-    binding_by_id: dict[BindingId, DataBindingDefinition]
-    relation_by_id: dict[RelationId, RelationDefinition]
+    binding_by_id: dict[BindingId, BindingDefinition]
     parameter_by_id: dict[str, ParameterDefinition]
     export_layout_by_id: dict[str, ExportLayoutDefinition]
     extraction_profile_by_id: dict[str, ExtractionProfileDefinition]
@@ -108,9 +106,8 @@ class RevisionValidationContext:
     casillas: set[CasillaId]
     formulas: dict[str, FormulaDefinition]
     bindings: set[BindingId]
-    relations: set[RelationId]
     parameters: set[str]
-    resolvable_values: set[BindingId | CasillaId | RelationId | str]
+    resolvable_values: set[BindingId | CasillaId | str]
     exported_casillas: set[CasillaId]
 
     @property
@@ -120,7 +117,6 @@ class RevisionValidationContext:
             "formula": self.formula_by_id,
             "parameter": self.parameter_by_id,
             "binding": self.binding_by_id,
-            "relation": self.relation_by_id,
             "export layout": self.export_layout_by_id,
             "extraction profile": self.extraction_profile_by_id,
             "cross-reference": self.cross_reference_by_id,
@@ -137,11 +133,9 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
     ids_by_kind = collect_record_id_lists(revision)
     formula_by_id = records_by_id(revision.formulas)
     binding_by_id = records_by_id(revision.bindings)
-    relation_by_id = records_by_id(revision.relations)
     parameter_by_id = records_by_id(revision.parameters)
     casillas = set(declared_casilla_ids(revision))
     bindings = set(binding_by_id)
-    relations = set(relation_by_id)
     parameters = set(parameter_by_id)
 
     return RevisionValidationContext(
@@ -157,7 +151,6 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         casilla_by_id=casillas_by_id(revision),
         formula_by_id=formula_by_id,
         binding_by_id=binding_by_id,
-        relation_by_id=relation_by_id,
         parameter_by_id=parameter_by_id,
         export_layout_by_id=records_by_id(revision.export_layouts),
         extraction_profile_by_id=records_by_id(revision.extraction_profiles),
@@ -172,8 +165,7 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
         casillas=casillas,
         formulas=formula_by_id,
         bindings=bindings,
-        relations=relations,
         parameters=parameters,
-        resolvable_values=casillas | bindings | relations | parameters,
+        resolvable_values=casillas | bindings | parameters,
         exported_casillas=_exported_casilla_ids(revision),
     )

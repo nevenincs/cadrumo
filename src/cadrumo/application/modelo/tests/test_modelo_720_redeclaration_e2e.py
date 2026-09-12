@@ -59,7 +59,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ....domain.calculations.registry.schema import DataBindingDefinition
+from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.contribuyente.renta_codes import FiscalResidency
@@ -112,7 +112,7 @@ _SECURITY_CLAVE = "V"
 _REDECLARATION_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
 
 
-def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
+def _source_casilla_id(binding: BindingDefinition) -> CasillaId:
     """Validate the selector value before using it as a typed casilla key."""
     return validated_casilla_id(
         selector_as_dict(binding)["source_casilla_id"],

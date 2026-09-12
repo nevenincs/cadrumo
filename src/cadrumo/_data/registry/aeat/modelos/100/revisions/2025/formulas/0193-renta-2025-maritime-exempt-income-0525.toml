@@ -20,4 +20,8 @@ expression = { op = "if_then_else", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-7", "ley-19-1994:art-75"]
-source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts"]
+source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-facts", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["límite máximo de 60.100 euros anuales", "Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]

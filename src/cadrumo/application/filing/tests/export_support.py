@@ -443,7 +443,7 @@ def _approved_modelo_131_historical_registry_draft():
             _M131_HISTORICAL_05_CASILLA: Decimal("250"),
             _M131_HISTORICAL_08_CASILLA: Decimal("3"),
             _M131_HISTORICAL_09_CASILLA: Decimal("2"),
-            "modelo-131-2019-2023-resultados-negativos-anteriores": Decimal("1"),
+            "modelo-131-resultados-negativos-anteriores": Decimal("1"),
             _M131_HISTORICAL_12_CASILLA: Decimal("0.50"),
             _M131_HISTORICAL_14_CASILLA: Decimal("0.25"),
         },
@@ -612,7 +612,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
     raise AssertionError(f"export record {record_id!r} not found")
 
 
-def _m151_producer_snapshot() -> FilingProducerSnapshot:
+def m151_producer_snapshot() -> FilingProducerSnapshot:
     """Producer facts for the Modelo 151 export coordinate."""
     return build_filing_producer_snapshot(
         modelo=Modelo.M151,
@@ -639,7 +639,7 @@ def _m151_producer_snapshot() -> FilingProducerSnapshot:
 
 
 @cache
-def _modelo_151_export_coordinate_draft():
+def modelo_151_export_coordinate_draft():
     """A Modelo 151 draft at the annual coordinate whose layout carries a filing envelope.
 
     Deliberately built from no inputs and left in its constructed status. The

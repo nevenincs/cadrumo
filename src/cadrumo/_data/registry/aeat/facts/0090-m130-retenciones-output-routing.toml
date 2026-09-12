@@ -16,6 +16,13 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-130-2019-v12"
+required_text = ["modelo"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Modelo 130"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

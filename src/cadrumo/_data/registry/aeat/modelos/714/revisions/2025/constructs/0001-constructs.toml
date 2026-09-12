@@ -77,12 +77,6 @@ bindings = [
     "m714-m100-cuota-integra-estatal",
     "m714-m100-cuota-integra-autonomica",
 ]
-relations = [
-    "m714-rel-100-base-imponible-general",
-    "m714-rel-100-base-imponible-ahorro",
-    "m714-rel-100-cuota-integra-estatal",
-    "m714-rel-100-cuota-integra-autonomica",
-]
 formulas = [
     "patrimonio-cuota-integra-escala-estatal",
     "patrimonio-irpf-bases-imponibles-m100",

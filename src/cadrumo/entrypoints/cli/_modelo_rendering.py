@@ -254,7 +254,6 @@ def source_diagnostic_notice_text(notice: Notice) -> str:
     return tr(
         "cli.app.modelo.work.calculate_source_advisory",
         message=message,
-        default="ADVISORY: %{message}",
     )
 
 
@@ -284,15 +283,25 @@ def _effective_work_unit_state(unit: WorkUnit) -> str:
 
 def calculation_revision_state_label(state: str) -> str:
     if state == CalculationRevisionState.BORRADOR.value:
-        return tr("cli.app.modelo.work.state_label_borrador", default="draft")
+        return tr(
+            "cli.app.modelo.work.state_label_borrador",
+        )
     if state == CalculationRevisionState.VERIFICADO_COMPLETO.value:
-        return tr("cli.app.modelo.work.state_label_verificado_completo", default="verified complete")
+        return tr(
+            "cli.app.modelo.work.state_label_verificado_completo",
+        )
     if state == CalculationRevisionState.PRESENTADO.value:
-        return tr("cli.app.modelo.work.state_label_presentado", default="filed")
+        return tr(
+            "cli.app.modelo.work.state_label_presentado",
+        )
     if state == CalculationRevisionState.PRESENTADO_SUPERSEDIDO.value:
-        return tr("cli.app.modelo.work.state_label_presentado_supersedido", default="superseded filing")
+        return tr(
+            "cli.app.modelo.work.state_label_presentado_supersedido",
+        )
     if state == CalculationRevisionState.DESCARTADO.value:
-        return tr("cli.app.modelo.work.state_label_descartado", default="discarded")
+        return tr(
+            "cli.app.modelo.work.state_label_descartado",
+        )
     return state
 
 
@@ -395,7 +404,6 @@ def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
         out.append(
             tr(
                 "cli.app.modelo.work.plazo_days_remaining",
-                default="days_remaining\t{days_remaining}",
                 days_remaining=posture.days_remaining,
             ),
         )
@@ -410,10 +418,6 @@ def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
         out.append(
             tr(
                 "cli.app.modelo.work.plazo_vencido_sin_previsualizacion_warning",
-                default=(
-                    "AVISO: plazo voluntario vencido. Esta aplicación no determina "
-                    "una deuda por recargo o intereses del Art. 27 LGT."
-                ),
             ),
         )
         return out
@@ -428,11 +432,6 @@ def work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
             f"conditional_recargo_preview_legal_ref\t{preview.legal_ref}",
             tr(
                 "cli.app.modelo.work.plazo_vencido_warning",
-                default=(
-                    "AVISO: plazo voluntario vencido. Esta aplicación muestra una "
-                    "previsualización no evaluada; no determina una deuda por recargo "
-                    "o intereses del Art. 27 LGT."
-                ),
             ),
         ],
     )
@@ -482,10 +481,6 @@ def _work_unit_deadline_output_from_posture(
             "cli.app.modelo.work.plazo_vencido_warning"
             if preview is not None
             else "cli.app.modelo.work.plazo_vencido_sin_previsualizacion_warning"
-        ),
-        default=(
-            "AVISO: plazo voluntario vencido. Esta aplicación no determina una "
-            "deuda por recargo o intereses del Art. 27 LGT."
         ),
     )
     context: dict[str, str] = {
@@ -609,7 +604,6 @@ def result_summary_lines(rev: CalculationRevision) -> list[str]:
         return []
     header = tr(
         "cli.app.modelo.work.result_summary_header",
-        default="result summary  %{modelo} %{year} %{period}",
         modelo=summary.modelo,
         year=summary.filing_year,
         period=summary.period.registry_token,
@@ -702,12 +696,18 @@ def _formula_operation_label(operation: str) -> str:
     if symbol is not None:
         return symbol
     if operation.startswith("lookup_"):
-        return tr("cli.app.modelo.work.formula_operation_lookup", default="lookup")
+        return tr(
+            "cli.app.modelo.work.formula_operation_lookup",
+        )
     entry = _FORMULA_OPERATION_LABEL_LOCALE_KEYS.get(operation)
     if entry is None:
-        return tr("cli.app.modelo.work.formula_operation_calculation", default="calculation")
+        return tr(
+            "cli.app.modelo.work.formula_operation_calculation",
+        )
     key, default = entry
-    return tr(key, default=default)
+    return tr(
+        key,
+    )
 
 
 def casilla_trace_verbose_line(obs: CasillaObservation) -> str:

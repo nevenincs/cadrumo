@@ -12,8 +12,8 @@
 # distinct and does not ground this base-liquidable carry.
 [[revisions."2024".bindings]]
 id = "renta-base-liquidable-negativa-general-anterior"
-source = "previous_filing"
-selector = { source_modelo = "100", source_casilla_id = "1391", filing_year_delta = -1, period = "0A" }
+provider = { kind = "previous_filing", source_modelo = "100", source_casilla_id = "1391", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-50"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

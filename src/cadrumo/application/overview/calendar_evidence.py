@@ -197,11 +197,6 @@ def no_aeat_history_notice(
             code=NO_AEAT_HISTORY_NOTICE_CODE,
             message=tr(
                 "overview.no_aeat_history_sociedades",
-                default=(
-                    "This profile holds no filing evidence AEAT confirmed. The automated retrieval sweep "
-                    "cannot fetch Impuesto sobre Sociedades filing history (Modelo 200/202); check it "
-                    "directly at the AEAT sede."
-                ),
             ),
             context={"observation_count": str(len(observation_source_kinds))},
         )
@@ -211,9 +206,6 @@ def no_aeat_history_notice(
         code=NO_AEAT_HISTORY_NOTICE_CODE,
         message=tr(
             "overview.no_aeat_history",
-            default=(
-                "This profile holds no filing evidence AEAT confirmed. Retrieve the filing history AEAT holds for it."
-            ),
         ),
         context={"observation_count": str(len(observation_source_kinds))},
     )

@@ -14,7 +14,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.integrado-base-imponible-quita-espera"
@@ -24,7 +23,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.integrado-cuota-quita-espera-cooperativas"
@@ -34,7 +32,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.rentas-reversion-deterioros"
@@ -44,7 +41,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.reserva-inversiones-canarias"
@@ -54,7 +50,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.bonificacion-ley-19-1994-art-26"
@@ -64,7 +59,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.no-computable-regimen-zec"
@@ -74,7 +68,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.minoracion-rentas-bonificacion-art-33-lis"
@@ -84,7 +77,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.excluido-aumento-capital-art-17-2"
@@ -94,7 +86,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.renta-exenta-cap-xiv-tit-vii-lis"
@@ -104,7 +95,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]
 
 [[revisions."2023-2024".casillas]]
 id = "informacion-adicional.bonificacion-art-34-lis"
@@ -114,4 +104,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-202-2023"]

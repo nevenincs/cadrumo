@@ -48,7 +48,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+17. Transparencia fiscal internacional (art. 100.10 LIS). 1  <-- ONE declared row; the layout repeats it 44 times at stride 43
 [[revisions."2024".casillas]]
@@ -60,7 +59,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @42+17. D.I. Interna intersocietaria al 5/10% (cooperativas). 1  <-- ONE declared row; the layout repeats it 44 times at stride 43
 [[revisions."2024".casillas]]
@@ -72,7 +70,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1908+17. Transparencia fiscal internacional (art. 100.10 LIS). Total [00575]
 [[revisions."2024".casillas]]
@@ -84,7 +81,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1925+17. D.I. Interna societaria al 5/10% (cooperativas). Total [00577]
 [[revisions."2024".casillas]]
@@ -96,4 +92,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

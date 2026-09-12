@@ -28,7 +28,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-353-prev-322-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "02"
@@ -40,7 +39,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "08"
@@ -52,7 +50,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "09"
@@ -65,7 +62,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-353-compensar-pendientes-posteriores"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "03"
@@ -78,7 +74,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-353-resultado"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "04"
@@ -92,7 +87,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 
 [[revisions."2021-2025".casillas]]
 id = "05"
@@ -105,4 +99,3 @@ required = false
 input_kind = "computed"
 formula = "modelo-353-resultado-autoliquidacion"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]

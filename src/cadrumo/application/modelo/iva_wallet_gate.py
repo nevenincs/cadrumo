@@ -53,16 +53,16 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
 from ...domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,

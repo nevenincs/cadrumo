@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Operació interior no subjecta a l'IVA"
+
+[language.en]
+short_description = "Domestic transaction outside the scope of VAT"
+
+[language.hu]
+short_description = "Áfa hatályán kívüli belföldi ügylet"
+

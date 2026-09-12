@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
@@ -36,9 +36,11 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
 class RectificationScope(StrEnum):
@@ -174,7 +176,7 @@ class InvoiceObservation(BaseModel):
         return self
 
 
-class _InvoiceSelector(BaseModel):
+class InvoiceProviderBase(BaseModel):
     """Strict validator for the selector mapping of an invoice-source binding."""
 
     model_config = STRICT_FROZEN_CONFIG
@@ -206,7 +208,7 @@ class _InvoiceSelector(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _claves_within_grouping_vocabulary(self) -> _InvoiceSelector:
+    def _claves_within_grouping_vocabulary(self) -> InvoiceProviderBase:
         """Check ``claves`` against the vocabulary its OWN grouping declares.
 
         A field validator cannot see ``grouping`` (declared after ``claves``
@@ -224,14 +226,51 @@ class _InvoiceSelector(BaseModel):
         return self
 
 
-def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
+# The five invoice-family providers share one selector grammar and differ only
+# in the direction and record family they name. The shared fields therefore live
+# on :class:`InvoiceProviderBase`, which is not itself a union member: a member
+# must carry exactly one ``kind`` literal, and the base carries none precisely so
+# that it cannot be declared.
+
+
+class LedgerTransactionProvider(InvoiceProviderBase):
+    """A counterparty-side ledger transaction aggregate over the invoice grammar."""
+
+    kind: Literal[BindingSourceKind.LEDGER_TRANSACTION] = BindingSourceKind.LEDGER_TRANSACTION
+
+
+class PurchaseInvoiceEvidenceProvider(InvoiceProviderBase):
+    """Evidence rows for purchase invoices, projected through the invoice grammar."""
+
+    kind: Literal[BindingSourceKind.PURCHASE_INVOICE_EVIDENCE] = BindingSourceKind.PURCHASE_INVOICE_EVIDENCE
+
+
+class PayableInvoiceProvider(InvoiceProviderBase):
+    """An invoice the taxpayer must pay: a purchase, clave A under RD 1065/2007 art. 33.1."""
+
+    kind: Literal[BindingSourceKind.PAYABLE_INVOICE] = BindingSourceKind.PAYABLE_INVOICE
+
+
+class CollectibleInvoiceProvider(InvoiceProviderBase):
+    """An invoice the taxpayer will collect: a sale, clave B under RD 1065/2007 art. 33.1."""
+
+    kind: Literal[BindingSourceKind.COLLECTIBLE_INVOICE] = BindingSourceKind.COLLECTIBLE_INVOICE
+
+
+class M347ThirdPartyOperationProvider(InvoiceProviderBase):
+    """The combined-direction M347 third-party operation total, grouped by counterparty."""
+
+    kind: Literal[BindingSourceKind.M347_THIRD_PARTY_OPERATION] = BindingSourceKind.M347_THIRD_PARTY_OPERATION
+
+
+def _invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
     try:
-        return _InvoiceSelector.model_validate(_selector_as_dict(binding))
+        return InvoiceProviderBase.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
 
 
-def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -> bool:
+def is_m347_declarante_summary_invoice_binding(binding: BindingDefinition) -> bool:
     """Return whether ``binding`` is the M347 declarante-summary invoice binding.
 
     The canonical, single-defined predicate over ``_M347_DECLARANTE_SUMMARY_RECORD``,
@@ -242,7 +281,7 @@ def is_m347_declarante_summary_invoice_binding(binding: DataBindingDefinition) -
     would have silently, permanently misclassified the M347 declarante-summary
     binding as absent rather than raising.
 
-    ``binding.source`` is checked first because :class:`_InvoiceSelector`
+    ``binding.source`` is checked first because :class:`InvoiceProviderBase`
     validates only invoice-family selectors; a non-invoice binding's selector
     shape is a different family's concept entirely, never this one's business.
     """
@@ -341,32 +380,32 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
 
 
-def validate_invoice_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_invoice_binding(binding: BindingDefinition) -> list[str]:
     """Validate an invoice-source binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
-    :class:`_InvoiceSelector` and lifts the invoice fact/op invariants to build
+    :class:`InvoiceProviderBase` and lifts the invoice fact/op invariants to build
     time, preserving the underlying pydantic field error. Both this validator and
     the invoice resolvers run the same inner
     :func:`_validated_invoice_selector`, so the fact/op invariants are genuinely
     re-checked at resolve time; :func:`validate_invoice_binding` is the
     public raise-style wrapper over that same inner check.
     """
-    failures = selector_against_model(binding, _InvoiceSelector)
+    failures = selector_against_model(binding, InvoiceProviderBase)
     if failures:
         return failures
     return invariant_diagnostics(binding, "invoice", lambda b: _validated_invoice_selector(b))
 
 
-def _validated_invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
+def _validated_invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
     selector = _invoice_selector(binding)
     validate_invoice_family_fact_and_aggregation(binding, selector, family_label="invoice", strict_scalar_shape=True)
     return selector
 
 
 def validate_invoice_family_fact_and_aggregation(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     *,
     family_label: str,
     strict_scalar_shape: bool,
@@ -374,7 +413,7 @@ def validate_invoice_family_fact_and_aggregation(
     """Shared invoice/counterpart fact + aggregation-op cross-invariant.
 
     The invoice and counterpart families share one selector shape
-    (:class:`_InvoiceSelector`) and one fact set (:data:`_INVOICE_FACTS`); their
+    (:class:`InvoiceProviderBase`) and one fact set (:data:`_INVOICE_FACTS`); their
     op/fact cross-checks were near-verbatim copies differing only in the
     family-name in the unsupported-fact message and in whether the invoice-only
     scalar-shape guards (``non-row fact must not declare row_field/grouping`` and
@@ -388,8 +427,8 @@ def validate_invoice_family_fact_and_aggregation(
 
 
 def _validate_invoice_fact_and_op(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     family_label: str,
 ) -> BindingAggregationOp:
     """Validate the fact/op pair and return the binding's aggregation op."""
@@ -410,8 +449,8 @@ def _validate_invoice_fact_and_op(
 
 
 def _validate_invoice_selector_shape(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     op: BindingAggregationOp,
     strict_scalar_shape: bool,
 ) -> None:
@@ -426,8 +465,8 @@ def _validate_invoice_selector_shape(
 
 
 def _validate_scalar_invoice_fact_op(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     op: BindingAggregationOp,
 ) -> None:
     """Validate the aggregation op + scope of the scalar (non-``row_field``) facts.
@@ -453,8 +492,8 @@ def _validate_scalar_invoice_fact_op(
 
 
 def _validate_row_field_invoice_fact(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     op: BindingAggregationOp,
 ) -> None:
     """Validate the ``row_field``-fact requirements on a row-producer binding.
@@ -495,8 +534,8 @@ def resolve_invoice_family_scalar_values(
     revision: ModeloRevision,
     *,
     source_kinds: frozenset[str] | frozenset[object],
-    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
-    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+    validate_selector: Callable[[BindingDefinition], InvoiceProviderBase],
+    observations_for_binding: Callable[[BindingDefinition], tuple[InvoiceObservation, ...]],
 ) -> dict[BindingId, Decimal]:
     """Resolve scalar bindings on a :class:`ModeloRevision` for one invoice family into Decimal aggregates.
 
@@ -522,8 +561,8 @@ def resolve_invoice_family_row_values(
     revision: ModeloRevision,
     *,
     source_kinds: frozenset[str] | frozenset[object],
-    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
-    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+    validate_selector: Callable[[BindingDefinition], InvoiceProviderBase],
+    observations_for_binding: Callable[[BindingDefinition], tuple[InvoiceObservation, ...]],
     cohort_by_source: bool,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
@@ -567,14 +606,14 @@ def resolve_invoice_family_row_values(
 
 
 _InvoiceRowCohortKey = tuple[object, InvoiceGrouping, RectificationScope, tuple[str, ...], str | None]
-_InvoiceRowCohortMembers = list[tuple[DataBindingDefinition, _InvoiceSelector]]
+type _InvoiceRowCohortMembers = list[tuple[BindingDefinition, InvoiceProviderBase]]
 
 
 def _collect_invoice_row_cohorts(
     revision: ModeloRevision,
     *,
     source_kinds: frozenset[str] | frozenset[object],
-    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
+    validate_selector: Callable[[BindingDefinition], InvoiceProviderBase],
     cohort_by_source: bool,
 ) -> dict[_InvoiceRowCohortKey, _InvoiceRowCohortMembers]:
     """Group row-producing bindings by their observation and row semantics."""
@@ -595,8 +634,8 @@ def _collect_invoice_row_cohorts(
 
 
 def _invoice_row_cohort_key(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     *,
     cohort_by_source: bool,
 ) -> _InvoiceRowCohortKey:
@@ -616,7 +655,7 @@ def _invoice_row_cohort_key(
 
 def _resolve_invoice_row_cohort(
     members: _InvoiceRowCohortMembers,
-    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+    observations_for_binding: Callable[[BindingDefinition], tuple[InvoiceObservation, ...]],
     *,
     m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
@@ -724,7 +763,7 @@ def resolve_invoice_binding_row_values(
 
 def _observations_for_binding_source(
     observations: tuple[InvoiceObservation, ...],
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> tuple[InvoiceObservation, ...]:
     if binding.source == BindingSourceKind.M347_THIRD_PARTY_OPERATION:
         # A binding declaring the combined-direction source reads BOTH
@@ -749,8 +788,8 @@ def _resolve_m347_declarante_summary_values(
     *,
     effective_date: date | None = None,
 ) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
-    summary_bindings: list[DataBindingDefinition] = []
-    invoice_family_bindings: list[DataBindingDefinition] = []
+    summary_bindings: list[BindingDefinition] = []
+    invoice_family_bindings: list[BindingDefinition] = []
     for binding in revision.bindings:
         if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
             invoice_family_bindings.append(binding)
@@ -848,7 +887,7 @@ def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:
 
 def _filter_invoice_observations(
     observations: Iterable[InvoiceObservation],
-    selector: _InvoiceSelector,
+    selector: InvoiceProviderBase,
 ) -> Iterable[InvoiceObservation]:
     clave_filter = set(selector.claves)
     # M347's contraparte_clave grouping filters on operation_clave -- its OWN,
@@ -863,7 +902,7 @@ def _filter_invoice_observations(
 
 def _invoice_observation_matches(
     observation: InvoiceObservation,
-    selector: _InvoiceSelector,
+    selector: InvoiceProviderBase,
     clave_field: str,
     clave_filter: set[str],
 ) -> bool:
@@ -877,15 +916,15 @@ def _invoice_observation_matches(
     return selector.iva_regime is None or observation.iva_regime == selector.iva_regime
 
 
-_InvoiceAggregator = Callable[
-    [DataBindingDefinition, _InvoiceSelector, tuple[InvoiceObservation, ...]],
+type _InvoiceAggregator = Callable[
+    [BindingDefinition, InvoiceProviderBase, tuple[InvoiceObservation, ...]],
     Decimal,
 ]
 
 
 def _require_invoice_aggregation_op(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     expected: BindingAggregationOp,
 ) -> None:
     """Require the operation that implements one scalar invoice fact."""
@@ -896,8 +935,8 @@ def _require_invoice_aggregation_op(
 
 
 def _aggregate_operator_count(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
     """Count the AEAT operator records represented by selected observations."""
@@ -916,7 +955,7 @@ def _aggregate_operator_count(
 
 def _operator_count_key(
     observation: InvoiceObservation,
-    selector: _InvoiceSelector,
+    selector: InvoiceProviderBase,
 ) -> tuple[object, ...]:
     """Return the distinct-record key for an operator-count binding."""
     if selector.rectification_scope == "only_rectifications":
@@ -935,8 +974,8 @@ def _operator_count_key(
 
 
 def _sum_base_amount(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
     """Sum the taxable base of selected invoice observations."""
@@ -945,8 +984,8 @@ def _sum_base_amount(
 
 
 def _sum_invoice_total_amount(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
     """Sum the IVA-inclusive total of selected invoice observations."""
@@ -955,8 +994,8 @@ def _sum_invoice_total_amount(
 
 
 def _sum_rectified_base_delta(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
     """Sum each rectification's change from its previously declared base."""
@@ -983,8 +1022,8 @@ _INVOICE_AGGREGATORS: Mapping[str, _InvoiceAggregator] = {
 
 
 def _aggregate_invoice_binding(
-    binding: DataBindingDefinition,
-    selector: _InvoiceSelector,
+    binding: BindingDefinition,
+    selector: InvoiceProviderBase,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
     try:
@@ -996,7 +1035,7 @@ def _aggregate_invoice_binding(
     return aggregator(binding, selector, observations)
 
 
-InvoiceSelector = _InvoiceSelector
+InvoiceProviderBase = InvoiceProviderBase
 invoice_selector = _invoice_selector
 
 

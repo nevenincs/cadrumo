@@ -17,4 +17,4 @@ formula = "renta-base-liquidable-negativa-general-2024-aplicada-maxima"
 internal_only = true
 data_type = "decimal"
 legal_refs = ["ley-35-2006:art-50"]
-source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+additional_source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]

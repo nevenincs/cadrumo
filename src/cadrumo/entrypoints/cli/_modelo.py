@@ -135,7 +135,6 @@ def work_compare_taxation(
             tr(
                 "cli.app.modelo.work.compare_taxation_work_unit_not_found",
                 work_unit_id=work_unit_id or "",
-                default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
             ),
         ) from exc
     except TaxationComparisonError as exc:
@@ -143,7 +142,6 @@ def work_compare_taxation(
             tr(
                 "cli.app.modelo.work.compare_taxation_error",
                 detail=str(exc),
-                default="Taxation comparison failed: {detail}",
             ),
         ) from exc
 
@@ -193,7 +191,6 @@ def work_compare_taxation(
             "cli.app.modelo.work.compare_taxation_recommendation_line",
             recommendation=comparison.recommendation.value,
             reason=comparison.recommendation_reason,
-            default="RECOMENDACIÓN: {recommendation} — {reason}",
         ),
     ]
     if caveat_notice is not None:

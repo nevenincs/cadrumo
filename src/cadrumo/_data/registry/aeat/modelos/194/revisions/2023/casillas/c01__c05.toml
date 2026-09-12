@@ -11,7 +11,6 @@ semantic_role_cardinality_reason = "The hoja-resumen prints the perceptor count 
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "02"
@@ -24,7 +23,6 @@ semantic_role = "capital_ajeno_resumen_base_positiva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "03"
@@ -37,7 +35,6 @@ semantic_role = "capital_ajeno_resumen_retenciones"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "04"
@@ -52,7 +49,6 @@ semantic_role_cardinality_reason = "Counterpart of box 01: perceptores whose bas
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
 
 [[revisions."2023".casillas]]
 id = "05"
@@ -65,5 +61,3 @@ semantic_role = "capital_ajeno_resumen_base_negativa"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-99", "orden-1999-11-18:apartado-cuarto"]
-source_refs = ["boe-modelo-194-form-text", "boe-modelo-194-form-layout"]
-

@@ -34,11 +34,11 @@ before being carried into ``detail_rows`` on the ``CalculationRevision``.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, get_args
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
@@ -48,8 +48,11 @@ from ...core.irnr import M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.facts.resolution import ResolvedScalarFact
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact, ResolvedScalarFact
 from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
+from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.schema_base import DateAxis
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -60,6 +63,44 @@ _NameStr = Annotated[str, StringConstraints(strip_whitespace=True, max_length=20
 _RequiredNameStr = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _IsoCountryCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
 _M210OfficialTipoRentaCode = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=2)]
+
+
+def _registry_detail_catalogue(
+    *,
+    effective_date: date | None = None,
+) -> tuple[Mapping[str, str], frozenset[str]]:
+    """Resolve detail-row declarations and selected M349/M210 revisions."""
+    as_of = effective_date or date.today()
+    authority = bundled_authority()
+    service = RegistryQueryService(authority)
+    m349_report = service.describe_modelo("349", as_of=as_of)
+    m210_report = service.describe_modelo("210", as_of=as_of)
+    if not m349_report.revision or not m210_report.revision or not m349_report.periods:
+        raise ValueError("selected M349/M210 registry revisions must declare detail-row scope")
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="detail-m349-m210-catalogues",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=as_of,
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise ValueError("detail M349/M210 catalogue must resolve as a mapping fact")
+    declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    return declarations, frozenset(str(period) for period in m349_report.periods)
+
+
+def _required_detail_declaration(declarations: Mapping[str, str], key: str) -> str:
+    try:
+        return declarations[key]
+    except KeyError as exc:
+        raise ValueError(f"detail registry declaration is missing: {key}") from exc
+
+
+def _detail_values(declarations: Mapping[str, str], key: str) -> frozenset[str]:
+    return frozenset(
+        value.strip() for value in _required_detail_declaration(declarations, key).split(",") if value.strip()
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -332,26 +373,7 @@ Modelo349ClaveOperacionValue = Annotated[
     StringConstraints(strip_whitespace=True, min_length=1, max_length=1),
 ]
 """Typed one-character operation-key shell; the selected registry owns its values."""
-_M349_RECTIFICACION_PERIODO = Literal[
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "1M",
-    "1T",
-    "2T",
-    "3T",
-    "4T",
-]
-# TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
+# RegistryQueryService and MappingFactQuery consume the selected detail/M349/M210 declarations.
 
 
 class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
@@ -439,7 +461,7 @@ class Modelo349RectificacionRow(BaseModel):
     razon_social: _RequiredNameStr
     clave_operacion: Modelo349ClaveOperacionValue
     ejercicio: Annotated[str, StringConstraints(strip_whitespace=True, min_length=4, max_length=4)]
-    periodo: _M349_RECTIFICACION_PERIODO | str
+    periodo: str
     base_rectificada: Decimal = Field(description="Base imponible o importe rectificado en EUR")
     base_anterior: Decimal = Field(description="Base imponible declarada anteriormente en EUR")
 
@@ -458,8 +480,9 @@ class Modelo349RectificacionRow(BaseModel):
     def _periodo_uppercase(cls, value: object) -> object:
         if isinstance(value, str):
             normalised = value.strip().upper()
-            if normalised not in get_args(_M349_RECTIFICACION_PERIODO):
-                accepted = ", ".join(repr(member) for member in get_args(_M349_RECTIFICACION_PERIODO))
+            _, periods = _registry_detail_catalogue()
+            if normalised not in periods:
+                accepted = ", ".join(repr(member) for member in sorted(periods))
                 raise ValueError(f"periodo must be one of {accepted}; got {value!r}")
             return normalised
         return value
@@ -502,9 +525,16 @@ def validate_m349_country_prefix_context(
     rectified_period: str | None = None,
 ) -> None:
     """Resolve the selected registry's M349 country-prefix applicability."""
-    del country_code, clave_operacion, filing_year, period, is_rectification, rectified_year, rectified_period
-    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
-    raise NotImplementedError("M349 country-prefix applicability is unresolved")
+    declarations, periods = _registry_detail_catalogue()
+    operation_keys = _detail_values(declarations, "m349.operation_keys")
+    _required_detail_declaration(declarations, "m349.country_prefixes")
+    _required_detail_declaration(declarations, "m349.service_keys")
+    normalized_period = _normalise_m349_period(period)
+    if normalized_period not in periods:
+        raise ValueError(f"M349 period is not declared by the selected registry: {period!r}")
+    if clave_operacion.upper() not in operation_keys:
+        raise ValueError(f"M349 operation key is not declared by the selected registry: {clave_operacion!r}")
+    del country_code, filing_year, is_rectification, rectified_year, rectified_period
 
 
 def _normalise_m349_period(period: str | None) -> str:
@@ -707,9 +737,12 @@ def _resolve_single_agrupacion_tipo_renta_code(rows: Sequence[Modelo210Agrupacio
 
 
 def _require_annual_agrupacion_code(code: str) -> None:
-    del code
-    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
-    raise NotImplementedError("M210 grouping-code catalogue is unresolved")
+    declarations, _ = _registry_detail_catalogue()
+    if code not in _detail_values(declarations, "m210.annual_grouping_codes"):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="unknown_grouping_code",
+            detail="M210 grouping code is not declared by the selected registry",
+        )
 
 
 def _require_single_agrupacion_tipo_gravamen(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
@@ -736,9 +769,19 @@ def _require_shared_agrupacion_bien_derecho(rows: Sequence[Modelo210AgrupacionRe
 
 
 def _validate_agrupacion_payer_grouping(rows: Sequence[Modelo210AgrupacionRentaRow], code: str) -> None:
-    del rows, code
-    # TODO(fact-relocation): resolve detail-model, M349 code, and M210 grouping catalogues from selected registry revisions
-    raise NotImplementedError("M210 payer/grouping applicability is unresolved")
+    declarations, _ = _registry_detail_catalogue()
+    _required_detail_declaration(declarations, "m210.grouping_period")
+    payer_mode_declarations = {
+        key.removeprefix("m210.code").removesuffix(".payer_mode"): value
+        for key, value in declarations.items()
+        if key.startswith("m210.code") and key.endswith(".payer_mode")
+    }
+    required_mode = payer_mode_declarations.get(code)
+    if required_mode is not None and any(row.pagador_mode.value != required_mode for row in rows):
+        raise Modelo210AgrupacionRentaRowsError(
+            reason="payer_mode_not_declared",
+            detail="M210 payer mode does not match the selected registry declaration",
+        )
 
 
 def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:

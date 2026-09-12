@@ -64,7 +64,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @52+17. Deducciones individuales pendientes de aplicar al incorporarse al grupo o, en su caso, al grupo previo (art. 71).INCN y cuota íntegra. Incremento por incumplimiento reserva de nivelación (art. 105.6 LIS)
 [[revisions."2024".casillas]]
@@ -76,7 +75,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @69+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2008
 [[revisions."2024".casillas]]
@@ -88,7 +86,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @86/1702+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2008
 [[revisions."2024".casillas]]
@@ -100,7 +97,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @92+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2008
 [[revisions."2024".casillas]]
@@ -112,7 +108,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @109+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2008
 [[revisions."2024".casillas]]
@@ -124,7 +119,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @126+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2008
 [[revisions."2024".casillas]]
@@ -136,7 +130,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @143+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2009
 [[revisions."2024".casillas]]
@@ -148,7 +141,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @160/1776+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2009
 [[revisions."2024".casillas]]
@@ -160,7 +152,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @166+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2009
 [[revisions."2024".casillas]]
@@ -172,7 +163,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @183+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2009
 [[revisions."2024".casillas]]
@@ -184,7 +174,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @200+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2009
 [[revisions."2024".casillas]]
@@ -196,7 +185,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @217+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDL 4/2004. Deducción pendiente. Ejercicio de generación. 2010
 [[revisions."2024".casillas]]
@@ -208,7 +196,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @234/1850+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2010
 [[revisions."2024".casillas]]
@@ -220,7 +207,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @240+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2010
 [[revisions."2024".casillas]]
@@ -232,7 +218,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @257+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2010
 [[revisions."2024".casillas]]
@@ -244,7 +229,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @274+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2010
 [[revisions."2024".casillas]]
@@ -256,7 +240,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @291+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2011
 [[revisions."2024".casillas]]
@@ -268,7 +251,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @308/1924+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2011
 [[revisions."2024".casillas]]
@@ -280,7 +262,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @314+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2011
 [[revisions."2024".casillas]]
@@ -292,7 +273,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @331+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2011
 [[revisions."2024".casillas]]
@@ -304,7 +284,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @348+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2011
 [[revisions."2024".casillas]]
@@ -316,7 +295,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @365+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2012
 [[revisions."2024".casillas]]
@@ -328,7 +306,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @382/1998+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2012
 [[revisions."2024".casillas]]
@@ -340,7 +317,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @388+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2012
 [[revisions."2024".casillas]]
@@ -352,7 +328,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @405+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2012
 [[revisions."2024".casillas]]
@@ -364,7 +339,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @422+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2012
 [[revisions."2024".casillas]]
@@ -376,7 +350,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @439+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2013
 [[revisions."2024".casillas]]
@@ -388,7 +361,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @456/2072+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2013
 [[revisions."2024".casillas]]
@@ -400,7 +372,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @462+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2013
 [[revisions."2024".casillas]]
@@ -412,7 +383,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @479+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2013
 [[revisions."2024".casillas]]
@@ -424,7 +394,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @496+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2013
 [[revisions."2024".casillas]]
@@ -436,7 +405,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @513+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. 2014
 [[revisions."2024".casillas]]
@@ -448,7 +416,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @530/2146+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Tipo gravamen período generación. Ejercicio de generación. 2014
 [[revisions."2024".casillas]]
@@ -460,7 +427,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @536+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. 2014
 [[revisions."2024".casillas]]
@@ -472,7 +438,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @553+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. 2014
 [[revisions."2024".casillas]]
@@ -484,7 +449,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @570+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. 2014
 [[revisions."2024".casillas]]
@@ -496,7 +460,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @587+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Deducción pendiente. Ejercicio de generación. Total períodos anteriores
 [[revisions."2024".casillas]]
@@ -508,7 +471,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @604+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. 2024: deducción pendiente . Ejercicio de generación. Total períodos anteriores
 [[revisions."2024".casillas]]
@@ -520,7 +482,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @621+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Aplicado en esta liquidación. Ejercicio de generación. Total períodos anteriores
 [[revisions."2024".casillas]]
@@ -532,7 +493,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @638+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA RDLEG 4/2004. Pendiente de aplicación en períodos futuros. Ejercicio de generación. Total períodos anteriores
 [[revisions."2024".casillas]]
@@ -544,7 +504,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @655+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -556,7 +515,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @672/2288+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -568,7 +526,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @678+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -580,7 +537,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @695+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -592,7 +548,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @712+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2015. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -604,7 +559,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @729+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -616,7 +570,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @746/2362+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -628,7 +581,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @752+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -640,7 +592,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @769+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -652,7 +603,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @786+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2016. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -664,7 +614,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @803+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -676,7 +625,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @820/2436+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -688,7 +636,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @826+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -700,7 +647,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @843+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -712,7 +658,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @860+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2017. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -724,7 +669,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @877+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -736,7 +680,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @894/2510+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -748,7 +691,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @900+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -760,7 +702,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @917+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -772,7 +713,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @934+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2018. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -784,7 +724,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @951+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -796,7 +735,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @968/2584+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -808,7 +746,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @974+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -820,7 +757,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @991+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -832,7 +768,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1008+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2019. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -844,7 +779,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1025+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -856,7 +790,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1042/2658+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -868,7 +801,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1048+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -880,7 +812,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1065+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -892,7 +823,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1082+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2020. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -904,7 +834,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1099+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -916,7 +845,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1116/2732+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -928,7 +856,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1122+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. 2024: deducción pendiente
 [[revisions."2024".casillas]]
@@ -940,7 +867,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1139+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -952,7 +878,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1156+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2021. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -964,7 +889,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1173+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -976,7 +900,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1190/2806+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -988,7 +911,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1196+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. : 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -1000,7 +922,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1213+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -1012,7 +933,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1230+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2022. Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -1024,7 +944,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1247+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -1036,7 +955,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1264/2880+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -1048,7 +966,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1270+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. : 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -1060,7 +977,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1287+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2023. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -1072,7 +988,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1304+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. periodos anteriores. DI interna 2023. Pendiente de aplicación en periodos futuros
 [[revisions."2024".casillas]]
@@ -1084,7 +999,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1321+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Deducción pendiente
 [[revisions."2024".casillas]]
@@ -1096,7 +1010,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1338/2954+6. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc anteriores. DI interna 2024(*). Tipo gravamen período generación
 [[revisions."2024".casillas]]
@@ -1108,7 +1021,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1344+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). : 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -1120,7 +1032,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1361+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -1132,7 +1043,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1378+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. DI interna 2024(*). Pendiente de aplicación en ejerc. futuros
 [[revisions."2024".casillas]]
@@ -1144,7 +1054,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1395+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Deducción pendiente
 [[revisions."2024".casillas]]
@@ -1156,7 +1065,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1412+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. : 2024 deducción pendiente
 [[revisions."2024".casillas]]
@@ -1168,7 +1076,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1429+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Aplicado en esta liquidación
 [[revisions."2024".casillas]]
@@ -1180,7 +1087,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1446+17. DEDUCCIONES POR DOBLE IMPOSICIÓN INTERNA DT 23.1 LIS. DI interna. ejerc. anteriores. Total. Pendiente de aplicación en periodos. futuros
 [[revisions."2024".casillas]]
@@ -1192,4 +1098,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

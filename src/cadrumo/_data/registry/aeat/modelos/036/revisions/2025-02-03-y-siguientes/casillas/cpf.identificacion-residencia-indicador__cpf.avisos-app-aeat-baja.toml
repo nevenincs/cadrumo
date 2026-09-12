@@ -52,7 +52,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @12+2. Identificacion. Persona fisica no residente en Espana. Nacionalidad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -67,7 +67,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @14+9. Identificacion. N.I.F. / N.I.E.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -82,7 +82,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @23+50. Identificacion. Apellido 1.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -97,7 +97,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @73+50. Identificacion. Apellido 2.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -112,7 +112,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @123+25. Identificacion. Nombre.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -127,7 +127,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @148+25. Identificacion. Nombre comercial.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -142,7 +142,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @173+5. Domicilio fiscal en Espana. Tipo de via.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -157,7 +157,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @178+5. Domicilio fiscal en Espana. Codigo de via INE. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -172,7 +172,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @183+50. Domicilio fiscal en Espana. Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -187,7 +187,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @233+3. Domicilio fiscal en Espana. Tipo de numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -202,7 +202,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @236+5. Domicilio fiscal en Espana. Numero de casa.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -217,7 +217,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @241+3. Domicilio fiscal en Espana. Calificador del numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -232,7 +232,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @244+3. Domicilio fiscal en Espana. Bloque.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -247,7 +247,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @247+3. Domicilio fiscal en Espana. Portal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -262,7 +262,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @250+3. Domicilio fiscal en Espana. Escalera.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -277,7 +277,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @253+3. Domicilio fiscal en Espana. Planta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -292,7 +292,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @256+3. Domicilio fiscal en Espana. Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -307,7 +307,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @259+40. Domicilio fiscal en Espana. Complemento de domicilio (urbanizacion, poligono industrial, centro comercial).
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -322,7 +322,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @299+30. Domicilio fiscal en Espana. Localidad o poblacion, si es distinta del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -337,7 +337,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @329+5. Domicilio fiscal en Espana. Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -352,7 +352,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @334+5. Domicilio fiscal en Espana. Codigo de municipio INE. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -367,7 +367,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @339+30. Domicilio fiscal en Espana. Nombre del municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -382,7 +382,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @369+2. Domicilio fiscal en Espana. Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -397,7 +397,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @371+100. Datos de telefonos y direcciones para recibir avisos. E-mail.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -412,7 +412,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @471+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -427,7 +427,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @472+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -442,7 +442,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @473+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos TEA. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -457,7 +457,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @474+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos TEA. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -472,7 +472,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @475+1. Datos de telefonos y direcciones para recibir avisos. Alta de avisos DGT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -487,7 +487,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @476+1. Datos de telefonos y direcciones para recibir avisos. Baja de avisos DGT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -502,7 +502,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @477+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del e-mail de avisos. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -517,7 +517,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @478+1. Datos de telefonos y direcciones para recibir avisos. Baja del e-mail de avisos. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -532,7 +532,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @498+50. Domicilio fiscal en el Estado de residencia (no residentes). Domicilio (address).
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -547,7 +547,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @548+40. Domicilio fiscal en el Estado de residencia (no residentes). Complemento de domicilio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -562,7 +562,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @588+30. Domicilio fiscal en el Estado de residencia (no residentes). Poblacion o ciudad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -577,7 +577,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @618+100. Identificacion. Dominio o direccion de internet.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -592,7 +592,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @718+10. Domicilio fiscal en el Estado de residencia (no residentes). Codigo postal (ZIP) del Estado de residencia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -607,7 +607,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @728+30. Domicilio fiscal en el Estado de residencia (no residentes). Provincia, region o estado.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -622,7 +622,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @758+30. Domicilio fiscal en el Estado de residencia (no residentes). Pais.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -637,7 +637,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @788+2. Domicilio fiscal en el Estado de residencia (no residentes). Codigo de pais.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -652,7 +652,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @790+4. Datos de telefonos y direcciones para recibir avisos. Prefijo de pais del telefono movil. Printed lowercase and parenthesised in the diseno: "(a28)".
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -667,7 +667,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @794+15. Datos de telefonos y direcciones para recibir avisos. Telefono movil.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -682,7 +682,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @809+1. Datos de telefonos y direcciones para recibir avisos. Alta o modificacion del telefono movil. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -697,7 +697,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @810+1. Datos de telefonos y direcciones para recibir avisos. Baja del telefono movil. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -712,7 +712,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @811+1. Datos de telefonos y direcciones para recibir avisos. Alta en la aplicacion movil AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -727,7 +727,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @812+1. Datos de telefonos y direcciones para recibir avisos. Baja en la aplicacion movil AEAT. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -742,4 +742,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

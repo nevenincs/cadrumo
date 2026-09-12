@@ -14,7 +14,6 @@ semantic_role = "declarante_contacto_telefono"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.persona-contacto-nombre"
@@ -29,7 +28,6 @@ semantic_role = "declarante_contacto_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.num-identificativo"
@@ -44,7 +42,6 @@ semantic_role = "declaracion_numero_identificativo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.complementaria"
@@ -59,7 +56,6 @@ semantic_role = "declaracion_complementaria"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.sustitutiva"
@@ -74,7 +70,6 @@ semantic_role = "declaracion_sustitutiva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.num-identificativo-anterior"
@@ -89,7 +84,6 @@ semantic_role = "declaracion_anterior_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.retenciones-ingresadas"
@@ -100,13 +94,12 @@ segmento = "declarante"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "retenciones_ingresadas_total"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 # Design positions 175-189: the sum of the perceptor-record retenciones e ingresos a cuenta for rows whose clave de percepcion is C, plus the A/B/D rows whose pago is 1 or 3, per the design's own declaration.
 required = true
 input_kind = "bound"
 binding = "modelo-193-retenciones-ingresadas"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.gastos-total"
@@ -117,12 +110,11 @@ segmento = "declarante"
 section = ["declarante", "resumen"]
 data_type = "money"
 semantic_role = "gastos_total_declarante"
-constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"], source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"] }
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"] }
 # Design positions 220-234: the sum of the gastos-relationship rows' importe de gastos.
 required = true
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.naturaleza-declarante"
@@ -137,4 +129,3 @@ semantic_role = "declarante_naturaleza"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]

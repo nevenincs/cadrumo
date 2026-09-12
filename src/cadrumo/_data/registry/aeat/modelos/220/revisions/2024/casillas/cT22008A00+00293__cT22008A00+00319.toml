@@ -33,7 +33,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17. Consolidación de resultados contables. B. Suma de los resultados de las sociedades del grupo fiscal en el ejercicio, antes de impuestos
 [[revisions."2024".casillas]]
@@ -45,7 +44,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17. Consolidación de bases imponibles. C. Diferencia por consolidacion de resultados (= A - B)
 [[revisions."2024".casillas]]
@@ -57,7 +55,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17. Consolidación de bases imponibles. D. Base imponible previa del grupo
 [[revisions."2024".casillas]]
@@ -69,7 +66,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17. Consolidación de bases imponibles.E. Suma de bases imponibles individuales ( = 043 - 01263 - 01264 + 01021 + 01935)
 [[revisions."2024".casillas]]
@@ -81,7 +77,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17. Consolidación de bases imponibles. F. Diferencia por consolidación de bases imponibles ( = D - E)
 [[revisions."2024".casillas]]
@@ -93,7 +88,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17. Consolidación de bases imponibles. G. DIFERENCIAS ENTRE LAS CONSOLIDACIONES DE RESULTADOS Y LA DE BASES IMPONIBLES (= F - C = G1 + G2)
 [[revisions."2024".casillas]]
@@ -105,7 +99,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en existencias en la entidad adquiriente
 [[revisions."2024".casillas]]
@@ -117,7 +110,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en inmovilizado amortizante en la entidad adquiriente
 [[revisions."2024".casillas]]
@@ -129,7 +121,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17. Diferencias en el diferimiento de resultados internos. Por op. Internas de bienes y servicios activados en terrenos en la entidad adquiriente
 [[revisions."2024".casillas]]
@@ -141,7 +132,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de drchos. De crédito y activos financieros representativos de deuda
 [[revisions."2024".casillas]]
@@ -153,7 +143,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de derivados (opciones, futuros, ...)
 [[revisions."2024".casillas]]
@@ -165,7 +154,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17. Diferencias en el diferimiento de resultados internos. Por transmisiones internas de activos financieros representativos de fondos propios
 [[revisions."2024".casillas]]
@@ -177,7 +165,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17. Diferencias en el diferimiento de resultados internos. Por operaciones internas no comprendidas en los epígrafes anteriores
 [[revisions."2024".casillas]]
@@ -189,7 +176,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17. Diferencias en el diferimiento de resultados internos. G1. Total diferencias por diferimiento de resultados internos.
 [[revisions."2024".casillas]]
@@ -201,7 +187,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17. Diferencias por otros conceptos. Por eliminación de los dividendos internos del grupo fiscal.
 [[revisions."2024".casillas]]
@@ -213,7 +198,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17. Diferencias por otros conceptos. Por eliminación dedeterioros de valor de participaciones en fondos propios de entidades del grupo fiscal.
 [[revisions."2024".casillas]]
@@ -225,7 +209,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17. Diferencias por otros conceptos. Por incorporación de deterioros de valor de participaciones en fondos propios de entidades del grupo fiscal.
 [[revisions."2024".casillas]]
@@ -237,7 +220,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17. Diferencias por otros conceptos. Por fondos de comercio de consolidación y diferencia negativa de consolidación.
 [[revisions."2024".casillas]]
@@ -249,7 +231,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17. Diferencias por otros conceptos. Por otros conceptos no comprendidos en los apartados anteriores. (especificar).
 [[revisions."2024".casillas]]
@@ -261,7 +242,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17. Diferencias por otros conceptos. G2. Total diferencias por otros conceptos.
 [[revisions."2024".casillas]]
@@ -273,4 +253,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

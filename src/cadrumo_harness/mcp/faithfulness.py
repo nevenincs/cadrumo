@@ -156,9 +156,4 @@ def advisory_line(result: FaithfulnessResult) -> str:
     return tr(
         "mcp.faithfulness.advisory",
         values=", ".join(result.flagged_values),
-        default=(
-            "FAITHFULNESS ADVISORY: the call's arguments cite amount(s) "
-            "[{values}] that no tool result in this session produced. Verify the "
-            "figure against a calculate/revision read before relying on it."
-        ),
     )

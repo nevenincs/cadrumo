@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
-from ..compiler.loader import load_modelo_directory, load_modelo_file
+from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import revision_section_fragment_paths
 from ..conformance.loader_directory_mode_support import (
     COMPLETENESS_CASILLA_0001 as _COMPLETENESS_CASILLA_0001,
@@ -29,6 +29,9 @@ from ..conformance.loader_directory_mode_support import (
     standard_revision_preamble_text as _standard_revision_preamble_text,
 )
 from ..conformance.loader_directory_mode_support import (
+    write_fragmented_modelo_from_text as _write_fragmented_modelo_from_text,
+)
+from ..conformance.loader_directory_mode_support import (
     write_standard_manifest as _write_standard_manifest,
 )
 from ..conformance.loader_directory_mode_support import (
@@ -40,8 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
 def test_registry_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
-    registry_file = tmp_path / "999.toml"
-    registry_file.write_text(
+    baseline_text = (
         _standard_manifest_text("Projection compiler proof")
         + "\n"
         + _standard_revision_preamble_text()
@@ -78,19 +80,17 @@ projection_kind = "m303_prorrata_activity"
 slot = {slot_literal}
 field = "cnae"
 casilla_id = "500"
-""".lstrip(),
-        encoding="utf-8",
+""".lstrip()
     )
 
     with pytest.raises(RegistryLoadError, match="exact integer"):
-        load_modelo_file(registry_file)
+        load_modelo_directory(_write_fragmented_modelo_from_text(tmp_path / "999", baseline_text))
 
 
 def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
     """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
 
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
+    baseline_text = (
         _standard_manifest_text("Fragment test")
         + "\n"
         + _standard_revision_preamble_text()
@@ -133,10 +133,11 @@ order = 0
 encoding = "iso-8859-1"
 line_ending = "crlf"
 required = true
-""".lstrip(),
-        encoding="utf-8",
+""".lstrip()
     )
-    expected = load_modelo_file(single_file)
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
@@ -213,13 +214,11 @@ required = true
 def test_directory_mode_merges_completeness_manifest_casilla_fragments(tmp_path: Path) -> None:
     """Large calculation-completeness manifests can split their casilla list."""
 
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
-        (
-            _standard_manifest_text("Fragment test")
-            + "\n"
-            + _standard_revision_preamble_text()
-            + """
+    baseline_text = (
+        _standard_manifest_text("Fragment test")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + """
 
 [revisions."2025".completeness_manifest]
 source_ref = "aeat-manual"
@@ -228,20 +227,20 @@ source_refs = ["aeat-manual"]
 
 [[revisions."2025".completeness_manifest.casillas]]
 """
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
-            + """
+        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0001}"\n'
+        + """
 number = "0001"
 
 [[revisions."2025".completeness_manifest.casillas]]
 """
-            + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
-            + """
+        + f'{_TOML_CASILLA_ID_KEY} = "{_COMPLETENESS_CASILLA_0002}"\n'
+        + """
 number = "0002"
 """
-        ).lstrip(),
-        encoding="utf-8",
+    ).lstrip()
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
     )
-    expected = load_modelo_file(single_file)
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "completeness_manifest").mkdir(parents=True)
@@ -288,8 +287,7 @@ number = "0002"
 def test_directory_mode_merges_export_record_field_fragments_by_record_id(tmp_path: Path) -> None:
     """Large fixed-width records can be split across multiple field fragments."""
 
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
+    baseline_text = (
         _standard_manifest_text("Fragment test")
         + "\n"
         + _standard_revision_preamble_text()
@@ -335,10 +333,11 @@ justification = "left"
 signed = false
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
+""".lstrip()
     )
-    expected = load_modelo_file(single_file)
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "export_layouts").mkdir(parents=True)
@@ -407,8 +406,7 @@ source_refs = ["aeat-manual"]
 def test_directory_mode_merges_construct_member_fragments_by_construct_id(tmp_path: Path) -> None:
     """Large construct membership lists can be split without redeclaring the construct."""
 
-    single_file = tmp_path / "999.toml"
-    single_file.write_text(
+    baseline_text = (
         _standard_manifest_text("Fragment test")
         + "\n"
         + _standard_revision_preamble_text()
@@ -420,10 +418,11 @@ legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 casilla_ids = ["0001"]
 formulas = ["formula-1"]
-""".lstrip(),
-        encoding="utf-8",
+""".lstrip()
     )
-    expected = load_modelo_file(single_file)
+    expected = load_modelo_directory(
+        _write_fragmented_modelo_from_text(tmp_path / "baseline-999", baseline_text),
+    )
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "constructs").mkdir(parents=True)

@@ -108,7 +108,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
 
         m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository)
-        assert m100_prefill.binding_values["renta-2025-base-liquidable-negativa-general-anterior"] == Decimal("0")
+        assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
 
 def test_observe_local_from_xlsx_spreadsheet_persists_values(

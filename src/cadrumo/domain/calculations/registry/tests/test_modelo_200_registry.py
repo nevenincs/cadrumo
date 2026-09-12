@@ -18,13 +18,13 @@ from .....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
 )
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
 from ._published_authority import artifact_components
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -459,12 +459,12 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         inputs=_base_inputs(Decimal("0"), cuota_liquida_positiva=Decimal("20000")),
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000"),
@@ -556,9 +556,9 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
             inputs={_M200_CUOTA_LIQUIDA_CASILLA: Decimal("0")},
             enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
             binding_values={
-                "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-                "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-                "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+                "modelo-200-profile-new-entity-flag": Decimal("0"),
+                "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+                "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             },
             relation_values={
                 "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
@@ -612,12 +612,12 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         inputs=_base_inputs(Decimal("1000000")),
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("10000000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),

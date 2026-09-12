@@ -79,7 +79,7 @@ _BASE_INPUTS: dict[CasillaId, Decimal] = _casilla_values(
         # 0513/0514 (mínimo por descendientes) are computed (Option A engine);
         # the zero for these
         # childless test couples is supplied via the
-        # renta-2025-profile-minimo-descendientes-estatal binding in
+        # renta-profile-minimo-descendientes-estatal binding in
         # _BASE_BINDINGS below, not as a manual casilla input.
         "0515": Decimal("0"),
         "0516": Decimal("0"),
@@ -117,31 +117,31 @@ _ZERO_RELATIONS = {
 }
 
 _BASE_BINDINGS = {
-    "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
     # These scenarios are salaried couples (trabajo income only, per the
     # module docstring), not economic-activity filers.
-    "renta-2025-profile-has-economic-activity": Decimal("0"),
+    "renta-profile-has-economic-activity": Decimal("0"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # declaration_type is intentionally absent — compare_taxation_modes injects it.
-    "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
-    "renta-2025-profile-marriage-full-year": Decimal("1"),  # married full year
-    "renta-2025-profile-marriage-month-start": Decimal("1"),
-    "renta-2025-profile-marriage-month-end": Decimal("12"),
+    "renta-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("1"),  # married full year
+    "renta-profile-marriage-month-start": Decimal("1"),
+    "renta-profile-marriage-month-end": Decimal("12"),
     # Fresh-filer scenarios: no prior-period BL negativa to compensate
     # (LIRPF art. 50.3 carry-forward; defaults to 0 for new couples).
-    "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     # No other unidad-familiar members' base for the Madrid nacimiento/adopción
     # límite-unidad-familiar check (madrid-dl-1-2010:art-18).
-    "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+    "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
     # No Madrid nacimiento/adopción-eligible descendants in these scenarios.
-    "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+    "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
     # Childless couple: Art. 58/61 LIRPF mínimo por descendientes aggregate is
     # zero (Option A engine) for both the estatal and autonómico halves — a
     # childless profile resolves to zero regardless of the Madrid tax
     # residence declared below (#593's per-CCAA divergence only matters when
     # eligible descendants exist).
-    "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-    "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+    "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+    "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
 }
 
 _BASE_ENUM_BINDINGS = {"renta-2025-profile-tax-residence-ccaa": "madrid"}
@@ -321,7 +321,7 @@ def test_individual_branch_caveat_present_when_individual_recommended(
 
 
 # DEFERRED: non-zero BL-negativa-anterior coverage test. Diagnostic 2026-06-03
-# established that the renta-2025-base-liquidable-negativa-general-anterior
+# established that the renta-base-liquidable-negativa-general-anterior
 # binding feeds the STOCK casilla 1388 ("Pendiente de aplicación al principio
 # del periodo") only; the amount-applied casilla (analogous to M200's 00547)
 # is a separate operator-input that must be supplied to actually reduce the

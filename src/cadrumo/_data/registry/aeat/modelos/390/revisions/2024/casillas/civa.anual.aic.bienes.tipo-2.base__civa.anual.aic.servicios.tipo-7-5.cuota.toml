@@ -1,0 +1,187 @@
+# Rate-specific box-layer casillas for the adquisiciones intracomunitarias
+# (AIC) block of the regimen general devengado section -- "bienes" (page 02,
+# offsets 999-1220) and "servicios" (page 02, offsets 1237-1458) rows of the
+# bundled 2025 Diseno de Registros apartado 5. Segment- and record-resolved
+# against the design's own "Adquis. intracomunit. bienes/servicios - Tipo N%"
+# row text, never against a bare offset or box number alone -- several of the
+# low box numbers here ([21]/[22], [23]/[24], [25]/[26]) also occur elsewhere
+# on the same page naming unrelated Reg. ordinario boxes.
+#
+# THE DEFECT THIS CLOSES: M390 previously routed ALL adquisiciones
+# intracomunitarias money (both bienes and servicios, every rate) into the
+# ISP (inversion del sujeto pasivo) export slot at page-02 offset 1492 --
+# box [28] -- via the single rate-blind casilla
+# iva.anual.autorepercutido.intracomunitaria. M303 files the identical
+# ledger categories on its OWN AIC-labelled boxes (11/13), so the two modelos
+# disagreed about where the same money goes. The design itself states the
+# boxes are distinct: [27]/[28] read "IVA deveng. invers. sujeto pasivo",
+# never "Adquis. intracomunit.". LIVA art. 13.1 makes AIC of goods its own
+# hecho imponible, with art. 85 the taxable-person chapter for it -- distinct
+# from art. 84 (entregas y prestaciones interiores, the domestic ISP rule
+# behind boxes [27]/[28] in the sibling casillas file).
+#
+# THE RATE-BLIND iva.anual.autorepercutido.intracomunitaria CASILLA REMAINS
+# THE TOTAL-FEEDING AGGREGATE, unchanged in the annual devengada total
+# formula (civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml).
+# Its precondition for the two-layer shape
+# holds: that total sums the rate-blind category casilla directly, never the
+# sum of these rate-specific boxes, so adding this box layer cannot double
+# count. Its export_refs move OFF the ISP slot in that same sibling file, in
+# this same change, so the ISP box no longer receives AIC money at all.
+#
+# EPOCH SCOPING FOR THE PENDING PER-YEAR SPLIT: AIC rung count has exactly
+# THREE states across the 9 bundled designs (2016-2021: 3 rungs, UNLABELLED
+# by rate in the design text -- "Base imponible [21]" with no "Tipo N%"
+# prefix at all; 2022-2023: 5 rungs, 0/4/5/10/21%; 2024-2025: 7 rungs,
+# 0/2/4/5/7,5/10/21%), read directly from the source .xlsx designs. Box
+# identity is STABLE across the widening -- a new rung gets a NEW box number
+# rather than renumbering an existing one -- so no cross-epoch translation is
+# needed for the boxes below; only the 2016-2021 non-existence of a rate
+# label is a real constraint. A rate-specific binding asserting a rate the
+# design never printed would repeat exactly the fabrication this module's own
+# governing ADR forbids, so **these bindings are authored for the 2022-2025
+# design-year range only** -- each casilla below carries its own precise
+# design-year comment, and the pending per-epoch split should drop this
+# fragment from any pre-2022 revision it produces rather than carry it
+# forward unmodified.
+
+
+# Box [683]/[684] - "Adquis. intracomunit. bienes - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.tipo-2.base"
+number = "683"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_2_base"
+continuidad_id = "iva-aic-bienes-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:195 (sha256 8be79bacc860) prints box [683]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [683] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-2-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.tipo-2.cuota"
+number = "684"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_2_cuota"
+continuidad_id = "iva-aic-bienes-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:196 (sha256 8be79bacc860) prints box [684]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [684] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# Box [685]/[686] - "Adquis. intracomunit. bienes - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.tipo-7-5.base"
+number = "685"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_7_5_base"
+continuidad_id = "iva-aic-bienes-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:201 (sha256 8be79bacc860) prints box [685]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [685] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.bienes.tipo-7-5.cuota"
+number = "686"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_bienes_tipo_7_5_cuota"
+continuidad_id = "iva-aic-bienes-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:202 (sha256 8be79bacc860) prints box [686]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [686] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC bienes rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-bienes-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# Box [687]/[688] - "Adquis. intracomunit. servicios - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.tipo-2.base"
+number = "687"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_2_base"
+continuidad_id = "iva-aic-servicios-tipo-2-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:209 (sha256 8be79bacc860) prints box [687]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [687] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-2-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.tipo-2.cuota"
+number = "688"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_2_cuota"
+continuidad_id = "iva-aic-servicios-tipo-2-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:210 (sha256 8be79bacc860) prints box [688]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [688] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 2 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-2-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+# Box [689]/[690] - "Adquis. intracomunit. servicios - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.tipo-7-5.base"
+number = "689"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_7_5_base"
+continuidad_id = "iva-aic-servicios-tipo-7-5-base"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:215 (sha256 8be79bacc860) prints box [689]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [689] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-7-5-base"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+
+[[revisions."2024".casillas]]
+id = "iva.anual.aic.servicios.tipo-7-5.cuota"
+number = "690"
+section = ["iva", "anual", "inversion_sujeto_pasivo"]
+data_type = "money"
+semantic_role = "iva_aic_servicios_tipo_7_5_cuota"
+continuidad_id = "iva-aic-servicios-tipo-7-5-cuota"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:216 (sha256 8be79bacc860) prints box [690]; corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx.extracted.md (sha256 179c02eddc8b) prints no box [690] and retires none"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One official AEAT box per AIC servicios rate; the 7,5 % rung is a distinct box from its sibling rates, not a typo twin."
+required = false
+input_kind = "bound"
+binding = "modelo-390-iva-aic-servicios-tipo-7-5-cuota"
+legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

@@ -510,8 +510,8 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(tmp
 
 def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path: Path) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
-    zero_binding = "renta-2025-base-liquidable-negativa-general-anterior"
-    retenciones_trabajo_binding = "renta-2025-modelo-111-retenciones-periodicas"
+    zero_binding = "renta-base-liquidable-negativa-general-anterior"
+    retenciones_trabajo_binding = "renta-modelo-111-retenciones-periodicas"
     retenciones_trabajo_casilla = "0596"
     retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
@@ -536,9 +536,9 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(tmp_path:
                 "0016": Decimal("0"),
             },
             binding_values={
-                "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+                "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
                 retenciones_trabajo_binding: retenciones_trabajo_amount,
-                "renta-2025-modelo-123-retenciones-periodicas": Decimal("0"),
+                "renta-modelo-123-retenciones-periodicas": Decimal("0"),
                 zero_binding: Decimal("0"),
             },
             clock=_CLOCK,

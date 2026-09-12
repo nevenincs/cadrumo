@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo.tests._verification_substance_support import _workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_support import workflow_profile
 from cadrumo.application.modelo.verification_predicates import evaluate_verification_predicates
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -47,7 +47,7 @@ def test_modelo_202_b1_b2_resultado_previo_both_positive_is_blocking() -> None:
         findings = evaluate_verification_predicates(
             (predicate,),
             {_CASILLA_18: Decimal("1200"), _CASILLA_26: Decimal("800")},
-            _workflow_profile(),
+            workflow_profile(),
         )
 
         assert len(findings) == 1, revision_id
@@ -67,4 +67,4 @@ def test_modelo_202_b1_b2_resultado_previo_single_lane_passes() -> None:
     predicate = _m202_xor_predicate("2025-y-siguientes")
 
     for case_label, casilla_values in _M202_SINGLE_LANE_CASES:
-        assert evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile()) == [], case_label
+        assert evaluate_verification_predicates((predicate,), casilla_values, workflow_profile()) == [], case_label

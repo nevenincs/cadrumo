@@ -6,11 +6,14 @@ import ast
 import re
 import tomllib
 from collections import Counter, defaultdict
+from collections.abc import Iterable
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Final, cast
 
 from babel.messages.pofile import read_po
 
+from cadrumo.core.i18n.render import extract_placeholders
 from dev._paths import REPO_ROOT, UTF_8
 
 from ._status import CatalogueLeafState, classify_catalogue_leaf
@@ -21,34 +24,87 @@ from .manager import (
     locale_catalogue_source,
 )
 
-_DOTTED_KEY_RE: Final[re.Pattern[str]] = re.compile(r"[a-z][a-z0-9_]*(?:\.[a-z0-9_-]+)+\Z")
-_LOCALE_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(r"(?:^|_)(?:ca|en|es|hu)$")
-_PRESENTATION_FIELD_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?:^|_)(?:description|help|label|message|name|notes|summary|title)$"
+_DOTTED_KEY_RE: Final[re.Pattern[str]] = re.compile(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_-]+)+\Z")
+_LOCALES: Final[tuple[str, ...]] = ("ca", "en", "es", "hu")
+_LANGUAGE_CORE_FIELDS: Final[frozenset[str]] = frozenset({"definition", "scope_note", "short_description"})
+_TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"%\{[^{}]*\}|\{[^{}]*\}")
+_TRANSLATION_CODE_RE: Final[re.Pattern[str]] = re.compile(
+    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]*(?:=[^][,;\s]+)?|"
+    r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b|\[\d{1,4}\]"
 )
+_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
+    "ca": frozenset(
+        {
+            "administracio",
+            "bonificacio",
+            "declaracio",
+            "descripcio",
+            "exencio",
+            "informacio",
+            "numero",
+            "provincia",
+            "telefon",
+            "variacio",
+        }
+    ),
+    "es": frozenset(
+        {
+            "administracion",
+            "autoliquidacion",
+            "declaracion",
+            "deduccion",
+            "descripcion",
+            "informacion",
+            "numero",
+            "retencion",
+            "telefono",
+        }
+    ),
+}
 
 
 def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[str, object]:
     """Build the known translation backlog and inventory-integrity findings."""
-    required_keys = set(manager.get_codebase_keys())
+    discovery_findings: list[dict[str, object]] = []
+    try:
+        required_keys = set(manager.get_codebase_keys())
+    except Exception as exc:  # This is an intentional audit boundary.
+        required_keys = set()
+        discovery_findings.append(
+            {
+                "classification": "blocking",
+                "kind": "key_discovery_failure",
+                "error_type": type(exc).__name__,
+                "detail": str(exc),
+                "next_action": "restore authoritative key discovery, then rerun check-locales",
+            }
+        )
     namespace_markers = sorted(manager.get_codebase_namespaces())
+    finite_families, unresolved_families = _dynamic_key_families(namespace_markers)
     locale_leaves, catalogue_findings = _catalogue_leaves(manager)
+    if discovery_findings:
+        required_keys.update(key for leaves in locale_leaves.values() for key in leaves)
+    namespace_prefixes = tuple(marker.rstrip("*").rstrip(".") for marker in namespace_markers)
+    required_keys.update(key for values in finite_families.values() for key in values)
+    required_keys.update(
+        key for leaves in locale_leaves.values() for key in leaves if _covered_by_namespace(key, namespace_prefixes)
+    )
     matrix = _translation_matrix(required_keys, locale_leaves)
     source_inventory, source_findings = _source_inventory(manager)
     parallel_inventory, parallel_findings = _parallel_localization_inventory(repository)
-    inventory_findings = [*source_findings, *parallel_findings]
+    inventory_findings = [*discovery_findings, *source_findings, *parallel_findings]
     inventory_open = bool(
-        source_inventory["invalid_tr_calls"]
-        or source_inventory["dynamic_tr_calls"]
+        discovery_findings
+        or source_inventory["invalid_tr_calls"]
         or source_inventory["naked_presentation_sites"]
         or parallel_inventory["parallel_localization_declarations"]
-        or namespace_markers
+        or unresolved_families
     )
     domains = _domain_summaries(
         required_keys,
         matrix,
         locale_leaves,
-        [*inventory_findings, *({"kind": "unbounded_key_family"} for _ in namespace_markers)],
+        [*inventory_findings, *({"kind": "unbounded_key_family"} for _ in unresolved_families)],
     )
     locales = _locale_summaries(required_keys, matrix, locale_leaves)
     backlog = cast(list[dict[str, object]], matrix["backlog"])
@@ -58,31 +114,48 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
     cells_to_translate = sum(
         1 for item in backlog if isinstance(item, dict) and item["state"] in {"missing", "needs_value"}
     )
+    keys_to_repair = {
+        str(item["key"]) for item in backlog if isinstance(item, dict) and item["state"] == "needs_repair"
+    }
     translation_backlog = {
         "exact": not inventory_open,
         "unique_keys_to_translate": len(keys_to_translate) if not inventory_open else None,
         "cells_to_translate": cells_to_translate if not inventory_open else None,
         "known_unique_keys_to_translate": len(keys_to_translate),
         "known_cells_to_translate": cells_to_translate,
+        "unique_keys_to_repair": len(keys_to_repair),
+        "cells_to_repair": int(cast(dict[str, int], matrix["cells"])["needs_repair"]),
+        "cells_to_review": int(cast(dict[str, int], matrix["cells"])["needs_review"]),
     }
     inventory_items = (
         source_inventory["invalid_tr_calls"]
-        + source_inventory["dynamic_tr_calls"]
         + source_inventory["naked_presentation_sites"]
         + source_inventory["unread_or_invalid_sources"]
         + parallel_inventory["parallel_localization_declarations"]
         + parallel_inventory["invalid_data_files"]
-        + len(namespace_markers)
+        + len(unresolved_families)
+        + len(discovery_findings)
     )
     largest = _largest_domain_locale(domains)
+    catalogue_key_cells = sum(len(leaves) for leaves in locale_leaves.values())
+    catalogue_keys_unique = len({key for leaves in locale_leaves.values() for key in leaves})
     catalogue_only_keys = {key for leaves in locale_leaves.values() for key in leaves if key not in required_keys}
+    finite_dynamic_keys = {key for values in finite_families.values() for key in values}
     summary = {
         "inventory": {
             "closed": not inventory_open,
+            "key_discovery_failures": len(discovery_findings),
+            "catalogue_key_declarations": catalogue_key_cells,
+            "catalogue_keys_unique": catalogue_keys_unique,
+            "catalogue_cross_locale_repetitions": catalogue_key_cells - catalogue_keys_unique,
+            "catalogue_duplicate_declarations": 0,
             **source_inventory,
             **parallel_inventory,
             "required_keys": len(required_keys),
-            "unbounded_key_families": len(namespace_markers),
+            "dynamic_key_families": len(namespace_markers),
+            "finite_key_families": len(finite_families),
+            "finite_dynamic_keys": len(finite_dynamic_keys),
+            "unbounded_key_families": len(unresolved_families),
         },
         "translation_backlog": translation_backlog,
         "cells": matrix["cells"],
@@ -111,7 +184,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
                 "key_prefix": marker,
                 "next_action": "replace with a finite canonical key declaration",
             }
-            for marker in namespace_markers
+            for marker in unresolved_families
         ),
     ]
     return {
@@ -122,8 +195,62 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
             "backlog": backlog,
             "findings": findings,
             "required_keys": sorted(required_keys),
+            "dynamic_key_families": {
+                "finite": [
+                    {
+                        "key_prefix": marker,
+                        "concrete_keys": list(keys),
+                    }
+                    for marker, keys in sorted(finite_families.items())
+                ],
+                "unresolved": [
+                    {
+                        "key_prefix": marker,
+                        "concrete_catalogue_keys": sorted(
+                            {
+                                key
+                                for leaves in locale_leaves.values()
+                                for key in leaves
+                                if _covered_by_namespace(key, (marker.rstrip("*").rstrip("."),))
+                            }
+                        ),
+                    }
+                    for marker in unresolved_families
+                ],
+            },
         },
     }
+
+
+def _dynamic_key_families(
+    namespace_markers: Iterable[str],
+    *,
+    registered_keys: Iterable[str] | None = None,
+) -> tuple[dict[str, tuple[str, ...]], tuple[str, ...]]:
+    """Partition namespace markers using concrete f-string registry evidence.
+
+    The scanner emits a marker whenever it cannot enumerate a dynamic key.  A
+    marker is finite when the f-string registry supplies at least one concrete
+    key below its prefix; only markers without that evidence remain unresolved.
+    ``registered_keys`` is injectable so this boundary can be tested without
+    importing the full runtime registry.
+    """
+    markers = tuple(sorted(set(namespace_markers)))
+    if registered_keys is None:
+        from .fstring_registry import get_registered_keys
+
+        registered_keys = get_registered_keys()
+    concrete_keys = tuple(sorted(set(registered_keys)))
+    finite: dict[str, tuple[str, ...]] = {}
+    unresolved: list[str] = []
+    for marker in markers:
+        prefix = marker.rstrip("*").rstrip(".")
+        values = tuple(key for key in concrete_keys if _covered_by_namespace(key, (prefix,)))
+        if values:
+            finite[marker] = values
+        else:
+            unresolved.append(marker)
+    return finite, tuple(unresolved)
 
 
 def _catalogue_leaves(
@@ -161,6 +288,9 @@ def _translation_matrix(
     findings: list[dict[str, object]] = []
     for key in sorted(required_keys):
         domain = _domain(key)
+        review_locales = _suspicious_translation_locales(key, locale_leaves)
+        source_value = locale_leaves.get("es", {}).get(key)
+        source_placeholders = _translation_tokens(source_value) if isinstance(source_value, str) else None
         for locale, leaves in sorted(locale_leaves.items()):
             if key not in leaves:
                 state, reason = "missing", "translation_missing"
@@ -171,7 +301,17 @@ def _translation_matrix(
                 else:
                     leaf_state = classify_catalogue_leaf(key, value)
                     if leaf_state is CatalogueLeafState.AUTHORED:
-                        state, reason = "ready", None
+                        state, reason = (
+                            ("needs_repair", "translation_placeholder_mismatch")
+                            if locale != "es"
+                            and source_placeholders is not None
+                            and _translation_tokens(value) != source_placeholders
+                            else ("needs_review", "translation_spelling_suspect")
+                            if _has_unaccented_word(locale, value)
+                            else ("needs_review", "translation_too_similar")
+                            if locale in review_locales
+                            else ("ready", None)
+                        )
                     elif leaf_state is CatalogueLeafState.UNBINDABLE:
                         state, reason = "needs_repair", "reserved_placeholder"
                     else:
@@ -185,7 +325,13 @@ def _translation_matrix(
                 "locale": locale,
                 "state": state,
                 "reason": reason,
-                "next_action": "set_translation" if state in {"missing", "needs_value"} else "repair_translation",
+                "next_action": (
+                    "set_translation"
+                    if state in {"missing", "needs_value"}
+                    else "review_translation"
+                    if state == "needs_review"
+                    else "repair_translation"
+                ),
             }
             backlog.append(item)
             findings.append({"classification": "blocking", "kind": reason, **item})
@@ -200,9 +346,82 @@ def _translation_matrix(
             "missing": counts["missing"],
             "needs_value": counts["needs_value"],
             "needs_repair": counts["needs_repair"],
-            "needs_review": 0,
+            "needs_review": counts["needs_review"],
         },
     }
+
+
+def _translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
+    """Return expansion placeholders and bracketed casilla references."""
+    bracketed = re.findall(r"\[([^\[\]\r\n]+)\]", value)
+    references = frozenset(
+        token
+        for token in bracketed
+        if token.isdecimal()
+        or (
+            not any(character.isspace() for character in token)
+            and any(operator in token for operator in "=+-*/")
+            and re.fullmatch(r"[A-Za-z0-9_.+*/=-]+", token)
+        )
+    )
+    return extract_placeholders(value), references
+
+
+def _suspicious_translation_locales(
+    key: str,
+    locale_leaves: dict[str, dict[str, object]],
+) -> set[str]:
+    source = locale_leaves.get("es", {}).get(key)
+    if not isinstance(source, str):
+        return set()
+    normalized_source = _human_translation_text(source)
+    source_words = _translation_words(normalized_source)
+    if len(normalized_source) < 40 or sum(character.isalpha() for character in normalized_source) < 25:
+        return set()
+    suspicious: set[str] = set()
+    for locale, leaves in locale_leaves.items():
+        if locale == "es":
+            continue
+        target = leaves.get(key)
+        if not isinstance(target, str):
+            continue
+        normalized_target = _human_translation_text(target)
+        target_words = _translation_words(normalized_target)
+        combined_words = len(source_words) + len(target_words)
+        maximum_ratio = 2 * min(len(source_words), len(target_words)) / combined_words if combined_words else 1.0
+        if maximum_ratio < 0.985:
+            continue
+        if SequenceMatcher(None, source_words, target_words).ratio() >= 0.985:
+            suspicious.add(locale)
+    return suspicious
+
+
+def _has_unaccented_word(locale: str, value: str) -> bool:
+    normalized = _human_translation_text(value)
+    if len(normalized) < 20:
+        return False
+    words = set(_translation_words(normalized))
+    return not words.isdisjoint(_UNACCENTED_WORDS.get(locale, frozenset()))
+
+
+def _human_translation_text(value: str) -> str:
+    """Return prose after removing interpolation and transport syntax.
+
+    Similarity and spelling signals are intended to review copied prose, not
+    the stable syntax embedded in a message.  CLI commands, option names,
+    structured ``FIELD=value`` input, snake-case enum members, casilla
+    references, and interpolation placeholders are therefore excluded before
+    either signal inspects the text.  The original value remains untouched for
+    placeholder parity and rendering checks.
+    """
+    without_placeholders = _TRANSLATION_PLACEHOLDER_RE.sub(" ", value)
+    without_code = _TRANSLATION_CODE_RE.sub(" ", without_placeholders)
+    return " ".join(without_code.casefold().split())
+
+
+def _translation_words(value: str) -> tuple[str, ...]:
+    """Return alphabetic prose words for locale-quality signals."""
+    return tuple(re.findall(r"[^\W\d_]+", value, flags=re.UNICODE))
 
 
 def _source_inventory(
@@ -221,8 +440,9 @@ def _source_inventory(
                 counts["unread_or_invalid_sources"] += 1
                 findings.append(_source_finding("source_unreadable", path, 0, type(exc).__name__))
                 continue
+            translation_names = _translation_call_names(tree)
             for node in ast.walk(tree):
-                if isinstance(node, ast.Call) and _call_name(node.func) == "tr":
+                if isinstance(node, ast.Call) and _is_translation_call(node.func, translation_names):
                     counts["tr_calls"] += 1
                     if not node.args:
                         counts["invalid_tr_calls"] += 1
@@ -236,15 +456,8 @@ def _source_inventory(
                             findings.append(_source_finding("invalid_tr_call", path, node.lineno, "invalid dotted key"))
                     else:
                         counts["dynamic_tr_calls"] += 1
-                        findings.append(_source_finding("dynamic_tr_call", path, node.lineno, "key is not a literal"))
-                if isinstance(node, ast.Raise) and isinstance(node.exc, ast.Call) and node.exc.args:
-                    value = node.exc.args[0]
-                    if isinstance(value, ast.Constant) and isinstance(value.value, str):
-                        counts["naked_presentation_sites"] += 1
-                        findings.append(_source_finding("naked_presentation_text", path, node.lineno, value.value))
-                if isinstance(node, ast.Call):
                     for keyword in node.keywords:
-                        if keyword.arg not in {"help", "label", "message", "title"}:
+                        if keyword.arg != "default":
                             continue
                         value = keyword.value
                         if isinstance(value, ast.Constant) and isinstance(value.value, str):
@@ -278,25 +491,41 @@ def _parallel_localization_inventory(
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
             continue
+        suffix_groups: dict[str, set[str]] = defaultdict(set)
         for dotted, value in _walk_mapping(payload):
             if not isinstance(value, str):
                 continue
-            field = dotted.rsplit(".", 1)[-1]
-            parallel = bool(
-                _LOCALE_SUFFIX_RE.search(field) or re.search(r"(?:^|\.)language\.(?:ca|en|es|hu)(?:\.|$)", dotted)
-            )
-            naked = bool(_PRESENTATION_FIELD_RE.search(field) and not field.endswith("_key"))
-            if parallel or naked:
+            match = re.fullmatch(r"(.+)_(ca|en|es|hu)", dotted)
+            if match:
+                suffix_groups[match.group(1)].add(match.group(2))
+                counts["parallel_localization_cells"] += 1
+        for base, present in sorted(suffix_groups.items()):
+            for locale in sorted(set(_LOCALES) - present):
                 counts["parallel_localization_declarations"] += 1
-                findings.append(
-                    _data_finding(
-                        "parallel_localization_declaration" if parallel else "naked_presentation_declaration",
-                        path,
-                        dotted,
-                        value,
+                findings.append(_data_finding("parallel_translation_missing", path, f"{base}_{locale}", locale))
+        language = payload.get("language")
+        if isinstance(language, dict):
+            languages = {
+                locale: value for locale, value in language.items() if locale in _LOCALES and isinstance(value, dict)
+            }
+            fields = {
+                field
+                for values in languages.values()
+                for field, value in values.items()
+                if field in _LANGUAGE_CORE_FIELDS and isinstance(value, str)
+            }
+            for field in sorted(fields):
+                for locale in _LOCALES:
+                    value = languages.get(locale, {}).get(field)
+                    counts["parallel_localization_cells"] += 1
+                    if isinstance(value, str) and value.strip():
+                        continue
+                    counts["parallel_localization_declarations"] += 1
+                    findings.append(
+                        _data_finding("parallel_translation_missing", path, f"language.{locale}.{field}", locale)
                     )
-                )
     docs_root = repository / "docs" / "locales"
+    docs_messages: dict[tuple[str, str], dict[str, bool]] = defaultdict(dict)
     for path in sorted(docs_root.rglob("*.po")) if docs_root.is_dir() else ():
         try:
             with path.open(encoding=UTF_8) as handle:
@@ -305,13 +534,27 @@ def _parallel_localization_inventory(
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
             continue
-        counts["parallel_localization_declarations"] += len(messages)
-        if messages:
+        relative = path.relative_to(docs_root)
+        locale = relative.parts[0]
+        catalogue = str(Path(*relative.parts[2:]))
+        for message in messages:
+            message_id = message.id if isinstance(message.id, str) else "\x04".join(message.id)
+            translated = bool(message.string) and "fuzzy" not in message.flags
+            docs_messages[(catalogue, message_id)][locale] = translated
+            counts["parallel_localization_cells"] += 1
+    for (catalogue, message_id), states in docs_messages.items():
+        for locale in ("ca", "es", "hu"):
+            if states.get(locale):
+                continue
+            counts["parallel_localization_declarations"] += 1
             findings.append(
-                _data_finding("parallel_localization_catalogue", path, "", f"{len(messages)} gettext entries")
+                _data_finding(
+                    "docs_translation_missing", docs_root / locale / "LC_MESSAGES" / catalogue, message_id, locale
+                )
             )
     return {
         "parallel_localization_declarations": counts["parallel_localization_declarations"],
+        "parallel_localization_cells": counts["parallel_localization_cells"],
         "invalid_data_files": counts["invalid_data_files"],
     }, findings
 
@@ -345,7 +588,15 @@ def _domain_summaries(
         )
         to_translate = states["missing"] + states["needs_value"]
         state = (
-            "translate" if to_translate else "repair" if states["needs_repair"] else "stale" if stale else "complete"
+            "translate"
+            if to_translate
+            else "repair"
+            if states["needs_repair"]
+            else "review"
+            if states["needs_review"]
+            else "stale"
+            if stale
+            else "complete"
         )
         largest_locale = max(locales, key=lambda locale: (by_locale[locale], locale))
         rows.append(
@@ -356,10 +607,17 @@ def _domain_summaries(
                 "keys_to_translate": len(translated_keys),
                 "to_translate": to_translate,
                 "needs_repair": states["needs_repair"],
+                "needs_review": states["needs_review"],
                 "catalogue_only": stale,
                 "to_translate_by_locale": by_locale,
                 "next_action": (
-                    f"translate {domain}/{largest_locale}: {by_locale[largest_locale]} cells" if to_translate else None
+                    f"translate {domain}/{largest_locale}: {by_locale[largest_locale]} cells"
+                    if to_translate
+                    else f"repair {states['needs_repair']} broken translations"
+                    if states["needs_repair"]
+                    else f"review {states['needs_review']} suspicious translations"
+                    if states["needs_review"]
+                    else None
                 ),
             }
         )
@@ -372,6 +630,7 @@ def _domain_summaries(
             "keys_to_translate": 0,
             "to_translate": 0,
             "needs_repair": 0,
+            "needs_review": 0,
             "catalogue_only": 0,
             "to_translate_by_locale": dict.fromkeys(locales, 0),
             "next_action": None,
@@ -405,7 +664,7 @@ def _locale_summaries(
                 "needs_value": states["needs_value"],
                 "to_translate": states["missing"] + states["needs_value"],
                 "needs_repair": states["needs_repair"],
-                "needs_review": 0,
+                "needs_review": states["needs_review"],
                 "catalogue_only": sum(1 for key in leaves if key not in required_keys),
             }
         )
@@ -490,12 +749,26 @@ def _domain(key: str) -> str:
     return key.split(".", 1)[0] if _DOTTED_KEY_RE.fullmatch(key) else "unassigned"
 
 
-def _call_name(node: ast.expr) -> str | None:
+def _covered_by_namespace(key: str, prefixes: tuple[str, ...]) -> bool:
+    return any(f".{prefix}." in f".{key}." for prefix in prefixes if prefix)
+
+
+def _translation_call_names(tree: ast.Module) -> set[str]:
+    """Return names imported from the canonical runtime translation module."""
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or not (node.module or "").endswith("i18n.render"):
+            continue
+        for alias in node.names:
+            if alias.name == "tr":
+                names.add(alias.asname or alias.name)
+    return names
+
+
+def _is_translation_call(node: ast.expr, translation_names: set[str]) -> bool:
     if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
+        return node.id in translation_names
+    return isinstance(node, ast.Attribute) and node.attr == "tr"
 
 
 def _source_finding(kind: str, path: Path, line: int, detail: str) -> dict[str, object]:
@@ -509,13 +782,18 @@ def _source_finding(kind: str, path: Path, line: int, detail: str) -> dict[str, 
 
 
 def _data_finding(kind: str, path: Path, field: str, detail: str) -> dict[str, object]:
+    next_action = (
+        "add the missing accented target-language translation"
+        if kind in {"parallel_translation_missing", "docs_translation_missing"}
+        else "repair the localization data source"
+    )
     return {
         "classification": "blocking",
         "kind": kind,
         "location": str(path),
         "field": field,
         "detail": detail,
-        "next_action": "replace presentation prose with a canonical dotted translation key",
+        "next_action": next_action,
     }
 
 

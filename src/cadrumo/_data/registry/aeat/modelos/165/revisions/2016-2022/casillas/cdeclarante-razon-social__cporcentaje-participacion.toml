@@ -17,7 +17,6 @@ semantic_role = "m165_declarante_razon_social"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
 # subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
@@ -31,7 +30,6 @@ semantic_role = "m165_persona_relacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 8. Positions 108-120, numerico de 13 posiciones. "Un numero secuencial
 # cuyos tres primeros digitos se corresponderan con el codigo 165."
@@ -44,7 +42,6 @@ semantic_role = "m165_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
 # 122 declaracion sustitutiva ("S").
@@ -59,7 +56,6 @@ semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / s
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 10. Positions 123-135, numerico de 13 posiciones. "En cualquier otro
 # caso debera rellenarse a CEROS."
@@ -72,7 +68,6 @@ semantic_role = "m165_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 11. Positions 136-144, numerico de 9 posiciones: "el numero total de
 # registros de socios o participes (Registro de tipo 2) declarados".
@@ -85,7 +80,6 @@ semantic_role = "m165_numero_total_declarados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 12. Positions 145-159. IMPORTE TOTAL DE LAS SUSCRIPCIONES O
 # ADQUISICIONES DE ACCIONES O PARTICIPACIONES. "Se consignara sin signo y sin
@@ -100,7 +94,6 @@ semantic_role = "m165_importe_total_suscripciones"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 13. Positions 160-167. FECHA DE CONSTITUCION de la empresa de nueva o
 # reciente creacion, subdivided 160-163 ANO, 164-165 MES, 166-167 DIA.
@@ -113,7 +106,6 @@ semantic_role = "m165_fecha_constitucion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 14. Positions 168-183, alfanumerica de 16 posiciones. IMPORTE FONDOS
 # PROPIOS de la entidad al inicio del periodo impositivo en que el contribuyente
@@ -131,7 +123,6 @@ semantic_role = "m165_importe_fondos_propios"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 5. Positions 18-26. N.I.F. DEL SOCIO O PARTICIPE de la entidad de nueva
 # o reciente creacion.
@@ -144,7 +135,6 @@ semantic_role = "m165_socio_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 6. Positions 27-35. "Si el perceptor es menor de 14 anos se consignara
 # en este campo el numero de identificacion fiscal de su representante legal
@@ -158,7 +148,6 @@ semantic_role = "m165_representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 7. Positions 36-75. APELLIDOS Y NOMBRE DEL SOCIO O PARTICIPE: "el primer
 # apellido, un espacio, el segundo apellido, un espacio y el nombre completo".
@@ -171,7 +160,6 @@ semantic_role = "m165_socio_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 8. Positions 76-88. IMPORTE DE LA SUSCRIPCION O ADQUISICION, "sin signo
 # y sin coma decimal", subdivided 76-86 parte entera and 87-88 parte decimal.
@@ -184,7 +172,6 @@ semantic_role = "m165_importe_suscripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 9. Positions 89-96. FECHA DE ADQUISICION DE LAS ACCIONES/PARTICIPACIONES,
 # subdivided 89-92 ANO, 93-94 MES, 95-96 DIA.
@@ -197,7 +184,6 @@ semantic_role = "m165_fecha_adquisicion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]
 
 # Campo 10. Positions 97-101. PORCENTAJE DE PARTICIPACION en el capital social.
 # "Dicho porcentaje, cuando no sea un numero entero, se expresara con dos
@@ -211,4 +197,3 @@ semantic_role = "m165_porcentaje_participacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-165-2016-2022"]

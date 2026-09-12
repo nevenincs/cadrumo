@@ -22,7 +22,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-353-prev-322-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
 [[revisions."2021-2025".casillas]]
@@ -36,7 +35,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-353-prev-322-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"
 
 [[revisions."2021-2025".casillas]]
@@ -50,5 +48,4 @@ required = false
 input_kind = "bound"
 binding = "modelo-353-prev-322-resultado-regimen-general"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-353-2021-2025"]
 export_exemption_reason = "not_in_record_design"

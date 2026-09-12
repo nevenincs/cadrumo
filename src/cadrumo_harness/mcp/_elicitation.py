@@ -123,22 +123,16 @@ def confirmation_request(
     if is_handoff_command(attached_policy):
         consequence = tr(
             "mcp.elicitation.confirm.consequence_handoff",
-            default=(
-                "This produces the filing-grade artefact the taxpayer will file "
-                "with AEAT themselves. Nothing is submitted anywhere by confirming."
-            ),
         )
     else:
         consequence = tr(
             "mcp.elicitation.confirm.consequence_local",
-            default="This changes local data for the active taxpayer profile.",
         )
     return ConfirmationRequest(
         message=tr(
             "mcp.elicitation.confirm.message",
             command=command_key,
             consequence=consequence,
-            default="Confirm running '{command}'. {consequence} Answer yes to proceed or no to stop.",
         ),
         requested_schema={
             "type": "object",
@@ -148,7 +142,6 @@ def confirmation_request(
                     "description": tr(
                         "mcp.elicitation.confirm.field_description",
                         command=command_key,
-                        default="Run '{command}' now?",
                     ),
                 },
             },
@@ -183,19 +176,10 @@ def refusal_message(route: ConfirmRoute, *, command_key: str) -> str:
         return tr(
             "mcp.elicitation.refusal.blocked",
             command=command_key,
-            default=(
-                "'{command}' is permanently blocked: live submission to AEAT is "
-                "forbidden by design. Export locally; the taxpayer files themselves."
-            ),
         )
     return tr(
         "mcp.elicitation.refusal.no_channel",
         command=command_key,
-        default=(
-            "'{command}' needs a human confirmation, and this client does not "
-            "support elicitation. Run it from a client that can ask you questions, "
-            "or run the equivalent Cadrumo CLI command directly in a terminal."
-        ),
     )
 
 

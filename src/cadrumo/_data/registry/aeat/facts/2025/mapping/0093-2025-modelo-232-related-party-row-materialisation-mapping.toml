@@ -6,13 +6,16 @@ family = "mapping"
 variant_id = "modelo-232-related-party-row-materialisation-mapping:2018-y-siguientes"
 date_axis = "filing_period"
 valid_from = 2018-01-01
-source_refs = ["aeat-modelo-232-2018", "orden-hfp-816-2017"]
+source_refs = ["aeat-dr-232-2018", "boe-modelo-232-2017-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
-source_ref = "aeat-modelo-232-2018"
-required_text = ["operaciones vinculadas", "NIF", "importe"]
+source_ref = "aeat-dr-232-2018"
+required_text = ["xml"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-232-2017-form"
+required_text = ["Modelo 232"]
 
 [fact.variants.payload]
 kind = "mapping"

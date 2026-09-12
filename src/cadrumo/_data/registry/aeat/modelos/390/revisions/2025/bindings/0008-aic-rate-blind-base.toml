@@ -6,8 +6,8 @@
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-bienes-zero-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -18,8 +18,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-bienes-super-reduced-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -30,8 +30,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-bienes-reduced-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -42,8 +42,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-bienes-general-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -54,8 +54,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-servicios-zero-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -66,8 +66,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-servicios-super-reduced-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -78,8 +78,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-servicios-reduced-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
@@ -90,8 +90,8 @@ required_text = ["modelo 390"]
 
 [[revisions."2025".bindings]]
 id = "modelo-390-iva-aic-servicios-general-blind-base"
-source = "ledger_iva_aggregation"
-selector = { categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_acquisition_reverse_charge"], rate_kinds = ["general"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

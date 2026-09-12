@@ -31,13 +31,13 @@ from ....iva.schema import (
     IvaRateKind,
 )
 from ..ledger_iva_bindings import (
+    LedgerIvaProvider,
     _iva_build_matcher,
     _iva_reachability_probe,
-    _IvaLedgerSelector,
 )
 from ..ledger_renta_gastos_pago_fraccionado_bindings import (
+    LedgerRentaGastosPagoFraccionadoProvider,
     _renta_gastos_pago_fraccionado_build_matcher,
-    _RentaLedgerGastosPagoFraccionadoSelector,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,9 +50,9 @@ def _iva_selector(
     *,
     cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,),
     observation_roles: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,),
-) -> _IvaLedgerSelector:
+) -> LedgerIvaProvider:
     """Build an otherwise-valid IVA selector with explicit role and treatment policies."""
-    return _IvaLedgerSelector(
+    return LedgerIvaProvider(
         categories=(_CATEGORY,),
         rate_kinds=(_RATE_KIND,),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
@@ -74,7 +74,7 @@ def test_a_reachable_iva_selector_passes_the_probe() -> None:
 def test_iva_selector_refuses_an_implicit_observation_role() -> None:
     """A selector cannot silently acquire a monetary or information role."""
     with pytest.raises(ValidationError, match="observation_roles"):
-        _IvaLedgerSelector.model_validate(
+        LedgerIvaProvider.model_validate(
             {
                 "categories": (_CATEGORY,),
                 "rate_kinds": (_RATE_KIND,),
@@ -188,7 +188,7 @@ def test_a_casilla_keyed_selector_probe_is_structurally_unable_to_fail() -> None
     second does not follow from having proved the first.
     """
     for casilla_id in ("02", "9999", "definitely-not-a-real-casilla"):
-        selector = _RentaLedgerGastosPagoFraccionadoSelector(
+        selector = LedgerRentaGastosPagoFraccionadoProvider(
             modelo=Modelo.M130,
             target_casilla_id=casilla_id,
             fact="deductible_amount_sum",

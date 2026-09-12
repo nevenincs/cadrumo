@@ -11,7 +11,6 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ....categories.registry import resolve_category_profiles
 from ....categories.spending_category import SpendingCategory
 from ....renta.ledger_expenses import (
@@ -29,8 +28,9 @@ from ..ledger_renta_gastos_estimacion_directa_bindings import (
     unsupported_ledger_renta_gastos_estimacion_directa_observations,
     validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition,
 )
-from ..schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from ..schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from ._published_authority import artifact_components
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -203,32 +203,32 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
             # Ledger renta expenses arise from económica activity; the production
             # profile resolver supplies this predicate as 1/0 from
             # taxpayer_type.irpf_income_categories.
-            "renta-2025-profile-has-economic-activity": Decimal("1"),
-            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-profile-has-economic-activity": Decimal("1"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
             # declaration-type=1 → individual filing (per Orden HAC/277/2026 art. 3
             # TIPOTRIBUTACION code 1; the joint-filing code is 2)
-            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-profile-declaration-type": Decimal("1"),
             # Neutral not-married marriage axis (peer contract made these required;
             # mirrors the convention in test_renta_chain_behaviour and
             # test_registry_scenarios).
-            "renta-2025-profile-marriage-full-year": Decimal("0"),
-            "renta-2025-profile-marriage-month-start": Decimal("0"),
-            "renta-2025-profile-marriage-month-end": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
             # Casilla 1388 is a previous-filing carry. This isolated
             # ledger-expense binding test has no prior filing fixture, so
             # provide the same explicit neutral opening balance used by the
             # Renta chain tests.
-            "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
             # facts; neutral zero when the chain under test is unrelated.
-            "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
-            "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+            "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+            "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine) for both estatal and
             # autonómico halves, regardless of the Madrid tax residence below.
-            "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-            "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
@@ -303,16 +303,17 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
     # schema-authority types in test files; the validator under test still
     # needs an invalid binding instance to exercise the target_casilla_id
     # allow-list error path.
-    binding = DataBindingDefinition.model_validate(
+    binding = BindingDefinition.model_validate(
         {
             "id": "bad-renta-binding",
-            "source": "ledger_renta_gastos_estimacion_directa_aggregation",
-            "selector": {
+            "provider": {
+                "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
                 "modelo": "100",
                 "period": "0A",
                 "target_casilla_id": _UNKNOWN_RENTA_EXPENSE_CASILLA,
                 "fact": "deductible_amount_sum",
             },
+            "value": {"data_type": "money", "channel": "decimal"},
             "aggregation": {"op": "sum"},
             "legal_refs": ("ley-35-2006:art-28",),
             "source_refs": ("aeat-renta-2025-manual-parte1",),
@@ -325,20 +326,21 @@ def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
 
 def test_renta_ledger_expense_binding_rejects_legacy_target_casilla_key() -> None:
     # The legacy ``target_casilla`` key is a selector-SHAPE violation (the strict
-    # ``_RentaLedgerGastosEstimacionDirectaSelector`` forbids the extra key), so under the F8
+    # ``LedgerRentaGastosEstimacionDirectaProvider`` forbids the extra key), so under the F8
     # construction-time selector gate the binding is refused the moment it is
     # built — the diagnostic still names both the canonical and legacy key.
     with pytest.raises(ValidationError) as exc_info:
-        DataBindingDefinition.model_validate(
+        BindingDefinition.model_validate(
             {
                 "id": "bad-renta-binding-legacy-target-key",
-                "source": "ledger_renta_gastos_estimacion_directa_aggregation",
-                "selector": {
+                "provider": {
+                    "kind": "ledger_renta_gastos_estimacion_directa_aggregation",
                     "modelo": "100",
                     "period": "0A",
                     "target_casilla": _M100_GASTO_SS_CASILLA,
                     "fact": "deductible_amount_sum",
                 },
+                "value": {"data_type": "money", "channel": "decimal"},
                 "aggregation": {"op": "sum"},
                 "legal_refs": ("ley-35-2006:art-28",),
                 "source_refs": ("aeat-renta-2025-manual-parte1",),
@@ -357,7 +359,7 @@ def _single_expense_binding_revision(snapshot: RegistrySnapshot, target_casilla_
         item
         for item in revision.bindings
         if item.source == "ledger_renta_gastos_estimacion_directa_aggregation"
-        and selector_as_dict(item).get("target_casilla_id") == target_casilla_id
+        and getattr(item.provider, "target_casilla_id", None) == target_casilla_id
     )
     return revision.model_copy(update={"bindings": (binding,)})
 

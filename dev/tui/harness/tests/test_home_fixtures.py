@@ -5,7 +5,6 @@ from __future__ import annotations
 import ast
 import re
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 import yaml
@@ -14,13 +13,12 @@ from pydantic import ValidationError
 from cadrumo.application.overview.calendar_models import OverviewPeriodState
 from cadrumo.application.overview.home import HomeAvailability, HomeDeclarationState, HomeSessionPosture
 from cadrumo.core.period import Period
-from dev._paths import REPO_ROOT
-
-from ..home_fixtures import (
+from cadrumo.entrypoints.tui.tests.home_fixtures import (
     HOME_FIXTURE_SCENARIOS,
     HomeFixtureScenario,
     build_home_projection_fixture,
 )
+from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -227,7 +225,11 @@ def test_every_serialized_fixture_has_no_pii_or_secret_like_values() -> None:
 
 
 def test_fixture_module_ast_has_only_local_record_construction_and_no_io() -> None:
-    source = ast.parse((Path(__file__).parent.parent / "home_fixtures.py").read_text(encoding="utf-8"))
+    source = ast.parse(
+        (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui" / "tests" / "home_fixtures.py").read_text(
+            encoding="utf-8"
+        )
+    )
 
     imported_modules = {alias.name for node in ast.walk(source) if isinstance(node, ast.Import) for alias in node.names}
     imported_modules.update(node.module or "" for node in ast.walk(source) if isinstance(node, ast.ImportFrom))

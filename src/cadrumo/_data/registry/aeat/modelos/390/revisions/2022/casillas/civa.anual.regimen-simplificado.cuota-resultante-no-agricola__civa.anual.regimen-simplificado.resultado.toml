@@ -16,7 +16,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-74-cuota-resultante-no-agricola"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.cuota-resultante-agricola"
@@ -33,7 +32,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-75-cuota-resultante-agricola"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.aic-bienes-cuota-devengada"
@@ -50,7 +48,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-76-aic"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.inversion-sujeto-pasivo"
@@ -67,7 +64,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-77-inversion-sujeto-pasivo"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.entrega-activos-fijos"
@@ -84,7 +80,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-78-entregas-activos"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.reconciliacion.devengada-simplificado-303"
@@ -101,7 +96,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-79-total-cuota-resultante"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.iva-soportado-activos-fijos"
@@ -118,7 +112,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-80-activos-fijos"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.regularizacion-bienes-inversion"
@@ -135,7 +128,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-81-regularizacion-inversion"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.suma-deducciones"
@@ -152,7 +144,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-82-suma-deducciones"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.regimen-simplificado.resultado"
@@ -169,4 +160,3 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-m303-simplificado-83-resultado"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]

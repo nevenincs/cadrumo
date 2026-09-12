@@ -46,7 +46,6 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.aggregation import BindingSourceKind
 from ...core.decimal.constants import HUNDRED
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
@@ -62,9 +61,12 @@ from ...core.prorrata_register import (
 )
 from ...core.prose_elision import IssueDetail
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister, validate_investment_asset_reciprocity
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
 )
@@ -1340,15 +1342,14 @@ def _deducible_cuota_binding_ids(revision: ModeloRevision) -> frozenset[BindingI
     ledger_iva_amount_bindings = {
         binding.id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
-        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+        if isinstance(binding.provider, LedgerIvaProvider) and binding.provider.fact == LedgerIvaFact.IVA_AMOUNT_SUM
     }
     binding_ids: set[BindingId] = set()
     for casilla in revision.casillas:
         if "deducible" not in casilla.section:
             continue
-        for binding_id in (casilla.binding, *casilla.alternate_bindings):
-            if binding_id is not None and binding_id in ledger_iva_amount_bindings:
+        for binding_id in bound_casilla_binding_ids(casilla):
+            if binding_id in ledger_iva_amount_bindings:
                 binding_ids.add(binding_id)
     return frozenset(binding_ids)
 
@@ -1558,11 +1559,6 @@ def validate_intracom_export_counterparty(
                 reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
                 detail=tr(
                     "aggregation.iva_ledger.errors.missing_counterparty_identification_state",
-                    default=(
-                        "An intra-community supply is exempt on the acquirer's IVA identification in "
-                        "another Member State. Record which Member State IVA-identifies this "
-                        "counterparty; its country of establishment cannot answer this."
-                    ),
                 ),
             )
         if identification_state is EUMemberState.ES:
@@ -1571,10 +1567,6 @@ def validate_intracom_export_counterparty(
                 reason=IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
                 detail=tr(
                     "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
-                    default=(
-                        "A counterparty purchasing under a Spanish IVA identification is not an "
-                        "intra-community acquirer, whatever its country of establishment."
-                    ),
                 ),
             )
     if category in _EXPORT_CATEGORIES:
@@ -1585,10 +1577,6 @@ def validate_intracom_export_counterparty(
                 detail=tr(
                     "aggregation.iva_ledger.errors.eu_member_state_on_export_transaction",
                     member_state=eu_member_state.value,
-                    default=(
-                        "Export or export-assimilated operations must not carry an EU member state; "
-                        "got %{member_state}."
-                    ),
                 ),
             )
         # Only NOW is absence reached, and it is refused rather than read as
@@ -1603,11 +1591,6 @@ def validate_intracom_export_counterparty(
                 reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
                 detail=tr(
                     "aggregation.iva_ledger.errors.missing_counterparty_establishment_on_export",
-                    default=(
-                        "An export is exempt because the operation leaves the Union, so it turns on where "
-                        "the counterparty is ESTABLISHED. Record the counterparty's country; an absent or "
-                        "unassigned code establishes nothing, and its IVA identification cannot answer this."
-                    ),
                 ),
             )
     return None

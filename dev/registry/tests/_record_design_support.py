@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import (
 )
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.record_design_schema import RecordDesignSheet
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..compiler.record_design import (
@@ -117,11 +117,11 @@ def _page_one_data_type(offset: int, type_code: str) -> str:
 
 
 def _fixed_export_selectors(
-    bindings: Iterable[DataBindingDefinition],
+    bindings: Iterable[BindingDefinition],
     *,
     revision: ModeloRevision,
-) -> tuple[tuple[DataBindingDefinition, BindingFixedExportSelector], ...]:
-    members: list[tuple[DataBindingDefinition, BindingFixedExportSelector]] = []
+) -> tuple[tuple[BindingDefinition, BindingFixedExportSelector], ...]:
+    members: list[tuple[BindingDefinition, BindingFixedExportSelector]] = []
     for binding in bindings:
         selector = binding_export_selector(binding, revision=revision)
         if isinstance(selector, BindingFixedExportSelector):

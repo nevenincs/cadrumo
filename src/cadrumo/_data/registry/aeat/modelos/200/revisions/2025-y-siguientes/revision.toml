@@ -1,4 +1,6 @@
 [revisions."2025-y-siguientes"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-dr-200-2025"] } }
+casilla_source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 # Prepared and reviewed by an agent against the bundled diseno de registros
 # (aeat-dr-200-2025) and the ordenes it cites; NO human operator has
 # countersigned it, and 'agent_reviewed' plus this reviewer token record that
@@ -60,46 +62,6 @@ legal_refs = [
     "orden-hac-657-2025:modelo-200",
 ]
 orden_aplicabilidad = [
-    "orden-hac-657-2025:modelo-200",
-]
-source_refs = [
-    "aeat-dr-200-2025",
-    "aeat-modelo-200-manual-2025",
-    "boe-modelo-200-2025-form",
-]
-
-
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition requires from_revision != to_revision -- it declares a transition between two revisions of the same modelo, and every evolution already declared anywhere in this registry is authored on the revision it lands on (its to_revision). Revision '2025-y-siguientes' of modelo 200 DOES have a strictly-earlier sibling, the 2024 revision, so it could in principle be the landing point of a transition; the family is empty because no casilla identity CHANGES between them. The two \
-revisions declare the same 3,462 casilla entries under the same 707 section paths, with no renumbering, no split and no merge, so there is no transition to record. This family must be revisited the moment a successor revision alters a casilla identity."""
-legal_refs = [
-    "ley-27-2014:art-40",
-    "ley-27-2014:art-41",
-    "ley-27-2014:art-124",
-    "ley-27-2014:art-10",
-    "ley-27-2014:art-11",
-    "ley-27-2014:art-29",
-    "ley-27-2014:art-30",
-    "ley-27-2014:art-39",
-    "ley-27-2014:art-19",
-    "ley-27-2014:art-36",
-    "ley-27-2014:art-100",
-    "ley-27-2014:art-101",
-    "ley-27-2014:art-12",
-    "rd-634-2015:art-3",
-    "ley-27-2014:art-15",
-    "ley-27-2014:art-21",
-    "ley-27-2014:art-22",
-    "ley-27-2014:art-31",
-    "ley-27-2014:art-32",
-    "ley-27-2014:art-13",
-    "ley-27-2014:art-16",
-    "ley-27-2014:art-25",
-    "ley-27-2014:art-26",
-    "ley-27-2014:art-105",
-    "ley-27-2014:dt-44",
-    "ley-49-2002:art-10",
     "orden-hac-657-2025:modelo-200",
 ]
 source_refs = [

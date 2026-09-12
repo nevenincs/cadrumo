@@ -8,7 +8,7 @@ from .....core.aggregation import BindingSourceKind
 from .....core.modelo import Modelo
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
-from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ..iva_wallet_carry_targets import is_iva_wallet_owned_relation_target
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

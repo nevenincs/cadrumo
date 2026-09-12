@@ -26,6 +26,7 @@ from typing import ClassVar, override
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.ledger import invoice_confirmation
 from ....application.ledger.confirmation_gate import ConfirmationBlockedError, confirmation_blockers
 from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
 from ....application.ledger.invoice_confirmation import confirm_invoice_draft_from_evidence
@@ -274,13 +275,11 @@ def test_confirming_in_the_direction_the_document_supports_raises_no_direction_b
     """
     draft = live_document(_PURCHASE_LINES, _PURCHASE_READ).extract()
 
-    from ....application.ledger.invoice_confirmation import _with_direction_contradiction
-
-    stamped = _with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
+    stamped = invoice_confirmation._with_direction_contradiction(draft, kind=InvoiceKind.RECEIVED)
 
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED not in {f.kind for f in stamped.discrepancies}
     assert DraftDiscrepancyKind.DIRECTION_CONTRADICTED in {
-        f.kind for f in _with_direction_contradiction(draft, kind=InvoiceKind.ISSUED).discrepancies
+        f.kind for f in invoice_confirmation._with_direction_contradiction(draft, kind=InvoiceKind.ISSUED).discrepancies
     }, "the same draft must contradict the other direction, or this passes for the wrong reason"
 
 

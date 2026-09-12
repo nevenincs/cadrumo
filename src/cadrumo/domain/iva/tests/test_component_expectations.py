@@ -41,7 +41,6 @@ from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ..classification import InvoiceKind
 from ..components import (
-    registry_component_catalogue,
     IvaCategoryComponents,
     IvaComponentPresence,
     IvaCuotaSettlement,
@@ -53,6 +52,7 @@ from ..components import (
     category_components,
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
+    registry_component_catalogue,
 )
 from ..schema import CUOTA_LESS_M303_IVA_CATEGORIES, EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
 

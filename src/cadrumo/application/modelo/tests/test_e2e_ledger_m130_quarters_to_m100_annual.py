@@ -118,8 +118,8 @@ _MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
         _RELATION_PREFILL_SOURCE,
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2024-modelo-100-estimacion-directa-es-normal"
-_M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-2024-certificado-trabajo-retenciones"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
+_M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")

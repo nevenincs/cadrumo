@@ -1,4 +1,6 @@
 [revisions."2011-julio-2015"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (overlapping predecessor).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2011-july"] } }
+casilla_source_refs = ["aeat-dr-308-2011-july"]
 authority_grade = "applicability"
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
@@ -22,8 +24,3 @@ source_refs = [
     "aeat-modelo-308-procedure",
     "boe-modelo-308-2008-form",
 ]
-
-[revisions."2011-julio-2015".family_dispositions.casilla_continuidad_evolutions]
-reason = "The July-2011 source has complete geometry, but no casilla identity program has adjudicated it against the superseded design. No continuity evolution is invented from the BOE form amendment."
-legal_refs = ["orden-eha-1033-2011:disposicion-final-unica"]
-source_refs = ["aeat-dr-308-2011-july"]

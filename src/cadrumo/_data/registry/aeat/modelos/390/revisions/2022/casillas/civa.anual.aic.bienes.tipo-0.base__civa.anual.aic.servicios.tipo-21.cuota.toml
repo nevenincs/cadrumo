@@ -62,7 +62,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-0-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.bienes.tipo-0.cuota"
@@ -79,7 +79,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-0-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [683]/[684] - "Adquis. intracomunit. bienes - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
 [[revisions."2022".casillas]]
@@ -97,7 +97,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-4-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.bienes.tipo-4.cuota"
@@ -114,7 +114,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [718]/[719] - "Adquis. intracomunit. bienes - Tipo 5%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward).
 [[revisions."2022".casillas]]
@@ -132,7 +132,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-5-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.bienes.tipo-5.cuota"
@@ -149,7 +149,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [685]/[686] - "Adquis. intracomunit. bienes - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
 [[revisions."2022".casillas]]
@@ -167,7 +167,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-10-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.bienes.tipo-10.cuota"
@@ -184,7 +184,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [25]/[26] - "Adquis. intracomunit. bienes - Tipo 21%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward; this box number is present unlabelled 2016-2021 too, see module header).
 [[revisions."2022".casillas]]
@@ -202,7 +202,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-21-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.bienes.tipo-21.cuota"
@@ -217,7 +217,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [720]/[721] - "Adquis. intracomunit. servicios - Tipo 0%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward).
 [[revisions."2022".casillas]]
@@ -235,7 +235,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-0-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.servicios.tipo-0.cuota"
@@ -252,7 +252,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-0-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [687]/[688] - "Adquis. intracomunit. servicios - Tipo 2%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
 [[revisions."2022".casillas]]
@@ -270,7 +270,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-4-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.servicios.tipo-4.cuota"
@@ -287,7 +287,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [722]/[723] - "Adquis. intracomunit. servicios - Tipo 5%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward).
 [[revisions."2022".casillas]]
@@ -305,7 +305,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-5-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.servicios.tipo-5.cuota"
@@ -322,7 +322,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-5-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [689]/[690] - "Adquis. intracomunit. servicios - Tipo 7,5%". Design-year validity: 2024-2025 only (RD-ley 4/2024 7-rung design; new box, not a renumbering).
 [[revisions."2022".casillas]]
@@ -340,7 +340,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-10-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.servicios.tipo-10.cuota"
@@ -357,7 +357,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 # Box [551]/[552] - "Adquis. intracomunit. servicios - Tipo 21%". Design-year validity: 2022-2025 (rate-labelled from the 2022 5-rung design onward; this box number is present unlabelled 2016-2021 too, see module header).
 [[revisions."2022".casillas]]
@@ -375,7 +375,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-21-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.aic.servicios.tipo-21.cuota"
@@ -392,4 +392,4 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-tipo-21-cuota"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

@@ -41,7 +41,6 @@ def _parse_disposal_regime(raw: str) -> BienInversionDisposalRegime:
         raise bad(
             tr(
                 "cli.app.ledger.bienes_inversion.unknown_disposal_regime",
-                default="Unknown disposal regime {regime!r}; accepted: {accepted}",
                 regime=raw,
                 accepted=accepted,
             ),
@@ -96,7 +95,6 @@ def bienes_inversion_declare(
         raise bad(
             tr(
                 "cli.app.ledger.bienes_inversion.disposal_requires_both",
-                default="--disposal-year and --disposal-regime must be supplied together.",
             ),
         ) from exc
     record = outcome.record

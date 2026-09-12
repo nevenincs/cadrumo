@@ -32,7 +32,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f003"
 kind = "binding"
-binding = "modelo-360-2010.page_02.11-15.operacion-1-numero-de-operacion"
+binding = "modelo-360.page_02.11-15.operacion-1-numero-de-operacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -55,7 +55,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f005"
 kind = "binding"
-binding = "modelo-360-2010.page_02.17-19.operacion-1-tipo-de-operacion"
+binding = "modelo-360.page_02.17-19.operacion-1-tipo-de-operacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -67,7 +67,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f006"
 kind = "binding"
-binding = "modelo-360-2010.page_02.20-69.operacion-1-numero-factura-o-doc-importacion"
+binding = "modelo-360.page_02.20-69.operacion-1-numero-factura-o-doc-importacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -79,7 +79,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f007"
 kind = "binding"
-binding = "modelo-360-2010.page_02.70-77.operacion-1-fecha-de-emision-factura-o-doc-importacion"
+binding = "modelo-360.page_02.70-77.operacion-1-fecha-de-emision-factura-o-doc-importacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -91,7 +91,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f008"
 kind = "binding"
-binding = "modelo-360-2010.page_02.78-87.operacion-1-bienes-y-servicios-adquiridos-codigo"
+binding = "modelo-360.page_02.78-87.operacion-1-bienes-y-servicios-adquiridos-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -103,7 +103,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f009"
 kind = "binding"
-binding = "modelo-360-2010.page_02.88-89.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d"
+binding = "modelo-360.page_02.88-89.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -115,7 +115,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f010"
 kind = "binding"
-binding = "modelo-360-2010.page_02.90-339.operacion-1-bienes-y-servicios-adquiridos-descripcion"
+binding = "modelo-360.page_02.90-339.operacion-1-bienes-y-servicios-adquiridos-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -127,7 +127,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f011"
 kind = "binding"
-binding = "modelo-360-2010.page_02.340-349.operacion-1-bienes-y-servicios-adquiridos-codigo-2"
+binding = "modelo-360.page_02.340-349.operacion-1-bienes-y-servicios-adquiridos-codigo-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -139,7 +139,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f012"
 kind = "binding"
-binding = "modelo-360-2010.page_02.350-351.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+binding = "modelo-360.page_02.350-351.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -151,7 +151,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f013"
 kind = "binding"
-binding = "modelo-360-2010.page_02.352-601.operacion-1-bienes-y-servicios-adquiridos-descripcion-2"
+binding = "modelo-360.page_02.352-601.operacion-1-bienes-y-servicios-adquiridos-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -163,7 +163,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f014"
 kind = "binding"
-binding = "modelo-360-2010.page_02.602-611.operacion-1-bienes-y-servicios-adquiridos-codigo-3"
+binding = "modelo-360.page_02.602-611.operacion-1-bienes-y-servicios-adquiridos-codigo-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -175,7 +175,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f015"
 kind = "binding"
-binding = "modelo-360-2010.page_02.612-613.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+binding = "modelo-360.page_02.612-613.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -187,7 +187,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f016"
 kind = "binding"
-binding = "modelo-360-2010.page_02.614-863.operacion-1-bienes-y-servicios-adquiridos-descripcion-3"
+binding = "modelo-360.page_02.614-863.operacion-1-bienes-y-servicios-adquiridos-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -199,7 +199,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f017"
 kind = "binding"
-binding = "modelo-360-2010.page_02.864-873.operacion-1-bienes-y-servicios-adquiridos-codigo-4"
+binding = "modelo-360.page_02.864-873.operacion-1-bienes-y-servicios-adquiridos-codigo-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -211,7 +211,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f018"
 kind = "binding"
-binding = "modelo-360-2010.page_02.874-875.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+binding = "modelo-360.page_02.874-875.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -223,7 +223,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f019"
 kind = "binding"
-binding = "modelo-360-2010.page_02.876-1125.operacion-1-bienes-y-servicios-adquiridos-descripcion-4"
+binding = "modelo-360.page_02.876-1125.operacion-1-bienes-y-servicios-adquiridos-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -235,7 +235,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f020"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1126-1135.operacion-1-bienes-y-servicios-adquiridos-codigo-5"
+binding = "modelo-360.page_02.1126-1135.operacion-1-bienes-y-servicios-adquiridos-codigo-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -247,7 +247,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f021"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1136-1137.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+binding = "modelo-360.page_02.1136-1137.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -259,7 +259,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f022"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1138-1387.operacion-1-bienes-y-servicios-adquiridos-descripcion-5"
+binding = "modelo-360.page_02.1138-1387.operacion-1-bienes-y-servicios-adquiridos-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -271,7 +271,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f023"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1388-1397.operacion-1-bienes-y-servicios-adquiridos-codigo-6"
+binding = "modelo-360.page_02.1388-1397.operacion-1-bienes-y-servicios-adquiridos-codigo-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -283,7 +283,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f024"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1398-1399.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+binding = "modelo-360.page_02.1398-1399.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -295,7 +295,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f025"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1400-1649.operacion-1-bienes-y-servicios-adquiridos-descripcion-6"
+binding = "modelo-360.page_02.1400-1649.operacion-1-bienes-y-servicios-adquiridos-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -307,7 +307,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f026"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1650-1659.operacion-1-bienes-y-servicios-adquiridos-codigo-7"
+binding = "modelo-360.page_02.1650-1659.operacion-1-bienes-y-servicios-adquiridos-codigo-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -319,7 +319,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f027"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1660-1661.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+binding = "modelo-360.page_02.1660-1661.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -331,7 +331,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f028"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1662-1911.operacion-1-bienes-y-servicios-adquiridos-descripcion-7"
+binding = "modelo-360.page_02.1662-1911.operacion-1-bienes-y-servicios-adquiridos-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -343,7 +343,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f029"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1912-1921.operacion-1-bienes-y-servicios-adquiridos-codigo-8"
+binding = "modelo-360.page_02.1912-1921.operacion-1-bienes-y-servicios-adquiridos-codigo-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -355,7 +355,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f030"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1922-1923.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+binding = "modelo-360.page_02.1922-1923.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -367,7 +367,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f031"
 kind = "binding"
-binding = "modelo-360-2010.page_02.1924-2173.operacion-1-bienes-y-servicios-adquiridos-descripcion-8"
+binding = "modelo-360.page_02.1924-2173.operacion-1-bienes-y-servicios-adquiridos-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -379,7 +379,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f032"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2174-2183.operacion-1-bienes-y-servicios-adquiridos-codigo-9"
+binding = "modelo-360.page_02.2174-2183.operacion-1-bienes-y-servicios-adquiridos-codigo-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -391,7 +391,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f033"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2184-2185.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+binding = "modelo-360.page_02.2184-2185.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -403,7 +403,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f034"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2186-2435.operacion-1-bienes-y-servicios-adquiridos-descripcion-9"
+binding = "modelo-360.page_02.2186-2435.operacion-1-bienes-y-servicios-adquiridos-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -415,7 +415,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f035"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2436-2445.operacion-1-bienes-y-servicios-adquiridos-codigo-10"
+binding = "modelo-360.page_02.2436-2445.operacion-1-bienes-y-servicios-adquiridos-codigo-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -427,7 +427,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f036"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2446-2447.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+binding = "modelo-360.page_02.2446-2447.operacion-1-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -439,7 +439,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f037"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2448-2697.operacion-1-bienes-y-servicios-adquiridos-descripcion-10"
+binding = "modelo-360.page_02.2448-2697.operacion-1-bienes-y-servicios-adquiridos-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -451,7 +451,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f038"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2698-2712.operacion-1-base-imponible"
+binding = "modelo-360.page_02.2698-2712.operacion-1-base-imponible"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -463,7 +463,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f039"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2713-2727.operacion-1-cuota-iva"
+binding = "modelo-360.page_02.2713-2727.operacion-1-cuota-iva"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -475,7 +475,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f040"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2728-2732.operacion-1-prorrata"
+binding = "modelo-360.page_02.2728-2732.operacion-1-prorrata"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -487,7 +487,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f041"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2733-2747.operacion-1-importe-solicitado-a-devolver"
+binding = "modelo-360.page_02.2733-2747.operacion-1-importe-solicitado-a-devolver"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -499,7 +499,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f042"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2748-2750.operacion-1-divisa"
+binding = "modelo-360.page_02.2748-2750.operacion-1-divisa"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -511,7 +511,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f043"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2751-2751.operacion-1-indicador-de-simplificada"
+binding = "modelo-360.page_02.2751-2751.operacion-1-indicador-de-simplificada"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -523,7 +523,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f044"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2752-2753.operacion-1-datos-del-proveeedor-de-bienes-prestador-de"
+binding = "modelo-360.page_02.2752-2753.operacion-1-datos-del-proveeedor-de-bienes-prestador-de"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -535,7 +535,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f045"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2754-2768.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2"
+binding = "modelo-360.page_02.2754-2768.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -547,7 +547,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f046"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2769-2770.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3"
+binding = "modelo-360.page_02.2769-2770.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -559,7 +559,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f047"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2771-2820.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4"
+binding = "modelo-360.page_02.2771-2820.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -571,7 +571,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f048"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2821-2945.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5"
+binding = "modelo-360.page_02.2821-2945.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -583,7 +583,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f049"
 kind = "binding"
-binding = "modelo-360-2010.page_02.2946-3093.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6"
+binding = "modelo-360.page_02.2946-3093.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -595,7 +595,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f050"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3094-3108.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7"
+binding = "modelo-360.page_02.3094-3108.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -607,7 +607,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f051"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3109-3110.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8"
+binding = "modelo-360.page_02.3109-3110.operacion-1-datos-del-proveeedor-de-bienes-prestador-de-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -619,7 +619,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f052"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3111-3115.operacion-2-numero-de-operacion"
+binding = "modelo-360.page_02.3111-3115.operacion-2-numero-de-operacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -642,7 +642,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f054"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3117-3119.operacion-2-tipo-de-operacion"
+binding = "modelo-360.page_02.3117-3119.operacion-2-tipo-de-operacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -654,7 +654,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f055"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3120-3169.operacion-2-numero-factura-o-doc-importacion"
+binding = "modelo-360.page_02.3120-3169.operacion-2-numero-factura-o-doc-importacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -666,7 +666,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f056"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3170-3177.operacion-2-fecha-de-emision-factura-o-doc-importacion"
+binding = "modelo-360.page_02.3170-3177.operacion-2-fecha-de-emision-factura-o-doc-importacion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -678,7 +678,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f057"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3178-3187.operacion-2-bienes-y-servicios-adquiridos-codigo"
+binding = "modelo-360.page_02.3178-3187.operacion-2-bienes-y-servicios-adquiridos-codigo"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -690,7 +690,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f058"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3188-3189.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d"
+binding = "modelo-360.page_02.3188-3189.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -702,7 +702,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f059"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3190-3439.operacion-2-bienes-y-servicios-adquiridos-descripcion"
+binding = "modelo-360.page_02.3190-3439.operacion-2-bienes-y-servicios-adquiridos-descripcion"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -714,7 +714,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f060"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3440-3449.operacion-2-bienes-y-servicios-adquiridos-codigo-2"
+binding = "modelo-360.page_02.3440-3449.operacion-2-bienes-y-servicios-adquiridos-codigo-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -726,7 +726,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f061"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3450-3451.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
+binding = "modelo-360.page_02.3450-3451.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -738,7 +738,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f062"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3452-3701.operacion-2-bienes-y-servicios-adquiridos-descripcion-2"
+binding = "modelo-360.page_02.3452-3701.operacion-2-bienes-y-servicios-adquiridos-descripcion-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -750,7 +750,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f063"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3702-3711.operacion-2-bienes-y-servicios-adquiridos-codigo-3"
+binding = "modelo-360.page_02.3702-3711.operacion-2-bienes-y-servicios-adquiridos-codigo-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -762,7 +762,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f064"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3712-3713.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
+binding = "modelo-360.page_02.3712-3713.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -774,7 +774,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f065"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3714-3963.operacion-2-bienes-y-servicios-adquiridos-descripcion-3"
+binding = "modelo-360.page_02.3714-3963.operacion-2-bienes-y-servicios-adquiridos-descripcion-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -786,7 +786,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f066"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3964-3973.operacion-2-bienes-y-servicios-adquiridos-codigo-4"
+binding = "modelo-360.page_02.3964-3973.operacion-2-bienes-y-servicios-adquiridos-codigo-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -798,7 +798,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f067"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3974-3975.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
+binding = "modelo-360.page_02.3974-3975.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -810,7 +810,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f068"
 kind = "binding"
-binding = "modelo-360-2010.page_02.3976-4225.operacion-2-bienes-y-servicios-adquiridos-descripcion-4"
+binding = "modelo-360.page_02.3976-4225.operacion-2-bienes-y-servicios-adquiridos-descripcion-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -822,7 +822,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f069"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4226-4235.operacion-2-bienes-y-servicios-adquiridos-codigo-5"
+binding = "modelo-360.page_02.4226-4235.operacion-2-bienes-y-servicios-adquiridos-codigo-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -834,7 +834,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f070"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4236-4237.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
+binding = "modelo-360.page_02.4236-4237.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -846,7 +846,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f071"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4238-4487.operacion-2-bienes-y-servicios-adquiridos-descripcion-5"
+binding = "modelo-360.page_02.4238-4487.operacion-2-bienes-y-servicios-adquiridos-descripcion-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -858,7 +858,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f072"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4488-4497.operacion-2-bienes-y-servicios-adquiridos-codigo-6"
+binding = "modelo-360.page_02.4488-4497.operacion-2-bienes-y-servicios-adquiridos-codigo-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -870,7 +870,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f073"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4498-4499.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
+binding = "modelo-360.page_02.4498-4499.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -882,7 +882,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f074"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4500-4749.operacion-2-bienes-y-servicios-adquiridos-descripcion-6"
+binding = "modelo-360.page_02.4500-4749.operacion-2-bienes-y-servicios-adquiridos-descripcion-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -894,7 +894,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f075"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4750-4759.operacion-2-bienes-y-servicios-adquiridos-codigo-7"
+binding = "modelo-360.page_02.4750-4759.operacion-2-bienes-y-servicios-adquiridos-codigo-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -906,7 +906,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f076"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4760-4761.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
+binding = "modelo-360.page_02.4760-4761.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -918,7 +918,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f077"
 kind = "binding"
-binding = "modelo-360-2010.page_02.4762-5011.operacion-2-bienes-y-servicios-adquiridos-descripcion-7"
+binding = "modelo-360.page_02.4762-5011.operacion-2-bienes-y-servicios-adquiridos-descripcion-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -930,7 +930,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f078"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5012-5021.operacion-2-bienes-y-servicios-adquiridos-codigo-8"
+binding = "modelo-360.page_02.5012-5021.operacion-2-bienes-y-servicios-adquiridos-codigo-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -942,7 +942,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f079"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5022-5023.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
+binding = "modelo-360.page_02.5022-5023.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -954,7 +954,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f080"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5024-5273.operacion-2-bienes-y-servicios-adquiridos-descripcion-8"
+binding = "modelo-360.page_02.5024-5273.operacion-2-bienes-y-servicios-adquiridos-descripcion-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -966,7 +966,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f081"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5274-5283.operacion-2-bienes-y-servicios-adquiridos-codigo-9"
+binding = "modelo-360.page_02.5274-5283.operacion-2-bienes-y-servicios-adquiridos-codigo-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -978,7 +978,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f082"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5284-5285.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
+binding = "modelo-360.page_02.5284-5285.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -990,7 +990,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f083"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5286-5535.operacion-2-bienes-y-servicios-adquiridos-descripcion-9"
+binding = "modelo-360.page_02.5286-5535.operacion-2-bienes-y-servicios-adquiridos-descripcion-9"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1002,7 +1002,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f084"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5536-5545.operacion-2-bienes-y-servicios-adquiridos-codigo-10"
+binding = "modelo-360.page_02.5536-5545.operacion-2-bienes-y-servicios-adquiridos-codigo-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1014,7 +1014,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f085"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5546-5547.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
+binding = "modelo-360.page_02.5546-5547.operacion-2-bienes-y-servicios-adquiridos-idioma-de-la-d-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1026,7 +1026,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f086"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5548-5797.operacion-2-bienes-y-servicios-adquiridos-descripcion-10"
+binding = "modelo-360.page_02.5548-5797.operacion-2-bienes-y-servicios-adquiridos-descripcion-10"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1038,7 +1038,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f087"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5798-5812.operacion-2-base-imponible"
+binding = "modelo-360.page_02.5798-5812.operacion-2-base-imponible"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1050,7 +1050,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f088"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5813-5827.operacion-2-cuota-iva"
+binding = "modelo-360.page_02.5813-5827.operacion-2-cuota-iva"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1062,7 +1062,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f089"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5828-5832.operacion-2-prorrata"
+binding = "modelo-360.page_02.5828-5832.operacion-2-prorrata"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1074,7 +1074,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f090"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5833-5847.operacion-2-importe-solicitado-a-devolver"
+binding = "modelo-360.page_02.5833-5847.operacion-2-importe-solicitado-a-devolver"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1086,7 +1086,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f091"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5848-5850.operacion-2-divisa"
+binding = "modelo-360.page_02.5848-5850.operacion-2-divisa"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1098,7 +1098,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f092"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5851-5851.operacion-2-indicador-de-simplificada"
+binding = "modelo-360.page_02.5851-5851.operacion-2-indicador-de-simplificada"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1110,7 +1110,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f093"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5852-5853.operacion-2-datos-del-proveeedor-de-bienes-prestador-de"
+binding = "modelo-360.page_02.5852-5853.operacion-2-datos-del-proveeedor-de-bienes-prestador-de"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1122,7 +1122,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f094"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5854-5868.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2"
+binding = "modelo-360.page_02.5854-5868.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-2"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1134,7 +1134,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f095"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5869-5870.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3"
+binding = "modelo-360.page_02.5869-5870.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-3"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1146,7 +1146,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f096"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5871-5920.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4"
+binding = "modelo-360.page_02.5871-5920.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-4"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1158,7 +1158,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f097"
 kind = "binding"
-binding = "modelo-360-2010.page_02.5921-6045.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5"
+binding = "modelo-360.page_02.5921-6045.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-5"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1170,7 +1170,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f098"
 kind = "binding"
-binding = "modelo-360-2010.page_02.6046-6193.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6"
+binding = "modelo-360.page_02.6046-6193.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-6"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1182,7 +1182,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f099"
 kind = "binding"
-binding = "modelo-360-2010.page_02.6194-6208.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7"
+binding = "modelo-360.page_02.6194-6208.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-7"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]
@@ -1194,7 +1194,7 @@ record_identity = "Pág. 2"
 [[entries]]
 export_field_id = "m360-2010.pagina02.f100"
 kind = "binding"
-binding = "modelo-360-2010.page_02.6209-6210.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8"
+binding = "modelo-360.page_02.6209-6210.operacion-2-datos-del-proveeedor-de-bienes-prestador-de-8"
 legal_refs = ["orden-eha-789-2010:art-1"]
 source_refs = ["aeat-dr-360-2010"]
 [entries.anchor]

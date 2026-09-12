@@ -22,15 +22,15 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -121,7 +121,7 @@ def _test_casilla_definition(
 def _test_revision(
     *,
     casillas: tuple[CasillaDefinition, ...] = (),
-    bindings: tuple[DataBindingDefinition, ...] = (),
+    bindings: tuple[BindingDefinition, ...] = (),
 ) -> ModeloRevision:
     return ModeloRevision(
         id="test-actions-revision",
@@ -206,15 +206,18 @@ def _source_bound_revision() -> ModeloRevision:
             # clears the F8 construction-time selector gate; the test exercises
             # the override-error localisation against the matching owned source,
             # not selector shape.
-            DataBindingDefinition(
+            BindingDefinition(
                 id=_SOURCE_BOUND_BINDING,
-                source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-                selector={
-                    "categories": ("domestic_general",),
-                    "rate_kinds": ("general",),
-                    "flow_direction": "repercutido",
-                    "fact": "iva_amount_sum",
+                provider={
+                    "kind": "ledger_iva_aggregation",
+                    **{
+                        "categories": ("domestic_general",),
+                        "rate_kinds": ("general",),
+                        "flow_direction": "repercutido",
+                        "fact": "iva_amount_sum",
+                    },
                 },
+                value={"data_type": "money", "channel": "decimal"},
                 legal_refs=(_TEST_LEGAL_REF,),
                 source_refs=(_TEST_SOURCE_REF,),
             ),
@@ -885,22 +888,22 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
     snapshot = bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     relation_values = {
         "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),

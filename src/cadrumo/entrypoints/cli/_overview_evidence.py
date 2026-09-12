@@ -194,11 +194,6 @@ def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notic
             code="overview.work_units_degraded",
             message=tr(
                 "cli.overview.local_work_units_unavailable",
-                default=(
-                    "Local Modelo work-unit state could not be loaded; this overview is "
-                    "derived from the deadline schedule and may over-report an in-progress "
-                    "draft as still due or omit older in-progress drafts."
-                ),
             ),
             context={},
         )

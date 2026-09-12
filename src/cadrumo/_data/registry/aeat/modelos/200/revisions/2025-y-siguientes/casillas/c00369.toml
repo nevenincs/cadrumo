@@ -7,4 +7,3 @@ semantic_role = "is_deduccion_donativos_general"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

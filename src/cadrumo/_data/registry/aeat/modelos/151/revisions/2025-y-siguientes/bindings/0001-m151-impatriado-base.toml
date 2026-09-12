@@ -17,8 +17,8 @@
 # classifier landed.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-151-impatriado-base-liquidable-general"
-source = "ledger_impatriado_income_aggregation"
-selector = { modelo = "151", target_casilla_id = "impatriado.base-liquidable-general", fact = "ingresos_integros_sum" }
+provider = { kind = "ledger_impatriado_income_aggregation", modelo = "151", target_casilla_id = "impatriado.base-liquidable-general", fact = "ingresos_integros_sum" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-93"]
 source_refs = ["aeat-modelo-151-procedure"]

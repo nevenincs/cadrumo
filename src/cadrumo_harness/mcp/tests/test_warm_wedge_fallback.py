@@ -23,9 +23,9 @@ from __future__ import annotations
 import threading
 import time
 
-import cadrumo_harness.mcp.inprocess as inprocess
-
 import pytest
+
+import cadrumo_harness.mcp.inprocess as inprocess
 
 from .._settings import override_mcp_settings
 from .._transport import McpTransport, _attested_cli_executable, _run_tool

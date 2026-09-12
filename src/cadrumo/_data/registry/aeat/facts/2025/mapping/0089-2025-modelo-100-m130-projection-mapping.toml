@@ -6,13 +6,16 @@ family = "mapping"
 variant_id = "modelo-100-m130-projection-mapping:2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-source_refs = ["aeat-modelo-100-2025", "aeat-modelo-130-2025"]
+source_refs = ["boe-modelo-100-2025-form", "aeat-modelo-130-instructions"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
-source_ref = "aeat-modelo-100-2025"
-required_text = ["Modelo 100", "Modelo 130"]
+source_ref = "boe-modelo-100-2025-form"
+required_text = ["Modelo 100"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Modelo 130"]
 
 [fact.variants.payload]
 kind = "mapping"

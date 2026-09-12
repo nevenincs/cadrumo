@@ -16,31 +16,38 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingSourceKind
 from ..binding_selector_utils import (
     BooleanBindingEncodedValue,
     boolean_binding_encoded_values,
 )
+from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition
+from ..manual_input_selector import ManualInputProvider
+from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _boolean_binding() -> DataBindingDefinition:
+def _boolean_binding() -> BindingDefinition:
     """Build the real Modelo 100 estimación-directa boolean-flag binding."""
-    return DataBindingDefinition.model_validate(
+    return BindingDefinition.model_validate(
         {
-            "id": "renta-2025-modelo-100-estimacion-directa-es-normal",
-            "source": "manual_input",
-            "selector": {
+            "id": "renta-modelo-100-estimacion-directa-es-normal",
+            "provider": {
+                "kind": "manual_input",
                 "casilla_id": "0168",
                 "data_type": "boolean",
                 "true_value": "N",
                 "false_value": "S",
             },
-            "aggregation": {"op": "copy"},
-            "typed_enum": "EstimacionDirectaModalidad",
+            "value": {
+                "data_type": "enum",
+                "channel": "enum",
+                "typed_enum": "EstimacionDirectaModalidad",
+            },
+            "aggregation": {
+                "op": "copy",
+            },
             "legal_refs": ("ley-35-2006:art-30",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
@@ -64,11 +71,18 @@ def test_boolean_binding_encodes_true_to_one_and_false_to_zero() -> None:
 
 def test_non_boolean_manual_input_binding_has_no_encoded_values() -> None:
     """A scalar-money manual_input binding is not a boolean flag, so no encoding."""
-    scalar = DataBindingDefinition.model_validate(
+    scalar = BindingDefinition.model_validate(
         {
             "id": "renta-2025-scalar-input",
-            "source": "manual_input",
-            "selector": {"casilla_id": "0003", "data_type": "money"},
+            "provider": {
+                "kind": "manual_input",
+                "casilla_id": "0003",
+                "data_type": "money",
+            },
+            "value": {
+                "data_type": "money",
+                "channel": "decimal",
+            },
             "legal_refs": ("ley-35-2006:art-99",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
@@ -79,18 +93,24 @@ def test_non_boolean_manual_input_binding_has_no_encoded_values() -> None:
 
 def test_non_manual_input_binding_has_no_encoded_values() -> None:
     """A profile-sourced binding is never a decimal-encoded boolean flag."""
-    profile = DataBindingDefinition.model_validate(
+    profile = BindingDefinition.model_validate(
         {
             "id": "renta-2025-profile-tax-residence-ccaa",
-            "source": "profile",
-            "selector": {
+            "provider": {
+                "kind": "profile",
                 "profile_model": "TaxResidenceProfile",
                 "field": "ccaa",
                 "xsd_attribute": "codigoCADeclaracion",
                 "dictionary_field": "ZCCAD",
             },
-            "aggregation": {"op": "copy"},
-            "typed_enum": "CCAA",
+            "value": {
+                "data_type": "enum",
+                "channel": "enum",
+                "typed_enum": "CCAA",
+            },
+            "aggregation": {
+                "op": "copy",
+            },
             "legal_refs": ("orden-hac-277-2026:art-3",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
@@ -102,12 +122,12 @@ def test_non_manual_input_binding_has_no_encoded_values() -> None:
 def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> None:
     """The bite proof: a selector shape the model rejects must raise, not vanish.
 
-    ``DataBindingDefinition.model_validate`` already dispatches through
-    ``ManualInputSelector`` at construction time, so a genuinely malformed
+    ``BindingDefinition.model_validate`` already dispatches through
+    ``ManualInputProvider`` at construction time, so a genuinely malformed
     selector cannot reach this function via the normal constructor -- proven
     by the companion assertion below. The residual risk this fix closes is
     DRIFT: a raw ``dict.get("true_value")`` reads a string literal with no tie
-    to the model's own field names, so if ``ManualInputSelector`` ever
+    to the model's own field names, so if ``ManualInputProvider`` ever
     renamed that field, the model's construction-time validation would keep
     passing (it would just be validating the NEW name) while a raw-dict
     reader silently, permanently stopped finding any boolean encoding at all --
@@ -118,40 +138,49 @@ def test_a_misspelled_boolean_encoding_key_is_refused_not_silently_dropped() -> 
     """
     with pytest.raises(
         ValidationError,
-        match="violates ManualInputSelector",
+        match=r"provider\.manual_input\.ture_value",
     ) as excinfo:
-        DataBindingDefinition.model_validate(
+        BindingDefinition.model_validate(
             {
-                "id": "renta-2025-modelo-100-estimacion-directa-es-normal",
-                "source": "manual_input",
-                "selector": {
+                "id": "renta-modelo-100-estimacion-directa-es-normal",
+                "provider": {
+                    "kind": "manual_input",
                     "casilla_id": "0168",
                     "data_type": "boolean",
-                    "ture_value": "N",  # deliberate typo of true_value
+                    "ture_value": "N",
                     "false_value": "S",
                 },
-                "aggregation": {"op": "copy"},
-                "typed_enum": "EstimacionDirectaModalidad",
+                "value": {
+                    "data_type": "enum",
+                    "channel": "enum",
+                    "typed_enum": "EstimacionDirectaModalidad",
+                },
+                "aggregation": {
+                    "op": "copy",
+                },
                 "legal_refs": ("ley-35-2006:art-30",),
                 "source_refs": ("aeat-dr-100-2025-dictionary",),
             },
         )
-    assert "ManualInputSelector" in str(excinfo.value), (
+    assert "Extra inputs are not permitted" in str(excinfo.value), (
         "construction-time gate must be the one refusing the typo -- confirms the "
         "residual risk this fix closes is drift, not malformed-data construction"
     )
 
-    drifted = DataBindingDefinition.model_construct(
-        id="renta-2025-modelo-100-estimacion-directa-es-normal",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "casilla_id": "0168",
-            "data_type": "boolean",
-            "ture_value": "N",  # the field ManualInputSelector no longer names "true_value"
-            "false_value": "S",
-        },
+    drifted = BindingDefinition.model_construct(
+        id="renta-modelo-100-estimacion-directa-es-normal",
+        provider=ManualInputProvider.model_construct(
+            casilla_id="0168",
+            data_type="boolean",
+            ture_value="N",  # the field ManualInputProvider no longer names "true_value"
+            false_value="S",
+        ),
+        value=BindingValueContract(
+            data_type=BindingDataType.ENUM,
+            channel=BindingValueChannel.ENUM,
+            typed_enum="EstimacionDirectaModalidad",
+        ),
         aggregation={"op": "copy"},
-        typed_enum="EstimacionDirectaModalidad",
         legal_refs=("ley-35-2006:art-30",),
         source_refs=("aeat-dr-100-2025-dictionary",),
     )

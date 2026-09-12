@@ -8,7 +8,7 @@ negative, its absolute value is carried forward as ``saldo-negativo-fin-periodo`
 (casilla saldo) into the next quarter's casilla 11 ("Resultados negativos de
 trimestres anteriores del mismo ejercicio").
 
-The carry-forward binding ``modelo-131-2024-resultados-negativos-anteriores``
+The carry-forward binding ``modelo-131-resultados-negativos-anteriores``
 uses ``source_period_offset_from_target = -1`` with ``max_year_delta = 0``:
 the 4T→1T transition wraps across the year boundary only within the same
 ejercicio (max_year_delta=0 prevents cross-year carry). The ≥2-renta
@@ -72,8 +72,8 @@ _YEAR_N_PLUS_1 = 2025
 _CLOCK = datetime(2026, 2, 1, 9, 0, 0, tzinfo=UTC)
 
 # Carry-forward binding id (same pattern as M130).
-_CARRY_BINDING = "modelo-131-2024-resultados-negativos-anteriores"
-_CARRY_BINDING_2025 = "modelo-131-2025-resultados-negativos-anteriores"
+_CARRY_BINDING = "modelo-131-resultados-negativos-anteriores"
+_CARRY_BINDING_2025 = "modelo-131-resultados-negativos-anteriores"
 
 
 _M131_RENDIMIENTO_MODULOS_CASILLA: CasillaId = validated_casilla_id("01")

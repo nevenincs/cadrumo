@@ -12,7 +12,7 @@ semantic_role = "m189_declarante_razon_social"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "tipo-soporte"
@@ -23,7 +23,7 @@ semantic_role = "m189_tipo_soporte"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "persona-relacion"
@@ -34,7 +34,7 @@ semantic_role = "m189_persona_relacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "numero-justificante"
@@ -45,7 +45,7 @@ semantic_role = "m189_numero_justificante"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "declaracion-complementaria-sustitutiva"
@@ -58,7 +58,7 @@ semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / s
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "numero-identificativo-anterior"
@@ -69,7 +69,7 @@ semantic_role = "m189_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "numero-total-declarados"
@@ -80,7 +80,7 @@ semantic_role = "m189_numero_total_declarados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "valoracion-total"
@@ -91,11 +91,7 @@ semantic_role = "m189_valoracion_total"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1", "orden-hfp-1180-2023:art-primero"]
-source_refs = [
-    "boe-modelo-189-base-order",
-    "boe-modelo-189-2023-amendment-hfp-1180",
-    "aeat-dr-189-2023",
-]
+additional_source_refs = ["boe-modelo-189-2023-amendment-hfp-1180", "aeat-dr-189-2023"]
 
 # Registro de tipo 2 (registro de declarado) -- 500 bytes, declared field
 # lengths sum to exactly 500. Same bundled Diseno de Registro.
@@ -109,7 +105,7 @@ semantic_role = "m189_representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "codigo-provincia"
@@ -120,7 +116,7 @@ semantic_role = "m189_codigo_provincia"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "clave-mercado"
@@ -131,7 +127,7 @@ semantic_role = "m189_clave_mercado"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "clave-identificacion"
@@ -142,7 +138,7 @@ semantic_role = "m189_clave_identificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "identificacion-valores"
@@ -153,7 +149,7 @@ semantic_role = "m189_identificacion_valores"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "clave-representacion"
@@ -164,7 +160,7 @@ semantic_role = "m189_clave_representacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "porcentaje-participacion"
@@ -175,7 +171,7 @@ semantic_role = "m189_porcentaje_participacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]
 
 [[revisions."2025".casillas]]
 id = "clave-titularidad"
@@ -186,4 +182,4 @@ semantic_role = "m189_clave_titularidad"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3481-2008:art-1"]
-source_refs = ["boe-modelo-189-base-order", "aeat-dr-189-2023"]
+additional_source_refs = ["aeat-dr-189-2023"]

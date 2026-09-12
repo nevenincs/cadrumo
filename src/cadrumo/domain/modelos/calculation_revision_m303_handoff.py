@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Self
 
 from pydantic import BaseModel, field_serializer, field_validator, model_validator
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
@@ -17,8 +19,10 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
@@ -38,7 +42,39 @@ from .calculation_revision_m303_evidence import (
 )
 from .errors import ModeloValidationError
 
-# TODO(fact-relocation): resolve M303/M390 handoff relation, projection, revision applicability, and binding/legal declarations from selected registry revision
+
+def _resolve_m303_m390_handoff_declarations(
+    *,
+    source_filing_year: int,
+    source_period: str,
+    target_filing_year: int,
+    target_period: str,
+) -> tuple[object, object, object]:
+    """Resolve selected cross-model handoff surfaces without local declarations."""
+    query_service = RegistryQueryService(bundled_authority())
+    source_report = query_service.describe_modelo_for_scope(
+        "303",
+        filing_year=source_filing_year,
+        period=source_period,
+        as_of=date(source_filing_year, 12, 31),
+    )
+    target_report = query_service.describe_modelo_for_scope(
+        "390",
+        filing_year=target_filing_year,
+        period=target_period,
+        as_of=date(target_filing_year, 12, 31),
+    )
+    target_bindings = query_service.bindings_for_scope(
+        "390",
+        filing_year=target_filing_year,
+        period=target_period,
+        as_of=date(target_filing_year, 12, 31),
+    )
+    if not any(
+        row.provider.kind is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for row in target_bindings.rows
+    ):
+        raise ModeloValidationError("selected Modelo 390 revision has no M303 annual-summary handoff bindings")
+    return source_report, target_report, target_bindings
 
 
 class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
@@ -124,6 +160,12 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
         relation metadata supplies model and period coordinates; this carrier
         retains only generic identity and evidence mechanics.
         """
+        _resolve_m303_m390_handoff_declarations(
+            source_filing_year=source_filing_year,
+            source_period=source_period_code,
+            target_filing_year=target_filing_year,
+            target_period=target_period_code,
+        )
         source_period = Period.from_year_and_code(source_filing_year, source_period_code)
         target_period = Period.from_year_and_code(target_filing_year, target_period_code)
         unsigned = cls.model_construct(

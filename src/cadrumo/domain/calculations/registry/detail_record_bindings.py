@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
@@ -26,8 +26,10 @@ from .binding_selector_utils import (
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_exports import ExportFieldDataType
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "AtributionMemberObservation",
@@ -45,7 +47,7 @@ __all__ = [
 
 
 def _required_detail_record_row_field[RowFieldT](
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     row_field: RowFieldT | None,
 ) -> RowFieldT:
     """Return the selector row field, refusing a detail-record binding that names none."""
@@ -55,7 +57,7 @@ def _required_detail_record_row_field[RowFieldT](
 
 
 def _validate_detail_record_row_field(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector_fact: object,
     selector_row_field: object,
     family_label: str,
@@ -155,8 +157,10 @@ class RelatedPartyOperationObservation(BaseModel):
         return value
 
 
-class _RelatedPartySelector(BaseModel):
+class RelatedPartyOperationProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.RELATED_PARTY_OPERATION] = BindingSourceKind.RELATED_PARTY_OPERATION
 
     # Only ``row_field`` is a legal fact for related-party-operation
     # bindings; every handler raises on anything else. Promoting to a
@@ -176,24 +180,24 @@ class _RelatedPartySelector(BaseModel):
     """
 
 
-def _validated_related_party_selector(binding: DataBindingDefinition) -> _RelatedPartySelector:
+def _validated_related_party_selector(binding: BindingDefinition) -> RelatedPartyOperationProvider:
     try:
-        selector = _RelatedPartySelector.model_validate(_selector_as_dict(binding))
+        selector = RelatedPartyOperationProvider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "related-party")
     return selector
 
 
-def validate_related_party_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_related_party_binding(binding: BindingDefinition) -> list[str]:
     """Validate a related-party-operation binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`_RelatedPartySelector` and lifts the resolve-time op/fact invariant
+    :class:`RelatedPartyOperationProvider` and lifts the resolve-time op/fact invariant
     (``row_field`` fact paired with the ``rows`` op and a named ``row_field``)
     to build time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _RelatedPartySelector)
+    failures = selector_against_model(binding, RelatedPartyOperationProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "related-party", lambda b: _validated_related_party_selector(b))
@@ -241,8 +245,10 @@ class Modelo720RowObservation(BaseModel):
         return value
 
 
-class _ForeignAssetSelector(BaseModel):
+class ForeignAssetProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.FOREIGN_ASSET] = BindingSourceKind.FOREIGN_ASSET
 
     fact: Literal["row_field"]
     row_field: _ForeignAssetRowField | None = None
@@ -259,16 +265,16 @@ class _ForeignAssetSelector(BaseModel):
     """
 
 
-def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _ForeignAssetSelector:
+def _validated_foreign_asset_selector(binding: BindingDefinition) -> ForeignAssetProvider:
     try:
-        selector = _ForeignAssetSelector.model_validate(_selector_as_dict(binding))
+        selector = ForeignAssetProvider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "foreign-asset")
     return selector
 
 
-def foreign_asset_binding_row_field(binding: DataBindingDefinition) -> str | None:
+def foreign_asset_binding_row_field(binding: BindingDefinition) -> str | None:
     """Return the ``row_field`` a ``foreign_asset`` binding declares, or ``None``.
 
     Reads through the typed :func:`_validated_foreign_asset_selector` rather
@@ -290,14 +296,14 @@ def foreign_asset_binding_row_field(binding: DataBindingDefinition) -> str | Non
     return _validated_foreign_asset_selector(binding).row_field
 
 
-def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_foreign_asset_binding(binding: BindingDefinition) -> list[str]:
     """Validate a foreign-asset binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
-    :class:`_ForeignAssetSelector` and lifts the resolve-time op/fact invariant
+    :class:`ForeignAssetProvider` and lifts the resolve-time op/fact invariant
     to build time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _ForeignAssetSelector)
+    failures = selector_against_model(binding, ForeignAssetProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "foreign-asset", lambda b: _validated_foreign_asset_selector(b))
@@ -305,9 +311,9 @@ def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
 
 def _foreign_asset_binding_members(
     revision: ModeloRevision,
-) -> tuple[list[tuple[DataBindingDefinition, _ForeignAssetSelector]], set[tuple[str, ...]]]:
+) -> tuple[list[tuple[BindingDefinition, ForeignAssetProvider]], set[tuple[str, ...]]]:
     """Collect foreign-asset row bindings and their declared class cohorts."""
-    members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
+    members: list[tuple[BindingDefinition, ForeignAssetProvider]] = []
     cohort_classes: set[tuple[str, ...]] = set()
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.FOREIGN_ASSET:
@@ -319,7 +325,7 @@ def _foreign_asset_binding_members(
 
 
 def _resolve_foreign_asset_rows(
-    members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]],
+    members: list[tuple[BindingDefinition, ForeignAssetProvider]],
     rows: tuple[Mapping[str, Decimal | str], ...],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Project each foreign-asset row field into its binding/index coordinates."""
@@ -481,8 +487,10 @@ class AtributionMemberObservation(BaseModel):
         return value
 
 
-class _AtributionSelector(BaseModel):
+class AtribucionMemberProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.ATRIBUCION_MEMBER] = BindingSourceKind.ATRIBUCION_MEMBER
 
     fact: Literal["row_field"]
     row_field: _AtributionRowField | None = None
@@ -498,23 +506,23 @@ class _AtributionSelector(BaseModel):
     """
 
 
-def _validated_atribucion_selector(binding: DataBindingDefinition) -> _AtributionSelector:
+def _validated_atribucion_selector(binding: BindingDefinition) -> AtribucionMemberProvider:
     try:
-        selector = _AtributionSelector.model_validate(_selector_as_dict(binding))
+        selector = AtribucionMemberProvider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "atribucion")
     return selector
 
 
-def validate_atribucion_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_atribucion_binding(binding: BindingDefinition) -> list[str]:
     """Validate an atribuci�n-member binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
-    :class:`_AtributionSelector` and lifts the resolve-time op/fact invariant to
+    :class:`AtribucionMemberProvider` and lifts the resolve-time op/fact invariant to
     build time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _AtributionSelector)
+    failures = selector_against_model(binding, AtribucionMemberProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "atribucion", lambda b: _validated_atribucion_selector(b))
@@ -531,7 +539,7 @@ def resolve_atribucion_binding_row_values(
         observations: Attribution member observations to group into rows.
     """
     available = tuple(observations)
-    members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
+    members: list[tuple[BindingDefinition, AtribucionMemberProvider]] = []
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.ATRIBUCION_MEMBER:
             continue
@@ -622,8 +630,10 @@ class RefundOperationObservation(BaseModel):
         return value
 
 
-class _RefundSelector(BaseModel):
+class RefundOperationProvider(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.REFUND_OPERATION] = BindingSourceKind.REFUND_OPERATION
 
     fact: Literal["row_field"]
     row_field: _RefundRowField | None = None
@@ -639,29 +649,29 @@ class _RefundSelector(BaseModel):
     """
 
 
-AtributionSelector = _AtributionSelector
-ForeignAssetSelector = _ForeignAssetSelector
-RefundSelector = _RefundSelector
-RelatedPartySelector = _RelatedPartySelector
+AtribucionMemberProvider = AtribucionMemberProvider
+ForeignAssetProvider = ForeignAssetProvider
+RefundOperationProvider = RefundOperationProvider
+RelatedPartyOperationProvider = RelatedPartyOperationProvider
 
 
-def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelector:
+def _validated_refund_selector(binding: BindingDefinition) -> RefundOperationProvider:
     try:
-        selector = _RefundSelector.model_validate(_selector_as_dict(binding))
+        selector = RefundOperationProvider.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "refund")
     return selector
 
 
-def validate_refund_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_refund_binding(binding: BindingDefinition) -> list[str]:
     """Validate a refund-operation binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
-    :class:`_RefundSelector` and lifts the resolve-time op/fact invariant to
+    :class:`RefundOperationProvider` and lifts the resolve-time op/fact invariant to
     build time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _RefundSelector)
+    failures = selector_against_model(binding, RefundOperationProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "refund", lambda b: _validated_refund_selector(b))

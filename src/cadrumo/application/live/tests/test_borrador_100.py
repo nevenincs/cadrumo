@@ -57,7 +57,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
 
     repository.save(snapshot)
@@ -190,7 +190,7 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
 ) -> None:
     repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
-    values = {"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")}
+    values = {"renta-modelo-111-retenciones-periodicas": Decimal("15.25")}
 
     snapshot = service.capture(
         filing_year=2025,
@@ -222,7 +222,7 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence(
         period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
     repository.save(
         snapshot.model_copy(
@@ -268,7 +268,7 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures(
         "period": _PERIOD,
         "captured_at": _CAPTURED_AT,
         "source_url": _SOURCE,
-        "binding_values": {"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        "binding_values": {"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
     }
 
     first = service.capture(**kwargs)
@@ -288,14 +288,14 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
         period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
     newer = service.capture(
         filing_year=2025,
         period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("16.25")},
     )
 
     assert repository.load(older.snapshot_id).state is SnapshotLifecycleState.SUPERSEDED
@@ -319,14 +319,14 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
         period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("16.25")},
     )
     older = service.capture(
         filing_year=2025,
         period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+        binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("15.25")},
     )
 
     assert repository.load(newer.snapshot_id).state is SnapshotLifecycleState.ACTIVE

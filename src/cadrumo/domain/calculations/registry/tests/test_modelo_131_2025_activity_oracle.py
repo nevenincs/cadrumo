@@ -37,7 +37,7 @@ _ZERO_MODULE_INPUTS = {
     "modulos-indice-temporada": Decimal("0"),
     "modulos-indice-inicio-actividad": Decimal("0"),
 }
-_ZERO_PRIOR_NEGATIVE_BINDING = {"modelo-131-2025-resultados-negativos-anteriores": Decimal("0")}
+_ZERO_PRIOR_NEGATIVE_BINDING = {"modelo-131-resultados-negativos-anteriores": Decimal("0")}
 _ACTIVITY_CASES = {
     "972.1": (
         {

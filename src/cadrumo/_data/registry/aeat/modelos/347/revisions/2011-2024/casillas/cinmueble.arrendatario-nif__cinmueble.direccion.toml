@@ -8,7 +8,6 @@ semantic_role = "arrendatario_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.representante-legal-nif"
 continuidad_id = "arrendatario-representante-legal-nif"
@@ -19,7 +18,6 @@ semantic_role = "arrendatario_representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.arrendatario-nombre"
 continuidad_id = "arrendatario-nombre"
@@ -30,7 +28,6 @@ semantic_role = "arrendatario_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.importe-operacion"
 continuidad_id = "importe-operacion-arrendamiento"
@@ -41,7 +38,6 @@ semantic_role = "importe_operacion_arrendamiento"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.situacion"
 continuidad_id = "situacion-inmueble"
@@ -52,7 +48,6 @@ semantic_role = "situacion_inmueble"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.referencia-catastral"
 continuidad_id = "referencia-catastral"
@@ -63,7 +58,6 @@ semantic_role = "referencia_catastral"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]
 [[revisions."2011-2024".casillas]]
 id = "inmueble.direccion"
 continuidad_id = "direccion-inmueble"
@@ -74,4 +68,3 @@ semantic_role = "direccion_inmueble"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-eha-3012-2008:art-10", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2011"]

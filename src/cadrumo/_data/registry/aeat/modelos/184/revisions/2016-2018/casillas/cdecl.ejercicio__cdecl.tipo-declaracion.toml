@@ -10,7 +10,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
-source_refs = ["boe-dr-184-2016-2018"]
 
 [[revisions."2016-2018".casillas]]
 id = "decl.tipo-declaracion"
@@ -23,4 +22,3 @@ semantic_role = "tipo_declaracion"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
-source_refs = ["boe-dr-184-2016-2018"]

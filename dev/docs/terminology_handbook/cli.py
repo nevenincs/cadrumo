@@ -51,14 +51,14 @@ from .curation import (
 from .enums import TermStatus
 from .errors import TerminologyError
 
-app = typer.Typer(name="terminology", help=tr("Terminology Handbook maintenance."), no_args_is_help=True)
+app = typer.Typer(name="terminology", help=tr("docs.terminology.cli.help"), no_args_is_help=True)
 
 
 @app.command("scaffold")
 def scaffold(
     check: Annotated[
         bool,
-        typer.Option("--check", help=tr("Report drift without writing; exit non-zero on drift.")),
+        typer.Option("--check", help=tr("docs.terminology.cli.check")),
     ] = False,
 ) -> None:
     """Reconcile the Handbook against live enrolment sources (msgmerge contract)."""
@@ -70,20 +70,20 @@ def scaffold(
 
 @app.command("set")
 def set_field(
-    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to curate."))],
-    language: Annotated[OutputLanguage, typer.Argument(help=tr("Language section code."))],
+    concept_id: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.concept_id"))],
+    language: Annotated[OutputLanguage, typer.Argument(help=tr("docs.terminology.cli.language"))],
     field_name: Annotated[
         str,
-        typer.Argument(help=tr("short_description | definition | scope_note | source | term.")),
+        typer.Argument(help=tr("docs.terminology.cli.field_name")),
     ],
-    value: Annotated[str, typer.Argument(help=tr("Field value (citation for 'source'; label for 'term')."))],
+    value: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.field_value"))],
     term_status: Annotated[
         TermStatus | None,
-        typer.Option("--term-status", help=tr("Term status when field is 'term'.")),
+        typer.Option("--term-status", help=tr("docs.terminology.cli.term_status")),
     ] = None,
     authority: Annotated[
         str | None,
-        typer.Option("--authority", help=tr("Source authority when field is 'source'.")),
+        typer.Option("--authority", help=tr("docs.terminology.cli.authority")),
     ] = None,
 ) -> None:
     """Set a curated language field or term on a concept."""
@@ -100,10 +100,10 @@ def set_field(
 
 @app.command("relate")
 def relate(
-    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to relate from."))],
-    relation: Annotated[str, typer.Argument(help=tr("broader | related."))],
-    target_id: Annotated[str, typer.Argument(help=tr("Target concept id."))],
-    remove: Annotated[bool, typer.Option("--remove", help=tr("Remove the edge instead of adding it."))] = False,
+    concept_id: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.relation_source"))],
+    relation: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.relation_kind"))],
+    target_id: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.relation_target"))],
+    remove: Annotated[bool, typer.Option("--remove", help=tr("docs.terminology.cli.remove_relation"))] = False,
 ) -> None:
     """Add or remove a broader / related edge between two concepts."""
     try:
@@ -116,9 +116,9 @@ def relate(
 
 @app.command("remove-term")
 def remove_term_cmd(
-    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to curate."))],
-    language: Annotated[OutputLanguage, typer.Argument(help=tr("Language section code."))],
-    label: Annotated[str, typer.Argument(help=tr("Exact term label to remove."))],
+    concept_id: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.concept_id"))],
+    language: Annotated[OutputLanguage, typer.Argument(help=tr("docs.terminology.cli.language"))],
+    label: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.remove_term_label"))],
 ) -> None:
     """Remove a term by its exact label from a concept's language section."""
     try:
@@ -130,8 +130,8 @@ def remove_term_cmd(
 
 @app.command("retire")
 def retire(
-    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to retire."))],
-    replaced_by: Annotated[str, typer.Argument(help=tr("Successor concept id (required)."))],
+    concept_id: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.retire_concept"))],
+    replaced_by: Annotated[str, typer.Argument(help=tr("docs.terminology.cli.replaced_by"))],
 ) -> None:
     """Tombstone a concept with a required successor (never deletes)."""
     try:
@@ -168,19 +168,19 @@ def audit() -> None:
 
 @app.command("seed")
 def seed(
-    source: Annotated[SeedSource, typer.Argument(help=tr("Tier-A source: iate | ubterm (eurovoc once verified)."))],
-    export_path: Annotated[Path, typer.Argument(help=tr("Path to the downloaded source export file."))],
+    source: Annotated[SeedSource, typer.Argument(help=tr("docs.terminology.cli.seed_source"))],
+    export_path: Annotated[Path, typer.Argument(help=tr("docs.terminology.cli.export_path"))],
     min_reliability: Annotated[
         int,
-        typer.Option("--min-reliability", help=tr("IATE: minimum reliability code to keep (>= 3).")),
+        typer.Option("--min-reliability", help=tr("docs.terminology.cli.min_reliability")),
     ] = 3,
     domain: Annotated[
         list[str] | None,
-        typer.Option("--domain", help=tr("IATE: subject-field allow-set (repeatable).")),
+        typer.Option("--domain", help=tr("docs.terminology.cli.domain")),
     ] = None,
     dry_run: Annotated[
         bool,
-        typer.Option("--dry-run", help=tr("Report what would be seeded without writing.")),
+        typer.Option("--dry-run", help=tr("docs.terminology.cli.dry_run")),
     ] = False,
 ) -> None:
     """Import a Tier-A external seed export, stamping provenance on every value.

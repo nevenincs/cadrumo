@@ -13,7 +13,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.tipo-autoliquidacion"
@@ -23,7 +22,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-lei"
@@ -33,7 +31,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.codigo-bic"
@@ -43,7 +40,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-via"
@@ -53,7 +49,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.nombre-via"
@@ -63,7 +58,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.tipo-numeracion"
@@ -73,7 +67,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.numero-casa"
@@ -83,7 +76,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.calificador-numero"
@@ -93,7 +85,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.bloque"
@@ -103,7 +94,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.portal"
@@ -113,7 +103,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.escalera"
@@ -123,7 +112,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.planta"
@@ -133,7 +121,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.puerta"
@@ -143,7 +130,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.complemento"
@@ -153,7 +139,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.localidad"
@@ -163,7 +148,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-postal"
@@ -173,7 +157,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.municipio"
@@ -183,7 +166,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.codigo-provincia"
@@ -193,7 +175,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-es.provincia"
@@ -203,7 +184,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.domicilio"
@@ -213,7 +193,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.complemento"
@@ -223,7 +202,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.poblacion"
@@ -233,7 +211,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-postal"
@@ -243,7 +220,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.provincia-region-estado"
@@ -253,7 +229,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.pais"
@@ -263,7 +238,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "dom-ex.codigo-pais"
@@ -273,7 +247,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.persona-contacto"
@@ -283,7 +256,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "sp.telefono-contacto"
@@ -293,7 +265,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "anexo.numero-justificante"
@@ -303,7 +274,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.01-base-imponible"
@@ -313,7 +283,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.02-cuota"
@@ -323,7 +292,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.03-signo-base-rectificaciones"
@@ -333,7 +301,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.03-base-rectificaciones"
@@ -343,7 +310,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.04-signo-cuota-rectificaciones"
@@ -353,7 +319,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.04-cuota-rectificaciones"
@@ -363,7 +328,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.05-operaciones-exentas"
@@ -373,7 +337,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.08-diferencia"
@@ -385,7 +348,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.09-cuota-estado"
@@ -397,7 +359,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.10-signo-cuota-rectificaciones-estado"
@@ -407,7 +368,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.10-cuota-rectificaciones-estado"
@@ -417,7 +377,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.11-porcentaje-atribuible-estado"
@@ -429,7 +388,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.12-resultado-estado"
@@ -441,7 +399,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.06-a-deducir"
@@ -451,7 +408,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "liq.07-resultado"
@@ -461,7 +417,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "compl.declaracion-complementaria"
@@ -471,7 +426,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "compl.numero-justificante-anterior"
@@ -481,7 +435,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-sujetas-no-exentas"
@@ -493,7 +446,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.signo-cuota-rectificaciones"
@@ -503,7 +455,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-rectificaciones"
@@ -513,7 +464,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.cuota-total-atribuible"
@@ -525,7 +475,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.porcentaje-atribuible"
@@ -537,7 +486,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.alava.importe-operaciones-exentas"
@@ -549,7 +497,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-sujetas-no-exentas"
@@ -561,7 +508,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.signo-cuota-rectificaciones"
@@ -571,7 +517,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-rectificaciones"
@@ -581,7 +526,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.cuota-total-atribuible"
@@ -593,7 +537,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.porcentaje-atribuible"
@@ -605,7 +548,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.guipuzcoa.importe-operaciones-exentas"
@@ -617,7 +559,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-sujetas-no-exentas"
@@ -629,7 +570,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.signo-cuota-rectificaciones"
@@ -639,7 +579,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-rectificaciones"
@@ -649,7 +588,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.cuota-total-atribuible"
@@ -661,7 +599,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.porcentaje-atribuible"
@@ -673,7 +610,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.vizcaya.importe-operaciones-exentas"
@@ -685,7 +621,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-sujetas-no-exentas"
@@ -697,7 +632,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.signo-cuota-rectificaciones"
@@ -707,7 +641,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-rectificaciones"
@@ -717,7 +650,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.cuota-total-atribuible"
@@ -729,7 +661,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.porcentaje-atribuible"
@@ -741,7 +672,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.navarra.importe-operaciones-exentas"
@@ -753,7 +683,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-sujetas-no-exentas"
@@ -765,7 +694,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.signo-cuota-rectificaciones"
@@ -775,7 +703,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-rectificaciones"
@@ -785,7 +712,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.cuota-total-atribuible"
@@ -797,7 +723,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.porcentaje-atribuible"
@@ -809,7 +734,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "terr.estado.importe-operaciones-exentas"
@@ -821,4 +745,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-510-2021:art-1", "orden-hac-510-2021:art-3", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-604-2024"]

@@ -154,7 +154,6 @@ def review_package_build(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.review_package.errors.output_required",
-                default="Supply --output PATH for the review package ZIP.",
             )
         )
     selected_revision = resolve_exportable_revision_for_cli(
@@ -225,7 +224,6 @@ def review_package_verify(ctx: typer.Context, package: Path) -> None:
             tr(
                 "cli.app.modelo.review_package.errors.package_not_found",
                 package_path=str(package),
-                default="Review package not found at {package_path}.",
             )
         ) from exc
     except ReviewPackageIntegrityError as exc:
@@ -250,7 +248,6 @@ def review_package_sign(ctx: typer.Context, package: Path, output: Path, bucket_
             tr(
                 "cli.app.modelo.review_package.errors.package_not_found",
                 package_path=str(package),
-                default="Review package not found at {package_path}.",
             )
         ) from exc
     except ReviewPackageIntegrityError as exc:
@@ -275,7 +272,6 @@ def review_package_verify_signature(ctx: typer.Context, package: Path, signature
             tr(
                 "cli.app.modelo.review_package.errors.signature_not_found",
                 signature_path=str(signature),
-                default="Signature envelope not found at {signature_path}.",
             )
         )
     try:
@@ -301,7 +297,6 @@ def review_package_counter_sign(
             tr(
                 "cli.app.modelo.review_package.errors.signature_not_found",
                 signature_path=str(signature),
-                default="Signature envelope not found at {signature_path}.",
             )
         )
     try:
@@ -351,7 +346,6 @@ def review_package_verify_receipt(
             tr(
                 "cli.app.modelo.review_package.errors.receipt_not_found",
                 receipt_path=str(receipt_path),
-                default="Receipt envelope not found at {receipt_path}.",
             )
         )
     try:
@@ -390,7 +384,6 @@ def review_package_encrypt_for_recipient(
             tr(
                 "cli.app.modelo.review_package.errors.package_not_found",
                 package_path=str(package),
-                default="Review package not found at {package_path}.",
             )
         )
     resolved_bucket_id = resolve_explicit_or_active_bucket_id(bucket_id)
@@ -403,7 +396,6 @@ def review_package_encrypt_for_recipient(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.review_package.errors.invalid_valid_for_days",
-                default="--valid-for-days must be a strictly positive integer.",
             )
         )
     from datetime import timedelta
@@ -444,7 +436,6 @@ def review_package_decrypt(ctx: typer.Context, envelope_path: Path, output: Path
             tr(
                 "cli.app.modelo.review_package.errors.envelope_not_found",
                 envelope_path=str(envelope_path),
-                default="Recipient-encrypted envelope not found at {envelope_path}.",
             )
         )
     try:
@@ -509,7 +500,6 @@ def review_package_encrypt_feedback(
                 tr(
                     "cli.app.modelo.review_package.errors.receipt_not_found",
                     receipt_path=str(receipt),
-                    default="Counter-signed receipt not found at {receipt_path}.",
                 )
             )
         try:
@@ -562,7 +552,6 @@ def review_package_import_feedback(
             tr(
                 "cli.app.modelo.review_package.errors.feedback_envelope_not_found",
                 envelope_path=str(envelope_path),
-                default="Feedback envelope not found at {envelope_path}.",
             )
         )
     if not package.exists():
@@ -570,7 +559,6 @@ def review_package_import_feedback(
             tr(
                 "cli.app.modelo.review_package.errors.package_not_found",
                 package_path=str(package),
-                default="Review package not found at {package_path}.",
             )
         )
     try:

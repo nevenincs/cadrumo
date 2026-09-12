@@ -13,18 +13,21 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from types import UnionType
+from typing import Annotated, Final, Literal, Union, get_args, get_origin
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.classification.policies import SensitivityClass
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import LegalRefId, SourceRefId
 
 __all__ = [
+    "CHAIN_FAMILY",
     "GOVERNANCE_STAMP",
     "MANIFEST_ONLY",
     "NUMERIC_CASILLA_DATA_TYPES",
@@ -36,6 +39,7 @@ __all__ = [
     "CasillaSignConstraint",
     "CasillaSignConstraintField",
     "CasillaSignConstraintValue",
+    "ChainFamilyMarker",
     "DateAxis",
     "DateAxisField",
     "EvidenceTier",
@@ -52,10 +56,14 @@ __all__ = [
     "SourceCitation",
     "SourceCitationText",
     "SourceRefs",
+    "chain_family_fields",
     "coerce_decimal_tuple",
     "coerce_enum_member",
     "coerce_enum_tuple",
+    "collection_shaped_fields",
+    "filing_period_from_scope",
     "governance_stamp_fields",
+    "is_schema_model_element",
     "manifest_only_fields",
     "schema_family_fields",
 ]
@@ -267,6 +275,33 @@ SCHEMA_FAMILY = SchemaFamilyMarker()
 """The singleton marker attached to every revision schema-family declaration."""
 
 
+class ChainFamilyMarker:
+    """``Annotated`` metadata enrolling one field as a chain-statement family.
+
+    A chain family holds authored statements about an identifier-keyed family's
+    inheritance chain across editions - retirements and replacements - rather
+    than content of the revision itself. Its natural state is empty: an edition
+    that withdraws nothing declares nothing. Emptiness is therefore resolved by
+    construction and is never a coverage claim, which is why this marker is
+    distinct from :class:`SchemaFamilyMarker` and why coverage ignores it. The
+    loader still discovers the section by shape, and the conformance check
+    accepts either marker as deliberate enrolment.
+    """
+
+
+CHAIN_FAMILY = ChainFamilyMarker()
+"""The singleton marker attached to every chain-statement family declaration."""
+
+
+def chain_family_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Return the names of ``model``'s fields marked :data:`CHAIN_FAMILY`."""
+    return frozenset[str](
+        name
+        for name, field in model.model_fields.items()
+        if any(isinstance(meta, ChainFamilyMarker) for meta in field.metadata)
+    )
+
+
 def manifest_only_fields(model: type[BaseModel]) -> frozenset[str]:
     """Return the names of ``model``'s fields marked :data:`MANIFEST_ONLY`.
 
@@ -295,6 +330,34 @@ def schema_family_fields(model: type[BaseModel]) -> frozenset[str]:
         for name, field in model.model_fields.items()
         if any(isinstance(meta, SchemaFamilyMarker) for meta in field.metadata)
     )
+
+
+def is_schema_model_element(element: object) -> bool:
+    """Return whether a tuple element type is a registry model or a closed union of them.
+
+    A family may be a plain model class or an ``Annotated`` discriminated union of model
+    classes; both are collections of schema models for enrolment and loader purposes.
+    """
+    if isinstance(element, type):
+        return issubclass(element, BaseModel)
+    origin = get_origin(element)
+    if origin is Annotated:
+        return is_schema_model_element(get_args(element)[0])
+    if origin in (Union, UnionType):
+        return all(is_schema_model_element(member) for member in get_args(element))
+    return False
+
+
+def collection_shaped_fields(model: type[BaseModel]) -> frozenset[str]:
+    """Return the names of ``model``'s tuple fields whose element is a schema model."""
+    shaped: set[str] = set()
+    for name, field in model.model_fields.items():
+        if get_origin(field.annotation) is not tuple:
+            continue
+        args = get_args(field.annotation)
+        if args and is_schema_model_element(args[0]):
+            shaped.add(name)
+    return frozenset(shaped)
 
 
 def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:
@@ -778,3 +841,11 @@ class SourceCitation(RegistryModel):
         if len(set(value)) != len(value):
             raise RegistryValidationError("source citation required_text entries must be unique")
         return value
+
+
+def filing_period_from_scope(filing_year: int, period: str) -> Period | None:
+    """Return a core :class:`Period` when the registry token is a real filing-period code."""
+    try:
+        return Period.from_year_and_code(filing_year, period)
+    except ValueError:
+        return None

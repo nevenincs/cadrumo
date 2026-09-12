@@ -101,15 +101,15 @@ def _full_m100_profile() -> UserProfileRecord:
             UserProfileFact(path="identity.name", value="Ana"),
             # 0008 renta-2025-profile-tax-residence-ccaa (profile_model form)
             UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-            # 0009 renta-2025-profile-declaration-type
+            # 0009 renta-profile-declaration-type
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
             # 0010 renta-2025-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             # 0011 renta-2025-profile-marital-status
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
-            # 0045 renta-2025-profile-marriage-full-year (derived from marriage_date at bind time)
-            # 0046 renta-2025-profile-marriage-month-start
-            # 0047 renta-2025-profile-marriage-month-end
+            # 0045 renta-profile-marriage-full-year (derived from marriage_date at bind time)
+            # 0046 renta-profile-marriage-month-start
+            # 0047 renta-profile-marriage-month-end
             UserProfileFact(path="renta_taxpayer.marriage_date", value=date(2023, 6, 15)),
             # 0012 renta-2025-profile-taxpayer-birth-date
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
@@ -135,7 +135,7 @@ def _full_m100_profile() -> UserProfileRecord:
             UserProfileFact(path="renta_spouse.eu_eea_country", value="DE"),
             # 0023 renta-2025-profile-family-descendants-eu-eea-deduction
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
-            # 0024 renta-2025-profile-family-minor-children-in-unit
+            # 0024 renta-profile-family-minor-children-in-unit
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
         created_at=_CLOCK,
@@ -266,9 +266,9 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
 
-    assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
-    assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
-    assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-month-start"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
 
 def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
@@ -309,9 +309,9 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
     assert ecivil_binding_id not in resolved.binding_values
     assert ecivil_binding_id not in resolved.enum_binding_values
     assert ecivil_binding_id not in resolved.date_binding_values
-    assert resolved.binding_values["renta-2025-profile-marriage-full-year"] == Decimal("0")
-    assert resolved.binding_values["renta-2025-profile-marriage-month-start"] == Decimal("0")
-    assert resolved.binding_values["renta-2025-profile-marriage-month-end"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-full-year"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-month-start"] == Decimal("0")
+    assert resolved.binding_values["renta-profile-marriage-month-end"] == Decimal("0")
 
 
 def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved() -> None:
@@ -334,9 +334,9 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
 
     resolved = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET_ID, profile_record=record)
 
-    assert "renta-2025-profile-marriage-full-year" not in resolved.binding_values
-    assert "renta-2025-profile-marriage-month-start" not in resolved.binding_values
-    assert "renta-2025-profile-marriage-month-end" not in resolved.binding_values
+    assert "renta-profile-marriage-full-year" not in resolved.binding_values
+    assert "renta-profile-marriage-month-start" not in resolved.binding_values
+    assert "renta-profile-marriage-month-end" not in resolved.binding_values
 
 
 def test_typed_values_match_expected_python_types() -> None:
@@ -365,7 +365,7 @@ def test_typed_values_match_expected_python_types() -> None:
         # formula still compares this binding against the literal "0" and is
         # unaffected: _decimal_value converts a bool to Decimal("1")/("0")
         # before the numeric channel sees it.
-        ("renta-2025-profile-family-minor-children-in-unit", bool),
+        ("renta-profile-family-minor-children-in-unit", bool),
     ]:
         binding = binding_map[binding_id]
         value = resolve_profile_binding_value(binding, fact_index)
@@ -400,7 +400,7 @@ def test_typed_values_match_expected_python_types() -> None:
     # Decimal-coerced facts — UserProfileFact coerces numeric-string values.
     # declaration_type = "1" arrives as Decimal("1") after coercion.
     for binding_id in [
-        "renta-2025-profile-declaration-type",  # "1" → Decimal("1")
+        "renta-profile-declaration-type",  # "1" → Decimal("1")
         "renta-2025-profile-taxpayer-disability-grade",  # "0" → Decimal("0")
         "renta-2025-profile-spouse-disability-grade",  # "0" → Decimal("0")
     ]:

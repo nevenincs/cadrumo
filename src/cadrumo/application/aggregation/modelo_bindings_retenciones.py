@@ -8,6 +8,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.i18n.translatable import Translatable as t
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
@@ -165,6 +166,7 @@ class RetencionesAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"perceptor:{rollup.perceptor_nif}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.PERCEPTOR_OBSERVATION,
                 ),
             ),
         )

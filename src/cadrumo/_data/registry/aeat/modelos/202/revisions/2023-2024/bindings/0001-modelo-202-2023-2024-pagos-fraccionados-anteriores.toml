@@ -1,9 +1,10 @@
 [[revisions.2023-2024.bindings]]
 id = "modelo-202-pagos-fraccionados-anteriores"
-source = "relation_prefill"
+provider = { kind = "relation_prefill", relation_kind = "previous_period", dependency_role = "direct_calculation", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "prior_quarter_expanding_span" } }
+applicability = { kind = "target_periods", periods = ["2P", "3P"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-modelo-202-instructions-2023-2024"]
-selector = { source_modelo = "202", source_casilla_id = "34" }
 aggregation = { op = "sum" }
 
 [[revisions.2023-2024.bindings.source_citations]]

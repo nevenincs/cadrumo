@@ -2,7 +2,7 @@
 
 Split out from :mod:`domain.calculations.registry.bindings` into its own
 public defining module because :mod:`domain.calculations.registry.
-binding_selector_utils` needs :class:`ManualInputSelector` while ``bindings``
+binding_selector_utils` needs :class:`ManualInputProvider` while ``bindings``
 imports ``selector_as_dict`` / ``selector_against_model`` FROM
 ``binding_selector_utils`` -- a genuine module-level import cycle that was
 previously worked around with two function-local imports of a private
@@ -16,6 +16,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, model_validator
 
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from .errors import RegistryValidationError
@@ -24,7 +25,7 @@ from .schema_base import CasillaDataType, coerce_enum_member
 __all__ = [
     "MANUAL_INPUT_RECORD_SHAPE_KEYS",
     "ManualInputDataType",
-    "ManualInputSelector",
+    "ManualInputProvider",
     "is_layout_binding_selector",
 ]
 
@@ -48,7 +49,7 @@ MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "
 """Canonical record-field shape keys on the manual_input selector.
 
 Single source of truth for both the typed validator in
-:class:`ManualInputSelector` and the layout-binding predicate at
+:class:`ManualInputProvider` and the layout-binding predicate at
 :func:`is_layout_binding_selector`.
 """
 
@@ -57,7 +58,7 @@ def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
     """Return True when ``selector`` carries the record-field layout shape.
 
     The predicate intentionally mirrors the record-shape keys declared
-    on :class:`ManualInputSelector` rather than re-implementing the
+    on :class:`ManualInputProvider` rather than re-implementing the
     check via raw key inspection. Validate gate behaviour stays
     coupled to the typed model: if the manual_input record-shape key
     set is ever extended or renamed, the layout predicate follows
@@ -68,7 +69,7 @@ def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
     return MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
 
 
-def _has_record_shape(selector: ManualInputSelector) -> bool:
+def _has_record_shape(selector: ManualInputProvider) -> bool:
     """Return whether any record-field coordinate was supplied."""
     return any(getattr(selector, key) is not None for key in MANUAL_INPUT_RECORD_SHAPE_KEYS)
 
@@ -83,7 +84,7 @@ def _validate_shape_presence(has_casilla: bool, has_record_shape: bool) -> None:
         raise RegistryValidationError("manual_input selector must declare a casilla_id or a record-field shape")
 
 
-def _validate_record_shape(selector: ManualInputSelector) -> None:
+def _validate_record_shape(selector: ManualInputProvider) -> None:
     """Require every coordinate of the record-field selector shape."""
     missing = [key for key in MANUAL_INPUT_RECORD_SHAPE_KEYS if getattr(selector, key) is None]
     if missing:
@@ -92,7 +93,7 @@ def _validate_record_shape(selector: ManualInputSelector) -> None:
         )
 
 
-def _validate_boolean_casilla_shape(selector: ManualInputSelector, has_casilla: bool) -> None:
+def _validate_boolean_casilla_shape(selector: ManualInputProvider, has_casilla: bool) -> None:
     """Require explicit wire values for a boolean casilla selector."""
     if (
         has_casilla
@@ -104,7 +105,7 @@ def _validate_boolean_casilla_shape(selector: ManualInputSelector, has_casilla: 
         )
 
 
-def _validate_signed_shape(selector: ManualInputSelector, has_casilla: bool) -> None:
+def _validate_signed_shape(selector: ManualInputProvider, has_casilla: bool) -> None:
     """Restrict sign-marker metadata to money record-field selectors."""
     if selector.signed is not None:
         if has_casilla:
@@ -119,7 +120,7 @@ def _validate_signed_shape(selector: ManualInputSelector, has_casilla: bool) -> 
             )
 
 
-class ManualInputSelector(BaseModel):
+class ManualInputProvider(BaseModel):
     """Strict validator for the selector mapping of a manual_input binding.
 
     Two shapes are accepted, gated by ``_validate_manual_input_shape``:
@@ -140,6 +141,8 @@ class ManualInputSelector(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.MANUAL_INPUT] = BindingSourceKind.MANUAL_INPUT
 
     # casilla shape
     casilla_id: CasillaId | None = Field(default=None, min_length=1, max_length=64)
@@ -162,7 +165,7 @@ class ManualInputSelector(BaseModel):
     data_type: ManualInputDataType
 
     @model_validator(mode="after")
-    def _validate_manual_input_shape(self) -> ManualInputSelector:
+    def _validate_manual_input_shape(self) -> ManualInputProvider:
         has_casilla = self.casilla_id is not None
         has_record_shape = _has_record_shape(self)
         _validate_shape_presence(has_casilla, has_record_shape)

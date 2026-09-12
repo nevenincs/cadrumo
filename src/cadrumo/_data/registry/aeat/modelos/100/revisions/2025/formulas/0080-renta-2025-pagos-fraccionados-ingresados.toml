@@ -2,8 +2,8 @@
 id = "renta-pagos-fraccionados-ingresados"
 target_casilla_id = "0604"
 expression = { op = "sum", args = [
-    { relation = "renta-2025-rel-130-pagos-fraccionados" },
-    { relation = "renta-2025-rel-131-pagos-fraccionados" },
+    { binding = "renta-modelo-130-pagos-fraccionados" },
+    { binding = "renta-modelo-131-pagos-fraccionados" },
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-109", "rd-439-2007:art-110", "orden-hac-277-2026:art-3", "orden-eha-672-2007:art-3"]

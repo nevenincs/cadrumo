@@ -17,11 +17,10 @@ Sister shared module to :mod:`~.revision_carry_gate`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
-from ...core.aggregation import BindingSourceKind
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
+from ...domain.calculations.registry.bindings_previous_filing import (
+    PreviousFilingProvider,
+    previous_filing_observation_requirements,
+)
 from ...domain.calculations.registry.schema import ModeloRevision
 
 _PER_GRUPO_MEMBER: str = "per_grupo_member"
@@ -49,8 +48,7 @@ def per_grupo_member_requirement_keys(
     grouped_binding_ids = {
         binding.id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.PREVIOUS_FILING
-        and _selector_grouping(binding.selector) == _PER_GRUPO_MEMBER
+        if isinstance(binding.provider, PreviousFilingProvider) and binding.provider.grouping == _PER_GRUPO_MEMBER
     }
     if not grouped_binding_ids:
         return set()
@@ -63,9 +61,3 @@ def per_grupo_member_requirement_keys(
         if any(binding_id in grouped_binding_ids for binding_id in requirement.binding_ids):
             keys.add((requirement.source_modelo, requirement.filing_year, requirement.periods[0]))
     return keys
-
-
-def _selector_grouping(selector: object) -> object:
-    if isinstance(selector, Mapping):
-        return STR_KEYED_MAPPING_ADAPTER.validate_python(selector).get("grouping")
-    return getattr(selector, "grouping", None)

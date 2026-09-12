@@ -125,12 +125,12 @@ def _calculate_args(work_unit_id: str) -> list[str]:
         "--casilla", "DP200014:01033=0.00",
         "--casilla", "DP200014:01034=0.00",
         "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
-        "--binding", "modelo-200-2024-profile-new-entity-flag=0",
-        "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
-        "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
-        "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
-        "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
-        "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+        "--binding", "modelo-200-profile-new-entity-flag=0",
+        "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+        "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
+        "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
+        "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+        "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
         "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
     ]  # fmt: skip
 

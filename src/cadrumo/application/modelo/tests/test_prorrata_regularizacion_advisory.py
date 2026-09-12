@@ -42,14 +42,17 @@ from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
-from ....domain.calculations.registry.bindings import ProrrataRegularizacionOutput
 from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
+)
+from ....domain.calculations.registry.prorrata_regularizacion_bindings import (
+    ProrrataRegularizacionOutput,
+    ProrrataRegularizacionProvider,
+)
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
-)
-from ....domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
@@ -273,7 +276,8 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
         binding
         for binding in revision.bindings
         if binding.source is BindingSourceKind.PRORRATA_REGULARIZACION
-        and binding.selector.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
+        and isinstance(binding.provider, ProrrataRegularizacionProvider)
+        and binding.provider.regularizacion_output is ProrrataRegularizacionOutput.MODELO_303_CASILLA_44
     )
     assert diagnostic.casilla_id in casillas_by_binding(revision)[prorrata_binding.id]
     assert "definitiva del ejercicio anterior" in diagnostic.message

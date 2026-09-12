@@ -30,7 +30,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-general-base"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.reducido.base"
@@ -47,7 +46,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.super-reducido.base"
@@ -64,7 +62,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-super-reducido-base"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 [[revisions."2022".casillas]]
 id = "iva.anual.repercutido.zero.base"
@@ -81,7 +78,6 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-zero-base"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [48] "Total oper. inter. corrientes bienes y servic. - Base imponible",
 # the deducible-side counterpart of cuota box [49]. The sibling cuota binding
@@ -100,4 +96,3 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-soportado-interiores-base"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2022"]

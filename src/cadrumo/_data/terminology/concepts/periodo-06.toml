@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de juny (codi 06)."
+
+[language.en]
+short_description = "June monthly period (code 06)."
+
+[language.hu]
+short_description = "júniusi havi időszak (06-es kód)."
+

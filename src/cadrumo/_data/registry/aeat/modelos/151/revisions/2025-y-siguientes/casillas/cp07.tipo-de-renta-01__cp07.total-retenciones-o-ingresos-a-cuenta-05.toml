@@ -21,7 +21,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -36,7 +36,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -51,7 +51,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -66,7 +66,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -81,7 +81,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -96,7 +96,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -111,7 +111,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -126,7 +126,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -141,7 +141,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -156,7 +156,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -171,7 +171,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -186,7 +186,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -201,7 +201,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -216,7 +216,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -231,7 +231,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -246,7 +246,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -261,7 +261,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -276,7 +276,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -291,7 +291,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -306,7 +306,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -321,7 +321,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -336,7 +336,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -351,7 +351,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -366,7 +366,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -381,7 +381,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -396,7 +396,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -411,7 +411,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -426,7 +426,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -441,7 +441,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: NIF de la sociedad o fondo de inversión [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -456,7 +456,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -471,7 +471,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -486,7 +486,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Ganancia Patrimonial [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -501,7 +501,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Rentención o ingreso a cuenta [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -516,7 +516,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total ganancias patrimoniales [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -531,7 +531,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -546,4 +546,4 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]

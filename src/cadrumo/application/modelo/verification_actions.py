@@ -80,15 +80,16 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
-from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -176,11 +177,10 @@ from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
 from .verification_cross_period import (
-    IVA_COMPENSATION_CARRY_LEGAL_REF,
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,
     cross_period_expected_member_sets_from_profile,
-    modelo_202_incomplete_modality_finding,
+    registry_modality_finding,
     zero_value_previous_filing_binding_ids,
 )
 from .verification_preconditions import (
@@ -464,7 +464,7 @@ def _collect_verification_gate_findings(
             transaction_repository=transaction_repository,
         )
     )
-    incomplete_modality_finding = modelo_202_incomplete_modality_finding(
+    incomplete_modality_finding = registry_modality_finding(
         work_unit=work_unit,
         profile=workflow_profile,
     )
@@ -742,6 +742,7 @@ def _append_model_specific_findings(
             work_unit=work_unit,
             revision=target,
             observation_repository=observation_repository,
+            registry_query_service=RegistryQueryService(bundled_authority()),
         ),
     )
 
@@ -1330,7 +1331,7 @@ def _append_revision_advisory_findings(
 _OSS_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
 
-def _m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[DataBindingDefinition, ...]:
+def _m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
     return tuple(binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE)
 
 
@@ -1382,7 +1383,7 @@ def _m369_unresolved_oss_source_finding(
 
 
 def _oss_binding_grounding(
-    oss_bindings: tuple[DataBindingDefinition, ...],
+    oss_bindings: tuple[BindingDefinition, ...],
 ) -> tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
     """Collect the sorted legal_refs / source_refs declared across the OSS bindings."""
     legal_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.legal_refs}))
@@ -1834,7 +1835,7 @@ def _iva_wallet_error_verification_finding(error: ModeloIvaWalletReconciliationB
             "condition_id": error.precondition_failure.verdict.failed_condition_id,
             "scenario_id": error.precondition_failure.scenario_id,
         },
-        legal_refs=(IVA_COMPENSATION_CARRY_LEGAL_REF,),
+        legal_refs=(),
     )
 
 

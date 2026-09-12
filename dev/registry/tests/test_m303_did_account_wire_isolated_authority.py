@@ -9,10 +9,10 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
-from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 
 from cadrumo.application.aggregation.m303_arrivals import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
-from cadrumo.application.filing.export import _render_layout, export_draft, render_filing_envelope
+from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
+from cadrumo.application.filing.export import export_draft, render_filing_envelope, render_filing_layout
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest
 from cadrumo.application.filing.export_producer import filing_producer_values
 from cadrumo.application.filing.producer_snapshot import (
@@ -24,7 +24,7 @@ from cadrumo.application.filing.producer_snapshot import (
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
-from cadrumo.application.filing.runtime import RegistrySchemaAccessor, _subview_from_snapshot, collection_from_snapshot
+from cadrumo.application.filing.runtime import RegistrySchemaAccessor, collection_from_snapshot, subview_from_snapshot
 from cadrumo.core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
@@ -431,7 +431,7 @@ def _schema_provider_for_snapshot(snapshot: RegistrySnapshot) -> RegistrySchemaA
     modelo_id = snapshot.modelo.id
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot)},
-        subviews={modelo_id: _subview_from_snapshot(snapshot)},
+        subviews={modelo_id: subview_from_snapshot(snapshot)},
         snapshots={modelo_id: snapshot},
         sources=snapshot.sources,
     )
@@ -657,7 +657,7 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
     registry_snapshot, layout = _load_isolated_did_layout(tmp_path)
     snapshot = _m303_did_producer_snapshot(disposition, registry_snapshot=registry_snapshot)
 
-    wire = _render_layout(
+    wire = render_filing_layout(
         layout,
         registry_snapshot=registry_snapshot,
         draft=_draft(),
@@ -696,7 +696,7 @@ def test_filing_envelope_facade_derives_ordered_bytes_from_the_canonical_resolve
     )
 
     assert tuple((item.record_id, item.occurrence) for item in result.occurrences) == (("test-owned-m303-page-did", 1),)
-    assert result.occurrences[0].payload == _render_layout(
+    assert result.occurrences[0].payload == render_filing_layout(
         envelope_layout,
         registry_snapshot=registry_snapshot,
         draft=_draft(),

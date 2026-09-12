@@ -38,8 +38,11 @@ from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
+from ...domain.calculations.registry.detail_record_bindings import ForeignAssetProvider
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.query_reports import ModeloCasillasReport, ModeloDescribeReport
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -47,8 +50,6 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
-
-# TODO(fact-relocation): resolve foreign-asset casillas, row bindings, and export declarations from selected registry revision
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +79,18 @@ class _Modelo721RegistryFields:
     balance: CasillaId | None
 
 
+def _resolve_foreign_asset_registry_declarations(
+    *,
+    modelo: str,
+    period: str,
+) -> tuple[ModeloDescribeReport, ModeloCasillasReport]:
+    """Resolve the selected foreign-asset model and casilla declarations."""
+    query_service = RegistryQueryService(bundled_authority())
+    model_report = query_service.describe_modelo(modelo, period=period)
+    casilla_report = query_service.casillas(modelo, period=period)
+    return model_report, casilla_report
+
+
 def _registry_valuation_casillas(
     modelo_revision: ModeloRevision,
 ) -> dict[ForeignAssetObligationGroup, CasillaId]:
@@ -97,9 +110,8 @@ def _registry_valuation_casillas(
 
 def _registry_modelo_721_fields(observation: RegistryModeloObservation) -> _Modelo721RegistryFields:
     """Resolve the selected Modelo 721 identity/value fields from registry metadata."""
-    query_service = RegistryQueryService(bundled_authority())
-    report = query_service.casillas(
-        observation.modelo,
+    _, report = _resolve_foreign_asset_registry_declarations(
+        modelo=observation.modelo,
         period=observation.period,
     )
     custodian_fields = tuple(
@@ -131,10 +143,15 @@ def _foreign_asset_binding_ids(
 ) -> tuple[str | None, str | None]:
     """Discover class and valuation row bindings without local binding IDs."""
     foreign_asset_bindings = tuple(
-        binding for binding in modelo_revision.bindings if binding.source is BindingSourceKind.FOREIGN_ASSET
+        binding for binding in modelo_revision.bindings if isinstance(binding.provider, ForeignAssetProvider)
     )
     valuation_binding = next(
-        (binding.id for binding in foreign_asset_bindings if getattr(binding.selector, "data_type", None) == "money"),
+        (
+            binding.id
+            for binding in foreign_asset_bindings
+            if isinstance(binding.provider, ForeignAssetProvider)
+            and binding.provider.data_type is CasillaDataType.MONEY
+        ),
         None,
     )
     class_binding = next(

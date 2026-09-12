@@ -1,4 +1,5 @@
 [revisions."2015"]
+casilla_source_refs = ["boe-dr-184-2015"]
 authority_grade = "applicability"
 # The 2015 BOE record-design PDF is hash-pinned for its own exercise.  Its
 # first detected field starts at position 160, so it carries no selectable

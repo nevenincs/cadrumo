@@ -5,15 +5,13 @@ from __future__ import annotations
 import re
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated
 
-from pydantic import BeforeValidator, Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, model_validator
 
-from ....core.aggregation import RelationAggregation
 from ....core.casilla_id import CasillaId
 from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.identity.continuidad import ContinuidadId
-from ....core.period import FilingPeriodCode, RegistrySelectorPeriodCode
 from ._schema_export_exemption import ExportExemptionReasonValue
 from .casilla_lineage import CasillaLineageOriginField
 from .errors import RegistryValidationError
@@ -21,17 +19,11 @@ from .ids import (
     BindingId,
     ExportFieldId,
     FormulaId,
-    ModeloId,
     RecordId,
-    RelationId,
     RevisionId,
     SourceRefId,
 )
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
-from .relation_dependency import (
-    RelationDependencyRoleField,
-    RelationKindField,
-)
 from .schema_base import (
     CasillaDataType,
     CasillaDataTypeField,
@@ -52,9 +44,6 @@ __all__ = [
     "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
-    "RelationDefinition",
-    "RelationPeriodAlignment",
-    "RelationRevisionSelector",
 ]
 
 
@@ -89,33 +78,6 @@ SemanticRoleCardinalityField = Annotated[
     SemanticRoleCardinality, BeforeValidator(coerce_enum_member(SemanticRoleCardinality))
 ]
 """Registry token hydrated into a SemanticRoleCardinality member."""
-
-
-class RelationPeriodAlignmentMode(StrEnum):
-    """How a relation lines its source periods up against its target period."""
-
-    PREVIOUS_QUARTER = "previous_quarter"
-    PRIOR_PAGOS_CUMULATIVE = "prior_pagos_cumulative"
-
-
-RelationPeriodAlignmentModeField = Annotated[
-    RelationPeriodAlignmentMode, BeforeValidator(coerce_enum_member(RelationPeriodAlignmentMode))
-]
-"""Registry token hydrated into a RelationPeriodAlignmentMode member."""
-
-
-class RelationSourcePeriodShape(StrEnum):
-    """The shape of the period series a relation draws from."""
-
-    QUARTERS = "quarters"
-    MONTHS = "months"
-    ANNUAL_SUMMARY = "annual_summary"
-
-
-RelationSourcePeriodShapeField = Annotated[
-    RelationSourcePeriodShape, BeforeValidator(coerce_enum_member(RelationSourcePeriodShape))
-]
-"""Registry token hydrated into a RelationSourcePeriodShape member."""
 
 
 class CasillaContinuidadEvolutionDefinition(RegistryModel):
@@ -715,223 +677,6 @@ class CalculationCompletenessManifest(RegistryModel):
     def manifest_keys(self) -> frozenset[tuple[str, str | None, str]]:
         """Return canonical ids paired with their reviewed record-design metadata."""
         return frozenset(casilla.manifest_key() for casilla in self.casillas)
-
-
-def _validate_selector_year_to(year_from: int | None, year_to: int | None) -> None:
-    """Require an open or bounded selector's upper year to have a lower bound."""
-    if year_to is not None and year_from is None:
-        raise RegistryValidationError("relation source revision selector year_to requires year_from")
-
-
-def _validate_selector_presence(
-    year: int | None,
-    year_from: int | None,
-    filing_year_delta: int | None,
-) -> None:
-    """Require a revision selector to name one supported selection shape."""
-    if year is None and year_from is None and filing_year_delta is None:
-        raise RegistryValidationError(
-            "relation source revision selector must declare year, year_from, or filing_year_delta",
-        )
-
-
-def _validate_selector_mode(
-    year: int | None,
-    year_from: int | None,
-    year_to: int | None,
-    filing_year_delta: int | None,
-) -> None:
-    """Reject mixing absolute year selectors and relative filing-year deltas."""
-    absolute_selector = year is not None or year_from is not None or year_to is not None
-    if absolute_selector and filing_year_delta is not None:
-        raise RegistryValidationError(
-            "relation source revision selector must use absolute year bounds or filing_year_delta, not both",
-        )
-
-
-def _validate_selector_year_bounds(
-    year: int | None,
-    year_from: int | None,
-    year_to: int | None,
-) -> None:
-    """Reject ambiguous or backwards absolute year bounds."""
-    if year is not None and (year_from is not None or year_to is not None):
-        raise RegistryValidationError(
-            "relation source revision selector must use year or year_from/year_to, not both",
-        )
-    if year_from is not None and year_to is not None and year_to < year_from:
-        raise RegistryValidationError(
-            "relation source revision selector year_to must be on or after year_from",
-        )
-
-
-class RelationRevisionSelector(RegistryModel):
-    """Select source revisions by an absolute year or filing-year offset.
-
-    A selector may use one year, a bounded or open-ended year range, or a
-    relative filing-year delta; validation rejects mixed selector shapes.
-    """
-
-    year: int | None = None
-    year_from: int | None = None
-    year_to: int | None = None
-    filing_year_delta: int | None = None
-
-    @model_validator(mode="after")
-    def _validate_shape(self) -> RelationRevisionSelector:
-        _validate_selector_year_to(self.year_from, self.year_to)
-        _validate_selector_presence(self.year, self.year_from, self.filing_year_delta)
-        _validate_selector_mode(self.year, self.year_from, self.year_to, self.filing_year_delta)
-        _validate_selector_year_bounds(self.year, self.year_from, self.year_to)
-        return self
-
-
-def _alignment_declares_shape(alignment: RelationPeriodAlignment) -> bool:
-    """Return whether an alignment contains at least one shape declaration."""
-    return any(
-        value is not None
-        for value in (
-            alignment.mode,
-            alignment.source_periods,
-            alignment.source_period_kind,
-            alignment.source_period,
-            alignment.target_period,
-            alignment.filing_year_delta,
-        )
-    )
-
-
-def _validate_named_alignment(alignment: RelationPeriodAlignment) -> None:
-    """Reject fields that cannot accompany a named alignment mode."""
-    if any(
-        value is not None
-        for value in (
-            alignment.source_periods,
-            alignment.source_period_kind,
-            alignment.source_period,
-            alignment.target_period,
-            alignment.filing_year_delta,
-        )
-    ):
-        raise RegistryValidationError("relation period alignment mode cannot be combined with period fields")
-
-
-def _validate_source_periods_alignment(alignment: RelationPeriodAlignment) -> None:
-    """Validate a relation aligned by a named source-period shape."""
-    if alignment.target_period is None:
-        raise RegistryValidationError("relation period alignment source_periods requires target_period")
-    if any(
-        value is not None
-        for value in (
-            alignment.source_period_kind,
-            alignment.source_period,
-            alignment.filing_year_delta,
-        )
-    ):
-        raise RegistryValidationError(
-            "relation period alignment source_periods cannot be combined with source_period_kind, "
-            "source_period, or filing_year_delta",
-        )
-
-
-def _validate_source_period_kind_alignment(alignment: RelationPeriodAlignment) -> None:
-    """Validate a relation aligned by its source period kind."""
-    if alignment.target_period is None:
-        raise RegistryValidationError("relation period alignment source_period_kind requires target_period")
-    if alignment.source_period is not None or alignment.filing_year_delta is not None:
-        raise RegistryValidationError(
-            "relation period alignment source_period_kind cannot be combined with source_period or filing_year_delta",
-        )
-
-
-def _validate_explicit_period_alignment(alignment: RelationPeriodAlignment) -> None:
-    """Validate a relation aligned by an explicit source period and offset."""
-    if alignment.target_period is None or alignment.filing_year_delta is None:
-        raise RegistryValidationError(
-            "relation period alignment source_period requires target_period and filing_year_delta",
-        )
-
-
-class RelationPeriodAlignment(RegistryModel):
-    """Describe the validated source and target period shape of a relation.
-
-    An alignment uses either a named mode or one explicit period shape, with
-    validation enforcing the required target and year-offset fields.
-    """
-
-    mode: RelationPeriodAlignmentModeField | None = None
-    source_periods: RelationSourcePeriodShapeField | None = None
-    source_period_kind: Literal["quarterly"] | None = None
-    source_period: FilingPeriodCode | None = None
-    target_period: FilingPeriodCode | None = None
-    filing_year_delta: int | None = None
-
-    @model_validator(mode="after")
-    def _validate_shape(self) -> RelationPeriodAlignment:
-        if not _alignment_declares_shape(self):
-            raise RegistryValidationError("relation period alignment must declare a current alignment shape")
-        if self.mode is not None:
-            _validate_named_alignment(self)
-            return self
-        if self.source_periods is not None:
-            _validate_source_periods_alignment(self)
-            return self
-        if self.source_period_kind is not None:
-            _validate_source_period_kind_alignment(self)
-            return self
-        if self.source_period is not None:
-            _validate_explicit_period_alignment(self)
-            return self
-        raise RegistryValidationError("relation period alignment declares target/delta fields without source alignment")
-
-
-class RelationDefinition(RegistryModel):
-    """Declare a grounded relation from a source casilla to a target binding.
-
-    The declaration records source revision selection, period alignment,
-    dependency role, and the legal and source references that ground it.
-    """
-
-    id: RelationId
-    kind: RelationKindField
-    dependency_role: RelationDependencyRoleField
-    source_modelo: ModeloId
-    source_revision_selector: RelationRevisionSelector
-    source_casilla_id: CasillaId
-    target_binding: BindingId
-    period_alignment: RelationPeriodAlignment
-    source_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
-    target_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
-    source_period_offset_from_target: int | None = None
-    aggregation: RelationAggregation | None = None
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-    @field_validator("source_periods", "target_periods")
-    @classmethod
-    def _relation_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("relation periods must be unique")
-        return value
-
-    @model_validator(mode="after")
-    def _validate_dependency_role(self) -> RelationDefinition:
-        if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
-            raise RegistryValidationError(
-                f"annual summary relation {self.id!r} must use periodic_to_annual_summary role",
-            )
-        if self.source_period_offset_from_target is not None:
-            # The offset declares "for each target_period, derive source_period
-            # by adding the offset to the target's ordinal". It is incompatible
-            # with explicit source_periods which fixes a single static source set.
-            if self.source_periods:
-                raise RegistryValidationError(
-                    f"relation {self.id!r} cannot declare source_periods together with "
-                    "source_period_offset_from_target",
-                )
-            if self.source_period_offset_from_target == 0:
-                raise RegistryValidationError(f"relation {self.id!r} source_period_offset_from_target must be non-zero")
-        return self
 
 
 # Single source of truth for the predicate-DSL operator names. The

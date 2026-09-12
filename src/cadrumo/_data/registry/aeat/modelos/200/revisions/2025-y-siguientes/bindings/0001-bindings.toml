@@ -1,7 +1,8 @@
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-pagos-fraccionados-anuales"
-source = "relation_prefill"
-selector = { source_modelo = "202", source_casilla_id = "34" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "34", temporal = { kind = "same_filing_year_periods", source_periods = ["1P", "2P", "3P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -20,8 +21,9 @@ required_text = [
 # formula subtracts BOTH relations and a 40.2 filer's instalments are now credited.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-pagos-fraccionados-anuales-40-2"
-source = "relation_prefill"
-selector = { source_modelo = "202", source_casilla_id = "03" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "instalment_to_final_settlement", source_modelo = "202", source_casilla_id = "03", temporal = { kind = "same_filing_year_periods", source_periods = ["1P", "2P", "3P"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -43,10 +45,9 @@ required_text = [
 # fichero-BOE record.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-legal-entity-form"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "legal_entity_form" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "legal_entity_form" }
+value = { data_type = "enum", channel = "enum", typed_enum = "LegalEntityForm" }
 aggregation = { op = "copy" }
-typed_enum = "LegalEntityForm"
 legal_refs = ["ley-27-2014:art-29"]
 source_refs = ["aeat-modelo-200-manual-2025"]
 
@@ -63,8 +64,8 @@ required_text = ["tipo de gravamen"]
 # top of the sub-form rate dispatch rather than replacing it.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-new-entity-flag"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -86,8 +87,8 @@ required_text = ["tipo de gravamen"]
 # engine refuses to guess micro-empresa identification.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-incn-prior-12-months"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-29"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -109,8 +110,8 @@ required_text = ["tipo de gravamen"]
 # surface an INCOMPLETE result.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-tributacion-estado-porcentaje"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -128,8 +129,8 @@ required_text = ["Casilla [00625] Administración del Estado"]
 # the formula treats it as zero.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-sal-reserva-especial-dotada"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "sal_reserva_especial_dotada" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "sal_reserva_especial_dotada" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -144,8 +145,8 @@ required_text = ["base imponible"]
 # cent above twice capital social.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-profile-sal-capital-social"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "sal_capital_social" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "sal_capital_social" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -167,8 +168,9 @@ required_text = ["base imponible"]
 # only from 2024.
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-bin-pendiente-ejercicios-anteriores"
-source = "relation_prefill"
-selector = { source_modelo = "200", source_casilla_id = "00671" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "00671", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-26", "ley-27-2014:art-25"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -195,8 +197,9 @@ required_text = ["bases imponibles negativas"]
 # from 2024).
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores"
-source = "relation_prefill"
-selector = { source_modelo = "200", source_casilla_id = "01498" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "01498", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
 source_refs = ["aeat-modelo-200-manual-2025"]
@@ -207,8 +210,9 @@ required_text = ["deterioro"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores"
-source = "relation_prefill"
-selector = { source_modelo = "200", source_casilla_id = "01499" }
+provider = { kind = "relation_prefill", relation_kind = "cross_model_output", dependency_role = "direct_calculation", source_modelo = "200", source_casilla_id = "01499", temporal = { kind = "filing_year_offset", years = -1, source_periods = ["0A"] } }
+applicability = { kind = "target_periods", periods = ["0A"] }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-13"]
 source_refs = ["aeat-modelo-200-manual-2025"]

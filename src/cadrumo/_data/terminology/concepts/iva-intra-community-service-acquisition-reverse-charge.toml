@@ -15,3 +15,13 @@ updated_at = 2026-08-07
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Adquisició intracomunitària de serveis amb inversió del subjecte passiu"
+
+[language.en]
+short_description = "Intra-Community acquisition of services subject to the reverse charge"
+
+[language.hu]
+short_description = "Fordított adózás alá eső Közösségen belüli szolgáltatásbeszerzés"
+

@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaValidationError
@@ -120,6 +119,8 @@ def registry_citation_catalogue(
     authority: ValidatedRegistryAuthority | None = None,
 ) -> CitationCatalogue:
     """Project the dated citation mapping fact into generic parser inputs."""
+    from ..calculations.registry.authority import bundled_authority
+
     selected_authority = authority or bundled_authority()
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(

@@ -27,12 +27,12 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .....tests.registry_snapshot import build_snapshot
 from ...export_field_kind import CasillaFieldKind
 from ..authority import bundled_authority
 from ..export import resolve_export_layout
 from ..schema_exports import ExportFieldDefinition
 from ..support_matrix import build_support_matrix
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

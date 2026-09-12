@@ -1,4 +1,7 @@
 [revisions."2025-y-siguientes"]
+predecessor = "2024"
+casilla_source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
+reviewed_against = "2024"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -43,28 +46,6 @@ legal_refs = [
 ]
 orden_aplicabilidad = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-instructions-2025", "aeat-modelo-190-procedure", "boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
-
-
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = "The 2024 and 2025 Diseño de Registros editions split the perceptor record only at its tail (the 2025 edition carves positions 389-394 out of the 2024 edition's blancos run), and every casilla shared across the split keeps its id, its number and its grounding unchanged -- so no continuity transition carries anything to declare, and the casilla_continuidad_evolutions family is empty by construction rather than unbuilt. A transition becomes necessary only when an edition renumbers or re-grounds a box."
-legal_refs = [
-    "ley-35-2006:art-99",
-    "orden-eha-3127-2009:art-1",
-    "orden-hac-1431-2025:art-2",
-    "rd-439-2007:art-108",
-    "rd-439-2007:art-80",
-    "ley-35-2006:art-101",
-    "rd-439-2007:art-86",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "aeat-dr-190-2024",
-    "aeat-dr-190-2025",
-    "aeat-modelo-190-instructions-2025",
-    "aeat-modelo-190-procedure",
-    "boe-modelo-190-2025-form",
-    "boe-modelo-190-2025-amendment",
-]
 
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = """

@@ -29,9 +29,9 @@ from ..projection import (
     FilingProjectionPlan,
     FilingProjectionValue,
     FilingRecordRenderContext,
-    _project_record,
     _require_regimen_snapshot_matches_registry,
     build_m303_filing_projection_plan,
+    project_filing_record,
 )
 from ..record_renderer import preflight_projection_plan
 from .test_producer_snapshot import _elections, _m303_filing_facts, _m303_profile, _presenter, _taxpayer_identity
@@ -207,7 +207,7 @@ def test_render_context_and_m303_builder_refuse_nonowned_or_cross_period_authori
         field=M303Exonerado390ActivityField.ACTIVITY_CODE,
     )
     with pytest.raises(FilingExportValidationError, match="mixes or uses an unsupported"):
-        _project_record(
+        project_filing_record(
             registry_snapshot=snapshot_2026,
             layout=context.layout,
             record=context.record,

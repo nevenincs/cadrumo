@@ -59,9 +59,4 @@ formulas = [
     "renta-trabajo-otros-gastos",
 ]
 bindings = ["renta-modelo-111-retenciones-periodicas", "renta-modelo-190-retenciones-anuales"]
-relations = [
-    "renta-2025-rel-111-retenciones-trimestrales",
-    "renta-2025-rel-111-retenciones-mensuales",
-    "renta-2025-rel-190-retenciones-anuales",
-]
 dependency_classifications = ["renta-2025-dep-111", "renta-2025-dep-190"]

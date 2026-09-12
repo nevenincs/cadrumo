@@ -19,7 +19,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-zero-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.bienes.super_reduced.base"
@@ -34,7 +34,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-super-reduced-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.bienes.reduced.base"
@@ -49,7 +49,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-reduced-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.bienes.general.base"
@@ -64,7 +64,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-bienes-general-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.servicios.zero.base"
@@ -79,7 +79,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-zero-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.servicios.super_reduced.base"
@@ -94,7 +94,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-super-reduced-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.servicios.reduced.base"
@@ -109,7 +109,7 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-reduced-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2023".casillas]]
 id = "iva.anual.aic.servicios.general.base"
@@ -124,4 +124,4 @@ required = false
 input_kind = "bound"
 binding = "modelo-390-iva-aic-servicios-general-blind-base"
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-85", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

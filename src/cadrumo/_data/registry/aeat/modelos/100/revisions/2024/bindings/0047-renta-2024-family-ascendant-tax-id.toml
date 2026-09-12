@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "renta-family-ascendant-tax-id"
-source = "profile"
-selector = { profile_model = "RentaFamilyProfile", collection = "ascendants", field = "tax_id", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/DNIASDLG", dictionary_field = "DNIASDLG", repeating = true }
+provider = { kind = "profile", profile_model = "RentaFamilyProfile", collection = "ascendants", field = "tax_id", xsd_path = "/DatosIdentificativos/Ascendientes/Ascendiente/DNIASDLG", dictionary_field = "DNIASDLG", repeating = true }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-59", "ley-35-2006:art-81-bis", "orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

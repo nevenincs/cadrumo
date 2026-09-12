@@ -7,7 +7,6 @@ semantic_role = "is_correccion_operaciones_art19_otras_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "01682"
 number = "01682"
@@ -17,4 +16,3 @@ semantic_role = "is_correccion_operaciones_art19_otras_permanente_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

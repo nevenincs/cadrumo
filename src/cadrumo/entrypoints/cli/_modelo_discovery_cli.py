@@ -432,16 +432,28 @@ def requires(ctx: typer.Context, modelo: str, year: int, period: str) -> None:
         f"filing_year\t{checklist.filing_year}",
         f"period\t{checklist.period}",
         *discovery_rendering.data_inventory_section_lines(
-            tr("cli.app.modelo.requires.section_required", default="required_manual"), checklist.required_manual
+            tr(
+                "cli.app.modelo.requires.section_required",
+            ),
+            checklist.required_manual,
         ),
         *discovery_rendering.data_inventory_section_lines(
-            tr("cli.app.modelo.requires.section_optional", default="optional_manual"), checklist.optional_manual
+            tr(
+                "cli.app.modelo.requires.section_optional",
+            ),
+            checklist.optional_manual,
         ),
         *discovery_rendering.data_inventory_section_lines(
-            tr("cli.app.modelo.requires.section_ledger", default="ledger_derivable"), checklist.ledger_derivable
+            tr(
+                "cli.app.modelo.requires.section_ledger",
+            ),
+            checklist.ledger_derivable,
         ),
         *discovery_rendering.data_inventory_section_lines(
-            tr("cli.app.modelo.requires.section_profile", default="profile_derivable"), checklist.profile_derivable
+            tr(
+                "cli.app.modelo.requires.section_profile",
+            ),
+            checklist.profile_derivable,
         ),
         *discovery_rendering.data_inventory_section_lines("previous_filing", checklist.previous_filing),
         *discovery_rendering.data_inventory_section_lines("relation_prefill", checklist.relation_prefill),
@@ -568,8 +580,8 @@ def bindings_resolve(
         bindings=[
             BindingPreviewRowPayload(
                 binding_id=row.binding_id,
-                source=row.source,
-                readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
+                source=row.provider.kind,
+                readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind]),
                 typed_enum=row.typed_enum,
                 override=overrides.get(row.binding_id),
                 legal_refs=row.legal_refs,
@@ -595,8 +607,8 @@ def bindings_resolve(
             "\t".join(
                 (
                     row.binding_id,
-                    row.source,
-                    tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
+                    row.provider.kind,
+                    tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.provider.kind]),
                     overrides.get(row.binding_id) or "-",
                 )
             )

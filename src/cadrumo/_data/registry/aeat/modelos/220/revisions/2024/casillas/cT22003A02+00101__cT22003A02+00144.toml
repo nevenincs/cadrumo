@@ -82,7 +82,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. ACTIVO. Activos financieros mantenidos para negociar. [00102]
 [[revisions."2024".casillas]]
@@ -94,7 +93,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. ACTIVO. Activos financieros mantenidos para negociar.Instrumentos de patrimonio. [00103]
 [[revisions."2024".casillas]]
@@ -106,7 +104,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. ACTIVO. Activos financieros mantenidos para negociar. Valores representativos de deuda. [00104]
 [[revisions."2024".casillas]]
@@ -118,7 +115,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. ACTIVO. Activos financieros mantenidos para negociar.Derivados. [00105]
 [[revisions."2024".casillas]]
@@ -130,7 +126,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. ACTIVO. Activos financieros mantenidos para negociar. Otros. [00106]
 [[revisions."2024".casillas]]
@@ -142,7 +137,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. [00107]
 [[revisions."2024".casillas]]
@@ -154,7 +148,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Instrumentos de patrimonio. [00108]
 [[revisions."2024".casillas]]
@@ -166,7 +159,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Valores representativos de deuda. [00109]
 [[revisions."2024".casillas]]
@@ -178,7 +170,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Instrumentos híbridos. [00110]
 [[revisions."2024".casillas]]
@@ -190,7 +181,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. nversiones por cuenta de los tomadores de seguros de vida que asuman el riesgo de la inversión. [00111]
 [[revisions."2024".casillas]]
@@ -202,7 +192,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. ACTIVO. Otros activos financieros a valor razonable con cambios en pérdidas y ganancias. Otros. [00112]
 [[revisions."2024".casillas]]
@@ -214,7 +203,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. ACTIVO. Activos financieros disponibles para la venta. [00113]
 [[revisions."2024".casillas]]
@@ -226,7 +214,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. ACTIVO. Activos financieros disponibles para la venta. Instrumentos de patrimonio. [00114]
 [[revisions."2024".casillas]]
@@ -238,7 +225,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. ACTIVO. Activos financieros disponibles para la venta. Valores representativos de deuda. [00115]
 [[revisions."2024".casillas]]
@@ -250,7 +236,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. ACTIVO. Activos financieros disponibles para la venta. Inversiones por cuenta de los tomadores de seguros de vida que asuman el riesgo de la inversión. [00116]
 [[revisions."2024".casillas]]
@@ -262,7 +247,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. ACTIVO. Activos financieros disponibles para la venta. Otros. [00117]
 [[revisions."2024".casillas]]
@@ -274,7 +258,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. ACTIVO. Préstamos y partidas a cobrar. [00118]
 [[revisions."2024".casillas]]
@@ -286,7 +269,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. ACTIVO. Préstamos y partidas a cobrar. Valores representativos de deuda. [00119]
 [[revisions."2024".casillas]]
@@ -298,7 +280,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. [00120]
 [[revisions."2024".casillas]]
@@ -310,7 +291,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. ACTIVO. Préstamos y partidas a cobrar. Anticipos sobre pólizas. [00121]
 [[revisions."2024".casillas]]
@@ -322,7 +302,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos a entidades del grupo y asociadas. [00122]
 [[revisions."2024".casillas]]
@@ -334,7 +313,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Entidades asociadas [00700]
 [[revisions."2024".casillas]]
@@ -346,7 +324,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Entidades multigrupo [00701]
 [[revisions."2024".casillas]]
@@ -358,7 +335,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos. Otros [00702]
 [[revisions."2024".casillas]]
@@ -370,7 +346,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 N. ACTIVO. Préstamos y partidas a cobrar. Préstamos a otras partes vinculadas. [00123]
 [[revisions."2024".casillas]]
@@ -382,7 +357,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 N. ACTIVO. Préstamos y partidas a cobrar. Depósitos en entidades de crédito. [00124]
 [[revisions."2024".casillas]]
@@ -394,7 +368,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. ACTIVO. Préstamos y partidas a cobrar. Depósitos constituídos por reaseguro aceptado. [00125]
 [[revisions."2024".casillas]]
@@ -406,7 +379,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de seguro directo. [00126]
 [[revisions."2024".casillas]]
@@ -418,7 +390,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 N. ACTIVO. Préstamos y partidas a cobrar. Tomadores de seguro. [00127]
 [[revisions."2024".casillas]]
@@ -430,7 +401,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 N. ACTIVO. Préstamos y partidas a cobrar. Mediadores. [00128]
 [[revisions."2024".casillas]]
@@ -442,7 +412,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de reaseguro. [00129]
 [[revisions."2024".casillas]]
@@ -454,7 +423,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos por operaciones de coaseguro. [00130]
 [[revisions."2024".casillas]]
@@ -466,7 +434,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+17 N. ACTIVO. Préstamos y partidas a cobrar. Desembolsos exigidos. [00131]
 [[revisions."2024".casillas]]
@@ -478,7 +445,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @594+17 N. ACTIVO. Préstamos y partidas a cobrar. Otros créditos. [00132]
 [[revisions."2024".casillas]]
@@ -490,7 +456,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @611+17 N. ACTIVO. Préstamos y partidas a cobrar. Créditos con las Administraciones Públicas. [00133]
 [[revisions."2024".casillas]]
@@ -502,7 +467,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @628+17 N. ACTIVO. Préstamos y partidas a cobrar. Resto de créditos. [00134]
 [[revisions."2024".casillas]]
@@ -514,7 +478,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @645+17 N. ACTIVO. Cartera de inversión a vencimiento. [00135]
 [[revisions."2024".casillas]]
@@ -526,7 +489,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @662+17 N. ACTIVO. Derivados de cobertura. [00136]
 [[revisions."2024".casillas]]
@@ -538,7 +500,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @679+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas. [00137]
 [[revisions."2024".casillas]]
@@ -550,7 +511,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @696+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.. Provisión para primas no consumidas. [00138]
 [[revisions."2024".casillas]]
@@ -562,7 +522,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @713+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.Provisión de seguros de vida. [00139]
 [[revisions."2024".casillas]]
@@ -574,7 +533,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @730+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas.. Provisión para prestaciones. [00140]
 [[revisions."2024".casillas]]
@@ -586,7 +544,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @747+17 N. ACTIVO. Participación del reaseguro en las provisiones técnicas. Otras provisiones técnicas. [00141]
 [[revisions."2024".casillas]]
@@ -598,7 +555,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @764+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. [00142]
 [[revisions."2024".casillas]]
@@ -610,7 +566,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @781+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. Inmovilizado material. [00143]
 [[revisions."2024".casillas]]
@@ -622,7 +577,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @798+17 N. ACTIVO. Inmovilizado material e inversiones inmobiliarias. Inversiones inmobiliarias. [00144]
 [[revisions."2024".casillas]]
@@ -634,4 +588,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

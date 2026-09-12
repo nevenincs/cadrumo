@@ -19,7 +19,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "02"
@@ -32,7 +31,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "03"
@@ -45,7 +43,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "04"
@@ -58,7 +55,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "05"
@@ -71,7 +67,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "06"
@@ -84,7 +79,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "07"
@@ -97,7 +91,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "08"
@@ -110,7 +103,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "09"
@@ -123,7 +115,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "10"
@@ -136,7 +127,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "107"
@@ -146,7 +136,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "11"
@@ -159,7 +148,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "12"
@@ -172,7 +160,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "120"
@@ -185,7 +172,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "122"
@@ -198,7 +184,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "123"
@@ -211,7 +196,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "124"
@@ -224,7 +208,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "125"
@@ -237,7 +220,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "126"
@@ -250,7 +232,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "127"
@@ -263,7 +244,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "128"
@@ -273,7 +253,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "13"
@@ -286,7 +265,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "14"
@@ -299,7 +277,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "15"
@@ -312,7 +289,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "150"
@@ -324,7 +300,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "151"
@@ -336,7 +311,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "152"
@@ -348,7 +322,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "153"
@@ -360,7 +333,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "154"
@@ -372,7 +344,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "155"
@@ -384,7 +355,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "156"
@@ -396,7 +366,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "157"
@@ -408,7 +377,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "158"
@@ -420,7 +388,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "159"
@@ -432,7 +399,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "16"
@@ -445,7 +411,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "160"
@@ -457,7 +422,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "161"
@@ -469,7 +433,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "162"
@@ -481,7 +444,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "163"
@@ -493,7 +455,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "164"
@@ -505,7 +466,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "17"
@@ -518,7 +478,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "18"
@@ -531,7 +490,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "19"
@@ -544,7 +502,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "20"
@@ -557,7 +514,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "21"
@@ -567,7 +523,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "22"
@@ -577,7 +532,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "23"
@@ -587,7 +541,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "24"
@@ -597,7 +550,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "25"
@@ -607,7 +559,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "26"
@@ -617,7 +568,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]
 
 [[revisions."2023".casillas]]
 id = "27"
@@ -630,4 +580,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-322-2023"]

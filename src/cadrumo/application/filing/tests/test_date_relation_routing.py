@@ -49,7 +49,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _M100_BIRTH_DATE_BINDING = "renta-2024-profile-taxpayer-birth-date"
 _M100_TAX_RESIDENCE_CCAA_BINDING = "renta-2024-profile-tax-residence-ccaa"
-_M100_ESTIMACION_DIRECTA_NORMAL_BINDING = "renta-2024-modelo-100-estimacion-directa-es-normal"
+_M100_ESTIMACION_DIRECTA_NORMAL_BINDING = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_RELATIONS = (
     "renta-2024-rel-130-pagos-fraccionados",
     "renta-2024-rel-131-pagos-fraccionados",
@@ -94,7 +94,7 @@ def test_date_inputs_for_ids_parses_iso_date_strings() -> None:
     """ISO date strings persisted on the revision snapshot parse back to ``date``."""
     inputs = {
         _M100_BIRTH_DATE_BINDING: "1985-05-15",
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
     }
     result = _date_inputs_for_ids(inputs, {_M100_BIRTH_DATE_BINDING})
     assert result == {_M100_BIRTH_DATE_BINDING: date(1985, 5, 15)}
@@ -162,25 +162,25 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             _M100_TAX_RESIDENCE_CCAA_BINDING: "madrid",
             _M100_BIRTH_DATE_BINDING: "1975-06-15",
             _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: "1",
-            "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-            "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-            "renta-2024-profile-declaration-type": Decimal("1"),
-            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-            "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-            "renta-2024-profile-incremento-guarderia": Decimal("0"),
-            "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-            "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-            "renta-2024-profile-marriage-full-year": Decimal("0"),
-            "renta-2024-profile-marriage-month-start": Decimal("0"),
-            "renta-2024-profile-marriage-month-end": Decimal("0"),
-            "renta-2024-profile-anualidades-sin-minimo-descendientes": Decimal("0"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-family-minor-children-in-unit": Decimal("0"),
+            "renta-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("0"),
+            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-profile-descendientes-guarderia": Decimal("0"),
+            "renta-profile-marriage-full-year": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-profile-anualidades-sin-minimo-descendientes": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
             # is zero.
-            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
             # Parte autonómica: non-Madrid profile mirrors the estatal zero.
-            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
-            "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
             "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
             "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
             "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),

@@ -5,7 +5,7 @@ from collections.abc import Iterable, Mapping
 import pytest
 
 from cadrumo.domain.calculations.registry.bindings_previous_filing import previous_filing_source_reference
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import RelationDefinition
 
 from ..compiler.validate_relation_periods import (
@@ -199,7 +199,7 @@ def _relations(
 
 def _previous_filing_bindings(
     modelos: Iterable[ModeloDefinition],
-) -> Iterable[tuple[ModeloDefinition, ModeloRevision, DataBindingDefinition]]:
+) -> Iterable[tuple[ModeloDefinition, ModeloRevision, BindingDefinition]]:
     for modelo in modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:

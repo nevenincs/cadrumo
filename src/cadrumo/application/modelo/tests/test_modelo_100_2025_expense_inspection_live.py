@@ -61,7 +61,7 @@ _M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: CasillaId = validated_casilla_id
     "1391",
     surface="_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA",
 )
-_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-2025-modelo-100-estimacion-directa-es-normal"
+_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
 _M100_SS_BINDING: BindingId = "renta-2025-ledger-expense-0186-deductible"
 _M100_OTHER_EXPENSES_BINDING: BindingId = "renta-2025-ledger-expense-0199-deductible"
 

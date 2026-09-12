@@ -22,7 +22,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Devengo - Periodo
 [[revisions."2015-2022".casillas]]
@@ -34,7 +33,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. Sexo
 [[revisions."2015-2022".casillas]]
@@ -47,7 +45,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. Fecha de nacimiento
 [[revisions."2015-2022".casillas]]
@@ -60,7 +57,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. Cambio de domicilio
 [[revisions."2015-2022".casillas]]
@@ -73,7 +69,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
@@ -86,7 +81,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
@@ -99,7 +93,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
@@ -112,7 +105,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
@@ -125,7 +117,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
@@ -138,7 +129,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 49 - Bloque.
 [[revisions."2015-2022".casillas]]
@@ -151,7 +141,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 50 - Portal.
 [[revisions."2015-2022".casillas]]
@@ -164,7 +153,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 51 - Escalera.
 [[revisions."2015-2022".casillas]]
@@ -177,7 +165,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 52 - Planta.
 [[revisions."2015-2022".casillas]]
@@ -190,7 +177,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 53 - Puerta.
 [[revisions."2015-2022".casillas]]
@@ -203,7 +189,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
@@ -216,7 +201,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
@@ -229,7 +213,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 56 - Código postal.
 [[revisions."2015-2022".casillas]]
@@ -241,7 +224,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 58 - Código de Provincia.
 [[revisions."2015-2022".casillas]]
@@ -253,7 +235,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 57 - Código de Municipio.
 [[revisions."2015-2022".casillas]]
@@ -265,7 +246,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 59 - Teléfono fijo.
 [[revisions."2015-2022".casillas]]
@@ -278,7 +258,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 60 - Teléfono móvil.
 [[revisions."2015-2022".casillas]]
@@ -291,7 +270,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente. 61 - Nº de Fax.
 [[revisions."2015-2022".casillas]]
@@ -303,7 +281,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 62 - Domicilio
 [[revisions."2015-2022".casillas]]
@@ -316,7 +293,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 63 - Datos complementarios domicilio
 [[revisions."2015-2022".casillas]]
@@ -329,7 +305,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 64 - Población/Ciudad
 [[revisions."2015-2022".casillas]]
@@ -342,7 +317,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 65 - Email
 [[revisions."2015-2022".casillas]]
@@ -355,7 +329,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 66 - Código postal/ZIP
 [[revisions."2015-2022".casillas]]
@@ -368,7 +341,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 67 - Provincia/Región/Estado
 [[revisions."2015-2022".casillas]]
@@ -381,7 +353,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 68 - País
 [[revisions."2015-2022".casillas]]
@@ -394,7 +365,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 70 - Teléfono Fijo
 [[revisions."2015-2022".casillas]]
@@ -407,7 +377,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 71 - Teléfono Móvil
 [[revisions."2015-2022".casillas]]
@@ -420,7 +389,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Domicilio Extranjero. 72 - Nº Fax
 [[revisions."2015-2022".casillas]]
@@ -432,7 +400,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Titularidad
 [[revisions."2015-2022".casillas]]
@@ -445,7 +412,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Porcentaje participación
 [[revisions."2015-2022".casillas]]
@@ -458,7 +424,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Situación
 [[revisions."2015-2022".casillas]]
@@ -471,7 +436,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Contribuyente Datos Adicionales vivienda actual. Referencia catastral
 [[revisions."2015-2022".casillas]]
@@ -484,7 +448,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. NIF
 [[revisions."2015-2022".casillas]]
@@ -497,7 +460,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. Apellidos
 [[revisions."2015-2022".casillas]]
@@ -509,7 +471,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. Nombre
 [[revisions."2015-2022".casillas]]
@@ -521,7 +482,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 44 - Tipo de vía.
 [[revisions."2015-2022".casillas]]
@@ -534,7 +494,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 45 - Nombre de la vía pública.
 [[revisions."2015-2022".casillas]]
@@ -547,7 +506,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 46 - Tipo de numeración.
 [[revisions."2015-2022".casillas]]
@@ -560,7 +518,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 47 - Número de casa.
 [[revisions."2015-2022".casillas]]
@@ -573,7 +530,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 48 - Calificador de número.
 [[revisions."2015-2022".casillas]]
@@ -586,7 +542,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 49 - Bloque.
 [[revisions."2015-2022".casillas]]
@@ -599,7 +554,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 50 - Portal.
 [[revisions."2015-2022".casillas]]
@@ -612,7 +566,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 51 - Escalera.
 [[revisions."2015-2022".casillas]]
@@ -625,7 +578,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 52 - Planta.
 [[revisions."2015-2022".casillas]]
@@ -638,7 +590,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 53 - Puerta.
 [[revisions."2015-2022".casillas]]
@@ -651,7 +602,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 54 - Datos complementarios de domicilio.
 [[revisions."2015-2022".casillas]]
@@ -664,7 +614,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 55 - Localidad/Población
 [[revisions."2015-2022".casillas]]
@@ -676,7 +625,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 56 - Código postal.
 [[revisions."2015-2022".casillas]]
@@ -688,7 +636,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 58 - Código de Provincia.
 [[revisions."2015-2022".casillas]]
@@ -700,7 +647,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 57 - Código de Municipio.
 [[revisions."2015-2022".casillas]]
@@ -712,7 +658,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 59 - Teléfono fijo.
 [[revisions."2015-2022".casillas]]
@@ -725,7 +670,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 60 - Teléfono móvil.
 [[revisions."2015-2022".casillas]]
@@ -738,7 +682,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Representante. 61 - Nº de Fax.
 [[revisions."2015-2022".casillas]]
@@ -750,7 +693,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Comunidad Autonoma de residencia durante el ejercicio indicado
 [[revisions."2015-2022".casillas]]
@@ -763,7 +705,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Asignacion Tributaria a la Iglesia Católica
 [[revisions."2015-2022".casillas]]
@@ -776,7 +717,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Asignacion de cantidades a fines sociales
 [[revisions."2015-2022".casillas]]
@@ -789,7 +729,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Declaracion Complementaria
 [[revisions."2015-2022".casillas]]
@@ -802,7 +741,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Declaracion Complementaria 2
 [[revisions."2015-2022".casillas]]
@@ -815,7 +753,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]
 
 # AEAT campo: Número de Justificante
 [[revisions."2015-2022".casillas]]
@@ -828,4 +765,3 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hap-2783-2015:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-modelo-151-procedure"]

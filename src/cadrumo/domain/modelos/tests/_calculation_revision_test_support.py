@@ -7,7 +7,6 @@ from typing import TypedDict
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ids import RelationId
 from ...calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -17,8 +16,14 @@ from ...iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
-from ..calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
-from ..calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from ..calculation_revision_m303_evidence import (
+    M303Exonerado390FilingEvidence,
+    M303RegimenSimplificadoCalculationResult,
+)
+from ..calculation_revision_m303_handoff import (
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 
 _INPUT_CASILLA_001: CasillaId = validated_casilla_id("001")
 _INPUT_CASILLA_002: CasillaId = validated_casilla_id("002")
@@ -61,6 +66,21 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
         ),
         scope_decision=scope,
     )
+    record_design = snapshot.record_design
+    record_design_epoch = record_design.record_design_epoch
+    if record_design_epoch is None:
+        raise AssertionError("the resolved M303 record design must carry its epoch")
+    calculation_result = M303RegimenSimplificadoCalculationResult.calculated(
+        ejercicio=period.filing_year,
+        registry_revision_id=snapshot.registry_revision_id,
+        period=period,
+        orden_source_ref=snapshot.orden.source_ref,
+        orden_source_content_digest=snapshot.orden.source_content_digest,
+        record_design_source_ref=record_design.id,
+        record_design_content_digest=record_design.sha256,
+        record_design_epoch=record_design_epoch,
+        activities=(),
+    )
     return M303FilingInstanceEvidence(
         period=period,
         joint_return_elected=True,
@@ -74,11 +94,11 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
             operaciones_terceros_declarables=None,
             operaciones_terceros_reference=None,
         ),
-        regimen_simplificado=regimen_simplificado_filing_evidence(
-            period=period,
+        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
             scope_decision=scope,
             rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
             regimen_snapshot=snapshot,
             dana_2024_eligibility=None,
+            calculation_result=calculation_result,
         ),
     )

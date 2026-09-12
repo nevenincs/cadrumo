@@ -8,11 +8,23 @@ typed result and the eventual mechanical reconstruction boundary.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from datetime import date
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
+    ScalarFactQuery,
+)
+from ..calculations.registry.queries import RegistryQueryService
+from ..calculations.registry.schema_base import DateAxis
 
 if TYPE_CHECKING:
     from .descendant import DescendantInfo
@@ -26,6 +38,84 @@ __all__ = [
 #: Prefix the stored descendant facts share, matching the one the canonical
 #: descendant reconstruction reads.
 _DESCENDANT_FACT_PREFIX: Final[str] = "renta_family.descendiente."
+
+
+@dataclass(frozen=True, slots=True)
+class _SeguroEnfermedadRegistryDeclarations:
+    """The selected, dated declarations needed by this mechanical reducer."""
+
+    disability_minimum_grade: int
+    insured_child_maximum_age: int
+    applicability: Mapping[str, str]
+
+    def required(self, key: str) -> str:
+        """Return one required applicability declaration without a local default."""
+        value = self.applicability.get(key)
+        if value is None or not value.strip():
+            raise ValueError(f"insurance applicability declaration {key!r} is empty or absent")
+        return value
+
+
+def _resolve_seguro_enfermedad_registry_declarations(
+    filing_year: int,
+) -> _SeguroEnfermedadRegistryDeclarations:
+    """Resolve the selected Modelo 100 and dated insurance fact declarations."""
+    effective_date = date(filing_year, 12, 31)
+    authority = bundled_authority()
+    query_service = RegistryQueryService(authority)
+    selected_model = query_service.describe_modelo("100", as_of=effective_date)
+    if not selected_model.revision:
+        raise ValueError("selected Modelo 100 registry revision is unavailable")
+
+    resolved_grade = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id="rirpf-art-72-disability-minimum-grade",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    resolved_age = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id="lirpf-art-30-insured-child-maximum-age",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    resolved_applicability = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id="lirpf-art-30-insured-coverage-applicability",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    if not isinstance(resolved_grade, ResolvedScalarFact):
+        raise TypeError("insurance disability threshold must resolve as a scalar fact")
+    if not isinstance(resolved_age, ResolvedScalarFact):
+        raise TypeError("insurance child age boundary must resolve as a scalar fact")
+    if not isinstance(resolved_applicability, ResolvedMappingFact):
+        raise TypeError("insurance applicability must resolve as a mapping fact")
+    try:
+        disability_minimum_grade = int(resolved_grade.payload.value)
+        insured_child_maximum_age = int(resolved_age.payload.value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("insurance scalar declarations must be integral") from exc
+    applicability: dict[str, str] = {}
+    for entry in resolved_applicability.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("insurance applicability entries must be string-to-string")
+        applicability[entry.key] = entry.value
+    declarations = _SeguroEnfermedadRegistryDeclarations(
+        disability_minimum_grade=disability_minimum_grade,
+        insured_child_maximum_age=insured_child_maximum_age,
+        applicability=MappingProxyType(applicability),
+    )
+    declarations.required("insured_population.taxpayer")
+    declarations.required("insured_population.spouse")
+    declarations.required("insured_population.child")
+    declarations.required("insured_population.child.death_gate")
+    declarations.required("coverage_limb.discapacidad")
+    declarations.required("coverage_limb.general")
+    return declarations
 
 
 class SeguroEnfermedadInsuredCounts(BaseModel):
@@ -51,14 +141,29 @@ class SeguroEnfermedadInsuredCounts(BaseModel):
         return self.general + self.discapacidad
 
 
-def _limb_for(grade: int | None) -> str:
+def _limb_for(
+    grade: int | None,
+    declarations: _SeguroEnfermedadRegistryDeclarations,
+) -> str:
     """Resolve the registry-owned coverage limb for a declared grade."""
-    raise NotImplementedError("insurance coverage-limb applicability is unresolved")
+    if grade is not None and grade >= declarations.disability_minimum_grade:
+        return "discapacidad"
+    return "general"
 
 
-def _insured_child(descendant: DescendantInfo, filing_year: int) -> bool:
+def _insured_child(
+    descendant: DescendantInfo,
+    filing_year: int,
+    declarations: _SeguroEnfermedadRegistryDeclarations,
+) -> bool:
     """Resolve registry-owned child coverage applicability."""
-    raise NotImplementedError("insurance child-coverage applicability is unresolved")
+    declarations.required("insured_population.child")
+    declarations.required("insured_population.child.death_gate")
+    if not descendant.convive_con_contribuyente:
+        return False
+    if descendant.age_at_year_end(filing_year) >= declarations.insured_child_maximum_age:
+        return False
+    return descendant.death_date is None or descendant.death_date.year >= filing_year
 
 
 def count_seguro_enfermedad_insured(
@@ -81,8 +186,24 @@ def count_seguro_enfermedad_insured(
     Returns:
         The per-limb counts.
     """
-    # TODO(fact-relocation): resolve insurance eligibility thresholds and coverage rules from registry authority
-    raise NotImplementedError("insurance eligibility is unresolved")
+    declarations = _resolve_seguro_enfermedad_registry_declarations(filing_year)
+    counts = {limb: 0 for limb in SeguroEnfermedadInsuredCounts.model_fields}
+
+    def add_insured(grade: int | None) -> None:
+        limb = _limb_for(grade, declarations)
+        if limb not in counts:
+            raise ValueError(f"insurance applicability selected unknown coverage limb {limb!r}")
+        counts[limb] += 1
+
+    declarations.required("insured_population.taxpayer")
+    add_insured(taxpayer_discapacidad_grado)
+    if has_spouse:
+        declarations.required("insured_population.spouse")
+        add_insured(spouse_discapacidad_grado)
+    for descendant in descendientes:
+        if _insured_child(descendant, filing_year, declarations):
+            add_insured(descendant.discapacidad_grado)
+    return SeguroEnfermedadInsuredCounts.model_validate(counts)
 
 
 def seguro_enfermedad_insured_counts_from_facts(
@@ -107,8 +228,23 @@ def seguro_enfermedad_insured_counts_from_facts(
     Returns:
         The per-limb counts.
     """
-    # TODO(fact-relocation): resolve insurance eligibility thresholds and coverage rules from registry authority
-    raise NotImplementedError("insurance eligibility is unresolved")
+    from .descendant_facts import descendant_list_from_facts
+
+    stored_facts = {str(path): str(value) for path, value in fact_index.items() if value is not None}
+    descendientes = descendant_list_from_facts(stored_facts)
+    return count_seguro_enfermedad_insured(
+        descendientes,
+        filing_year=filing_year,
+        taxpayer_discapacidad_grado=_declared_grado(
+            fact_index,
+            "renta_taxpayer.disability_grade",
+        ),
+        spouse_discapacidad_grado=_declared_grado(
+            fact_index,
+            "renta_spouse.disability_grade",
+        ),
+        has_spouse=any(str(path).startswith("renta_spouse.") for path in fact_index),
+    )
 
 
 def _declared_grado(fact_index: Mapping[str, object], path: str) -> int | None:

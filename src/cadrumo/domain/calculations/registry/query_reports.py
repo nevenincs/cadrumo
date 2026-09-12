@@ -36,7 +36,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -45,8 +45,9 @@ from ....core.identity.aeat_box import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.text_bounds import PositiveCount
+from .binding_provider import BindingProvider
 from .binding_selector_utils import BooleanBindingEncodedValue
-from .ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
+from .ids import BindingId, FormulaId, LegalRefId, ParameterId, RevisionId, SourceRefId
 from .schema_input_kind import InputKind
 from .support_matrix import ModeloEntry
 
@@ -198,43 +199,26 @@ class ModeloCasillaDetailReport(CasillaGroundingReport):
     formula_expression: Mapping[str, object] | None
 
 
-BindingSelectorQueryValue = str | int | bool | tuple[str, ...]
-
-
-class BindingSelectorQueryEntry(BaseModel):
-    """One normalized binding-selector entry on the public query surface."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    key: str = Field(min_length=1)
-    value: BindingSelectorQueryValue
-
-
-class BindingSelectorQueryProjection(BaseModel):
-    """Typed public projection of a binding selector."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    source: str
-    keys: tuple[str, ...]
-    entries: tuple[BindingSelectorQueryEntry, ...]
-
-
 class ModeloBindingQueryRow(BaseModel):
     """One row in a binding listing for a resolved modelo revision."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     binding_id: BindingId
-    source: BindingSourceKind
     typed_enum: str | None
     input_channel: BindingInputChannelValue
-    selector: BindingSelectorQueryProjection
+    provider: BindingProvider
+    """The binding's own provider union member, carried whole.
+
+    The public surface used to flatten the declaration into an untagged
+    key/value entry list, which erased the member's identity and its field
+    types. Carrying the member itself keeps the discriminator and every typed
+    field; a JSON consumer serialises it with ``model_dump(mode="json")``.
+    """
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
     borrador_capable: bool = False
-    relation_inputs: tuple[RelationId, ...] = ()
     encoded_options: tuple[BooleanBindingEncodedValue, ...] = ()
     operator_input_required: bool = True
 
@@ -262,7 +246,6 @@ class ModeloFormulaRow(BaseModel):
     input_casilla_ids: tuple[CasillaId, ...]
     input_bindings: tuple[BindingId, ...]
     input_parameters: tuple[ParameterId, ...]
-    input_relations: tuple[RelationId, ...]
     expression: Mapping[str, object]
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
@@ -323,9 +306,6 @@ class ModeloSupportMatrixReport(BaseModel):
 
 
 __all__ = [
-    "BindingSelectorQueryEntry",
-    "BindingSelectorQueryProjection",
-    "BindingSelectorQueryValue",
     "ModeloBindingQueryRow",
     "ModeloBindingsReport",
     "ModeloCasillaDetailReport",

@@ -44,6 +44,7 @@ from ..filing.runtime import build_runtime_schema_provider
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
+from .abort import WorkflowAbortReason
 from .engine_helpers import (
     CertificateSeverityValue,
     DeadlineRole,
@@ -57,7 +58,6 @@ from .engine_helpers import (
 )
 from .engine_recording import record_site_unavailable, record_unhandled
 from .errors import WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
-from .abort import WorkflowAbortReason
 from .protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,

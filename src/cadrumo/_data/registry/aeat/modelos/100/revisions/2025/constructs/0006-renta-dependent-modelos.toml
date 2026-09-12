@@ -46,16 +46,6 @@ bindings = [
     "renta-modelo-193-retenciones-anuales",
     "renta-base-liquidable-negativa-general-anterior",
 ]
-relations = [
-    "renta-2025-rel-111-retenciones-trimestrales",
-    "renta-2025-rel-111-retenciones-mensuales",
-    "renta-2025-rel-123-retenciones-trimestrales",
-    "renta-2025-rel-130-pagos-fraccionados",
-    "renta-2025-rel-131-pagos-fraccionados",
-    "renta-2025-rel-184-atribucion-actividades-economicas",
-    "renta-2025-rel-190-retenciones-anuales",
-    "renta-2025-rel-193-retenciones-anuales",
-]
 dependency_classifications = [
     "renta-2025-dep-111",
     "renta-2025-dep-123",

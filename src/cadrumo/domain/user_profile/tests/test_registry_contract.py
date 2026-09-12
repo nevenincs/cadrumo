@@ -12,8 +12,8 @@ from pydantic import BaseModel, ValidationError
 from ....core.aggregation import BindingSourceKind
 from ....core.errors.severity import BaseSeverity
 from ...calculations.registry.authority import bundled_authority
-from ...calculations.registry.bindings import ProfileSelector
-from ...calculations.registry.schema import DataBindingDefinition
+from ...calculations.registry.profile_bindings import ProfileProvider
+from ...calculations.registry.schema import BindingDefinition
 from ..loader import load_user_profile_schema
 from ..registry_contract import (
     UserProfileRegistryContractIssue,
@@ -236,38 +236,50 @@ def test_unknown_derived_pattern_placeholder_is_refused() -> None:
 
 
 def test_profile_binding_selectors_is_public_and_deduplicates_supported_selector_forms() -> None:
+    """Each selector path a member declares is read once, in declaration order.
+
+    A member declares exactly one of the scalar, composite, or collection forms
+    -- the provider model refuses a row carrying more than one -- so the
+    deduplication that remains is within the composite form and across the
+    applicability key it can repeat.
+    """
     selectors = profile_binding_selectors(
-        {
-            "profile_key": "tax.id",
-            "profile_keys": ("tax.id", "tax.residence.ccaa"),
-            "required_when_profile_key": "enrollment.large_company",
-            "profile_model": "TaxResidenceProfile",
-            "field": "ccaa",
-        },
+        ProfileProvider.model_validate(
+            {
+                "profile_keys": ("tax.id", "tax.residence.ccaa", "tax.id"),
+                "format": "{0} {1}",
+                "required_when_profile_key": "tax.residence.ccaa",
+                "required_when_value": "S",
+            },
+        ),
     )
 
-    assert selectors == (
-        "tax.id",
-        "tax.residence.ccaa",
-        "enrollment.large_company",
-        "TaxResidenceProfile.ccaa",
+    assert selectors == ("tax.id", "tax.residence.ccaa")
+
+
+def test_profile_binding_selectors_reads_the_collection_form() -> None:
+    """The collection form contributes its model-qualified field path."""
+    selectors = profile_binding_selectors(
+        ProfileProvider.model_validate({"profile_model": "TaxResidenceProfile", "field": "ccaa"}),
     )
+
+    assert selectors == ("TaxResidenceProfile.ccaa",)
 
 
 def test_profile_binding_selectors_resolves_a_real_hydrated_profile_selector() -> None:
     """The legitimate path: a real ``source = "profile"`` binding still resolves.
 
-    ``binding.selector`` is hydrated into ``ProfileSelector`` at construction
-    time by ``DataBindingDefinition``'s discriminated-union field validator
+    ``binding.provider`` is hydrated into ``ProfileProvider`` at construction
+    time by ``BindingDefinition``'s discriminated-union field validator
     (never a raw dict), matching the exact object every real caller of
     :func:`profile_binding_selectors` (all pre-filtered to ``source ==
     BindingSourceKind.PROFILE``) actually passes.
     """
-    binding = DataBindingDefinition.model_validate(
+    binding = BindingDefinition.model_validate(
         {
             "id": "renta-2025-profile-tax-residence-ccaa",
-            "source": "profile",
-            "selector": {
+            "provider": {
+                "kind": "profile",
                 "profile_model": "TaxResidenceProfile",
                 "field": "ccaa",
                 "xsd_attribute": "codigoCADeclaracion",
@@ -275,19 +287,19 @@ def test_profile_binding_selectors_resolves_a_real_hydrated_profile_selector() -
                 "required_when_profile_key": "enrollment.large_company",
                 "required_when_value": "S",
             },
+            "value": {"data_type": "enum", "channel": "enum", "typed_enum": "CCAA"},
             "aggregation": {"op": "copy"},
-            "typed_enum": "CCAA",
             "legal_refs": ("orden-hac-277-2026:art-3",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
     )
 
-    assert not isinstance(binding.selector, dict), (
-        "the fix relies on this being an already-hydrated ProfileSelector model, "
+    assert not isinstance(binding.provider, dict), (
+        "the fix relies on this being an already-hydrated ProfileProvider model, "
         "never a raw mapping -- if this assertion ever fails, the hydration "
         "contract this fix depends on has changed and the fix must be revisited"
     )
-    assert profile_binding_selectors(binding.selector) == (
+    assert profile_binding_selectors(binding.provider) == (
         "enrollment.large_company",
         "TaxResidenceProfile.ccaa",
     )
@@ -295,8 +307,8 @@ def test_profile_binding_selectors_resolves_a_real_hydrated_profile_selector() -
 
 def test_profile_binding_selectors_ignores_a_non_profile_typed_selector() -> None:
     """A different binding-source family's typed selector never carries a
-    profile key: the ``isinstance(selector, ProfileSelector)`` narrowing
-    means only a genuine ``ProfileSelector`` reaches the attribute-access
+    profile key: the ``isinstance(selector, ProfileProvider)`` narrowing
+    means only a genuine ``ProfileProvider`` reaches the attribute-access
     branch, and every other typed selector shape is a clean no-op rather
     than an attempted (and doomed) dict-style read on a BaseModel.
     """
@@ -308,23 +320,23 @@ def test_profile_binding_selectors_ignores_a_non_profile_typed_selector() -> Non
 
 
 def test_a_dropped_profile_selector_field_is_refused_not_silently_missing() -> None:
-    """The bite proof: a ``ProfileSelector`` instance that has genuinely lost a
+    """The bite proof: a ``ProfileProvider`` instance that has genuinely lost a
     declared field must fail loud, never silently drop the value.
 
     Before the fix, :func:`profile_binding_selectors` discarded the model's
     type information via ``model_dump()`` and re-read the resulting plain
     dict with the string literal ``selector.get("required_when_profile_key")``.
-    If ``ProfileSelector``'s field of that name (declared at ``_bindings.py``)
+    If ``ProfileProvider``'s field of that name (declared at ``_bindings.py``)
     were ever renamed, that read would keep silently returning ``None``
     forever -- permanently indistinguishable from "this binding has no
     conditional gate" -- while construction-time validation kept passing (it
     would just be validating the new name). This simulates that drift
-    directly on a real, otherwise-valid ``ProfileSelector`` instance (the
+    directly on a real, otherwise-valid ``ProfileProvider`` instance (the
     field is removed from the live instance's ``__dict__``, not stood in with
     a look-alike class) and proves the fixed attribute-access read fails loud
     instead of silently dropping the gate.
     """
-    selector = ProfileSelector(
+    selector = ProfileProvider(
         profile_key="tax.id",
         required_when_profile_key="enrollment.large_company",
         required_when_value="S",
@@ -386,7 +398,7 @@ def _live_profile_binding_selectors() -> frozenset[str]:
             for binding in revision.bindings:
                 if binding.source != BindingSourceKind.PROFILE:
                     continue
-                selectors.update(profile_binding_selectors(binding.selector))
+                selectors.update(profile_binding_selectors(binding.provider))
     return frozenset(selectors)
 
 

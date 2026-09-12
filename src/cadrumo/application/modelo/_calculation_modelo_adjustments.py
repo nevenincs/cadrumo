@@ -42,6 +42,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.invoice_bindings import CollectibleInvoiceProvider
 from ...domain.calculations.registry.relations import relation_source_requirements
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
@@ -450,14 +451,12 @@ def _detail_row_binding_values_for_calculation(
     del work_unit
     summary_bindings: dict[tuple[str, str], BindingId] = {}
     for binding in revision.bindings:
-        if binding.source is not BindingSourceKind.COLLECTIBLE_INVOICE:
+        provider = binding.provider
+        if not isinstance(provider, CollectibleInvoiceProvider):
             continue
-        selector = binding.selector
-        if getattr(selector, "record", None) is not None:
+        if provider.record is not None:
             continue
-        scope = getattr(selector, "rectification_scope", None)
-        if scope is None:
-            continue
+        scope = provider.rectification_scope
         summary_bindings[(binding_aggregation_op(binding).value, scope.value)] = binding.id
 
     operador_rows = tuple(row for row in detail_rows if isinstance(row, Modelo349OperadorRow))

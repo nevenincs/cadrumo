@@ -29,6 +29,9 @@ hidden_search_forms = ["terminology handbook"]
 
 [language.en]
 short_description = "The curated TOML tree that governs documentation concepts and terms."
+definition = "A committed authoring surface containing one TOML fragment per concept, compiling those fragments into strict records, and feeding the generated glossary and terminology search. It is the intermediate layer between enrolment sources and generated documentation artifacts."
+scope_note = "It is neither the Pagefind index nor a hand-written page; it is the single source for concepts later projected into search and the glossary."
+
 
 [[language.en.term]]
 label = "Terminology Handbook"
@@ -37,6 +40,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "L'arbre TOML curat que governa els conceptes i termes de la documentacio."
+definition = "Superfície d'autoria compromesa que conté un fragment TOML per concepte, compila aquests fragments en registres estrictes i alimenta el glossari generat i la cerca terminològica. És la capa intermèdia entre les fonts d'enrolment i els artefactes documentals generats."
+scope_note = "No és l'índex Pagefind ni una pàgina escrita a mà; és la font única dels conceptes que després es projecten a la cerca i al glossari."
+
 
 [language.hu]
 short_description = "A kuralt TOML-fa, amely a dokumentacio fogalmait es terminusait iranyitja."
+definition = "Elkötelezett szerzői felület, amely fogalmanként egy TOML-részletet tartalmaz, ezeket szigorú rekordokká fordítja össze, és a létrehozott szójegyzéket, valamint a terminológiai keresést táplálja. Ez a bejelentkezési források és a létrehozott dokumentációs artefaktumok közötti köztes réteg."
+scope_note = "Nem a Pagefind-index és nem kézzel írt oldal, hanem azoknak a fogalmaknak az egyetlen forrása, amelyeket később a keresésbe és a szójegyzékbe vetítünk."
+

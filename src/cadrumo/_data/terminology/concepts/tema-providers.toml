@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tema sobre proveïdors externs, credencials i integracions."
+
+[language.en]
+short_description = "Topic covering external providers, credentials, and integrations."
+
+[language.hu]
+short_description = "A külső szolgáltatókkal, hitelesítő adatokkal és integrációkkal foglalkozó téma."
+

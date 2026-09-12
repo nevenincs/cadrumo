@@ -7,11 +7,11 @@ whose ``relation_prefill`` binding sums a periodic source modelo's retenciones
 output through the enrolled :class:`RelationPrefillSourceResolver`:
 
 * casilla ``0596`` ("Por rendimientos del trabajo") binds
-  ``renta-2024-modelo-111-retenciones-periodicas`` — ``source_modelo='111'``,
+  ``renta-modelo-111-retenciones-periodicas`` — ``source_modelo='111'``,
   ``source_casilla_id='28'`` (M111 "retenciones e ingresos a cuenta"), summed over
   the four quarters.
 * casilla ``0597`` ("Por rendimientos del capital mobiliario") binds
-  ``renta-2024-modelo-123-retenciones-periodicas`` — ``source_modelo='123'``,
+  ``renta-modelo-123-retenciones-periodicas`` — ``source_modelo='123'``,
   ``source_casilla_id='09'`` (M123 retenciones), summed over the four quarters.
 
 This module proves both folds work end-to-end on the LIVE operator calculate
@@ -134,7 +134,7 @@ _M130_C19_BY_PERIOD: dict[str, Decimal] = {
 _M130_PAGOS_OUTPUT: CasillaId = validated_casilla_id("19", surface="_M130_PAGOS_OUTPUT")
 _M131_PAGOS_OUTPUT: CasillaId = validated_casilla_id("15", surface="_M131_PAGOS_OUTPUT")
 _OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-2024-certificado-trabajo-retenciones"},
+    {"renta-certificado-trabajo-retenciones"},
 )
 
 

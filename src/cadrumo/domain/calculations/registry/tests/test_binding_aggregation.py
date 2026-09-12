@@ -33,7 +33,7 @@ from .....core.aggregation import (
 )
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
-from ..schema import DataBindingDefinition
+from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -73,7 +73,11 @@ _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
 # be listed here because registry binding sources now fail closed when no
 # selector model is registered.
 _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
-    "previous_filing": {"source_modelo": "130", "source_casilla_id": _M130_INGRESOS_CASILLA},
+    "previous_filing": {
+        "source_modelo": "130",
+        "source_casilla_id": _M130_INGRESOS_CASILLA,
+        "temporal": {"kind": "filing_year_offset", "years": -1, "source_periods": ("0A",)},
+    },
     "withholding": {"fact": "retencion_sum", "claves": ("A",)},
     "payable_invoice": {"fact": "base_sum"},
     "collectible_invoice": {"fact": "base_sum"},
@@ -120,8 +124,8 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
 }
 
 
-def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefinition:
-    """Build a ``DataBindingDefinition`` for ``source`` with an optional typed op.
+def _binding(*, source: str, op: BindingAggregationOp | None) -> BindingDefinition:
+    """Build a ``BindingDefinition`` for ``source`` with an optional typed op.
 
     Constructed through ``model_validate`` (the same boundary the registry
     loader uses) so the parametrised ``source`` string is validated against the
@@ -132,11 +136,15 @@ def _binding(*, source: str, op: BindingAggregationOp | None) -> DataBindingDefi
     not selector shape, so the minimal selector only has to clear the per-family
     selector model.
     """
-    return DataBindingDefinition.model_validate(
+    return BindingDefinition.model_validate(
         {
             "id": f"test-binding-aggregation-{source}",
-            "source": source,
-            "selector": _WELL_SHAPED_SELECTORS[source],
+            "provider": {"kind": source, **_WELL_SHAPED_SELECTORS[source]},
+            "value": (
+                {"data_type": "money", "channel": "row_set"}
+                if op is BindingAggregationOp.ROWS
+                else {"data_type": "money", "channel": "decimal"}
+            ),
             "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": (_MINIMAL_LEGAL_REF_ID,),
             "source_refs": (_MINIMAL_SOURCE_REF_ID,),

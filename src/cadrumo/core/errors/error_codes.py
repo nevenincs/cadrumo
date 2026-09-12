@@ -26,7 +26,7 @@ from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
 from types import MappingProxyType
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from pydantic import BaseModel, ConfigDict
 
@@ -51,6 +51,15 @@ _SECRET_FIELD_PATTERN = re.compile(
 # (`missing_flags`, also internal once interpolated) instead of leaking
 # a raw `('tax-id', 'activity')` tuple as a stray context line.
 _INTERNAL_CONTEXT_KEYS: frozenset[str] = frozenset({"prompt_key", "question_id", "flow_id", "missing", "missing_flags"})
+
+ERROR_CONTEXT_LABEL_KEYS: Final[tuple[str, ...]] = ("area", "entry_count", "reason")
+"""Finite vocabulary translated for human-facing error context labels.
+
+Error contexts themselves remain extensible structured data.  Only this
+declared operator-facing label subset is sent through the locale catalogue;
+unknown context keys use the same human-readable fallback shape without
+constructing an unregistered translation key.
+"""
 
 
 class ErrorCategory(StrEnum):
@@ -386,9 +395,11 @@ def render_error_text(
 
 def _text_context_label(key: str) -> str:
     """Localize common human-facing context labels without changing JSON keys."""
+    if key not in ERROR_CONTEXT_LABEL_KEYS:
+        return key.replace("_", " ").capitalize()
     from ..i18n.render import tr
 
-    return tr(f"errors.context_labels.{key}", default=key)
+    return tr(f"errors.context_labels.{key}")
 
 
 def _text_context_value(key: str, value: str) -> str:
@@ -396,7 +407,7 @@ def _text_context_value(key: str, value: str) -> str:
     if key == "area":
         from ..i18n.render import tr
 
-        return tr(f"cli.config.storage.values.area.{value}", default=value)
+        return tr(f"cli.config.storage.values.area.{value}")
     return value
 
 
@@ -608,6 +619,7 @@ def _stringify_collection_context_value(value: object) -> str | None:
 
 
 __all__ = [
+    "ERROR_CONTEXT_LABEL_KEYS",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",

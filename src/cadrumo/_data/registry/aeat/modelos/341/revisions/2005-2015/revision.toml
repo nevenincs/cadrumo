@@ -1,4 +1,5 @@
 [revisions."2005-2015"]
+casilla_source_refs = ["aeat-dr-341-2005-2015"]
 authority_grade = "applicability"
 # Exact 619-position fixed-width era from aeat-dr-341-2005-2015. This layout
 # authority proves byte geometry only; it does not promote the revision to
@@ -25,10 +26,3 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-26
-
-[revisions."2005-2015".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-The historical design proves its own field identities and byte coordinates but
-does not adjudicate continuity from the unevidenced 2000-2004 wire era."""
-legal_refs = ["orden-min-2000-12-15-m341:art-1", "orden-min-2000-12-15-m341:art-2"]
-source_refs = ["aeat-dr-341-2005-2015"]

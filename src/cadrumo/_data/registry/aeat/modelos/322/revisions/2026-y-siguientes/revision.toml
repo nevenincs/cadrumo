@@ -1,4 +1,6 @@
 [revisions."2026-y-siguientes"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2026"] } }
+casilla_source_refs = ["aeat-dr-322-2026"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -58,23 +60,6 @@ source_refs = [
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
 
-
-[revisions."2026-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-This revision DOES have a strictly-earlier sibling (2008-2025), so unlike a first revision it could in principle be the landing point of a within-modelo continuity transition. It declares none because the split that created it changed no casilla identity: both revisions carry the same eight semantic-slug money casillas plus the two declaration-header casillas, with identical ids, numbers, data types and semantic roles. A CasillaContinuidadEvolutionDefinition records a casilla CHANGING across a \
-revision boundary; nothing changed here, because the boundary was drawn for the record design's byte extents, not for a casilla renumbering. Should this revision later be re-authored onto the 2026 design's official numbered boxes, that WOULD be a renumbering and would require evolutions declared here."""
-legal_refs = [
-    "orden-eha-3434-2007:art-1",
-    "orden-eha-3434-2007:art-8",
-    "rd-1624-1992:art-71",
-]
-source_refs = [
-    "aeat-dr-322-2026",
-    "aeat-modelo-322-procedure",
-    "boe-modelo-322-2007-form",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-]
-
 [revisions."2026-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (modelo-322-2026-fichero-boe) declares no record with repeat = 'projection_rows' and no field of kind 'projection', so there is no repeated endpoint for the family to admit and nothing an entry here could name. Empty by construction rather than unbuilt: authoring a projection row into the layout is what would make this family apply, and that change reaches this declaration through \
@@ -90,23 +75,6 @@ source_refs = [
     "boe-modelo-322-2007-form",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
-
-[revisions."2026-y-siguientes".family_dispositions.relations]
-reason = """
-A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 5 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
-declaration through the same revision."""
-legal_refs = [
-    "orden-eha-3434-2007:art-1",
-    "orden-eha-3434-2007:art-8",
-    "rd-1624-1992:art-71",
-]
-source_refs = [
-    "aeat-dr-322-2026",
-    "aeat-modelo-322-procedure",
-    "boe-modelo-322-2007-form",
-    "aeat-calendario-contribuyente-2026-hasta-2-marzo",
-]
-
 [revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification names another modelo whose filing this one depends on. 322 depends on none: it is the LEAF of the grupo de entidades chain, the member entity's own monthly liquidation of its own operations, and every value it reports originates in that member's ledger. The dependency runs the other way -- Modelo 353 declares 'modelo-353-dep-322' because the group aggregate reads these results -- and a classification is authored on the DEPENDENT revision, not the source. Empty by \

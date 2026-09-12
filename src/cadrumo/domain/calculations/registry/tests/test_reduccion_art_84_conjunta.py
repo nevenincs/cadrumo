@@ -72,33 +72,33 @@ _REL_2025 = {
 }
 
 _BASE_BINDINGS_2024 = {
-    "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
-    "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-    "renta-2024-profile-incremento-guarderia": Decimal("0"),
-    "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-2024-profile-descendientes-guarderia": Decimal("0"),
+    "renta-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-profile-incremento-guarderia": Decimal("0"),
+    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-profile-descendientes-guarderia": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
-    "renta-2024-profile-marriage-full-year": Decimal("0"),
-    "renta-2024-profile-marriage-month-start": Decimal("0"),
-    "renta-2024-profile-marriage-month-end": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
     # BIN-pendiente fresh-filer baseline: previous_filing binding for
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
-    "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 _BASE_BINDINGS_2025 = {
-    "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
     # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
-    "renta-2025-profile-marriage-full-year": Decimal("0"),
-    "renta-2025-profile-marriage-month-start": Decimal("0"),
-    "renta-2025-profile-marriage-month-end": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
     # BIN-pendiente fresh-filer baseline (2025 binding).
-    "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 
@@ -138,8 +138,8 @@ def _scenario_2024(
         inputs={},
         binding_values={
             **_BASE_BINDINGS_2024,
-            "renta-2024-profile-declaration-type": declaration_type,
-            "renta-2024-profile-family-minor-children-in-unit": minor_children_in_unit,
+            "renta-profile-declaration-type": declaration_type,
+            "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
         },
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2024,
@@ -171,8 +171,8 @@ def _scenario_2025(
         inputs={},
         binding_values={
             **_BASE_BINDINGS_2025,
-            "renta-2025-profile-declaration-type": declaration_type,
-            "renta-2025-profile-family-minor-children-in-unit": minor_children_in_unit,
+            "renta-profile-declaration-type": declaration_type,
+            "renta-profile-family-minor-children-in-unit": minor_children_in_unit,
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2025,

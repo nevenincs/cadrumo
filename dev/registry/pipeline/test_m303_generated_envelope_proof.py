@@ -20,9 +20,12 @@ from cadrumo.application.aggregation.iva_ledger import IvaDifferentiatedDeductio
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.export import render_filing_envelope
 from cadrumo.application.filing.export_envelope import FilingEnvelopeRenderRequest, FilingEnvelopeRenderResult
-from cadrumo.application.filing.projection import _project_record
+from cadrumo.application.filing.projection import project_filing_record
 from cadrumo.application.filing.tests import test_m303_did_account_wire_isolated_authority as m303_did
-from cadrumo.application.filing.tests.test_producer_snapshot import _m303_exonerado_evidence, _params_for
+from cadrumo.application.filing.tests.test_producer_snapshot import (
+    m303_bienes_inversion_parameters,
+    m303_exonerado_390_evidence,
+)
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionRef,
     M303Exonerado390ActivityProjectionRef,
@@ -211,13 +214,13 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     # From the module that owns the bundle rather than rebuilt here; the
     # projection refuses one resolved for another filing year, so it is asked
     # for THIS year, and the regularisation result below reuses its provenance.
-    bienes_parameters = _params_for(filing_year)
+    bienes_parameters = m303_bienes_inversion_parameters(filing_year)
     facts = m303_did.M303FilingFacts(
         bienes_parameters=bienes_parameters,
         joint_return_elected=False,
         annual_volume_nonzero=False,
         insolvency=None,
-        exonerado_390=_m303_exonerado_evidence(applicable=True),
+        exonerado_390=m303_exonerado_390_evidence(applicable=True),
         regimen_simplificado=regimen_evidence,
         regimen_simplificado_result=regimen_evidence.calculation_result,
         period=period,
@@ -585,7 +588,7 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_pat
         M303DifferentiatedDeductionProjectionRef,
     }
 
-    contexts, values = _project_record(
+    contexts, values = project_filing_record(
         registry_snapshot=snapshot,
         layout=layout,
         record=record,
@@ -606,7 +609,7 @@ def test_m303_dp30305_composes_its_two_declared_projection_families_once(tmp_pat
     )
     assert isinstance(unsupported_ref, M303Exonerado390ActivityProjectionRef)
     with pytest.raises(FilingExportValidationError, match="mixes or uses an unsupported"):
-        _project_record(
+        project_filing_record(
             registry_snapshot=snapshot,
             layout=layout,
             record=record,

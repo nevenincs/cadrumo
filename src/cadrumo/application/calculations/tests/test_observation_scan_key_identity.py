@@ -34,10 +34,10 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.iva_compensation.filed_derivation import (
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository, ObservationEnvelopePayload, observation_key
 

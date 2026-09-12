@@ -372,7 +372,6 @@ def test_check_module_has_no_migration_reader_or_publisher_surface() -> None:
         "bundled_authority",
         "copytree",
         "copy2",
-        "load_modelo_file",
         "load_modelo_path",
         "publish_validated_generated_export_tree",
         "resolve_export_layout",

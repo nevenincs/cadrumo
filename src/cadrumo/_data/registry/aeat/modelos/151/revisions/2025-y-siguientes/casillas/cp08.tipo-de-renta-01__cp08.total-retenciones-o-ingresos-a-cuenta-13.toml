@@ -21,7 +21,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número Justificante del modelo 211 [54]
 [[revisions."2025-y-siguientes".casillas]]
@@ -36,7 +36,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión (Adquisición) [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -51,7 +51,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición (Adquisición) [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -66,7 +66,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia (Adquisición) [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -81,7 +81,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia o pérdida (Adquisición) [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -96,7 +96,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -111,7 +111,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -126,7 +126,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia (Mejora o 2ª adquisición) [08]
 [[revisions."2025-y-siguientes".casillas]]
@@ -141,7 +141,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
 [[revisions."2025-y-siguientes".casillas]]
@@ -156,7 +156,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial total obtenida [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -171,7 +171,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -186,7 +186,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [55]
 [[revisions."2025-y-siguientes".casillas]]
@@ -201,7 +201,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de mejora o 2ª adquisición [56]
 [[revisions."2025-y-siguientes".casillas]]
@@ -216,7 +216,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [57]
 [[revisions."2025-y-siguientes".casillas]]
@@ -231,7 +231,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Cuota de participación [58]
 [[revisions."2025-y-siguientes".casillas]]
@@ -246,7 +246,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. NIF [59]
 [[revisions."2025-y-siguientes".casillas]]
@@ -261,7 +261,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. F/J [60]
 [[revisions."2025-y-siguientes".casillas]]
@@ -276,7 +276,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
 [[revisions."2025-y-siguientes".casillas]]
@@ -288,7 +288,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de vía [26]
 [[revisions."2025-y-siguientes".casillas]]
@@ -303,7 +303,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Nombre de la vía pública [27]
 [[revisions."2025-y-siguientes".casillas]]
@@ -318,7 +318,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de numeración [28]
 [[revisions."2025-y-siguientes".casillas]]
@@ -333,7 +333,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número de casa [29]
 [[revisions."2025-y-siguientes".casillas]]
@@ -348,7 +348,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Calificador de número [30]
 [[revisions."2025-y-siguientes".casillas]]
@@ -363,7 +363,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Bloque [31]
 [[revisions."2025-y-siguientes".casillas]]
@@ -378,7 +378,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Portal [32]
 [[revisions."2025-y-siguientes".casillas]]
@@ -393,7 +393,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Escalera [33]
 [[revisions."2025-y-siguientes".casillas]]
@@ -408,7 +408,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Planta [34]
 [[revisions."2025-y-siguientes".casillas]]
@@ -423,7 +423,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Puerta [35]
 [[revisions."2025-y-siguientes".casillas]]
@@ -438,7 +438,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos complementarios de domicilio [36]
 [[revisions."2025-y-siguientes".casillas]]
@@ -453,7 +453,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Localidad/Población [37]
 [[revisions."2025-y-siguientes".casillas]]
@@ -468,7 +468,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Código postal [38]
 [[revisions."2025-y-siguientes".casillas]]
@@ -483,7 +483,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Provincia [39]
 [[revisions."2025-y-siguientes".casillas]]
@@ -498,7 +498,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Municipio [40]
 [[revisions."2025-y-siguientes".casillas]]
@@ -513,7 +513,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Referencia Catastral [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -528,7 +528,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Documento publico o privado [62] [63]
 [[revisions."2025-y-siguientes".casillas]]
@@ -543,7 +543,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Notario o fedetario [64]
 [[revisions."2025-y-siguientes".casillas]]
@@ -558,7 +558,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número de protocolo [65]
 [[revisions."2025-y-siguientes".casillas]]
@@ -573,7 +573,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de Renta [01]
 [[revisions."2025-y-siguientes".casillas]]
@@ -588,7 +588,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número Justificante del modelo 211 [54]
 [[revisions."2025-y-siguientes".casillas]]
@@ -603,7 +603,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión (Adquisición) [02]
 [[revisions."2025-y-siguientes".casillas]]
@@ -618,7 +618,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de adquisición (Adquisición) [03]
 [[revisions."2025-y-siguientes".casillas]]
@@ -633,7 +633,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia (Adquisición) [04]
 [[revisions."2025-y-siguientes".casillas]]
@@ -648,7 +648,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia o pérdida (Adquisición) [05]
 [[revisions."2025-y-siguientes".casillas]]
@@ -663,7 +663,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de transmisión (Mejora o 2ª adquisición) [06]
 [[revisions."2025-y-siguientes".casillas]]
@@ -678,7 +678,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Valor de Mejora o 2ª adquisición (Mejora o 2ª adquisición) [07]
 [[revisions."2025-y-siguientes".casillas]]
@@ -693,7 +693,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Diferencia (Mejora o 2ª adquisición) [08]
 [[revisions."2025-y-siguientes".casillas]]
@@ -708,7 +708,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia o pérdida (Mejora o 2ª adquisición) [09]
 [[revisions."2025-y-siguientes".casillas]]
@@ -723,7 +723,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Ganancia Patrimonial total obtenida [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -738,7 +738,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Retención o ingreso a cuenta [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -753,7 +753,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de adquisición [55]
 [[revisions."2025-y-siguientes".casillas]]
@@ -768,7 +768,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de mejora o 2ª adquisición [56]
 [[revisions."2025-y-siguientes".casillas]]
@@ -783,7 +783,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Fecha de transmisión [57]
 [[revisions."2025-y-siguientes".casillas]]
@@ -798,7 +798,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Cuota de participación [58]
 [[revisions."2025-y-siguientes".casillas]]
@@ -813,7 +813,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. NIF [59]
 [[revisions."2025-y-siguientes".casillas]]
@@ -828,7 +828,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. F/J [60]
 [[revisions."2025-y-siguientes".casillas]]
@@ -843,7 +843,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Adquiriente. Apellidos y nombre o razón social [61]
 [[revisions."2025-y-siguientes".casillas]]
@@ -855,7 +855,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de vía [26]
 [[revisions."2025-y-siguientes".casillas]]
@@ -870,7 +870,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Nombre de la vía pública [27]
 [[revisions."2025-y-siguientes".casillas]]
@@ -885,7 +885,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Tipo de numeración [28]
 [[revisions."2025-y-siguientes".casillas]]
@@ -900,7 +900,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número de casa [29]
 [[revisions."2025-y-siguientes".casillas]]
@@ -915,7 +915,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Calificador de número [30]
 [[revisions."2025-y-siguientes".casillas]]
@@ -930,7 +930,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Bloque [31]
 [[revisions."2025-y-siguientes".casillas]]
@@ -945,7 +945,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Portal [32]
 [[revisions."2025-y-siguientes".casillas]]
@@ -960,7 +960,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Escalera [33]
 [[revisions."2025-y-siguientes".casillas]]
@@ -975,7 +975,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Planta [34]
 [[revisions."2025-y-siguientes".casillas]]
@@ -990,7 +990,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Puerta [35]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1005,7 +1005,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Datos complementarios de domicilio [36]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1020,7 +1020,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Localidad/Población [37]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1035,7 +1035,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Código postal [38]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1050,7 +1050,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Provincia [39]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1065,7 +1065,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Municipio [40]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1080,7 +1080,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Referencia Catastral [53]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1095,7 +1095,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Documento publico o privado [62] [63]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1110,7 +1110,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Notario o fedetario [64]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1125,7 +1125,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Número de protocolo [65]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1140,7 +1140,7 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Ganancia Patrimonial total obtenida [10]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1155,7 +1155,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: RESTO. Retención o ingreso a cuenta [11]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1170,7 +1170,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total ganancias patrimoniales [12]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1185,7 +1185,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]
 
 # AEAT campo: Total retenciones o ingresos a cuenta [13]
 [[revisions."2025-y-siguientes".casillas]]
@@ -1200,4 +1200,4 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2023", "aeat-modelo-151-procedure"]
+additional_source_refs = ["aeat-modelo-151-procedure"]

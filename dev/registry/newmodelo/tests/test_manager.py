@@ -208,7 +208,7 @@ def test_scaffolded_tree_is_refused_by_the_directory_mode_loader(tmp_path: Path)
     let a docstring claim the refusal came from semantic ``ModeloDefinition``
     validation of the manifest's TODO fields; against a real scaffolded tree it
     does not. Every non-``casillas`` section fragment (formulas, bindings,
-    completeness_manifest, verification_expectations, export_layouts,
+    completeness_manifest, verification_expectations,
     extraction_profiles, application_links) is scaffolded as guidance that is
     entirely commented out, so ``_read_single_revision_table`` refuses the
     first such fragment it reads for declaring no ``[revisions.<id>]`` table at
@@ -284,6 +284,117 @@ def test_render_checklist_renders_every_item() -> None:
     for index, item in enumerate(CHECKLIST, start=1):
         assert item.title in rendered
         assert f"{index:>2}." in rendered
+
+
+def _write_edition(modelos_root: Path, modelo_id: str, revision_id: str, valid_from: str) -> None:
+    """Write a minimal real edition on disk for the predecessor scan to read."""
+    revision_root = modelos_root / modelo_id / "revisions" / revision_id
+    revision_root.mkdir(parents=True, exist_ok=True)
+    (revision_root / "revision.toml").write_text(
+        f'[revisions."{revision_id}"]\nvalid_from = {valid_from}\n',
+        encoding="utf-8",
+    )
+
+
+def test_a_first_edition_declares_no_predecessor_key_at_all(tmp_path: Path) -> None:
+    """Absence is the grounded statement; a placeholder naming nothing is not.
+
+    A modelo with no earlier edition on disk states every row itself, and the
+    schema reads a missing key as exactly that. Emitting the key with an empty
+    or TODO value instead would be a predecessor claim the scaffold cannot make.
+    """
+    import tomllib
+
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+
+    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
+    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    assert "predecessor" not in declared
+
+
+def test_a_successor_edition_declares_the_latest_existing_edition_as_predecessor(tmp_path: Path) -> None:
+    """The newest edition BY DECLARED valid_from is offered, not the last one by name.
+
+    Directory order and edition order disagree in the real corpus: modelo 303
+    carries `2024-desde-09-y-3t` and `2024-hasta-08-y-2t`, where the edition
+    that sorts first is the one that takes effect second. A scaffold that read
+    the directory listing would hand a new edition the wrong predecessor, and
+    the delta would then be measured against a form it does not succeed.
+    """
+    import tomllib
+
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-hasta-08-y-2t", "2024-01-01")
+    _write_edition(tmp_path, _THROWAWAY_MODELO_ID, "2024-desde-09-y-3t", "2024-09-01")
+    (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").write_text(
+        "# Scaffolded modelo manifest — test fixture\n",
+        encoding="utf-8",
+    )
+
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, "2025")
+
+    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / "2025" / "revision.toml"
+    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"]["2025"]
+    assert declared["predecessor"] == "2024-desde-09-y-3t"
+
+
+def test_a_rescaffolded_edition_is_never_offered_its_own_name_as_predecessor(tmp_path: Path) -> None:
+    """Re-running the scaffold over a written edition must not make it its own predecessor.
+
+    The edition being scaffolded is on disk from the first run, so a scan that
+    did not exclude it would name it -- a self-edge the predecessor forest
+    refuses, discovered only once the tree is loaded.
+    """
+    import tomllib
+
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, force=True)
+
+    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
+    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    assert declared.get("predecessor") != _THROWAWAY_REVISION_ID
+
+
+def test_the_revision_manifest_declares_the_editions_casilla_source_default(tmp_path: Path) -> None:
+    """casilla_source_refs is declared once on the edition, so no row has to restate it."""
+    import tomllib
+
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+
+    revision_path = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "revision.toml"
+    declared = tomllib.loads(revision_path.read_text(encoding="utf-8"))["revisions"][_THROWAWAY_REVISION_ID]
+    assert "casilla_source_refs" in declared
+
+
+def test_the_casillas_fragment_proposes_no_restated_row_field(tmp_path: Path) -> None:
+    """The exemplar row names only delta-shaped keys.
+
+    The three restatements this excludes -- a row's own source_refs, its own
+    legal_refs, and an edition year inside an identifier -- are each
+    individually valid TOML the loader accepts, so nothing downstream would
+    report them. The scaffold is where they are not proposed in the first place.
+    """
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
+
+    fragment = (
+        tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID / "casillas" / "0001-casillas.toml"
+    ).read_text(encoding="utf-8")
+    proposed = [
+        line.removeprefix("# ").strip()
+        for line in fragment.splitlines()
+        if line.startswith("# ") and "=" in line and not line.startswith("# [")
+    ]
+    keys = [line.split("=", 1)[0].strip() for line in proposed]
+
+    assert "additional_source_refs" in keys, "the exemplar must show how a row adds to the edition default"
+    assert "source_refs" not in keys, "a scaffolded row must not restate the edition's casilla_source_refs"
+    assert "legal_refs" not in keys, "a scaffolded row must not restate the edition's orden_aplicabilidad"
+    for line in proposed:
+        assert _THROWAWAY_REVISION_ID not in line, f"an exemplar identifier carries the edition year: {line}"
 
 
 def test_the_scaffold_does_not_create_the_hand_authored_export_directory(tmp_path: Path) -> None:

@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de agost (codi 08)."
+
+[language.en]
+short_description = "August monthly period (code 08)."
+
+[language.hu]
+short_description = "augusztusi havi időszak (08-es kód)."
+

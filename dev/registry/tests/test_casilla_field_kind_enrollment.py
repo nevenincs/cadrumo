@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -53,9 +53,9 @@ def test_bundledexport_field_kinds_are_hydrated_enum_members() -> None:
 
 def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     """The binding-derived export path emits CasillaFieldKind members."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
-    selector = WithholdingSelector.model_validate(
+    selector = WithholdingProvider.model_validate(
         {
             "fact": "row_field",
             "record": "perceptor",
@@ -63,10 +63,10 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
             "grouping": "per_perceptor",
         }
     )
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="binding.rows",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=selector,
+        provider=selector,
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -134,12 +134,11 @@ def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
     """One official fixed-width field can represent multiple source-specific row bindings."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
-    public_binding = DataBindingDefinition(
+    public_binding = BindingDefinition(
         id="binding.rows.public",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=WithholdingSelector.model_validate(
+        provider=WithholdingProvider.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -147,14 +146,14 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
                 "grouping": "per_perceptor",
             }
         ),
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
     )
-    mirror_binding = DataBindingDefinition(
+    mirror_binding = BindingDefinition(
         id="binding.rows.mirror",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=WithholdingSelector.model_validate(
+        provider=WithholdingProvider.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -162,6 +161,7 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
                 "grouping": "per_perceptor",
             }
         ),
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -212,12 +212,11 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
 
 def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> None:
     """A casilla template row field becomes one binding export field, not one per source."""
-    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingSelector
+    from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingProvider
 
-    public_binding = DataBindingDefinition(
+    public_binding = BindingDefinition(
         id="binding.rows.public",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=WithholdingSelector.model_validate(
+        provider=WithholdingProvider.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -225,14 +224,14 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
                 "grouping": "per_perceptor",
             }
         ),
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
     )
-    mirror_binding = DataBindingDefinition(
+    mirror_binding = BindingDefinition(
         id="binding.rows.mirror",
-        source=BindingSourceKind.WITHHOLDING,
-        selector=WithholdingSelector.model_validate(
+        provider=WithholdingProvider.model_validate(
             {
                 "fact": "row_field",
                 "record": "perceptor",
@@ -240,6 +239,7 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
                 "grouping": "per_perceptor",
             }
         ),
+        value={"data_type": "money", "channel": "row_set", "row_grouping": "withholding"},
         aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
@@ -291,7 +291,7 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
 
 def _minimal_revision(
     *,
-    bindings: tuple[DataBindingDefinition, ...],
+    bindings: tuple[BindingDefinition, ...],
     export_layouts: tuple[ExportLayoutDefinition, ...],
 ):
     from datetime import date

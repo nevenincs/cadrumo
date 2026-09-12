@@ -61,7 +61,7 @@ from ._scenarios import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-2024-profile-deduccion-maternidad": Decimal(
+    "renta-profile-deduccion-maternidad": Decimal(
         compute_deduccion_maternidad_0611([], filing_year=2024),
     ),
 }
@@ -85,26 +85,26 @@ _BASE_LIQUIDABLE_AHORRO_LEAF: CasillaId = validated_casilla_id("0429", surface="
 
 def _bindings(*, retencion: str) -> dict[str, Decimal]:
     return {
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal(retencion),
-        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-modelo-111-retenciones-periodicas": Decimal(retencion),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
         # Art. 81.1 is profile-derived at the application boundary. This
         # direct registry scenario has no profile facts, so it supplies the
         # resolved no-descendant scalar just as the profile resolver would.
         **_M100_2024_MATERNIDAD_BINDINGS,
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 

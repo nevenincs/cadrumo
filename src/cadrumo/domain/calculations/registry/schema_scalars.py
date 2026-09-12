@@ -7,7 +7,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
+from pydantic import BeforeValidator, Field
 
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
@@ -21,9 +21,6 @@ from .errors import RegistryValidationError
 
 __all__ = [
     "BicString",
-    "BindingSelector",
-    "BindingSelectorMap",
-    "BindingSelectorValue",
     "CCAACode",
     "CalendarDate",
     "CountryCode",
@@ -498,25 +495,3 @@ def _validate_workbook_cell_ref_str(value: object) -> object:
 
 
 WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_str)]
-
-
-BindingSelectorValue = str | int | DecimalValue | bool | tuple[str, ...]
-"""Closed union of the value shapes a raw binding-selector entry can hold."""
-
-BindingSelectorMap = dict[str, BindingSelectorValue]
-"""Authoring/input mapping shape for binding selectors before family hydration.
-
-Registry TOML and tests still supply selector payloads as ordinary dictionaries.
-``DataBindingDefinition`` immediately hydrates that mapping through the
-per-source selector model registered in :mod:`bindings`, so the stored binding
-field is no longer this broad map.
-"""
-
-BindingSelector = SerializeAsAny[BaseModel]
-"""Stored binding selector payload after source-family hydration.
-
-The concrete value is one of the frozen per-source pydantic selector models
-registered by ``selector_model_for_source``. ``SerializeAsAny`` preserves the
-concrete model's fields during ``model_dump``/``model_dump_json`` instead of
-serialising through the empty ``BaseModel`` surface.
-"""

@@ -52,7 +52,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁ nancieros [00336]
 [[revisions."2024".casillas]]
@@ -64,7 +63,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁnancieros. Activos financieros a valor razonable con cambios en el patrimonio neto [00337]
 [[revisions."2024".casillas]]
@@ -76,7 +74,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por valoración de instrumentos ﬁnancieros. Otros ingresos / gastos [00338]
 [[revisions."2024".casillas]]
@@ -88,7 +85,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por coberturas de ﬂ ujos de efectivo [00339]
 [[revisions."2024".casillas]]
@@ -100,7 +96,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Subvenciones, donaciones y legados recibidos [00340]
 [[revisions."2024".casillas]]
@@ -112,7 +107,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por ganancias y pérdidas actuariales y otros ajustes [00341]
 [[revisions."2024".casillas]]
@@ -124,7 +118,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Por activos no corrientes y pasivos vinculados, mantenidos para la venta [00342]
 [[revisions."2024".casillas]]
@@ -136,7 +129,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Efecto impositivo [00344]
 [[revisions."2024".casillas]]
@@ -148,7 +140,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. INGRESOS Y GASTOS IMPUTADOS DIRECTAMENTE EN EL PATRIMONIO NETO CONSOLIDADO. Total ingresos y gastos imputados directamente en el patrimonio neto consolidado [00345]
 [[revisions."2024".casillas]]
@@ -160,7 +151,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros [00346]
 [[revisions."2024".casillas]]
@@ -172,7 +162,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros. Activos financieros a valor razonable con cambios en el patrimonio neto [00347]
 [[revisions."2024".casillas]]
@@ -184,7 +173,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por valoración de instrumentos ﬁnancieros. Otros ingresos / gastos [00348]
 [[revisions."2024".casillas]]
@@ -196,7 +184,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por coberturas de ﬂ ujos de efectivo [00349]
 [[revisions."2024".casillas]]
@@ -208,7 +195,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Subvenciones, donaciones y legados recibidos [00350]
 [[revisions."2024".casillas]]
@@ -220,7 +206,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Por activos no corrientes y pasivos vinculados, mantenidos para la venta [00351]
 [[revisions."2024".casillas]]
@@ -232,7 +217,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Efecto impositivo [00353]
 [[revisions."2024".casillas]]
@@ -244,7 +228,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. TRANSFERENCIAS A LA CUENTA DE PÉRDIDAS Y GANANCIAS CONSOLIDADA. Total transferencia a la cuenta de pérdidas y ganancias consolidada [00354]
 [[revisions."2024".casillas]]
@@ -256,7 +239,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS [00355]
 [[revisions."2024".casillas]]
@@ -268,7 +250,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS.Total de ingresos y gastos atribuidos a la sociedad dominante [00333]
 [[revisions."2024".casillas]]
@@ -280,7 +261,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. TOTAL DE INGRESOS Y GASTOS CONSOLIDADOS RECONOCIDOS. Total de ingresos y gastos atribuidos a socios externos [00334]
 [[revisions."2024".casillas]]
@@ -292,4 +272,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

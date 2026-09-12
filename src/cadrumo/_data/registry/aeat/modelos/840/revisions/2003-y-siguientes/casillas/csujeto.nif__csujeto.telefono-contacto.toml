@@ -27,8 +27,6 @@ data_type = "nif"
 semantic_role = "sujeto_pasivo_nif"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @45+125. Apart. I: Datos ident. del sujeto pasivo. Apellidos y nombre o Razon social. [2]
 [[revisions."2003-y-siguientes".casillas]]
@@ -39,8 +37,6 @@ data_type = "name"
 semantic_role = "sujeto_pasivo_nombre_razon_social"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @170+2. Apart. I: Datos ident. del sujeto pasivo. SG (sigla de la via publica). [3]
 [[revisions."2003-y-siguientes".casillas]]
@@ -51,8 +47,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_sigla_via"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @172+25. Apart. I: Datos ident. del sujeto pasivo. Via publica. [4]
 [[revisions."2003-y-siguientes".casillas]]
@@ -63,8 +57,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_via_publica"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @197+5. Apart. I: Datos ident. del sujeto pasivo. Num.. [5]
 [[revisions."2003-y-siguientes".casillas]]
@@ -75,8 +67,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_numero"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @202+5. Apart. I: Datos ident. del sujeto pasivo. Km.. [6]
 [[revisions."2003-y-siguientes".casillas]]
@@ -87,8 +77,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_kilometro"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @207+2. Apart. I: Datos ident. del sujeto pasivo. Esc.. [7]
 [[revisions."2003-y-siguientes".casillas]]
@@ -99,8 +87,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_escalera"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @209+2. Apart. I: Datos ident. del sujeto pasivo. Piso. [8]
 [[revisions."2003-y-siguientes".casillas]]
@@ -111,8 +97,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_piso"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @211+2. Apart. I: Datos ident. del sujeto pasivo. Pta.. [9]
 [[revisions."2003-y-siguientes".casillas]]
@@ -123,8 +107,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_puerta"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @215+5. Apart. I: Datos ident. del sujeto pasivo. Municipio (codigo). [10]
 [[revisions."2003-y-siguientes".casillas]]
@@ -135,8 +117,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_municipio"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @213+2. Apart. I: Datos ident. del sujeto pasivo. Provincia (codigo). [11]
 [[revisions."2003-y-siguientes".casillas]]
@@ -147,8 +127,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_provincia"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @256+5. Apart. I: Datos ident. del sujeto pasivo. Cod. Postal. [12]
 [[revisions."2003-y-siguientes".casillas]]
@@ -159,8 +137,6 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_domicilio_codigo_postal"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]
 
 # @261+9. Apart. I: Datos ident. del sujeto pasivo. Telefono de contacto (prefijo incluido). [13]
 [[revisions."2003-y-siguientes".casillas]]
@@ -171,5 +147,3 @@ data_type = "text"
 semantic_role = "sujeto_pasivo_telefono_contacto"
 required = false
 input_kind = "informational"
-legal_refs = ["orden-hac-2572-2003:apartado-1"]
-source_refs = ["aeat-dr-840"]

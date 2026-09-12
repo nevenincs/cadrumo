@@ -15,7 +15,6 @@ semantic_role = "modelo_145_pagina_complementaria"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.nif"
@@ -26,7 +25,6 @@ semantic_role = "modelo_145_perceptor_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.primer-apellido"
@@ -37,7 +35,6 @@ semantic_role = "modelo_145_perceptor_primer_apellido"
 required = true
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.segundo-apellido"
@@ -48,7 +45,6 @@ semantic_role = "modelo_145_perceptor_segundo_apellido"
 required = true
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.nombre"
@@ -59,7 +55,6 @@ semantic_role = "modelo_145_perceptor_nombre"
 required = true
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.anio-nacimiento"
@@ -70,7 +65,6 @@ semantic_role = "modelo_145_perceptor_anio_nacimiento"
 required = true
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.situacion-familiar"
@@ -81,7 +75,6 @@ semantic_role = "modelo_145_perceptor_situacion_familiar"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.conyuge-nif"
@@ -92,7 +85,6 @@ semantic_role = "modelo_145_perceptor_conyuge_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.discapacidad-grado"
@@ -105,7 +97,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the perceptor disability 
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.discapacidad-ayuda"
@@ -118,7 +109,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the perceptor third-party
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # AEAT's diseño de registro declares this date as THREE independently
 # numbered rows -- dr-12 Día, dr-13 Mes, dr-14 Año, each its own Num
@@ -137,7 +127,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.movilidad-geografica-fecha-mes"
@@ -150,7 +139,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.movilidad-geografica-fecha-anio"
@@ -163,7 +151,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.prolongacion-actividad-laboral"
@@ -174,7 +161,6 @@ semantic_role = "modelo_145_perceptor_prolongacion_actividad_laboral"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 2: hijos y otros descendientes menores de 25 anios (cuatro slots) ---
 
@@ -187,7 +173,6 @@ semantic_role = "modelo_145_descendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.anio-adopcion"
@@ -198,7 +183,6 @@ semantic_role = "modelo_145_descendiente_anio_adopcion"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.discapacidad-grado"
@@ -209,7 +193,6 @@ semantic_role = "modelo_145_descendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.ayuda-movilidad"
@@ -220,7 +203,6 @@ semantic_role = "modelo_145_descendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-1.computo-entero"
@@ -231,7 +213,6 @@ semantic_role = "modelo_145_descendiente_computo_entero"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.anio-nacimiento"
@@ -242,7 +223,6 @@ semantic_role = "modelo_145_descendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.anio-adopcion"
@@ -253,7 +233,6 @@ semantic_role = "modelo_145_descendiente_anio_adopcion"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.discapacidad-grado"
@@ -264,7 +243,6 @@ semantic_role = "modelo_145_descendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.ayuda-movilidad"
@@ -275,7 +253,6 @@ semantic_role = "modelo_145_descendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-2.computo-entero"
@@ -286,7 +263,6 @@ semantic_role = "modelo_145_descendiente_computo_entero"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.anio-nacimiento"
@@ -297,7 +273,6 @@ semantic_role = "modelo_145_descendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.anio-adopcion"
@@ -308,7 +283,6 @@ semantic_role = "modelo_145_descendiente_anio_adopcion"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.discapacidad-grado"
@@ -319,7 +293,6 @@ semantic_role = "modelo_145_descendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.ayuda-movilidad"
@@ -330,7 +303,6 @@ semantic_role = "modelo_145_descendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-3.computo-entero"
@@ -341,7 +313,6 @@ semantic_role = "modelo_145_descendiente_computo_entero"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.anio-nacimiento"
@@ -352,7 +323,6 @@ semantic_role = "modelo_145_descendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.anio-adopcion"
@@ -363,7 +333,6 @@ semantic_role = "modelo_145_descendiente_anio_adopcion"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.discapacidad-grado"
@@ -374,7 +343,6 @@ semantic_role = "modelo_145_descendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.ayuda-movilidad"
@@ -385,7 +353,6 @@ semantic_role = "modelo_145_descendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "descendiente-4.computo-entero"
@@ -396,7 +363,6 @@ semantic_role = "modelo_145_descendiente_computo_entero"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 3: ascendientes mayores de 65 anios (dos slots) ---
 
@@ -409,7 +375,6 @@ semantic_role = "modelo_145_ascendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.discapacidad-grado"
@@ -420,7 +385,6 @@ semantic_role = "modelo_145_ascendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.ayuda-movilidad"
@@ -431,7 +395,6 @@ semantic_role = "modelo_145_ascendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-1.convivencia-otros"
@@ -442,7 +405,6 @@ semantic_role = "modelo_145_ascendiente_convivencia_otros"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.anio-nacimiento"
@@ -453,7 +415,6 @@ semantic_role = "modelo_145_ascendiente_anio_nacimiento"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.discapacidad-grado"
@@ -464,7 +425,6 @@ semantic_role = "modelo_145_ascendiente_discapacidad_grado"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.ayuda-movilidad"
@@ -475,7 +435,6 @@ semantic_role = "modelo_145_ascendiente_ayuda_movilidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "ascendiente-2.convivencia-otros"
@@ -486,7 +445,6 @@ semantic_role = "modelo_145_ascendiente_convivencia_otros"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 4: pensiones ---
 
@@ -499,7 +457,6 @@ semantic_role = "modelo_145_pension_compensatoria_importe_anual"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "anualidades-alimentos.importe-anual"
@@ -510,7 +467,6 @@ semantic_role = "modelo_145_anualidades_alimentos_importe_anual"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 5: vivienda habitual ---
 
@@ -523,7 +479,6 @@ semantic_role = "modelo_145_vivienda_habitual_financiacion_ajena"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 6: fecha y firma de la comunicacion ---
 
@@ -536,7 +491,6 @@ semantic_role = "modelo_145_comunicacion_firma_lugar"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # Same shape as the perceptor movilidad-geografica date above: AEAT
 # declares dr-48 Dia, dr-49 Mes, dr-50 Año as three independently
@@ -553,7 +507,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the communication signatu
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-fecha-mes"
@@ -566,7 +519,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the communication signatu
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-fecha-anio"
@@ -579,7 +531,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the communication signatu
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-tipo"
@@ -590,7 +541,6 @@ semantic_role = "modelo_145_comunicacion_firma_tipo"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # --- Apartado 7: acuse de recibo del pagador ---
 
@@ -603,7 +553,6 @@ semantic_role = "modelo_145_acuse_recibo_empresa_entidad"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.lugar"
@@ -614,7 +563,6 @@ semantic_role = "modelo_145_acuse_recibo_lugar"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 # Same shape again: AEAT declares dr-54 Día, dr-55 Mes, dr-56 Año as
 # three independently numbered Num rows, so this is a concatenation,
@@ -630,7 +578,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo day o
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.fecha-mes"
@@ -643,7 +590,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo month
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.fecha-anio"
@@ -656,7 +602,6 @@ semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo year 
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.tipo-firma"
@@ -667,4 +612,3 @@ semantic_role = "modelo_145_acuse_recibo_tipo_firma"
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
-source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]

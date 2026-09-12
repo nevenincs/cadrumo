@@ -320,12 +320,6 @@ def _comparecencia_notice(record: NotificationDocumentRecord) -> Notice:
         code="live.notifications.document.comparecencia_guarded",
         message=tr(
             "cli.app.live.notifications.document.comparecencia_notice",
-            default=(
-                "This document was fetched only because AEAT already reports the notification as read by the "
-                "taxpayer. Opening an unread notification is the comparecencia that makes it legally served and "
-                "starts its appeal and payment periods, so an unread notification is refused and must be opened "
-                "by the taxpayer personally."
-            ),
         ),
         context={"certificado_id": str(record.certificado_id), "comparecencia_performed": "false"},
     )
@@ -338,11 +332,6 @@ def _already_in_custody_notice(record: NotificationDocumentRecord) -> Notice:
         code="live.notifications.document.already_in_custody",
         message=tr(
             "cli.app.live.notifications.document.already_in_custody_notice",
-            default=(
-                "This document was already held for that notification with identical content, so nothing was "
-                "stored again and the fetch timestamp was left as it was. The record returned is the one already "
-                "in custody."
-            ),
         ),
         context={
             "certificado_id": str(record.certificado_id),
@@ -367,12 +356,6 @@ def _unparsed_document_notice(record: NotificationDocumentRecord) -> Notice | No
         code="live.notifications.document.unparsed",
         message=tr(
             "cli.app.live.notifications.document.unparsed_notice",
-            default=(
-                "No figures were read from this document, so it is held as bytes only. That is not a statement "
-                "that the document carries no amounts: read the stored document itself before concluding "
-                "anything about what it says. Consult the original, already-opened notification in the AEAT "
-                "sede; this command does not render or export the encrypted PDF bytes."
-            ),
         ),
         context={"certificado_id": str(record.certificado_id), "parse_refusal": record.parse_refusal},
     )
@@ -465,11 +448,6 @@ def _history_notice(*, count: int) -> Notice:
         code="live.notifications.document.history_not_balance",
         message=tr(
             "cli.app.live.notifications.document.history_notice",
-            default=(
-                "This history records figures AEAT served in individual notification documents. It is not a "
-                "payable balance or the recaudacion register read by the deudas commands: payment, appeal, "
-                "reduction and supersession are not established by this view."
-            ),
         ),
         context={"document_count": str(count), "total_computed": "false"},
     )

@@ -159,12 +159,16 @@ def identity_gate_refusal(
     try:
         classification = execution_policy or command_policy(command_key)
     except LookupError:
-        return tr("mcp.identity_gate.first_mutation_refused", default=_FIRST_MUTATION_REFUSED_DEFAULT)
+        return tr(
+            "mcp.identity_gate.first_mutation_refused",
+        )
     if classification.read_only and not classification.open_world:
         return None
     if state.identity_confirmed:
         return None
-    return tr("mcp.identity_gate.first_mutation_refused", default=_FIRST_MUTATION_REFUSED_DEFAULT)
+    return tr(
+        "mcp.identity_gate.first_mutation_refused",
+    )
 
 
 def identity_elicitation_echo(*, active_profile_label: str | None) -> str:
@@ -176,7 +180,10 @@ def identity_elicitation_echo(*, active_profile_label: str | None) -> str:
     renders a neutral placeholder rather than an empty name.
     """
     label = active_profile_label if active_profile_label else "(no active profile)"
-    return tr("mcp.identity_gate.elicitation_echo", label=label, default=_ELICITATION_ECHO_DEFAULT)
+    return tr(
+        "mcp.identity_gate.elicitation_echo",
+        label=label,
+    )
 
 
 __all__ = [

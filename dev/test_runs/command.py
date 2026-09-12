@@ -879,8 +879,8 @@ class _LocalesStatusSignalProcessor:
         return decoded
 
     def effective_exit_status(self, child_exit_status: int) -> int:
-        """Fail closed when a nominally successful child emitted no usable report."""
-        if child_exit_status == 0 and self._payload() is None:
+        """Normalize every unusable locale report to the operational-failure code."""
+        if child_exit_status != 127 and self._payload() is None:
             return 7
         return child_exit_status
 

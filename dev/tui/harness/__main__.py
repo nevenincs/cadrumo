@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from cadrumo.entrypoints.tui.tests.fixture import workspace
 
-from .fixture import workspace
 from .journal import Click, Fill, Press, Session, Type, describe, read_session, write_session
 from .replay import replay, screenshot
 from .surfaces import SURFACES, resolve

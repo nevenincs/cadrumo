@@ -1,7 +1,7 @@
 [[revisions."2025".bindings]]
 id = "renta-profile-has-economic-activity"
-source = "profile"
-selector = { profile_key = "taxpayer_type.irpf_income_categories" }
+provider = { kind = "profile", profile_key = "taxpayer_type.irpf_income_categories" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2025-manual-parte1"]

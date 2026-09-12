@@ -407,7 +407,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="calculation carry-gate tests preserve opaque AEAT expediente source labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/filing/tests/_export_support\.py$"),
+        path=_path(r"^src/cadrumo/application/filing/tests/export_support\.py$"),
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(

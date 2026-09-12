@@ -22,4 +22,4 @@ semantic_role = "irpf_eo_agr_reduccion_jovenes_flag"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "2025-only EO-agraria agricultores-jovenes eligibility flag (AEAT DR field AJ); no sibling revision models this Fase 4a gate yet."
 legal_refs = ["ley-35-2006:da-6", "orden-hac-1347-2024:anexo-i-instruccion-3"]
-source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-renta-2025-manual-parte1"]
+additional_source_refs = ["aeat-dr-100-2025-input-dictionary", "aeat-renta-2025-manual-parte1"]

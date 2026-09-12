@@ -46,7 +46,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @12+8. Fecha de la causa de la presentacion del representante.
 # ONE date casilla: the diseno splits it into dia @12+2, mes @14+2 and ano @16+4.
@@ -62,7 +62,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @20+9. NIF del representante.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -77,7 +77,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @29+125. Apellidos y nombre o razon social del representante.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -92,7 +92,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @154+1. Representante residente: si o no.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -107,7 +107,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @155+1. Causa de la presentacion de la persona fisica designada.
 # Slug: AEAT prints no box number on this flag.
@@ -123,7 +123,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @156+8. Fecha de la causa de la presentacion de la persona fisica designada.
 # ONE date casilla: dia @156+2, mes @158+2, ano @160+4.
@@ -139,7 +139,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @164+9. NIF de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -154,7 +154,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @173+40. Primer apellido de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -169,7 +169,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @213+40. Segundo apellido de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -184,7 +184,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @253+45. Nombre de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -199,7 +199,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @480+1. Causa de la representacion.
 # Slug, and the reason is a limit of the extractor rather than a choice. AEAT labels this field "[330 332]" -- TWO box numbers inside one bracket -- and the derived-casilla regex matches a single number only, so neither 330 nor 332 appears in the derived set at all. Declaring either as `number` would claim a box the coverage report cannot see. The diseno also mislabels this field as "3.2.-" although it sits in block 3.1, before the 3.2 block opens at @487.
@@ -215,7 +215,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @481+2. Clave de la representacion legal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -230,7 +230,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @483+2. Clave del tipo de representacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -245,7 +245,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @485+2. Clave del titulo de representacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -260,7 +260,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @487+1. Causa de la presentacion: alta, baja o modificacion del representante.
 # Slug: AEAT prints no box number on this flag.
@@ -276,7 +276,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @488+8. Fecha de la causa de la presentacion del representante.
 # ONE date casilla: dia @488+2, mes @490+2, ano @492+4.
@@ -292,7 +292,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @496+9. NIF del representante.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -307,7 +307,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @505+125. Apellidos y nombre o razon social del representante.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -322,7 +322,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @630+1. Representante residente: si o no.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -337,7 +337,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @631+1. Causa de la presentacion de la persona fisica designada.
 # Slug: AEAT prints no box number on this flag.
@@ -353,7 +353,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @632+8. Fecha de la causa de la presentacion de la persona fisica designada.
 # ONE date casilla: dia @632+2, mes @634+2, ano @636+4.
@@ -369,7 +369,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @640+9. NIF de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -384,7 +384,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @649+40. Primer apellido de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -399,7 +399,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @689+40. Segundo apellido de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -414,7 +414,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @729+45. Nombre de la persona fisica designada.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -429,7 +429,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @956+1. Causa de la representacion.
 # Slug for the same reason as its block-3.1 twin: AEAT labels it "[380 382]", two numbers in one bracket, and neither is derived.
@@ -445,7 +445,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @957+2. Clave de la representacion legal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -460,7 +460,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @959+2. Clave del tipo de representacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -475,7 +475,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @961+2. Clave del titulo de representacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -490,4 +490,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

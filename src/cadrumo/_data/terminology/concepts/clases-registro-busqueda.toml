@@ -26,6 +26,9 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The result categories that offline search combines and ranks together."
+definition = "A typed set of records combined by documentation search: Handbook concept cards, registry projections of boxes, CLI surfaces, and documentation pages. These classes let one query return meaning, boxes, legal grounding, and navigation in a single ranking."
+scope_note = "A registry class is not merely one concrete Python class; it is the semantic category carried in search metadata."
+
 
 [[language.en.term]]
 label = "search record kinds"
@@ -34,6 +37,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "Les categories de resultat que la cerca offline combina i ordena conjuntament."
+definition = "Conjunt tipat de registres que combina la cerca documental: targetes de conceptes del Handbook, projeccions de caselles del registre, superfícies de la CLI i pàgines documentals. Aquestes classes permeten que una consulta retorni significat, caselles, fonamentació legal i navegació en un únic rànquing."
+scope_note = "La classe de registre no és només una classe concreta de Python; és la categoria semàntica que viatja a les metadades de cerca."
+
 
 [language.hu]
 short_description = "Az eredmenykategoriak, amelyeket az offline kereses egyutt rangsorol."
+definition = "A dokumentációs keresés által kombinált, típusos rekordok halmaza: a Handbook fogalomkártyái, a regiszter mezővetületei, a CLI-felületek és a dokumentációs oldalak. Ezek a kategóriák lehetővé teszik, hogy egy lekérdezés egyetlen rangsorban jelentést, mezőket, jogi megalapozást és navigációt adjon vissza."
+scope_note = "A regiszterosztály nem csupán egy konkrét Python-osztály, hanem a keresési metaadatokban továbbított szemantikai kategória."
+

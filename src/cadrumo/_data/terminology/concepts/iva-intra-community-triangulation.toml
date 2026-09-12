@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Operació triangular intracomunitària"
+
+[language.en]
+short_description = "Intra-Community triangular transaction"
+
+[language.hu]
+short_description = "Közösségen belüli háromszögügylet"
+

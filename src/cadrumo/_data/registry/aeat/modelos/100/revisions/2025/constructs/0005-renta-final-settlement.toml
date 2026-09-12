@@ -110,7 +110,7 @@ formulas = [
     "renta-matrimonio-mes-inicio",
     "renta-matrimonio-mes-fin",
 ]
-relations = [
-    "renta-2025-rel-130-pagos-fraccionados",
-    "renta-2025-rel-131-pagos-fraccionados",
+bindings = [
+    "renta-modelo-130-pagos-fraccionados",
+    "renta-modelo-131-pagos-fraccionados",
 ]

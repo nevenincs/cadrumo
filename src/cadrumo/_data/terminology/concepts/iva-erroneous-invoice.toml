@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Factura d'IVA errònia que requereix correcció"
+
+[language.en]
+short_description = "Erroneous VAT invoice requiring correction"
+
+[language.hu]
+short_description = "Javítást igénylő hibás áfaszámla"
+

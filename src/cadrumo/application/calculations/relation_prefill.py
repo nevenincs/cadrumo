@@ -86,7 +86,7 @@ from ...domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from ...domain.calculations.registry.iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
+from ...domain.calculations.registry.iva_wallet_carry_targets import is_iva_wallet_owned_relation_target
 from ...domain.calculations.registry.observation_fold import resolve_observed_requirement_value
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,

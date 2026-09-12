@@ -84,7 +84,9 @@ def off_host_consent_text() -> str:
     the operator BEFORE the first off-host-visible interaction, on every session,
     with no fragile first-run state that a returning session could skip.
     """
-    return tr("mcp.harness.off_host_consent", default=_OFF_HOST_CONSENT_DEFAULT)
+    return tr(
+        "mcp.harness.off_host_consent",
+    )
 
 
 class ActivePersonaDocument(BaseModel):

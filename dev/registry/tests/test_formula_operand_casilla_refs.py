@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
@@ -39,16 +38,19 @@ def test_snapshot_build_fails_when_non_casilla_operand_ref_collides_with_casilla
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="01",
-        source=BindingSourceKind.MANUAL_INPUT,
-        selector={
-            "record": "DPA",
-            "field": "test",
-            "offset": 1,
-            "length": 1,
-            "data_type": "integer",
+        provider={
+            "kind": "manual_input",
+            **{
+                "record": "DPA",
+                "field": "test",
+                "offset": 1,
+                "length": 1,
+                "data_type": "integer",
+            },
         },
+        value={"data_type": "integer", "channel": "integer"},
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )

@@ -28,7 +28,6 @@ from cadrumo.application.aggregation.renta_income_ledger import RentaIncomeObser
 from cadrumo.core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
-    BindingSourceKind,
     LedgerIncomeGrounding,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -40,7 +39,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_income_bindings import (
     unsupported_ledger_renta_income_observations,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
+from cadrumo.domain.calculations.registry.schema import BindingDefinition
 from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
@@ -258,14 +257,17 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
 
 
 def test_income_binding_validator_rejects_unknown_fact() -> None:
-    # ``net_income_sum`` is outside the ``_RentaLedgerIncomeSelector`` fact
+    # ``net_income_sum`` is outside the ``LedgerRentaIncomeProvider`` fact
     # Literal, a selector-SHAPE violation the F8 construction-time gate refuses
     # the moment the binding is built.
     with pytest.raises(ValidationError):
-        DataBindingDefinition(
+        BindingDefinition(
             id="m130-income-bad-fact",
-            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "net_income_sum"},
+            provider={
+                "kind": "ledger_renta_income_aggregation",
+                **{"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA, "fact": "net_income_sum"},
+            },
+            value={"data_type": "money", "channel": "decimal"},
             aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-modelo-130-instructions",),
@@ -277,10 +279,13 @@ def test_income_binding_validator_rejects_legacy_target_casilla_key() -> None:
     # selector model forbids the extra key), refused at construction under F8;
     # the diagnostic still names both the canonical and legacy key.
     with pytest.raises(ValidationError) as exc_info:
-        DataBindingDefinition(
+        BindingDefinition(
             id="m130-income-legacy-target-key",
-            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            selector={"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
+            provider={
+                "kind": "ledger_renta_income_aggregation",
+                **{"modelo": "130", "target_casilla": _M130_INGRESOS_CASILLA, "fact": "cash_received_sum"},
+            },
+            value={"data_type": "money", "channel": "decimal"},
             aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-modelo-130-instructions",),
@@ -434,10 +439,13 @@ def test_selector_refuses_an_omitted_fact_and_names_the_accepted_set() -> None:
     saying "Field required".
     """
     with pytest.raises(ValidationError) as exc_info:
-        DataBindingDefinition(
+        BindingDefinition(
             id="m130-income-no-fact",
-            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-            selector={"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA},
+            provider={
+                "kind": "ledger_renta_income_aggregation",
+                **{"modelo": "130", "target_casilla_id": _M130_INGRESOS_CASILLA},
+            },
+            value={"data_type": "money", "channel": "decimal"},
             aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-modelo-130-instructions",),

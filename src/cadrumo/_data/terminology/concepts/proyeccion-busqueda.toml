@@ -31,6 +31,9 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The compiler that turns concepts, casillas, CLI surfaces, and pages into search records."
+definition = "A build-time transformation that takes Terminology Handbook concepts, registry-projected boxes, CLI surfaces, and built pages and converts them into typed records for offline search. The projection joins result classes before injecting them into Pagefind."
+scope_note = "Concrete boxes are projected from the registry; they are not curated as Handbook fragments."
+
 
 [[language.en.term]]
 label = "search projection"
@@ -39,6 +42,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "La compilacio que converteix conceptes, caselles, CLI i pagines en registres de cerca."
+definition = "Transformació en temps de compilació que pren els conceptes del Terminology Handbook, les caselles projectades del registre, les superfícies de la CLI i les pàgines construïdes, i les converteix en registres tipats per a la cerca fora de línia. La projecció uneix les classes de resultats abans d'injectar-les a Pagefind."
+scope_note = "Les caselles concretes es projecten des del registre; no es curen com a fragments del Handbook."
+
 
 [language.hu]
 short_description = "A fordító, amely fogalmakat, mezőket, CLI-felületeket és oldalakat keresési rekordokká alakít."
+definition = "Fordítási időben végzett átalakítás, amely a Terminology Handbook fogalmait, a regiszterből vetített mezőket, a CLI-felületeket és a létrehozott oldalakat offline kereséshez használható típusos rekordokká alakítja. A vetítés a találati kategóriákat a Pagefindba való beillesztés előtt egyesíti."
+scope_note = "A konkrét mezőket a regiszterből vetítjük ki, nem a Handbook-részletekben gondozzuk."
+

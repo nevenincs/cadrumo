@@ -56,7 +56,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @26+60. Identificacion de la entidad representante o dominante. Apellidos o razon social de la entidad representante o dominante.
 [[revisions."2024".casillas]]
@@ -67,7 +66,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @86+20. Identificacion de la entidad representante o dominante. Nombre de la entidad representante o dominante.
 [[revisions."2024".casillas]]
@@ -78,7 +76,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @110+2. Identificacion de la entidad representante o dominante. Periodo.
 [[revisions."2024".casillas]]
@@ -89,7 +86,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @112+1. Identificacion de la entidad representante o dominante. La entidad es representante y no dominante.
 [[revisions."2024".casillas]]
@@ -100,7 +96,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @113+1. Identificacion de la entidad representante o dominante. La entidad es dominante e incluida en el grupo fiscal.
 [[revisions."2024".casillas]]
@@ -111,7 +106,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @114+7. Identificacion de la entidad representante o dominante. Numero del grupo fiscal.
 [[revisions."2024".casillas]]
@@ -122,7 +116,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @121+9. Identificacion de la entidad representante o dominante. Telefono de la entidad representante o dominante.
 [[revisions."2024".casillas]]
@@ -133,7 +126,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @130+8. Periodo impositivo. Fecha de inicio del periodo impositivo, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -144,7 +136,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @138+8. Periodo impositivo. Fecha final del periodo impositivo, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -155,7 +146,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @146+1. Periodo impositivo. Tipo de ejercicio.
 [[revisions."2024".casillas]]
@@ -166,7 +156,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @147+15. Identificacion de la entidad dominante. Numero de identificacion de la entidad dominante. Fifteen positions rather than a nine-position N.I.F., because a dominante may be non-resident.
 [[revisions."2024".casillas]]
@@ -177,7 +166,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @162+60. Identificacion de la entidad dominante. Apellidos o razon social de la entidad dominante.
 [[revisions."2024".casillas]]
@@ -188,7 +176,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @222+20. Identificacion de la entidad dominante. Nombre de la entidad dominante.
 [[revisions."2024".casillas]]
@@ -199,7 +186,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @242+2. Identificacion de la entidad dominante. Pais o territorio foral de la entidad dominante.
 [[revisions."2024".casillas]]
@@ -210,7 +196,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @244+1. Autoliquidacion complementaria. La autoliquidacion es complementaria.
 [[revisions."2024".casillas]]
@@ -221,7 +206,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @245+13. Autoliquidacion complementaria. Numero de justificante de la autoliquidacion anterior.
 [[revisions."2024".casillas]]
@@ -232,7 +216,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @258+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 1, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -243,7 +226,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @263+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 1.
 [[revisions."2024".casillas]]
@@ -254,7 +236,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @323+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 2, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -265,7 +246,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @328+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 2.
 [[revisions."2024".casillas]]
@@ -276,7 +256,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @388+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 3, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -287,7 +266,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @393+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 3.
 [[revisions."2024".casillas]]
@@ -298,7 +276,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @453+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 4, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -309,7 +286,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 4.
 [[revisions."2024".casillas]]
@@ -320,7 +296,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @518+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 5, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -331,7 +306,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @523+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 5.
 [[revisions."2024".casillas]]
@@ -342,7 +316,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @583+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 6, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -353,7 +326,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @588+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 6.
 [[revisions."2024".casillas]]
@@ -364,7 +336,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @648+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 7, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -375,7 +346,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @653+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 7.
 [[revisions."2024".casillas]]
@@ -386,7 +356,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @713+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 8, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -397,7 +366,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @718+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 8.
 [[revisions."2024".casillas]]
@@ -408,7 +376,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @778+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 9, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -419,7 +386,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @783+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 9.
 [[revisions."2024".casillas]]
@@ -430,7 +396,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @843+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 10, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -441,7 +406,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @848+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 10.
 [[revisions."2024".casillas]]
@@ -452,7 +416,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @908+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 11, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -463,7 +426,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @913+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 11.
 [[revisions."2024".casillas]]
@@ -474,7 +436,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @973+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 12, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -485,7 +446,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @978+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 12.
 [[revisions."2024".casillas]]
@@ -496,7 +456,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1038+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 13, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -507,7 +466,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1043+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 13.
 [[revisions."2024".casillas]]
@@ -518,7 +476,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1103+5. Actividades desarrolladas por el grupo. Epigrafe CNAE de la actividad 14, en orden de mayor a menor importancia.
 [[revisions."2024".casillas]]
@@ -529,7 +486,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1108+60. Actividades desarrolladas por el grupo. Descripcion CNAE (2009) de la actividad 14.
 [[revisions."2024".casillas]]
@@ -540,7 +496,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1168+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo general.
 [[revisions."2024".casillas]]
@@ -551,7 +506,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1169+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo de entidades de credito.
 [[revisions."2024".casillas]]
@@ -562,7 +516,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1170+1. Tipo de grupo y otros caracteres. Tipo de grupo a efectos de estados de cuentas consolidadas. Grupo de entidades aseguradoras.
 [[revisions."2024".casillas]]
@@ -573,7 +526,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1171+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo de cooperativas, RD 1345/1992 de 6 de noviembre.
 [[revisions."2024".casillas]]
@@ -584,7 +536,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1172+1. Tipo de grupo y otros caracteres. Otros caracteres. Aplicacion de incentivos de reducida dimension, Titulo VII Capitulo XI LIS.
 [[revisions."2024".casillas]]
@@ -595,7 +546,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1173+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo foral, tributacion conforme a normativa foral.
 [[revisions."2024".casillas]]
@@ -606,7 +556,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1174+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo con entidad dominante no residente o sometida a normativa foral, constituido por entidades dependientes.
 [[revisions."2024".casillas]]
@@ -617,7 +566,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1175+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo sometido a normativa comun con alguna entidad sometida a la normativa foral de Navarra, DT 19a Ley Foral 26/2016 de 28 de diciembre.
 [[revisions."2024".casillas]]
@@ -628,7 +576,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1176+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo que aplica las reglas del art. 74.3 LIS.
 [[revisions."2024".casillas]]
@@ -639,7 +586,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1177+1. Tipo de grupo y otros caracteres. Otros caracteres. Opcion del 0,7 por ciento de la cuota integra para fines sociales.
 [[revisions."2024".casillas]]
@@ -650,7 +596,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1178+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo con entidad o entidades navieras que aplican el regimen especial de tributacion en funcion del tonelaje.
 [[revisions."2024".casillas]]
@@ -661,7 +606,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1179+1. Tipo de grupo y otros caracteres. Otros caracteres. Grupo de empresas emergentes.
 [[revisions."2024".casillas]]
@@ -672,7 +616,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1180+13. Autoliquidacion complementaria. Numero de justificante identificativo de la autoliquidacion de la prestacion patrimonial por conversion de activos, DA 13a LIS.
 [[revisions."2024".casillas]]
@@ -683,7 +626,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1193+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo inferior a 20 millones de euros.
 [[revisions."2024".casillas]]
@@ -694,7 +636,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1194+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo de al menos 20 millones y inferior a 60 millones de euros.
 [[revisions."2024".casillas]]
@@ -705,7 +646,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1195+1. Importe neto de la cifra de negocios de los doce meses anteriores. INCN total del grupo de al menos 60 millones de euros.
 [[revisions."2024".casillas]]
@@ -716,7 +656,6 @@ data_type = "boolean"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1196+36. Declaracion de los representantes legales. Representante legal 1. Nombre y apellidos.
 [[revisions."2024".casillas]]
@@ -727,7 +666,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1232+9. Declaracion de los representantes legales. Representante legal 1. N.I.F.
 [[revisions."2024".casillas]]
@@ -738,7 +676,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1241+8. Declaracion de los representantes legales. Representante legal 1. Fecha del poder, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -749,7 +686,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1249+12. Declaracion de los representantes legales. Representante legal 1. Notaria.
 [[revisions."2024".casillas]]
@@ -760,7 +696,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1261+36. Declaracion de los representantes legales. Representante legal 2. Nombre y apellidos.
 [[revisions."2024".casillas]]
@@ -771,7 +706,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1297+9. Declaracion de los representantes legales. Representante legal 2. N.I.F.
 [[revisions."2024".casillas]]
@@ -782,7 +716,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1306+8. Declaracion de los representantes legales. Representante legal 2. Fecha del poder, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -793,7 +726,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1314+12. Declaracion de los representantes legales. Representante legal 2. Notaria.
 [[revisions."2024".casillas]]
@@ -804,7 +736,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1326+36. Declaracion de los representantes legales. Representante legal 3. Nombre y apellidos.
 [[revisions."2024".casillas]]
@@ -815,7 +746,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1362+9. Declaracion de los representantes legales. Representante legal 3. N.I.F.
 [[revisions."2024".casillas]]
@@ -826,7 +756,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1371+8. Declaracion de los representantes legales. Representante legal 3. Fecha del poder, formato AAAAMMDD.
 [[revisions."2024".casillas]]
@@ -837,7 +766,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1379+12. Declaracion de los representantes legales. Representante legal 3. Notaria.
 [[revisions."2024".casillas]]
@@ -848,7 +776,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1391+50. Persona de contacto para incidencias. Nombre y apellidos de la persona de contacto para incidencias.
 [[revisions."2024".casillas]]
@@ -859,7 +786,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1441+9. Persona de contacto para incidencias. Telefono fijo de contacto para incidencias.
 [[revisions."2024".casillas]]
@@ -870,7 +796,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1450+9. Persona de contacto para incidencias. Telefono movil de contacto para incidencias.
 [[revisions."2024".casillas]]
@@ -881,7 +806,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1459+50. Persona de contacto para incidencias. Direccion de correo electronico para incidencias.
 [[revisions."2024".casillas]]
@@ -892,4 +816,3 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

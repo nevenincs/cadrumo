@@ -89,10 +89,6 @@ def _contradicted_notice(envelope: FieldProvenance) -> Notice:
             field=envelope.field,
             anchor=seen,
             detail=envelope.note,
-            default=(
-                f"{envelope.field}: the document reads {seen!r}, which does not agree with the value "
-                f"recorded for this field. {envelope.note}"
-            ),
         ),
         context={
             "field": envelope.field,
@@ -113,10 +109,6 @@ def _ambiguous_notice(envelope: FieldProvenance) -> Notice:
             "cli.app.ledger.evidence.field_ambiguous",
             field=envelope.field,
             candidates=competing,
-            default=(
-                f"{envelope.field}: several readings competed and none could be decided between "
-                f"({competing}). Choose one rather than accepting the draft as read."
-            ),
         ),
         context={
             "field": envelope.field,
@@ -137,11 +129,6 @@ def _self_reported_notice(envelope: FieldProvenance) -> Notice:
             "cli.app.ledger.evidence.field_anchor_self_reported",
             field=envelope.field,
             anchor=seen,
-            default=(
-                f"{envelope.field}: the reader reports having read this from {seen!r}, but that claim "
-                "came from the same reader that produced the value, so nothing independent has "
-                "confirmed it."
-            ),
         ),
         context={
             "field": envelope.field,
@@ -167,11 +154,6 @@ def _anchor_not_found_notice(envelope: FieldProvenance) -> Notice:
             field=envelope.field,
             anchor=seen,
             detail=envelope.note,
-            default=(
-                f"{envelope.field}: the reader points at {seen!r}, which does not occur in the "
-                "document's transcription. A normalised value can fail this search legitimately, so "
-                f"check the field rather than assuming it was corroborated. {envelope.note}"
-            ),
         ),
         context={
             "field": envelope.field,
@@ -197,11 +179,6 @@ def _uncorroborated_anchor_notice(envelope: FieldProvenance) -> Notice:
             field=envelope.field,
             anchor=seen,
             detail=envelope.note,
-            default=(
-                f"{envelope.field}: the reader points at {seen!r}, and nothing found that form missing "
-                "from the document. The value is still not corroborated, so what is unsettled is "
-                f"something other than the printed form. {envelope.note}"
-            ),
         ),
         context={
             "field": envelope.field,
@@ -225,10 +202,6 @@ def _no_anchor_notice(envelope: FieldProvenance) -> Notice:
         message=tr(
             "cli.app.ledger.evidence.field_no_anchor",
             field=envelope.field,
-            default=(
-                f"{envelope.field}: the reader offered nothing in the document to point at, so there "
-                "is no printed form to check this value against."
-            ),
         ),
         context={
             "field": envelope.field,

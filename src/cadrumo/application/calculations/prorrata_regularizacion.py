@@ -58,12 +58,14 @@ from ...core.prorrata_register import (
     regime_apportions_deduction,
 )
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
     SourceRefId,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
@@ -171,9 +173,9 @@ def _prorrata_source_casilla_ids(revision: ModeloRevision) -> tuple[CasillaId, .
     """Return the ordered source casillas declared by selected bindings."""
     ids: list[CasillaId] = []
     for binding in revision.bindings:
-        if binding.source != _SOURCE_KIND:
+        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
             continue
-        for casilla_id in getattr(binding.selector, "source_casilla_ids", ()):
+        for casilla_id in binding.provider.source_casilla_ids:
             value = validated_casilla_id(casilla_id, surface="selected prorrata source casilla")
             if value not in ids:
                 ids.append(value)
@@ -539,11 +541,9 @@ def _binding_source_refs(revision: ModeloRevision) -> tuple[SourceRefId, ...]:
 def _prorrata_bindings_by_output(revision: ModeloRevision) -> dict[str, BindingId]:
     bindings: dict[str, BindingId] = {}
     for binding in revision.bindings:
-        if binding.source != _SOURCE_KIND:
+        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
             continue
-        output = getattr(binding.selector, "regularizacion_output", None)
-        if isinstance(output, str):
-            bindings[output] = binding.id
+        bindings[binding.provider.regularizacion_output] = binding.id
     return bindings
 
 
@@ -554,9 +554,9 @@ def _prorrata_declared_binding_ids(revision: ModeloRevision) -> tuple[BindingId,
 def _prorrata_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
     periods: list[str] = []
     for binding in revision.bindings:
-        if binding.source != _SOURCE_KIND:
+        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
             continue
-        for period in getattr(binding.selector, "source_periods", ()):
+        for period in binding.provider.source_periods:
             if period not in periods:
                 periods.append(period)
     return tuple(periods)
@@ -606,6 +606,7 @@ def _current_year_values_provenance(
         lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"{context.modelo}:{context.filing_year}:{period_ref}:prorrata-current-year-values",
         parent_source_ref=None,
+        terminal_origin=TerminalOriginClass.DERIVED_CALCULATION,
         source_modelo=context.modelo,
         source_filing_year=context.filing_year,
         source_periods=periods,
@@ -649,6 +650,7 @@ def _register_provenance(
         lineage_role=CalculationSourceLineageRole.PRIMARY,
         source_ref=f"prorrata-register:{context.filing_year}:{suffix}",
         parent_source_ref=None,
+        terminal_origin=TerminalOriginClass.DERIVED_CALCULATION,
         source_filing_year=context.filing_year,
         legal_refs=_binding_legal_refs(revision),
         source_refs=_binding_source_refs(revision),
@@ -671,6 +673,7 @@ def _prior_definitiva_provenance(
             f"{source_modelo}:{carry.source_filing_year}:{carry.source_period}:{_prorrata_source_id(revision, 3)}"
         ),
         parent_source_ref=None,
+        terminal_origin=TerminalOriginClass.DERIVED_CALCULATION,
         source_modelo=source_modelo,
         source_filing_year=carry.source_filing_year,
         source_periods=(carry.source_period,),

@@ -11,6 +11,13 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-200-2025"
+required_text = ["modelo"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-200-manual-2025"
+required_text = ["manual practico"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

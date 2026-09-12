@@ -31,6 +31,9 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The committed data that maps swept terms to ranked documentation targets."
+definition = "A laundered data file that materializes RAG-sweep results as term-to-target mappings: registry identifiers, surface type, target, and normalized weight. The map is committed because CI and offline builds do not run RAG, and its targets must resolve against current documentation."
+scope_note = "The map contains no vectors, sparse weights, snippets, or paths from raw hits."
+
 
 [[language.en.term]]
 label = "relevance mapping"
@@ -39,6 +42,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "La dada compromesa que associa cada terme amb destinacions documentals ordenades."
+definition = "Fitxer de dades depurades que materialitza els resultats del rastreig RAG com a mapatges de terme a destinació: identificadors de registre, tipus de superfície, destinació i pes normalitzat. El mapa es compromet al repositori perquè la CI i la compilació fora de línia no executen RAG, i els seus objectius han de resoldre contra la documentació actual."
+scope_note = "El mapa no conté vectors, pesos dispersos, fragments ni rutes de resultats en brut."
+
 
 [language.hu]
 short_description = "Az eltárolt adat, amely a terminusokat rangsorolt dokumentációs célokhoz köti."
+definition = "Tisztított adatfájl, amely a RAG-pásztázás eredményeit kifejezés–célpont leképezésekként rögzíti: regiszterazonosítókat, felülettípust, célpontot és normalizált súlyt. A térkép a tároló része, mert a CI és az offline build nem futtat RAG-ot, célpontjainak pedig az aktuális dokumentációra kell feloldódniuk."
+scope_note = "A térkép nem tartalmaz vektorokat, ritka súlyokat, találatrészleteket vagy nyers találati útvonalakat."
+

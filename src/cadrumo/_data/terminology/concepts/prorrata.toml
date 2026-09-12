@@ -49,6 +49,8 @@ hidden_search_forms = ["prorateo"]
 [language.en]
 short_description = "The deductible proportion of input VAT when a taxpayer makes both deductible and non-deductible supplies."
 definition = "The rule that fixes the share of input VAT a taxable person may deduct when their activity combines supplies that grant the right to deduct with supplies that do not. The percentage is the ratio of deductible-right turnover to total turnover, rounded up to the next whole unit."
+scope_note = "It covers both the general and special pro-rata. Capital-goods adjustments are governed by Articles 107 to 110 of the LIVA and are treated as a separate concept."
+
 
 [language.en.source]
 citation = "Articles 102 and 104 of Law 37/1992 on VAT (LIVA)."
@@ -67,6 +69,8 @@ part_of_speech = "noun"
 [language.ca]
 short_description = "Percentatge d'IVA suportat deduible quan es fan alhora operacions amb i sense dret a deduccio."
 definition = "Regla que determina la part de les quotes d'IVA suportat que un subjecte passiu pot deduir quan en la seva activitat concorren operacions que originen el dret a deduir i operacions que no l'originen."
+scope_note = "Inclou tant la prorrata general com l'especial. La regularització dels béns d'inversió es regeix pels articles 107 a 110 de la LIVA i es tracta com un concepte diferent."
+
 
 [language.ca.source]
 citation = "Articles 102 i 104 de la Llei 37/1992 de l'IVA (LIVA)."
@@ -81,6 +85,8 @@ grammatical_gender = "feminine"
 [language.hu]
 short_description = "A levonható előzetes áfa aránya, ha az adóalany levonásra jogosító és nem jogosító ügyleteket is végez."
 definition = "Szabály, amely meghatározza a levonható beszerzési IVA azon részét, amelyet egy adófizetésre kötelezett levonhat, ha tevékenységében levonási jogot keletkeztető és azt nem keletkeztető ügyletek egyaránt előfordulnak. A százalékot a levonási joggal rendelkező ügyletek összegének és az összes ügylet arányaként számítják ki, felfelé kerekítve a legközelebbi egész számra."
+scope_note = "Az általános és a különleges arányosítást egyaránt lefedi. A beruházási javak korrekciójára a LIVA 107–110. cikke irányadó, és azt külön fogalomként kezeljük."
+
 
 [language.hu.source]
 citation = "A 37/1992. IVA-törvény (LIVA) 102. és 104. cikke."

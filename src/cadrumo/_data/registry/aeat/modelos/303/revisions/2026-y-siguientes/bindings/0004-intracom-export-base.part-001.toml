@@ -29,7 +29,8 @@
 # zero-rated category members.
 [[revisions.2026-y-siguientes.bindings]]
 id = "modelo-303-casilla-59-entregas-intracomunitarias-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_supply"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-25", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -37,20 +38,13 @@ source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2026-y-siguientes.bindings.selector]
-categories = ["intra_community_supply"]
-rate_kinds = ["zero"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2026-y-siguientes.bindings.aggregation]
 op = "sum"
 
 [[revisions.2026-y-siguientes.bindings]]
 id = "modelo-303-casilla-60-exportaciones-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"], rate_kinds = ["zero"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-21", "ley-37-1992:art-22", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -58,13 +52,5 @@ source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2026-y-siguientes.bindings.selector]
-categories = ["export_third_country_zero_rated", "export_assimilated_zero_rated"]
-rate_kinds = ["zero"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2026-y-siguientes.bindings.aggregation]
 op = "sum"

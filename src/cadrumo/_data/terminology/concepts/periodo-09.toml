@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Període mensual de setembre (codi 09)."
+
+[language.en]
+short_description = "September monthly period (code 09)."
+
+[language.hu]
+short_description = "szeptemberi havi időszak (09-es kód)."
+

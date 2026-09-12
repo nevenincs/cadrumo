@@ -19,6 +19,7 @@ from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as t
 from ...core.logging import get_logger
+from ...domain.calculations.registry.binding_provider_registration import registration_for
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
@@ -319,6 +320,16 @@ def collect_unhandled_source_diagnostics(
     for binding in revision.bindings:
         source = str(binding.source)
         if source in handled_sources or source in manual_sources:
+            continue
+        if registration_for(binding.source).disposition == "deferred":
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="deferred_binding_source",
+                    source_kind=source,
+                    binding_id=binding.id,
+                    message=f"binding {binding.id!r} declares deferred source {source!r}",
+                ),
+            )
             continue
         diagnostics.append(
             CalculationSourceDiagnostic(

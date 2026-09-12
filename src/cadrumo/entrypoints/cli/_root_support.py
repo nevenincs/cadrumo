@@ -75,7 +75,6 @@ def _root_profile_secret_help_lines() -> tuple[str, ...]:
     return (
         tr(
             "cli.operator_surface.help.root.section_profile_authentication_options",
-            default="Profile authentication options",
         ),
         *(f"  {declaration.ljust(width)}  {description}" for declaration, description in rendered),
     )

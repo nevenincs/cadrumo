@@ -48,7 +48,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+17. Bonificaciones por rentas obtenidas en Ceuta y Melilla (art. 33 LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -60,7 +59,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @42+17. Bonificaciones por prestación de servicios (art. 34 LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -72,7 +70,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @59+17. Bonificación rendimientos por venta bienes corporales producidos en Canarias (art. 26 Ley. 19/1994).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -84,7 +81,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @76+17. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -96,7 +92,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @93+17. Bonificaciones sociedades cooperativas (Ley.20/1990).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -108,7 +103,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @110+17. Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tít. VII LIS). 1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -120,7 +114,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @127+17. Otras Bonificaciones.1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -132,7 +125,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @144+17. Bonificaciones empresas navieras en Canarias (art. 76 Ley.19/1994).1  <-- ONE declared row; the layout repeats it 24 times at stride 145
 [[revisions."2024".casillas]]
@@ -144,7 +136,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3496+17. Bonificaciones por rentas obtenidas en Ceuta y Melilla (art. 33 LIS). Total [00567]
 [[revisions."2024".casillas]]
@@ -156,7 +147,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3513+17. Bonificaciones por prestación de servicios (art. 34 LIS). Total [00568]
 [[revisions."2024".casillas]]
@@ -168,7 +158,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3530+17. Bonificación rendimientos por venta bienes corporales producidos en Canarias (art. 26 Ley. 19/1994). Total [00563]
 [[revisions."2024".casillas]]
@@ -180,7 +169,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3547+17. Bonificación rendimientos por venta bienes corporales producidos en Illes Balears (DA 70.Cinco Ley 31/2022). Total [01375]
 [[revisions."2024".casillas]]
@@ -192,7 +180,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3564+17. Bonificaciones sociedades cooperativas (Ley.20/1990). Total [00566]
 [[revisions."2024".casillas]]
@@ -204,7 +191,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3581+17. Bonificaciones entidades dedicadas al arrendamiento de viviendas (Cap. III Tit. VII LIS). Total [00576]
 [[revisions."2024".casillas]]
@@ -216,7 +202,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3598+17. Otras Bonificaciones. Total [00569]
 [[revisions."2024".casillas]]
@@ -228,7 +213,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @3615+17. Bonificaciones empresas navieras en Canarias (art. 76 Ley.19/1994). Total [00581]
 [[revisions."2024".casillas]]
@@ -240,4 +224,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

@@ -7,7 +7,7 @@ semantic_role = "irpf_declarante_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1"]
-source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "ejercicio-declaracion"
@@ -18,7 +18,7 @@ semantic_role = "filing_year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-4"]
-source_refs = ["boe-modelo-280-base-order", "aeat-modelo-280-procedure", "aeat-dr-280-2022"]
+additional_source_refs = ["aeat-modelo-280-procedure", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nif"
@@ -29,7 +29,7 @@ semantic_role = "m280_declarado_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
-source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "declarado-nombre"
@@ -40,7 +40,7 @@ semantic_role = "m280_declarado_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hap-2118-2015:art-2"]
-source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "clave-alta"
@@ -51,7 +51,7 @@ semantic_role = "m280_clave_alta"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1"]
-source_refs = ["boe-modelo-280-base-order", "aeat-dr-280-2022"]
+additional_source_refs = ["aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "aportaciones-ejercicio"
@@ -62,11 +62,7 @@ semantic_role = "m280_aportaciones_ejercicio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2016-amendment-hfp-1822",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-ejercicio"
@@ -77,11 +73,7 @@ semantic_role = "m280_rendimientos_positivos_ejercicio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2016-amendment-hfp-1822",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-ejercicio"
@@ -92,11 +84,7 @@ semantic_role = "m280_rendimientos_negativos_ejercicio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2016-amendment-hfp-1822",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "extincion-plan"
@@ -107,11 +95,7 @@ semantic_role = "m280_extincion_plan"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1192-2022:art-cuarto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2022-amendment-hfp-1192",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "fecha-extincion"
@@ -122,11 +106,7 @@ semantic_role = "m280_fecha_extincion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1192-2022:art-cuarto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2022-amendment-hfp-1192",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2022-amendment-hfp-1192", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-positivos-acumulados"
@@ -137,11 +117,7 @@ semantic_role = "m280_rendimientos_positivos_acumulados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2016-amendment-hfp-1822",
-    "aeat-dr-280-2022",
-]
+additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]
 
 [[revisions."2025".casillas]]
 id = "rendimientos-negativos-acumulados"
@@ -152,9 +128,4 @@ semantic_role = "m280_rendimientos_negativos_acumulados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-1822-2016:art-sexto"]
-source_refs = [
-    "boe-modelo-280-base-order",
-    "boe-modelo-280-2016-amendment-hfp-1822",
-    "aeat-dr-280-2022",
-]
-
+additional_source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"]

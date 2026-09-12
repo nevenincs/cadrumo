@@ -56,7 +56,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+9 An. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). NIF de la entidad que dota la reserva (1)
 [[revisions."2024".casillas]]
@@ -68,7 +67,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @34+8 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Fecha de la inversión(1)
 [[revisions."2024".casillas]]
@@ -80,7 +78,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @42+4 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Ejercicio de la generación de la deducción (1)
 [[revisions."2024".casillas]]
@@ -92,7 +89,6 @@ data_type = "year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @46+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción pendiente de aplicar al inicio del período o Deducción generada en el período (1)
 [[revisions."2024".casillas]]
@@ -104,7 +100,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @63+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción aplicada en el período (1)
 [[revisions."2024".casillas]]
@@ -116,7 +111,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @80+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (DT 24.5 LIS y Art. 37 TRLIS). Deducción pendiente de aplicación (1)
 [[revisions."2024".casillas]]
@@ -128,7 +122,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2689+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción pendiente de aplicar al inicio del ejercicio o Deducción generada en el ejercicio. Total [00469]
 [[revisions."2024".casillas]]
@@ -140,7 +133,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2706+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción aplicada en el ejercicio. Total [00470]
 [[revisions."2024".casillas]]
@@ -152,7 +144,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2723+17 Num. DEDUCCIÓN POR INVERSIÓN DE BENEFICIOS (Art. 37 LIS). Deducción pendiente de aplicación. Total [00471]
 [[revisions."2024".casillas]]
@@ -164,4 +155,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

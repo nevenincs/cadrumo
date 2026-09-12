@@ -1,4 +1,3 @@
-# ruff: noqa: E501 - localized guidance and tabular wire lines are atomic
 """Behavior handlers for modelo IVA wallet commands."""
 
 from __future__ import annotations
@@ -46,7 +45,6 @@ def _wallet_amount(amount: str) -> Decimal:
             tr(
                 "cli.app.modelo.iva_wallet.seed_invalid_amount",
                 amount=amount,
-                default=f"Amount {amount!r} is not a valid decimal.",
             )
         )
     return parsed
@@ -94,7 +92,6 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.seed_confirm_required",
-                default="Pass --confirm to acknowledge: this declares the M303 carry-forward balance for the specified period. Filing accuracy depends on correct seeding.",
             )
         )
     seed_amount = _wallet_amount(amount)
@@ -111,7 +108,6 @@ def iva_wallet_seed_cmd(ctx: typer.Context, filing_year: int, period: str, amoun
                 "cli.app.modelo.iva_wallet.seed_conflict",
                 filing_year=filing_year,
                 period=period,
-                default=f"A compensation state for {filing_year}/{period} already exists. Seeding is refused to prevent overwriting.",
             )
         ) from exc
     if state.taxpayer_nif is None:
@@ -146,7 +142,6 @@ def iva_wallet_correct_cmd(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.correct_confirm_required",
-                default="Pass --confirm to acknowledge: this overwrites the previously seeded M303 carry-forward balance for the specified period.",
             )
         )
     clean_reason = reason.strip()
@@ -154,7 +149,6 @@ def iva_wallet_correct_cmd(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.correct_reason_required",
-                default="--reason must not be blank; record why the opening balance is being corrected.",
             )
         )
     correct_amount = _wallet_amount(amount)
@@ -212,7 +206,6 @@ def iva_wallet_override_cmd(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.override_confirm_required",
-                default="Pass --confirm to acknowledge: this records a taxpayer override of the M303 prior-compensación carry. Filing accuracy depends on the value supplied.",
             )
         )
     clean_reason = reason.strip()
@@ -220,7 +213,6 @@ def iva_wallet_override_cmd(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.override_reason_required",
-                default="--reason must not be blank; record the basis for the override.",
             )
         )
     clean_locator = evidence_locator.strip()
@@ -228,7 +220,6 @@ def iva_wallet_override_cmd(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.iva_wallet.override_evidence_locator_required",
-                default="--evidence-locator must not be blank; record where the override's evidence lives.",
             )
         )
     override_amount = _wallet_amount(amount)

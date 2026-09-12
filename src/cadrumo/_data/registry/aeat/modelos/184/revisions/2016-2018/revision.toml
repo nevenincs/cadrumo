@@ -1,4 +1,7 @@
 [revisions."2016-2018"]
+predecessor = "2015"
+casilla_source_refs = ["boe-dr-184-2016-2018"]
+reviewed_against = "2015"
 authority_grade = "applicability"
 # This epoch has its own BOE design.  Strict parsing detects its first field at
 # position 81, so neither the 2015 form spec nor the 2023-2024 map is reused.

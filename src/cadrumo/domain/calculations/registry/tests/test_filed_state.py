@@ -10,7 +10,6 @@ from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..errors import RegistryValidationError
 from ..filed_state import (
@@ -21,6 +20,7 @@ from ..filed_state import (
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from ._published_authority import artifact_components
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

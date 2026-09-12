@@ -6,13 +6,19 @@ family = "mapping"
 variant_id = "modelo-100-xml-export-declarations-mapping:2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-source_refs = ["aeat-modelo-100-2025", "aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"]
+source_refs = ["boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
-source_ref = "aeat-modelo-100-2025"
+source_ref = "boe-modelo-100-2025-form"
 required_text = ["Modelo 100"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["dpnif_d"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["xml"]
 
 [fact.variants.payload]
 kind = "mapping"

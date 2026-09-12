@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 136, autoliquidació del gravamen especial sobre premis de loteries i apostes"
+
+[language.en]
+short_description = "Modelo 136, self-assessment of the special levy on lottery and gambling prizes"
+
+[language.hu]
+short_description = "136-os modell: a lottó- és szerencsejáték-nyeremények különadójának önadózása"
+

@@ -67,7 +67,6 @@ def _resolve_confidence_threshold(value: float | None) -> Decimal | None:
             tr(
                 "cli.review.errors.invalid_confidence",
                 value=str(value),
-                default="Confidence threshold %{value} is out of range; supply a value between 0 and 1.",
             ),
         )
     return threshold
@@ -139,7 +138,7 @@ def review_view(
         f"{tr('cli.review.labels.next')}\t{row.canonical_next_command}",
     ]
     if explain and row.legal_refs:
-        lines.append(f"{tr('cli.review.labels.legal_refs', default='legal_refs')}\t{', '.join(row.legal_refs)}")
+        lines.append(f"{tr('cli.review.labels.legal_refs')}\t{', '.join(row.legal_refs)}")
     emit_envelope(ctx, command="review.view", result=typed_result, lines=lines)
 
 
@@ -160,7 +159,7 @@ def _queue_lines(report: ReviewQueueReport, *, explain: bool = False) -> list[st
         f"{tr('cli.review.labels.next')}"
     )
     if explain:
-        header = f"{header}\t{tr('cli.review.labels.legal_refs', default='legal_refs')}"
+        header = f"{header}\t{tr('cli.review.labels.legal_refs')}"
     lines = [header]
     for row in report.rows:
         base = (

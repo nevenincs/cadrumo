@@ -44,9 +44,9 @@ from ._published_authority import artifact_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _FORM_BINDING = "modelo-200-2024-profile-legal-entity-form"
-_NEW_ENTITY_BINDING = "modelo-200-2024-profile-new-entity-flag"
-_INCN_BINDING = "modelo-200-2024-profile-incn-prior-12-months"
-_ESTADO_PCT_BINDING = "modelo-200-2024-profile-tributacion-estado-porcentaje"
+_NEW_ENTITY_BINDING = "modelo-200-profile-new-entity-flag"
+_INCN_BINDING = "modelo-200-profile-incn-prior-12-months"
+_ESTADO_PCT_BINDING = "modelo-200-profile-tributacion-estado-porcentaje"
 _M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id("00501", surface="_M200_RESULTADO_CONTABLE_CASILLA")
 _M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
     "DP200013:00417",
@@ -118,9 +118,9 @@ def _cuota_for(
             _ESTADO_PCT_BINDING: Decimal("100"),
             # BIN-pendiente fresh-filer baseline: previous_filing binding
             # for casilla 00670 resolves to zero with no prior filing.
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
@@ -492,7 +492,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     The formula
     ``modelo-200-cuota-ejercicio-a-ingresar-devolver`` multiplies the
     cuota by ``(binding / 100)`` where the binding is
-    ``modelo-200-2024-profile-tributacion-estado-porcentaje``. Without
+    ``modelo-200-profile-tributacion-estado-porcentaje``. Without
     that binding the multiplier was 0/100 = 0, silently zeroing the
     result regardless of the supplied cuota líquida.
 
@@ -524,9 +524,9 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
             _INCN_BINDING: Decimal("10000000"),
             _ESTADO_PCT_BINDING: Decimal("100"),
             # BIN-pendiente fresh-filer baseline.
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         relation_values={
             "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),
@@ -544,7 +544,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
 def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() -> None:
     """DP200014B:00599 raises RegistryValidationError when binding is absent.
 
-    Without ``modelo-200-2024-profile-tributacion-estado-porcentaje``
+    Without ``modelo-200-profile-tributacion-estado-porcentaje``
     the formula cannot evaluate — the engine raises rather than
     silently returning zero.  This is the correct fail-loud behaviour:
     operators see a missing-binding error instead of a borrador with
@@ -572,9 +572,9 @@ def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() ->
                 _INCN_BINDING: Decimal("10000000"),
                 # _ESTADO_PCT_BINDING intentionally absent
                 # BIN-pendiente fresh-filer baseline (separate gate).
-                "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
-                "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-                "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+                "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+                "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+                "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
             },
             relation_values={
                 "modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0"),

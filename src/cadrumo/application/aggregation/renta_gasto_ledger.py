@@ -55,6 +55,8 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
@@ -75,7 +77,27 @@ from .errors import AggregationValidationError
 # architecture rule; the cross-package boundary is enforced elsewhere.
 from .renta_ledger import resolve_iva_deduction_ratio
 
-# TODO(fact-relocation): resolve Renta ledger model, target casilla, category selectors, and bindings from selected registry revision
+# fact-relocation: selected Renta expense model, target, category policy, and binding declarations are consumed through RegistryQueryService
+
+
+def renta_gasto_registry_declarations(
+    query_service: RegistryQueryService,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> ModeloBindingsReport:
+    """Resolve the selected Renta expense binding surface without a fallback.
+
+    The selected revision owns the model, target casilla, source selector,
+    aggregation fact, and applicability evidence. This module retains only
+    generic expense classification and folding mechanics.
+    """
+    return query_service.bindings_for_scope(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+    )
 
 
 class RentaGastoLedgerAggregationIssueReason(StrEnum):
@@ -442,4 +464,5 @@ __all__ = [
     "RentaGastoObservation",
     "aggregate_renta_gasto_ledger",
     "aggregate_renta_gasto_ledger_from_repositories",
+    "renta_gasto_registry_declarations",
 ]

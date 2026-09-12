@@ -160,7 +160,6 @@ def modelo_export_verb(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.export.errors.output_required",
-                default="Supply --output PATH for the fichero-BOE artefact.",
             )
         )
     selected_revision = resolve_exportable_revision_for_cli(

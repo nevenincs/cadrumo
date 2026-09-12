@@ -29,9 +29,18 @@ part_of_speech = "phrase"
 
 [language.en]
 short_description = "The verified-complete lifecycle state: a draft has passed the verify gate's completeness contract."
+definition = "A calculation lifecycle state indicating that a draft has passed the verification check's completeness contract. It is a completeness and consistency check run on the person's computer; it does not check the model against the AEAT portal or guarantee that the agency will accept it."
+scope_note = "An internal concept in the application's search and calculation machinery, documented for the development RAG. It is not a taxpayer-facing tax term and therefore remains outside the glossary."
+
 
 [language.ca]
 short_description = "L'estat de verificat complet: l'esborrany ha superat el contracte de completesa de la verificacio."
+definition = "Estat del cicle de vida d'un càlcul que indica que un esborrany ha superat el contracte de completitud de la comprovació de verificació. És un control de completitud i coherència que s'executa a l'ordinador de la persona; no comprova el model contra el portal de l'AEAT ni garanteix que l'agència l'accepti."
+scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
+
 
 [language.hu]
 short_description = "A teljesen ellenőrzött életciklus-állapot: a piszkozat átment az ellenőrzés teljességi szerződésén."
+definition = "A számítás életciklusának állapota, amely azt jelzi, hogy a piszkozat teljesítette az ellenőrzés teljességi szerződését. Ez a személy számítógépén futó teljességi és következetességi ellenőrzés; nem veti össze a modellt az AEAT portáljával, és nem garantálja, hogy a hivatal elfogadja."
+scope_note = "Az alkalmazás keresési és számítási gépezetének belső fogalma, amelyet a fejlesztési RAG számára dokumentálunk. Nem adózóknak szóló adóügyi kifejezés, ezért kívül marad a szójegyzéken."
+

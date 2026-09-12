@@ -15,6 +15,9 @@ ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["pago fraccionado"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-131-2025"
+required_text = ["xml"]
 
 [fact.variants.payload]
 kind = "mapping"

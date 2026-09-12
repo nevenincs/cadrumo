@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 280, declaració informativa anual dels plans d'estalvi a llarg termini"
+
+[language.en]
+short_description = "Modelo 280, annual information return on long-term savings plans"
+
+[language.hu]
+short_description = "280-as modell: hosszú távú megtakarítási tervek éves tájékoztató bevallása"
+

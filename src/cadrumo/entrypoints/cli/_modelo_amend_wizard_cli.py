@@ -221,7 +221,6 @@ def run_modelo_work_amend_wizard(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.amend_wizard_no_corrections",
-                default="No casilla was corrected; the amendment wizard needs at least one changed value.",
             )
         )
     run_token = uuid4().hex
@@ -234,7 +233,6 @@ def run_modelo_work_amend_wizard(
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.amend_wizard_no_corrections",
-                    default="No casilla was corrected; the amendment wizard needs at least one changed value.",
                 )
             )
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
@@ -354,7 +352,6 @@ def _selection_definition(
         year=unit.filing_year,
         period=unit.period.registry_token,
         summary=summary_lines,
-        default="Filed {modelo} {year} {period} — current values:\n{summary}\nWhich casillas changed? (select the ones to correct, none to abort)",
     )
     choices: list[FlowChoice] = []
     for row in amendable:
@@ -402,7 +399,6 @@ def _selected_rows(
                     modelo=str(unit.modelo),
                     year=unit.filing_year,
                     period=unit.period.registry_token,
-                    default="Casilla {token!r} is not part of the filed {modelo} {year} {period} return; choose from the listed casilla numbers.",
                 )
             )
         selected.append(row)
@@ -514,7 +510,6 @@ def _correction_value_pages(
             number=row.number,
             label=row.label,
             previous_value=str(previous),
-            default="Corrected value for casilla {number} ({label}), currently {previous_value}",
         )
         help_ref = _value_help_ref(row=row, run_token=run_token, table=table)
         pages.append(
@@ -548,12 +543,10 @@ def _amendment_kind_page(*, modelo: str, period: Period, run_token: str, table: 
     table[kind_prompt_ref] = tr(
         "cli.app.modelo.work.amend_wizard_kind_prompt",
         choices=", ".join(repr(kind.value) for kind in permitted_kinds),
-        default="Amendment kind ({choices})",
     )
     kind_help_ref = _copy_ref(run_token, "kind:help")
     table[kind_help_ref] = tr(
         "cli.app.modelo.work.amend_wizard_kind_help",
-        default="complementaria adds to the prior tax due; sustitutiva fully replaces the prior filing; rectificativa is the unified correction mechanism for modelos whose orden implements it (e.g. Modelo 303 from filing year 2023). Only the kinds legally available for this filing's period are accepted.",
     )
     return FlowPage(
         id=_KIND_PAGE_ID,
@@ -618,7 +611,7 @@ def _m303_motive_choice(*, motive: M303RectificativaMotive, run_token: str, tabl
 def _amendment_reason_page(*, run_token: str, table: dict[str, str]) -> FlowPage:
     reason_prompt_ref = _copy_ref(run_token, "reason:prompt")
     table[reason_prompt_ref] = tr(
-        "cli.app.modelo.work.amend_wizard_reason_prompt", default="Reason for this amendment (kept in the audit trail)"
+        "cli.app.modelo.work.amend_wizard_reason_prompt",
     )
     return FlowPage(
         id=_REASON_PAGE_ID,

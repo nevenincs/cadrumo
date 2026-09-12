@@ -13,7 +13,6 @@ semantic_role = "importe_devolucion_solicitado"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.divisa"
@@ -24,7 +23,6 @@ semantic_role = "divisa_devolucion"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.numero-facturas"
@@ -35,7 +33,6 @@ semantic_role = "numero_facturas_relacionadas"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.numero-documentos-importacion"
@@ -46,7 +43,6 @@ semantic_role = "numero_documentos_importacion_relacionados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.periodo-fecha-inicio"
@@ -57,7 +53,6 @@ semantic_role = "periodo_devolucion_fecha_inicio"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.periodo-fecha-fin"
@@ -68,7 +63,6 @@ semantic_role = "periodo_devolucion_fecha_fin"
 required = true
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "devolucion.declaracion-no-entrega-bienes"
@@ -79,7 +73,6 @@ semantic_role = "declaracion_no_entrega_bienes_ni_servicios"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "prorrata.ejercicio"
@@ -90,7 +83,6 @@ semantic_role = "prorrata_ejercicio_modificado"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "prorrata.definitiva"
@@ -101,4 +93,3 @@ semantic_role = "prorrata_definitiva"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]

@@ -47,8 +47,8 @@ _M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
     "0596",
     surface="_M100_RETENCIONES_TRABAJO_CASILLA",
 )
-_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-2024-certificado-trabajo-retenciones"
-_M100_M111_RETENCIONES_BINDING = "renta-2024-modelo-111-retenciones-periodicas"
+_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-certificado-trabajo-retenciones"
+_M100_M111_RETENCIONES_BINDING = "renta-modelo-111-retenciones-periodicas"
 
 
 def _resolved_revision(*, modelo: str, filing_year: int, period_code: str):

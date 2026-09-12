@@ -13,9 +13,8 @@ import pytest
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
 from ..retenciones_routing_integrity import (
-    RENTA_130_RETENCIONES_BINDING_ID,
-    RENTA_130_RETENCIONES_OUTPUT_CASILLA,
     check_m130_retenciones_output_casilla,
+    resolve_m130_retenciones_route,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -23,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_output_casilla_is_the_registry_validated_casilla_id() -> None:
     """The constant is a real, validated casilla id -- "06", not a bare string literal."""
-    assert RENTA_130_RETENCIONES_OUTPUT_CASILLA == "06"
+    assert resolve_m130_retenciones_route().output_casilla == "06"
 
 
 def test_retenciones_check_is_registered_with_the_registry_validator() -> None:
@@ -59,14 +58,15 @@ def test_check_fires_only_when_the_declared_binding_has_nowhere_to_report() -> N
     passed through unused, so an empty and a populated value must produce
     the same result.
     """
+    route = resolve_m130_retenciones_route()
     unrelated_targets = frozenset({"0183"})
-    declared = frozenset({RENTA_130_RETENCIONES_BINDING_ID})
+    declared = frozenset({route.binding_id})
 
     # All three conditions hold -- exactly one failure, naming both halves.
     failures = check_m130_retenciones_output_casilla("130", frozenset(), unrelated_targets, declared)
     assert len(failures) == 1
-    assert RENTA_130_RETENCIONES_OUTPUT_CASILLA in failures[0]
-    assert RENTA_130_RETENCIONES_BINDING_ID in failures[0]
+    assert route.output_casilla in failures[0]
+    assert route.binding_id in failures[0]
 
     # The first-slice parameter is genuinely unused: same verdict either way.
     assert check_m130_retenciones_output_casilla("130", frozenset(), frozenset(), declared) == failures
@@ -90,18 +90,17 @@ def test_modelo_130_revisions_declare_the_output_casilla() -> None:
     """Every committed Modelo 130 revision declares the retenciones output casilla.
 
     Domain-layer mirror of the snapshot-time gate: every revision's own
-    casilla set must contain :data:`RENTA_130_RETENCIONES_OUTPUT_CASILLA`. A
+    casilla set must contain the output selected by the registry route. A
     regression that drops or renumbers casilla 06 without updating this
     constant reproduces the exact defect the registered check guards
     against.
     """
+    output_casilla = resolve_m130_retenciones_route().output_casilla
     modelo_130 = bundled_authority().modelo("130")
 
     for revision_id, revision in modelo_130.revisions.items():
         casilla_ids = {casilla.id for casilla in revision.casillas}
-        assert RENTA_130_RETENCIONES_OUTPUT_CASILLA in casilla_ids, (
-            f"revision {revision_id!r} is missing casilla {RENTA_130_RETENCIONES_OUTPUT_CASILLA!r}"
-        )
+        assert output_casilla in casilla_ids, f"revision {revision_id!r} is missing casilla {output_casilla!r}"
 
 
 def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:

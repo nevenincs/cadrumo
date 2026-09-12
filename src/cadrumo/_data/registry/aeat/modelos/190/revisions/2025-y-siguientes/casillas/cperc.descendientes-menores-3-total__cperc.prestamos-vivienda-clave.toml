@@ -15,7 +15,6 @@ semantic_role = "payee_descendientes_menores_3_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-menores-3-entero"
@@ -28,7 +27,6 @@ semantic_role = "payee_descendientes_menores_3_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-resto-total"
@@ -41,7 +39,6 @@ semantic_role = "payee_descendientes_resto_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-resto-entero"
@@ -54,7 +51,6 @@ semantic_role = "payee_descendientes_resto_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-33-65-total"
@@ -67,7 +63,6 @@ semantic_role = "payee_descendientes_discapacidad_33_65_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-33-65-entero"
@@ -80,7 +75,6 @@ semantic_role = "payee_descendientes_discapacidad_33_65_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-movilidad-total"
@@ -93,7 +87,6 @@ semantic_role = "payee_descendientes_discapacidad_movilidad_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-movilidad-entero"
@@ -106,7 +99,6 @@ semantic_role = "payee_descendientes_discapacidad_movilidad_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-65-total"
@@ -119,7 +111,6 @@ semantic_role = "payee_descendientes_discapacidad_65_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.descendientes-discapacidad-65-entero"
@@ -132,7 +123,6 @@ semantic_role = "payee_descendientes_discapacidad_65_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-menores-75-total"
@@ -145,7 +135,6 @@ semantic_role = "payee_ascendientes_menores_75_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-menores-75-entero"
@@ -158,7 +147,6 @@ semantic_role = "payee_ascendientes_menores_75_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-75-mas-total"
@@ -171,7 +159,6 @@ semantic_role = "payee_ascendientes_75_mas_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-75-mas-entero"
@@ -184,7 +171,6 @@ semantic_role = "payee_ascendientes_75_mas_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-59", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-33-65-total"
@@ -197,7 +183,6 @@ semantic_role = "payee_ascendientes_discapacidad_33_65_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-33-65-entero"
@@ -210,7 +195,6 @@ semantic_role = "payee_ascendientes_discapacidad_33_65_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-movilidad-total"
@@ -223,7 +207,6 @@ semantic_role = "payee_ascendientes_discapacidad_movilidad_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-movilidad-entero"
@@ -236,7 +219,6 @@ semantic_role = "payee_ascendientes_discapacidad_movilidad_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-65-total"
@@ -249,7 +231,6 @@ semantic_role = "payee_ascendientes_discapacidad_65_total"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ascendientes-discapacidad-65-entero"
@@ -262,7 +243,6 @@ semantic_role = "payee_ascendientes_discapacidad_65_entero"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-1"
@@ -275,7 +255,6 @@ semantic_role = "payee_computo_hijo_1"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-2"
@@ -288,7 +267,6 @@ semantic_role = "payee_computo_hijo_2"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.computo-hijo-3"
@@ -301,7 +279,6 @@ semantic_role = "payee_computo_hijo_3"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-58", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.prestamos-vivienda-clave"
@@ -314,4 +291,3 @@ semantic_role = "payee_prestamos_vivienda_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "rd-439-2007:art-86", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

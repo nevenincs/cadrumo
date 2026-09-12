@@ -20,7 +20,7 @@ from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition
 from cadrumo.domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 
 from ..compiler.authority import compiled_bundled_authority
@@ -269,9 +269,9 @@ _RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
 
 
 def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
-    """F8: every binding's ``typed_enum`` is the narrowed enum member, not a bare str.
+    """Every binding's ``typed_enum`` is the narrowed enum member, not a bare str.
 
-    The field was a stringly-typed pointer; F8 narrowed it to
+    The field is typed as
     :class:`~cadrumo.core.aggregation.BindingTypedEnumKind`. The loader coerces the
     raw TOML token to its member at the boundary, so every committed binding that
     declares a ``typed_enum`` exposes a member (which still equals its string
@@ -296,23 +296,29 @@ def test_declared_typed_enum_hydrates_to_binding_typed_enum_kind() -> None:
 def test_unknown_typed_enum_token_is_rejected_at_construction() -> None:
     """Anti-tautology: an unknown ``typed_enum`` token is refused at the boundary.
 
-    If this ever passes with an arbitrary token, the F8 narrowing is broken and
-    the ``isinstance`` assertion above is vacuous.
+    If this ever passes with an arbitrary token, the enum narrowing is broken
+    and the ``isinstance`` assertion above is vacuous.
     """
     with pytest.raises(ValidationError):
-        DataBindingDefinition.model_validate(
+        BindingDefinition.model_validate(
             {
                 "id": "bad-typed-enum",
-                "source": "profile",
-                "selector": {"profile_key": "censo.status"},
-                "typed_enum": "NotARealSubstrateEnum",
+                "provider": {
+                    "kind": "profile",
+                    "profile_key": "censo.status",
+                },
+                "value": {
+                    "data_type": "enum",
+                    "channel": "enum",
+                    "typed_enum": "NotARealSubstrateEnum",
+                },
                 "legal_refs": ("rd-1065-2007:art-9",),
                 "source_refs": ("aeat-modelo-036-procedure",),
             },
         )
 
 
-def _modelo_100_bindings(modelos: Iterable[ModeloDefinition]) -> Iterator[DataBindingDefinition]:
+def _modelo_100_bindings(modelos: Iterable[ModeloDefinition]) -> Iterator[BindingDefinition]:
     """Yield every binding declared by any Modelo 100 revision."""
     for modelo in modelos:
         if modelo.id != "100":
@@ -322,7 +328,7 @@ def _modelo_100_bindings(modelos: Iterable[ModeloDefinition]) -> Iterator[DataBi
 
 
 def _typed_enum_offence(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     expectations: tuple[tuple[str, str], ...],
 ) -> str | None:

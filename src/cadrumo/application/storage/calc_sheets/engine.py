@@ -37,7 +37,7 @@ from ....domain.calculations.registry.relations import (
     relation_source_requirements,
 )
 from ....domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloRevision,
     RegistrySnapshot,
@@ -1163,7 +1163,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
 
     Each element in the returned tuple is a :class:`SheetRowSet`.
     """
-    cohorts: dict[str, list[tuple[DataBindingDefinition, BindingRowSetSelector]]] = {}
+    cohorts: dict[str, list[tuple[BindingDefinition, BindingRowSetSelector]]] = {}
     cohort_legal: dict[str, set[str]] = {}
     cohort_source: dict[str, set[str]] = {}
     public_row_bindings_by_id = _collectible_row_bindings_by_id(revision)
@@ -1212,7 +1212,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     return tuple(row_sets)
 
 
-def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, DataBindingDefinition]:
+def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, BindingDefinition]:
     return {
         str(binding.id): binding
         for binding in revision.bindings
@@ -1222,9 +1222,9 @@ def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, DataB
 
 
 def _is_public_row_mirror(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector: BindingRowSetSelector,
-    public_row_bindings_by_id: Mapping[str, DataBindingDefinition],
+    public_row_bindings_by_id: Mapping[str, BindingDefinition],
 ) -> bool:
     if binding.source != BindingSourceKind.PAYABLE_INVOICE:
         return False
@@ -1241,7 +1241,7 @@ def _is_public_row_mirror(
     return selector.grouping == public_selector.grouping and selector.row_field == public_selector.row_field
 
 
-def _row_set_column_label(binding: DataBindingDefinition, selector: BindingRowSetSelector) -> str:
+def _row_set_column_label(binding: BindingDefinition, selector: BindingRowSetSelector) -> str:
     """Derive a human-readable column header for a row-set binding.
 
     Resolves the operator-facing label through the i18n translation
@@ -1249,7 +1249,9 @@ def _row_set_column_label(binding: DataBindingDefinition, selector: BindingRowSe
     under ``sheets.detalle.headers.*``; missing keys fall back to the
     binding id so the workbook still renders rather than 500-erroring.
     """
-    return tr(f"sheets.detalle.headers.{selector.row_field}", default=binding.id)
+    return tr(
+        f"sheets.detalle.headers.{selector.row_field}",
+    )
 
 
 def _collect_cell_constraints(

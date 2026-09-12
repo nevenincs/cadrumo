@@ -99,6 +99,7 @@ from .ids import (
     RelationId,
     SourceRefId,
 )
+from .relations import relation_prefill_bindings_for_period
 from .runtime_graph import formula_evaluation_order
 from .schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from .schema_formula import FormulaExpression, ParameterDefinition
@@ -489,7 +490,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             date-aware ops; ``filing_period`` defaults to the snapshot's typed
             calculation filing date when present, otherwise its year-end.
         binding_values: Optional resolved numeric binding values keyed by
-            :class:`~domain.calculations.registry.DataBindingDefinition`
+            :class:`~domain.calculations.registry.BindingDefinition`
             id; Decimal-only.
         enum_binding_values: Optional string-valued bindings (e.g. profile
             CCAA) keyed by binding id; consumed by enum-routed ops.
@@ -670,11 +671,7 @@ def _validate_external_value_ids(
 ) -> None:
     revision = snapshot.revision
     binding_ids = {binding.id for binding in revision.bindings}
-    relation_ids = {
-        relation.id
-        for relation in revision.relations
-        if not relation.target_periods or snapshot.period in relation.target_periods
-    }
+    relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision, period=snapshot.period)}
     _reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
     _reject_unknown_external_values(resolved_relations, relation_ids, "relation")
     _reject_unknown_external_values(
@@ -1081,22 +1078,6 @@ def _evaluate_binding_leaf(binding_id: BindingId, ctx: EvalContext) -> Decimal:
     return value
 
 
-def _evaluate_relation_leaf(relation_id: RelationId, ctx: EvalContext) -> Decimal:
-    """Resolve one numeric relation leaf and append its provenance reference."""
-    if relation_id not in ctx.relation_values:
-        if relation_id in ctx.unresolved_relation_ids:
-            raise _UnresolvedFormulaDependencyError((relation_id,))
-        raise RegistryValidationError(
-            f"relation {relation_id!r} has no supplied value",
-            translated_message="errors.calc.relation_value_missing",
-            context={"relation_id": relation_id},
-        )
-    value = ctx.relation_values[relation_id]
-    ctx.operand_refs.append(relation_id)
-    ctx.operand_values.append(value)
-    return value
-
-
 def _reject_date_binding_leaf(binding_id: BindingId) -> None:
     """Reject a date channel used without its age operation."""
     raise RegistryValidationError(
@@ -1118,8 +1099,6 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
         _reject_date_binding_leaf(expression.date_binding)
     if expression.parameter is not None:
         return _resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
-    if expression.relation is not None:
-        return _evaluate_relation_leaf(expression.relation, ctx)
     raise RegistryValidationError(
         "empty formula expression",
         translated_message="errors.calc.empty_expression",

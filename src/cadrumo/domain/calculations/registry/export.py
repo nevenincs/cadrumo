@@ -31,12 +31,12 @@ from .export_field_casilla import layout_fields_in_emission_order
 from .export_parse import xml_dictionary_entries
 from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
-from .schema import DataBindingDefinition, ModeloRevision, RegistrySnapshot
+from .schema import BindingDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import ZERO_PADDED_EXPORT_DATA_TYPES, RegistryModel
 from .schema_exports import ExportFieldDataType, ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
 from .schema_references import SourceReference
 
-_BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
+_BindingExportMember = tuple[BindingDefinition, BindingExportSelector]
 
 
 class ResolvedExportLayout(RegistryModel):
@@ -355,7 +355,7 @@ def _export_fields_from_record_bindings(
 
 def _export_field_from_binding_member(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector: BindingExportSelector,
     *,
     bindings_by_id: Mapping[str, _BindingExportMember],
@@ -374,7 +374,7 @@ def _export_field_from_binding_member(
     return _export_field_from_row_binding(record, binding, selector, bindings_by_id=bindings_by_id)
 
 
-def _row_binding_field(binding: DataBindingDefinition, selector: BindingExportSelector) -> str | None:
+def _row_binding_field(binding: BindingDefinition, selector: BindingExportSelector) -> str | None:
     if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
     if not isinstance(selector, BindingRowExportSelector):
@@ -384,7 +384,7 @@ def _row_binding_field(binding: DataBindingDefinition, selector: BindingExportSe
 
 def _export_field_from_row_binding(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector: BindingExportSelector,
     *,
     bindings_by_id: Mapping[str, _BindingExportMember],
@@ -416,7 +416,7 @@ def _export_field_from_row_binding(
 
 def _row_binding_export_context(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector: BindingExportSelector,
 ) -> tuple[str, CasillaId] | None:
     """Resolve a repeated binding to its declared row-field casilla."""
@@ -438,7 +438,7 @@ def _row_binding_export_context(
 
 def _row_binding_is_already_materialized(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     row_field: str,
     bindings_by_id: Mapping[str, _BindingExportMember],
 ) -> bool:
@@ -450,7 +450,7 @@ def _row_binding_is_already_materialized(
 
 def _row_binding_template(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     casilla_id: CasillaId,
 ) -> ExportFieldDefinition:
     """Find the casilla field whose fixed-width slot templates this row binding."""
@@ -485,7 +485,7 @@ def _record_binding_field_for_row_field(
 
 def _export_field_from_binding(
     record: ExportRecordDefinition,
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector: BindingFixedExportSelector,
 ) -> ExportFieldDefinition:
     return ExportFieldDefinition(

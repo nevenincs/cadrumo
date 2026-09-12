@@ -61,7 +61,6 @@ def record_m036(
             tr(
                 "cli.app.modelo.m036.errors.bad_declared_on",
                 value=declared_on,
-                default=f"--declared-on must be an ISO date (YYYY-MM-DD); got {declared_on!r}.",
             )
         ) from exc
     bucket_id = active_bucket_id_or_refuse()
@@ -164,7 +163,11 @@ def m036_list(ctx: typer.Context) -> None:
             for declaration in declarations
         )
     else:
-        lines.append(tr("cli.app.modelo.m036.list_empty", default="No M036 declarations recorded yet."))
+        lines.append(
+            tr(
+                "cli.app.modelo.m036.list_empty",
+            )
+        )
     emit_envelope(ctx, command="modelo.m036.list", result=result, lines=lines)
 
 
@@ -179,7 +182,6 @@ def m036_view(ctx: typer.Context, declaration_id: str) -> None:
             tr(
                 "cli.app.modelo.m036.errors.declaration_not_found",
                 value=declaration_id,
-                default=f"No M036 declaration matches {declaration_id!r}. Run 'aeat app modelo m036 list' to see recorded declarations.",
             )
         ) from exc
     result = M036DeclarationShowResult(

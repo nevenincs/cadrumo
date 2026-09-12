@@ -10,7 +10,8 @@ import pytest
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry import bindings as _bindings
-from cadrumo.domain.calculations.registry.bindings import ProfileSelector, selector_model_for_source
+from cadrumo.domain.calculations.registry.binding_provider_registration import provider_model_for
+from cadrumo.domain.calculations.registry.profile_bindings import ProfileProvider
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues, RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.tests.registry_snapshot import build_snapshot
@@ -26,7 +27,7 @@ _EXPECTED_CASILLA_TO_BINDING: Mapping[str, str] = {
     "DPNIF_D": "renta-2024-profile-tax-id",
     "DP_APENOM_D": "renta-2024-profile-display-name",
     "ZCCAD": "renta-2024-profile-tax-residence-ccaa",
-    "TIPOTRIBUTACION": "renta-2024-profile-declaration-type",
+    "TIPOTRIBUTACION": "renta-profile-declaration-type",
     "SEXO_D": "renta-2024-profile-taxpayer-sex",
     "ECIVIL": "renta-2024-profile-marital-status",
     "DPNIF_C": "renta-2024-profile-spouse-tax-id",
@@ -40,7 +41,7 @@ _EXPECTED_CASILLA_TO_BINDING: Mapping[str, str] = {
     "RESIDENTEUE": "renta-2024-profile-spouse-eu-eea-resident",
     "ZRUE2": "renta-2024-profile-spouse-eu-eea-country",
     "HIJOSUE": "renta-2024-profile-family-descendants-eu-eea-deduction",
-    "PH18": "renta-2024-profile-family-minor-children-in-unit",
+    "PH18": "renta-profile-family-minor-children-in-unit",
     "NIFDLG": "renta-2024-family-descendant-tax-id",
     "APENOMDLG": "renta-2024-family-descendant-display-name",
     "FNACDLG": "renta-2024-family-descendant-birth-date",
@@ -69,8 +70,8 @@ _EXPECTED_ROW_BINDING_TARGETS: Mapping[str, tuple[str, str]] = {
 }
 
 
-def _profile_selector(value: object) -> ProfileSelector:
-    assert isinstance(value, ProfileSelector)
+def _profile_selector(value: object) -> ProfileProvider:
+    assert isinstance(value, ProfileProvider)
     return value
 
 
@@ -91,15 +92,15 @@ def _modelo_100_2024_snapshot() -> RegistrySnapshot:
 
 def test_profile_selector_is_the_single_profile_dispatch_authority() -> None:
     """The live registry dispatch and loaded profile bindings share one class."""
-    assert selector_model_for_source(BindingSourceKind.PROFILE) is ProfileSelector
-    assert not hasattr(_bindings, "_ProfileSelector")
+    assert provider_model_for(BindingSourceKind.PROFILE) is ProfileProvider
+    assert not hasattr(_bindings, "ProfileProvider")
 
     snapshot = _modelo_100_2024_snapshot()
     profile_bindings = tuple(
         binding for binding in snapshot.revision.bindings if binding.source is BindingSourceKind.PROFILE
     )
     assert profile_bindings
-    assert all(isinstance(binding.selector, ProfileSelector) for binding in profile_bindings)
+    assert all(isinstance(binding.provider, ProfileProvider) for binding in profile_bindings)
 
 
 def test_modelo_100_2024_profile_family_surface_is_bound_to_profile_registry_facts() -> None:
@@ -120,7 +121,7 @@ def test_modelo_100_2024_profile_family_surface_is_bound_to_profile_registry_fac
         assert binding.legal_refs
         assert binding.source_refs
 
-        selector = _profile_selector(binding.selector)
+        selector = _profile_selector(binding.provider)
         assert selector.dictionary_field == casilla_id
 
 
@@ -150,16 +151,16 @@ def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> N
     (declared as a year-parameterised pattern rather than a per-year schema field)
     is now populated by
     :func:`~cadrumo.application.modelo.inject_derived_minimo_descendientes_facts`
-    and consumed by the binding ``renta-2024-profile-minimo-descendientes-estatal``,
+    and consumed by the binding ``renta-profile-minimo-descendientes-estatal``,
     which feeds casillas 0513/0514 via a live formula.
     """
     snapshot = _modelo_100_2024_snapshot()
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     assert "renta-2024-profile-descendientes-minimos-aggregate" not in bindings
 
-    binding = bindings["renta-2024-profile-minimo-descendientes-estatal"]
+    binding = bindings["renta-profile-minimo-descendientes-estatal"]
     assert binding.source is BindingSourceKind.PROFILE
-    selector = _profile_selector(binding.selector)
+    selector = _profile_selector(binding.provider)
     assert selector.profile_key == "renta_family.descendientes_minimos_aggregate_2024"
 
     casillas = {casilla.id: casilla for casilla in snapshot.revision.casillas}
@@ -185,7 +186,7 @@ def test_modelo_100_2024_taxpayer_birth_date_profile_binding_remains_available()
 
     binding = bindings["renta-2024-profile-taxpayer-birth-date"]
     assert binding.source is BindingSourceKind.PROFILE
-    selector = _profile_selector(binding.selector)
+    selector = _profile_selector(binding.provider)
     assert selector.profile_key == "renta_taxpayer.birth_date"
     assert selector.xsd_path == "/DatosIdentificativos/Declarante/DPFNAC_D"
     assert selector.dictionary_field == "DPFNAC_D"

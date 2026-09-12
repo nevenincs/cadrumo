@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
@@ -30,8 +30,10 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member, coerce_enum_tuple
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
 class OssIossLedgerObservation(BaseModel):
@@ -73,7 +75,7 @@ class OssIossLedgerObservation(BaseModel):
     iva_amount: Decimal
 
 
-class _OssIossLedgerSelector(BaseModel):
+class LedgerOssProvider(BaseModel):
     """Validated form of a ledger_oss_aggregation binding selector.
 
     The selector is expressed in TOML as a mapping of string-valued
@@ -83,6 +85,8 @@ class _OssIossLedgerSelector(BaseModel):
     """
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.LEDGER_OSS_AGGREGATION] = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
     regime: Annotated[OssIossRegime, BeforeValidator(coerce_enum_member(OssIossRegime))]
     destination_member_state: Annotated[EUMemberState, BeforeValidator(coerce_enum_member(EUMemberState))]
@@ -102,21 +106,21 @@ class _OssIossLedgerSelector(BaseModel):
         return value
 
 
-def _ledger_oss_selector(binding: DataBindingDefinition) -> _OssIossLedgerSelector:
+def _ledger_oss_selector(binding: BindingDefinition) -> LedgerOssProvider:
     """Validate and parse a binding selector into a typed OSS / IOSS selector."""
     try:
-        return _OssIossLedgerSelector.model_validate(_selector_as_dict(binding))
+        return LedgerOssProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 
 
 def validate_ledger_oss_aggregation_binding_definition(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> None:
     """Validate a ``ledger_oss_aggregation`` binding's selector and aggregation.
 
     Args:
-        binding: The :class:`DataBindingDefinition` to validate. Must
+        binding: The :class:`BindingDefinition` to validate. Must
             have ``source == "ledger_oss_aggregation"``.
 
     Raises:
@@ -144,7 +148,7 @@ def validate_ledger_oss_aggregation_binding_definition(
 
 
 def _oss_build_matcher(
-    selector: _OssIossLedgerSelector,
+    selector: LedgerOssProvider,
 ) -> Callable[[OssIossLedgerObservation], bool]:
     regime, destination, rate_kind, direction = (
         selector.regime,
@@ -168,7 +172,7 @@ def _oss_build_matcher(
 
 def _oss_aggregate(
     matched: Sequence[OssIossLedgerObservation],
-    selector: _OssIossLedgerSelector,
+    selector: LedgerOssProvider,
 ) -> Decimal:
     if selector.fact == "iva_amount_sum":
         return sum((observation.iva_amount for observation in matched), Decimal("0"))
@@ -263,11 +267,11 @@ def unsupported_ledger_oss_observations(
 # domestic-reverse-charge operations.
 
 
-def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_oss_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_oss_aggregation`` binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`_OssIossLedgerSelector` (preserving the underlying pydantic field
+    :class:`LedgerOssProvider` (preserving the underlying pydantic field
     error) then runs the fact/aggregation-op invariant through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_oss_aggregation_binding_definition`. This validator is
@@ -275,10 +279,10 @@ def validate_ledger_oss_aggregation_binding(binding: DataBindingDefinition) -> l
     only; :func:`resolve_ledger_oss_aggregation_binding_values` re-parses the
     selector independently through :func:`_ledger_oss_selector`.
     """
-    failures = selector_against_model(binding, _OssIossLedgerSelector)
+    failures = selector_against_model(binding, LedgerOssProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition)
 
 
-OssIossLedgerSelector = _OssIossLedgerSelector
+LedgerOssProvider = LedgerOssProvider

@@ -69,7 +69,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-111"
@@ -86,7 +86,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-120"
@@ -103,7 +103,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-144"
@@ -120,7 +120,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-121"
@@ -137,7 +137,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-142"
@@ -154,7 +154,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-122"
@@ -171,7 +171,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-123"
@@ -188,7 +188,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-124"
@@ -205,7 +205,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-125"
@@ -222,7 +222,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-126"
@@ -239,7 +239,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-127"
@@ -256,7 +256,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-128"
@@ -273,7 +273,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-129"
@@ -290,7 +290,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-130"
@@ -307,7 +307,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-143"
@@ -324,7 +324,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-131"
@@ -341,7 +341,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-132"
@@ -358,7 +358,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-133"
@@ -375,7 +375,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-134"
@@ -392,7 +392,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-135"
@@ -409,7 +409,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-136"
@@ -426,7 +426,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-137"
@@ -443,7 +443,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-138"
@@ -460,7 +460,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-139"
@@ -477,7 +477,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-145"
@@ -494,7 +494,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-146"
@@ -511,7 +511,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-140"
@@ -528,7 +528,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.causa-150"
@@ -545,4 +545,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

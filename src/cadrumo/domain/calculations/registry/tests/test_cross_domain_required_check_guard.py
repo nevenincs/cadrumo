@@ -25,10 +25,10 @@ import textwrap
 
 import pytest
 
+from .. import validate_cross_domain_snapshot as snapshot_validation
 from ..snapshot import _CROSS_DOMAIN_CHECK_MODULES
 from ..validate_cross_domain_snapshot import (
     _CROSS_DOMAIN_CHECK_IDENTITIES,
-    _CROSS_DOMAIN_SNAPSHOT_CHECKS,
     REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES,
     missing_required_cross_domain_check,
 )
@@ -37,6 +37,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REQUIRED_MODULE = "cadrumo.domain.renta.first_slice_routing_integrity"
 _OTHER_MODULE = "cadrumo.domain.renta.retenciones_routing_integrity"
+
+
+def _registered_checks() -> list[object]:
+    """Read the validator's private list for identity-index consistency proofs."""
+    return vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
 
 
 def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProcess[str]:
@@ -49,18 +54,20 @@ def _build_m100_with_declared_modules(declared: str) -> subprocess.CompletedProc
 
         from cadrumo.domain.calculations.registry.authority import bundled_authority
         from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import (
-            _CROSS_DOMAIN_SNAPSHOT_CHECKS,
-        )
+        import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         try:
             bundled_authority().snapshot("100", filing_year=2025, period="0A")
         except RegistryValidationError as error:
-            registered = sorted(check.__module__ for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS)
+            registered = sorted(
+                check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+            )
             print("REFUSED", registered)
             print(error)
         else:
-            registered = sorted(check.__module__ for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS)
+            registered = sorted(
+                check.__module__ for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
+            )
             print("BUILT", registered)
         """
     return subprocess.run(
@@ -164,9 +171,7 @@ def test_every_required_check_module_is_one_the_builder_installs() -> None:
     """
 
     installed_modules = {
-        importlib.util.resolve_name(name, "cadrumo.domain.calculations.registry")
-        if name.startswith(".")
-        else name
+        importlib.util.resolve_name(name, "cadrumo.domain.calculations.registry") if name.startswith(".") else name
         for name in _CROSS_DOMAIN_CHECK_MODULES
     }
     assert set(REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES.values()) == installed_modules
@@ -182,8 +187,8 @@ def test_the_identity_index_and_the_check_list_hold_the_same_checks() -> None:
 
     indexed = [check for checks in _CROSS_DOMAIN_CHECK_IDENTITIES.values() for check in checks]
 
-    assert len(indexed) == len(_CROSS_DOMAIN_SNAPSHOT_CHECKS)
-    assert {id(check) for check in indexed} == {id(check) for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS}
+    assert len(indexed) == len(_registered_checks())
+    assert {id(check) for check in indexed} == {id(check) for check in _registered_checks()}
     for identity, checks in _CROSS_DOMAIN_CHECK_IDENTITIES.items():
         for check in checks:
             assert check.__module__ == identity

@@ -70,19 +70,19 @@ _MELLIZO_BIRTH = "NACIMIENTO=2022-06-01"
 # 0611. Its 2024 registry formula reads the profile-derived scalar, so no
 # command-line flag supplies its value.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
-    "--binding", "renta-2024-modelo-100-estimacion-directa-es-normal=1",
-    "--binding", "renta-2024-modelo-111-retenciones-periodicas=0",
-    "--binding", "renta-2024-modelo-123-retenciones-periodicas=0",
-    "--binding", "renta-2024-modelo-193-retenciones-anuales=0",
+    "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
+    "--binding", "renta-modelo-111-retenciones-periodicas=0",
+    "--binding", "renta-modelo-123-retenciones-periodicas=0",
+    "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-2024-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-2024-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-2024-profile-family-minor-children-in-unit=0",
-    "--binding", "renta-2024-profile-guarderia-gastos-reales=0",
-    "--binding", "renta-2024-profile-cotizaciones-ss-madre=0",
-    "--binding", "renta-2024-profile-marriage-full-year=0",
-    "--binding", "renta-2024-profile-marriage-month-start=0",
-    "--binding", "renta-2024-profile-marriage-month-end=0",
-    "--binding", "renta-2024-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-profile-family-minor-children-in-unit=0",
+    "--binding", "renta-profile-guarderia-gastos-reales=0",
+    "--binding", "renta-profile-cotizaciones-ss-madre=0",
+    "--binding", "renta-profile-marriage-full-year=0",
+    "--binding", "renta-profile-marriage-month-start=0",
+    "--binding", "renta-profile-marriage-month-end=0",
+    "--binding", "renta-base-liquidable-negativa-general-anterior=0",
 )  # fmt: skip
 
 

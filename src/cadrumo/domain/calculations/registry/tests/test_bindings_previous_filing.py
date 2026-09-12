@@ -16,16 +16,27 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from ..binding_temporal import (
+    BindingTemporalKind,
+    PriorQuarterExpandingSpan,
+    SameFilingYearPeriods,
+    SameTargetContext,
+    temporal_selector_from_previous_modelo_fields,
+)
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
 from ..bindings import CasillaObservation, RegistryModeloObservation
 from ..bindings_previous_filing import (
-    PreviousModeloSelector,
+    PreviousFilingProvider,
     is_direct_previous_filing_binding,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
@@ -33,9 +44,8 @@ from ..bindings_previous_filing import (
 from ..errors import RegistryValidationError
 from ..period_offset_math import same_ejercicio_prior_quarter_anchors
 from ..relations import source_presence_gaps
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
-from ..schema_scalars import BindingSelectorMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,9 +56,19 @@ _M130_PAGO_FRACCIONADO_CASILLA: CasillaId = validated_casilla_id(
     surface="_M130_PAGO_FRACCIONADO_CASILLA",
 )
 _M130_MINORACION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_MINORACION_CASILLA")
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
+# ``kind`` is stated explicitly on every temporal member, exactly as the authored
+# corpus states it: the provider round-trip that ``is_direct_previous_filing_binding``
+# performs dumps only the fields a declaration actually set, so a discriminator left
+# on its default would not survive back into the union.
+_PRIOR_QUARTER_SPAN = PriorQuarterExpandingSpan(kind=BindingTemporalKind.PRIOR_QUARTER_EXPANDING_SPAN)
 
 
-def _revision(*, bindings: tuple[DataBindingDefinition, ...]) -> ModeloRevision:
+def _same_year_periods(*periods: str) -> SameFilingYearPeriods:
+    return SameFilingYearPeriods(kind=BindingTemporalKind.SAME_FILING_YEAR_PERIODS, source_periods=periods)
+
+
+def _revision(*, bindings: tuple[BindingDefinition, ...]) -> ModeloRevision:
     return ModeloRevision(
         id="test-previous-filing-revision",
         localization_key="test.schema.revision.test-previous-filing.label",
@@ -63,23 +83,18 @@ def _revision(*, bindings: tuple[DataBindingDefinition, ...]) -> ModeloRevision:
 def _span_binding(
     *,
     source_casilla_ids: tuple[CasillaId, ...],
-    selector: dict[str, object] | None = None,
+    provider: PreviousFilingProvider | None = None,
     aggregation: BindingAggregation | None = None,
-) -> DataBindingDefinition:
-    selector_payload = cast(
-        BindingSelectorMap,
-        selector
-        or {
-            "source_modelo": "130",
-            "source_casilla_ids": tuple(source_casilla_ids),
-            "prior_quarter_expanding_span": True,
-            "max_year_delta": 0,
-        },
-    )
-    return DataBindingDefinition(
+) -> BindingDefinition:
+    return BindingDefinition(
         id="modelo-130-test-span-binding",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector=selector_payload,
+        provider=provider
+        or PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_ids=tuple(source_casilla_ids),
+            temporal=_PRIOR_QUARTER_SPAN,
+        ),
+        value=_MONEY_VALUE,
         aggregation=aggregation or BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
@@ -109,27 +124,27 @@ def _source_observation(
 
 def test_required_source_casillas_must_be_unique_and_canonical_candidates() -> None:
     with pytest.raises(ValidationError, match="required_source_casilla_ids entries must be unique"):
-        PreviousModeloSelector(
+        PreviousFilingProvider(
             source_modelo="100",
-            period="0A",
+            temporal=_same_year_periods("0A"),
             source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
             required_source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_PAGO_FRACCIONADO_CASILLA),
         )
 
     outside = validated_casilla_id("99", surface="test required source presence")
     with pytest.raises(ValidationError, match="must be a subset of source casillas"):
-        PreviousModeloSelector(
+        PreviousFilingProvider(
             source_modelo="100",
-            period="0A",
+            temporal=_same_year_periods("0A"),
             source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
             required_source_casilla_ids=(outside,),
         )
 
 
 def test_omitted_required_source_policy_keeps_all_candidates_mandatory() -> None:
-    selector = PreviousModeloSelector(
+    selector = PreviousFilingProvider(
         source_modelo="100",
-        period="0A",
+        temporal=_same_year_periods("0A"),
         source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
     )
 
@@ -139,21 +154,21 @@ def test_omitted_required_source_policy_keeps_all_candidates_mandatory() -> None
 def test_coalesced_optional_bindings_preserve_each_registry_presence_group() -> None:
     first = _span_binding(
         source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
-        selector={
-            "source_modelo": "130",
-            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
-            "required_source_casilla_ids": (),
-            "period": "1T",
-        },
+        provider=PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
+            required_source_casilla_ids=(),
+            temporal=_same_year_periods("1T"),
+        ),
     )
     second = _span_binding(
         source_casilla_ids=(_M130_MINORACION_CASILLA,),
-        selector={
-            "source_modelo": "130",
-            "source_casilla_ids": (_M130_MINORACION_CASILLA,),
-            "required_source_casilla_ids": (),
-            "period": "1T",
-        },
+        provider=PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_ids=(_M130_MINORACION_CASILLA,),
+            required_source_casilla_ids=(),
+            temporal=_same_year_periods("1T"),
+        ),
     ).model_copy(update={"id": "modelo-130-test-second-optional-binding"})
 
     requirement = previous_filing_observation_requirements(
@@ -182,7 +197,7 @@ def test_coalesced_optional_bindings_preserve_each_registry_presence_group() -> 
 
 
 def _resolve_binding(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     observations: tuple[RegistryModeloObservation, ...],
     *,
     target_period: str,
@@ -272,28 +287,18 @@ def test_previous_filing_requirement_rejects_ungrounded_binding_snapshot() -> No
 
 
 def test_expanding_span_mutually_exclusive_with_offset() -> None:
-    with pytest.raises(ValidationError, match="mutually exclusive"):
-        _span_binding(
-            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
-            selector={
-                "source_modelo": "130",
-                "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
-                "prior_quarter_expanding_span": True,
-                "source_period_offset_from_target": -1,
-            },
+    with pytest.raises(RegistryValidationError, match="mutually exclusive"):
+        temporal_selector_from_previous_modelo_fields(
+            prior_quarter_expanding_span=True,
+            source_period_offset_from_target=-1,
         )
 
 
 def test_expanding_span_mutually_exclusive_with_source_periods() -> None:
-    with pytest.raises(ValidationError, match="mutually exclusive"):
-        _span_binding(
-            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA,),
-            selector={
-                "source_modelo": "130",
-                "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA,),
-                "prior_quarter_expanding_span": True,
-                "source_periods": ("1T", "2T"),
-            },
+    with pytest.raises(RegistryValidationError, match="mutually exclusive"):
+        temporal_selector_from_previous_modelo_fields(
+            prior_quarter_expanding_span=True,
+            source_periods=("1T", "2T"),
         )
 
 
@@ -306,16 +311,15 @@ def test_expanding_span_rejects_non_quarterly_target() -> None:
         )
 
 
-def _prior_pagos_binding() -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _prior_pagos_binding() -> BindingDefinition:
+    return BindingDefinition(
         id="modelo-130-pagos-fraccionados-anteriores",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector={
-            "source_modelo": "130",
-            "source_casilla_ids": (_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
-            "prior_quarter_expanding_span": True,
-            "max_year_delta": 0,
-        },
+        provider=PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_ids=(_M130_PAGO_FRACCIONADO_CASILLA, _M130_MINORACION_CASILLA),
+            temporal=_PRIOR_QUARTER_SPAN,
+        ),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
@@ -428,17 +432,14 @@ def test_is_direct_previous_filing_binding_true_for_plural_source_casilla_ids() 
 
 def test_is_direct_previous_filing_binding_true_for_scalar_casilla_with_period() -> None:
     """The legitimate path: a real scalar-casilla-plus-period selector resolves True."""
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="modelo-130-test-scalar-period-binding",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector=cast(
-            BindingSelectorMap,
-            {
-                "source_modelo": "130",
-                "source_casilla_id": _M130_PAGO_FRACCIONADO_CASILLA,
-                "period": "1T",
-            },
+        provider=PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA,
+            temporal=_same_year_periods("1T"),
         ),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
@@ -446,45 +447,42 @@ def test_is_direct_previous_filing_binding_true_for_scalar_casilla_with_period()
     assert is_direct_previous_filing_binding(binding)
 
 
-def test_previous_modelo_selector_permits_a_period_less_scalar_casilla_and_the_predicate_is_the_only_guard() -> None:
-    """PIN THE COMPENSATION. Do not remove this predicate's scalar branch as
-    apparently-redundant "the model already validates the selector" cleanup --
-    this test is what would catch that regression.
+def test_unanchored_scalar_casilla_is_now_refused_by_the_model_not_only_by_the_predicate() -> None:
+    """The former compensation is gone: the model itself refuses the shape.
 
-    ``PreviousModeloSelector``'s own build-time invariant
-    (``_missing_period_selector_failure``) checks ``bool(source_casilla_ids)``
-    -- the PLURAL field -- but never references the scalar
-    ``source_casilla_id`` sibling. So a selector declaring a scalar casilla
-    with NO period-selection axis (no ``period``, ``source_periods``,
-    ``source_period_offset_from_target``, or ``prior_quarter_expanding_span``)
-    constructs CLEANLY -- the model does not enforce that this shape needs a
-    period anchor, and this is asserted directly below, not inferred.
+    A scalar ``source_casilla_id`` with no source window used to construct
+    cleanly -- the build-time invariant checked only the PLURAL
+    ``source_casilla_ids`` -- leaving ``is_direct_previous_filing_binding`` as
+    the single guard against a binding that named no period anchor. The
+    temporal union closed that gap at the declaration: ``same_target_context``
+    is meaningful only for the ``per_grupo_member`` fold, and any other use is
+    refused where it is written.
 
-    ``is_direct_previous_filing_binding`` is the ONLY thing that still
-    catches it, by independently re-checking the same condition for the
-    scalar case and returning ``False``.
-
-    This is deliberate, not an unfinished fix: closing the gap in the model
-    would narrow what the predicate's ``False`` return means, conflating
-    "lacking a period anchor" with "relation-targeted" (no source casilla at
-    all) -- a distinction its four call sites currently rely on. See the
-    campaign finding classifying this as a compensated latent asymmetry, not
-    a live defect.
+    Both halves are asserted here so neither can regress silently: the refusal
+    below, and the predicate's surviving ``False`` branch for the one shape
+    that ``same_target_context`` legitimately describes -- which is what keeps
+    "lacking a period anchor" distinguishable from "relation-targeted" at the
+    predicate's call sites.
     """
-    selector = PreviousModeloSelector(source_modelo="130", source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA)
-    assert selector.source_casilla_id == _M130_PAGO_FRACCIONADO_CASILLA
-    assert selector.period is None
-    assert not selector.source_periods
-    assert selector.source_period_offset_from_target is None
-    assert not selector.prior_quarter_expanding_span
+    with pytest.raises(ValidationError, match="same_target_context reads the target's own period"):
+        PreviousFilingProvider(
+            source_modelo="130",
+            source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA,
+            temporal=SameTargetContext(kind=BindingTemporalKind.SAME_TARGET_CONTEXT),
+        )
 
-    binding = DataBindingDefinition(
+    per_grupo = PreviousFilingProvider(
+        source_modelo="130",
+        source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA,
+        temporal=SameTargetContext(kind=BindingTemporalKind.SAME_TARGET_CONTEXT),
+        grouping="per_grupo_member",
+    )
+    assert per_grupo.required_periods == ()
+
+    binding = BindingDefinition(
         id="modelo-130-test-unanchored-binding",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector=cast(
-            BindingSelectorMap,
-            {"source_modelo": "130", "source_casilla_id": _M130_PAGO_FRACCIONADO_CASILLA},
-        ),
+        provider=per_grupo,
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),
@@ -503,7 +501,7 @@ def test_a_misspelled_previous_filing_selector_key_is_refused_not_silently_treat
     (``previous_filing_observation_requirements``,
     ``_aggregate_previous_filing_binding``,
     ``_validate_relation_sources.py``'s slot-source gate), so a field rename
-    on ``PreviousModeloSelector`` would keep passing construction-time
+    on ``PreviousFilingProvider`` would keep passing construction-time
     validation (the NEW name) while this string-literal read silently,
     permanently returned False for a binding that IS direct -- and that
     predicate backs a registry-build REFUSAL (a ``previous_filing`` binding
@@ -517,14 +515,15 @@ def test_a_misspelled_previous_filing_selector_key_is_refused_not_silently_treat
     "an exception was raised", so a coincidentally-matching different
     refusal upstream cannot pass this proof for the wrong reason.
     """
-    drifted = DataBindingDefinition.model_construct(
+    drifted = BindingDefinition.model_construct(
         id="modelo-130-test-drift-binding",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector={
-            "source_modelo": "130",
-            "source_casill_id": _M130_PAGO_FRACCIONADO_CASILLA,  # deliberate typo of source_casilla_id
-            "period": "1T",
-        },
+        provider=PreviousFilingProvider.model_construct(
+            # ``source_modelo`` deliberately absent: the provider no longer
+            # round-trips into its own model, standing in for a field drift.
+            source_casilla_id=_M130_PAGO_FRACCIONADO_CASILLA,
+            temporal=_same_year_periods("1T"),
+        ),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.COPY),
         legal_refs=(_REFERENCE_LEGAL_ID,),
         source_refs=(_REFERENCE_SOURCE_ID,),

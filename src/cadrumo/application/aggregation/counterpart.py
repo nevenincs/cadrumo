@@ -34,9 +34,9 @@ from ...core.parsing.dates import IsoDateString
 from ...core.period import FilingPeriodCode, Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.m347_threshold import m347_declarable_party_ids
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.m347_threshold import m347_declarable_party_ids
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 if TYPE_CHECKING:

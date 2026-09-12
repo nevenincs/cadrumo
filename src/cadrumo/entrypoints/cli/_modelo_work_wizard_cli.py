@@ -195,7 +195,6 @@ def _drive_wizard_calculation(
         CliRefusedBoundaryError(
             tr(
                 "cli.app.modelo.work.wizard_retry_exhausted",
-                default="The wizard could not resolve every calculation input after {limit} follow-up prompts.",
                 limit=_MAX_MISSING_INPUT_RETRIES,
             )
         ),

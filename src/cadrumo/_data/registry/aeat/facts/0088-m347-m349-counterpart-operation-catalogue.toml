@@ -24,6 +24,22 @@ source_refs = [
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["%PDF"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["Modelo 347"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-349-2020-current"
+required_text = ["%PDF"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-instructions"
+required_text = ["Modelo 349"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-349-procedure"
+required_text = ["Modelo 349"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

@@ -1,7 +1,7 @@
 [[revisions."2024".bindings]]
 id = "renta-family-descendant-death-date"
-source = "profile"
-selector = { profile_model = "RentaFamilyProfile", collection = "descendants", field = "death_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FALLDLG", dictionary_field = "FALLDLG", repeating = true, format = "date" }
+provider = { kind = "profile", profile_model = "RentaFamilyProfile", collection = "descendants", field = "death_date", xsd_path = "/DatosIdentificativos/Hijos/Hijo/FALLDLG", dictionary_field = "FALLDLG", repeating = true, format = "date" }
+value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-58", "orden-hac-242-2025:art-3"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]

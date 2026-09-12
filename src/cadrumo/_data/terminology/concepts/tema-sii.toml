@@ -15,3 +15,13 @@ updated_at = 2026-06-29
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tema sobre el Subministrament Immediat d'Informació de l'IVA (SII)."
+
+[language.en]
+short_description = "Topic covering the VAT Immediate Supply of Information system (SII)."
+
+[language.hu]
+short_description = "Az áfa azonnali adatszolgáltatási rendszerével (SII) foglalkozó téma."
+

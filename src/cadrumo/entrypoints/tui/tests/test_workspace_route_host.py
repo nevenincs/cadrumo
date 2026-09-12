@@ -22,7 +22,6 @@ from __future__ import annotations
 from typing import cast
 
 import pytest
-from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import (
@@ -55,6 +54,7 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
+from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

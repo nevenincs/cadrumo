@@ -38,17 +38,21 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodError, StandardPeriodCode
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.irnr_ledger_bindings import (
     resolve_ledger_irnr_income_aggregation_binding_values,
     unsupported_ledger_irnr_income_observations,
 )
+from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_impatriado_bindings import (
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
 )
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
+    LedgerIvaProvider,
     invoice_ledger_screen_binding_ids,
     structurally_unroutable_iva_base_categories,
     unrouted_ledger_iva_quantities,
@@ -356,6 +360,7 @@ class LedgerIvaAggregationSourceResolver:
                         lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"transaction:{observation.ledger_id}",
                         parent_source_ref=None,
+                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
                 )
                 + _provenance_for(
@@ -368,6 +373,7 @@ class LedgerIvaAggregationSourceResolver:
                         lineage_role=CalculationSourceLineageRole.PRIMARY,
                         source_ref=f"prorrata:{reference.transaction_id}",
                         parent_source_ref=None,
+                        terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                     ),
                 )
                 + _iva_prorrata_apportionment_provenance(
@@ -535,6 +541,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -723,6 +730,7 @@ class LedgerImpatriadoIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -843,6 +851,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -966,6 +975,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     lineage_role=CalculationSourceLineageRole.PRIMARY,
                     source_ref=f"transaction:{observation.transaction_id}",
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
             ),
         )
@@ -1013,6 +1023,7 @@ def _iva_prorrata_apportionment_provenance(
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=_iva_prorrata_apportionment_source_ref(period, apportionment),
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
             legal_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.legal_refs)),
             source_refs=tuple(dict.fromkeys(ref for casilla in casillas for ref in casilla.source_refs)),
         ),
@@ -1036,17 +1047,13 @@ def _iva_deducible_cuota_casillas(revision: ModeloRevision) -> tuple[CasillaDefi
     ledger_iva_amount_bindings = {
         binding.id
         for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
-        and getattr(binding.selector, "fact", "iva_amount_sum") == "iva_amount_sum"
+        if isinstance(binding.provider, LedgerIvaProvider) and binding.provider.fact == LedgerIvaFact.IVA_AMOUNT_SUM
     }
     return tuple(
         casilla
         for casilla in revision.casillas
         if "deducible" in casilla.section
-        and any(
-            binding_id is not None and binding_id in ledger_iva_amount_bindings
-            for binding_id in (casilla.binding, *casilla.alternate_bindings)
-        )
+        and any(binding_id in ledger_iva_amount_bindings for binding_id in bound_casilla_binding_ids(casilla))
     )
 
 

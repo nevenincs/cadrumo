@@ -35,11 +35,11 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
 from ._published_authority import artifact_components
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

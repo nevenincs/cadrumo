@@ -253,11 +253,6 @@ bindings = [
     "modelo-390-iva-aic-servicios-reduced-blind-base",
     "modelo-390-iva-aic-servicios-general-blind-base",
 ]
-relations = [
-    "modelo-390-rel-303-cuota-devengada-total",
-    "modelo-390-rel-303-cuota-deducible-total",
-    "modelo-390-rel-303-resultado-regimen-general",
-]
 dependency_classifications = ["modelo-390-dep-303"]
 workbook_parity_refs = ["modelo-390-dr-2025"]
 extraction_profiles = ["modelo-390-declaracion-pdf"]

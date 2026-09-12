@@ -24,7 +24,6 @@ legal_refs = [
     "rd-1065-2007:art-42-quater",
     "orden-hfp-886-2023:art-1",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "tipo-declaracion"
@@ -40,7 +39,6 @@ legal_refs = [
     "rd-1065-2007:art-42-quater",
     "orden-hfp-886-2023:art-1",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 # --- Per-custodian/per-token detail casillas (type_2 records) ---
 
@@ -59,7 +57,6 @@ legal_refs = [
     "orden-hfp-886-2023:art-2",
     "ley-58-2003:art-93",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "custodio.codigo-pais"
@@ -76,7 +73,6 @@ legal_refs = [
     "orden-hfp-886-2023:art-2",
     "ley-58-2003:art-93",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.clave-token"
@@ -93,7 +89,6 @@ legal_refs = [
     "orden-hfp-886-2023:art-2",
     "ley-58-2003:art-93",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.saldo-31-diciembre"
@@ -110,7 +105,6 @@ legal_refs = [
     "orden-hfp-886-2023:art-2",
     "ley-58-2003:art-93",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]
 
 [[revisions."2023".casillas]]
 id = "moneda.saldo-inicio"
@@ -127,4 +121,3 @@ legal_refs = [
     "orden-hfp-886-2023:art-2",
     "ley-58-2003:art-93",
 ]
-source_refs = ["boe-modelo-721-2023-layout"]

@@ -1,4 +1,7 @@
 [revisions."2008-y-siguientes"]
+predecessor = "2007"
+casilla_source_refs = ["aeat-dr-576-2008"]
+reviewed_against = "2007"
 authority_grade = "applicability"
 # The 2008 authority is the first covered fixed-width era. The bundled AEAT
 # design (aeat-dr-576-2008) maps 42 casillas into 60 fields that tile the
@@ -47,16 +50,4 @@ legal_refs = [
 ]
 source_refs = [
     "enrolled-modelo-576-procedure",
-]
-
-[revisions."2008-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-CasillaContinuidadEvolutionDefinition records a transition between distinct revisions of the same modelo and is authored on the revision where that transition lands. The preceding 2007 revision carries only the form-backed declaration year, without a fixed-width export identity. There is consequently no evidence-backed positional casilla identity to carry into 2008-y-siguientes, and the family is empty by construction rather than omission."""
-legal_refs = [
-    "orden-eha-3851-2007:art-1",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-576-procedure",
-    "aeat-dr-576-2008",
 ]

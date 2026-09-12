@@ -62,7 +62,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @71+5. Actividad. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over two design components at @71+1 seccion and @72+4 grupo o epigrafe, BOTH printed under the single number 402.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -77,7 +77,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @76+3. Actividad. Tipo de actividad.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -92,7 +92,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @79+1. Actividad desarrollada fuera de un local determinado. Alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -107,7 +107,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @80+8. Actividad desarrollada fuera de un local determinado. Fecha de alta. ONE casilla over @80+2 dia, @82+2 mes and @84+4 ano, all printed under the single number 406.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -122,7 +122,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @88+1. Actividad desarrollada fuera de un local determinado. Baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -137,7 +137,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @89+8. Actividad desarrollada fuera de un local determinado. Fecha de baja. ONE casilla over @89+2 dia, @91+2 mes and @93+4 ano, all printed under the single number 409.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -152,7 +152,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @97+13. Actividad desarrollada fuera de un local determinado. Numero de referencia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -167,7 +167,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @110+25. Actividad desarrollada fuera de un local determinado. Municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -182,7 +182,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @135+2. Actividad desarrollada fuera de un local determinado. Codigo de provincia. Carries no printed box number.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -197,7 +197,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @143+20. Local directamente afecto a la actividad (primero). Referencia catastral.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -212,7 +212,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @163+17. Local directamente afecto a la actividad (primero). Seccion grafica catastral (S.G.).
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -227,7 +227,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @180+25. Local directamente afecto a la actividad (primero). Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -242,7 +242,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @205+5. Local directamente afecto a la actividad (primero). Numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -257,7 +257,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @210+2. Local directamente afecto a la actividad (primero). Piso.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -272,7 +272,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @212+2. Local directamente afecto a la actividad (primero). Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -287,7 +287,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @214+5. Local directamente afecto a la actividad (primero). Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -302,7 +302,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @219+25. Local directamente afecto a la actividad (primero). Municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -317,7 +317,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @244+2. Local directamente afecto a la actividad (primero). Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -332,7 +332,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @252+7. Local directamente afecto a la actividad (primero). Superficie en metros cuadrados.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -347,7 +347,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @259+3. Local directamente afecto a la actividad (primero). Grado de afectacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -362,7 +362,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @262+1. Local directamente afecto a la actividad (primero). Alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -377,7 +377,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @263+8. Local directamente afecto a la actividad (primero). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -392,7 +392,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @271+1. Local directamente afecto a la actividad (primero). Baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -407,7 +407,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @272+8. Local directamente afecto a la actividad (primero). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -422,7 +422,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @280+13. Local directamente afecto a la actividad (primero). Numero de referencia de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -437,7 +437,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @293+1. Local directamente afecto a la actividad (primero). Variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -452,7 +452,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @294+8. Local directamente afecto a la actividad (primero). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -467,7 +467,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @302+13. Local directamente afecto a la actividad (primero). Numero de referencia de la variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -482,7 +482,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @315+20. Local directamente afecto a la actividad (segundo). Referencia catastral.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -497,7 +497,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @335+17. Local directamente afecto a la actividad (segundo). Seccion grafica catastral (S.G.).
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -512,7 +512,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @352+25. Local directamente afecto a la actividad (segundo). Nombre de la via publica.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -527,7 +527,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @377+5. Local directamente afecto a la actividad (segundo). Numero.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -542,7 +542,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @382+2. Local directamente afecto a la actividad (segundo). Piso.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -557,7 +557,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @384+2. Local directamente afecto a la actividad (segundo). Puerta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -572,7 +572,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @386+5. Local directamente afecto a la actividad (segundo). Codigo postal.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -587,7 +587,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @391+25. Local directamente afecto a la actividad (segundo). Municipio.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -602,7 +602,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @416+2. Local directamente afecto a la actividad (segundo). Codigo de provincia.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -617,7 +617,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @424+7. Local directamente afecto a la actividad (segundo). Superficie en metros cuadrados.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -632,7 +632,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @431+3. Local directamente afecto a la actividad (segundo). Grado de afectacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -647,7 +647,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @434+1. Local directamente afecto a la actividad (segundo). Alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -662,7 +662,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @435+8. Local directamente afecto a la actividad (segundo). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -677,7 +677,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @443+1. Local directamente afecto a la actividad (segundo). Baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -692,7 +692,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @444+8. Local directamente afecto a la actividad (segundo). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -707,7 +707,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @452+13. Local directamente afecto a la actividad (segundo). Numero de referencia de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -722,7 +722,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @465+1. Local directamente afecto a la actividad (segundo). Variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -737,7 +737,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @466+8. Local directamente afecto a la actividad (segundo). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -752,7 +752,7 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]
 
 # @474+13. Local directamente afecto a la actividad (segundo). Numero de referencia de la variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
@@ -767,4 +767,4 @@ legal_refs = [
     "orden-eha-1274-2007:art-1",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure", "aeat-dr-036-2025"]
+additional_source_refs = ["aeat-dr-036-2025"]

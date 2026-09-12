@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -13,32 +13,60 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode
 from .binding_selector_utils import selector_as_dict
 from .binding_targets import bound_casilla_binding_ids
+from .binding_temporal import BindingTemporalSelector, FiledCurrentPeriod
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_input_kind import InputKind
 from .schema_surfaces import CasillaDefinition
 
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
+
 __all__ = [
+    "M303RegimenSimplificadoAnnualSummaryProvider",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
-    "M303RegimenSimplificadoAnnualSummarySelector",
     "m303_regimen_simplificado_annual_summary_requirement",
     "m303_regimen_simplificado_annual_summary_selector",
     "validate_m303_regimen_simplificado_annual_summary_revision",
 ]
 
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
+_ANNUAL_SUMMARY_SOURCE_PERIOD: FilingPeriodCode = "4T"
 
 
-class M303RegimenSimplificadoAnnualSummarySelector(BaseModel):
+class M303RegimenSimplificadoAnnualSummaryProvider(BaseModel):
     """Strict selector for one immutable Modelo 303 4T annual-summary endpoint."""
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY] = (
+        BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+    )
+
     source_modelo: Literal["303"]
-    source_period: Literal["4T"]
+    temporal: BindingTemporalSelector = FiledCurrentPeriod(source_period=_ANNUAL_SUMMARY_SOURCE_PERIOD)
     source_casilla_ids: tuple[CasillaId, ...]
     summary_casilla_id: CasillaId
+
+    @model_validator(mode="after")
+    def _temporal_is_the_filed_fourth_quarter(self) -> M303RegimenSimplificadoAnnualSummaryProvider:
+        """Pin the source window to the already-filed 4T of the target's own year.
+
+        The annual summary is legally the fourth-quarter declaration of the same
+        filing year, so no other temporal member can produce it. The pin is a
+        refusal rather than a default because a binding that silently read a
+        different period would publish a complete-looking annual total built
+        from the wrong quarter.
+        """
+        if (
+            not isinstance(self.temporal, FiledCurrentPeriod)
+            or self.temporal.source_period != _ANNUAL_SUMMARY_SOURCE_PERIOD
+        ):
+            raise RegistryValidationError(
+                "m303_regimen_simplificado_annual_summary temporal must be the filed 4T period "
+                "of the target's own filing year",
+            )
+        return self
 
     @field_validator("source_casilla_ids")
     @classmethod
@@ -71,11 +99,11 @@ class M303RegimenSimplificadoAnnualSummaryRequirement(BaseModel):
 
 
 def m303_regimen_simplificado_annual_summary_selector(
-    binding: DataBindingDefinition,
-) -> M303RegimenSimplificadoAnnualSummarySelector:
+    binding: BindingDefinition,
+) -> M303RegimenSimplificadoAnnualSummaryProvider:
     """Parse one declared simplified-regime annual-summary selector."""
     try:
-        return M303RegimenSimplificadoAnnualSummarySelector.model_validate(selector_as_dict(binding))
+        return M303RegimenSimplificadoAnnualSummaryProvider.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed m303_regimen_simplificado_annual_summary selector: {exc}",
@@ -93,7 +121,7 @@ def m303_regimen_simplificado_annual_summary_requirement(
     binding_ids_by_summary_casilla_id, legal_refs, source_refs = _collect_bindings(bindings, first_selector)
     return M303RegimenSimplificadoAnnualSummaryRequirement(
         source_modelo=first_selector.source_modelo,
-        source_period=first_selector.source_period,
+        source_period=_ANNUAL_SUMMARY_SOURCE_PERIOD,
         source_casilla_ids=first_selector.source_casilla_ids,
         binding_ids_by_summary_casilla_id=binding_ids_by_summary_casilla_id,
         dependency_treatment=_dependency_treatment(revision, first_selector.source_modelo),
@@ -126,7 +154,7 @@ def validate_m303_regimen_simplificado_annual_summary_revision(revision: ModeloR
     return failures
 
 
-def _annual_summary_bindings(revision: ModeloRevision) -> tuple[DataBindingDefinition, ...]:
+def _annual_summary_bindings(revision: ModeloRevision) -> tuple[BindingDefinition, ...]:
     return tuple(
         binding
         for binding in revision.bindings
@@ -135,8 +163,8 @@ def _annual_summary_bindings(revision: ModeloRevision) -> tuple[DataBindingDefin
 
 
 def _collect_bindings(
-    bindings: tuple[DataBindingDefinition, ...],
-    first_selector: M303RegimenSimplificadoAnnualSummarySelector,
+    bindings: tuple[BindingDefinition, ...],
+    first_selector: M303RegimenSimplificadoAnnualSummaryProvider,
 ) -> tuple[dict[CasillaId, BindingId], set[LegalRefId], set[SourceRefId]]:
     binding_ids_by_summary_casilla_id: dict[CasillaId, BindingId] = {}
     legal_refs: set[LegalRefId] = set()
@@ -145,7 +173,7 @@ def _collect_bindings(
         selector = m303_regimen_simplificado_annual_summary_selector(binding)
         if (
             selector.source_modelo != first_selector.source_modelo
-            or selector.source_period != first_selector.source_period
+            or selector.temporal != first_selector.temporal
             or selector.source_casilla_ids != first_selector.source_casilla_ids
         ):
             raise RegistryValidationError(

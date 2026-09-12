@@ -1,4 +1,6 @@
 [revisions."2025-y-siguientes"]
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-35-2006:art-93"], source_refs = ["aeat-modelo-151-procedure"] } }
+casilla_source_refs = ["aeat-dr-151-2023"]
 # Prepared and reviewed by an agent against the bundled diseno de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather
@@ -46,31 +48,6 @@ source_refs = [
     # "151 - Orden HAP/2783/2015 (Ejercicios 2023 y siguientes)".
     "aeat-dr-151-2023",
 ]
-
-[revisions."2025-y-siguientes".family_dispositions.relations]
-reason = """
-A relation is declared on the TARGET revision and names a target_binding in that same revision; a binding existing only as a relation's materialisation slot declares source = 'relation_prefill'. This revision declares 1 binding(s) and none of that source, so no fold-in from another modelo has a slot to land in and an entry here could name no target. Empty by construction rather than unbuilt: authoring a relation_prefill binding is what would make this family apply, and that change reaches this \
-declaration through the same revision."""
-legal_refs = [
-    "ley-35-2006:art-93",
-    "ley-35-2006:art-93-ahorro",
-    "ley-35-2006:art-93-ahorro-2023",
-    "rd-439-2007:art-113",
-    "orden-hfp-1338-2023:art-1",
-]
-source_refs = [
-    "aeat-modelo-151-procedure",
-    "boe-modelo-151-layout",
-    "aeat-dr-151-2023",
-]
-
-[revisions."2025-y-siguientes".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-This revision DOES have a strictly-earlier sibling (2015-2022), so unlike that sibling it is a possible landing point for a continuity transition. It declares none because none is derivable without a per-box tax review. Orden HFP/1338/2023 did not amend the 2015 model in place: it approved a new one, adding two whole records, changing how many times several blocks repeat, and renumbering the printed box references throughout -- and in the Representante block it transposes the municipio and \
-provincia labels against their own widths. A description match between the two editions was measured before this was written and reaches 76%, which is high enough to look authoritative and far too low to be a continuity claim. Reviewing each box against both ordenes and declaring the transitions that survive is what would populate this family."""
-legal_refs = ["ley-35-2006:art-93", "orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
-source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
-
 [revisions."2025-y-siguientes".family_dispositions.projection_endpoints]
 reason = """
 A projection endpoint admits one typed filing endpoint that an export record REPEATS. This revision's export layout (generated-modelo-151-2025-y-siguientes-fichero) declares no record with repeat = 'projection_rows' and no field of kind 'projection': the design repeats its income blocks by printing each occurrence as its own positions within a fixed-width record, not by repeating a record, so there is no repeated endpoint for the family to admit and nothing an entry here could name. Authoring a \

@@ -48,7 +48,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @973+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Guipuzcoa
 [[revisions."2024".casillas]]
@@ -60,7 +59,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @990+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Vizcaya
 [[revisions."2024".casillas]]
@@ -72,7 +70,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1007+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Navarra
 [[revisions."2024".casillas]]
@@ -84,7 +81,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1024+17. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio.Total.Territorio común
 [[revisions."2024".casillas]]
@@ -96,7 +92,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1041+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Álava
 [[revisions."2024".casillas]]
@@ -108,7 +103,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1046+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Guipuzcoa
 [[revisions."2024".casillas]]
@@ -120,7 +114,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1051+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Vizcaya
 [[revisions."2024".casillas]]
@@ -132,7 +125,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1056+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Navarra
 [[revisions."2024".casillas]]
@@ -144,7 +136,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1061+5. Cálculo de porcentajes de tributación. Volúmenes de operaciones realizado en cada territorio. Porcentajes de tributacion. Territorio común
 [[revisions."2024".casillas]]
@@ -156,7 +147,6 @@ data_type = "ratio"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1066+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Araba
 [[revisions."2024".casillas]]
@@ -168,7 +158,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1083+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver.Gipuzkoa
 [[revisions."2024".casillas]]
@@ -180,7 +169,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1100+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Bizkaia
 [[revisions."2024".casillas]]
@@ -192,7 +180,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1117+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Navarra
 [[revisions."2024".casillas]]
@@ -204,7 +191,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1134+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota del ejercicio a ingresar o devolver. Total territorios forales
 [[revisions."2024".casillas]]
@@ -216,7 +202,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1151+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 1º
 [[revisions."2024".casillas]]
@@ -228,7 +213,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1168+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 1º
 [[revisions."2024".casillas]]
@@ -240,7 +224,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1185+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 1º
 [[revisions."2024".casillas]]
@@ -252,7 +235,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1202+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 1º
 [[revisions."2024".casillas]]
@@ -264,7 +246,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1219+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 1º
 [[revisions."2024".casillas]]
@@ -276,7 +257,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1236+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 2º
 [[revisions."2024".casillas]]
@@ -288,7 +268,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1253+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 2º
 [[revisions."2024".casillas]]
@@ -300,7 +279,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1270+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 2º
 [[revisions."2024".casillas]]
@@ -312,7 +290,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1287+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 2º
 [[revisions."2024".casillas]]
@@ -324,7 +301,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1304+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 2º
 [[revisions."2024".casillas]]
@@ -336,7 +312,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1321+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Araba. 3º
 [[revisions."2024".casillas]]
@@ -348,7 +323,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1338+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados.Gipuzkoa. 3º
 [[revisions."2024".casillas]]
@@ -360,7 +334,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1355+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Bizkaia. 3º
 [[revisions."2024".casillas]]
@@ -372,7 +345,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1372+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Navarra. 3º
 [[revisions."2024".casillas]]
@@ -384,7 +356,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1389+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Pagos fraccionados. Total territorios forales. 3º
 [[revisions."2024".casillas]]
@@ -396,7 +367,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1406+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Araba.
 [[revisions."2024".casillas]]
@@ -408,7 +378,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1423+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial .Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -420,7 +389,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1440+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Bizkaia.
 [[revisions."2024".casillas]]
@@ -432,7 +400,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1457+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Navarra.
 [[revisions."2024".casillas]]
@@ -444,7 +411,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1474+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Cuota diferencial. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -456,7 +422,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1491+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Araba.
 [[revisions."2024".casillas]]
@@ -468,7 +433,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1508+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores..Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -480,7 +444,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1525+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Bizkaia.
 [[revisions."2024".casillas]]
@@ -492,7 +455,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1542+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Navarra.
 [[revisions."2024".casillas]]
@@ -504,7 +466,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1559+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Incremento por pérdida beneficios fiscales períodos anteriores. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -516,7 +477,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1576+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Araba.
 [[revisions."2024".casillas]]
@@ -528,7 +488,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1593+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora.Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -540,7 +499,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1610+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Bizkaia.
 [[revisions."2024".casillas]]
@@ -552,7 +510,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1627+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Navarra.
 [[revisions."2024".casillas]]
@@ -564,7 +521,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1644+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Intereses de demora. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -576,7 +532,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1661+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Araba
 [[revisions."2024".casillas]]
@@ -588,7 +543,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1678+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Gipuzkoa
 [[revisions."2024".casillas]]
@@ -600,7 +554,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1695+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Bizkaia
 [[revisions."2024".casillas]]
@@ -612,7 +565,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1712+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Navarra
 [[revisions."2024".casillas]]
@@ -624,7 +576,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1729+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones I+D+i por insufi ciencia de cuota (opción art. 39.2 LIS). Total territorios forales
 [[revisions."2024".casillas]]
@@ -636,7 +587,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1746+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Araba
 [[revisions."2024".casillas]]
@@ -648,7 +598,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1763+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Gipuzkoa
 [[revisions."2024".casillas]]
@@ -660,7 +609,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1780+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Bizkaia
 [[revisions."2024".casillas]]
@@ -672,7 +620,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1797+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Navarra
 [[revisions."2024".casillas]]
@@ -684,7 +631,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1814+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras (art. 39.3 LIS). Total territorios forales
 [[revisions."2024".casillas]]
@@ -696,7 +642,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1831+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Araba
 [[revisions."2024".casillas]]
@@ -708,7 +653,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1848+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Gipuzkoa
 [[revisions."2024".casillas]]
@@ -720,7 +664,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1865+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Bizkaia
 [[revisions."2024".casillas]]
@@ -732,7 +675,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1882+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Navarra
 [[revisions."2024".casillas]]
@@ -744,7 +686,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1899+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Abono de deducciones por producciones cinematográficas extranjeras en Canarias (art. 39.3 LIS y DA 14ª Ley 19/1994). Total territorios forales
 [[revisions."2024".casillas]]
@@ -756,7 +697,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1916+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Araba.
 [[revisions."2024".casillas]]
@@ -768,7 +708,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1933+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -780,7 +719,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1950+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Bizkaia.
 [[revisions."2024".casillas]]
@@ -792,7 +730,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1967+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Navarra.
 [[revisions."2024".casillas]]
@@ -804,7 +741,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1984+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Resultado de la autoliquidación. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -816,7 +752,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2001+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Araba.
 [[revisions."2024".casillas]]
@@ -828,7 +763,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2018+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -840,7 +774,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2035+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Bizkaia.
 [[revisions."2024".casillas]]
@@ -852,7 +785,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2052+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
 [[revisions."2024".casillas]]
@@ -864,7 +796,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2069+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultados a ingresar procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -876,7 +807,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2086+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Araba.
 [[revisions."2024".casillas]]
@@ -888,7 +818,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2103+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -900,7 +829,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2120+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Bizkaia.
 [[revisions."2024".casillas]]
@@ -912,7 +840,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2137+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
 [[revisions."2024".casillas]]
@@ -924,7 +851,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2154+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Devoluciones acordadas procedentes de autoliquidaciones anteriores correspondientes al período impositivo 2024 Total territorios forales.
 [[revisions."2024".casillas]]
@@ -936,7 +862,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2171+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Araba.
 [[revisions."2024".casillas]]
@@ -948,7 +873,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2188+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -960,7 +884,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2205+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Bizkaia.
 [[revisions."2024".casillas]]
@@ -972,7 +895,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2222+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Liquido a ingresar o a devolver. Navarra.
 [[revisions."2024".casillas]]
@@ -984,7 +906,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2239+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales.Liquido a ingresar o a devolver. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -996,7 +917,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2256+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Araba.
 [[revisions."2024".casillas]]
@@ -1008,7 +928,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2273+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1020,7 +939,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2290+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Bizkaia.
 [[revisions."2024".casillas]]
@@ -1032,7 +950,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2307+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Navarra.
 [[revisions."2024".casillas]]
@@ -1044,7 +961,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2324+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Importe integrado en la base imponible. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -1056,7 +972,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2341+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS. Araba.
 [[revisions."2024".casillas]]
@@ -1068,7 +983,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2358+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1080,7 +994,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2375+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Bizkaia.
 [[revisions."2024".casillas]]
@@ -1092,7 +1005,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2392+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS Navarra.
 [[revisions."2024".casillas]]
@@ -1104,7 +1016,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2409+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Deuda tributaria resultante del fraccionamiento art. 19.1 LIS. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -1116,7 +1027,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2426+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Araba.
 [[revisions."2024".casillas]]
@@ -1128,7 +1038,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2443+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1140,7 +1049,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2460+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Bizkaia.
 [[revisions."2024".casillas]]
@@ -1152,7 +1060,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2477+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento Navarra.
 [[revisions."2024".casillas]]
@@ -1164,7 +1071,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2494+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. 1er fraccionamiento. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -1176,7 +1082,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2511+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Araba.
 [[revisions."2024".casillas]]
@@ -1188,7 +1093,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2528+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1200,7 +1104,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2545+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Bizkaia.
 [[revisions."2024".casillas]]
@@ -1212,7 +1115,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2562+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Navarra.
 [[revisions."2024".casillas]]
@@ -1224,7 +1126,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2579+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Opción de fraccionamiento art. 19.1 LIS. Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS. Total territorios forales.
 [[revisions."2024".casillas]]
@@ -1236,7 +1137,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2596+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024 Araba.
 [[revisions."2024".casillas]]
@@ -1248,7 +1148,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2613+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1260,7 +1159,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2630+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Bizkaia.
 [[revisions."2024".casillas]]
@@ -1272,7 +1170,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2647+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024. Navarra.
 [[revisions."2024".casillas]]
@@ -1284,7 +1181,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2664+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Complementaria: Resultado de la autoliquidación incluido el 1er fraccionamiento del art. 19.1 LIS procedente de autoliquidaciones anteriores correspondientes al período impositivo 2024.
 [[revisions."2024".casillas]]
@@ -1296,7 +1192,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2681+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Araba.
 [[revisions."2024".casillas]]
@@ -1308,7 +1203,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2698+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Gipuzkoa.
 [[revisions."2024".casillas]]
@@ -1320,7 +1214,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2715+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Bizkaia.
 [[revisions."2024".casillas]]
@@ -1332,7 +1225,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2732+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS. Navarra.
 [[revisions."2024".casillas]]
@@ -1344,7 +1236,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2749+17. Determinación del líquido a ingresar o devolver en cada una de las Administraciones forales. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS.
 [[revisions."2024".casillas]]
@@ -1356,4 +1247,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

@@ -10,7 +10,6 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
-from dev.locales.manager import LocaleManager, LocaleNode
 
 from ....core.directory_scan import scan_directory
 from .. import (
@@ -33,6 +32,7 @@ from .. import (
     _ledger_support,
 )
 from .. import ledger_lifecycle_cli as _ledger_lifecycle_cli
+from .locale_catalogue import LocaleNode, get_yaml_keys, load_locale
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -279,10 +279,9 @@ _MINIMUM_LEDGER_LOCALE_KEYS = 200
 
 def test_ledger_locale_values_do_not_redeclare_command_guidance() -> None:
     """Localized ledger facts cannot carry executable command identity."""
-    manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     failures: list[str] = []
     for locale in ("ca", "en", "es", "hu"):
-        catalogue = manager.load_locale(_LOCALES_DIR / locale)
+        catalogue = load_locale(_LOCALES_DIR / locale)
         ledger_leaves = [(key, value) for key, value in _iter_locale_leaves(catalogue) if key.startswith("cli.ledger.")]
         assert len(ledger_leaves) >= _MINIMUM_LEDGER_LOCALE_KEYS, (
             f"locale {locale} carries only {len(ledger_leaves)} cli.ledger key(s); below this "
@@ -439,7 +438,6 @@ def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
 
 def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
-    manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
     source_keys: set[str] = set(_REGISTERED_LEDGER_LOCALE_KEYS)
     for path in scan_directory(_PACKAGE_ROOT, pattern="*.py", recursive=True):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -449,11 +447,7 @@ def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
             if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("cli.ledger.")
         )
     key_sets = {
-        locale: {
-            key
-            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_DIR / locale))
-            if key.startswith("cli.ledger.")
-        }
+        locale: {key for key in get_yaml_keys(load_locale(_LOCALES_DIR / locale)) if key.startswith("cli.ledger.")}
         for locale in ("ca", "en", "es", "hu")
     }
     canonical = key_sets["en"]

@@ -79,12 +79,15 @@ def scaffold(
 
     Writes ``manifest.toml`` and a ``revisions/<revision_id>/`` fragment
     directory tree (casillas, formulas, bindings, completeness_manifest,
-    verification_expectations, export_layouts, extraction_profiles,
-    application_links) under
-    ``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``. The tree is a
-    skeleton only: it does not validate as calc-grade until a contributor
-    fills in the contributor checklist (``python -m dev.registry.newmodelo
-    checklist``), printed again below after a successful scaffold.
+    verification_expectations, extraction_profiles, application_links) under
+    ``src/cadrumo/_data/registry/aeat/modelos/<modelo_id>/``. The revision
+    manifest is emitted in edition-delta shape: it declares the modelo's latest
+    existing edition as its ``predecessor`` (a first edition declares none) and
+    a ``casilla_source_refs`` default, so no scaffolded row has to restate them.
+    The tree is a skeleton only: it does not validate as calc-grade until a
+    contributor fills in the contributor checklist (``python -m
+    dev.registry.newmodelo checklist``), printed again below after a successful
+    scaffold.
     """
     manager = (
         NewModeloScaffoldManager(registry_modelos_root=registry_modelos_root)

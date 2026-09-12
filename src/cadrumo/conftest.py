@@ -278,49 +278,6 @@ def _evict_test_bound_bucket_session() -> Iterator[None]:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def _isolate_registry_caches() -> Iterator[None]:
-    """Clear the registry loader's in-process caches per pytest session (the #44 fix).
-
-    The loader's cross-process ``/tmp`` ``cadrumo_registry_*.pkl`` disk pickle is
-    keyed by file mtime and was historically shared across pytest-xdist worker
-    processes, so a parallel ``-n`` run could serve a stale/transient compiled
-    registry from one worker to another (the #44 isolation gap). The loader
-    closes that race at the ROOT: the disk pickle is now read/written under
-    pytest only for the package-bundled, read-only registry tree
-    (``registry_disk_cache_enabled(is_bundled=...)``), which is never mutated
-    mid-run; a mutable/synthetic root (a test's ``tmp_path`` registry) never
-    gets a disk pickle under pytest at all, so no per-worker purge is needed to
-    protect it.
-
-    This fixture therefore clears only the per-process ``lru_cache`` and the
-    1-second-TTL fingerprint cache at session start and end -- it does NOT
-    purge the ``/tmp`` disk pickle. An earlier version of this fixture DID
-    purge it unconditionally at session start; measured directly (two separate
-    ``pytest`` invocations against the same bundled-tree content, each its own
-    "session" exactly as an xdist worker's own session boundary is), that
-    purge deleted the very pickle the bundled-root cache had just written,
-    forcing every subsequent session/worker to independently recompile the
-    bundled tree from scratch (8.6s-8.7s per invocation, zero cross-session
-    reuse) -- silently defeating the cross-worker sharing the disk-cache fix
-    exists to deliver. The disk-cache read path is already self-validating (a
-    SHA-256 of the schema version plus every file's path/size/mtime), so a
-    stale or incompatible pickle simply misses on its own; no defensive purge
-    is needed for correctness, only for tidiness the temp directory does not
-    require.
-    """
-    from dev.registry.compiler.loader import load_registry_tree_cached
-    from dev.registry.compiler.loader_fingerprints import clear_fingerprint_cache
-
-    def _reset() -> None:
-        load_registry_tree_cached.cache_clear()
-        clear_fingerprint_cache()
-
-    _reset()
-    yield
-    _reset()
-
-
-@pytest.fixture(scope="session", autouse=True)
 def _release_settings_storage_directories() -> Iterator[None]:
     """Drop the temporary storage roots ``env_scope`` mints, at session end.
 

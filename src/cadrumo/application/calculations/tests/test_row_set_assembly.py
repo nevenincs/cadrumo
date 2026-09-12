@@ -16,12 +16,13 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import BindingRowSetSelector
+from ....domain.calculations.registry.binding_value_contract import BindingValueContract
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
-from ....domain.calculations.registry.withholding296_bindings import Withholding296Observation
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
+from ....domain.calculations.registry.withholding296_bindings import Withholding296Observation, Withholding296Provider
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..row_set_assembly import (
     assemble_atribucion_observations,
@@ -53,13 +54,17 @@ def _snapshot(modelo_id: str, *, filing_year: int, period: str):
 def _withholding296_revision(*fields: str) -> ModeloRevision:
     """Build a minimal typed row-set revision for the M296 assembler contract."""
     bindings = tuple(
-        DataBindingDefinition.model_construct(
+        BindingDefinition.model_construct(
             id=f"test-m296-{field}",
-            source=BindingSourceKind.WITHHOLDING296,
-            selector=BindingRowSetSelector(
-                fact="row_field",
-                row_field=field,
-                grouping="per_perceptor",
+            provider=Withholding296Provider.model_validate(
+                BindingRowSetSelector(
+                    fact="row_field",
+                    row_field=field,
+                    grouping="per_perceptor",
+                ).model_dump(),
+            ),
+            value=BindingValueContract.model_validate(
+                {"data_type": "money", "channel": "row_set", "row_grouping": "withholding296"},
             ),
             aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
             legal_refs=(),

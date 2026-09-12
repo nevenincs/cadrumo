@@ -29,13 +29,6 @@ formulas = [
     "renta-pagos-fraccionados-ingresados",
     "renta-total-pagos-a-cuenta",
 ]
-relations = [
-    "renta-2020-rel-111-retenciones-trimestrales",
-    "renta-2020-rel-111-retenciones-mensuales",
-    "renta-2020-rel-123-retenciones-trimestrales",
-    "renta-2020-rel-130-pagos-fraccionados",
-    "renta-2020-rel-131-pagos-fraccionados",
-]
 dependency_classifications = [
     "renta-2020-dep-111",
     "renta-2020-dep-123",

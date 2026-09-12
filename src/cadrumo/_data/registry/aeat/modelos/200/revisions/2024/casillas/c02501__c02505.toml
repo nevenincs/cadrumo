@@ -7,7 +7,6 @@ semantic_role = "is_correccion_cambio_criterios_contables_art11_3_permanente_aum
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02502"
 number = "02502"
@@ -17,7 +16,6 @@ semantic_role = "is_correccion_cambio_criterios_contables_art11_3_temporaria_eje
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02503"
 number = "02503"
@@ -27,7 +25,6 @@ semantic_role = "is_correccion_cambio_criterios_contables_art11_3_temporaria_ant
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02504"
 number = "02504"
@@ -37,7 +34,6 @@ semantic_role = "is_correccion_cambio_criterios_contables_art11_3_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02505"
 number = "02505"
@@ -47,4 +43,3 @@ semantic_role = "is_correccion_cambio_criterios_contables_art11_3_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

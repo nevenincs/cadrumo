@@ -388,11 +388,6 @@ def submitted_file_extraction_notices(observation: FiledDeclaracionObservation) 
             code=FILED_SUBMITTED_FILE_EXTRACTION_NOTICE_CODE,
             message=tr(
                 "live.filed.pull.submitted_file_extraction_failed",
-                default=(
-                    "Modelo {modelo} filing {period} {ejercicio} (expediente {expediente_id}) could not be "
-                    "read through its submitted-file layout. The declaration-PDF fallback, if AEAT provided it, "
-                    "remains the only extraction path. Parser reason: {reason}"
-                ),
                 modelo=observation.modelo,
                 period=observation.period.registry_token,
                 ejercicio=observation.ejercicio,
@@ -1825,18 +1820,10 @@ class FiledHistoryOnboardingRun(BaseModel):
         if not expected:
             return tr(
                 "live.filed.pull_all.denominator_note_register_only",
-                default=(
-                    "No taxpayer-specific denominator: all {offered_only} walked pair(s) came from AEAT's "
-                    "offered option list, whose scoping to this NIF is unconfirmed. This run measures nothing."
-                ),
                 offered_only=offered_only,
             )
         return tr(
             "live.filed.pull_all.denominator_note_profile",
-            default=(
-                "Measured against {expected} pair(s) the taxpayer's own declared facts expect. A further "
-                "{offered_only} pair(s) came only from AEAT's offered option list and support no coverage claim."
-            ),
             expected=expected,
             offered_only=offered_only,
         )
@@ -1867,10 +1854,6 @@ def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | No
         code="live.filed.pull_all.expected_but_not_found",
         message=tr(
             "live.filed.pull_all.expected_but_not_found",
-            default=(
-                "Your declared profile expects a filing for {count} modelo/ejercicio pair(s) where AEAT's "
-                "register returned none: {pairs}. Check whether these were filed."
-            ),
             count=len(missing),
             pairs=named,
         ),
@@ -1927,10 +1910,6 @@ def recapture_divergence_notices(
                 code="live.filed.pull_all.recapture_divergence",
                 message=tr(
                     "live.filed.pull_all.recapture_divergence",
-                    default=(
-                        "Re-capturing modelo {modelo} {period} {ejercicio} changed {count} previously "
-                        "observed casilla value(s): {casillas}. AEAT may hold a corrected filing."
-                    ),
                     modelo=observation.modelo,
                     period=observation.period.registry_token,
                     ejercicio=observation.ejercicio,

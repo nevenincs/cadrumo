@@ -34,7 +34,6 @@ def _parse_iso_date(
         raw=raw,
         option=label,
         value=raw,
-        default=default or f"{label} must be an ISO date (YYYY-MM-DD); got {raw!r}.",
     )
     try:
         parsed = parse_iso8601_date(raw.strip())

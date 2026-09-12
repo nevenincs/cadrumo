@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
@@ -27,6 +26,7 @@ from .....core.identity.transaction_ids import TransactionId
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ....tui.components.host import ScreenHostApp
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ...tests.frame import geometry_band
 from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen

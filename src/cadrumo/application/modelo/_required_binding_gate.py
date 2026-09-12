@@ -32,7 +32,7 @@ from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -175,7 +175,7 @@ def _resolved_profile_binding_values(
 
 
 def _profile_binding_decimal_value(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     facts: Mapping[str, UserProfileFactValue],
 ) -> Decimal | None:
     """Project one resolved profile value into the required Decimal channel."""

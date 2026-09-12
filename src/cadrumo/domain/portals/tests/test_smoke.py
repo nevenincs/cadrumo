@@ -8,9 +8,7 @@ import pytest
 
 from ....core import logging
 from ....core.errors.hierarchy import CadrumoError
-from .. import __all__ as portals_all
-from .. import __doc__ as portals_doc
-from .. import __name__ as _package_name
+from .. import registry as portals_registry
 from ..registry import PORTAL_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -18,12 +16,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_smoke_portals_public_surface() -> None:
     """The subpackage is importable and publishes the documented surface."""
+    package = sys.modules[portals_registry.__package__]
+    portals_all = vars(package).get("__all__", ())
+    portals_doc = vars(package).get("__doc__")
     assert portals_doc is not None
     assert issubclass(CadrumoError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
     # Every name advertised in __all__ is resolvable.
-    package = sys.modules[_package_name]
     for name in portals_all:
         assert hasattr(package, name), name
 

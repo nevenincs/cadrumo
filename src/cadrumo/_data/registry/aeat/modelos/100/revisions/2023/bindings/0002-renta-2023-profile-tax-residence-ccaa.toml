@@ -1,9 +1,8 @@
 [[revisions."2023".bindings]]
 id = "renta-profile-tax-residence-ccaa"
-source = "profile"
-selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+provider = { kind = "profile", profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+value = { data_type = "enum", channel = "enum", typed_enum = "CCAA" }
 aggregation = { op = "copy" }
-typed_enum = "CCAA"
 legal_refs = ["ley-35-2006:art-74"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]
 

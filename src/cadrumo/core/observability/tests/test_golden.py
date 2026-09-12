@@ -20,10 +20,10 @@ import io
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any, cast
+from uuid import uuid4
 
 import pytest
 
-from ....domain.user_profile.values import new_profile_snapshot_id
 from ....tests.golden_comparison import (
     GOLDEN_MASK_FIELDS,
     GOLDEN_MASK_PATHS,
@@ -75,7 +75,10 @@ def _capture_scenario() -> dict[str, object]:
             label="deterministic",
             profile_id=_PROFILE_ID,
             generated_at=now(),
-            snapshot_id=new_profile_snapshot_id(_PROFILE_ID, created_at=now()),
+            # This is a synthetic observability payload.  Keep the value
+            # unique so the mask is exercised without importing the domain
+            # profile model into the core test package.
+            snapshot_id=f"{_PROFILE_ID}:{now().strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}",
             run_id=_mint_run_id(),
         )
         stream = io.StringIO()

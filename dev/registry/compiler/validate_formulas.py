@@ -19,7 +19,7 @@ from collections.abc import Mapping
 from graphlib import CycleError
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.runtime_graph import formula_evaluation_order
 from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
@@ -40,7 +40,6 @@ def validate_formula_section(
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
     bindings: set[BindingId],
     parameters: set[str],
-    relations: set[RelationId],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
@@ -81,7 +80,6 @@ def validate_formula_section(
                 casillas=casillas,
                 bindings=bindings,
                 parameters=parameters,
-                relations=relations,
             ),
         )
 
@@ -113,7 +111,6 @@ def _formula_scalar_reference_failures(
     casillas: set[CasillaId],
     bindings: set[BindingId],
     parameters: set[str],
-    relations: set[RelationId],
 ) -> list[str]:
     failures: list[str] = []
     if expression.casilla_id is not None and expression.casilla_id not in casillas:
@@ -122,8 +119,6 @@ def _formula_scalar_reference_failures(
         failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
     if expression.parameter is not None and expression.parameter not in parameters:
         failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
-    if expression.relation is not None and expression.relation not in relations:
-        failures.append(f"{scope}: formula {formula_id!r} references unknown relation {expression.relation!r}")
     return failures
 
 
@@ -150,7 +145,6 @@ def _formula_direct_reference_failures(
     casillas: set[CasillaId],
     bindings: set[BindingId],
     parameters: set[str],
-    relations: set[RelationId],
 ) -> list[str]:
     failures = _formula_scalar_reference_failures(
         scope,
@@ -159,7 +153,6 @@ def _formula_direct_reference_failures(
         casillas=casillas,
         bindings=bindings,
         parameters=parameters,
-        relations=relations,
     )
     failures.extend(_formula_dispatch_reference_failures(scope, formula_id, expression, parameters))
     return failures
@@ -173,7 +166,6 @@ def validate_formula_expression(
     casillas: set[CasillaId],
     bindings: set[BindingId],
     parameters: set[str],
-    relations: set[RelationId],
 ) -> list[str]:
     """Return reference-closure failures for one formula expression tree.
 
@@ -191,7 +183,6 @@ def validate_formula_expression(
         casillas=casillas,
         bindings=bindings,
         parameters=parameters,
-        relations=relations,
     )
     for arg in expression.args:
         failures.extend(
@@ -202,7 +193,6 @@ def validate_formula_expression(
                 casillas=casillas,
                 bindings=bindings,
                 parameters=parameters,
-                relations=relations,
             ),
         )
     return failures

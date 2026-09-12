@@ -109,6 +109,38 @@ does not exist.
 UNKNOWN_FIELD_ISSUE_CODE: Final[str] = "unknown_field"
 """Issue code for a write aimed at a path the schema does not declare."""
 
+EFFECTIVE_WINDOW_UNUSED_CODE: Final[str] = "effective_window_unused"
+"""Issue code for a window attached to a non-effective-dated field."""
+
+EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE: Final[str] = "effective_window_end_not_enforced"
+"""Issue code for a ``valid_to`` boundary no profile reader enforces."""
+
+MODELO_WORK_PROFILE_BASELINE_MISSING_CODE: Final[str] = "modelo_work_profile_baseline_missing"
+"""Issue code for a filing-grade Modelo work baseline field that is absent."""
+
+PROFILE_VALIDATION_ISSUE_CODES: Final[tuple[str, ...]] = (
+    REQUIRED_FIELD_MISSING_CODE,
+    CONDITIONAL_REQUIRED_FIELD_MISSING_CODE,
+    CONDITIONALLY_FORBIDDEN_FIELD_CODE,
+    NUMERIC_VALUE_ISSUE_CODE,
+    BOOLEAN_VALUE_ISSUE_CODE,
+    ENUM_VALUE_ISSUE_CODE,
+    DATE_VALUE_ISSUE_CODE,
+    EMAIL_VALUE_ISSUE_CODE,
+    DERIVED_FIELD_ISSUE_CODE,
+    UNKNOWN_FIELD_ISSUE_CODE,
+    EFFECTIVE_WINDOW_UNUSED_CODE,
+    EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE,
+    MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
+)
+"""Complete finite vocabulary emitted under ``profile.validation.*``.
+
+The first twelve values are emitted by :class:`ProfileValidationService`;
+the filing-grade baseline value is emitted by the Modelo readiness gate.  The
+tuple lives beside the issue-code declarations so a new producer must update
+one source of truth before its dynamic locale key can be rendered.
+"""
+
 _ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
     ProfileValueRefusalKind.ENUM: ENUM_VALUE_ISSUE_CODE,
     ProfileValueRefusalKind.DATE: DATE_VALUE_ISSUE_CODE,
@@ -320,7 +352,7 @@ class ProfileValidationService:
             return (
                 ProfileValidationIssue(
                     severity=BaseSeverity.WARNING,
-                    code="effective_window_unused",
+                    code=EFFECTIVE_WINDOW_UNUSED_CODE,
                     path=fact.path,
                     message=(
                         f"path {fact.path!r} carries an effective window but neither "
@@ -366,7 +398,7 @@ class ProfileValidationService:
         return tuple(
             ProfileValidationIssue(
                 severity=BaseSeverity.WARNING,
-                code="effective_window_end_not_enforced",
+                code=EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE,
                 path=path,
                 message=(
                     f"path {path!r} declares valid_to {fact.valid_to.isoformat()!r} but the value "
@@ -568,9 +600,13 @@ __all__ = [
     "CONDITIONALLY_FORBIDDEN_FIELD_CODE",
     "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
     "DATE_VALUE_ISSUE_CODE",
+    "EFFECTIVE_WINDOW_END_NOT_ENFORCED_CODE",
+    "EFFECTIVE_WINDOW_UNUSED_CODE",
     "EMAIL_VALUE_ISSUE_CODE",
     "ENUM_VALUE_ISSUE_CODE",
+    "MODELO_WORK_PROFILE_BASELINE_MISSING_CODE",
     "NUMERIC_VALUE_ISSUE_CODE",
+    "PROFILE_VALIDATION_ISSUE_CODES",
     "REQUIRED_FIELD_MISSING_CODE",
     "UNKNOWN_FIELD_ISSUE_CODE",
     "ProfileValidationService",

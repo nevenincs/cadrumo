@@ -27,9 +27,12 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.bienes_inversion_regularizacion_bindings import (
+    BienesInversionRegularizacionOutput,
+    BienesInversionRegularizacionProvider,
+)
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.bindings import (
-    BienesInversionRegularizacionOutput,
     CasillaObservation,
     RegistryModeloObservation,
 )
@@ -133,7 +136,8 @@ def _canonical_bienes_target(*, modelo: str, period: str, output: BienesInversio
         binding
         for binding in revision.bindings
         if binding.source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
-        and binding.selector.regularizacion_output is output
+        and isinstance(binding.provider, BienesInversionRegularizacionProvider)
+        and binding.provider.regularizacion_output is output
     )
     return casillas_by_binding(revision)[binding.id][0]
 

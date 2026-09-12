@@ -9,7 +9,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 continuidad_id = "tipo-declaracion"
@@ -28,7 +27,6 @@ input_kind = "informational"
 # value anywhere on the record.
 export_exemption_reason = "not_in_record_design"
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 
 # --- Per-counterparty detail fields (Tipo 2 contraparte declarada) ---
 
@@ -43,7 +41,6 @@ semantic_role = "contraparte_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.nombre"
 continuidad_id = "contraparte-nombre"
@@ -55,7 +52,6 @@ semantic_role = "contraparte_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.clave-operacion"
 continuidad_id = "contraparte-clave-operacion"
@@ -67,7 +63,6 @@ semantic_role = "contraparte_clave_operacion"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q1"
 continuidad_id = "contraparte-importe-q1"
@@ -81,7 +76,6 @@ semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaci
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q2"
 continuidad_id = "contraparte-importe-q2"
@@ -95,7 +89,6 @@ semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaci
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q3"
 continuidad_id = "contraparte-importe-q3"
@@ -109,7 +102,6 @@ semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaci
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.importe-Q4"
 continuidad_id = "contraparte-importe-q4"
@@ -123,7 +115,6 @@ semantic_role_cardinality_reason = "El Modelo 347 desglosa el importe de operaci
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.provincia-codigo"
 continuidad_id = "contraparte-provincia-codigo"
@@ -135,7 +126,6 @@ semantic_role = "contraparte_provincia_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "contraparte.pais-codigo"
 continuidad_id = "contraparte-pais-codigo"
@@ -147,4 +137,3 @@ semantic_role = "contraparte_pais_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3012-2008:art-1", "orden-hac-1431-2025:art-1", "rd-1065-2007:art-31", "rd-1065-2007:art-33", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025"]

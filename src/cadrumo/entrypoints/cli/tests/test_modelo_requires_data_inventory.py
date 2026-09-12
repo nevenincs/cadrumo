@@ -118,18 +118,18 @@ def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_so
     result = unwrap_schema_envelope(invocation.output)
     relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
     assert {
-        ("renta-2025-modelo-111-retenciones-periodicas", "relation_prefill"),
+        ("renta-modelo-111-retenciones-periodicas", "relation_prefill"),
         ("renta-2025-modelo-190-retenciones-anuales", "relation_prefill"),
     } <= relation_pairs
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
-    assert ("renta-2025-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
+    assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
 
     notices = unwrap_envelope_notices(invocation.output)
     advisory = next(notice for notice in notices if notice["code"] == "modelo.requires.unbucketed_binding_source")
     assert advisory["severity"] == "warning"
     assert advisory["action"] is None
     assert "manual_input" in advisory["context"]["source_kinds"]
-    assert "renta-2025-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
+    assert "renta-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
 
 
 def test_requires_buckets_local_register_resolvers_as_live_observations() -> None:
@@ -192,7 +192,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     """
     resolved = {
         "renta-2025-profile-tax-residence-ccaa",
-        "renta-2025-profile-declaration-type",
+        "renta-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
     }
     invocation = invoke_cached_cli(

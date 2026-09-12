@@ -20,7 +20,7 @@ never on the operator's live calculate.
   stock casilla ``00670`` ("pendiente de aplicación a principio del período").
   Relation ``modelo-200-2024-rel-self-bin-pendiente-anterior`` (``source_casilla_id =
   '00671'``) drives binding
-  ``modelo-200-2024-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
+  ``modelo-200-bin-pendiente-ejercicios-anteriores`` (``copy``), which casilla
   ``00670`` (``input_kind = bound``) consumes.
 * **Dotaciones-deterioro self-carry** (LIS art. 13, a dotación whose deducibility
   conditions are not yet met stays pending), tracked SEPARATELY per condition-state

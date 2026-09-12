@@ -44,6 +44,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
+from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -58,7 +60,28 @@ from .currency_predicates import effective_eur_amount, effective_eur_taxable_bas
 from .errors import AggregationPeriodError, AggregationValidationError
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
-# TODO(fact-relocation): resolve Renta ledger model, target casilla, category selectors, and bindings from selected registry revision
+# fact-relocation: selected Renta income model, target, selector, and binding declarations are consumed through RegistryQueryService
+
+
+def renta_income_registry_declarations(
+    query_service: RegistryQueryService,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> ModeloBindingsReport:
+    """Resolve the selected Renta income binding surface without a fallback.
+
+    The revision query owns the model identity, target casilla, source selector,
+    aggregation fact, and applicability evidence. The projection below keeps
+    only the generic ledger fold and accepts the selected report at its normal
+    source-mesh boundary; it does not recreate any declaration locally.
+    """
+    return query_service.bindings_for_scope(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+    )
 
 
 class RentaIncomeLedgerAggregationIssueReason(StrEnum):
@@ -1122,4 +1145,5 @@ __all__ = [
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",
     "aggregate_renta_m100_income_ledger_from_repositories",
+    "renta_income_registry_declarations",
 ]

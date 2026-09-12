@@ -33,7 +33,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [87] - '8. Tributación razón de territorio - Administraciones - Territorio común [87]' (offset 98, length 5).
 [[revisions."2022".casillas]]
@@ -50,7 +49,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [88] - '8. Tributación razón de territorio - Administraciones - Álava [88]' (offset 103, length 5).
 [[revisions."2022".casillas]]
@@ -67,7 +65,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [89] - '8. Tributación razón de territorio - Administraciones - Guipúzcoa [89]' (offset 108, length 5).
 [[revisions."2022".casillas]]
@@ -84,7 +81,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [90] - '8. Tributación razón de territorio - Administraciones - Vizcaya [90]' (offset 113, length 5).
 [[revisions."2022".casillas]]
@@ -101,7 +97,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [91] - '8. Tributación razón de territorio - Administraciones - Navarra [91]' (offset 118, length 5).
 [[revisions."2022".casillas]]
@@ -118,7 +113,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [92] - '8. Tributación razón de territorio - Administraciones - Resultado atribuible a territorio común [92]' (offset 157, length 17).
 [[revisions."2022".casillas]]
@@ -135,7 +129,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [93] - '8. Tributación razón de territorio - Administraciones - Compens. cuotas ej. anterior atrib. territ. com. [93]' (offset 191, length 17).
 [[revisions."2022".casillas]]
@@ -152,7 +145,6 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]
 
 # Box [94] - '8. Tributación razón de territorio - Administraciones - Resultado liq. anual atribuible territ. comun [94]' (offset 208, length 17).
 [[revisions."2022".casillas]]
@@ -169,4 +161,3 @@ semantic_role_cardinality_reason = "Distinct official AEAT box of the pagina 6 r
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-115", "ley-37-1992:art-99", "orden-eha-3111-2009:art-1", "rd-1624-1992:art-71"]
-source_refs = ["aeat-dr-390-2022"]

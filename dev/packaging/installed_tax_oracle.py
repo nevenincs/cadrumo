@@ -69,12 +69,12 @@ CASILLAS = (
 )
 BINDINGS = (
     "modelo-200-2024-profile-legal-entity-form=sl",
-    "modelo-200-2024-profile-new-entity-flag=0",
-    "modelo-200-2024-profile-incn-prior-12-months=500000",
-    "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
-    "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
-    "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
-    "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+    "modelo-200-profile-new-entity-flag=0",
+    "modelo-200-profile-incn-prior-12-months=500000",
+    "modelo-200-profile-tributacion-estado-porcentaje=100",
+    "modelo-200-bin-pendiente-ejercicios-anteriores=0",
+    "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+    "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
 )
 RELATIONS = (
     "modelo-200-2024-rel-202-pagos-fraccionados=0",

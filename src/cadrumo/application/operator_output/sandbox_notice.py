@@ -1,7 +1,7 @@
 """Sandbox-active indicator shared by every operator-facing JSON/text emitter.
 
 Any command surface that renders a success envelope or text line for the
-operator — the CLI transport (:mod:`entrypoints.cli._common`) and the setup
+operator — the CLI transport (:mod:`entrypoints.cli.common`) and the setup
 wizard (:mod:`application.wizard.commands`) alike — must be able to warn the
 operator that the active profile bucket is a discardable sandbox rather than
 their real profile. Both surfaces need the SAME check, so it lives here,
@@ -64,10 +64,6 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
         code="config.profile.sandbox.active_indicator",
         message=tr(
             "cli.config.profile.sandbox.active_indicator_info",
-            default=(
-                "You are operating inside the sandbox %{label}, not a real profile; "
-                "every command runs against this isolated, discardable bucket."
-            ),
             label=label,
         ),
     )

@@ -76,7 +76,7 @@ def test_build_gate_refuses_one_missing_or_miswired_handoff_endpoint() -> None:
         binding.id
         for binding in revision.bindings
         if binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
-        and binding.selector.summary_casilla_id == target_casilla_id
+        and binding.provider.summary_casilla_id == target_casilla_id
     )
     partial_revision = revision.model_copy(
         update={"bindings": tuple(binding for binding in revision.bindings if binding.id != target_binding_id)},

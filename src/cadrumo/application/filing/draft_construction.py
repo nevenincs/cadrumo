@@ -23,7 +23,6 @@ from ...core.parsing.dates import parse_iso8601_date as _parse_iso8601_date
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period as _Period
 from ...core.time.clock import now as _utc_now
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import (
     bound_casilla_binding_ids as _registry_bound_casilla_binding_ids,
@@ -41,10 +40,11 @@ from ...domain.calculations.registry.ids import BindingId as _BindingId
 from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
 from ...domain.calculations.registry.ids import RelationId as _RelationId
 from ...domain.calculations.registry.ids import SourceRefId as _SourceRefId
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import enum_consumed_binding_ids as _enum_consumed_binding_ids
 from ...domain.calculations.registry.runtime_graph import expression_binding_refs as _expression_binding_refs
 from ...domain.calculations.registry.runtime_graph import revision_date_binding_ids as _revision_date_binding_ids
-from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition as _DataBindingDefinition
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef as _RegistrySnapshotRef
@@ -528,7 +528,7 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     persisted inputs by this id-set; relations not present in the inputs
     are simply absent from the resolved relation map.
     """
-    return {relation.id for relation in snapshot.revision.relations}
+    return {binding.id for binding, _ in relation_prefill_bindings_for_period(snapshot.revision)}
 
 
 def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, str]:
@@ -711,7 +711,7 @@ def binding_provenance(
 ) -> tuple[_BindingSourceKind, tuple[_LegalRefId, ...], tuple[_SourceRefId, ...]]:
     """Extract the typed source kind and grounding from a binding definition.
 
-    The ``binding`` is the registry ``DataBindingDefinition`` already held by
+    The ``binding`` is the registry ``BindingDefinition`` already held by
     the filing builder; its ``source`` is a typed
     :class:`BindingSourceKind` and its ``legal_refs`` / ``source_refs``
     carry the binding's regulatory grounding. Carrying them onto every
@@ -824,45 +824,24 @@ def _binding_row_index(binding_id: _BindingId, row_key: object) -> int:
     return index
 
 
-def _binding_data_type(binding: object) -> str:
-    """Return the declared scalar type for one binding input.
+def _binding_data_type(binding: _DataBindingDefinition) -> str:
+    """Return the scalar type the binding's value contract declares.
 
-    The decimal default is correct for a scalar binding, which declares neither a
-    ``data_type`` nor a ``row_field`` and is a money value by construction. It is
-    NOT correct for a detail-record row field, whose type depends entirely on
-    which field it is: a ``valuation_amount`` is money and a ``party_tax_id`` is a
-    NIF. An undeclared row field therefore refuses rather than defaulting, because
-    the alternative is emitting a name or a tax id into a filing artefact as a
-    decimal, which is byte-valid and wrong and indistinguishable from a real value.
+    A row field's scalar type is registry data: the binding declares it on its
+    typed value contract, drawn from the closed vocabulary, so an unsupported
+    value is refused at registry build rather than at emission. The type is
+    never inferred from the row field's NAME, which could not be correct in
+    general: ``operation_kind_code`` is a typed enum on modelo 232 and a plain
+    string on modelo 360.
 
-    A row field's scalar type is registry data: the binding declares ``data_type``
-    on its selector, typed as the closed export vocabulary so an unsupported value
-    is refused at registry build rather than at emission. That is the same key,
-    carrying the same fact, that a fixed-width export projection declares -- the
-    two differ only in how the value is positioned -- so this reads the
-    declaration and never infers a type from the row field's NAME, which could not
-    be correct in general: ``operation_kind_code`` is a typed enum on modelo 232
-    and a plain string on modelo 360.
+    The alternative to reading the declaration is emitting a name or a tax id
+    into a filing artefact as a decimal, which is byte-valid and wrong and
+    indistinguishable from a real value.
     """
-    selector: object = getattr(binding, "selector", None)
-    if isinstance(selector, Mapping):
-        metadata = STR_KEYED_MAPPING_ADAPTER.validate_python(selector)
-        raw_data_type = metadata.get("data_type")
-        row_field = metadata.get("row_field")
-    else:
-        raw_data_type = getattr(selector, "data_type", None)
-        row_field = getattr(selector, "row_field", None)
-    if raw_data_type is not None:
-        return str(raw_data_type)
-    if isinstance(row_field, str):
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
-            context={"binding_id": str(getattr(binding, "id", row_field)), "data_type": row_field},
-        )
-    return "decimal"
+    return str(binding.value.data_type)
 
 
-def _binding_input(binding_id: _BindingId, value: object, binding: object) -> _ModeloScalar:
+def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingDefinition) -> _ModeloScalar:
     """Route one binding input to the channel its declared data type belongs to.
 
     The runtime family comes from the registry classifier rather than a local

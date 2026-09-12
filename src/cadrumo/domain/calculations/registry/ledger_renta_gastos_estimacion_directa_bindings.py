@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from pydantic import BaseModel
 
@@ -25,7 +25,9 @@ from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
-from .schema import DataBindingDefinition, ModeloRevision
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 # SpendingCategory routing table.
 _RENTA_100_FIRST_SLICE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
@@ -81,10 +83,14 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
         ...
 
 
-class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
+class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
     """Validated form of a ledger_renta_gastos_estimacion_directa_aggregation binding selector."""
 
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION] = (
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
+    )
 
     modelo: Literal[Modelo.M100] = Modelo.M100
     period: Literal["0A"] = "0A"
@@ -93,10 +99,10 @@ class _RentaLedgerGastosEstimacionDirectaSelector(BaseModel):
 
 
 def _renta_ledger_gastos_estimacion_directa_selector(
-    binding: DataBindingDefinition,
-) -> _RentaLedgerGastosEstimacionDirectaSelector:
+    binding: BindingDefinition,
+) -> LedgerRentaGastosEstimacionDirectaProvider:
     try:
-        return _RentaLedgerGastosEstimacionDirectaSelector.model_validate(_selector_as_dict(binding))
+        return LedgerRentaGastosEstimacionDirectaProvider.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_gastos_estimacion_directa_aggregation selector: {exc}",
@@ -104,7 +110,7 @@ def _renta_ledger_gastos_estimacion_directa_selector(
 
 
 def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> None:
     """Validate a ``ledger_renta_gastos_estimacion_directa_aggregation`` binding definition."""
     if binding.source != BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION:
@@ -131,7 +137,7 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definiti
 
 
 def _renta_gastos_estimacion_directa_build_matcher(
-    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+    selector: LedgerRentaGastosEstimacionDirectaProvider,
 ) -> Callable[[RentaGastosEstimacionDirectaObservationProtocol], bool]:
     modelo, period, target_casilla_id = selector.modelo, selector.period, selector.target_casilla_id
 
@@ -147,7 +153,7 @@ def _renta_gastos_estimacion_directa_build_matcher(
 
 def _renta_gastos_estimacion_directa_aggregate(
     matched: Sequence[RentaGastosEstimacionDirectaObservationProtocol],
-    selector: _RentaLedgerGastosEstimacionDirectaSelector,
+    selector: LedgerRentaGastosEstimacionDirectaProvider,
 ) -> Decimal:
     del selector  # single declared fact (deductible_amount_sum); nothing to dispatch on
     return sum((observation.deductible_amount for observation in matched), Decimal("0"))
@@ -243,15 +249,15 @@ def renta_first_slice_binding_target_casillas(revision: ModeloRevision) -> froze
     )
 
 
-def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding: BindingDefinition) -> list[str]:
     """Validate a ``ledger_renta_gastos_estimacion_directa_aggregation`` binding at registry-build time.
 
-    Accumulating ``list[str]`` validator over :class:`_RentaLedgerGastosEstimacionDirectaSelector`;
+    Accumulating ``list[str]`` validator over :class:`LedgerRentaGastosEstimacionDirectaProvider`;
     runs the fact/aggregation-op invariant at build time through
     :func:`invariant_diagnostics`, whose raise-style body is
     :func:`validate_ledger_renta_gastos_estimacion_directa_aggregation_binding_definition`.
     """
-    failures = selector_against_model(binding, _RentaLedgerGastosEstimacionDirectaSelector)
+    failures = selector_against_model(binding, LedgerRentaGastosEstimacionDirectaProvider)
     if failures:
         return failures
     return invariant_diagnostics(
@@ -261,4 +267,4 @@ def validate_ledger_renta_gastos_estimacion_directa_aggregation_binding(binding:
     )
 
 
-RentaLedgerGastosEstimacionDirectaSelector = _RentaLedgerGastosEstimacionDirectaSelector
+LedgerRentaGastosEstimacionDirectaProvider = LedgerRentaGastosEstimacionDirectaProvider

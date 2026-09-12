@@ -6,13 +6,16 @@ family = "mapping"
 variant_id = "renta-ledger-category-variant-routing-mapping:2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
-source_refs = ["aeat-modelo-100-2025", "boe-lirpf-statutory-facts"]
+source_refs = ["aeat-modelo-100-procedure", "boe-lirpf-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
-source_ref = "aeat-modelo-100-2025"
-required_text = ["gastos fiscalmente deducibles", "seguro de enfermedad"]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo 100"]
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["reducción"]
 
 [fact.variants.payload]
 kind = "mapping"

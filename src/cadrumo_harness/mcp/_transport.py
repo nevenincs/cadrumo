@@ -171,7 +171,6 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
         command=command_key,
         tier=tier.value,
         seconds=int(timeout_s),
-        default=("'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled."),
     )
     return _transport_error_envelope(
         command_key=command_key,
@@ -374,10 +373,6 @@ def _inprocess_timeout_notice(*, command_key: str, worker_stack: str = "") -> No
     message = tr(
         "mcp.call.timeout_may_complete",
         command=command_key,
-        default=(
-            "'{command}' exceeded its time limit; the operation may still be completing in the "
-            "background. The idempotency guard prevents duplicate writes."
-        ),
     )
     context: dict[str, str] = {}
     if worker_stack:
@@ -416,11 +411,6 @@ def _warm_degradation_notice(*, command_key: str, wedged: bool) -> Notice:
         "mcp.serving.warm_degraded",
         command=command_key,
         reason=reason,
-        default=(
-            "'{command}' was served through the subprocess transport because the warm in-process "
-            "runtime was {reason}; the result is identical, only slower. Warm serving resumes once "
-            "the slow call clears."
-        ),
     )
     return Notice(
         severity=NoticeSeverity.WARNING,

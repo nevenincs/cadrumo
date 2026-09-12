@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 763, autoliquidació de l'impost sobre activitats de joc per activitats anuals o plurianuals"
+
+[language.en]
+short_description = "Modelo 763, self-assessment of the tax on gambling activities for annual or multi-year activities"
+
+[language.hu]
+short_description = "763-as modell: a szerencsejáték-tevékenységek éves vagy többéves adójának önadózása"
+

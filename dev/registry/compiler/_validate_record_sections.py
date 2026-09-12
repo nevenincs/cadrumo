@@ -28,7 +28,7 @@ from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summa
     validate_m303_regimen_simplificado_annual_summary_revision,
 )
 from cadrumo.domain.calculations.registry.manual_input_selector import is_layout_binding_selector
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -213,7 +213,7 @@ def validate_binding_section(
     """Return binding selector-shape, reference, and evidence failures.
 
     The :class:`~domain.calculations.registry.ModeloRevision` supplies
-    :class:`~domain.calculations.registry.DataBindingDefinition` rows.
+    :class:`~domain.calculations.registry.BindingDefinition` rows.
     Selectors are validated through the single binding-selector contract; layout
     bindings require layout-authority evidence, while other bindings require
     official-source guidance and source citations.
@@ -251,7 +251,7 @@ def validate_binding_section(
     return failures
 
 
-def _is_layout_binding(binding: DataBindingDefinition) -> bool:
+def _is_layout_binding(binding: BindingDefinition) -> bool:
     """Layout-binding predicate, delegated to the typed manual_input shape."""
     return is_layout_binding_selector(selector_as_dict(binding))
 

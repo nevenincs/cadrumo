@@ -117,6 +117,7 @@ from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
 
 from .analysis.delta_minimality import restatement_differences
+from .compiler.authority import compile_validated_authority
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_directory
 from .edition_export_scenarios import edition_export_scenarios
@@ -724,6 +725,21 @@ def plan_migration(
     return _plan(modelo_dir, definition, declare_blocked_roots=declare_blocked_roots)[0]
 
 
+def _delta_authored(manifest: Mapping[str, object]) -> bool:
+    """Whether a manifest states an edition in delta form rather than full copy.
+
+    A lifted default (``casilla_source_refs``) or a named ``predecessor`` both
+    mean rows may now be inherited, so the edition no longer carries its own
+    full-copy form.  A ``predecessor`` that is a ``none`` root declares the
+    opposite -- that this edition inherits from nothing -- so every row is still
+    stated in full and the edition can be lifted and proven against its own
+    materialisation like any first edition.
+    """
+    if "casilla_source_refs" in manifest:
+        return True
+    return isinstance(manifest.get("predecessor"), str)
+
+
 def _plan(
     modelo_dir: Path,
     definition: ModeloDefinition,
@@ -732,9 +748,7 @@ def _plan(
 ) -> tuple[MigrationPlan, tuple[_EditionWork, ...]]:
     ordered = ordered_revisions(definition)
     sources = {str(revision.id): _read_edition(modelo_dir, str(revision.id)) for revision in ordered}
-    already = any(
-        key in source.manifest for source in sources.values() for key in ("predecessor", "casilla_source_refs")
-    )
+    already = any(_delta_authored(source.manifest) for source in sources.values())
     materialised: dict[str, list[_Placed]] = {}
     work: list[_EditionWork] = []
     for position, revision in enumerate(ordered):
@@ -1306,6 +1320,11 @@ def migrate_modelo(
     )
     applied = False
     if apply and not report.findings:
+        # Publication is a stronger boundary than planning: prove that the
+        # complete staged candidate is a valid authoring authority before any
+        # production path is displaced.  Dry runs remain modelo-local so an
+        # unrelated registry defect cannot hide this tool's own diagnostics.
+        compile_validated_authority(staged, bundled_path()).modelo(modelo_id)
         target = modelo_dir.resolve()
         displaced = _scratch_path(work_dir, "displaced", modelo_id)
         shutil.move(target, displaced)

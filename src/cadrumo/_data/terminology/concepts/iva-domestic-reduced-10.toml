@@ -16,3 +16,13 @@ updated_at = 2026-08-07
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tipus reduït del 10 % per a operacions interiors d'IVA"
+
+[language.en]
+short_description = "10% reduced rate for domestic VAT transactions"
+
+[language.hu]
+short_description = "Belföldi áfaügyletek 10%-os kedvezményes kulcsa"
+

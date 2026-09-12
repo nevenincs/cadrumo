@@ -9,7 +9,6 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..authority import bundled_authority
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
@@ -18,6 +17,7 @@ from ._published_authority import (
     artifact_components,
     artifact_snapshot,
 )
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

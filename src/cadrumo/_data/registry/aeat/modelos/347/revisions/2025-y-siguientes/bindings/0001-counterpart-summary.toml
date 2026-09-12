@@ -7,8 +7,8 @@
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-declarante-numero-personas-entidades"
-source = "m347_third_party_operation"
-selector = { fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "operator_count", record = "m347_declarante_summary", rectification_scope = "any" }
+value = { data_type = "integer", channel = "integer" }
 aggregation = { op = "count_distinct" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",
@@ -29,8 +29,8 @@ required_text = ["operaciones con terceras personas"]
 
 [[revisions."2025-y-siguientes".bindings]]
 id = "modelo-347-declarante-importe-total-anual-operaciones"
-source = "m347_third_party_operation"
-selector = { fact = "invoice_total_sum", record = "m347_declarante_summary", rectification_scope = "any" }
+provider = { kind = "m347_third_party_operation", fact = "invoice_total_sum", record = "m347_declarante_summary", rectification_scope = "any" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = [
     "orden-eha-3012-2008:art-1",

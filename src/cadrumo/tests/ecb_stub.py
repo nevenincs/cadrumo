@@ -13,21 +13,17 @@ assertions tautological.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
 from ..core.parsing.dates import parse_iso8601_date
 
-if TYPE_CHECKING:
-    from ..adapters.outbound.fx.ecb_provider import RateFetch
-
 _CSV_HEADER = "KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE"
 
 
-def ecb_csv_fetch(quotes: Mapping[str, Mapping[date, Decimal]]) -> RateFetch:
+def ecb_csv_fetch(quotes: Mapping[str, Mapping[date, Decimal]]) -> Callable[[str], str]:
     """Return a :data:`~adapters.outbound.fx.RateFetch` over declared quotes.
 
     Args:

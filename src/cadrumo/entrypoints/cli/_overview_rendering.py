@@ -233,10 +233,6 @@ def overview_coverage_notices(coverage: ObligationCoverageReport) -> list[Notice
             code=_COVERAGE_NOTICE_CODE,
             message=tr(
                 "cli.overview.coverage.investigate",
-                default=(
-                    "The filing obligation %{modelo} could not be positively scoped for this "
-                    "profile and may be under-reported. Review its filing explanation."
-                ),
                 modelo=item.modelo,
             ),
             action=resolve_notice_action(
@@ -280,7 +276,6 @@ def overview_post_filing_event_notices(events: Sequence[OverviewCalendarEvent]) 
     kinds = sorted({event.post_filing_kind.value for event in actionable if event.post_filing_kind is not None})
     message = tr(
         "cli.overview.post_filing.pending_summary",
-        default=("%{count} AEAT post-filing event(s) require attention: %{kinds}. Review the affected notifications."),
         count=len(actionable),
         kinds=", ".join(kinds),
     )
@@ -334,10 +329,6 @@ def overview_deemed_served_notification_notices(events: Sequence[OverviewCalenda
     certificado_ids = sorted({event.reference_id for event in deemed_served if event.reference_id})
     message = tr(
         "cli.overview.notificacion.rechazo_tacito_summary",
-        default=(
-            "%{count} AEAT notification(s) are legally served by rechazo tácito "
-            "(Ley 39/2015 art. 43.2): %{certificados}. The plazos are already running."
-        ),
         count=len(deemed_served),
         certificados=", ".join(certificado_ids),
     )
@@ -762,23 +753,26 @@ def overview_pipeline_output(
         ready=report.ready,
     )
     lines: list[str] = [
-        f"{tr('cli.overview.labels.period', default='Period')}\t{report.period} {report.filing_year}",
-        f"{tr('cli.overview.pipeline.labels.ready', default='ready')}\t{str(report.ready).lower()}",
+        f"{tr('cli.overview.labels.period')}\t{report.period} {report.filing_year}",
+        f"{tr('cli.overview.pipeline.labels.ready')}\t{str(report.ready).lower()}",
         "",
-        tr("cli.overview.pipeline.labels.ledger_section", default="Ledger:"),
+        tr(
+            "cli.overview.pipeline.labels.ledger_section",
+        ),
         f"  {tr('cli.ledger.labels.rows')}\t{report.ledger.total_count}",
         f"  {tr('cli.ledger.labels.pending')}\t{report.ledger.pending_review_count}",
         f"  {tr('cli.ledger.labels.reviewed')}\t{report.ledger.reviewed_count}",
         f"  {tr('cli.ledger.labels.skipped')}\t{report.ledger.skipped_count}",
         f"  {tr('cli.ledger.labels.readiness_issues')}\t{report.ledger.readiness_issue_count}",
         "",
-        tr("cli.overview.pipeline.labels.modelos_section", default="Modelos:"),
+        tr(
+            "cli.overview.pipeline.labels.modelos_section",
+        ),
     ]
     notices: list[Notice] = []
     if not report.modelos:
         no_units_message = tr(
             "cli.overview.pipeline.no_work_units",
-            default="No modelo work units for this period yet.",
         )
         lines.append(f"  {no_units_message}")
     for row in report.modelos:
@@ -795,7 +789,7 @@ def overview_pipeline_output(
         )
     lines.append("")
     lines.append(
-        f"{tr('cli.overview.pipeline.labels.findings_section', default='Findings:')} "
+        f"{tr('cli.overview.pipeline.labels.findings_section')} "
         f"{report.total_blocking_findings} blocking, {report.total_warning_findings} warning",
     )
     return typed_result, lines, notices
@@ -839,7 +833,6 @@ def _work_units_line(report: OverviewStatusReport) -> str:
     if report.work_units == 0 and report.discarded_work_units == 0:
         return tr(
             "cli.overview.status.work_units_empty",
-            default="No modelo work units have been started yet.",
         )
     if report.discarded_work_units > 0:
         # The bare total misleads when some units are discarded: the
@@ -847,16 +840,11 @@ def _work_units_line(report: OverviewStatusReport) -> str:
         # live work. The line states the active / discarded split.
         return tr(
             "cli.overview.status.work_units_present_with_discarded",
-            default=(
-                "%{count} active modelo work unit(s) (%{discarded} discarded) "
-                "in this local storage - your active modelo work is saved."
-            ),
             count=report.work_units,
             discarded=report.discarded_work_units,
         )
     return tr(
         "cli.overview.status.work_units_present",
-        default=("%{count} modelo work unit(s) are in progress in this local storage - your modelo work is saved."),
         count=report.work_units,
     )
 
@@ -890,9 +878,6 @@ def _drafts_line(report: OverviewStatusReport) -> str:
         if report.work_units > 0:
             return tr(
                 "cli.overview.status.drafts_empty_with_work_units",
-                default=(
-                    "No declaration drafts are saved - this is normal and does not affect your modelo work units below."
-                ),
             )
         return tr("cli.overview.status.drafts_empty")
     return tr("cli.overview.status.drafts_present", count=report.drafts)
@@ -959,15 +944,25 @@ def _calendar_entry_work_unit_text_fields(entry: OverviewCalendarEntry) -> str:
 def _calendar_shift_reason_part_text(part: str) -> str:
     """Return the localized text label for one shift-reason token."""
     if part == "business_day":
-        return tr("cli.overview.calendar.shift.business_day", default="Business day")
+        return tr(
+            "cli.overview.calendar.shift.business_day",
+        )
     if part == "calendar_unavailable":
-        return tr("cli.overview.calendar.shift.calendar_unavailable", default="Calendar unavailable")
+        return tr(
+            "cli.overview.calendar.shift.calendar_unavailable",
+        )
     if part == "domingo":
-        return tr("cli.overview.calendar.shift.domingo", default="Sunday")
+        return tr(
+            "cli.overview.calendar.shift.domingo",
+        )
     if part == "modelo_exception":
-        return tr("cli.overview.calendar.shift.modelo_exception", default="Modelo exception")
+        return tr(
+            "cli.overview.calendar.shift.modelo_exception",
+        )
     if part == "sabado":
-        return tr("cli.overview.calendar.shift.sabado", default="Saturday")
+        return tr(
+            "cli.overview.calendar.shift.sabado",
+        )
     return part
 
 

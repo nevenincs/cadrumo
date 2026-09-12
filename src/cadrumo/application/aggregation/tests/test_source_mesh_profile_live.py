@@ -41,12 +41,12 @@ _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 # minimo separate-escala eligibility flag (Art. 64/75 LIRPF).
 _DERIVED_FACT_PROFILE_BINDINGS = frozenset(
     {
-        "renta-2025-profile-minimo-descendientes-estatal",
-        "renta-2025-profile-minimo-descendientes-autonomico",
-        "renta-2025-profile-has-economic-activity",
-        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
-        "renta-2025-profile-unidad-familiar-otros-miembros-base",
-        "renta-2025-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-descendientes-autonomico",
+        "renta-profile-has-economic-activity",
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-unidad-familiar-otros-miembros-base",
+        "renta-profile-anualidades-sin-minimo-descendientes",
     },
 )
 

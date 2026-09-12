@@ -10,7 +10,8 @@
 # bindings across fragments) to keep revision.toml under the reviewability cap.
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-iva-autorepercutido-interior-devengado-cuota"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -18,14 +19,6 @@ source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["domestic_reverse_charge"]
-rate_kinds = ["general", "reduced", "super_reduced"]
-flow_direction = "inversion_sujeto_pasivo"
-fact = "iva_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"
 
@@ -48,7 +41,8 @@ op = "sum"
 # (devengado box 11 - deducible box 37 = 0).
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero", "general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -56,14 +50,6 @@ source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["zero", "general", "reduced", "super_reduced"]
-flow_direction = "inversion_sujeto_pasivo"
-fact = "iva_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"
 
@@ -76,7 +62,8 @@ op = "sum"
 # instead of iva_amount_sum.
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-devengado-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero", "general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -84,20 +71,13 @@ source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["zero", "general", "reduced", "super_reduced"]
-flow_direction = "inversion_sujeto_pasivo"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"
 
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"], rate_kinds = ["zero", "general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-13", "ley-37-1992:art-15", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -105,20 +85,13 @@ source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["intra_community_acquisition_reverse_charge", "intra_community_service_acquisition_reverse_charge"]
-rate_kinds = ["zero", "general", "reduced", "super_reduced"]
-flow_direction = "inversion_sujeto_pasivo"
-fact = "iva_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"
 
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-iva-autorepercutido-interior-deducible-cuota"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -126,13 +99,5 @@ source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["domestic_reverse_charge"]
-rate_kinds = ["general", "reduced", "super_reduced"]
-flow_direction = "inversion_sujeto_pasivo"
-fact = "iva_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"

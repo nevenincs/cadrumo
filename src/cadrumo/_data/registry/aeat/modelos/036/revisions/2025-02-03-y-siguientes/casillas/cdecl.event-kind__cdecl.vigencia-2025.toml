@@ -15,7 +15,6 @@ legal_refs = [
     "orden-eha-1274-2007:art-2",
     "orden-hac-1526-2024:art-1",
 ]
-source_refs = ["aeat-modelo-036-procedure"]
 
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.vigencia-2025"
@@ -33,4 +32,3 @@ legal_refs = [
     "orden-hac-1526-2024:df-unica",
 ]
 source_refs = ["aeat-dr-036-2025"]
-

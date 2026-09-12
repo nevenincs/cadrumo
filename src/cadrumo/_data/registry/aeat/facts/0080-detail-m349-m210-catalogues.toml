@@ -6,13 +6,16 @@ family = "mapping"
 variant_id = "detail-m349-m210-catalogues:2026-01-01"
 date_axis = "filing_period"
 valid_from = 2026-01-01
-legal_refs = ["orden-hac-174-2020:art-1", "orden-hac-56-2024:art-4.1"]
+legal_refs = ["orden-hac-174-2020:art-1"]
 source_refs = ["aeat-modelo-349-procedure", "aeat-modelo-210-procedure"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "aeat-modelo-349-procedure"
 required_text = ["operaciones intracomunitarias"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["Modelo 210"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [

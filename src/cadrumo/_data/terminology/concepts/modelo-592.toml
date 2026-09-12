@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 592, autoliquidació de l'impost especial sobre envasos de plàstic no reutilitzables"
+
+[language.en]
+short_description = "Modelo 592, self-assessment of the special tax on non-reusable plastic packaging"
+
+[language.hu]
+short_description = "592-es modell: az újra nem használható műanyag csomagolások különadójának önadózása"
+

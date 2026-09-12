@@ -7,7 +7,6 @@ semantic_role = "filing_year"
 required = true
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.estado-miembro"
@@ -18,5 +17,3 @@ semantic_role = "estado_miembro_devolucion"
 required = true
 input_kind = "informational"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1"]
-source_refs = ["aeat-dr-360-2010"]
-

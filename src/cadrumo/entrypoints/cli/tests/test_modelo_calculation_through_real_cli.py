@@ -240,17 +240,17 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-2024-profile-new-entity-flag=0",
-            "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
+            "--binding", "modelo-200-profile-new-entity-flag=0",
+            "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             # Estado-share porcentaje for IS cuota; 100 means full estado share
             # (no foral/territorial adjustment) which is the common-regime case
             # this oracle fixture covers.
-            "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
+            "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             # BIN-pendiente fresh-filer baseline (M200 self previous_filing).
-            "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
+            "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
             # Dotaciones/deterioro credit balance fresh-filer baseline.
-            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
-            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+            "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+            "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             # Relation value: sum of M202 pagos fraccionados for the year.
             # Zero means no prior instalments have been paid.
             "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
@@ -613,12 +613,12 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-2024-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-2024-profile-new-entity-flag=0",
-            "--binding", "modelo-200-2024-profile-incn-prior-12-months=500000",
-            "--binding", "modelo-200-2024-profile-tributacion-estado-porcentaje=100",
-            "--binding", "modelo-200-2024-bin-pendiente-ejercicios-anteriores=0",
-            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
-            "--binding", "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
+            "--binding", "modelo-200-profile-new-entity-flag=0",
+            "--binding", "modelo-200-profile-incn-prior-12-months=500000",
+            "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
+            "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
+            "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores=0",
+            "--binding", "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores=0",
             "--relation", "modelo-200-2024-rel-202-pagos-fraccionados=0",
         ],
     )  # fmt: skip

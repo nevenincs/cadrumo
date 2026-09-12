@@ -87,8 +87,8 @@ def test_string_inputs_for_ids_extracts_enum_binding() -> None:
 
     inputs: ModeloInputs = {
         "modelo-200-2024-profile-legal-entity-form": "sl",
-        "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-        "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+        "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+        "modelo-200-profile-new-entity-flag": Decimal("0"),
     }
     snap = _m200_snapshot()
     enum_ids = enum_consumed_binding_ids(snap.revision)
@@ -104,8 +104,8 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
     enum_ids = enum_consumed_binding_ids(snap.revision)
     inputs = {
         "modelo-200-2024-profile-legal-entity-form": "sl",
-        "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-        "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+        "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+        "modelo-200-profile-new-entity-flag": Decimal("0"),
     }
 
     # Must not raise ModeloBuilderError for the string enum binding
@@ -115,7 +115,7 @@ def test_filing_binding_values_skips_enum_bindings() -> None:
     binding_ids = {bv.binding_id for bv in binding_values}
     assert "modelo-200-2024-profile-legal-entity-form" not in binding_ids
     # Decimal bindings are still present
-    assert "modelo-200-2024-profile-incn-prior-12-months" in binding_ids
+    assert "modelo-200-profile-incn-prior-12-months" in binding_ids
 
 
 def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> None:
@@ -138,14 +138,14 @@ def test_calculate_registry_snapshot_accepts_enum_binding_via_enum_channel() -> 
         },
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
             # Fresh-filer scenario: no prior-period BIN to compensate.
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("0"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("0"),
             # Fresh filer: no prior-year unfulfilled credit-impairment balance (casilla 01494).
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
             "modelo-200-2024-profile-legal-entity-form": "sl",
@@ -188,13 +188,13 @@ def test_calculate_registry_snapshot_applies_non_zero_bin_pendiente_compensation
         },
         date_context={"filing_period": date(2024, 12, 31)},
         binding_values={
-            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
-            "modelo-200-2024-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
+            "modelo-200-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
+            "modelo-200-bin-pendiente-ejercicios-anteriores": Decimal("10000"),
             # No prior-year unfulfilled credit-impairment balance (casilla 01494).
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
-            "modelo-200-2024-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores": Decimal("0"),
+            "modelo-200-dotaciones-deterioro-creditos-saldo-cumplido-anteriores": Decimal("0"),
         },
         enum_binding_values={
             "modelo-200-2024-profile-legal-entity-form": "sl",

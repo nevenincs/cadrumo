@@ -27,7 +27,8 @@
 # because nothing is being self-assessed by anyone in Spain.
 [[revisions.2024-desde-09-y-3t.bindings]]
 id = "modelo-303-casilla-120-no-sujetas-localizacion-base"
-source = "ledger_iva_aggregation"
+provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
+value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
@@ -38,13 +39,5 @@ required_text = ["modelo 303"]
 # Every rate kind, for the reason fragment 0007 states: the discriminator is
 # (category, flow), the operation is not zero-rated, and pinning "zero" would
 # silently drop rows whose line recorded a tier.
-[revisions.2024-desde-09-y-3t.bindings.selector]
-categories = ["intra_community_service_supply"]
-rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"]
-flow_direction = "repercutido"
-fact = "base_amount_sum"
-
-observation_roles = ["settlement"]
-cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-desde-09-y-3t.bindings.aggregation]
 op = "sum"

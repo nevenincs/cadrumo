@@ -283,7 +283,6 @@ def test_join_module_rejects_forbidden_non_authoritative_surfaces() -> None:
         "provenance",
         "render",
         "load_export_layout",
-        "load_modelo_file",
         "single_file",
         "direct_revision",
         "difflib",

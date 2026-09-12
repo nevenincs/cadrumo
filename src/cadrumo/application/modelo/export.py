@@ -85,7 +85,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.applicability import derive_taxpayer_files_economic_activity
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.calculations.registry.schema import DataBindingDefinition
+from ...domain.calculations.registry.schema import BindingDefinition
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
@@ -535,7 +535,7 @@ def _compose_export_dictionary_values(
     draft: ModeloDraft,
     taxpayer_identity: TaxpayerIdentityFacts,
     bucket_id: str,
-    profile_export_bindings: Sequence[DataBindingDefinition] = (),
+    profile_export_bindings: Sequence[BindingDefinition] = (),
 ) -> dict[str, object]:
     """Resolve typed XML dictionary values from canonical profile bindings."""
     values: dict[str, object] = dict(

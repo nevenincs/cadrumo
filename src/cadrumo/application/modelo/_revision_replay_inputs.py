@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
+from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.applicability import (
@@ -38,7 +38,8 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
+from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
+from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
@@ -205,7 +206,7 @@ def _observation_backed_bound_casillas_with_replay_binding(
 
 def _has_observation_backed_binding(
     binding_ids: tuple[BindingId, ...],
-    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> bool:
     return any(
         (binding := bindings_by_id.get(binding_id)) is not None
@@ -216,30 +217,21 @@ def _has_observation_backed_binding(
 
 def _replay_binding_id_for_bound_casilla(
     casilla: CasillaDefinition,
-    bindings_by_id: dict[BindingId, DataBindingDefinition],
+    bindings_by_id: dict[BindingId, BindingDefinition],
 ) -> BindingId | None:
     binding_ids = bound_casilla_binding_ids(casilla)
     manual_casilla_bindings = tuple(
         binding.id
         for binding_id in binding_ids
         if (binding := bindings_by_id.get(binding_id)) is not None
-        and binding.source == BindingSourceKind.MANUAL_INPUT
-        and _binding_selector_casilla_id(binding) == casilla.id
+        and isinstance(binding.provider, ManualInputProvider)
+        and binding.provider.casilla_id == casilla.id
     )
     if manual_casilla_bindings:
         return manual_casilla_bindings[0]
     if casilla.binding in bindings_by_id:
         return casilla.binding
     return next((binding_id for binding_id in binding_ids if binding_id in bindings_by_id), None)
-
-
-def _binding_selector_casilla_id(binding: DataBindingDefinition) -> str | None:
-    selector = binding.selector
-    if isinstance(selector, dict):
-        raw = selector.get("casilla_id")
-        return str(raw) if raw is not None else None
-    raw = getattr(selector, "casilla_id", None)
-    return str(raw) if raw is not None else None
 
 
 def _m349_detail_row_replay_inputs(

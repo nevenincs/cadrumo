@@ -7,10 +7,10 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
@@ -51,29 +51,32 @@ def _iva_binding(
     categories: tuple[IvaCategory, ...],
     rate_kinds: tuple[IvaRateKind, ...],
     flow_direction: IvaFlowDirection,
-) -> DataBindingDefinition:
-    return DataBindingDefinition(
+) -> BindingDefinition:
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        selector={
-            "categories": categories,
-            "rate_kinds": rate_kinds,
-            "flow_direction": flow_direction,
-            "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
-            "cash_accounting_treatments": (
-                IvaCashAccountingTreatment.NONE,
-                IvaCashAccountingTreatment.TAXPAYER_REGIME,
-                IvaCashAccountingTreatment.SUPPLIER_REGIME,
-            ),
-            "fact": "iva_amount_sum",
+        provider={
+            "kind": "ledger_iva_aggregation",
+            **{
+                "categories": categories,
+                "rate_kinds": rate_kinds,
+                "flow_direction": flow_direction,
+                "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+                "cash_accounting_treatments": (
+                    IvaCashAccountingTreatment.NONE,
+                    IvaCashAccountingTreatment.TAXPAYER_REGIME,
+                    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+                ),
+                "fact": "iva_amount_sum",
+            },
         },
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("ley-37-1992:art-88",),
         source_refs=("test-iva-ledger-binding",),
     )
 
 
-def _revision_with_iva_bindings(revision_id: str, *bindings: DataBindingDefinition) -> ModeloRevision:
+def _revision_with_iva_bindings(revision_id: str, *bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id=revision_id,
         localization_key=f"test.schema.revision.{revision_id}.label",

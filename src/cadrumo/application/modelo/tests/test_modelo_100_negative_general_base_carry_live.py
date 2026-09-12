@@ -209,8 +209,8 @@ def _calculate_m100(
 @pytest.mark.parametrize(
     ("filing_year", "source_year", "binding_id", "prior_pending"),
     (
-        (2024, 2023, "renta-2024-base-liquidable-negativa-general-anterior", Decimal("3210.00")),
-        (2025, 2024, "renta-2025-base-liquidable-negativa-general-anterior", Decimal("4321.00")),
+        (2024, 2023, "renta-base-liquidable-negativa-general-anterior", Decimal("3210.00")),
+        (2025, 2024, "renta-base-liquidable-negativa-general-anterior", Decimal("4321.00")),
     ),
 )
 def test_m100_prior_negative_general_base_carries_without_manual_0501_input(
@@ -276,9 +276,7 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     revision = snapshot.revision
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     formulas = {formula.id: formula for formula in revision.formulas}
-    binding = next(
-        item for item in revision.bindings if item.id == "renta-2025-base-liquidable-negativa-general-anterior"
-    )
+    binding = next(item for item in revision.bindings if item.id == "renta-base-liquidable-negativa-general-anterior")
 
     art_50 = "ley-35-2006:art-50"
     art_48 = "ley-35-2006:art-48"
@@ -295,6 +293,6 @@ def test_m100_2025_base_liquidable_carry_is_grounded_in_art_50_not_art_48() -> N
     prior_binding = next(
         item
         for item in prior_snapshot.revision.bindings
-        if item.id == "renta-2024-base-liquidable-negativa-general-anterior"
+        if item.id == "renta-base-liquidable-negativa-general-anterior"
     )
     assert prior_binding.legal_refs == (art_50,)

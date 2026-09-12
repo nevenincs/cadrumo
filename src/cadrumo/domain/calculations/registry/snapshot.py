@@ -22,12 +22,11 @@ from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orde
 from .period_selector_match import registry_period_for_request
 from .reference_checks import check_all_id_references
 from .revision_context import records_by_id
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
-from .schema_base import DateAxis
+from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from .schema_base import DateAxis, filing_period_from_scope
 from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
-from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
 from .validate_revision_identity import revision_reference_identity_failures
 
 
@@ -842,7 +841,6 @@ def collect_snapshot_ref_ids(
         revision.formulas,
         *((revision.parameters,) if include_parameters else ()),
         revision.bindings,
-        revision.relations,
         revision.projection_endpoints,
         revision.extraction_profiles,
         revision.live_cross_references,

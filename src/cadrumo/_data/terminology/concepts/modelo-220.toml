@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 220, declaració anual de l'impost sobre societats en règim de consolidació fiscal"
+
+[language.en]
+short_description = "Modelo 220, annual corporate income tax return under the tax-consolidation regime"
+
+[language.hu]
+short_description = "220-as modell: társaságiadó-bevallás adócsoportos konszolidációs rendszerben"
+

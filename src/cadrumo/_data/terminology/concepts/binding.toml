@@ -29,9 +29,18 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The registry rule that maps a ledger entry or a profile fact to a casilla."
+definition = "A model-registry rule that assigns a ledger entry or profile datum to a specific box, so calculation knows which datum feeds each box in a model."
+scope_note = "An internal concept in the application's search and calculation machinery, documented for the development RAG. It is not a taxpayer-facing tax term and therefore remains outside the glossary."
+
 
 [language.ca]
 short_description = "La regla del registre que connecta una entrada del ledger o una dada del perfil amb una casella."
+definition = "Regla del registre de models que assigna una entrada del llibre major o una dada del perfil a una casella concreta, perquè el càlcul sàpiga quina dada alimenta cada casella del model."
+scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
+
 
 [language.hu]
 short_description = "A nyilvántartási szabály, amely egy ledger-bejegyzést vagy profiladatot egy casillához rendel."
+definition = "A modellregiszter szabálya, amely egy főkönyvi bejegyzést vagy profiladatot egy konkrét mezőhöz rendel, hogy a számítás tudja, melyik adat táplálja a modell egyes mezőit."
+scope_note = "Az alkalmazás keresési és számítási gépezetének belső fogalma, amelyet a fejlesztési RAG számára dokumentálunk. Nem adózóknak szóló adóügyi kifejezés, ezért kívül marad a szójegyzéken."
+

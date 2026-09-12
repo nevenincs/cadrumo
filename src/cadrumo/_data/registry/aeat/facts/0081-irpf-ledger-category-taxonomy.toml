@@ -12,6 +12,10 @@ source_refs = ["boe-rirpf-category-profile-authority"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["rendimientos"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

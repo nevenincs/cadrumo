@@ -55,7 +55,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.aggregation import BindingAggregationOp, BindingSourceKind
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
@@ -63,6 +63,7 @@ from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -75,9 +76,8 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.iva_wallet_relation_targets import (
+from ...domain.calculations.registry.iva_wallet_carry_targets import (
     iva_wallet_owned_binding_ids_for_revision,
-    iva_wallet_owned_relation_targets_for_revision,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_input_kind import InputKind
@@ -135,6 +135,9 @@ from ._calculation_preparation import PreparedCalculation as _PreparedCalculatio
 from ._calculation_preparation import prepare_calculation as _prepare_calculation
 from ._calculation_source_staging import (
     add_expected_missing_binding_diagnostics as _add_expected_missing_binding_diagnostics,
+)
+from ._calculation_source_staging import (
+    add_terminal_origin_diagnostics as _add_terminal_origin_diagnostics,
 )
 from ._calculation_source_staging import (
     add_unhandled_source_diagnostics as _add_unhandled_source_diagnostics,
@@ -895,7 +898,6 @@ def _resolve_bucket_source_mesh(
                     excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
-                        relations=snapshot.revision.relations,
                     ),
                 )
             ),
@@ -934,6 +936,7 @@ def _resolve_bucket_source_mesh(
         observation_repository=CalculationObservationRepository(bucket_id=work_unit.bucket_id),
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
+    source_resolution = _add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
     return _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
 
 
@@ -997,18 +1000,17 @@ def _caller_relation_values_from_bindings(
     revision: ModeloRevision,
     target_period: str,
     caller_binding_values: Mapping[BindingId, Decimal],
-) -> dict[RelationId, Decimal]:
-    """Project caller --binding overrides of relation target bindings into relation values.
+) -> dict[BindingId, Decimal]:
+    """Project caller --binding overrides of fold slots into the fold-value channel.
 
-    A caller --binding override of a relation's target binding also resolves that
-    relation for formula operands (relation-only formulas such as M100 0604),
-    scoped to the relation's declared target periods.
+    A caller --binding override of a relation-prefill slot also resolves that
+    fold for formula operands, scoped to the periods the binding's own
+    applicability admits.
     """
     return {
-        relation.id: _calculated_decimal(caller_binding_values[relation.target_binding])
-        for relation in revision.relations
-        if relation.target_binding in caller_binding_values
-        and (not relation.target_periods or target_period in relation.target_periods)
+        binding.id: _calculated_decimal(caller_binding_values[binding.id])
+        for binding, _ in relation_prefill_bindings_for_period(revision, period=target_period)
+        if binding.id in caller_binding_values
     }
 
 
@@ -1636,46 +1638,34 @@ def _source_resolution_excluding_iva_compensation(
     resolution: CalculationSourceResolution,
 ) -> CalculationSourceResolution:
     """Keep Modelo 303 prior-compensation owned exclusively by the IVA wallet."""
-    excluded_bindings, relation_ids = _iva_wallet_source_ids(snapshot)
-    if not _iva_wallet_sources_present(
-        resolution,
-        excluded_bindings=excluded_bindings,
-        relation_ids=relation_ids,
-    ):
+    excluded_bindings = _iva_wallet_source_ids(snapshot)
+    if not _iva_wallet_sources_present(resolution, excluded_bindings=excluded_bindings):
         return resolution
-    return _without_iva_wallet_sources(
-        resolution,
-        excluded_bindings=excluded_bindings,
-        relation_ids=relation_ids,
-    )
+    return _without_iva_wallet_sources(resolution, excluded_bindings=excluded_bindings)
 
 
-def _iva_wallet_source_ids(snapshot: RegistrySnapshot) -> tuple[frozenset[BindingId], frozenset[RelationId]]:
-    """Resolve the binding and relation identities owned by the IVA wallet."""
-    revision = snapshot.revision
-    binding_ids = iva_wallet_owned_binding_ids_for_revision(
+def _iva_wallet_source_ids(snapshot: RegistrySnapshot) -> frozenset[BindingId]:
+    """Resolve the binding identities owned by the IVA wallet.
+
+    One set now answers both channels: the fold-value channel is keyed by the
+    slot binding it materialises into, so the wallet's carry has a single
+    identity rather than a binding id paired with a separate relation id.
+    """
+    return iva_wallet_owned_binding_ids_for_revision(
         modelo_id=str(snapshot.modelo.id),
-        revision_id=str(revision.id),
-        relations=revision.relations,
+        revision_id=str(snapshot.revision.id),
     )
-    wallet_relation_targets = iva_wallet_owned_relation_targets_for_revision(
-        modelo_id=str(snapshot.modelo.id),
-        revision_id=str(revision.id),
-        relations=revision.relations,
-    )
-    return binding_ids, frozenset(relation_id for relation_id, _target_binding in wallet_relation_targets)
 
 
 def _iva_wallet_sources_present(
     resolution: CalculationSourceResolution,
     *,
     excluded_bindings: frozenset[BindingId],
-    relation_ids: frozenset[RelationId],
 ) -> bool:
     """Return whether a non-wallet resolver supplied a wallet-owned value."""
     return bool(
         excluded_bindings.intersection(resolution.binding_values)
-        or relation_ids.intersection(resolution.relation_values),
+        or excluded_bindings.intersection(resolution.relation_values),
     )
 
 
@@ -1683,18 +1673,17 @@ def _without_iva_wallet_sources(
     resolution: CalculationSourceResolution,
     *,
     excluded_bindings: frozenset[BindingId],
-    relation_ids: frozenset[RelationId],
 ) -> CalculationSourceResolution:
     """Remove non-wallet values and provenance for wallet-owned identities."""
     return resolution.model_copy(
         update={
             "binding_values": {k: v for k, v in resolution.binding_values.items() if k not in excluded_bindings},
-            "relation_values": {k: v for k, v in resolution.relation_values.items() if k not in relation_ids},
+            "relation_values": {k: v for k, v in resolution.relation_values.items() if k not in excluded_bindings},
             "provenance": tuple(
                 item
                 for item in resolution.provenance
                 if not any(item.source_ref.endswith(f":{binding_id}") for binding_id in excluded_bindings)
-                and item.source_ref.split(":", 1)[0] not in relation_ids
+                and item.source_ref.split(":", 1)[0] not in excluded_bindings
             ),
         },
     )
@@ -1776,14 +1765,16 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
 
     Raises:
         ModeloAggregationBindingError: When a binding carries a source kind
-            absent from executable production ownership.
+            absent from executable production ownership and not registered as
+            deferred or non-runtime. Deferred kinds are not refused here; they
+            surface as ``deferred_binding_source`` diagnostics at resolution.
     """
     novel = sorted(
         {
             str(binding.source)
             for binding in revision.bindings
-            if getattr(getattr(binding, "aggregation", None), "op", None) is not BindingAggregationOp.ROWS
-            and str(binding.source) not in CALCULATION_ROUTE_ENROLLED_SOURCES
+            if str(binding.source) not in CALCULATION_ROUTE_ENROLLED_SOURCES
+            and _registered_disposition(binding.source) not in ("deferred", "non_runtime")
         },
     )
     if novel:
@@ -1791,6 +1782,12 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
             translated_message="application.modelo.errors.novel_source_kind_rejected",
             context={"novel_source_kinds": novel, "revision_id": revision.id},
         )
+
+
+def _registered_disposition(source: object) -> str | None:
+    """Return the registered disposition for ``source``, or ``None`` when unregistered."""
+    registration = BINDING_PROVIDER_REGISTRATIONS.get(source)  # type: ignore[arg-type]
+    return None if registration is None else registration.disposition
 
 
 def _source_owned_binding_ids(
@@ -1939,3 +1936,4 @@ def _calculation_revision_in_repository_bucket(
             context={"calculation_revision_id": calculation_revision_id},
         )
     return revision, work_unit
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  

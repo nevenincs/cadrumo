@@ -169,8 +169,7 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     assert evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, workflow_profile()) is True
     values_negative: dict[CasillaId, Decimal] = {_CASILLA_11: Decimal("750"), _CASILLA_10: Decimal("-50")}
     assert (
-        evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, workflow_profile())
-        is True
+        evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, workflow_profile()) is True
     )
 
 

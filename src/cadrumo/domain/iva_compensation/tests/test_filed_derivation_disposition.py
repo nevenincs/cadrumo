@@ -28,13 +28,13 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId
-from ..carry_forward import derive_303_compensation_available
-from ..filed_derivation import (
+from ...calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
-    derive_m303_compensation_available_from_casillas,
 )
+from ..carry_forward import derive_303_compensation_available
+from ..filed_derivation import derive_m303_compensation_available_from_casillas
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

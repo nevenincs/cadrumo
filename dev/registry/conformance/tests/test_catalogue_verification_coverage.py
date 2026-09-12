@@ -16,8 +16,7 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import filing_period_from_scope
-from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, filing_period_from_scope
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.temporal import select_revision

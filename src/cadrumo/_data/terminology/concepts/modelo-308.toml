@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 308, sol·licitud de devolució de l'IVA per recàrrec d'equivalència o subjectes ocasionals"
+
+[language.en]
+short_description = "Modelo 308, VAT refund request for equivalence-surcharge taxpayers or occasional taxable persons"
+
+[language.hu]
+short_description = "308-as modell: áfa-visszatérítési kérelem egyenértékűségi feláras vagy alkalmi adóalanyok számára"
+

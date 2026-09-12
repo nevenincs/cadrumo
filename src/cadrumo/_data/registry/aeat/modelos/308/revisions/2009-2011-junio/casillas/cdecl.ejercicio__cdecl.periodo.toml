@@ -10,8 +10,6 @@ data_type = "year"
 semantic_role = "filing_year"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3786-2008:art-2"]
-source_refs = ["aeat-dr-308-2009"]
 
 [[revisions."2009-2011-junio".casillas]]
 id = "decl.periodo"
@@ -21,5 +19,3 @@ data_type = "period_code"
 semantic_role = "filing_period"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3786-2008:art-2"]
-source_refs = ["aeat-dr-308-2009"]

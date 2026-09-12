@@ -18,6 +18,16 @@ source_refs = [
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-111-instructions"
+required_text = ["Modelo"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-115-obligaciones-retenedor"
+required_text = ["Modelo"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-123-procedure"
+required_text = ["Modelo"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

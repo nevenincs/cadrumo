@@ -7,7 +7,6 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02727"
 number = "02727"
@@ -17,7 +16,6 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02728"
 number = "02728"
@@ -27,7 +25,6 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_disminucion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02729"
 number = "02729"
@@ -37,7 +34,6 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_inicial"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024".casillas]]
 id = "02730"
 number = "02730"
@@ -47,4 +43,3 @@ semantic_role = "is_correccion_limite_art11_12_perdidas_deterioro_saldo_final"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]

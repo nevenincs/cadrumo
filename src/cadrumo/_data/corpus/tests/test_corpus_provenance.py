@@ -30,18 +30,19 @@ and registry-binding validation own those immutable identity claims.
 
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
 
 import pytest
 
-from ....core.directory_scan import DirectoryEntryKind, scan_directory
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-bundled_path = importlib.import_module("....core.resources.bundled_data", package=__package__).bundled_path
-_AEAT_ROOT = bundled_path("corpus", "aeat_official")
+# These tests are part of the resource-data tree itself.  Resolve the checked
+# out data root from this file instead of importing a product-layer resource
+# helper: data must remain usable and independently checkable when the product
+# package is not importable.
+_DATA_ROOT = Path(__file__).resolve().parents[2]
+_AEAT_ROOT = _DATA_ROOT / "corpus" / "aeat_official"
 _CORPUS_ROOT = _AEAT_ROOT / "instructions"
 
 #: The audit-document filename, named once so the sweeps and discovery helper
@@ -64,10 +65,7 @@ def _provenance_documents(aeat_root: Path = _AEAT_ROOT) -> list[Path]:
     """
     if not aeat_root.is_dir():
         return []
-    return [
-        candidate.parent
-        for candidate in scan_directory(aeat_root, pattern=_PROVENANCE, recursive=True, select=DirectoryEntryKind.FILES)
-    ]
+    return [candidate.parent for candidate in aeat_root.rglob(_PROVENANCE) if candidate.is_file()]
 
 
 #: Documents that are provenance metadata rather than sourced payload, and so
@@ -82,12 +80,7 @@ def _files_in(subdir: Path) -> tuple[Path, ...]:
     document, so the sweep works for every committed corpus shape.
     """
     roots = [subdir / "files"] if (subdir / "files").is_dir() else [subdir]
-    return tuple(
-        path
-        for root in roots
-        for path in scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES)
-        if path.name not in _NON_PAYLOAD
-    )
+    return tuple(path for root in roots for path in root.rglob("*") if path.is_file() if path.name not in _NON_PAYLOAD)
 
 
 def _undocumented_files(subdir: Path) -> list[str]:

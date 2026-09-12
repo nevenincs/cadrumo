@@ -562,6 +562,7 @@ def compile_schema(
         does not resolve is simply absent from the map, and its entry renders
         from the record alone.
     """
+    from cadrumo.domain.calculations.registry.binding_targets import bound_casilla_binding_ids
     from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 
     resolved = authority if authority is not None else compiled_bundled_authority()
@@ -603,7 +604,7 @@ def compile_schema(
             if formula is None
             else tuple(dict.fromkeys(str(ref) for ref in expression_casilla_refs(formula.expression)))
         )
-        binding_ids = (casilla.binding, *casilla.alternate_bindings) if casilla.binding is not None else ()
+        binding_ids = bound_casilla_binding_ids(casilla)
         facts[(record.modelo.value, str(record.casilla_id))] = CasillaFacts(
             binding_sources=tuple(
                 dict.fromkeys(

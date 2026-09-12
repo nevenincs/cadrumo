@@ -24,7 +24,7 @@ from ...domain.modelos.calculation_revision_amendment import CalculationRevision
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
+from ..calculations.m303_carry_ingress import m303_carry_header_key
 from ..calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,
@@ -139,16 +139,15 @@ def _require_submitted_file_domiciliacion_header(
     Exactly one is required rather than at least one: two headers disagreeing
     about the baseline's disposition leave no fact to rectify against.
     """
-    declaration_type_headers = tuple(
-        header for header in observation.source_headers if header.header_key == M303_DECLARATION_TYPE_HEADER_KEY
-    )
+    header_key = m303_carry_header_key()
+    declaration_type_headers = tuple(header for header in observation.source_headers if header.header_key == header_key)
     if len(declaration_type_headers) != 1:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification requires exactly one submitted-file "
             "baseline declaration type header",
             context={
                 "baseline_filing_record_id": baseline_id,
-                "header_key": M303_DECLARATION_TYPE_HEADER_KEY,
+                "header_key": header_key,
                 "header_count": str(len(declaration_type_headers)),
             },
         )
@@ -158,7 +157,7 @@ def _require_submitted_file_domiciliacion_header(
             "prior domiciliation cancellation/modification requires submitted-file baseline declaration type U",
             context={
                 "baseline_filing_record_id": baseline_id,
-                "header_key": M303_DECLARATION_TYPE_HEADER_KEY,
+                "header_key": header_key,
                 "header_value": declaration_type_header.value,
             },
         )

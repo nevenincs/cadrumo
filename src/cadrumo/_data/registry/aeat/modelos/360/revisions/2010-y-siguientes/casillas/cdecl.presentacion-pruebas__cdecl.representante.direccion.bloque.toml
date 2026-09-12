@@ -13,7 +13,6 @@ semantic_role = "presentacion_pruebas"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.calidad-datos"
@@ -25,7 +24,6 @@ semantic_role = "calidad_datos"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.causa-presentacion"
@@ -37,7 +35,6 @@ semantic_role = "causa_presentacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.prorrata-anterior"
@@ -49,7 +46,6 @@ semantic_role = "prorrata_anterior_comunicacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.num-registro-anterior"
@@ -61,7 +57,6 @@ semantic_role = "registro_anterior_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante-email"
@@ -73,7 +68,6 @@ semantic_role = "solicitante_email"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante-telefono"
@@ -85,7 +79,6 @@ semantic_role = "solicitante_telefono"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.tipo-via"
@@ -97,7 +90,6 @@ semantic_role = "solicitante_direccion_tipo_via"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.nombre-via"
@@ -109,7 +101,6 @@ semantic_role = "solicitante_direccion_nombre_via"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.tipo-numero"
@@ -121,7 +112,6 @@ semantic_role = "solicitante_direccion_tipo_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.numero-casa"
@@ -133,7 +123,6 @@ semantic_role = "solicitante_direccion_numero_casa"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.calificador-numero"
@@ -145,7 +134,6 @@ semantic_role = "solicitante_direccion_calificador_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.bloque"
@@ -157,7 +145,6 @@ semantic_role = "solicitante_direccion_bloque"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.portal"
@@ -169,7 +156,6 @@ semantic_role = "solicitante_direccion_portal"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.escalera"
@@ -181,7 +167,6 @@ semantic_role = "solicitante_direccion_escalera"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.planta"
@@ -193,7 +178,6 @@ semantic_role = "solicitante_direccion_planta"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.puerta"
@@ -205,7 +189,6 @@ semantic_role = "solicitante_direccion_puerta"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.complemento"
@@ -217,7 +200,6 @@ semantic_role = "solicitante_direccion_complemento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.localidad"
@@ -229,7 +211,6 @@ semantic_role = "solicitante_direccion_localidad"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.codigo-postal"
@@ -241,7 +222,6 @@ semantic_role = "solicitante_direccion_codigo_postal"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.municipio"
@@ -253,7 +233,6 @@ semantic_role = "solicitante_direccion_municipio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.direccion.provincia"
@@ -265,7 +244,6 @@ semantic_role = "solicitante_direccion_provincia"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.extranjero.domicilio"
@@ -277,7 +255,6 @@ semantic_role = "solicitante_extranjero_domicilio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.extranjero.poblacion"
@@ -289,7 +266,6 @@ semantic_role = "solicitante_extranjero_poblacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.extranjero.codigo-postal"
@@ -301,7 +277,6 @@ semantic_role = "solicitante_extranjero_codigo_postal"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.extranjero.region"
@@ -313,7 +288,6 @@ semantic_role = "solicitante_extranjero_region"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.extranjero.pais"
@@ -325,7 +299,6 @@ semantic_role = "solicitante_extranjero_pais"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.apartado.numero"
@@ -337,7 +310,6 @@ semantic_role = "solicitante_apartado_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.apartado.localidad"
@@ -349,7 +321,6 @@ semantic_role = "solicitante_apartado_localidad"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.apartado.codigo-postal"
@@ -361,7 +332,6 @@ semantic_role = "solicitante_apartado_codigo_postal"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.apartado.municipio"
@@ -373,7 +343,6 @@ semantic_role = "solicitante_apartado_municipio"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.apartado.provincia"
@@ -385,7 +354,6 @@ semantic_role = "solicitante_apartado_provincia"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante-establecido"
@@ -397,7 +365,6 @@ semantic_role = "solicitante_establecido_iva"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante-hacienda-foral"
@@ -409,7 +376,6 @@ semantic_role = "solicitante_hacienda_foral"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante-delegacion"
@@ -421,7 +387,6 @@ semantic_role = "solicitante_delegacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-1"
@@ -433,7 +398,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-1"
@@ -445,7 +409,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-1"
@@ -457,7 +420,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-2"
@@ -469,7 +431,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-2"
@@ -481,7 +442,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-2"
@@ -493,7 +453,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-3"
@@ -505,7 +464,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-3"
@@ -517,7 +475,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-3"
@@ -529,7 +486,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-4"
@@ -541,7 +497,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-4"
@@ -553,7 +508,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-4"
@@ -565,7 +519,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-5"
@@ -577,7 +530,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-5"
@@ -589,7 +541,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-5"
@@ -601,7 +552,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-6"
@@ -613,7 +563,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-6"
@@ -625,7 +574,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-6"
@@ -637,7 +585,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-7"
@@ -649,7 +596,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-7"
@@ -661,7 +607,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-7"
@@ -673,7 +618,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-8"
@@ -685,7 +629,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-8"
@@ -697,7 +640,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-8"
@@ -709,7 +651,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-9"
@@ -721,7 +662,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-9"
@@ -733,7 +673,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-9"
@@ -745,7 +684,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-10"
@@ -757,7 +695,6 @@ semantic_role = "nace_codigo"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-idioma-10"
@@ -769,7 +706,6 @@ semantic_role = "nace_idioma"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.solicitante.nace-descripcion-10"
@@ -781,7 +717,6 @@ semantic_role = "nace_descripcion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante-nif"
@@ -793,7 +728,6 @@ semantic_role = "representante_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante-nombre"
@@ -805,7 +739,6 @@ semantic_role = "representante_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante-email"
@@ -817,7 +750,6 @@ semantic_role = "representante_email"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante-telefono"
@@ -829,7 +761,6 @@ semantic_role = "representante_telefono"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.tipo-via"
@@ -841,7 +772,6 @@ semantic_role = "representante_direccion_tipo_via"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.nombre-via"
@@ -853,7 +783,6 @@ semantic_role = "representante_direccion_nombre_via"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.tipo-numero"
@@ -865,7 +794,6 @@ semantic_role = "representante_direccion_tipo_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.numero-casa"
@@ -877,7 +805,6 @@ semantic_role = "representante_direccion_numero_casa"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.calificador-numero"
@@ -889,7 +816,6 @@ semantic_role = "representante_direccion_calificador_numero"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]
 
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.representante.direccion.bloque"
@@ -901,4 +827,3 @@ semantic_role = "representante_direccion_bloque"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
-source_refs = ["aeat-dr-360-2010"]

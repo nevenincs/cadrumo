@@ -11,7 +11,7 @@ See Also:
         Closed source-kind enum whose committed members are audited here.
     :class:`~domain.calculations.registry.RegistryQueryService`
         Domain query service that supplies the source-inventory report.
-    :class:`~domain.calculations.registry.DataBindingDefinition`
+    :class:`~domain.calculations.registry.BindingDefinition`
         Binding schema mutated in the novel-source anti-tautology check.
     :func:`~application.modelo.assert_no_novel_source_kinds`
         Live calculate-path guard proved by the synthetic source case.
@@ -25,9 +25,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.schema import DataBindingDefinition
+from ....domain.calculations.registry.schema import BindingDefinition
+from ...aggregation.source_resolution_operations import collect_unhandled_source_diagnostics
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_actions import assert_no_novel_source_kinds
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
@@ -71,9 +72,10 @@ def test_novel_source_binding_raises_not_silent_zero() -> None:
     # literal revision id: AEAT re-cuts revision layouts, and this modelo's
     # a broad M303 revision was decomposed into four narrower revisions.
     revision = bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
-    synthetic = DataBindingDefinition.model_construct(
+    synthetic = BindingDefinition.model_construct(
         id="synthetic-missing-source-binding",
-        source="synthetic_unrouted_source_qqq",
+        provider={"kind": "synthetic_unrouted_source_qqq"},
+        value={"data_type": "money", "channel": "decimal"},
     )
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic)})
 
@@ -99,3 +101,43 @@ def test_row_producing_binding_uses_its_detail_row_channel() -> None:
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic)})
 
     assert_no_novel_source_kinds(patched)
+
+
+def _deferred_binding() -> BindingDefinition:
+    grouping = ROW_SET_GROUPING_FOR_BINDING_SOURCE[BindingSourceKind.RELATED_PARTY_OPERATION]
+    return BindingDefinition.model_validate(
+        {
+            "id": "synthetic-deferred-related-party-rows",
+            "provider": {"kind": "related_party_operation", "fact": "row_field", "row_field": "counterparty_tax_id"},
+            "value": {"data_type": "money", "channel": "row_set", "row_grouping": grouping},
+            "aggregation": {"op": "rows"},
+            "legal_refs": ("ley-27-2014:art-18",),
+            "source_refs": ("aeat-manual",),
+        },
+    )
+
+
+def test_deferred_source_binding_is_not_novel_and_is_not_exempted_by_row_shape() -> None:
+    """A kind registered ``deferred`` passes the novel gate on its registration, not on a ROWS exemption."""
+    revision = bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    patched = revision.model_copy(update={"bindings": (*revision.bindings, _deferred_binding())})
+
+    assert_no_novel_source_kinds(patched)
+
+    scalar_novel = BindingDefinition.model_construct(
+        id="synthetic-scalar-novel",
+        provider=_deferred_binding().provider.model_copy(update={"kind": "synthetic_unrouted_source_qqq"}),
+    )
+    with pytest.raises(ModeloAggregationBindingError):
+        assert_no_novel_source_kinds(revision.model_copy(update={"bindings": (*revision.bindings, scalar_novel)}))
+
+
+def test_deferred_source_binding_surfaces_as_deferred_diagnostic() -> None:
+    revision = bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    patched = revision.model_copy(update={"bindings": (_deferred_binding(),)})
+
+    diagnostics = collect_unhandled_source_diagnostics(patched, handled_sources=frozenset())
+
+    assert [d.reason for d in diagnostics] == ["deferred_binding_source"]
+    assert diagnostics[0].binding_id == "synthetic-deferred-related-party-rows"
+    assert diagnostics[0].source_kind == "related_party_operation"

@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 
 import pytest
 from pydantic import ValidationError
 
+from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
 from ..authority import bundled_authority
+from ..binding_temporal import TargetPeriodOffset
+from ..bindings_previous_filing import PreviousFilingProvider
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..queries import RegistryQueryService, ResolvedRegistryQueryContext, relations_by_target_binding
 from ..query_reports import (
-    BindingSelectorQueryProjection,
     ModeloBindingsReport,
     ModeloCasillaDetailReport,
     ModeloFormulaRow,
@@ -100,56 +101,41 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert all(row.formula for row in casillas.rows)
     assert bindings.code == "130"
     assert any(row.binding_id == "irpf.previous_year_economic_activity_net_income" for row in bindings.rows)
-    assert "previous_filing" in {row.source for row in bindings.rows}
+    assert BindingSourceKind.PREVIOUS_FILING in {row.provider.kind for row in bindings.rows}
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casilla_ids or row.input_bindings or row.input_parameters for row in formulas.rows)
 
 
-def test_binding_query_rows_expose_typed_selector_projection() -> None:
+def test_binding_query_rows_expose_typed_provider() -> None:
     service = _service()
 
     report = service.bindings_for_scope("130", filing_year=2026, period="1T")
     row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
 
-    assert isinstance(row.selector, BindingSelectorQueryProjection)
-    assert not isinstance(row.selector, Mapping)
-    assert row.selector.source == "previous_filing"
-    assert row.selector.keys == (
-        "max_year_delta",
-        "source_casilla_id",
-        "source_modelo",
-        "source_period_offset_from_target",
-    )
-    assert {entry.key: entry.value for entry in row.selector.entries} == {
-        "max_year_delta": 0,
-        "source_casilla_id": "saldo-negativo-fin-periodo",
-        "source_modelo": "130",
-        "source_period_offset_from_target": -1,
-    }
+    assert isinstance(row.provider, PreviousFilingProvider)
+    assert row.provider.source_modelo == "130"
+    assert row.provider.source_casilla_id == "saldo-negativo-fin-periodo"
+    assert isinstance(row.provider.temporal, TargetPeriodOffset)
+    assert row.provider.temporal.periods == -1
+    assert row.provider.temporal.within_filing_year is True
 
 
-def test_binding_query_rows_dump_selector_as_ordered_entries() -> None:
+def test_binding_query_rows_dump_typed_provider() -> None:
     service = _service()
 
     report = service.bindings_for_scope("130", filing_year=2026, period="1T")
     row = next(item for item in report.rows if item.binding_id == "modelo-130-resultados-negativos-anteriores")
     dumped = row.model_dump(mode="json")
 
-    assert dumped["selector"] == {
-        "source": "previous_filing",
-        "keys": [
-            "max_year_delta",
-            "source_casilla_id",
-            "source_modelo",
-            "source_period_offset_from_target",
-        ],
-        "entries": [
-            {"key": "max_year_delta", "value": 0},
-            {"key": "source_casilla_id", "value": "saldo-negativo-fin-periodo"},
-            {"key": "source_modelo", "value": "130"},
-            {"key": "source_period_offset_from_target", "value": -1},
-        ],
+    assert dumped["provider"] == {
+        "kind": "previous_filing",
+        "source_modelo": "130",
+        "temporal": {"kind": "target_period_offset", "periods": -1, "within_filing_year": True},
+        "source_casilla_ids": [],
+        "source_casilla_id": "saldo-negativo-fin-periodo",
+        "required_source_casilla_ids": None,
+        "grouping": None,
     }
 
 

@@ -556,7 +556,7 @@ def _namespace_leaf_view(
         field=field,
         values=values,
         label_suffix=(
-            f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS[leaf], default=leaf)})"
+            f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS[leaf])})"
             if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_LOCALE_KEYS
             else f" ({tr('flows.manager.namespace_detail', number=detail_number)})"
         ),

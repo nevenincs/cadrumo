@@ -345,8 +345,18 @@ def test_runtime_projection_rejects_casilla_binding_id_collision() -> None:
             "bindings": (
                 {
                     "id": "01",
-                    "source": "manual_input",
-                    "selector": {"record": "DPA", "field": "test", "offset": 1, "length": 1, "data_type": "integer"},
+                    "provider": {
+                        "kind": "manual_input",
+                        "record": "DPA",
+                        "field": "test",
+                        "offset": 1,
+                        "length": 1,
+                        "data_type": "integer",
+                    },
+                    "value": {
+                        "data_type": "integer",
+                        "channel": "integer",
+                    },
                     "legal_refs": ("ley-58-2003:art-29",),
                     "source_refs": ("aeat-manual",),
                 },

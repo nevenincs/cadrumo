@@ -16,7 +16,6 @@ semantic_role = "m181_declarante_razon_social"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 7. Positions 59-107. PERSONA CON QUIEN RELACIONARSE; the design subdivides
 # it (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares one campo of 49.
@@ -29,7 +28,6 @@ semantic_role = "m181_persona_relacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 8. Positions 108-120. NUMERO IDENTIFICATIVO DE LA DECLARACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -41,7 +39,6 @@ semantic_role = "m181_numero_identificativo_declaracion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 9. Positions 121-122. DECLARACION COMPLEMENTARIA O SUSTITUTIVA.
 [[revisions."2022-y-siguientes".casillas]]
@@ -55,7 +52,6 @@ semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / s
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 10. Positions 123-135. NUMERO IDENTIFICATIVO DE LA DECLARACION ANTERIOR.
 [[revisions."2022-y-siguientes".casillas]]
@@ -67,7 +63,6 @@ semantic_role = "m181_numero_identificativo_anterior"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 11. Positions 136-144. NUMERO TOTAL DE REGISTROS DECLARADOS.
 [[revisions."2022-y-siguientes".casillas]]
@@ -79,7 +74,6 @@ semantic_role = "m181_numero_total_declarados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 12. Positions 145-159. IMPORTE TOTAL DEL CAPITAL AMORTIZADO -- the sum of
 # the tipo-2 campo at 127-139. "Sin signo y sin coma decimal", subdivided
@@ -93,7 +87,6 @@ semantic_role = "m181_importe_total_capital_amortizado"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 13. Positions 160-174. IMPORTE TOTAL DE LOS INTERESES ABONADOS EN EL
 # EJERCICIO -- the sum of the tipo-2 campo at 140-152. Subdivided 160-172 entera,
@@ -107,7 +100,6 @@ semantic_role = "m181_importe_total_intereses"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 14. Positions 175-189. IMPORTE TOTAL DE LOS GASTOS DERIVADOS DE LA
 # FINANCIACION AJENA -- the sum of the tipo-2 campo at 153-165. Subdivided
@@ -121,7 +113,6 @@ semantic_role = "m181_importe_total_gastos_financiacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 15. Positions 190-203. IMPORTE TOTAL DE LOS SALDOS PENDIENTES A 31 DE
 # DICIEMBRE -- the sum of the tipo-2 campo at 208-219. Subdivided 190-201 entera,
@@ -135,7 +126,6 @@ semantic_role = "m181_importe_total_saldos_pendientes"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 5. Positions 18-26. N.I.F. DEL DECLARADO.
 [[revisions."2022-y-siguientes".casillas]]
@@ -147,7 +137,6 @@ semantic_role = "m181_declarado_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 6. Positions 27-35. N.I.F. DEL REPRESENTANTE LEGAL.
 [[revisions."2022-y-siguientes".casillas]]
@@ -159,7 +148,6 @@ semantic_role = "m181_representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 7. Positions 36-75. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL DECLARADO.
 [[revisions."2022-y-siguientes".casillas]]
@@ -171,7 +159,6 @@ semantic_role = "m181_declarado_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 8. Positions 76-77. CODIGO PROVINCIA.
 [[revisions."2022-y-siguientes".casillas]]
@@ -183,7 +170,6 @@ semantic_role = "m181_codigo_provincia"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 9. Position 78. CLAVE TIPO DE IDENTIFICACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -195,7 +181,6 @@ semantic_role = "m181_clave_tipo_identificacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 10. Positions 79-82. PREFIJO CODIGO IBAN.
 [[revisions."2022-y-siguientes".casillas]]
@@ -207,7 +192,6 @@ semantic_role = "m181_prefijo_codigo_iban"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 11. Positions 83-102. IDENTIFICACION DEL PRESTAMO, CREDITO U OTRA
 # OPERACION FINANCIERA.
@@ -220,7 +204,6 @@ semantic_role = "m181_identificacion_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 12. Positions 103-110. FECHA DE LA OPERACION (103-106 ano, 107-108 mes,
 # 109-110 dia).
@@ -233,7 +216,6 @@ semantic_role = "m181_fecha_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 13. Positions 111-113. DURACION DE LA OPERACION, "expresada en meses".
 [[revisions."2022-y-siguientes".casillas]]
@@ -245,7 +227,6 @@ semantic_role = "m181_duracion_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 14. Positions 114-126. IMPORTE DEL PRESTAMO, CREDITO U OTRA OPERACION
 # FINANCIERA. "Sin signo y sin coma decimal", 114-124 entera, 125-126 decimal.
@@ -258,7 +239,6 @@ semantic_role = "m181_importe_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 15. Positions 127-139. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
 # AMORTIZACION DE CAPITAL. 127-137 entera, 138-139 decimal.
@@ -271,7 +251,6 @@ semantic_role = "m181_importe_amortizacion_capital"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 16. Positions 140-152. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
 # INTERESES. 140-150 entera, 151-152 decimal.
@@ -284,7 +263,6 @@ semantic_role = "m181_importe_intereses"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 17. Positions 153-165. IMPORTE ABONADO EN EL EJERCICIO EN CONCEPTO DE
 # GASTOS DERIVADOS DE LA FINANCIACION AJENA. 153-163 entera, 164-165 decimal.
@@ -297,7 +275,6 @@ semantic_role = "m181_importe_gastos_financiacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 18. Positions 166-171. PORCENTAJE DE PARTICIPACION. Subdivided 166-168
 # parte entera and 169-171 parte decimal -- three decimal digits, not two.
@@ -310,7 +287,6 @@ semantic_role = "m181_porcentaje_participacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 19. Position 172. ORIGEN DE LA OPERACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -322,7 +298,6 @@ semantic_role = "m181_origen_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 20. Position 173. TIPO DE OPERACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -334,7 +309,6 @@ semantic_role = "m181_tipo_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 21. Position 174. SUBCLAVE OPERACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -346,7 +320,6 @@ semantic_role = "m181_subclave_operacion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 22. Position 175. SITUACION DEL INMUEBLE.
 [[revisions."2022-y-siguientes".casillas]]
@@ -358,7 +331,6 @@ semantic_role = "m181_situacion_inmueble"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 23. Positions 176-195. REFERENCIA CATASTRAL.
 [[revisions."2022-y-siguientes".casillas]]
@@ -370,7 +342,6 @@ semantic_role = "m181_referencia_catastral"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 24. Positions 196-207. VALOR DE TASACION DEL INMUEBLE OBJETO DE GARANTIA.
 # "Sin signo y sin coma decimal", two implied decimals.
@@ -383,7 +354,6 @@ semantic_role = "m181_valor_tasacion_inmueble"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 25. Positions 208-219. SALDO PENDIENTE A 31 DE DICIEMBRE. "Este saldo NO
 # se prorrateara en el caso de que la operacion corresponda a varios declarados."
@@ -396,7 +366,6 @@ semantic_role = "m181_saldo_pendiente"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 26. Positions 220-412. DIRECCION DEL INMUEBLE. AEAT declares ONE
 # alfanumerico campo of 193 bytes and subdivides it into seventeen named parts
@@ -415,7 +384,6 @@ semantic_role = "m181_direccion_inmueble"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 27. Position 413. CLAVE DE INTERVENCION EN LA OPERACION.
 [[revisions."2022-y-siguientes".casillas]]
@@ -427,7 +395,6 @@ semantic_role = "m181_clave_intervencion"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 28. Positions 414-448. APELLIDOS Y NOMBRE O RAZON SOCIAL DEL PRESTAMISTA.
 [[revisions."2022-y-siguientes".casillas]]
@@ -439,7 +406,6 @@ semantic_role = "m181_prestamista_nombre"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 29. Positions 449-457. N.I.F. DEL PRESTAMISTA.
 [[revisions."2022-y-siguientes".casillas]]
@@ -451,7 +417,6 @@ semantic_role = "m181_prestamista_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 30. Positions 458-462. PORCENTAJE DE LA FINANCIACION DESTINADO A LA
 # VIVIENDA HABITUAL, only when subclave de operacion is 1. Subdivided 458-460
@@ -465,7 +430,6 @@ semantic_role = "m181_porcentaje_financiacion_vivienda_habitual"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 31. Positions 463-472. IMPORTE DEVENGADO EN EL EJERCICIO EN CONCEPTO DE
 # REINTEGRO DE INTERESES. "Sin signo y sin coma decimal".
@@ -478,7 +442,6 @@ semantic_role = "m181_importe_reintegro_intereses"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 32. Positions 473-481. INTERESES INDEMNIZATORIOS. Subdivided 473-479
 # entera, 480-481 decimal.
@@ -491,7 +454,6 @@ semantic_role = "m181_intereses_indemnizatorios"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 33. Positions 482-490. OTRAS CANTIDADES INDEMNIZATORIAS.
 [[revisions."2022-y-siguientes".casillas]]
@@ -503,7 +465,6 @@ semantic_role = "m181_otras_cantidades_indemnizatorias"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]
 
 # Campo 34. Positions 491-500. CANTIDADES DESTINADAS POR LA ENTIDAD FINANCIERA A
 # MINORAR EL PRINCIPAL DEL PRESTAMO.
@@ -516,4 +477,3 @@ semantic_role = "m181_cantidades_minorar_principal"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3514-2009:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-181-2022"]

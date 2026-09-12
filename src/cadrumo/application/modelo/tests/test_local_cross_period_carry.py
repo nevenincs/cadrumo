@@ -47,7 +47,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.iva_wallet_relation_targets import (
+from ....domain.calculations.registry.iva_wallet_carry_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
     iva_wallet_owned_binding_ids_for_revision,
 )

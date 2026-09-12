@@ -10,7 +10,6 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
@@ -24,6 +23,7 @@ from ._published_authority import (
     artifact_snapshot,
 )
 from .registry_observations import registry_grounded_modelo_observation
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

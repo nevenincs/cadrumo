@@ -15,7 +15,6 @@ semantic_role = "representante_legal_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ingresos-a-cuenta-repercutidos"
@@ -25,11 +24,10 @@ number = "135-147"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "ingresos_a_cuenta_repercutidos"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ejercicio-devengo"
@@ -42,7 +40,6 @@ semantic_role = "devengo_year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nif-conyuge-titular-unidad"
@@ -55,7 +52,6 @@ semantic_role = "payee_spouse_or_unit_titular_nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.discapacidad"
@@ -70,7 +66,6 @@ semantic_role = "payee_disability_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-60", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.contrato-relacion"
@@ -85,7 +80,6 @@ semantic_role = "payee_contract_relation_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.titular-unidad-convivencia"
@@ -100,7 +94,6 @@ semantic_role = "payee_unit_convivencia_titular_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.movilidad-geografica"
@@ -115,4 +108,3 @@ semantic_role = "payee_geographic_mobility_clave"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-19", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

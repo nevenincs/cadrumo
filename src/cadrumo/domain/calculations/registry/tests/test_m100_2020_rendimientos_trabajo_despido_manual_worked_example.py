@@ -203,7 +203,7 @@ def _scenario(*, reduccion_art_20: Decimal, expected_0025: Decimal, scenario_id:
         filing_year=2020,
         period="0A",
         inputs=inputs,
-        binding_values={"renta-2020-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        binding_values={"renta-modelo-100-estimacion-directa-es-normal": Decimal("1")},
         enum_binding_values={"renta-2020-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2020,
         date_context={"filing_period": date(2020, 12, 31)},

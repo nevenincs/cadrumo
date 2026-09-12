@@ -24,8 +24,8 @@
 # comunidades. Feeds casilla 0514 (autonómico).
 [[revisions."2025".bindings]]
 id = "renta-profile-minimo-descendientes-autonomico"
-source = "profile"
-selector = { profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2025" }
+provider = { kind = "profile", profile_key = "renta_family.descendientes_minimos_aggregate_autonomico_2025" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61", "madrid-dl-1-2010:art-2"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]

@@ -14,8 +14,8 @@
 # Art. 40.2 formula (clave 03) is refused when INCN is unknown.
 [[revisions.2025-y-siguientes.bindings]]
 id = "modelo-202-incn-prior-12-months"
-source = "profile"
-selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
+provider = { kind = "profile", profile_model = "taxpayer", field = "incn_prior_12_months" }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions"]

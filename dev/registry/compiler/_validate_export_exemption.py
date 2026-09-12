@@ -92,6 +92,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.export_exemption_reason import ExportExemptionReason
 from cadrumo.core.export_layout_format import ExportLayoutFormat
+from cadrumo.domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
 from cadrumo.domain.calculations.registry.export import (
     derive_export_layouts_from_bindings,
@@ -99,7 +100,7 @@ from cadrumo.domain.calculations.registry.export import (
 )
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
@@ -154,12 +155,12 @@ def _formula_consumption_sources(
 def _binding_consumption_sources(
     casilla: CasillaDefinition,
     *,
-    bindings: dict[str, DataBindingDefinition],
+    bindings: dict[str, BindingDefinition],
     modelo_id: str,
 ) -> tuple[CasillaId, ...]:
     sources: list[CasillaId] = []
-    for binding_id in (casilla.binding, *casilla.alternate_bindings):
-        binding = bindings.get(binding_id) if binding_id is not None else None
+    for binding_id in bound_casilla_binding_ids(casilla):
+        binding = bindings.get(binding_id)
         if binding is None or binding.source is BindingSourceKind.PREVIOUS_FILING:
             continue
         source_modelo = binding_source_modelo(binding)

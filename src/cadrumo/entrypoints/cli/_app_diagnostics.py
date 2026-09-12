@@ -81,7 +81,6 @@ def _llm_no_run_data_notice(*, code: str):
         code=code,
         message=tr(
             "cli.diagnostics.llm_run_data_observed",
-            default="No LLM run telemetry was recorded for this report.",
         ),
         action=resolve_notice_action(action=ActionReference(action_id="operator.ledger.classify")),
     )
@@ -157,7 +156,11 @@ def _run_health_lines(
     no_run_data_notice: Notice | None,
 ) -> list[str]:
     """Render the stable human-readable run-health lines."""
-    lines: list[str] = [tr("cli.diagnostics.run_health.header", default="LLM run health:")]
+    lines: list[str] = [
+        tr(
+            "cli.diagnostics.run_health.header",
+        )
+    ]
     if no_run_data_notice is not None:
         lines.append(no_run_data_notice.message)
     else:
@@ -168,7 +171,9 @@ def _run_health_lines(
             )
     lines.extend(
         (
-            tr("cli.diagnostics.run_health.auth_header", default="Auth session:"),
+            tr(
+                "cli.diagnostics.run_health.auth_header",
+            ),
             f"provider\t{report.auth_provider or '(none configured)'}",
             f"persisted_session_present\t{report.persisted_session_present}",
             f"persisted_session_expired\t{report.persisted_session_expired}",
@@ -209,14 +214,12 @@ def diagnostics_run_health(
             code="diagnostics.run_health.session_stale",
             message=tr(
                 "cli.diagnostics.run_health.session_stale_message",
-                default="The persisted AEAT session has passed its idle deadline; a live read will re-authenticate.",
             ),
         )
         notices.append(notice)
         lines.append(
             tr(
                 "cli.diagnostics.run_health.session_stale_message",
-                default="The persisted AEAT session has passed its idle deadline; a live read will re-authenticate.",
             ),
         )
     elif not report.persisted_session_present:
@@ -225,7 +228,6 @@ def diagnostics_run_health(
             code="diagnostics.run_health.no_session",
             message=tr(
                 "cli.diagnostics.run_health.no_session_message",
-                default="No persisted AEAT session found on disk.",
             ),
         )
         notices.append(notice)
@@ -271,7 +273,11 @@ def diagnostics_runs(
     )
 
     no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.runs.no_run_data") if not rows else None
-    lines: list[str] = [tr("cli.diagnostics.runs.header", default="Recent LLM runs:")]
+    lines: list[str] = [
+        tr(
+            "cli.diagnostics.runs.header",
+        )
+    ]
     if no_run_data_notice is not None:
         lines.append(no_run_data_notice.message)
     else:
@@ -333,7 +339,11 @@ def diagnostics_latency(
         has_run_data=report.has_run_data,
     )
 
-    lines: list[str] = [tr("cli.diagnostics.latency.header", default="LLM run latency:")]
+    lines: list[str] = [
+        tr(
+            "cli.diagnostics.latency.header",
+        )
+    ]
     notices: list[Notice] = []
     if not report.has_run_data:
         no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.latency.no_run_data")
@@ -386,12 +396,15 @@ def diagnostics_errors(
         has_failures=report.has_failures,
     )
 
-    lines: list[str] = [tr("cli.diagnostics.errors.header", default="LLM run errors:")]
+    lines: list[str] = [
+        tr(
+            "cli.diagnostics.errors.header",
+        )
+    ]
     notices: list[Notice] = []
     if not report.has_failures:
         message = tr(
             "cli.diagnostics.errors.no_failures",
-            default="No failed LLM runs recorded in this range.",
         )
         lines.append(message)
         notices.append(Notice(severity=NoticeSeverity.INFO, code="diagnostics.errors.no_failures", message=message))
@@ -455,7 +468,11 @@ def diagnostics_llm_usage(
         has_run_data=report.has_run_data,
     )
 
-    lines: list[str] = [tr("cli.diagnostics.llm_usage.header", default="LLM run usage:")]
+    lines: list[str] = [
+        tr(
+            "cli.diagnostics.llm_usage.header",
+        )
+    ]
     notices: list[Notice] = []
     if not report.has_run_data:
         no_run_data_notice = _llm_no_run_data_notice(code="diagnostics.llm_usage.no_run_data")

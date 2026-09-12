@@ -66,7 +66,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @17+4 Num. Devengo(2) - Ejercicio.{DID_ejer}
 [[revisions."2024".casillas]]
@@ -78,7 +77,6 @@ data_type = "year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @21+1 Num. Devengo (2). Tipo de ejercicio. {DID_tipo_ejer}
 [[revisions."2024".casillas]]
@@ -90,7 +88,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @22+2 An. Devengo(2). Período Impositivo {DID_periodo}
 [[revisions."2024".casillas]]
@@ -102,7 +99,6 @@ data_type = "period_code"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @24+8 Num. Devengo (2).Período Impositivo fecha de inicio {DID_fi_periodo} (AAAAMMDD)
 [[revisions."2024".casillas]]
@@ -114,7 +110,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @32+8 Num. Devengo (2). Período Impositivo fecha fin {DID_ff_periodo} (AAAAMMDD)
 [[revisions."2024".casillas]]
@@ -126,7 +121,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @40+9 An. Identificación (1) - NIF. {DID_id_NIF}
 [[revisions."2024".casillas]]
@@ -138,7 +132,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @49+60 An. Identificación (1) - Apellidos o Razón Social. {DID_id_apellidos}
 [[revisions."2024".casillas]]
@@ -150,7 +143,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @109+20 An. Identificación (1) - Nombre {DID_id_nombre}
 [[revisions."2024".casillas]]
@@ -162,7 +154,6 @@ data_type = "name"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @129+17 Num. Liquidación (3) - Cuota íntegra del grupo [00562]. {DID_liq_CI}
 [[revisions."2024".casillas]]
@@ -174,7 +165,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @146+17 N. Liquidación (3)- Resultado: Estado [00621]
 [[revisions."2024".casillas]]
@@ -186,7 +176,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @163+17 N. Liquidación (3)- Opción de fraccionamiento art. 19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS: Estado. Estado [02800]
 [[revisions."2024".casillas]]
@@ -198,7 +187,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @180+1 An. Devolución (4) - Modalidad de devolución {DID_modalidad_devolucion}
 [[revisions."2024".casillas]]
@@ -210,7 +198,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @181+17 Num. Devolución (4) - Importe a devolver. {DID_dev_importe} [D]
 [[revisions."2024".casillas]]
@@ -222,7 +209,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @198+1 Num. Devolución(4) - Marca SEPA
 [[revisions."2024".casillas]]
@@ -234,7 +220,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @199+34 An. Devolución (4) - Código IBAN - Bloque. {DID_dev_iban}
 [[revisions."2024".casillas]]
@@ -246,7 +231,6 @@ data_type = "iban"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @233+11 An. Devolución (4) - Código SWIFT-BIC. {DID_dev_swift_bic} (sólo Resto de paises/no SEPA)
 [[revisions."2024".casillas]]
@@ -258,7 +242,6 @@ data_type = "bic"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @244+70 An. Devolución (4) - Resto países- Banco/Name of the bank
 [[revisions."2024".casillas]]
@@ -270,7 +253,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @314+35 An. Devolución (4) - Resto países - Dirección del banco/Address of the bank
 [[revisions."2024".casillas]]
@@ -282,7 +264,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @349+30 An. Devolución (4) - Resto países - Ciudad/City
 [[revisions."2024".casillas]]
@@ -294,7 +275,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @379+40 An. Devolución (4) - Resto países - País/Country
 [[revisions."2024".casillas]]
@@ -306,7 +286,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @419+2 An. Devolución (5) - Resto países - Código País/Country Code
 [[revisions."2024".casillas]]
@@ -318,7 +297,6 @@ data_type = "country_code"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @421+1 An. Ingreso (5) - Modalidad de ingreso. {DID_modalidad_ingreso}
 [[revisions."2024".casillas]]
@@ -330,7 +308,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @422+17 Num. Ingreso (5) - Importe a ingresar. {DID_ing_efectivo} [I]
 [[revisions."2024".casillas]]
@@ -342,7 +319,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @439+34 An. Ingreso (5) - Código IBAN - Bloque. {DID_ing_iban}
 [[revisions."2024".casillas]]
@@ -354,7 +330,6 @@ data_type = "iban"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @473+17 N. Abono/Compensación(6). Abono por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [A]
 [[revisions."2024".casillas]]
@@ -366,7 +341,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @490+17 N. Abono/Compensación(6). Compensación por conversión de activos por impuesto diferido (Art. 130 L.I.S.) [C]
 [[revisions."2024".casillas]]
@@ -378,7 +352,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @507+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Abono [02806]
 [[revisions."2024".casillas]]
@@ -390,7 +363,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @524+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Compensación [02809]
 [[revisions."2024".casillas]]
@@ -402,7 +374,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @541+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: A ingresar [02812]
 [[revisions."2024".casillas]]
@@ -414,7 +385,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @558+1 An. Cuota Cero (7). {DID_cuota_cero}
 [[revisions."2024".casillas]]
@@ -426,4 +396,3 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

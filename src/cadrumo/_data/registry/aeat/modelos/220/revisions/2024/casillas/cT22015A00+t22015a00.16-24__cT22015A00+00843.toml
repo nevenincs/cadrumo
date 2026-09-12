@@ -60,7 +60,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+8 Num. Deducciones por reinversión (1).Fecha de la transmisión (AAAAMMDD)
 [[revisions."2024".casillas]]
@@ -72,7 +71,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+9 An. Deducciones por reinversión (1).NIF de la Entidad que reinvierte
 [[revisions."2024".casillas]]
@@ -84,7 +82,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @42+8 Num. Deducciones por reinversión (1).Fecha de la reinversión (AAAAMMDD)
 [[revisions."2024".casillas]]
@@ -96,7 +93,6 @@ data_type = "date"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+4 Num. Deducciones por reinversión (1).Ejercicio de generación de la deducción
 [[revisions."2024".casillas]]
@@ -108,7 +104,6 @@ data_type = "year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @54+17 Num. Deducciones por reinversión (1).Deducción pendiente de aplicar al inicio del periodo o Deducción generada en el periodo
 [[revisions."2024".casillas]]
@@ -120,7 +115,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @71+17 Num. Deducciones por reinversión (1).Deducción aplicada en el período
 [[revisions."2024".casillas]]
@@ -132,7 +126,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @88+17 Num. Deducciones por reinversión (1).Deducción pendiente de aplicación.
 [[revisions."2024".casillas]]
@@ -144,7 +137,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2953+17 Num. Resultado de la autoliquidación.Deducciones por reinversión. Total. Deducción pendiente de aplicar al inicio del ejercicio [00841]
 [[revisions."2024".casillas]]
@@ -156,7 +148,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2970+17 Num. Deducciones por reinversión. Total.Deducción aplicada en el ejercicio. [00585]
 [[revisions."2024".casillas]]
@@ -168,7 +159,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @2987+17 Num. Deducciones por reinversión. Total.Deducción pendiente de aplicar. [00843]
 [[revisions."2024".casillas]]
@@ -180,4 +170,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

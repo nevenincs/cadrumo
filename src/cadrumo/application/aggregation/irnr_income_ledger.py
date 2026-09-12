@@ -1,11 +1,10 @@
 """Repository-backed IRNR income ledger mechanics.
 
 The module retains transaction filtering, classification folding, period
-partitioning, and typed issue/provenance mechanics.  Target coordinates,
+partitioning, and typed issue/provenance mechanics. Target coordinates,
 income-type namespaces, model applicability, source-scope membership, and
-binding/legal declarations belong to the selected registry revision.
-
-TODO(fact-relocation): resolve IRNR ledger target and M210 income-type parameter namespace from selected registry revision
+binding/legal declarations belong to the selected registry revision and are
+read at the registry seam below.
 
 No target, parameter prefix, applicability set, or binding identifier is
 declared as a Python fallback.
@@ -217,11 +216,27 @@ def aggregate_irnr_income_ledger(
 
 
 def _resolve_selected_income_type_codes(revision: ModeloRevision, period: Period) -> frozenset[str]:
-    """Require selected-revision income-type resolution at the registry seam."""
-    del revision, period
-    raise AggregationValidationError(
-        "resolve IRNR ledger target and income-type parameter namespace from selected registry revision",
+    """Resolve the dated code namespace from the selected revision parameters."""
+    candidates = tuple(
+        parameter
+        for parameter in revision.parameters
+        if str(parameter.data_type) == "keyed_bracket_table" and parameter.unit == "code"
     )
+    if len(candidates) != 1:
+        raise AggregationValidationError(
+            "selected registry revision must expose exactly one coded income namespace",
+        )
+    coordinate = period.start_date
+    declared = frozenset(
+        str(entry.key)
+        for entry in candidates[0].keyed_brackets
+        if entry.valid_from <= coordinate and (entry.valid_to is None or coordinate <= entry.valid_to)
+    )
+    if not declared:
+        raise AggregationValidationError(
+            "selected registry revision exposes no income codes for the requested period",
+        )
+    return declared
 
 
 def _irnr_source_jurisdiction_issue(
@@ -235,10 +250,6 @@ def _irnr_source_jurisdiction_issue(
             reason=IrnrIncomeLedgerAggregationIssueReason.SOURCE_JURISDICTION_UNRESOLVED,
             detail=tr(
                 "aggregation.irnr_income_ledger.diagnostics.source_jurisdiction_unresolved",
-                default=(
-                    "source_jurisdiction is unresolved (None) on an incoming IRNR candidate; "
-                    "resolve source-scope membership from the selected registry revision"
-                ),
             ),
             rejected_source_jurisdiction=None,
         )
@@ -259,10 +270,6 @@ def _irnr_classification_issue(
             reason=IrnrIncomeLedgerAggregationIssueReason.INCOMPLETE_M210_CLASSIFICATION,
             detail=tr(
                 "aggregation.irnr_income_ledger.diagnostics.incomplete_m210_classification",
-                default=(
-                    "in-scope incoming transaction has no explicit income classification; "
-                    "the IRNR projection never infers an official income type from irpf_category"
-                ),
             ),
         )
     if classification.official_tipo_renta_code not in declared_codes:
@@ -273,10 +280,6 @@ def _irnr_classification_issue(
                 "aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared",
                 tipo_renta_code=classification.official_tipo_renta_code,
                 period=str(period),
-                default=(
-                    "official income type %{tipo_renta_code} is not declared "
-                    "for the selected revision and filing period %{period}"
-                ),
             ),
         )
     return None

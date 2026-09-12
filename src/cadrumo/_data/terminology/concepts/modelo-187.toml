@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 187, declaració informativa anual de participacions en institucions d'inversió col·lectiva i retencions"
+
+[language.en]
+short_description = "Modelo 187, annual information return on collective-investment units and related withholding"
+
+[language.hu]
+short_description = "187-es modell: a kollektív befektetési jegyek és a kapcsolódó adólevonások éves tájékoztató bevallása"
+

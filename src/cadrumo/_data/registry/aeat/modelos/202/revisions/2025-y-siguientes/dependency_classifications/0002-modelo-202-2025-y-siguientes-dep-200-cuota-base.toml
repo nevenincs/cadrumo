@@ -18,6 +18,6 @@ id = "modelo-202-2025-y-siguientes-dep-200-cuota-base"
 source_modelo = "200"
 treatment = "factual_evidence"
 target_constructs = ["modelo-202-foundation"]
-relation_refs = ["modelo-202-2025-y-siguientes-rel-cuota-base-1p", "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
+binding_refs = ["modelo-202-cuota-base-ejercicio-anterior"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30"]
 source_refs = ["aeat-modelo-202-instructions"]

@@ -7,7 +7,6 @@ semantic_role = "is_reserva_nivelacion_dotacion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02783"
 number = "02783"
@@ -17,7 +16,6 @@ semantic_role = "is_reserva_nivelacion_dotacion_pendiente"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02784"
 number = "02784"
@@ -27,4 +25,3 @@ semantic_role = "is_reserva_nivelacion_dotacion_dispuesta"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

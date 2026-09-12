@@ -44,8 +44,19 @@ import pytest
 from .....core.aggregation import BindingSourceKind
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
-from ..bindings_previous_filing import is_direct_previous_filing_binding
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..binding_temporal import BindingTemporalKind, FilingYearOffset, SameTargetContext
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
+from ..bindings_previous_filing import (
+    PreviousFilingProvider,
+    is_direct_previous_filing_binding,
+)
+from ..schema import BindingDefinition, ModeloRevision
+
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -124,7 +135,7 @@ class _ScanResult(TypedDict):
     also_relation_targets: list[str]
 
 
-def _cross_modelo_source(binding: DataBindingDefinition, *, owning_modelo: str) -> str | None:
+def _cross_modelo_source(binding: BindingDefinition, *, owning_modelo: str) -> str | None:
     """Return the source modelo when the binding reaches across modelos, else ``None``.
 
     A ``previous_filing`` selector that names no source modelo, or names the
@@ -139,7 +150,7 @@ def _cross_modelo_source(binding: DataBindingDefinition, *, owning_modelo: str) 
 
 
 def _classify(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     owning_modelo: str,
     revision_id: str,
@@ -267,10 +278,18 @@ def test_the_scan_reaches_the_corpus(scan: _ScanResult) -> None:
 
 def test_an_unenumerated_cross_modelo_carry_is_refused() -> None:
     """Positive control: the classifier flags a carry that lands in neither row."""
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="probe.unenumerated-cross-modelo-carry",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector={"source_modelo": "100", "filing_year_delta": -1, "period": "0A", "source_casilla_ids": ("0224",)},
+        provider=PreviousFilingProvider(
+            source_modelo="100",
+            temporal=FilingYearOffset(
+                kind=BindingTemporalKind.FILING_YEAR_OFFSET,
+                years=-1,
+                source_periods=("0A",),
+            ),
+            source_casilla_ids=("0224",),
+        ),
+        value=_MONEY_VALUE,
         legal_refs=("rd-439-2007:art-110",),
         source_refs=("aeat-modelo-130-instructions",),
     )
@@ -281,16 +300,15 @@ def test_an_unenumerated_cross_modelo_carry_is_refused() -> None:
 
 def test_the_fan_in_row_is_recognised_by_its_grouping_axis() -> None:
     """Positive control: the fan-in row is claimed by the grouping axis, not by a list."""
-    binding = DataBindingDefinition(
+    binding = BindingDefinition(
         id="probe.cross-member-fan-in",
-        source=BindingSourceKind.PREVIOUS_FILING,
-        selector={
-            "source_modelo": "322",
-            "filing_year_delta": 0,
-            "source_period_offset_from_target": 0,
-            "grouping": "per_grupo_member",
-            "source_casilla_ids": ("iva.cuota-deducible-total",),
-        },
+        provider=PreviousFilingProvider(
+            source_modelo="322",
+            temporal=SameTargetContext(kind=BindingTemporalKind.SAME_TARGET_CONTEXT),
+            grouping="per_grupo_member",
+            source_casilla_ids=("iva.cuota-deducible-total",),
+        ),
+        value=_MONEY_VALUE,
         legal_refs=("ley-37-1992:art-92",),
         source_refs=("aeat-modelo-353-instructions",),
     )

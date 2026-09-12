@@ -285,12 +285,6 @@ def _period_token_error(
     if declared:
         return tr(
             "cli.app.modelo.work.period_token_invalid",
-            default=(
-                f"--period {token!r} is not a valid period token for modelo "
-                f"{modelo}. --year and --period are composed separately: pass "
-                f"--year {year} for the filing year and one of the declared "
-                f"period tokens for --period. Valid tokens: {', '.join(declared)}."
-            ),
             token=token,
             modelo=modelo or "",
             year=year,
@@ -300,12 +294,6 @@ def _period_token_error(
         return fallback
     return tr(
         "cli.app.modelo.work.period_token_unrecognised",
-        default=(
-            f"--period {token!r} is not a recognised period token. --year and "
-            f"--period are composed separately: pass --year {year} for the "
-            f"filing year and a period token (0A for annual, 1T-4T for quarters, "
-            f"or MM for a month) for --period."
-        ),
         token=token,
         year=year,
     )
@@ -324,9 +312,6 @@ def bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
         return fallback
     return tr(
         "cli.app.modelo.describe.period_token_invalid",
-        default=(
-            f"--period {period!r} is not a valid period token for modelo {modelo}. Valid tokens: {', '.join(declared)}."
-        ),
         period=period,
         modelo=modelo,
         tokens=", ".join(declared),

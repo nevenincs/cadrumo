@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Tercer període de pagament fraccionat (codi 3P)."
+
+[language.en]
+short_description = "Third instalment-payment period (code 3P)."
+
+[language.hu]
+short_description = "Harmadik részletfizetési időszak (3P kód)."
+

@@ -30,8 +30,3 @@ periods = ["1T", "2T", "3T", "4T", "0A", "01", "02", "03", "04", "05", "06", "07
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
-
-[revisions."2025".family_dispositions.casilla_continuidad_evolutions]
-reason = "Casilla numbering in Modelo 303 remains continuous without within-modelo renumbered casilla evolutions."
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025"]

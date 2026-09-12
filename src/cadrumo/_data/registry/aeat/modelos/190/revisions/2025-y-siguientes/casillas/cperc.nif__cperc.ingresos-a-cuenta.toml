@@ -18,7 +18,6 @@ semantic_role = "payee_nif"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.nombre"
@@ -31,7 +30,6 @@ semantic_role = "payee_name"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.clave"
@@ -44,7 +42,6 @@ semantic_role = "payee_clave_percepcion"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.subclave"
@@ -57,7 +54,6 @@ semantic_role = "payee_subclave_percepcion"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepcion-dineraria"
@@ -67,11 +63,10 @@ number = "82-94"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "percepcion_integra_dineraria"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.retenciones-practicadas"
@@ -81,11 +76,10 @@ number = "95-107"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "retenciones_ingresos_a_cuenta"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.percepcion-especie"
@@ -95,11 +89,10 @@ number = "109-121"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "percepcion_valoracion_especie"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "perc.ingresos-a-cuenta"
@@ -109,8 +102,7 @@ number = "122-134"
 section = ["perceptor", "percepcion"]
 data_type = "money"
 semantic_role = "ingresos_a_cuenta_efectuados"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"], source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-190-2024", "aeat-dr-190-2025"]

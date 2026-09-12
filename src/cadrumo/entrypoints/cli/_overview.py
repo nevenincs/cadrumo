@@ -672,7 +672,6 @@ def overview_agenda(
         raise bad(
             tr(
                 "cli.overview.agenda.errors.invalid_horizon",
-                default="--horizon must be a positive integer (days).",
             ),
         )
     record = current.active_profile_record()
@@ -795,7 +794,6 @@ def overview_prepare(
             tr(
                 "cli.overview.prepare.modelo_period_error",
                 message=str(exc),
-                default="{message}",
             ),
         ) from exc
 

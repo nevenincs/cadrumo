@@ -55,6 +55,33 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M390_COMPENSATION_LAST_PERIOD_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
+)
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import (
@@ -68,33 +95,6 @@ from ...domain.iva_compensation.errors import (
     IvaCompensationDecimalParseError,
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M390_COMPENSATION_LAST_PERIOD_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
 )
 from .errors import IvaCompensationModeloError
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload

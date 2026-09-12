@@ -42,9 +42,9 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..formula_runtime import calculate_registry_snapshot
 from ._published_authority import artifact_components
+from .snapshot_support import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -98,18 +98,18 @@ def _neutral_binding_values() -> dict[str, Decimal]:
     return {
         # Agricultural activity is económica; the production profile resolver
         # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
-        "renta-2025-profile-has-economic-activity": Decimal("1"),
-        "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
-        "renta-2025-profile-declaration-type": Decimal("1"),
-        "renta-2025-profile-marriage-full-year": Decimal("0"),
-        "renta-2025-profile-marriage-month-start": Decimal("0"),
-        "renta-2025-profile-marriage-month-end": Decimal("0"),
-        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
-        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
-        "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 
 

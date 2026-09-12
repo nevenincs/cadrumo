@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 117, retencions i ingressos a compte per transmissions o reemborsaments de participacions en fons d'inversió"
+
+[language.en]
+short_description = "Modelo 117, withholding and advance payments on transfers or redemptions of collective-investment fund units"
+
+[language.hu]
+short_description = "117-es modell: befektetési alapok befektetési jegyeinek átruházásából vagy visszaváltásából származó adólevonás és adóelőleg"
+

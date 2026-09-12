@@ -26,14 +26,19 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregation, BindingAggregationOp
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.iva.flow import IvaFlowDirection
-from ....domain.iva.schema import IvaCategory, IvaRateKind
+from ....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -59,19 +64,25 @@ _BOX_4PCT: CasillaId = validated_casilla_id("02", surface="test.rate_box.box")
 _bucket = active_profile_isolated_backend_fixture(bucket_id=_BUCKET_ID, name="_bucket")
 
 
-def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> DataBindingDefinition:
+def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
     selector: dict[str, object] = {
         "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
         "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "fact": "iva_amount_sum",
+        "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+        "cash_accounting_treatments": (
+            IvaCashAccountingTreatment.NONE,
+            IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        ),
     }
     if applied_rates is not None:
         selector["applied_rates"] = applied_rates
-    return DataBindingDefinition(
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        selector=selector,
+        provider={"kind": "ledger_iva_aggregation", **selector},
+        value={"data_type": "money", "channel": "decimal"},
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=_LEGAL,
         source_refs=_SOURCE,

@@ -496,7 +496,6 @@ def _declined_message(*, command_key: str, decision: ConfirmDecision) -> str:
         "mcp.elicitation.confirm.declined",
         command=command_key,
         outcome=decision.value,
-        default="'{command}' was not confirmed by the user ({outcome}); nothing was run.",
     )
 
 

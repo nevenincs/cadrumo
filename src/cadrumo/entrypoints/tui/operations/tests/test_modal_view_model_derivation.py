@@ -24,7 +24,7 @@ from datetime import UTC, datetime
 import pytest
 
 from .....application.operations.frontend_projection import OperationPublicProjectionV1
-from .....application.operations.tests.test_public_contracts import _projection
+from .....application.operations.tests import test_public_contracts
 from .....core.operations import OperationLifecycle, OperationTerminalCondition
 from ..projection import OperationModalViewModelV1, build_operation_modal_view_model
 
@@ -45,7 +45,7 @@ def _terminal(
     unpacking an ``object``-typed mapping into a signature with typed keyword
     parameters hides every argument from the checker.
     """
-    return _projection(
+    return test_public_contracts._projection(
         lifecycle=OperationLifecycle.TERMINAL,
         terminal_condition=condition,
         result_ref=result_ref,
@@ -61,13 +61,13 @@ def _revalidated(**overrides: object) -> OperationModalViewModelV1:
     persisted or reconstructed view model is exactly what would arrive already
     disagreeing with its projection.
     """
-    built = build_operation_modal_view_model(_projection())
+    built = build_operation_modal_view_model(test_public_contracts._projection())
     return OperationModalViewModelV1.model_validate({**built.model_dump(), **overrides})
 
 
 def test_the_builder_produces_a_view_model_the_validator_accepts() -> None:
     """The control: without it, every refusal below could pass vacuously."""
-    projection = _projection()
+    projection = test_public_contracts._projection()
 
     built = build_operation_modal_view_model(projection)
 
@@ -113,14 +113,14 @@ def test_a_derived_field_cannot_disagree_with_its_projection(
 
 def test_a_running_operation_names_no_terminal_copy() -> None:
     """Terminal copy on a live operation would announce an ending that has not happened."""
-    built = build_operation_modal_view_model(_projection())
+    built = build_operation_modal_view_model(test_public_contracts._projection())
 
     assert built.terminal_copy_key is None
 
 
 def test_a_projection_carrying_no_settled_reference_names_no_receipt() -> None:
     """Absent is not "result with an empty reference"; the pair moves together."""
-    built = build_operation_modal_view_model(_projection())
+    built = build_operation_modal_view_model(test_public_contracts._projection())
 
     assert built.receipt_kind is None
     assert built.receipt_ref is None

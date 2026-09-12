@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Operació d'IVA desconeguda pendent de classificació"
+
+[language.en]
+short_description = "Unknown VAT transaction awaiting classification"
+
+[language.hu]
+short_description = "Besorolásra váró, ismeretlen áfaügylet"
+

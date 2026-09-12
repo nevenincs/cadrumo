@@ -38,7 +38,7 @@ from ...domain.calculations.registry.runtime_graph import (
     expression_relation_refs,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.schema import DataBindingDefinition, FormulaDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ...domain.calculations.registry.temporal import select_revision
@@ -81,7 +81,7 @@ class _ReviewRowContext:
     """Precomputed registry and persistence facts shared by every review row."""
 
     revision: CalculationRevision | None
-    bindings_by_id: Mapping[BindingId, DataBindingDefinition]
+    bindings_by_id: Mapping[BindingId, BindingDefinition]
     formulas_by_id: Mapping[FormulaId, FormulaDefinition]
     binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
     relations_by_binding: Mapping[BindingId, tuple[RelationDefinition, ...]]

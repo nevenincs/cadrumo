@@ -4,7 +4,7 @@ The interactive profile setup flow renders a legal-provenance zone on every
 question page: which modelos consume the fact being asked, and under which
 legal provisions. That grounding is never hand-authored — it is a projection
 over the validated registry: every ``source = "profile"``
-:class:`DataBindingDefinition` names the profile key(s) it consumes in its
+:class:`BindingDefinition` names the profile key(s) it consumes in its
 selector and carries its own ``legal_refs`` / ``source_refs``, so the index
 inverts that relation once per :class:`ValidatedRegistryAuthority` and the
 flow reads it at flow-compile time.
@@ -27,9 +27,9 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from .authority import ValidatedRegistryAuthority
 from .binding_selector_utils import selector_as_dict
-from .bindings import ProfileSelector
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition
+from .profile_bindings import ProfileProvider
+from .schema import BindingDefinition
 
 
 class ProfileKeyGrounding(BaseModel):
@@ -121,7 +121,7 @@ def _compute_profile_grounding_index(
     }
 
 
-def binding_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
+def binding_profile_keys(binding: BindingDefinition) -> tuple[str, ...]:
     """Return the value-consuming profile keys named by a profile binding's selector.
 
     Only value-consuming selector members contribute: the scalar
@@ -135,22 +135,22 @@ def binding_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     registry, and a per-binding caller needs the same extraction without
     building that index.
     """
-    selector = binding.selector
-    if isinstance(selector, BaseModel) and not isinstance(selector, ProfileSelector):
+    selector = binding.provider
+    if isinstance(selector, BaseModel) and not isinstance(selector, ProfileProvider):
         # A different binding-source family's selector (manual_input, relation,
         # ...); its shape never carries a profile key, so no read is needed.
         return ()
-    if not isinstance(selector, ProfileSelector):
+    if not isinstance(selector, ProfileProvider):
         if binding.source is not BindingSourceKind.PROFILE:
             return ()
         # A ``source = "profile"`` binding whose selector has not been
         # hydrated into the typed model by construction (e.g. built via
         # ``model_construct``). Re-validate through the declared model --
-        # ``ProfileSelector`` -- rather than reading the raw mapping with
+        # ``ProfileProvider`` -- rather than reading the raw mapping with
         # string-literal keys, so a field the model no longer declares fails
         # loud instead of silently under-reporting this key's grounding.
         try:
-            selector = ProfileSelector.model_validate(selector_as_dict(binding))
+            selector = ProfileProvider.model_validate(selector_as_dict(binding))
         except ValidationError as exc:
             raise RegistryValidationError(
                 f"binding {binding.id!r} has malformed profile selector: {exc}",

@@ -374,7 +374,7 @@ def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
         binding_values={
-            "modelo-131-2026-resultados-negativos-anteriores": Decimal("99999"),
+            "modelo-131-resultados-negativos-anteriores": Decimal("99999"),
         },
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

@@ -2,7 +2,7 @@
 
 The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies
 ``previous_filing``
-:class:`~cadrumo.domain.calculations.registry.DataBindingDefinition`
+:class:`~cadrumo.domain.calculations.registry.BindingDefinition`
 declarations; this module turns those selectors into
 :class:`~cadrumo.domain.calculations.registry.RegistryFoldRequirement` source
 requirements and resolved
@@ -23,26 +23,39 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar, Literal, Protocol
+from typing import TYPE_CHECKING, ClassVar, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.period import RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import invariant_diagnostics, selector_against_model
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_temporal import (
+    BindingTemporalSelector,
+    FiledCurrentPeriod,
+    FilingYearOffset,
+    FilingYearOffsetByTargetPeriod,
+    PriorQuarterExpandingSpan,
+    SameFilingYearPeriods,
+    SameTargetContext,
+    TargetPeriodOffset,
+    temporal_max_year_delta,
+    temporal_period_anchors,
+)
 from .errors import RegistryValidationError
 from .ids import BindingId, LegalRefId, ModeloId, SourceRefId
 from .observation_fold import fold_sum_or_copy
-from .period_offset_math import apply_period_offset, same_ejercicio_prior_quarter_anchors
 from .relation_dependency import (
     RelationDependencyTreatmentField,
 )
 from .relations import RegistryFoldRequirement
-from .schema import DataBindingDefinition, ModeloRevision, filing_period_from_scope
+from .schema_base import filing_period_from_scope
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 
 class _RegistryModeloObservationLike(Protocol):
@@ -69,12 +82,12 @@ class PreviousFilingSourceReference:
     year-coverage check can derive the exact source-year interval a selector
     requires without re-parsing the selector a second time.
 
-    ``has_variable_year_offset`` is ``True`` for a selector using
-    ``prior_quarter_expanding_span`` or ``source_period_offset_from_target``:
-    both produce PER-ANCHOR year deltas (:meth:`required_period_anchors_for_target`
+    ``has_variable_year_offset`` is ``True`` for a provider whose temporal
+    member is the expanding span or a period offset: both produce PER-ANCHOR
+    year deltas (:meth:`PreviousFilingProvider.required_period_anchors_for_target`
     returns several ``(period_year_delta, period)`` pairs, each with its own
-    offset) rather than the single uniform ``filing_year_delta`` a coverage
-    check keyed on one interval can represent.
+    offset) rather than the single uniform offset a coverage check keyed on one
+    interval can represent.
     """
 
     source_modelo: ModeloId
@@ -110,11 +123,11 @@ class _PreviousFilingRequirementAccumulator:
     ] = field(default_factory=dict)
 
 
-def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
+def previous_filing_source_reference(binding: BindingDefinition) -> PreviousFilingSourceReference:
     """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
 
     The supplied
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` is parsed
+    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` is parsed
     through the same selector model used by
     :func:`previous_filing_observation_requirements`.
     """
@@ -123,17 +136,15 @@ def previous_filing_source_reference(binding: DataBindingDefinition) -> Previous
         source_modelo=selector.source_modelo,
         required_periods=selector.required_periods,
         source_casilla_ids=_previous_filing_source_ids(selector),
-        filing_year_delta=selector.filing_year_delta,
+        filing_year_delta=selector.uniform_filing_year_delta,
         max_year_delta=selector.max_year_delta,
-        has_variable_year_offset=(
-            selector.prior_quarter_expanding_span or selector.source_period_offset_from_target is not None
-        ),
+        has_variable_year_offset=selector.has_variable_year_offset,
     )
 
 
 def _direct_previous_filing_selectors(
     revision: ModeloRevision,
-) -> Iterable[tuple[DataBindingDefinition, PreviousModeloSelector]]:
+) -> Iterable[tuple[BindingDefinition, PreviousFilingProvider]]:
     """Yield typed selectors for direct previous-filing bindings in revision order."""
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.PREVIOUS_FILING:
@@ -145,8 +156,8 @@ def _direct_previous_filing_selectors(
 
 def _record_previous_filing_requirement(
     accumulator: _PreviousFilingRequirementAccumulator,
-    binding: DataBindingDefinition,
-    selector: PreviousModeloSelector,
+    binding: BindingDefinition,
+    selector: PreviousFilingProvider,
     *,
     filing_year: int,
     period_year_delta: int,
@@ -154,7 +165,7 @@ def _record_previous_filing_requirement(
     dependency_treatments_by_source: Mapping[ModeloId, RelationDependencyTreatmentField],
 ) -> None:
     """Record one selector anchor and all of its registry provenance."""
-    expected_year = filing_year + selector.filing_year_delta + period_year_delta
+    expected_year = filing_year + period_year_delta
     key = (selector.source_modelo, expected_year, required_period)
     source_ids = _previous_filing_source_ids(selector)
     accumulator.binding_ids_by_key.setdefault(key, set()).add(binding.id)
@@ -232,8 +243,8 @@ def previous_filing_observation_requirements(
 
 
 def _observed_casilla_values(
-    binding: DataBindingDefinition,
-    selector: PreviousModeloSelector,
+    binding: BindingDefinition,
+    selector: PreviousFilingProvider,
     match: _RegistryModeloObservationLike,
     expected_year: int,
     required_period: str,
@@ -296,8 +307,8 @@ class _PreviousFilingObservationAbsentError(Exception):
 
 
 def _resolve_anchor_values(
-    binding: DataBindingDefinition,
-    selector: PreviousModeloSelector,
+    binding: BindingDefinition,
+    selector: PreviousFilingProvider,
     available: tuple[_RegistryModeloObservationLike, ...],
     *,
     expected_year: int,
@@ -335,7 +346,7 @@ def _resolve_anchor_values(
 
 
 def _resolve_binding_values(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     available: tuple[_RegistryModeloObservationLike, ...],
     *,
     filing_year: int,
@@ -349,7 +360,7 @@ def _resolve_binding_values(
     values: list[Decimal] = []
     scoped_pre_activity = False
     for period_year_delta, required_period in required_anchors:
-        expected_year = filing_year + selector.filing_year_delta + period_year_delta
+        expected_year = filing_year + period_year_delta
         if _anchor_strictly_before_activity_start(
             expected_year,
             required_period,
@@ -437,81 +448,33 @@ def _anchor_strictly_before_activity_start(
     return filing_period.end_date < activity_start_date
 
 
-def _zero_values_for_scoped_out_binding(selector: PreviousModeloSelector) -> list[Decimal]:
+def _zero_values_for_scoped_out_binding(selector: PreviousFilingProvider) -> list[Decimal]:
     """Return a neutral zero vector matching the binding's source-casilla shape."""
     return [Decimal("0")] * max(1, len(_previous_filing_source_ids(selector)))
 
 
-class PreviousModeloSelector(BaseModel):
-    """Typed selector model for a ``previous_filing`` binding declaration.
+class PreviousFilingProvider(BaseModel):
+    """Typed provider model for a ``previous_filing`` binding declaration.
 
-    Parsed from
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition.selector`
-    and shared by build-time validation, source-requirement generation, and
-    resolve-time previous-filing folds.
+    The source coordinate is split in two: ``source_modelo`` plus the source
+    casilla ids name WHICH filed values are read, and :attr:`temporal` names
+    WHEN they were filed, relative to the target filing context. The temporal
+    axis is the shared closed union, so the six mutually exclusive period
+    fields this model used to carry -- and the hand-written validators that
+    policed their legal combinations -- are replaced by members that cannot
+    express an illegal combination at all.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.PREVIOUS_FILING] = BindingSourceKind.PREVIOUS_FILING
+
     source_modelo: ModeloId
-    filing_year_delta: int = 0
-    period: RegistrySelectorPeriodCode | None = None
-    source_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
-    source_period_offset_from_target: int | None = None
-    prior_quarter_expanding_span: bool = False
+    temporal: BindingTemporalSelector
     source_casilla_ids: tuple[CasillaId, ...] = ()
     source_casilla_id: CasillaId | None = None
     required_source_casilla_ids: tuple[CasillaId, ...] | None = None
-    max_year_delta: int | None = None
     grouping: Literal["per_grupo_member"] | None = None
-
-    @field_validator("max_year_delta")
-    @classmethod
-    def _max_year_delta_non_negative(cls, value: int | None) -> int | None:
-        if value is not None and value < 0:
-            raise RegistryValidationError("previous-filing max_year_delta must be non-negative")
-        return value
-
-    @field_validator("source_periods")
-    @classmethod
-    def _source_periods_unique(
-        cls,
-        value: tuple[RegistrySelectorPeriodCode, ...],
-    ) -> tuple[RegistrySelectorPeriodCode, ...]:
-        if len(set(value)) != len(value):
-            raise RegistryValidationError("previous-filing source_periods entries must be unique")
-        return value
-
-    @property
-    def required_periods(self) -> tuple[str, ...]:
-        """Return the selector's normalized source-period tuple."""
-        if self.period is not None:
-            return (self.period,)
-        return self.source_periods
-
-    def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
-        """Return source year-offset and period anchors for a target period."""
-        if self.prior_quarter_expanding_span:
-            anchors: tuple[tuple[int, str], ...] = _prior_quarter_expanding_span_anchors(target_period)
-        elif self.source_period_offset_from_target is None:
-            anchors = tuple((0, period) for period in self.required_periods)
-        else:
-            anchors = (
-                _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period),
-            )
-        if self.max_year_delta is None:
-            return anchors
-        return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
-
-    @field_validator("period")
-    @classmethod
-    def _period_not_empty(
-        cls,
-        value: RegistrySelectorPeriodCode | None,
-    ) -> RegistrySelectorPeriodCode | None:
-        if value is not None and not value.strip():
-            raise RegistryValidationError("previous-filing period must be non-empty")
-        return value
 
     @field_validator("source_casilla_ids")
     @classmethod
@@ -530,78 +493,67 @@ class PreviousModeloSelector(BaseModel):
             raise RegistryValidationError("previous-filing required_source_casilla_ids entries must be unique")
         return value
 
-    @model_validator(mode="after")
-    def _validate_period_selector(self) -> PreviousModeloSelector:
-        failure = self._period_selector_failure()
-        if failure is not None:
-            raise RegistryValidationError(failure)
-        return self
+    @property
+    def required_periods(self) -> tuple[str, ...]:
+        """Return the source periods the temporal member names, if any.
 
-    def _period_selector_failure(self) -> str | None:
-        """Return the first contradiction among period-selection axes."""
-        for check in (
-            self._prior_quarter_expanding_span_failure,
-            self._source_period_offset_failure,
-            self._period_pair_failure,
-            self._missing_period_selector_failure,
-        ):
-            if failure := check():
-                return failure
-        return None
+        ``same_target_context``, the period offset, and the expanding span name
+        no fixed period set: their periods depend on the target period and are
+        produced by :meth:`required_period_anchors_for_target` instead.
+        """
+        if isinstance(self.temporal, SameFilingYearPeriods | FilingYearOffset | FilingYearOffsetByTargetPeriod):
+            return self.temporal.source_periods
+        return ()
 
-    def _prior_quarter_expanding_span_failure(self) -> str | None:
-        """Reject ordinary period selectors beside the expanding-span mode."""
-        if self.prior_quarter_expanding_span and self._has_explicit_period_selector():
-            return (
-                "previous-filing prior_quarter_expanding_span is mutually exclusive with "
-                "period, source_periods, and source_period_offset_from_target"
-            )
-        return None
+    @property
+    def uniform_filing_year_delta(self) -> int:
+        """Return the single year offset every anchor shares, or zero.
 
-    def _source_period_offset_failure(self) -> str | None:
-        """Reject conflicting or zero source-period offsets."""
-        if self.source_period_offset_from_target is None:
-            return None
-        if self.period is not None or self.source_periods:
-            return (
-                "previous-filing selector cannot declare period/source_periods together with "
-                "source_period_offset_from_target"
-            )
-        if self.source_period_offset_from_target == 0 and self.grouping != "per_grupo_member":
-            return "previous-filing source_period_offset_from_target must be non-zero"
-        return None
+        Only :class:`FilingYearOffset` states one uniform offset. The period
+        offset and the expanding span carry a per-anchor year delta instead,
+        which is why :attr:`has_variable_year_offset` exists.
+        """
+        return self.temporal.years if isinstance(self.temporal, FilingYearOffset) else 0
 
-    def _period_pair_failure(self) -> str | None:
-        """Reject simultaneous singular and plural period selectors."""
-        if self.period is not None and self.source_periods:
-            return "previous-filing selector must use period or source_periods, not both"
-        return None
-
-    def _missing_period_selector_failure(self) -> str | None:
-        """Reject source casillas without any period-selection mechanism."""
-        if self._has_source_casillas_without_selector():
-            return (
-                "previous-filing selector must declare period, source_periods, "
-                "source_period_offset_from_target, or prior_quarter_expanding_span"
-            )
-        return None
-
-    def _has_explicit_period_selector(self) -> bool:
-        """Whether any ordinary period-selection axis is declared."""
-        return self.period is not None or bool(self.source_periods) or self.source_period_offset_from_target is not None
-
-    def _has_source_casillas_without_selector(self) -> bool:
-        """Whether source casillas are present without a way to select a period."""
-        return (
-            self.period is None
-            and not self.source_periods
-            and self.source_period_offset_from_target is None
-            and not self.prior_quarter_expanding_span
-            and bool(self.source_casilla_ids)
+    @property
+    def has_variable_year_offset(self) -> bool:
+        """Whether the anchors carry per-anchor year deltas rather than one offset."""
+        return isinstance(
+            self.temporal,
+            TargetPeriodOffset | PriorQuarterExpandingSpan | FilingYearOffsetByTargetPeriod,
         )
 
+    @property
+    def max_year_delta(self) -> int | None:
+        """Return the absolute bound on anchor year deltas the member declares."""
+        return temporal_max_year_delta(self.temporal)
+
+    def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
+        """Return source year-offset and period anchors for a target period.
+
+        Each year offset is the TOTAL distance from the target filing year, so
+        a caller derives the source year as ``filing_year + year_delta`` and
+        never adds :attr:`uniform_filing_year_delta` a second time.
+        """
+        return temporal_period_anchors(self.temporal, target_period=target_period)
+
     @model_validator(mode="after")
-    def _validate_source_spec(self) -> PreviousModeloSelector:
+    def _validate_temporal_shape(self) -> PreviousFilingProvider:
+        """Refuse a temporal member that names no source window for the declared casillas."""
+        if isinstance(self.temporal, SameTargetContext) and self.grouping != "per_grupo_member":
+            raise RegistryValidationError(
+                "previous-filing same_target_context reads the target's own period and is only "
+                "meaningful for the per_grupo_member fold; name the source window explicitly",
+            )
+        if isinstance(self.temporal, FiledCurrentPeriod):
+            raise RegistryValidationError(
+                "previous-filing cannot read a filed_current_period; that member belongs to the "
+                "same-year annual-summary providers",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_source_spec(self) -> PreviousFilingProvider:
         if self.source_casilla_ids and self.source_casilla_id is not None:
             raise RegistryValidationError(
                 "previous-filing selector cannot declare both source_casilla_ids and source_casilla_id",
@@ -622,10 +574,10 @@ class PreviousModeloSelector(BaseModel):
         return self
 
 
-def _previous_filing_selector(binding: DataBindingDefinition) -> PreviousModeloSelector:
+def _previous_filing_selector(binding: BindingDefinition) -> PreviousFilingProvider:
     selector = _selector_as_dict(binding)
     try:
-        return PreviousModeloSelector.model_validate(selector)
+        return PreviousFilingProvider.model_validate(selector)
     except ValueError as exc:
         hint = ""
         if "source_casillas" in selector:
@@ -646,7 +598,7 @@ _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(
 )
 
 
-def _validate_previous_filing_invariants(binding: DataBindingDefinition) -> None:
+def _validate_previous_filing_invariants(binding: BindingDefinition) -> None:
     """Lift the resolve-time previous-filing op/source invariants to build time.
 
     A previous_filing binding aggregates one or more source casillas under one of
@@ -681,33 +633,33 @@ def _validate_previous_filing_invariants(binding: DataBindingDefinition) -> None
         )
 
 
-def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str]:
+def validate_previous_filing_binding(binding: BindingDefinition) -> list[str]:
     """Validate a previous_filing binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`PreviousModeloSelector` and lifts the previous-filing op/source
+    :class:`PreviousFilingProvider` and lifts the previous-filing op/source
     invariants for a
-    :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` to build
+    :class:`~cadrumo.domain.calculations.registry.BindingDefinition` to build
     time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, PreviousModeloSelector)
+    failures = selector_against_model(binding, PreviousFilingProvider)
     if failures:
         return failures
     return invariant_diagnostics(binding, "previous-filing", _validate_previous_filing_invariants)
 
 
-def is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
+def is_direct_previous_filing_binding(binding: BindingDefinition) -> bool:
     """Whether ``binding`` carries a DIRECT previous-filing selector shape.
 
     Every real caller passes a ``source == "previous_filing"`` binding (the
-    only source this predicate is meaningful for), so ``binding.selector`` is
-    already hydrated into :class:`PreviousModeloSelector` by construction
-    (``DataBindingDefinition``'s discriminated-union field validator). Reading
+    only source this predicate is meaningful for), so ``binding.provider`` is
+    already hydrated into :class:`PreviousFilingProvider` by construction
+    (the ``BindingProvider`` union hydrates it at construction). Reading
     through the declared model -- ``_previous_filing_selector``, the same
     helper :func:`previous_filing_observation_requirements` and
     :func:`_aggregate_previous_filing_binding` already call -- rather than
     string-literal ``dict.get()`` keys means a field rename on
-    ``PreviousModeloSelector`` fails loud instead of silently making every
+    ``PreviousFilingProvider`` fails loud instead of silently making every
     direct binding register as non-direct: this predicate backs the
     registry-build refusal (``_validate_relation_sources.py``) that a
     ``previous_filing`` binding must satisfy the direct-selector shape or
@@ -719,14 +671,10 @@ def is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
         return True
     if selector.source_casilla_id is None:
         return False
-    return (
-        selector.period is not None
-        or bool(selector.source_periods)
-        or selector.source_period_offset_from_target is not None
-    )
+    return not isinstance(selector.temporal, SameTargetContext)
 
 
-def _previous_filing_source_ids(selector: PreviousModeloSelector) -> tuple[CasillaId, ...]:
+def _previous_filing_source_ids(selector: PreviousFilingProvider) -> tuple[CasillaId, ...]:
     if selector.source_casilla_ids:
         return selector.source_casilla_ids
     if selector.source_casilla_id is not None:
@@ -734,7 +682,7 @@ def _previous_filing_source_ids(selector: PreviousModeloSelector) -> tuple[Casil
     return ()
 
 
-def previous_filing_binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaId, ...]:
+def previous_filing_binding_source_casilla_ids(binding: BindingDefinition) -> tuple[CasillaId, ...]:
     """Return the source casilla ids a ``previous_filing`` binding targets.
 
     The canonical, typed way to ask "which casilla(s) does this
@@ -744,7 +692,7 @@ def previous_filing_binding_source_casilla_ids(binding: DataBindingDefinition) -
     ``source_casilla_id`` key via a raw ``selector_as_dict(binding).get(...)``
     silently misses any binding declaring the plural ``source_casilla_ids``
     form instead, indistinguishable from "this binding targets no casilla at
-    all". Reading through :class:`PreviousModeloSelector` also means a
+    all". Reading through :class:`PreviousFilingProvider` also means a
     renamed ``source_casilla_id``/``source_casilla_ids`` field raises here,
     rather than silently returning an empty tuple for every binding.
 
@@ -756,36 +704,8 @@ def previous_filing_binding_source_casilla_ids(binding: DataBindingDefinition) -
     return _previous_filing_source_ids(_previous_filing_selector(binding))
 
 
-def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[int, str]:
-    try:
-        return apply_period_offset(offset, target_period=target_period)
-    except RegistryValidationError as exc:
-        raise RegistryValidationError(
-            f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}",
-        ) from exc
-
-
-def _prior_quarter_expanding_span_anchors(target_period: str) -> tuple[tuple[int, str], ...]:
-    """Enumerate the same-ejercicio quarters strictly preceding ``target_period``.
-
-    Models the AEAT Modelo 130 casilla-05 ``trimestres anteriores del mismo
-    ejercicio`` span: ``1T`` yields the empty span (no prior quarter within the
-    ejercicio, absent-by-design), ``2T`` yields ``{1T}``, ``3T`` yields
-    ``{1T, 2T}``, and ``4T`` yields ``{1T, 2T, 3T}``. Every anchor carries
-    ``year_delta = 0`` because the span never reaches across the ejercicio
-    boundary (paired with ``max_year_delta = 0`` on the binding).
-    """
-    try:
-        return same_ejercicio_prior_quarter_anchors(target_period)
-    except RegistryValidationError as exc:
-        raise RegistryValidationError(
-            "previous-filing prior_quarter_expanding_span cannot interpret target period "
-            f"{target_period!r}; only quarterly codes 1T..4T are supported",
-        ) from exc
-
-
 def _aggregate_previous_filing_binding(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     values: list[Decimal],
     *,
     source_casilla_ids: tuple[CasillaId, ...] = (),
@@ -804,7 +724,7 @@ def _aggregate_previous_filing_binding(
 
 
 def _aggregate_prior_pagos_fraccionados(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     values: list[Decimal],
     *,
     source_casilla_ids: tuple[CasillaId, ...],

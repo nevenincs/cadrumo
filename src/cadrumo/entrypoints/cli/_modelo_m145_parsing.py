@@ -50,7 +50,6 @@ def m145_field_values_from_cli(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.m145.errors.casilla_required",
-                default="Provide at least one --casilla ID=VALUE entry.",
             ),
         )
     values: dict[CasillaId, str] = {}

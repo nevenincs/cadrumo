@@ -18,8 +18,9 @@ from typing import Protocol, cast
 from textual.app import App
 from textual.pilot import Pilot
 
-from .fixture import ensure_profile, ensure_session, harness_storage
-from .frame import Frame, capture
+from cadrumo.entrypoints.tui.tests.fixture import ensure_profile, ensure_session, harness_storage
+from cadrumo.entrypoints.tui.tests.frame import Frame, capture
+
 from .journal import Click, Fill, Press, Session, Type
 from .surfaces import resolve
 

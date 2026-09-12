@@ -57,7 +57,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+9 An. N.I.F. de la Entidad emisora de las acciones o participaciones deterioradas. 1
 [[revisions."2024".casillas]]
@@ -69,7 +68,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @34+4 Num. Ejercicio en el que eliminó el deterioro de valor. 1
 [[revisions."2024".casillas]]
@@ -81,7 +79,6 @@ data_type = "year"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @38+17 N. Deteriorio de valor incorporado. 1
 [[revisions."2024".casillas]]
@@ -93,7 +90,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @1966+17 N. OTRAS CORRECCIONES A LA SUMA DE BASES IMPONIBLES: Incorporación de deterioros de valor de participaciones en fondos propios de entidades del grupo fi scal, eliminados en períodos anteriores. Total [00082]
 [[revisions."2024".casillas]]
@@ -105,4 +101,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

@@ -21,7 +21,9 @@ class StorageManagementError(CadrumoError):
 
 def _area_display(area: StorageArea) -> str:
     """Return a localized text label while retaining the enum as the API value."""
-    return tr(f"cli.config.storage.values.area.{area.value}", default=area.value)
+    return tr(
+        f"cli.config.storage.values.area.{area.value}",
+    )
 
 
 _REASON_LOCALE_KEYS = {
@@ -44,11 +46,12 @@ class StorageReclaimRefusedError(StorageManagementError):
         reason: str,
     ) -> None:
         """Initialize this public contract."""
-        display_reason = tr(_REASON_LOCALE_KEYS[reason], default=reason)
+        display_reason = tr(
+            _REASON_LOCALE_KEYS[reason],
+        )
         super().__init__(
             tr(
                 "cli.config.storage.errors.reclaim_area_refused",
-                default=("refusing to reclaim %{area}: %{reason}; nothing was removed."),
                 area=_area_display(area),
                 entries=str(entry_count),
                 reason=display_reason,
@@ -81,7 +84,6 @@ class StorageReclaimUnconfirmedError(StorageManagementError):
         super().__init__(
             tr(
                 "cli.config.storage.errors.reclaim_area_unconfirmed",
-                default=("reclaiming %{area} deletes up to %{entries} entries and needs explicit confirmation."),
                 area=_area_display(area),
                 entries=str(entry_count),
             ),

@@ -17,17 +17,19 @@ destination is what the operation means, not a value the law re-sets per year.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, model_validator
 
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
-from .binding_selector_utils import selector_against_model
+from .binding_temporal import BindingTemporalSelector, SameTargetContext
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 type InventoryProjectionOperation = Literal[
     "complete_acquisition_cost",
@@ -51,7 +53,7 @@ _INVENTORY_DESTINATION_BY_OPERATION: dict[InventoryProjectionOperation, CasillaI
 }
 
 
-class _InventorySelector(BaseModel):
+class InventoryProvider(BaseModel):
     """One immutable operation template expanded over runtime activity rows.
 
     ``complete_acquisition_cost`` names the legally complete acquisition-cost
@@ -62,15 +64,16 @@ class _InventorySelector(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    kind: Literal[BindingSourceKind.INVENTORY] = BindingSourceKind.INVENTORY
+
     modelo: Literal[Modelo.M100]
-    # PINNED TO 2025, and it must stay pinned. The three destinations this
-    # selector admits (0177, 0181, 0182) are Modelo 100's 2025 casilla numbers,
-    # and AEAT renumbers casillas between filing years -- so a selector that
-    # accepted any year would let a 2024- or 2026-scoped binding target 2025
-    # boxes and resolve silently. This field was widened to a bare ``int`` inside
-    # a reformat commit, which turned the refusal off; restoring the pin is what
-    # forces a deliberate re-adjudication when a later revision needs it.
-    filing_year: Literal[2025]
+    # The source year is the TARGET's year, never an authored constant: the
+    # declaration states timeless intent and the filing context supplies the
+    # year. The casilla-renumbering hazard the former absolute ``filing_year``
+    # guarded against is carried by the revision the binding is declared in
+    # together with ``_INVENTORY_DESTINATION_BY_OPERATION``, which still pins
+    # each operation to the exact destination casilla of its own revision.
+    temporal: BindingTemporalSelector = SameTargetContext()
     projection_grain: Literal["taxpayer_year_activity"]
     fact: Literal["row_field"]
     record: Literal["inventory_activity"]
@@ -79,7 +82,7 @@ class _InventorySelector(BaseModel):
     target_casilla_id: CasillaId
 
     @model_validator(mode="after")
-    def _require_operation_destination_identity(self) -> _InventorySelector:
+    def _require_operation_destination_identity(self) -> InventoryProvider:
         expected = _INVENTORY_DESTINATION_BY_OPERATION[self.row_field]
         if self.target_casilla_id != expected:
             raise RegistryValidationError(
@@ -89,12 +92,13 @@ class _InventorySelector(BaseModel):
         return self
 
 
-InventorySelector = _InventorySelector
+def validate_inventory_binding(binding: BindingDefinition) -> list[str]:
+    """Validate the inventory op invariant for snapshot build.
 
-
-def validate_inventory_binding(binding: DataBindingDefinition) -> list[str]:
-    """Validate an inventory selector while preserving field diagnostics."""
-    failures = selector_against_model(binding, _InventorySelector)
+    The provider shape is the union member's own gate; the operation template's
+    requirement of a row aggregation is the invariant left to lift.
+    """
+    failures: list[str] = []
     if binding.aggregation is None or binding.aggregation.op is not BindingAggregationOp.ROWS:
         failures.append(f"binding {binding.id!r} inventory operation template requires aggregation op 'rows'")
     return failures
@@ -102,6 +106,6 @@ def validate_inventory_binding(binding: DataBindingDefinition) -> list[str]:
 
 __all__ = [
     "InventoryProjectionOperation",
-    "InventorySelector",
+    "InventoryProvider",
     "validate_inventory_binding",
 ]

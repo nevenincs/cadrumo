@@ -1,7 +1,7 @@
 [[revisions."2019-2023".bindings]]
 id = "modelo-131-resultados-negativos-anteriores"
-source = "previous_filing"
-selector = { source_modelo = "131", source_casilla_id = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
+provider = { kind = "previous_filing", source_modelo = "131", source_casilla_id = "saldo-negativo-fin-periodo", temporal = { kind = "target_period_offset", periods = -1, within_filing_year = true } }
+value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]

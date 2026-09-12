@@ -584,7 +584,7 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
         binding_ids.append(record.reference.binding_id)
         assert isinstance(record.label, ModeloWorkspaceTechnicalLabelV1)
         assert record.label.identifier == record.reference.binding_id
-        assert record.legal_refs is not None  # DataBindingDefinition is retained whole
+        assert record.legal_refs is not None  # BindingDefinition is retained whole
         assert record.constraints == ()
     assert binding_ids == sorted(inspection.binding_ids)
 

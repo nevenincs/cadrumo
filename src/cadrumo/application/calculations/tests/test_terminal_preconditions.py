@@ -21,13 +21,15 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from ....domain.calculations.registry.temporal import select_revision
-from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....domain.iva_compensation.filed_derivation import (
+from ....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+)
+from ....domain.calculations.registry.temporal import select_revision
+from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from ....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )

@@ -15,3 +15,13 @@ updated_at = 2026-08-07
 
 [language.es]
 short_description = "Tipo impositivo reducido del IVA, aplicable a las entregas, servicios y operaciones que la ley enumera de forma tasada (LIVA art. 91.Uno)."
+
+[language.ca]
+short_description = "Tipus reduït de l'IVA per a les operacions enumerades a l'article 91.U de la LIVA"
+
+[language.en]
+short_description = "Reduced VAT rate for the transactions listed in Article 91(1) of the LIVA"
+
+[language.hu]
+short_description = "A LIVA 91. cikkének (1) bekezdésében felsorolt ügyletek kedvezményes áfakulcsa"
+

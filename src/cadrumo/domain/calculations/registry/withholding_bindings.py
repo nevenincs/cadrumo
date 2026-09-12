@@ -10,7 +10,7 @@ from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
@@ -22,19 +22,19 @@ from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     optional_uppercase_alpha_code,
-)
-from .binding_selector_utils import (
-    selector_as_dict as _selector_as_dict,
+    provider_member,
 )
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import DataBindingDefinition, ModeloRevision
 from .schema_exports import ExportFieldDataType
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
-    "WithholdingSelector",
+    "WithholdingProvider",
     "aggregate_withholding_by_clave",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
@@ -515,8 +515,12 @@ class WithholdingObservation(BaseModel):
         return value
 
 
-class WithholdingSelector(BaseModel):
+class WithholdingProvider(BaseModel):
+    """The per-perceptor withholding provider: one retencion fact over a clave set."""
+
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.WITHHOLDING] = BindingSourceKind.WITHHOLDING
 
     # Promoted from ``str`` to a typed Literal so the snapshot-build
     # shape gate rejects unknown fact values, mirroring the runtime
@@ -537,22 +541,17 @@ class WithholdingSelector(BaseModel):
     """
 
 
-def _withholding_selector(binding: DataBindingDefinition) -> WithholdingSelector:
-    try:
-        return WithholdingSelector.model_validate(_selector_as_dict(binding))
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding selector") from exc
+def _withholding_selector(binding: BindingDefinition) -> WithholdingProvider:
+    return provider_member(binding, WithholdingProvider)
 
 
-def validate_withholding_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
-    """Validate withholding selector shape and fact/op invariants for snapshot build."""
-    try:
-        WithholdingSelector.model_validate(_selector_as_dict(binding))
-    except ValueError as exc:
-        return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates "
-            f"{WithholdingSelector.__name__}: {exc}",
-        ]
+def validate_withholding_binding_selector_shape(binding: BindingDefinition) -> list[str]:
+    """Validate the withholding fact/op invariants for snapshot build.
+
+    The provider shape itself is the union member's own gate, already enforced
+    when the row was constructed; what is left to lift to build time is the
+    cross-invariant between the declared fact and the aggregation operation.
+    """
     try:
         _validated_withholding_selector(binding)
     except RegistryValidationError as exc:
@@ -560,7 +559,7 @@ def validate_withholding_binding_selector_shape(binding: DataBindingDefinition) 
     return []
 
 
-def _validated_withholding_selector(binding: DataBindingDefinition) -> WithholdingSelector:
+def _validated_withholding_selector(binding: BindingDefinition) -> WithholdingProvider:
     selector = _withholding_selector(binding)
     if selector.fact not in _WITHHOLDING_FACTS:
         raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
@@ -586,7 +585,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> Withholdi
 
 def _filter_withholding_observations(
     observations: Iterable[WithholdingObservation],
-    selector: WithholdingSelector,
+    selector: WithholdingProvider,
 ) -> Iterable[WithholdingObservation]:
     clave_filter = set(selector.claves)
     for observation in observations:

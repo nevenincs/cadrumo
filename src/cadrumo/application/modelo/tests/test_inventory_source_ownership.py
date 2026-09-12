@@ -10,7 +10,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from .._registry_helpers import validate_casilla_input_ids
 from ..action_errors import ModeloAggregationBindingError
@@ -26,26 +26,29 @@ _DESTINATIONS = {
 }
 
 
-def _binding(operation: str, target: str) -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _binding(operation: str, target: str) -> BindingDefinition:
+    return BindingDefinition(
         id=f"inventory-{target}",
-        source=BindingSourceKind.INVENTORY,
-        selector={
-            # Mirrors the shipped `renta-2025-inventory-activity-*` selectors
-            # verbatim. The `actividad_id` / `operation` pair this replaced is a
-            # shape `_InventorySelector` no longer accepts: it now requires
-            # `fact`, `record`, `grouping` and `row_field`, and forbids
-            # `actividad_id`. The fixture's operation tokens already matched the
-            # registry's `row_field` values, so only the envelope moved.
-            "modelo": "100",
-            "filing_year": 2025,
-            "projection_grain": "taxpayer_year_activity",
-            "fact": "row_field",
-            "record": "inventory_activity",
-            "grouping": "per_inventory_activity",
-            "row_field": operation,
-            "target_casilla_id": target,
+        provider={
+            "kind": "inventory",
+            **{
+                # Mirrors the shipped `renta-2025-inventory-activity-*` selectors
+                # verbatim. The `actividad_id` / `operation` pair this replaced is a
+                # shape `InventoryProvider` no longer accepts: it now requires
+                # `fact`, `record`, `grouping` and `row_field`, and forbids
+                # `actividad_id`. The fixture's operation tokens already matched the
+                # registry's `row_field` values, so only the envelope moved.
+                "modelo": "100",
+                "filing_year": 2025,
+                "projection_grain": "taxpayer_year_activity",
+                "fact": "row_field",
+                "record": "inventory_activity",
+                "grouping": "per_inventory_activity",
+                "row_field": operation,
+                "target_casilla_id": target,
+            },
         },
+        value={"data_type": "money", "channel": "decimal"},
         legal_refs=("ley-35-2006:art-30",),
         source_refs=("aeat-renta-2025-manual",),
     )

@@ -69,18 +69,18 @@ def test_m100_build_on_renta_free_import_path_registers_the_gate() -> None:
 
         from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported before the snapshot build on this path"
         )
-        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (
+        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain checks must be registered before the snapshot build"
         )
 
         snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         assert snapshot.modelo.id == "100"
-        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
+        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "building an M100 snapshot must register the renta first-slice "
             "routing cross-domain check"
         )
@@ -116,9 +116,9 @@ def test_m100_build_succeeds_when_the_check_module_is_imported() -> None:
 
         from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
-        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS, (
+        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"], (
             "importing the check module must register at least one cross-domain check"
         )
 
@@ -148,12 +148,12 @@ def test_non_m100_build_on_renta_free_path_does_not_require_the_gate() -> None:
 
         from cadrumo.domain.resources.registry import resources
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import _CROSS_DOMAIN_SNAPSHOT_CHECKS
+        import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert "cadrumo.domain.renta" not in sys.modules, (
             "renta must not be imported on this path"
         )
-        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (
+        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain checks must be registered without renta imported"
         )
 

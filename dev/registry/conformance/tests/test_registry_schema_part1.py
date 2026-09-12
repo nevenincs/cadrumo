@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import selector
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema import (
-    DataBindingDefinition,
+    BindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -39,13 +39,14 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
 )
 from cadrumo.tests.registry_snapshot import build_snapshot
 
-from ...compiler.loader import load_modelo_file
+from ...compiler.loader import load_modelo_directory
 from ...compiler.validate_export_field_widths import (
     DRAFT_ATTRIBUTE_CANONICAL_WIDTHS,
     validate_draft_field_slot_width,
 )
 from ...compiler.validator import RegistryValidator
 from ..coverage import build_model_law_coverage_ledger
+from ..loader_directory_mode_support import write_fragmented_modelo_from_text
 from ..registry_schema_support import (
     NUMERIC_CASILLA_01 as _NUMERIC_CASILLA_01,
 )
@@ -69,7 +70,14 @@ _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL
 _MODELO_130_DIR = bundled_path("registry", "aeat", "modelos", "130")
 
 
-def _copy_committed_modelo(path: Path) -> None:
+def _committed_modelo_text() -> str:
+    """Flatten the committed M130 source tree into one editable TOML text.
+
+    A mutation test wants to change one declaration and see the compiler refuse
+    it; reading the fragments into one string keeps the edit a single
+    substitution. The mutated text is always written back out as the fragmented
+    directory layout before it is compiled.
+    """
     revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
     fragments = [revision_dir / "revision.toml"]
     fragments.extend(
@@ -78,8 +86,12 @@ def _copy_committed_modelo(path: Path) -> None:
         if item.name != "revision.toml"
     )
     text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
-    text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
-    path.write_text(text, encoding="utf-8", newline="\n")
+    return text + "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
+
+
+def _load_modelo_text(root: Path, text: str) -> ModeloDefinition:
+    """Compile one whole-modelo TOML text through the directory-mode loader."""
+    return load_modelo_directory(write_fragmented_modelo_from_text(root / "130", text))
 
 
 def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinition) -> ModeloRevision:
@@ -147,7 +159,7 @@ def _validate_revision(modelo: ModeloDefinition, catalogues: RegistryCatalogues,
     _validate_modelo(_with_revision(modelo, revision), catalogues)
 
 
-def _with_binding(revision: ModeloRevision, binding: DataBindingDefinition) -> ModeloRevision:
+def _with_binding(revision: ModeloRevision, binding: BindingDefinition) -> ModeloRevision:
     return revision.model_copy(
         update={"bindings": tuple(binding if item.id == binding.id else item for item in revision.bindings)},
     )
@@ -329,35 +341,27 @@ def test_model_law_coverage_ledger_moves_status_when_evidence_tier_changes() -> 
 
 
 def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    path.write_text(path.read_text(encoding="utf-8") + '\n[source."local"]\nkind = "record_design"\n', encoding="utf-8")
+    text = _committed_modelo_text() + '\n[source."local"]\nkind = "record_design"\n'
 
     with pytest.raises(RegistryLoadError, match="must not define local legal/source"):
-        load_modelo_file(path)
+        _load_modelo_text(tmp_path, text)
 
 
 def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    text = path.read_text(encoding="utf-8")
     mutated, replacements = re.subn(
         r"legal_refs = \[[^\]]+\]",
         "legal_refs = []",
-        text,
+        _committed_modelo_text(),
         count=1,
     )
     assert replacements == 1, "M130 fixture must contain at least one legal_refs list"
-    path.write_text(mutated, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="too_short"):
-        load_modelo_file(path)
+        _load_modelo_text(tmp_path, mutated)
 
 
 def test_modelo_file_rejects_casilla_binding_id_collision(tmp_path: Path) -> None:
-    path = tmp_path / "999.toml"
-    path.write_text(
-        """
+    text = """
 [modelo]
 id = "999"
 tax_domain = "iva"
@@ -385,12 +389,10 @@ source = "manual_input"
 selector = { record = "DPA", field = "test", offset = 1, length = 1, data_type = "integer" }
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
-""".lstrip(),
-        encoding="utf-8",
-    )
+""".lstrip()
 
     with pytest.raises(RegistryValidationError, match="duplicate registry id '01' shared by casilla, binding"):
-        load_modelo_file(path)
+        load_modelo_directory(write_fragmented_modelo_from_text(tmp_path / "999", text))
 
 
 def test_snapshot_requires_source_integrity(tmp_path: Path) -> None:
@@ -468,17 +470,14 @@ def test_validator_requires_workbook_parity_for_filing_or_declared_layout(
 
 
 def test_modelo_file_rejects_formula_workbook_without_runner(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    text = path.read_text(encoding="utf-8").replace(
+    text = _committed_modelo_text().replace(
         'formula_coverage = "record_design_layout"',
         'formula_coverage = "formula_form"',
         1,
     )
-    path.write_text(text, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="formula coverage requires a runner"):
-        load_modelo_file(path)
+        _load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_formula_workbook_without_executable_parity_source() -> None:
@@ -573,7 +572,7 @@ def test_validator_rejects_invalid_invoice_binding_shapes() -> None:
                 "selector": {"claves": ("E",)},
                 "aggregation": BindingAggregation(op=BindingAggregationOp.SUM),
             },
-            r"selector violates _InvoiceSelector",
+            r"selector violates InvoiceProviderBase",
         ),
         (
             "aggregation-mismatch",
@@ -998,17 +997,14 @@ def test_validator_rejects_parameter_without_official_source_guidance() -> None:
 
 
 def test_modelo_file_rejects_static_cross_reference_as_executable_parity(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    text = path.read_text(encoding="utf-8").replace(
+    text = _committed_modelo_text().replace(
         'evidence_tier = "layout_authority"\nsurface = "static_official_documentation"',
         'evidence_tier = "executable_parity_evidence"\nsurface = "static_official_documentation"',
         1,
     )
-    path.write_text(text, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="static documentation is not executable parity evidence"):
-        load_modelo_file(path)
+        _load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_cross_reference_source_tier_mismatch() -> None:
@@ -1022,13 +1018,10 @@ def test_validator_rejects_cross_reference_source_tier_mismatch() -> None:
 
 
 def test_modelo_file_rejects_runner_without_formula_workbook(tmp_path: Path) -> None:
-    path = tmp_path / "130.toml"
-    _copy_committed_modelo(path)
-    text = path.read_text(encoding="utf-8").replace("runner_required = false", "runner_required = true", 1)
-    path.write_text(text, encoding="utf-8")
+    text = _committed_modelo_text().replace("runner_required = false", "runner_required = true", 1)
 
     with pytest.raises(RegistryLoadError, match="runner requires formula coverage"):
-        load_modelo_file(path)
+        _load_modelo_text(tmp_path, text)
 
 
 def test_validator_rejects_missing_legal_reference() -> None:

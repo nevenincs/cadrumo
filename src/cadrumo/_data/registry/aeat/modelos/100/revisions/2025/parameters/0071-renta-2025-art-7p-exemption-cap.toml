@@ -1,0 +1,16 @@
+[[revisions."2025".parameters]]
+id = "lirpf-art-7p-exemption-cap"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-7"]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["límite máximo de 60.100 euros anuales"]
+
+[[revisions."2025".parameters.values]]
+value = "60100"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

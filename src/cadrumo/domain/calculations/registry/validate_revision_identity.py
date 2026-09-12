@@ -31,7 +31,6 @@ _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
     ("casilla", "casillas"),
     ("formula", "formulas"),
     ("binding", "bindings"),
-    ("relation", "relations"),
     ("parameter", "parameters"),
     ("export layout", "export_layouts"),
     ("extraction profile", "extraction_profiles"),

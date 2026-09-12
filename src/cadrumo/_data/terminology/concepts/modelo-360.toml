@@ -15,3 +15,13 @@ updated_at = 2026-06-10
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 360, sol·licitud de devolució de l'IVA suportat en un altre Estat membre per empreses no establertes allí"
+
+[language.en]
+short_description = "Modelo 360, EU-scheme VAT refund request for businesses and professionals not established where VAT was borne"
+
+[language.hu]
+short_description = "360-as modell: az Európai Unióban le nem telepedett vállalkozások és szakemberek más tagállamban megfizetett áfájának visszatérítési kérelme"
+

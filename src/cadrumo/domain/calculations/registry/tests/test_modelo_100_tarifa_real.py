@@ -46,7 +46,7 @@ from ..schema import RegistrySnapshot
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _M100_2024_MATERNIDAD_BINDINGS = {
-    "renta-2024-profile-deduccion-maternidad": Decimal(
+    "renta-profile-deduccion-maternidad": Decimal(
         compute_deduccion_maternidad_0611([], filing_year=2024),
     ),
 }
@@ -261,7 +261,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot: Registr
 # Art. 57.2/57.3 age-bracket supplement from the taxpayer's real birth date.
 # Casilla 0513 (mínimo por descendientes, this module's engine) is likewise
 # computed from the active profile's real descendientes facts, via the
-# ``renta-2024-profile-minimo-descendientes-estatal`` binding
+# ``renta-profile-minimo-descendientes-estatal`` binding
 # (Option A engine) — no fabricated
 # manual input on 0513 for an unrelated Art. 57.2 age concept.
 #
@@ -319,45 +319,45 @@ _PERE_AGE_70_BIRTH_DATE_BINDINGS_2024: dict[BindingId, date] = {
 
 def _base_binding_values() -> dict[BindingId, Decimal]:
     return {
-        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-193-retenciones-anuales": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
-        "renta-2024-profile-declaration-type": Decimal("1"),
-        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in scenarios
         # without childcare deduction (mínimo del contribuyente chain only).
-        "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-        "renta-2024-profile-incremento-guarderia": Decimal("0"),
-        "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-        "renta-2024-profile-descendientes-guarderia": Decimal("0"),
+        "renta-profile-guarderia-gastos-reales": Decimal("0"),
+        "renta-profile-incremento-guarderia": Decimal("0"),
+        "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+        "renta-profile-descendientes-guarderia": Decimal("0"),
         # Art. 58/61 LIRPF mínimo por descendientes aggregate
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
         **_M100_2024_MATERNIDAD_BINDINGS,
-        "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica (casilla 0514): every scenario in this file
         # runs a Cataluña-resident profile, which is absent from the wired
         # per-CCAA divergence table, so the autonómico aggregate mirrors the
         # estatal one exactly — zero baseline here for the same reason.
-        "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
-        "renta-2024-profile-marriage-full-year": Decimal("0"),
-        "renta-2024-profile-marriage-month-start": Decimal("0"),
-        "renta-2024-profile-marriage-month-end": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline: the previous_filing binding
         # for casilla 1388 (LIRPF Art. 48 base liquidable negativa carry)
         # resolves to zero when no prior Modelo 100 filing exists in the
         # test corpus. Test fixtures with no carry exercise this baseline.
-        "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         # LIRPF art. 64/75 anualidades separate-escala eligibility flag.
         # 1 = the non-custodial payer without the mínimo por
         # descendientes (the form-faithful default). Only read inside the
         # régimen predicate when 0527 > 0 AND 0527 < 0505, so it is inert for
         # every non-anualidades scenario.
-        "renta-2024-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
+        "renta-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
     }
 
 
@@ -399,8 +399,8 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         binding_values={
             **_base_binding_values(),
             **_M100_2024_MATERNIDAD_BINDINGS,
-            "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_PERE_AGE_70_BIRTH_DATE_BINDINGS_2024,
@@ -450,8 +450,8 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         binding_values={
             **_base_binding_values(),
             **_M100_2024_MATERNIDAD_BINDINGS,
-            "renta-2024-profile-minimo-descendientes-estatal": Decimal("7900"),
-            "renta-2024-profile-minimo-descendientes-autonomico": Decimal("7900"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("7900"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("7900"),
         },
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
@@ -689,7 +689,7 @@ def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
     since 0505 carries no anualidades subtraction.
     """
     bindings = _base_binding_values()
-    bindings["renta-2024-profile-anualidades-sin-minimo-descendientes"] = Decimal("0")
+    bindings["renta-profile-anualidades-sin-minimo-descendientes"] = Decimal("0")
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs={

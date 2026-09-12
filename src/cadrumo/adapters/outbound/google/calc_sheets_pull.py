@@ -1162,7 +1162,7 @@ def _collect_binding_values(
     enum_binding_values: dict[BindingId, str] = {}
     for binding in snapshot.revision.bindings:
         edit = edits_by_binding.get(binding.id)
-        if binding.typed_enum:
+        if binding.value.typed_enum is not None:
             text = _enum_binding_text(edit.value if edit is not None else None)
             if text is not None:
                 enum_binding_values[binding.id] = text

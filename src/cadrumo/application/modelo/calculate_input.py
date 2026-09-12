@@ -60,11 +60,12 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     revision_date_binding_ids,
 )
-from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_scalars import (
     registry_scalar_value_type,
@@ -452,7 +453,7 @@ def _resolve_relation_overrides(
     revision: ModeloRevision,
 ) -> dict[RelationId, Decimal]:
     """Resolve relation overrides against the active revision and decimal grammar."""
-    known_relation_ids = {relation.id for relation in revision.relations}
+    known_relation_ids = {binding.id for binding, _ in relation_prefill_bindings_for_period(revision)}
     relation_values: dict[RelationId, Decimal] = {}
     for raw_key, raw_value in relation_overrides.items():
         key = _validated_relation_id(raw_key, known_relation_ids)
@@ -594,7 +595,7 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
     return parsed
 
 
-def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> Decimal:
+def _decimal_binding_value(raw_value: str, binding: BindingDefinition) -> Decimal:
     """Parse a ``--binding`` decimal value, teaching the accepted encoding on failure.
 
     For a boolean-typed decimal-channel binding (the Modelo 100 estimación-directa

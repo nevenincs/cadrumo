@@ -43,8 +43,8 @@ _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)
 _YEAR = 2024
 
 #: The two bindings the 0613 formula multiplies and minimises over.
-_SPEND_BINDING = "renta-2024-profile-guarderia-gastos-reales"
-_COUNT_BINDING = "renta-2024-profile-descendientes-guarderia"
+_SPEND_BINDING = "renta-profile-guarderia-gastos-reales"
+_COUNT_BINDING = "renta-profile-descendientes-guarderia"
 
 
 @lru_cache

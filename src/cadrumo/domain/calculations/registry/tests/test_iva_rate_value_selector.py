@@ -14,20 +14,36 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from .....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+)
 from .....domain.iva.flow import IvaFlowDirection
-from .....domain.iva.schema import IvaCashAccountingTreatment, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from .....domain.iva.schema import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
 from ..ledger_iva_bindings import (
     IvaLedgerObservation,
+    LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
+
+_MONEY_VALUE = BindingValueContract(data_type=BindingDataType.MONEY, channel=BindingValueChannel.DECIMAL)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> DataBindingDefinition:
+def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> BindingDefinition:
     selector: dict[str, object] = {
         "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
         "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
@@ -42,17 +58,17 @@ def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> D
     }
     if applied_rates is not None:
         selector["applied_rates"] = applied_rates
-    return DataBindingDefinition(
+    return BindingDefinition(
         id=binding_id,
-        source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
-        selector=selector,
+        provider=LedgerIvaProvider.model_validate(selector),
+        value=_MONEY_VALUE,
         aggregation=BindingAggregation(op=BindingAggregationOp.SUM),
         legal_refs=("ley-37-1992:art-91",),
         source_refs=("aeat-dr-390-2025",),
     )
 
 
-def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:
+def _revision(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="2010-y-siguientes",
         localization_key="test.schema.revision.2010-y-siguientes.label",

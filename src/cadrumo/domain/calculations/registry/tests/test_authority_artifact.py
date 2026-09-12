@@ -22,7 +22,7 @@ from ..authority_artifact import (
     read_shared_authority_artifact,
     write_authority_artifact,
 )
-from ..schema import DataBindingDefinition, NoPredecessor
+from ..schema import BindingDefinition, NoPredecessor
 from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -72,7 +72,7 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
 def test_published_authority_round_trips_strict_profile_selector_json(tmp_path: Path) -> None:
     """JSON arrays in a published selector rehydrate to the declared tuple shape."""
     artifact_path = tmp_path / "authority.json"
-    binding = DataBindingDefinition.model_validate(
+    binding = BindingDefinition.model_validate(
         {
             "id": "profile-selector",
             "source": BindingSourceKind.PROFILE,

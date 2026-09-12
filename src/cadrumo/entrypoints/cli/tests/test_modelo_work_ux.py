@@ -864,7 +864,7 @@ def test_m131_modulos_manual_entry_calculates_without_ledger_observations(
             "--casilla", "modulos-6-unidades=0",
             "--casilla", "modulos-7-unidades=0",
             "--casilla", "modulos-minoracion-inversion=0",
-            "--binding", "modelo-131-2026-resultados-negativos-anteriores=0",
+            "--binding", "modelo-131-resultados-negativos-anteriores=0",
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output

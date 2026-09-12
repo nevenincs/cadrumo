@@ -25,7 +25,6 @@ semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base dividendos tw
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "09"
@@ -38,7 +37,6 @@ semantic_role_cardinality_reason = "aeat-dr-216-2024 declares base resto twice: 
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "10"
@@ -52,7 +50,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-base-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "11"
@@ -63,7 +60,6 @@ semantic_role = "irnr_retencion_cuota_dividendos"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "12"
@@ -74,7 +70,6 @@ semantic_role = "irnr_retencion_cuota_resto"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "13"
@@ -86,7 +81,6 @@ required = false
 input_kind = "computed"
 formula = "modelo-216-retenciones-total"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "20"
@@ -97,7 +91,6 @@ semantic_role = "irnr_retencion_resultados_anteriores"
 required = false
 input_kind = "manual"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]
 
 [[revisions."2024-y-siguientes".casillas]]
 id = "21"
@@ -105,9 +98,8 @@ number = "21"
 section = ["totales"]
 data_type = "money"
 semantic_role = "cuota_a_ingresar"
-constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"], source_refs = ["boe-modelo-216-form-layout"] }
+constraints = { sign = "non_negative", legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"] }
 required = false
 input_kind = "computed"
 formula = "modelo-216-resultado"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "orden-eha-3290-2008:art-1"]
-source_refs = ["boe-modelo-216-form-layout"]

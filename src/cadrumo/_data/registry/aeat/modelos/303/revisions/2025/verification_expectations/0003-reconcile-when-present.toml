@@ -97,4 +97,4 @@ rounding = "money-2"
 min_coverage = "0"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
 legal_refs = ["ley-37-1992:art-25", "ley-37-1992:art-15", "orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-303-2025", "aeat-dr-349-2020-current"]
+source_refs = ["aeat-dr-303-2025", "aeat-dr-349-2020-current", "aeat-modelo-303-procedure"]

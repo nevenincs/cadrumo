@@ -31,7 +31,6 @@ data_type = "text"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction
 
 [[revisions."2025-y-siguientes".casillas]]
@@ -45,7 +44,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction
 
 [[revisions."2025-y-siguientes".casillas]]
@@ -59,7 +57,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction; the
 # RESTO overflow row also reprints this box rather than declaring a new one
 
@@ -74,7 +71,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]
 # repeated up to nine times on this page, once per declared transaction; the
 # RESTO overflow row also reprints this box rather than declaring a new one
 
@@ -89,7 +85,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "impatriado.anexo-transmision-iic.total-retenciones"
@@ -102,4 +97,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-35-2006:art-93"]
-source_refs = ["aeat-dr-151-2023"]

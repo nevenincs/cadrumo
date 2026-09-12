@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.formula_initial_values import (
     binding_values_with_absent_by_design_defaults,
@@ -26,7 +27,7 @@ def _registry_relation_prefill_binding_ids(
     return frozenset(
         row.binding_id
         for row in report.rows
-        if getattr(row.source, "value", row.source) == "relation_prefill" and not row.operator_input_required
+        if row.provider.kind is BindingSourceKind.RELATION_PREFILL and not row.operator_input_required
     )
 
 

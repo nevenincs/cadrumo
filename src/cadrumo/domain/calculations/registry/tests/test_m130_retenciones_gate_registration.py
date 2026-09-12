@@ -63,9 +63,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         import sys
 
         from cadrumo.domain.calculations.registry.authority import bundled_authority
-        from cadrumo.domain.calculations.registry.validate_cross_domain_snapshot import (
-            _CROSS_DOMAIN_SNAPSHOT_CHECKS,
-        )
+        import cadrumo.domain.calculations.registry.validate_cross_domain_snapshot as snapshot_validation
 
         assert not [name for name in sys.modules if name.startswith("cadrumo.application.aggregation")], (
             "this interpreter must reach the snapshot build without aggregation"
@@ -73,7 +71,7 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         assert "{_RETENCIONES_MODULE}" not in sys.modules, (
             "the retenciones check module must not be loaded before the build"
         )
-        assert _CROSS_DOMAIN_SNAPSHOT_CHECKS == [], (
+        assert vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"] == [], (
             "no cross-domain check may be registered before the build"
         )
 
@@ -84,7 +82,8 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         )
 
         registered = {{
-            (check.__module__, check.__name__): check for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS
+            (check.__module__, check.__name__): check
+            for check in vars(snapshot_validation)["_CROSS_DOMAIN_SNAPSHOT_CHECKS"]
         }}
         key = ("{_RETENCIONES_MODULE}", "check_m130_retenciones_output_casilla")
         assert key in registered, (

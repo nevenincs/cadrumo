@@ -52,23 +52,23 @@ _ESTATAL_CASILLA_ID = "0513"
 # Every profile/relation-sourced binding a minimal M100 2024 calculate needs
 # besides the descendiente facts under test, mirroring the fixture in
 # ``application/modelo/tests/test_actions.py``. Deliberately EXCLUDES
-# ``renta-2024-profile-minimo-descendientes-estatal`` -- that binding is the
+# ``renta-profile-minimo-descendientes-estatal`` -- that binding is the
 # exact aggregate this module's calculate engine derives from the declared
 # descendiente facts; overriding it here would make the assertions tautological.
 _REQUIRED_2024_BINDING_FLAGS: tuple[str, ...] = (
-    "--binding", "renta-2024-modelo-100-estimacion-directa-es-normal=1",
-    "--binding", "renta-2024-modelo-111-retenciones-periodicas=0",
-    "--binding", "renta-2024-modelo-123-retenciones-periodicas=0",
-    "--binding", "renta-2024-modelo-193-retenciones-anuales=0",
+    "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
+    "--binding", "renta-modelo-111-retenciones-periodicas=0",
+    "--binding", "renta-modelo-123-retenciones-periodicas=0",
+    "--binding", "renta-modelo-193-retenciones-anuales=0",
     "--binding", "renta-2024-modelo-130-pagos-fraccionados=0",
     "--binding", "renta-2024-modelo-131-pagos-fraccionados=0",
-    "--binding", "renta-2024-profile-family-minor-children-in-unit=0",
-    "--binding", "renta-2024-profile-guarderia-gastos-reales=0",
-    "--binding", "renta-2024-profile-cotizaciones-ss-madre=0",
-    "--binding", "renta-2024-profile-marriage-full-year=0",
-    "--binding", "renta-2024-profile-marriage-month-start=0",
-    "--binding", "renta-2024-profile-marriage-month-end=0",
-    "--binding", "renta-2024-base-liquidable-negativa-general-anterior=0",
+    "--binding", "renta-profile-family-minor-children-in-unit=0",
+    "--binding", "renta-profile-guarderia-gastos-reales=0",
+    "--binding", "renta-profile-cotizaciones-ss-madre=0",
+    "--binding", "renta-profile-marriage-full-year=0",
+    "--binding", "renta-profile-marriage-month-start=0",
+    "--binding", "renta-profile-marriage-month-end=0",
+    "--binding", "renta-base-liquidable-negativa-general-anterior=0",
 )  # fmt: skip
 
 
@@ -444,10 +444,10 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
             # from the declared months. The cotización is set well above the
             # post-birthday total so it cannot be what the min() picks.
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -488,10 +488,10 @@ def test_an_annual_only_figure_in_the_turning_three_period_is_disclosed_not_sile
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -555,10 +555,10 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -608,10 +608,10 @@ def test_declared_spend_without_the_mothers_months_is_disclosed_not_silent(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -665,10 +665,10 @@ def test_a_partial_overlap_takes_only_the_months_shared_end_to_end(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -705,10 +705,10 @@ def test_an_overlapping_declaration_still_reaches_its_shared_months(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -777,11 +777,11 @@ def test_the_cotizaciones_term_binds_the_0613_cap(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
             # The smallest of the three terms, so it is the one that must win.
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=450",
+            "--binding", "renta-profile-cotizaciones-ss-madre=450",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output
@@ -824,10 +824,10 @@ def test_the_population_term_binds_the_0613_cap(
             "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             *_binding_flags_without(
-                "renta-2024-profile-guarderia-gastos-reales",
-                "renta-2024-profile-cotizaciones-ss-madre",
+                "renta-profile-guarderia-gastos-reales",
+                "renta-profile-cotizaciones-ss-madre",
             ),
-            "--binding", "renta-2024-profile-cotizaciones-ss-madre=5000",
+            "--binding", "renta-profile-cotizaciones-ss-madre=5000",
         ],
     )  # fmt: skip
     assert calc_result.exit_code == 0, calc_result.output

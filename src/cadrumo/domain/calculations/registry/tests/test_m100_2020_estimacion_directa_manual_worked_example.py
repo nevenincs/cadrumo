@@ -143,7 +143,7 @@ revision for this section):
     0223 "Total gastos deducibles (simplificada)" = 0218 + 0222
       = 78.300 + 2.000 = 80.300.
     0224 "Rendimiento neto" (modalidad simplificada branch, driven by
-      binding renta-2020-modelo-100-estimacion-directa-es-normal = 0)
+      binding renta-modelo-100-estimacion-directa-es-normal = 0)
       = [0180] - [0223] = 138.400 - 80.300 = 58.100 — matches the manual's
       "Rendimiento neto" (fiscal) exactly.
     0225 "Reducciones de rendimientos generados en más de 2 años" = 0
@@ -225,7 +225,7 @@ def _scenario(*, es_normal: Decimal, expected_0226: Decimal, scenario_id: str) -
         period="0A",
         inputs=oracle_declared_figures(_ORACLE_PAYLOAD_NAME),
         binding_values={
-            "renta-2020-modelo-100-estimacion-directa-es-normal": es_normal,
+            "renta-modelo-100-estimacion-directa-es-normal": es_normal,
         },
         enum_binding_values={"renta-2020-profile-tax-residence-ccaa": "madrid"},
         relation_values=_REL_2020,

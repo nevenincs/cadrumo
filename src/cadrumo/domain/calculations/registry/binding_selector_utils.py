@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import TYPE_CHECKING, Literal, Protocol, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -13,9 +13,11 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from .binding_aggregation import binding_aggregation_op
 from .errors import RegistryValidationError
-from .manual_input_selector import ManualInputSelector
-from .schema import DataBindingDefinition, ModeloRevision
+from .manual_input_selector import ManualInputProvider
 from .schema_exports import ExportFieldDataType, OneBasedExportOffset
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition, ModeloRevision
 
 __all__ = [
     "M347_OPERATION_CLAVES",
@@ -35,6 +37,7 @@ __all__ = [
     "invariant_diagnostics",
     "manual_input_record_field_selector",
     "operation_clave_validator",
+    "provider_member",
     "selector_against_model",
     "selector_as_dict",
     "unique_tuple",
@@ -325,14 +328,58 @@ class _BindingRowSetProjection(BaseModel):
         return BindingRowSetSelector(row_field=self.row_field, grouping=self.grouping, record=self.record)
 
 
-def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
-    """Return a plain selector mapping without injected source metadata."""
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        return STR_KEYED_MAPPING_ADAPTER.validate_python(
-            selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True),
-        )
-    return {key: value for key, value in selector.items() if key != "source"}
+def _restored_member_dump(member: BaseModel, dumped: dict[str, object]) -> dict[str, object]:
+    """Return one nested member's dump with its own and its children's tags restored."""
+    restored: dict[str, object] = dict(dumped)
+    for name, value in dumped.items():
+        child = getattr(member, name, None)
+        if isinstance(child, BaseModel) and isinstance(value, dict):
+            restored[name] = _restored_member_dump(child, cast("dict[str, object]", value))
+    tag = getattr(member, "kind", None)
+    if tag is not None and "kind" not in restored:
+        restored["kind"] = tag
+    return restored
+
+
+def _restore_nested_discriminators(provider: BaseModel, dumped: dict[str, object]) -> dict[str, object]:
+    """Return ``dumped`` with every nested union member's discriminator put back.
+
+    ``exclude_unset`` is what keeps an authored selector mapping free of fields
+    the author never wrote, but it cannot distinguish a defaulted *value* from a
+    defaulted *tag*: a nested union member built entirely from defaults sets no
+    field at all, so its own ``kind`` is dropped and the mapping no longer names
+    which member it is. Re-validating that mapping then fails on the
+    discriminator rather than on anything the author did wrong. The tag is not
+    authored content, so it is restored from the constructed member.
+
+    The provider's own top-level tag is deliberately NOT restored here: it is
+    excluded by :func:`selector_as_dict`, which owns that decision.
+    """
+    restored: dict[str, object] = dict(dumped)
+    for name, value in dumped.items():
+        member = getattr(provider, name, None)
+        if isinstance(member, BaseModel) and isinstance(value, dict):
+            restored[name] = _restored_member_dump(member, cast("dict[str, object]", value))
+    return restored
+
+
+def selector_as_dict(binding: BindingDefinition) -> dict[str, object]:
+    """Return the provider's authored field mapping without its own discriminator.
+
+    The provider's top-level ``kind`` is excluded because it is the union tag,
+    not a selector field: the per-family models this mapping is re-validated
+    against accept it as a defaulted literal, and a family helper that reasoned
+    over the tag as data would be reading the discriminator twice.
+
+    A *nested* union member's tag is restored instead of dropped, because that
+    mapping has no other way to say which member it is; see
+    :func:`_restore_nested_discriminators`.
+    """
+    provider = binding.provider
+    dumped: dict[str, object] = provider.model_dump(exclude_none=True, exclude_unset=True)
+    restored = _restore_nested_discriminators(provider, dumped)
+    restored.pop("kind", None)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(restored)
 
 
 class BooleanBindingEncodedValue(BaseModel):
@@ -343,7 +390,7 @@ class BooleanBindingEncodedValue(BaseModel):
     consumed by the registry formulas as a numeric ``1`` / ``0`` operand. The
     operator therefore supplies a decimal on the ``--binding`` channel, yet the
     accepted values and their meaning are opaque from the raw
-    :class:`DataBindingDefinition`. This record makes one accepted value
+    :class:`BindingDefinition`. This record makes one accepted value
     explicit: ``encoded_value`` is the decimal the operator types,
     ``boolean_meaning`` is the affirmative/negative sense it carries, and
     ``registry_value`` is the underlying casilla token the boolean maps to (the
@@ -358,7 +405,7 @@ class BooleanBindingEncodedValue(BaseModel):
 
 
 def boolean_binding_encoded_values(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> tuple[BooleanBindingEncodedValue, ...]:
     """Return the decimal encoding of a boolean-casilla ``manual_input`` binding.
 
@@ -375,7 +422,7 @@ def boolean_binding_encoded_values(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against :class:`ManualInputSelector`
+            whose selector does not validate against :class:`ManualInputProvider`
             -- a malformed selector must be a named failure, not a silently
             empty "not a boolean binding" result.
     """
@@ -385,7 +432,7 @@ def boolean_binding_encoded_values(
     # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
     # must raise, not silently return "not a boolean binding".
     try:
-        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputProvider.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
@@ -405,7 +452,7 @@ def boolean_binding_encoded_values(
 class ManualInputRecordFieldSelector(BaseModel):
     """The record-field shape of a validated ``manual_input`` binding selector.
 
-    :class:`ManualInputSelector` models both the casilla shape and the
+    :class:`ManualInputProvider` models both the casilla shape and the
     record-field shape on one class because the two are mutually exclusive
     and share ``data_type``; this narrower model is what a caller that only
     cares about the record-field shape (a fichero-BOE fixed-record
@@ -424,7 +471,7 @@ class ManualInputRecordFieldSelector(BaseModel):
 
 
 def manual_input_record_field_selector(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
 ) -> ManualInputRecordFieldSelector | None:
     """Return the record-field selector of a ``manual_input`` binding, or ``None``.
 
@@ -442,7 +489,7 @@ def manual_input_record_field_selector(
 
     Raises:
         RegistryValidationError: When ``binding`` is a ``manual_input`` binding
-            whose selector does not validate against ``ManualInputSelector``
+            whose selector does not validate against ``ManualInputProvider``
             -- a malformed selector must be a named failure, not silently read
             as "not a record-field binding".
     """
@@ -452,14 +499,14 @@ def manual_input_record_field_selector(
     # renamed/misspelled ``record`` / ``field`` key must raise, not silently
     # read as "not a record-field binding".
     try:
-        selector = ManualInputSelector.model_validate(selector_as_dict(binding))
+        selector = ManualInputProvider.model_validate(selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
         ) from exc
     if selector.record is None:
         return None
-    # ManualInputSelector._validate_manual_input_shape already proved that a
+    # ManualInputProvider._validate_manual_input_shape already proved that a
     # non-None record implies field/offset/length are all non-None too -- the
     # record-field shape's four keys are required together.
     field = selector.field
@@ -500,11 +547,11 @@ def _fields_owned_by(model_cls: type[BaseModel], raw: Mapping[str, object]) -> d
 
 
 def binding_export_selector(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     *,
     revision: ModeloRevision,
 ) -> BindingExportSelector | None:
-    """Return the typed export projection embedded in ``binding.selector``.
+    """Return the typed export projection embedded in ``binding.provider``.
 
     Binding source-family selectors remain authoritative for business facts.
     Export record resolution only needs the official record-coordinate
@@ -540,8 +587,8 @@ def binding_export_selector(
     return projection.export_selector(binding_id=binding.id)
 
 
-def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSelector | None:
-    """Return the typed row-set projection embedded in ``binding.selector``.
+def binding_row_set_selector(binding: BindingDefinition) -> BindingRowSetSelector | None:
+    """Return the typed row-set projection embedded in ``binding.provider``.
 
     Source-family selectors remain the authority for fact-specific filters.
     Row-set consumers only need the common ``fact = "row_field"`` projection
@@ -583,11 +630,34 @@ def binding_row_set_selector(binding: DataBindingDefinition) -> BindingRowSetSel
     return projection.row_set_selector(binding_id=binding.id)
 
 
+def provider_member[ProviderT: BaseModel](binding: BindingDefinition, provider_model: type[ProviderT]) -> ProviderT:
+    """Return ``binding.provider`` narrowed to the member its kind is registered for.
+
+    The discriminated union already constructed the member from the authored
+    row, so this is a narrowing rather than a re-validation: there is no
+    authored input that reaches here holding a different class. A mismatch can
+    therefore only mean the registration table and the union have drifted apart,
+    which is refused loudly instead of being silently revalidated or skipped.
+
+    Raises:
+        RegistryValidationError: The constructed member is not an instance of the
+            model its kind is registered for.
+    """
+    provider = binding.provider
+    if not isinstance(provider, provider_model):
+        raise RegistryValidationError(
+            f"binding {binding.id!r} (source={binding.source!r}) carries provider member "
+            f"{type(provider).__name__}, but its kind is registered for {provider_model.__name__}",
+            context={"binding_id": str(binding.id), "kind": binding.source.value},
+        )
+    return provider
+
+
 def selector_against_model(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     selector_model: type[BaseModel],
 ) -> list[str]:
-    """Validate ``binding.selector`` against ``selector_model``, accumulating diagnostics.
+    """Validate ``binding.provider`` against ``selector_model``, accumulating diagnostics.
 
     Projects the selector through :func:`selector_as_dict` (the same normalised
     mapping the resolve-time helpers see, so the build gate is never stricter
@@ -623,9 +693,9 @@ def canonical_selector_key_hint(selector: Mapping[str, object], selector_model: 
 
 
 def invariant_diagnostics(
-    binding: DataBindingDefinition,
+    binding: BindingDefinition,
     label: str,
-    check: Callable[[DataBindingDefinition], object],
+    check: Callable[[BindingDefinition], object],
 ) -> list[str]:
     """Run a raise-style op/fact invariant ``check`` and collect its diagnostic.
 

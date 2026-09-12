@@ -1,4 +1,7 @@
 [revisions."2016-2022"]
+predecessor = "2013-2015"
+casilla_source_refs = ["aeat-dr-165-2016-2022"]
+reviewed_against = "2013-2015"
 authority_grade = "filing"
 # The complete AEAT design headed "Ejercicio 2016" applies through exercise
 # 2022. Its two records tile 1..500, but its type-1 BLANCOS field begins at
@@ -66,12 +69,6 @@ source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
 reason = "A projection endpoint describes a typed value source for a repeated projection record. The 2016 layout declares no projection-row record and no projection field, so there is no endpoint coordinate to admit."
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-165-2016-2022"]
-
-[revisions."2016-2022".family_dispositions.relations]
-reason = "Relations are cross-modelo handoffs landing in relation-prefill bindings. This revision declares neither relation-prefill bindings nor another modelo's carried amount, so no relation is applicable."
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2016-2022"]
-
 [revisions."2016-2022".family_dispositions.verification_expectations]
 reason = "Verification expectations compare a declared calculation or reconciliation outcome. This revision has no formula, binding, relation, or official outcome specimen against which such an assertion could be grounded."
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
@@ -89,21 +86,3 @@ calendar windows for 2016-2022 are bundled. A date is not inferred from a
 recurring legal month; this revision therefore declares none."""
 legal_refs = ["orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure"]
-
-[revisions."2016-2022".family_dispositions.casilla_continuidad_evolutions]
-reason = """
-The 2013-2015 predecessor is deliberately applicability-only because its
-type-2 design has an official unread 102-103 hole. It declares no positional
-casilla identity from which an evolution could be grounded. The 2016 design
-therefore starts the first complete wire identity and has no predecessor
-evolution to declare."""
-legal_refs = [
-    "orden-hap-2455-2013:art-1",
-    "orden-hap-2455-2013:art-4",
-    "ley-58-2003:art-93",
-]
-source_refs = [
-    "enrolled-modelo-165-procedure",
-    "enrolled-modelo-165-layout",
-    "aeat-dr-165-2016-2022",
-]

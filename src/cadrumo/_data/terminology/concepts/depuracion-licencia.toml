@@ -31,6 +31,9 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The boundary that ships only clean identifiers and rankings, never embedding internals."
+definition = "A transformation rule that removes any disallowed model-derived data from search artifacts, such as vectors, sparse weights, raw scores, paths, or snippets, and keeps only identifiers, targets, surfaces, and normalized weights. Under the sources' licence constraints, this cleanup keeps the shipped backend clean even when the development oracle uses hybrid retrieval."
+scope_note = "It does not change a result's legal source; it only defines which derived information may cross into the shipped artifact."
+
 
 [[language.en.term]]
 label = "licence laundering"
@@ -39,6 +42,12 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "La frontera que envia nomes identificadors i rankings nets, mai dades internes d'embedding."
+definition = "Regla de transformació que elimina dels artefactes de cerca qualsevol dada derivada del model que no estigui permesa, com ara vectors, pesos dispersos, puntuacions en brut, rutes o fragments, i conserva només identificadors, destinacions, superfícies i pesos normalitzats. Sota la restricció de llicències de les fonts, aquesta depuració manté net el backend distribuït encara que l'oracle de desenvolupament utilitzi recuperació híbrida."
+scope_note = "No canvia la font legal d'un resultat; només defineix quina informació derivada pot passar a l'artefacte distribuït."
+
 
 [language.hu]
 short_description = "A határ, amely csak tiszta azonosítókat és rangsorokat szállít, embedding-belső adatokat nem."
+definition = "Átalakítási szabály, amely eltávolítja a keresési artefaktumokból a nem engedélyezett, modellből származtatott adatokat, például a vektorokat, ritka súlyokat, nyers pontszámokat, útvonalakat vagy részleteket, és csak azonosítókat, célpontokat, felületeket és normalizált súlyokat őriz meg. A források licencfeltételei mellett ez a tisztítás tisztán tartja a kiadott hátteret akkor is, ha a fejlesztési orákulum hibrid visszakeresést használ."
+scope_note = "Nem módosítja a találat jogi forrását, csak meghatározza, hogy mely származtatott információ kerülhet a kiadott artefaktumba."
+

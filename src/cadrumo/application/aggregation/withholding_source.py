@@ -27,6 +27,7 @@ from ...adapters.persistence.storage.errors import (
     STORAGE_DEGRADATION_ERRORS as _STORAGE_DEGRADATION_ERRORS,
 )
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
@@ -61,6 +62,7 @@ def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[Calcu
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"percepcion:{observation.perceptor_tax_id}:{observation.clave}:{observation.subclave or '-'}",
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.PERCEPTOR_OBSERVATION,
         )
         for observation in observations
     )

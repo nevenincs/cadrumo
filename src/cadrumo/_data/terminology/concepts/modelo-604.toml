@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 604, autoliquidació de l'impost sobre les transaccions financeres"
+
+[language.en]
+short_description = "Modelo 604, self-assessment of the financial transaction tax"
+
+[language.hu]
+short_description = "604-es modell: a pénzügyi tranzakciók adójának önadózása"
+

@@ -8,7 +8,7 @@ condiciones) / 01499 (que SÍ han cumplido) — becomes the next ejercicio's sto
 "pendiente de integración a principio del período" — casilla 01494 / 01495 —
 tracked SEPARATELY per condition-state because only the cumplido stock may be
 integrated. Two cross-year ``previous_filing`` bindings
-(``modelo-200-2024-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores``
+(``modelo-200-dotaciones-deterioro-creditos-saldo-no-cumplido-anteriores``
 copies prior 01498 → 01494; the ``...-cumplido-anteriores`` copies prior 01499 →
 01495) make those opening-stock casillas auto-resolve from the prior filing — the
 operator does not re-key the carried dotación stock.
@@ -91,9 +91,9 @@ _M200_PAGOS_RELATION = "modelo-200-2024-rel-202-pagos-fraccionados"
 _M200_PAGOS_RELATION_40_2 = "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
 
 _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
-    "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
-    "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
-    "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+    "modelo-200-profile-new-entity-flag": Decimal("0"),
+    "modelo-200-profile-incn-prior-12-months": Decimal("500000"),
+    "modelo-200-profile-tributacion-estado-porcentaje": Decimal("100"),
 }
 _PROFILE_ENUM_BINDINGS: dict[str, str] = {"modelo-200-2024-profile-legal-entity-form": "sl"}
 

@@ -44,6 +44,7 @@ from .errors import RentaValidationError
 
 EUR_CURRENCY: Literal["EUR"] = "EUR"
 
+
 class RentaExpenseDirection(StrEnum):
     """Closed direction values for first-slice Renta expense facts."""
 

@@ -74,7 +74,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @33+17 N. PASIVO. Otros pasivos financieros a valor razonable con cambios en pérdidas y ganancias. [00164]
 [[revisions."2024".casillas]]
@@ -86,7 +85,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @50+17 N. PASIVO. Débitos y partidas a pagar. [00165]
 [[revisions."2024".casillas]]
@@ -98,7 +96,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @67+17 N. PASIVO. Débitos y partidas a pagar. Pasivos subordinados. [00166]
 [[revisions."2024".casillas]]
@@ -110,7 +107,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @84+17 N. PASIVO. Débitos y partidas a pagar. Depósitos recibidos por reaseguro cedido. [00167]
 [[revisions."2024".casillas]]
@@ -122,7 +118,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @101+17 N. PASIVO. Débitos y partidas a pagar. Deudas por operaciones de seguro. [00168]
 [[revisions."2024".casillas]]
@@ -134,7 +129,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @118+17 N. PASIVO. Débitos y partidas a pagar. Deudas con asegurados. [00169]
 [[revisions."2024".casillas]]
@@ -146,7 +140,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @135+17 N. PASIVO. Débitos y partidas a pagar. Deudas con mediadores. [00170]
 [[revisions."2024".casillas]]
@@ -158,7 +151,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @152+17 N. PASIVO. Débitos y partidas a pagar. Deudas condicionadas. [00171]
 [[revisions."2024".casillas]]
@@ -170,7 +162,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @169+17 N. PASIVO. Débitos y partidas a pagar. Deudas por operaciones de reaseguro. [00172]
 [[revisions."2024".casillas]]
@@ -182,7 +173,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @186+17 N. PASIVO. Débitos y partidas a pagar. Deudas por operaciones de coaseguro. [00173]
 [[revisions."2024".casillas]]
@@ -194,7 +184,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @203+17 N. PASIVO. Débitos y partidas a pagar. Obligaciones y otros valores negociables. [00174]
 [[revisions."2024".casillas]]
@@ -206,7 +195,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @220+17 N. PASIVO. Débitos y partidas a pagar. Deudas con entidades de crédito. [00175]
 [[revisions."2024".casillas]]
@@ -218,7 +206,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @237+17 N. PASIVO. Débitos y partidas a pagar. Deudas por operaciones preparatorias de contratos de seguro. [00176]
 [[revisions."2024".casillas]]
@@ -230,7 +217,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @254+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. [00177]
 [[revisions."2024".casillas]]
@@ -242,7 +228,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @271+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Deudas con las Administraciones Públicas. [00178]
 [[revisions."2024".casillas]]
@@ -254,7 +239,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @288+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Otras deudas con entidades del grupo y asociadas. [00179]
 [[revisions."2024".casillas]]
@@ -266,7 +250,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @305+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Entidades asociadas [00703]
 [[revisions."2024".casillas]]
@@ -278,7 +261,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @322+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Entidades multigrupo [00704]
 [[revisions."2024".casillas]]
@@ -290,7 +272,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @339+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Otros [00705]
 [[revisions."2024".casillas]]
@@ -302,7 +283,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @356+17 N. PASIVO. Débitos y partidas a pagar. Otras deudas. Resto de otras deudas. [00180]
 [[revisions."2024".casillas]]
@@ -314,7 +294,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @373+17 N. PASIVO. Derivados de cobertura. [00181]
 [[revisions."2024".casillas]]
@@ -326,7 +305,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @390+17 N. PASIVO. Provisiones técnicas. [00182]
 [[revisions."2024".casillas]]
@@ -338,7 +316,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @407+17 N. PASIVO. Provisiones técnicas. Provisión para primas no consumidas. [00183]
 [[revisions."2024".casillas]]
@@ -350,7 +327,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @424+17 N. PASIVO. Provisiones técnicas. Provisión para riesgos en curso. [00184]
 [[revisions."2024".casillas]]
@@ -362,7 +338,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @441+17 N. PASIVO. Provisiones técnicas. Provisión de seguros de vida. [00185]
 [[revisions."2024".casillas]]
@@ -374,7 +349,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @458+17 N. PASIVO. Provisiones técnicas. Provisión de seguros de vida. Provisión para primas no consumidas. [00186]
 [[revisions."2024".casillas]]
@@ -386,7 +360,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @475+17 N. PASIVO. Provisiones técnicas. Provisión de seguros de vida. Provisión para riesgos en curso. [00187]
 [[revisions."2024".casillas]]
@@ -398,7 +371,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @492+17 N. PASIVO. Provisiones técnicas. Provisión de seguros de vida. Provisión matemática. [00188]
 [[revisions."2024".casillas]]
@@ -410,7 +382,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @509+17 N. PASIVO. Provisiones técnicas. Provisión de seguros de vida. Provisión de seguros de vida cuando el riesgo de la inversión lo asuma el tomador. [00189]
 [[revisions."2024".casillas]]
@@ -422,7 +393,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @526+17 N. PASIVO. Provisiones técnicas. Provisión para prestaciones. [00190]
 [[revisions."2024".casillas]]
@@ -434,7 +404,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @543+17 N. PASIVO. Provisiones técnicas. Provisión para participación en benefi cios y para extornos. [00191]
 [[revisions."2024".casillas]]
@@ -446,7 +415,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @560+17 N. PASIVO. Provisiones técnicas. Otras provisiones técnicas. [00192]
 [[revisions."2024".casillas]]
@@ -458,7 +426,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @577+17 N. PASIVO. Provisiones no técnicas. [00193]
 [[revisions."2024".casillas]]
@@ -470,7 +437,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @594+17 N. PASIVO. Provisiones no técnicas. Provisiones para impuestos y otras contingencias legales. [00194]
 [[revisions."2024".casillas]]
@@ -482,7 +448,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @611+17 N. PASIVO. Provisiones no técnicas. Provisión para pensiones y obligaciones similares. [00195]
 [[revisions."2024".casillas]]
@@ -494,7 +459,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @628+17 N. PASIVO. Provisiones no técnicas. Provisión para pagos por convenios de liquidación. [00196]
 [[revisions."2024".casillas]]
@@ -506,7 +470,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @645+17 N. PASIVO. Provisiones no técnicas. Otras provisiones no técnicas. [00197]
 [[revisions."2024".casillas]]
@@ -518,7 +481,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @662+17 N. PASIVO. Pasivos fiscales. [00198]
 [[revisions."2024".casillas]]
@@ -530,7 +492,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @679+17 N. PASIVO. Pasivos fiscales. Pasivos por impuesto corriente. [00199]
 [[revisions."2024".casillas]]
@@ -542,7 +503,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @696+17 N. PASIVO. Pasivos fiscales. Pasivos por impuesto diferido. [00200]
 [[revisions."2024".casillas]]
@@ -554,7 +514,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @713+17 N. PASIVO. Resto de pasivos. [00201]
 [[revisions."2024".casillas]]
@@ -566,7 +525,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @730+17 N. PASIVO. Resto de pasivos. Periodificaciones. [00202]
 [[revisions."2024".casillas]]
@@ -578,7 +536,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @747+17 N. PASIVO. Resto de pasivos. Pasivos por asimetrías contables. [00203]
 [[revisions."2024".casillas]]
@@ -590,7 +547,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @764+17 N. PASIVO. Resto de pasivos. Comisiones y otros costes de adquisición del reaseguro cedido. [00204]
 [[revisions."2024".casillas]]
@@ -602,7 +558,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @781+17 N. PASIVO. Resto de pasivos. Otros pasivos. [00205]
 [[revisions."2024".casillas]]
@@ -614,7 +569,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @798+17 N. PASIVO. Pasivos vinculados con activos mantenidos para la venta. [00206]
 [[revisions."2024".casillas]]
@@ -626,7 +580,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @815+17 N. PASIVO. TOTAL PASIVO. [00207]
 [[revisions."2024".casillas]]
@@ -638,4 +591,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

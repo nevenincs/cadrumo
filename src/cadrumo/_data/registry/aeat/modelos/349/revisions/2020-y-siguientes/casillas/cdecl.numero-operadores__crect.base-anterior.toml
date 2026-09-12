@@ -9,7 +9,7 @@ required = true
 input_kind = "bound"
 binding = "iva-349-declarante-numero-operadores"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+additional_source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.importe-operaciones"
@@ -22,7 +22,7 @@ required = true
 input_kind = "bound"
 binding = "iva-349-declarante-importe-operaciones"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+additional_source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.numero-rectificaciones"
@@ -35,7 +35,7 @@ required = true
 input_kind = "bound"
 binding = "iva-349-declarante-numero-rectificaciones"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+additional_source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "decl.importe-rectificaciones"
@@ -48,7 +48,7 @@ required = true
 input_kind = "bound"
 binding = "iva-349-declarante-importe-rectificaciones"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
+additional_source_refs = ["aeat-modelo-349-procedure"]
 
 # --- Per-operator detail fields (Tipo 2 operador intracomunitario) ---
 
@@ -61,7 +61,6 @@ semantic_role = "operador_codigo_pais"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.nif-comunitario"
@@ -72,7 +71,6 @@ semantic_role = "intracomunitario_nif_iva"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.apellidos-razon-social"
@@ -83,7 +81,6 @@ semantic_role = "intracomunitario_operador_nombre"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.clave-operacion"
@@ -94,7 +91,6 @@ semantic_role = "intracomunitario_clave_operacion"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "op.base-imponible"
@@ -102,11 +98,10 @@ number = "134-146"
 section = ["operador", "operacion"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Rectification detail fields (Tipo 2 rectificaciones) ---
 
@@ -119,7 +114,6 @@ semantic_role = "intracomunitario_rectificacion_ejercicio"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.periodo-rectificado"
@@ -130,7 +124,6 @@ semantic_role = "periodo_rectificado"
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.base-rectificada"
@@ -138,11 +131,10 @@ number = "153-165"
 section = ["rectificacion", "importe"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
 id = "rect.base-anterior"
@@ -150,11 +142,9 @@ number = "166-178"
 section = ["rectificacion", "importe"]
 data_type = "money"
 semantic_role = "base_intracomunitaria"
-constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"], source_refs = ["aeat-dr-349-2020-current"] }
+constraints = { sign = "non_negative", legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"] }
 required = true
 input_kind = "manual"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Live cross-reference policy ---
-

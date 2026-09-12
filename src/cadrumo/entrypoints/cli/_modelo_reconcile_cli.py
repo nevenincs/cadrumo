@@ -218,5 +218,9 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
             for entry in entries
         )
     else:
-        lines.append(tr("cli.app.modelo.reconcile.list_empty", default="No reconciliations recorded yet."))
+        lines.append(
+            tr(
+                "cli.app.modelo.reconcile.list_empty",
+            )
+        )
     emit_envelope(ctx, command="modelo.reconcile.list", result=result, lines=lines)

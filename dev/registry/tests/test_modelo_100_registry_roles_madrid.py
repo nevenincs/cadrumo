@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
+
+from cadrumo.application.modelo.profile_binding import madrid_nacimiento_adopcion_candidate_weighted_count
+from cadrumo.domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 
 from ._modelo_100_registry_support import (
     _AUTONOMIC_DEDUCTION_ART_77_REF,
@@ -69,3 +74,31 @@ def test_modelo_100_madrid_2025_m26_nuevos_contribuyentes_pending_roles_follow_o
     assert tuple(current_pending.section) == _MADRID_DEDUCTION_SECTION
     assert current_pending.semantic_role == _MADRID_NUEVOS_CONTRIBUYENTES_PENDIENTE_ROLE
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
+
+
+_NACIMIENTO_ADOPCION_COUNT_BINDING = "renta-profile-madrid-nacimiento-adopcion-eligible-count"
+
+
+def test_madrid_nacimiento_adopcion_count_binding_declares_a_non_monetary_decimal() -> None:
+    """The prorrateo-weighted count is a fractional quantity, neither money nor a whole count.
+
+    The injector behind this binding shares a descendant's nacimiento/adopción
+    window between two custodians (DL 1/2010 arts. 4 y 18.1), so the value it
+    produces is genuinely fractional: an ``integer`` contract would truncate
+    the prorrata away, and ``money`` would label a count as currency.
+    """
+    revision = _modelo_100_snapshot(2025).revision
+    binding = next(item for item in revision.bindings if item.id == _NACIMIENTO_ADOPCION_COUNT_BINDING)
+
+    assert binding.value.data_type is BindingDataType.DECIMAL
+    assert binding.value.channel is BindingValueChannel.DECIMAL
+
+    shared_custody_facts = {
+        "renta_family.descendiente.0.birth_date": "2024-06-01",
+        "renta_family.descendiente.0.convivencia": "true",
+        "renta_family.descendiente.0.custodia_compartida": "true",
+    }
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(shared_custody_facts, 2024)
+
+    assert weighted_count == Decimal("0.5")
+    assert weighted_count != weighted_count.to_integral_value()

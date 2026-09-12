@@ -7,13 +7,16 @@ variant_id = "modelo-303-carry-disposition-verification-mapping:2025"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "rd-1624-1992:art-71"]
-source_refs = ["aeat-modelo-303-instructions", "aeat-dr-303-2025"]
+source_refs = ["aeat-modelo-303-procedure", "aeat-dr-303-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
 [[fact.variants.source_citations]]
-source_ref = "aeat-modelo-303-instructions"
-required_text = ["Tipo de declaración"]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-303-2025"
+required_text = ["xml"]
 
 [fact.variants.payload]
 kind = "mapping"

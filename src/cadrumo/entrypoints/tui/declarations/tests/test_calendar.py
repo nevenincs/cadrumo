@@ -7,7 +7,6 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
-from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Select, Static
@@ -33,6 +32,7 @@ from .....core.period import Period
 from .....domain.deadlines.models import ObligationStatus
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ...tests.frame import geometry_band
 from ..calendar import DeclarationsCalendarScreen
 from ..controller import DeclarationsCalendarController, calendar_focus_key, declarations_copy
 from ..models import DeclarationsCalendarScopeV1

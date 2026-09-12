@@ -7,7 +7,6 @@ from types import SimpleNamespace
 from typing import ClassVar, cast
 
 import pytest
-from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Button, Static
@@ -39,6 +38,7 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from ..operations.modal import OperationModalSettledOutcomeV1
+from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

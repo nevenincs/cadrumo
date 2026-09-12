@@ -11,6 +11,8 @@ from types import MappingProxyType
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.money.rounding import CENT
 from ...core.parsing.dates import parse_date
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_verification import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     ParsedVerificationPredicate,
@@ -576,9 +578,32 @@ def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> M
     )
 
 
-# TODO(fact-relocation): load verification predicate instances and reason declarations from selected registry revisions
+def _selected_revision_verification_predicates(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    query_service: RegistryQueryService | None = None,
+    as_of: _date | None = None,
+) -> tuple[VerificationPredicateDefinition, ...]:
+    """Read predicate instances from the revision selected by registry query."""
+    service = query_service or RegistryQueryService(bundled_authority())
+    revision = service._resolve_revision_for_scope(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        as_of=as_of,
+    ).revision
+    return tuple(revision.verification_predicates)
+
+
+# Predicate instances, finding reasons, operands, and legal references are
+# supplied by the selected ``RegistrySnapshot.revision`` at the verification
+# action boundary.  This module deliberately retains only the generic
+# predicate operators and finding projection; it does not author predicate
+# facts or provide a fallback catalogue.
 def evaluate_verification_predicates(
-    predicates: tuple[VerificationPredicateDefinition, ...],
+    predicates: tuple[VerificationPredicateDefinition, ...] | None,
     casilla_values: Mapping[CasillaId, Decimal],
     profile: TaxpayerProfile,
     text_values: Mapping[CasillaId, str] = MappingProxyType({}),
@@ -587,6 +612,12 @@ def evaluate_verification_predicates(
         None,
     ]
     | None = None,
+    *,
+    modelo: str | None = None,
+    filing_year: int | None = None,
+    period: str | None = None,
+    query_service: RegistryQueryService | None = None,
+    as_of: _date | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
@@ -620,6 +651,17 @@ def evaluate_verification_predicates(
         :func:`_classify_verification_outcome`:
             Converts finding severity into report completeness and grant status.
     """
+    if predicates is None:
+        if modelo is None or filing_year is None or period is None:
+            raise ValueError("predicate evaluation requires a selected registry revision")
+        predicates = _selected_revision_verification_predicates(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            query_service=query_service,
+            as_of=as_of,
+        )
+
     if not predicates:
         return []
 

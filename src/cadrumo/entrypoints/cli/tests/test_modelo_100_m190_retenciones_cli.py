@@ -129,7 +129,7 @@ def test_m100_2025_cli_m190_annual_retenciones_populates_0596(
             "--casilla",
             "0102=9600",
             "--binding",
-            "renta-2025-modelo-100-estimacion-directa-es-normal=1",
+            "renta-modelo-100-estimacion-directa-es-normal=1",
             "--binding",
             "renta-2025-modelo-184-atribucion-actividades-economicas=0",
             "--binding",

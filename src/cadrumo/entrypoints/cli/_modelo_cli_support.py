@@ -143,11 +143,6 @@ def parse_kv_spec[T](
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.kv_format_error",
-                default=(
-                    "{flag} must be written as {key_label}={value_label}. "
-                    "This is a key-value entry: put the field name on the left of one equals sign "
-                    "and the value on the right. Received {spec}."
-                ),
                 flag=flag,
                 key_label=key_label,
                 value_label=value_label,
@@ -171,11 +166,6 @@ def validate_binding_key(key: str, spec: str) -> None:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_binding_key",
-                default=(
-                    f"--binding key {key!r} is not a valid BindingId "
-                    f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
-                    f"got {spec!r}"
-                ),
             ),
         ) from exc
 
@@ -240,11 +230,6 @@ def validate_relation_key(key: str, spec: str) -> None:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_relation_key",
-                default=(
-                    f"--relation key {key!r} is not a valid RelationId "
-                    f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
-                    f"got {spec!r}"
-                ),
             ),
         ) from exc
 
@@ -268,11 +253,6 @@ def validate_casilla_key(key: str, spec: str) -> None:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_casilla_key",
-                default=(
-                    f"--casilla key {key!r} is not a valid CasillaId "
-                    f"(max {_CASILLA_MAX_LEN} chars, alphanumeric/dotted ref); "
-                    f"got {spec!r}"
-                ),
             ),
         ) from exc
 
@@ -332,11 +312,6 @@ def _parse_row_field_tokens(tokens: list[str]) -> dict[str, str]:
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.row_kv_format_error",
-                    default=(
-                        "--row field {token} must be written as KEY=VALUE. "
-                        "This is a key-value entry: put the row field name on the left of one equals sign "
-                        "and its value on the right."
-                    ),
                     token=token,
                 ),
             )
@@ -345,7 +320,6 @@ def _parse_row_field_tokens(tokens: list[str]) -> dict[str, str]:
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.work.row_empty_key",
-                    default=f"--row field key cannot be empty in {token!r}",
                     token=token,
                 ),
             )
@@ -362,7 +336,6 @@ def _parse_row_spec_tokens(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_validation_error",
-                default=f"--row 'spec' failed validation: {exc}",
                 row_type="spec",
                 error=str(exc),
             ),
@@ -371,7 +344,6 @@ def _parse_row_spec_tokens(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_empty_spec",
-                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
             ),
         )
     row_type = parts[0].lower()
@@ -381,7 +353,6 @@ def _parse_row_spec_tokens(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_unknown_type",
-                default=(f"--row type {row_type!r} is not recognised; supported types: {list(supported)}"),
                 row_type=row_type,
                 supported=", ".join(supported),
             ),
@@ -419,11 +390,6 @@ def _validate_m349_row_nif(row_type: str, values: Mapping[str, str | Decimal]) -
     raise typer.BadParameter(
         tr(
             "cli.app.modelo.work.row_m349_invalid_nif",
-            default=(
-                f"--row {row_type}: nif_comunitario {nif!r} does not match "
-                f"the expected NIF-IVA format for country {country_code!r} "
-                "(Council Directive 2006/112/EC Annex XI)"
-            ),
             nif=nif,
             pais=country_code,
         ),
@@ -444,7 +410,6 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_validation_error",
-                default=f"--row {row_type!r} failed validation: {exc}",
                 row_type=row_type,
                 error=str(exc),
             ),
@@ -478,7 +443,6 @@ def optional_decimal_option(raw: str | None, *, translation_key: str, default: s
             tr(
                 translation_key,
                 value=raw,
-                default=default,
             ),
         )
     return parsed

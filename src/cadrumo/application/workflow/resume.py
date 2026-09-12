@@ -64,9 +64,9 @@ from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from .abort import WorkflowAbortReason
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
-from .abort import WorkflowAbortReason
 from .run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
 
 if TYPE_CHECKING:

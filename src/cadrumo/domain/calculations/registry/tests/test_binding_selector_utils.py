@@ -2,29 +2,41 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, NamedTuple
 
 import pytest
+from pydantic import BaseModel
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ..binding_selector_utils import BindingRowSetSelector, binding_row_set_selector
+from ..binding_provider_registration import provider_model_for
+from ..binding_selector_utils import BindingRowSetSelector, binding_row_set_selector, selector_as_dict
+from ..binding_temporal import (
+    FiledCurrentPeriod,
+    FilingYearOffset,
+    PriorQuarterExpandingSpan,
+    SameFilingYearPeriods,
+    SameTargetContext,
+    TargetPeriodOffset,
+)
 from ..errors import RegistryValidationError
-from ..schema import DataBindingDefinition
+from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _binding(
-    selector: dict[str, Any],
+    provider_fields: dict[str, Any],
     *,
     source: BindingSourceKind = BindingSourceKind.WITHHOLDING,
     aggregation: BindingAggregation | None = None,
-) -> DataBindingDefinition:
-    return DataBindingDefinition.model_validate(
+    value: dict[str, Any] | None = None,
+) -> BindingDefinition:
+    """Build one binding from its provider fields and an explicit value contract."""
+    return BindingDefinition.model_validate(
         {
             "id": "binding-under-test",
-            "source": source,
-            "selector": selector,
+            "provider": {"kind": source, **provider_fields},
+            "value": value or {"data_type": "text", "channel": "row_set", "row_grouping": "withholding"},
             "aggregation": aggregation,
             "legal_refs": ("ley-37-1992:art-1",),
             "source_refs": ("aeat-dr-190",),
@@ -80,6 +92,7 @@ def test_binding_row_set_selector_rejects_a_non_row_set_eligible_binding() -> No
             "data_type": "money",
         },
         source=BindingSourceKind.MANUAL_INPUT,
+        value={"data_type": "money", "channel": "decimal"},
     )
 
     with pytest.raises(RegistryValidationError, match="is not row-set-eligible"):
@@ -114,3 +127,96 @@ def test_binding_row_set_selector_rejects_non_row_fact_with_row_keys() -> None:
 
     with pytest.raises(RegistryValidationError, match="non-row fact"):
         binding_row_set_selector(binding)
+
+
+_SCALAR_VALUE: dict[str, Any] = {"data_type": "money", "channel": "decimal"}
+_ROW_VALUE: dict[str, Any] = {"data_type": "money", "channel": "row_set"}
+
+
+class _TemporalCase(NamedTuple):
+    """One temporal union member on a provider whose own invariants admit it."""
+
+    source: BindingSourceKind
+    fields: dict[str, Any]
+    temporal: BaseModel
+    value: dict[str, Any]
+    op: BindingAggregationOp
+
+
+_PREVIOUS_FILING_FIELDS: dict[str, Any] = {"source_modelo": "303", "source_casilla_id": "110"}
+_M303_FIELDS: dict[str, Any] = {
+    "source_modelo": "303",
+    "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
+    "summary_casilla_id": "80",
+}
+_INVENTORY_FIELDS: dict[str, Any] = {
+    "modelo": "100",
+    "projection_grain": "taxpayer_year_activity",
+    "fact": "row_field",
+    "record": "inventory_activity",
+    "grouping": "per_inventory_activity",
+    "row_field": "closing_minus_opening_positive",
+    "target_casilla_id": "0177",
+}
+
+
+def _temporal_cases() -> tuple[_TemporalCase, ...]:
+    """Return every temporal union member on a provider whose invariants admit it.
+
+    Each member is built with as few fields as its own model requires, so the
+    two members that require none -- ``same_target_context`` and
+    ``prior_quarter_expanding_span`` -- are exercised exactly as a fully
+    defaulted nested union member, which is the case the projection used to
+    lose.
+    """
+
+    def previous_filing(temporal: BaseModel) -> _TemporalCase:
+        return _TemporalCase(
+            BindingSourceKind.PREVIOUS_FILING,
+            _PREVIOUS_FILING_FIELDS,
+            temporal,
+            _SCALAR_VALUE,
+            BindingAggregationOp.COPY,
+        )
+
+    return (
+        _TemporalCase(
+            BindingSourceKind.INVENTORY,
+            _INVENTORY_FIELDS,
+            SameTargetContext(),
+            _ROW_VALUE,
+            BindingAggregationOp.ROWS,
+        ),
+        _TemporalCase(
+            BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
+            _M303_FIELDS,
+            FiledCurrentPeriod(source_period="4T"),
+            _SCALAR_VALUE,
+            BindingAggregationOp.SUM,
+        ),
+        previous_filing(SameFilingYearPeriods(source_periods=("0A",))),
+        previous_filing(FilingYearOffset(years=-1, source_periods=("0A",))),
+        previous_filing(TargetPeriodOffset(periods=-1)),
+        previous_filing(PriorQuarterExpandingSpan()),
+    )
+
+
+@pytest.mark.parametrize("case", _temporal_cases(), ids=lambda case: type(case.temporal).__name__)
+def test_selector_projection_round_trips_every_temporal_member(case: _TemporalCase) -> None:
+    """A nested temporal member survives the selector projection, including a fully defaulted one.
+
+    A member built entirely from defaults sets no field, so an unset-excluding
+    dump used to drop its discriminator too and the mapping no longer named
+    which member it was. Re-validation then failed on the union tag rather than
+    on anything authored.
+    """
+    binding = _binding(
+        {**case.fields, "temporal": case.temporal},
+        source=case.source,
+        value=case.value,
+        aggregation=BindingAggregation(op=case.op),
+    )
+
+    projected = selector_as_dict(binding)
+
+    assert provider_model_for(case.source).model_validate(projected).temporal == case.temporal

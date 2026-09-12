@@ -6,7 +6,7 @@ non-numeric value such as ``false`` otherwise produces an opaque "is not a
 decimal" refusal. :func:`_decimal_binding_value` teaches the accepted encoding on
 failure, enumerating each accepted decimal and its meaning derived from the
 binding's boolean selector. These tests exercise the real parsing function with a
-real :class:`DataBindingDefinition`, so no registry snapshot load is required.
+real :class:`BindingDefinition`, so no registry snapshot load is required.
 """
 
 from __future__ import annotations
@@ -16,37 +16,50 @@ from decimal import Decimal
 import pytest
 
 from ....core.errors.error_codes import resolve_error_message
-from ....domain.calculations.registry.schema import DataBindingDefinition
+from ....domain.calculations.registry.schema import BindingDefinition
 from ..calculate_input import ModeloCalculateDecimalInputError, _decimal_binding_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _boolean_binding() -> DataBindingDefinition:
-    return DataBindingDefinition.model_validate(
+def _boolean_binding() -> BindingDefinition:
+    return BindingDefinition.model_validate(
         {
-            "id": "renta-2025-modelo-100-estimacion-directa-es-normal",
-            "source": "manual_input",
-            "selector": {
+            "id": "renta-modelo-100-estimacion-directa-es-normal",
+            "provider": {
+                "kind": "manual_input",
                 "casilla_id": "0168",
                 "data_type": "boolean",
                 "true_value": "N",
                 "false_value": "S",
             },
-            "aggregation": {"op": "copy"},
-            "typed_enum": "EstimacionDirectaModalidad",
+            "value": {
+                "data_type": "enum",
+                "channel": "enum",
+                "typed_enum": "EstimacionDirectaModalidad",
+            },
+            "aggregation": {
+                "op": "copy",
+            },
             "legal_refs": ("ley-35-2006:art-30",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },
     )
 
 
-def _scalar_binding() -> DataBindingDefinition:
-    return DataBindingDefinition.model_validate(
+def _scalar_binding() -> BindingDefinition:
+    return BindingDefinition.model_validate(
         {
             "id": "renta-2025-scalar-input",
-            "source": "manual_input",
-            "selector": {"casilla_id": "0003", "data_type": "money"},
+            "provider": {
+                "kind": "manual_input",
+                "casilla_id": "0003",
+                "data_type": "money",
+            },
+            "value": {
+                "data_type": "money",
+                "channel": "decimal",
+            },
             "legal_refs": ("ley-35-2006:art-99",),
             "source_refs": ("aeat-dr-100-2025-dictionary",),
         },

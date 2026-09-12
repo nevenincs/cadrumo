@@ -15,3 +15,13 @@ updated_at = 2026-07-30
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Model 216, autoliquidació de retencions de l'impost sobre la renda de no residents sense establiment permanent"
+
+[language.en]
+short_description = "Modelo 216, return for withholding under non-resident income tax without a permanent establishment"
+
+[language.hu]
+short_description = "216-os modell: a telephellyel nem rendelkező nem rezidensek jövedelemadójának adólevonási bevallása"
+

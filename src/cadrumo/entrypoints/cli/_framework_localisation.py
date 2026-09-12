@@ -57,9 +57,15 @@ def localise_help_section_headers() -> None:
     import typer.core as _typer_core
 
     headings = {
-        "Arguments": tr("cli.help.panel.arguments", default="Arguments"),
-        "Options": tr("cli.help.panel.options", default="Options"),
-        "Commands": tr("cli.help.panel.commands", default="Commands"),
+        "Arguments": tr(
+            "cli.help.panel.arguments",
+        ),
+        "Options": tr(
+            "cli.help.panel.options",
+        ),
+        "Commands": tr(
+            "cli.help.panel.commands",
+        ),
     }
 
     def _localised_gettext(message: str) -> str:
@@ -91,7 +97,7 @@ def _localised_missing_prefix(rendered: str) -> str:
     """Swap Typer's English ``Missing …`` prefix for its localised equivalent."""
     for match_prefix, key, default, strip_prefix in _MISSING_PARAMETER_PREFIXES:
         if rendered.startswith(match_prefix):
-            return f"{tr(key, default=default)}{rendered.removeprefix(strip_prefix)}"
+            return f"{tr(key)}{rendered.removeprefix(strip_prefix)}"
     return rendered
 
 
@@ -100,14 +106,15 @@ def _localised_invalid_value(rendered: str) -> str:
     if rendered.startswith("Invalid value for "):
         prefix, separator, detail = rendered.partition(": ")
         parameter = prefix.removeprefix("Invalid value for ")
-        rendered = (
-            f"{tr('cli.help.invalid_value_for', default='Invalid value for %{parameter}', parameter=parameter)}"
-            f"{separator}{detail}"
-        )
+        rendered = f"{tr('cli.help.invalid_value_for', parameter=parameter)}{separator}{detail}"
     elif rendered.startswith("Invalid value"):
-        invalid_value = tr("cli.help.invalid_value", default="Invalid value")
+        invalid_value = tr(
+            "cli.help.invalid_value",
+        )
         rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
-    localised_integer = tr("cli.help.not_valid_integer", default="is not a valid integer.")
+    localised_integer = tr(
+        "cli.help.not_valid_integer",
+    )
     # Typer vendors its own Click fork whose IntParamType.name is ``int``
     # (upstream Click uses ``integer``), so the conversion failure reads
     # "is not a valid int."; localise both spellings. The "int." form is
@@ -178,11 +185,17 @@ def localise_typer_parse_error_messages() -> None:
             self,
             prog,
             args,
-            tr("cli.help.usage_prefix", default="Usage: ") if prefix is None else prefix,
+            tr(
+                "cli.help.usage_prefix",
+            )
+            if prefix is None
+            else prefix,
         )
 
     def _localised_error_prefix() -> str:
-        return tr("cli.help.panel.error", default="Error")
+        return tr(
+            "cli.help.panel.error",
+        )
 
     # ADAPTER-INTERNAL-ALIAS-RATIONALE-CLICK-SHOW: mirrors Click's own
     # untyped ClickException.show(file: IO[Any] | None) signature so this
@@ -227,7 +240,6 @@ def localise_typer_parse_error_messages() -> None:
                 "",
                 tr(
                     "cli.help.try_for_help",
-                    default="Try '{command_path} {help_option}' for help.",
                 ),
             )
             hint = f"{hint_template.format(command_path=command, help_option=option)}\n"

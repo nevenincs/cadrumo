@@ -146,7 +146,7 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
 
         m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(m100_snapshot, repository=repository)
-        assert m100_prefill.binding_values["renta-2025-base-liquidable-negativa-general-anterior"] == Decimal("0")
+        assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
         m130_snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(m130_snapshot, repository=repository)

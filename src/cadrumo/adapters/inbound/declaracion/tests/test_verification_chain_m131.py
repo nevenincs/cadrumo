@@ -46,7 +46,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
       1. parse_declaracion with año_override=2026, period_override='1T'.
       2. Filter to non-computed casillas (01, 02, 03, 05, 08, 09, 12, 14) -> inputs.
       3. Supply binding_values for casilla 11 (previous-filing bound):
-         modelo-131-2026-resultados-negativos-anteriores = 0.
+         modelo-131-resultados-negativos-anteriores = 0.
       4. calculate_registry_snapshot.
       5. Assert engine computes:
          07 = 02 + 04 + 06
@@ -74,7 +74,7 @@ def test_verification_chain_m131_engine_recomputes_closure_casillas() -> None:
     inputs = _decimal_inputs_from_extracted_values(extracted, excluding=_COMPUTED_CASILLAS_M131)
 
     binding_values: dict[BindingId, Decimal] = {
-        "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
+        "modelo-131-resultados-negativos-anteriores": Decimal("0"),
     }
     engine_values = _calculate_engine_values_from_inputs(
         modelo="131",

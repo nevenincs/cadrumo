@@ -7,9 +7,16 @@ variant_id = "iva-category-component-catalogue:2022-01-01"
 date_axis = "filing_period"
 valid_from = 2022-01-01
 legal_refs = ["ley-35-2006:art-99", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-13", "ley-37-1992:art-130", "ley-37-1992:art-131", "ley-37-1992:art-134", "ley-37-1992:art-15", "ley-37-1992:art-154", "ley-37-1992:art-158", "ley-37-1992:art-161", "ley-37-1992:art-17", "ley-37-1992:art-20", "ley-37-1992:art-21", "ley-37-1992:art-22", "ley-37-1992:art-25", "ley-37-1992:art-26", "ley-37-1992:art-69", "ley-37-1992:art-7", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-439-2007:art-76", "rd-439-2007:art-95"]
-source_refs = ["cadrumo-iva-component-row-audit"]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["Modelo 303"]
 
 [fact.variants.payload]
 kind = "mapping"

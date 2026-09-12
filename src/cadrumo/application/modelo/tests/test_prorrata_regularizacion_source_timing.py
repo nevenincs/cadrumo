@@ -12,7 +12,7 @@ See Also:
         Canonical no-persist engine materialisation seam under test.
     :data:`~application.modelo._calculation_source_staging._PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS`
         Canonical source-value order consumed by the resolver.
-    :class:`~domain.calculations.registry._bindings._ProrrataRegularizacionSelector`
+    :class:`~domain.calculations.registry._bindings.ProrrataRegularizacionProvider`
         Registry selector contract that declares the source casilla set.
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Downstream resolver that consumes these materialised values.

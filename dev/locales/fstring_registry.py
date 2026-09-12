@@ -7,10 +7,12 @@ bounded f-string pattern whose value space is fully known at import time
 so the scaffold can expand them into concrete placeholder entries.
 
 Every f-string ``tr()`` call site with a known enumeration source must be
-registered here as a :class:`FStringKeyRegistration`. Open-ended patterns
-(e.g. ``profile.keys.{profile_key}`` or ``sheets.detalle.headers.{row_field}``)
-remain namespace-marker only because their value spaces are not bounded at
-import time.
+registered here as a :class:`FStringKeyRegistration`. Dynamic values whose
+producer is data- or schema-backed are registered from that producer's finite
+vocabulary as well (for example, wizard profile descriptors and registry
+``row_field`` declarations). A genuinely unenumerable source must fail the
+discovery path explicitly; it must never be represented by an empty
+registration or an exemption.
 
 Adding a new enum value without updating the matching registration here
 will cause scaffold to omit the required locale entries, which the
@@ -35,6 +37,9 @@ class _FlowLike(Protocol):
 
     @property
     def id(self) -> str: ...
+
+    @property
+    def sections(self) -> Iterable[object]: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -157,12 +162,16 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         OperationCancellationRefusalCode,
         OperationResponseControlRefusalCode,
     )
+    from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
+    from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
     from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
-    from cadrumo.core.errors.error_codes import ErrorCategory
+    from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
+    from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.core.storage_taxonomy import StorageArea
+    from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.contribuyente.ccaa import CCAA
     from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
     from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
@@ -172,6 +181,12 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         IrpfSpecialRegime,
     )
     from cadrumo.domain.user_profile.values import ProfileSetupState
+    from dev.docs.terminology_handbook.topics import load_topic_catalogue
+    from dev.locales._registry_scanner import scan_detail_row_fields
+
+    apoderado_scope_values = tuple(scope.code.lower() for scope in load_default_catalogue().scopes)
+    topic_slugs = tuple(topic.slug for topic in load_topic_catalogue().topics)
+    row_fields = scan_detail_row_fields()
 
     return (
         *_wizard_choice_label_registrations(
@@ -191,6 +206,16 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             fiscal_residency=FiscalResidency,
         ),
         *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
+        *_dynamic_family_registrations(
+            wizard_flows=WIZARD_FLOWS,
+            apoderado_scope_values=apoderado_scope_values,
+            context_label_keys=ERROR_CONTEXT_LABEL_KEYS,
+            profile_validation_codes=PROFILE_VALIDATION_ISSUE_CODES,
+            row_fields=row_fields,
+            topic_slugs=topic_slugs,
+            home_reason_codes=HOME_ACTION_REASON_CODES,
+            wizard_reason_codes=WIZARD_VALIDATION_REASON_CODES,
+        ),
         *_surface_registrations(profile_setup_state=ProfileSetupState),
         *_storage_registrations(
             storage_area=StorageArea,
@@ -628,6 +653,81 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
                 "option_required",
                 "option_optional",
             ),
+        ),
+    )
+
+
+def _dynamic_family_registrations(
+    *,
+    wizard_flows: Iterable[_FlowLike],
+    apoderado_scope_values: Iterable[str],
+    context_label_keys: Iterable[str],
+    profile_validation_codes: Iterable[str],
+    row_fields: Iterable[str],
+    topic_slugs: Iterable[str],
+    home_reason_codes: Iterable[str],
+    wizard_reason_codes: Iterable[str],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Register the eight formerly-unbounded production f-string families.
+
+    Each iterable is supplied by the owning producer in ``_build_registrations``:
+    no current locale catalogue is consulted.  The wizard profile-key values
+    come from the descriptor graph itself, while the sheet values come from a
+    strict structural scan of the committed registry source.
+    """
+    profile_key_values: list[str] = []
+    for flow in wizard_flows:
+        for section in flow.sections:
+            for question in section.questions:
+                profile_key = getattr(question, "profile_key", None)
+                if profile_key is not None and profile_key not in profile_key_values:
+                    profile_key_values.append(profile_key)
+
+    return (
+        FStringKeyRegistration(
+            description="cli.config.auth.apoderado.scope.* (ApoderamientosCatalogue scopes.toml)",
+            key_factory=lambda v: f"cli.config.auth.apoderado.scope.{v}",
+            values=tuple(apoderado_scope_values),
+        ),
+        FStringKeyRegistration(
+            description="errors.context_labels.* (ERROR_CONTEXT_LABEL_KEYS)",
+            key_factory=lambda v: f"errors.context_labels.{v}",
+            values=tuple(context_label_keys),
+        ),
+        FStringKeyRegistration(
+            description="profile.keys.* (WizardFlow question profile_key declarations)",
+            key_factory=lambda v: f"profile.keys.{v}",
+            values=tuple(profile_key_values),
+        ),
+        FStringKeyRegistration(
+            description="profile.validation.* (PROFILE_VALIDATION_ISSUE_CODES)",
+            key_factory=lambda v: f"profile.validation.{v}",
+            values=tuple(profile_validation_codes),
+        ),
+        FStringKeyRegistration(
+            description="sheets.detalle.headers.* (bundled registry row_field declarations)",
+            key_factory=lambda v: f"sheets.detalle.headers.{v}",
+            values=tuple(row_fields),
+        ),
+        FStringKeyRegistration(
+            description="topic.*.title (bundled terminology topic slugs)",
+            key_factory=lambda v: f"topic.{v}.title",
+            values=tuple(topic_slugs),
+        ),
+        FStringKeyRegistration(
+            description="topic.*.body (bundled terminology topic slugs)",
+            key_factory=lambda v: f"topic.{v}.body",
+            values=tuple(topic_slugs),
+        ),
+        FStringKeyRegistration(
+            description="tui.home.reason.* (HOME_ACTION_REASON_CODES)",
+            key_factory=lambda v: f"tui.home.reason.{v}",
+            values=tuple(home_reason_codes),
+        ),
+        FStringKeyRegistration(
+            description="wizard.errors.* (WIZARD_VALIDATION_REASON_CODES)",
+            key_factory=lambda v: f"wizard.errors.{v}",
+            values=tuple(wizard_reason_codes),
         ),
     )
 

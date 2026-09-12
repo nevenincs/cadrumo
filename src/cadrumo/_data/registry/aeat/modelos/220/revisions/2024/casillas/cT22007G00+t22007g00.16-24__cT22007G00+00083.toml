@@ -61,7 +61,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @25+9 An. Eliminación (1).N.I.F. de la Entidad perceptora
 [[revisions."2024".casillas]]
@@ -73,7 +72,6 @@ data_type = "nif"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @34+17 N. Eliminación (1).Retornos intragrupo
 [[revisions."2024".casillas]]
@@ -85,7 +83,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @51+17 N. Eliminación (1).Ayudas económicas intragrupo
 [[revisions."2024".casillas]]
@@ -97,7 +94,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @68+17 N. Eliminación (1).Resultados distribuidos por la entidad cabeza del grupo
 [[revisions."2024".casillas]]
@@ -109,7 +105,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @85+17 N. Eliminación (1).Total eliminaciones
 [[revisions."2024".casillas]]
@@ -121,7 +116,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @4316+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Retornos intragrupo(*) Total [00103]
 [[revisions."2024".casillas]]
@@ -133,7 +127,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @4333+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Ayudas económicas intragrupo (*). Total [00105]
 [[revisions."2024".casillas]]
@@ -145,7 +138,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @4350+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Resultados distribuidos por la entidad cabeza de grupo (*). Total [00107]
 [[revisions."2024".casillas]]
@@ -157,7 +149,6 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]
 
 # @4367+17 N. GRUPOS DE COOPERATIVAS: Eliminación de "retornos intragrupo", "Ayudas económicas intragrupo" y "resultados distribuidos por la entidad cabeza del grupo" (R:D. 1345/1992). Total eliminaciones. Total [00083]
 [[revisions."2024".casillas]]
@@ -169,4 +160,3 @@ data_type = "money"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
-source_refs = ["aeat-dr-220-2024"]

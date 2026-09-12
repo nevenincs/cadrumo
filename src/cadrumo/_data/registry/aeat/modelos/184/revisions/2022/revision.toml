@@ -1,4 +1,7 @@
 [revisions."2022"]
+predecessor = "2019-2021"
+casilla_source_refs = ["boe-dr-184-2022"]
+reviewed_against = "2019-2021"
 authority_grade = "applicability"
 # This epoch has its own BOE design.  Strict parsing detects its first field at
 # position 103, so it cannot safely carry either earlier or later coordinates.

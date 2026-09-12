@@ -147,10 +147,6 @@ def _resolve_provenance(
             raise bad(
                 tr(
                     "cli.app.ledger.prorrata.provenance_not_electable",
-                    default=(
-                        "Provenance {provenance!r} is not operator-declarable; accepted: {accepted}. "
-                        "The art. 105.Cinco interrupted percentage is computed from the register."
-                    ),
                     provenance=raw.value,
                     accepted=", ".join(member.value for member in ELECTABLE_PROVENANCES),
                 ),
@@ -159,14 +155,12 @@ def _resolve_provenance(
             raise bad(
                 tr(
                     "cli.app.ledger.prorrata.reference_required",
-                    default="Provenance {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires --reference.",
                     provenance=raw.value,
                 ),
             ) from exc
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.reference_not_permitted",
-                default="--reference is permitted only with an aeat_autorizada or inicio_actividad provenance.",
             ),
         ) from exc
 
@@ -378,10 +372,6 @@ def _refuse_blocking_findings(findings: tuple[ProrrataSeedFinding, ...]) -> None
     raise bad(
         tr(
             "cli.app.ledger.prorrata.seed_blocked",
-            default=(
-                "The carried prior-definitive prorrata seed is blocked and nothing was written. "
-                "Blocking findings: {detail}"
-            ),
             detail=" | ".join(f"[{finding.code}] {finding.message}" for finding in blocking),
         ),
     )
@@ -407,11 +397,6 @@ def _seed_notices(
         code=_SEED_LOCAL_AUTHORITY_NOTICE_CODE,
         message=tr(
             "cli.app.ledger.prorrata.seed_local_authority",
-            default=(
-                "The provisional percentage was carried locally from your stored {modelo} "
-                "{filing_year} {period} settlement observation (LIVA art. 105.Uno). It is not a "
-                "percentage AEAT issued for this ejercicio."
-            ),
             modelo=seed.source_modelo,
             filing_year=seed.source_filing_year,
             period=seed.source_period,
@@ -441,11 +426,6 @@ def _refuse_missing_seed_source(ejercicio: int) -> NoReturn:
     raise bad(
         tr(
             "cli.app.ledger.prorrata.seed_source_absent",
-            default=(
-                "No stamped Modelo 303 settlement observation for {prior_ejercicio} carries a "
-                "definitive prorrata percentage, so ejercicio {ejercicio} cannot be seeded. "
-                "The prior definitive is missing, not zero: capture the prior settlement first."
-            ),
             prior_ejercicio=ejercicio - 1,
             ejercicio=ejercicio,
         ),
@@ -474,11 +454,6 @@ def _seed_findings_with_existing_entry(
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.seed_regulated_override_standing",
-                default=(
-                    "Ejercicio {ejercicio} already carries a {provenance} provisional prorrata, "
-                    "which outranks the art. 105.Uno carry. Nothing was written; replace that "
-                    "declaration explicitly before seeding."
-                ),
                 ejercicio=ejercicio,
                 provenance=standing_provenance.value,
             ),
@@ -570,11 +545,6 @@ def prorrata_seed_sector(
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
-                default=(
-                    "Sector {sector_id} holds no settled definitive percentage for {prior_ejercicio}, "
-                    "so ejercicio {ejercicio} cannot be seeded. The prior definitive is missing, not "
-                    "zero: settle {prior_ejercicio} for this sector first."
-                ),
                 sector_id=sector_id,
                 prior_ejercicio=ejercicio - 1,
                 ejercicio=ejercicio,
@@ -631,10 +601,6 @@ def prorrata_settle_sector(
         raise bad(
             tr(
                 "cli.app.ledger.prorrata.settle_sector_entry_absent",
-                default=(
-                    "No register entry exists for ejercicio {ejercicio} sector {sector_id}, so there "
-                    "is nothing to settle. Elect the sector's regime for that ejercicio first."
-                ),
                 ejercicio=ejercicio,
                 sector_id=sector_id,
             ),

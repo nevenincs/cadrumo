@@ -271,12 +271,12 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
         _c("1759"): Decimal("800"),
     }
     binding_values = {
-        "renta-2021-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-        "renta-2021-modelo-111-retenciones-periodicas": Decimal("0"),
-        "renta-2021-modelo-123-retenciones-periodicas": Decimal("0"),
-        "renta-2021-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
-        "renta-2021-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2021-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     relation_values = {
         "renta-2021-rel-130-pagos-fraccionados": Decimal("0"),

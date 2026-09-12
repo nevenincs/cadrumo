@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from functools import cache
 from pathlib import Path
 
@@ -18,7 +18,6 @@ from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 
 _REVISION_HEADER_RE = re.compile(r'^\[\[?revisions\.(?:"([^"]+)"|([A-Za-z0-9_-]+))(?=[.\]])')
 _REVISION_FIELD_RE = re.compile(r'^\[\[?revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.([A-Za-z0-9_]+)')
-MAX_SINGLE_FILE_MODELO_LINES = 2_000
 MAX_TOML_FRAGMENT_LINES = 1_750
 MAX_TOML_ROW_CHARS = 600
 TOML_CASILLA_ID_KEY = "casilla_id"
@@ -168,19 +167,23 @@ def load_revision(modelo_dir: Path, *, revision_id: str = "2025") -> ModeloRevis
     return load_modelo_directory(modelo_dir).revisions[revision_id]
 
 
-def build_directory_layout(
+def write_fragmented_modelo(
     target_dir: Path,
     *,
     manifest_text: str,
-    revision_files: dict[str, str],
-) -> None:
-    """Materialise a directory-mode modelo at ``target_dir``."""
+    revisions: Mapping[str, str],
+) -> Path:
+    """Materialise a directory-mode modelo whose revisions are fragment trees.
+
+    Each value of ``revisions`` is a whole ``[revisions."<id>"]`` table with
+    inline section arrays; it is split into the scalar-only ``revision.toml``
+    plus one fragment per section, which is the only supported revision layout.
+    """
     target_dir.mkdir(parents=True, exist_ok=True)
     (target_dir / "manifest.toml").write_text(manifest_text, encoding="utf-8", newline="\n")
-    revisions_dir = target_dir / "revisions"
-    revisions_dir.mkdir(exist_ok=True)
-    for filename, content in revision_files.items():
-        (revisions_dir / filename).write_text(content, encoding="utf-8", newline="\n")
+    for revision_id, revision_text in revisions.items():
+        write_fragmented_revision(target_dir / "revisions" / revision_id, revision_text)
+    return target_dir
 
 
 def write_minimal_shared_catalogues(legal_dir: Path, *, years: Sequence[int] = (2025,)) -> None:
@@ -336,22 +339,30 @@ def _revision_id_from_line(
     return revision_id
 
 
-def split_single_file_modelo_text(text: str) -> tuple[str, str, dict[str, str]]:
-    """Split one modelo TOML into manifest text and revision table text."""
+def split_modelo_text(text: str) -> tuple[str, dict[str, str]]:
+    """Split one whole-modelo TOML text into manifest text and per-revision text.
+
+    A test-authoring convenience for expressing a fixture modelo as one readable
+    block: it is a text transformation only, and the result is always written
+    out as the directory layout the loader accepts.
+    """
     manifest_lines: list[str] = []
-    revision_lines: list[str] = []
     revision_lines_by_id: dict[str, list[str]] = {}
     current_revision_id: str | None = None
     for line in text.splitlines(keepends=True):
         current_revision_id = _revision_id_from_line(line, current_revision_id, revision_lines_by_id)
         if current_revision_id is not None:
-            revision_lines.append(line)
             revision_lines_by_id[current_revision_id].append(line)
         else:
             manifest_lines.append(line)
 
     return (
         "".join(manifest_lines),
-        "".join(revision_lines),
         {revision_id: "".join(lines) for revision_id, lines in revision_lines_by_id.items()},
     )
+
+
+def write_fragmented_modelo_from_text(target_dir: Path, text: str) -> Path:
+    """Materialise one whole-modelo TOML text as the fragmented directory layout."""
+    manifest_text, revisions = split_modelo_text(text)
+    return write_fragmented_modelo(target_dir, manifest_text=manifest_text, revisions=revisions)

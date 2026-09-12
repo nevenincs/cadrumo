@@ -35,7 +35,7 @@ _UNKNOWN_CONSTRUCT_MEMBER_CASILLA: CasillaId = validated_casilla_id(
 def _m100_2024_deduccion_maternidad_bindings() -> Mapping[str, Decimal]:
     """Return M100 2024's empty-descendant maternity binding from domain law."""
     return {
-        "renta-2024-profile-deduccion-maternidad": Decimal(
+        "renta-profile-deduccion-maternidad": Decimal(
             compute_deduccion_maternidad_0611(
                 [],
                 filing_year=2024,
@@ -83,7 +83,7 @@ _PERSONAL_FAMILY_BINDINGS: frozenset[str] = frozenset(
         "renta-2025-profile-tax-id",
         "renta-2025-profile-display-name",
         "renta-2025-profile-tax-residence-ccaa",
-        "renta-2025-profile-declaration-type",
+        "renta-profile-declaration-type",
         "renta-2025-profile-taxpayer-sex",
         "renta-2025-profile-marital-status",
         "renta-2025-profile-taxpayer-birth-date",
@@ -98,7 +98,7 @@ _PERSONAL_FAMILY_BINDINGS: frozenset[str] = frozenset(
         "renta-2025-profile-spouse-eu-eea-resident",
         "renta-2025-profile-spouse-eu-eea-country",
         "renta-2025-profile-family-descendants-eu-eea-deduction",
-        "renta-2025-profile-family-minor-children-in-unit",
+        "renta-profile-family-minor-children-in-unit",
         "renta-2025-family-descendant-tax-id",
         "renta-2025-family-descendant-display-name",
         "renta-2025-family-descendant-birth-date",
@@ -681,7 +681,7 @@ _INMUEBLE_2025_CONTINUITY_REFS: Mapping[str, frozenset[str]] = {
     "irpf-inmueble-vivienda-habitual-flag": _INMUEBLE_ART_22_FORM_ORDER_REFS,
 }
 _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID = "renta-anexo-c-base-liquidable-negativa-general"
-_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-2025-base-liquidable-negativa-general-anterior"
+_ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID = "renta-base-liquidable-negativa-general-anterior"
 # The base liquidable general negativa carry is grounded in Art. 50.3 LIRPF
 # (4-year carry-forward of a negative base liquidable general); Art. 48
 # (within-year integración) is a distinct mechanism and does not ground it.
@@ -879,7 +879,7 @@ _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS: Mapping[CasillaId, tuple[str, ...]] 
 }
 _NO_FRACTIONAL_PAYMENT_2025_BINDING_IDS = frozenset(
     {
-        "renta-2025-base-liquidable-negativa-general-anterior",
+        "renta-base-liquidable-negativa-general-anterior",
     }
 )
 _NO_FRACTIONAL_PAYMENT_2025_CONSTRUCT_IDS = frozenset(

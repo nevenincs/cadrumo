@@ -210,7 +210,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id != "renta-2024-certificado-trabajo-retenciones"
+        if binding.id != "renta-certificado-trabajo-retenciones"
         if binding.source
         not in (
             "profile",

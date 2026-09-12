@@ -17,13 +17,13 @@ from pathlib import Path
 
 import pytest
 
-from ..compiler.loader import load_modelo_file
+from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
 
-_MODELO_TEXT = """
+_MANIFEST_TEXT = """
 [modelo]
 id = "130"
 tax_domain = "irpf"
@@ -31,13 +31,17 @@ cadence = "quarterly"
 jurisdiction = "ES-AEAT"
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
+""".lstrip()
 
+_REVISION_TEXT = """
 [revisions.2019-y-siguientes]
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
 legal_refs = ["ley-35-2006:art-1"]
 source_refs = ["aeat-source"]
+""".lstrip()
 
+_CASILLA_TEXT = """
 [[revisions.2019-y-siguientes.casillas]]
 id = "01"
 number = "@@CASILLA_NUMBER@@"
@@ -49,15 +53,15 @@ source_refs = ["aeat-source"]
 """
 
 
-def _modelo_text(number: str) -> str:
-    """Return the modelo TOML with the casilla number substituted.
+def _casilla_text(number: str) -> str:
+    """Return the casilla fragment TOML with the casilla number substituted.
 
     Both call sites pass a two-character number, which is what keeps the
     rewrite the same SIZE as the original -- the collision the test needs.
     """
     if len(number) != len("01"):
         raise ValueError("the colliding rewrite requires a two-character casilla number")
-    return _MODELO_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
+    return _CASILLA_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
 
 
 def _rewrite_pinning_stat(path: Path, new_text: str) -> None:
@@ -69,14 +73,20 @@ def _rewrite_pinning_stat(path: Path, new_text: str) -> None:
     assert after.st_mtime_ns == before.st_mtime_ns
 
 
-def test_single_file_modelo_same_size_same_mtime_edit_invalidates(tmp_path: Path) -> None:
+def test_modelo_fragment_same_size_same_mtime_edit_invalidates(tmp_path: Path) -> None:
     """A colliding rewrite must serve the new language-neutral field value."""
-    modelo_path = tmp_path / "130.toml"
-    modelo_path.write_text(_modelo_text("01"), encoding="utf-8")
-    loaded_a = load_modelo_file(modelo_path)
+    modelo_dir = tmp_path / "130"
+    revision_dir = modelo_dir / "revisions" / "2019-y-siguientes"
+    (revision_dir / "casillas").mkdir(parents=True)
+    (modelo_dir / "manifest.toml").write_text(_MANIFEST_TEXT, encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(_REVISION_TEXT, encoding="utf-8")
+    casilla_path = revision_dir / "casillas" / "01.toml"
+    casilla_path.write_text(_casilla_text("01"), encoding="utf-8")
+
+    loaded_a = load_modelo_directory(modelo_dir)
     assert loaded_a.revisions["2019-y-siguientes"].casillas[0].number == "01"
 
-    _rewrite_pinning_stat(modelo_path, _modelo_text("02"))
+    _rewrite_pinning_stat(casilla_path, _casilla_text("02"))
 
-    loaded_b = load_modelo_file(modelo_path)
+    loaded_b = load_modelo_directory(modelo_dir)
     assert loaded_b.revisions["2019-y-siguientes"].casillas[0].number == "02"

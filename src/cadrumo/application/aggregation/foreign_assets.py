@@ -47,6 +47,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString, require_iso8601_date
 from ...core.period import Period
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.detail_record_bindings import (
     Modelo720RowObservation,
     resolve_foreign_asset_binding_row_values,
@@ -478,6 +479,7 @@ def _worksheet_row_resolution(
             lineage_role=CalculationSourceLineageRole.PRIMARY,
             source_ref=f"worksheet:{row.source_id}",
             parent_source_ref=None,
+            terminal_origin=TerminalOriginClass.DETAIL_RECORD,
             fingerprint=content_hash_hex(row.model_dump(mode="json")),
         )
         for row in ordered

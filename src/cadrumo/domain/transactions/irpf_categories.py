@@ -49,12 +49,16 @@ def _required_taxonomy_declaration(declarations: Mapping[str, str], key: str) ->
 
 
 def _split_declaration(declarations: Mapping[str, str], key: str) -> tuple[str, ...]:
-    return tuple(value.strip() for value in _required_taxonomy_declaration(declarations, key).split(",") if value.strip())
+    return tuple(
+        value.strip() for value in _required_taxonomy_declaration(declarations, key).split(",") if value.strip()
+    )
 
 
 def _descriptor_from_registry(category_id: str, declarations: Mapping[str, str]) -> LedgerIrpfCategoryDescriptor:
     prefix = f"category.{category_id}"
-    directions = tuple(TransactionDirection(value) for value in _split_declaration(declarations, f"{prefix}.directions"))
+    directions = tuple(
+        TransactionDirection(value) for value in _split_declaration(declarations, f"{prefix}.directions")
+    )
     net_paid_field = "_".join(("net", "paid", "invoice"))
     related_field = "_".join(("related", "category", "ids"))
     net_paid = _required_taxonomy_declaration(declarations, f"{prefix}.{net_paid_field}")
@@ -138,6 +142,5 @@ def is_net_paid_related_category(value: str | None) -> bool:
         return False
     token = value.strip().casefold()
     return any(
-        descriptor.net_paid and token in descriptor.related_ids
-        for descriptor in ledger_irpf_category_catalogue()
+        descriptor.net_paid and token in descriptor.related_ids for descriptor in ledger_irpf_category_catalogue()
     )

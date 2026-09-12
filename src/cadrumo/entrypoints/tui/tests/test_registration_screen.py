@@ -20,7 +20,6 @@ import unicodedata
 from pathlib import Path
 
 import pytest
-from dev.tui.harness.fixture import registration_attempt
 from textual.css.query import NoMatches
 from textual.widgets import Input, Static
 
@@ -33,6 +32,7 @@ from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.secret.credentials import assessment_refusal
 from ....entrypoints.tui.secret.registration import RecoveryWordsScreen, RegistrationScreen
 from ....tests.secure_sql import isolated_profile_storage_root
+from .fixture import registration_attempt
 
 pytestmark = [
     pytest.mark.integration,

@@ -11,8 +11,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_temporal import TargetPeriods
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ...domain.iva.schema import IvaCashAccountingTreatment
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
@@ -35,10 +37,15 @@ def _transition_period_applicability_from_registry(period: Period) -> bool:
         period=registry_period,
     )
     schedules = tuple(snapshot.revision.filing_schedules)
-    relations = tuple(snapshot.revision.relations)
-    if not schedules or not relations:
+    folds = relation_prefill_bindings_for_period(snapshot.revision)
+    if not schedules or not folds:
         raise NotImplementedError("selected registry transition declarations are unavailable")
-    relation_periods = {token for relation in relations for token in relation.target_periods}
+    relation_periods = {
+        token
+        for binding, _ in folds
+        if isinstance(binding.applicability, TargetPeriods)
+        for token in binding.applicability.periods
+    }
     transition_periods = {
         schedule.periods[-1]
         for schedule in schedules

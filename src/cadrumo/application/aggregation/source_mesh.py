@@ -41,6 +41,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
     BindingId,
     LegalRefId,
@@ -99,7 +100,21 @@ CalculationSourceDiagnosticReason = Literal[
     "storage_degraded",
     "source_domain_not_ready",
     "unhandled_binding_source",
+    # The binding's provider kind is registered with disposition ``deferred``:
+    # the declaration is legal and enrolled, but no executable route owns it yet.
+    # Distinct from "unhandled_binding_source", which is drift between the
+    # registration and the route table, not an authored deferral.
+    "deferred_binding_source",
     "unresolved_derived_binding",
+    # The resolved provenance graph does not show the terminal origin the
+    # binding's declaration -- authored, or derived from its provider
+    # registration -- says the value must rest on: a class the declaration does
+    # not admit, no terminal node at all where one is required, more than one
+    # where the family carries a single fact, or a missing evidence fingerprint
+    # on a class that must carry one. Distinct from "unresolved_binding", which
+    # says no value arrived: here a value DID arrive, complete-looking, by a
+    # route nobody declared, which is the failure a complete total hides best.
+    "terminal_origin_mismatch",
     "unrouted_observation",
     # An independent QUANTITY consumed rows carry that no binding drawing that
     # quantity reaches -- the retención suffered on the renta side, a base
@@ -628,6 +643,14 @@ class CalculationSourceProvenance(BaseModel):
     source_ref: str = Field(min_length=1, max_length=256)
     parent_source_ref: str | None = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    #: The class of terminal fact this node actually rests on, as the resolver
+    #: that produced it knows it. This is the runtime half of the pair the
+    #: authored (or registration-derived) terminal-origin expectation forms:
+    #: without it, "the value resolved" and "the value resolved from where the
+    #: declaration said" are the same observation. ``None`` is reserved for a
+    #: mesh-only source that no provider registration covers -- it states that
+    #: no expectation exists to audit against, never that the origin is unknown.
+    terminal_origin: TerminalOriginClass | None = None
     relation_id: RelationId | None = None
     source_modelo: ModeloId | None = None
     source_filing_year: FilingYear | None = None

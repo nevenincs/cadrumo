@@ -28,14 +28,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError as _CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ..calculations.registry.formula_runtime_ops import resolve_dated_value
-from ..calculations.registry.schema import ModeloRevision
 from ..calculations.registry.schema_base import ThresholdComparison
+
+if TYPE_CHECKING:
+    from ..calculations.registry.schema import ModeloRevision
 
 #: The registry parameter carrying the art-103.Dos.2 margin.
 PRORRATA_ESPECIAL_MANDATORY_PARAMETER_ID = "m303-prorrata-especial-obligatoria-margen-porcentaje"

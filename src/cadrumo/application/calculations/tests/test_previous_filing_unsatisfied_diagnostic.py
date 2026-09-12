@@ -37,6 +37,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.registry_observations import (
@@ -243,3 +244,19 @@ def test_a_satisfiable_previous_filing_binding_stays_silent(tmp_path: Path) -> N
         "a satisfied carry must NOT be named; the resolver would otherwise be reporting unconditionally"
     )
     assert _M130_PRIOR_PAGOS_BINDING not in set(resolution.unresolved_binding_ids)
+
+
+def test_a_satisfied_carry_declares_the_filed_casilla_it_rests_on(tmp_path: Path) -> None:
+    """The resolver names the class of terminal fact behind the carry, not just its resolver id.
+
+    A carry's terminal fact is a casilla of an immutable, already-filed
+    revision. Stating that on the provenance row is what lets the resolved
+    value be audited against the binding's declared terminal origin instead of
+    being trusted because a value arrived.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_prior_quarter(profile.repository)
+        resolution = _resolve(profile.repository)
+
+    assert resolution.provenance, "the seeded prior trimestre must produce provenance, or this proves nothing"
+    assert all(row.terminal_origin is TerminalOriginClass.FILED_MODELO_CASILLA for row in resolution.provenance)

@@ -16,7 +16,7 @@ Sister module to :mod:`~.relation_prefill`. The runtime distinguishes
 ``relation`` leaves (cross-revision aggregations declared as
 :class:`~domain.calculations.registry.RelationDefinition` records) from
 ``previous_filing`` bindings (declared as
-:class:`~domain.calculations.registry.DataBindingDefinition` with
+:class:`~domain.calculations.registry.BindingDefinition` with
 ``source = "previous_filing"``).
 Modelo 390 uses bindings — modelo 200 uses relations — both express
 "sum a prior modelo's casilla across periods" but route through
@@ -43,15 +43,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
-from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
-from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
@@ -59,6 +57,7 @@ from ...domain.calculations.registry.bindings import (
     binding_source_casilla_ids,
 )
 from ...domain.calculations.registry.bindings_previous_filing import (
+    PreviousFilingProvider,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
@@ -67,7 +66,28 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RevisionId,
 )
-from ...domain.calculations.registry.iva_wallet_relation_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
+from ...domain.calculations.registry.iva_wallet_carry_targets import MODELO_303_IVA_COMPENSATION_BINDING_ID
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
@@ -76,70 +96,11 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as _M303_DISPONIBLE_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_PENDING_PRIOR_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
-)
-from ...domain.iva_compensation.filed_derivation import (
-    M303_COMPENSATION_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
-)
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from .errors import BindingPrefillTypeError
 from .iva_compensation_history import IvaCompensationHistoryRepository
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
-
-_STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
-
-
-def _selector_year_delta(value: object) -> int:
-    """Narrow a binding-selector ``filing_year_delta`` to ``int``.
-
-    Selectors flow through pydantic with a union value type, so static
-    analysis loses the per-key shape; an explicit guard restores it and
-    rejects unexpected payloads at runtime.
-    """
-    if isinstance(value, int) and not isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        return int(value)
-    raise BindingPrefillTypeError(
-        translated_message="application.calculations.binding_prefill.errors.selector_filing_year_delta_type",
-        context={"selector_key": "filing_year_delta", "observed_type": type(value).__name__},
-    )
-
-
-def _selector_periods(value: object) -> tuple[str, ...]:
-    """Normalise a binding-selector ``source_periods`` into a tuple of strings."""
-    if isinstance(value, str):
-        return (value,)
-    if isinstance(value, tuple):
-        try:
-            return _STRING_SEQUENCE.validate_python(value)
-        except ValueError as exc:
-            raise BindingPrefillTypeError(
-                translated_message="application.calculations.binding_prefill.errors.selector_source_periods_member_type",
-                context={"selector_key": "source_periods"},
-            ) from exc
-    raise BindingPrefillTypeError(
-        translated_message="application.calculations.binding_prefill.errors.selector_source_periods_type",
-        context={"selector_key": "source_periods", "observed_type": type(value).__name__},
-    )
-
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
@@ -232,6 +193,15 @@ def _merge_gathered_observations(
     )
 
 
+UNKNOWN_SOURCE_COORDINATE = "unknown"
+"""The token a rendered source coordinate carries when the coordinate is not known.
+
+Rendered provenance must stay readable as a coordinate triple, so the unknown
+axis is named rather than left blank: an empty segment reads as a coordinate
+that was looked up and found empty.
+"""
+
+
 class PrefilledBinding(BaseModel):
     """One resolved previous-filing binding with local-source provenance.
 
@@ -256,8 +226,12 @@ class PrefilledBinding(BaseModel):
     dependency_treatment: str = ""
     provenance: str = _LOCAL_FILING_PROVENANCE
     source_kind: str = _LOCAL_FILING_PROVENANCE
-    source_modelo: str
-    source_filing_year: int
+    #: The prior filing this value was carried from, or ``None`` when the binding
+    #: resolved outside any registry requirement and its provider names no source
+    #: coordinate. ``None`` is the honest answer for "not known"; an empty string
+    #: would read as a modelo whose code happens to be blank.
+    source_modelo: str | None
+    source_filing_year: int | None
     source_periods: tuple[str, ...]
     source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     resolved_at: datetime
@@ -644,17 +618,17 @@ def _unsatisfied_previous_filing_bindings(
     requirement_index = _requirements_by_binding(snapshot)
     unsatisfied: list[UnsatisfiedBinding] = []
     for binding in snapshot.revision.bindings:
-        if binding.source != BindingSourceKind.PREVIOUS_FILING:
+        provider = binding.provider
+        if not isinstance(provider, PreviousFilingProvider):
             continue
         if binding.id in resolved_binding_ids or binding.id in excluded:
             continue
-        selector = binding.selector
         source_modelo, source_filing_year, source_periods, _dependency_treatment = requirement_index.get(
             binding.id,
             (
-                str(_selector_value(selector, "source_modelo", "") or ""),
-                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
-                _selector_periods(_selector_value(selector, "source_periods", ())),
+                str(provider.source_modelo),
+                snapshot.filing_year + provider.uniform_filing_year_delta,
+                provider.required_periods,
                 "",
             ),
         )
@@ -708,20 +682,19 @@ def _pre_activity_scoped_binding_ids(
     )
 
 
-def _selector_value(selector: object, key: str, default: object) -> object:
-    if isinstance(selector, dict):
-        return STR_KEYED_MAPPING_ADAPTER.validate_python(selector).get(key, default)
-    return getattr(selector, key, default)
-
-
 def _source_kind_for_binding(
     gathered: tuple[_GatheredObservation, ...],
     *,
-    source_modelo: str,
-    source_filing_year: int,
+    source_modelo: str | None,
+    source_filing_year: int | None,
     source_periods: tuple[str, ...],
     source_casilla_ids: tuple[CasillaId, ...] = (),
 ) -> str:
+    if source_modelo is None or source_filing_year is None:
+        # An unknown source coordinate matches no observation. Saying so is not
+        # the same as having looked and found nothing, but both leave the value
+        # standing on its own provenance rather than on a prior filing.
+        return _LOCAL_FILING_PROVENANCE
     required_periods = set(source_periods)
     matched_source_kinds: set[str] = set()
     for item in gathered:
@@ -771,15 +744,19 @@ def _prefilled_bindings(
         binding = binding_index.get(binding_id)
         if binding is None:
             continue
-        selector = binding.selector
-        source_modelo, source_filing_year, source_periods, dependency_treatment = requirement_index.get(
-            binding_id,
-            (
-                str(_selector_value(selector, "source_modelo", "") or ""),
-                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
-                _selector_periods(_selector_value(selector, "source_periods", ())),
-                "",
-            ),
+        provider = binding.provider
+        source_modelo, source_filing_year, source_periods, dependency_treatment = (
+            requirement_index.get(
+                binding_id,
+                (
+                    str(provider.source_modelo),
+                    snapshot.filing_year + provider.uniform_filing_year_delta,
+                    provider.required_periods,
+                    "",
+                ),
+            )
+            if isinstance(provider, PreviousFilingProvider)
+            else requirement_index.get(binding_id, (None, None, (), ""))
         )
         source_kind = (
             _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
@@ -984,8 +961,11 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         (item for item in report.prefilled if item.binding_id == MODELO_303_IVA_COMPENSATION_BINDING_ID),
         None,
     )
-    if prefilled is None:
+    if prefilled is None or prefilled.source_modelo is None or prefilled.source_filing_year is None:
+        # The wallet comparison is a claim about one identified prior filing, so
+        # an unknown source coordinate is refused rather than filled in.
         raise RegistrySnapshotError("resolved IVA compensation recurrence lacks canonical source registry coordinates")
+    source_filing_year = prefilled.source_filing_year
     return (
         LocalIvaCompensationRecurrence(
             binding_id=prefilled.binding_id,
@@ -994,7 +974,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
             source_modelo=prefilled.source_modelo,
             source_filing_year=prefilled.source_filing_year,
             source_periods=tuple(
-                Period.from_year_and_code(prefilled.source_filing_year, period) for period in prefilled.source_periods
+                Period.from_year_and_code(source_filing_year, period) for period in prefilled.source_periods
             ),
             source_registry_snapshot_refs=prefilled.source_registry_snapshot_refs,
             resolved_at=prefilled.resolved_at,

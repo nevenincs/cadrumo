@@ -41,7 +41,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
-from ...domain.calculations.registry.iva_wallet_relation_targets import iva_wallet_owned_binding_ids_for_revision
+from ...domain.calculations.registry.iva_wallet_carry_targets import iva_wallet_owned_binding_ids_for_revision
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -55,6 +55,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import collect_unhandled_source_diagnostics, merge_source_resolutions
+from ..aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
 from ..calculations.observations_repository import CalculationObservationRepository
 from ..calculations.prorrata_regularizacion import ProrrataRegularizacionSourceResolver
@@ -427,6 +428,21 @@ def add_unhandled_source_diagnostics(
         handled_sources=frozenset(source_resolution.owned_sources) | CALCULATION_ROUTE_PRE_MESH_SOURCES,
         manual_sources=frozenset({"manual_input"}),
     )
+    if not diagnostics:
+        return source_resolution
+    return source_resolution.model_copy(update={"diagnostics": source_resolution.diagnostics + diagnostics})
+
+
+def add_terminal_origin_diagnostics(
+    revision: ModeloRevision,
+    source_resolution: CalculationSourceResolution,
+) -> CalculationSourceResolution:
+    """Add advisories where a resolved value's origin departs from its declaration.
+
+    ``revision`` is the compiled :class:`ModeloRevision` whose bindings carry
+    the terminal-origin expectation the mesh's provenance is audited against.
+    """
+    diagnostics = collect_terminal_origin_diagnostics(revision, source_resolution)
     if not diagnostics:
         return source_resolution
     return source_resolution.model_copy(update={"diagnostics": source_resolution.diagnostics + diagnostics})

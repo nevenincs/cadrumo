@@ -19,6 +19,7 @@ from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
@@ -148,6 +149,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
                         f"{source.work_unit_id}:{source_revision.calculation_revision_id}"
                     ),
                     parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.FILED_MODELO_CASILLA,
                     fingerprint=handoff.digest,
                     source_modelo=requirement.source_modelo,
                     source_filing_year=source.filing_year,

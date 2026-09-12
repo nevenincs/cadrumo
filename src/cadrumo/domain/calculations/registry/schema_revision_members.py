@@ -28,7 +28,6 @@ from .ids import (
     FormulaId,
     ModeloId,
     ParameterId,
-    RelationId,
     VerificationExpectationId,
     WorkbookParityRefId,
 )
@@ -96,7 +95,6 @@ class ConstructDefinition(RegistryModel):
     formulas: tuple[FormulaId, ...] = ()
     parameters: tuple[ParameterId, ...] = ()
     bindings: tuple[BindingId, ...] = ()
-    relations: tuple[RelationId, ...] = ()
     export_layouts: tuple[ExportLayoutId, ...] = ()
     extraction_profiles: tuple[ExtractionProfileId, ...] = ()
     live_cross_references: tuple[CrossReferenceId, ...] = ()
@@ -121,7 +119,6 @@ class ConstructDefinition(RegistryModel):
         "formulas",
         "parameters",
         "bindings",
-        "relations",
         "export_layouts",
         "extraction_profiles",
         "live_cross_references",
@@ -145,7 +142,6 @@ class ConstructDefinition(RegistryModel):
             self.formulas,
             self.parameters,
             self.bindings,
-            self.relations,
             self.export_layouts,
             self.extraction_profiles,
             self.live_cross_references,
@@ -170,11 +166,11 @@ class DependencyClassificationDefinition(RegistryModel):
     taxpayer_files_source: bool = True
     conditional_on_economic_activity: bool = False
     target_constructs: tuple[ConstructId, ...] = ()
-    relation_refs: tuple[RelationId, ...] = ()
+    binding_refs: tuple[BindingId, ...] = ()
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
-    @field_validator("target_constructs", "relation_refs")
+    @field_validator("target_constructs", "binding_refs")
     @classmethod
     def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
@@ -184,7 +180,7 @@ class DependencyClassificationDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_classification(self) -> DependencyClassificationDefinition:
         if self.treatment == "non_dependency":
-            if self.target_constructs or self.relation_refs:
+            if self.target_constructs or self.binding_refs:
                 raise RegistryValidationError(
                     f"non-dependency classification {self.id!r} must not declare target members",
                 )

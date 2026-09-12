@@ -14,10 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core.aggregation import BindingSourceKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....tests.secure_sql import isolated_runtime_profile
 from .._preconditions import AggregationPreconditionCondition
@@ -54,13 +53,16 @@ def _m180_retenciones_revision() -> ModeloRevision:
         legal_refs=_M180_RETENCIONES_LEGAL_REFS,
         source_refs=_M180_RETENCIONES_SOURCE_REFS,
         bindings=(
-            DataBindingDefinition(
+            BindingDefinition(
                 id=_M180_BINDING_ID,
-                source=BindingSourceKind.RETENCIONES_AGGREGATION,
-                selector={
-                    "target_casilla_id": "decl.total-perceptores",
-                    "fact": "perceptor_count_distinct",
+                provider={
+                    "kind": "retenciones_aggregation",
+                    **{
+                        "target_casilla_id": "decl.total-perceptores",
+                        "fact": "perceptor_count_distinct",
+                    },
                 },
+                value={"data_type": "money", "channel": "decimal"},
                 legal_refs=_M180_RETENCIONES_LEGAL_REFS,
                 source_refs=_M180_RETENCIONES_SOURCE_REFS,
             ),

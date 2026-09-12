@@ -26,7 +26,6 @@ from .....core.result_disposition import (
     result_disposition_casilla_ids,
 )
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from .....tests.registry_snapshot import build_snapshot
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
@@ -44,7 +43,8 @@ from ..ledger_iva_bindings import (
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ..relations import materialize_relation_binding_values, resolve_relation_values_from_observations
-from ..schema import DataBindingDefinition, ModeloRevision
+from ..schema import BindingDefinition, ModeloRevision
+from .snapshot_support import build_snapshot
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
@@ -105,15 +105,15 @@ def _modelo_303_revision() -> ModeloRevision:
     return modelo.revisions["2022"]
 
 
-def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:
+def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> BindingDefinition:
     return next(item for item in _modelo_303_revision().bindings if item.id == binding_id)
 
 
-def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBindingDefinition:
+def _with_selector(binding: BindingDefinition, **updates: object) -> BindingDefinition:
     return binding.model_copy(update={"selector": {**selector_as_dict(binding), **updates}})
 
 
-def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
+def _with_aggregation(binding: BindingDefinition, op: BindingAggregationOp) -> BindingDefinition:
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
 
 
@@ -211,7 +211,7 @@ def _observation(
     )
 
 
-def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
+def _revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevision:
     return _modelo_303_revision().model_copy(update={"bindings": bindings})
 
 

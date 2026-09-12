@@ -17,10 +17,23 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind, RetencionClave
-from ..schema import DataBindingDefinition, ModeloRevision
+from .....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+    RetencionClave,
+)
+from ..binding_value_contract import (
+    BindingDataType,
+    BindingValueChannel,
+    BindingValueContract,
+)
+from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
-from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
+from ..withholding_bindings import (
+    WithholdingObservation,
+    WithholdingProvider,
+    resolve_withholding_binding_values,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -42,7 +55,7 @@ _M190_WITHHOLDING_SOURCE_REFS = (
 )
 
 
-def _revision_with(binding: DataBindingDefinition) -> ModeloRevision:
+def _revision_with(binding: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
         id="2024-y-siguientes",
         localization_key="test.schema.revision.2024-y-siguientes.label",
@@ -54,11 +67,11 @@ def _revision_with(binding: DataBindingDefinition) -> ModeloRevision:
     )
 
 
-def _percepcion_count_binding() -> DataBindingDefinition:
-    return DataBindingDefinition(
+def _percepcion_count_binding() -> BindingDefinition:
+    return BindingDefinition(
         id=_PERCEPCION_BINDING_ID,
-        source=BindingSourceKind.WITHHOLDING,
-        selector={"fact": "percepcion_count"},
+        provider=WithholdingProvider.model_validate({"fact": "percepcion_count"}),
+        value=BindingValueContract(data_type=BindingDataType.INTEGER, channel=BindingValueChannel.INTEGER),
         aggregation=BindingAggregation(op=BindingAggregationOp.COUNT_DISTINCT),
         legal_refs=_M190_WITHHOLDING_LEGAL_REFS,
         source_refs=_M190_WITHHOLDING_SOURCE_REFS,

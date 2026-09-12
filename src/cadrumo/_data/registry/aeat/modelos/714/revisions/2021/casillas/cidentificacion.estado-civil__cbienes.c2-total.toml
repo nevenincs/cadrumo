@@ -8,8 +8,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-nacimiento"
@@ -19,8 +17,6 @@ section = ["identificacion"]
 data_type = "date"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.discapacidad-porcentaje"
@@ -30,8 +26,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.discapacidad-clase"
@@ -41,8 +35,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.codigo-provincia"
@@ -52,8 +44,6 @@ section = ["identificacion"]
 data_type = "province_code"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.nacionalidad"
@@ -63,8 +53,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.regimen-economico-matrimonio"
@@ -74,8 +62,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.representante-nif"
@@ -85,8 +71,6 @@ section = ["identificacion"]
 data_type = "nif"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.representante-nombre"
@@ -96,8 +80,6 @@ section = ["identificacion"]
 data_type = "name"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-localidad"
@@ -107,8 +89,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-dia"
@@ -118,8 +98,6 @@ section = ["identificacion"]
 data_type = "integer"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-mes"
@@ -129,8 +107,6 @@ section = ["identificacion"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.fecha-declaracion-anio"
@@ -140,8 +116,6 @@ section = ["identificacion"]
 data_type = "year"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "identificacion.complementaria-cuotas-anteriores"
@@ -151,8 +125,6 @@ section = ["identificacion"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "decl.idioma"
@@ -162,8 +134,6 @@ section = ["declarante"]
 data_type = "text"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "bienes.c1-total"
@@ -173,8 +143,6 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]
 
 [[revisions."2021".casillas]]
 id = "bienes.c2-total"
@@ -184,5 +152,3 @@ section = ["bienes_y_derechos"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["orden-hfp-207-2022:art-4"]
-source_refs = ["aeat-dr-714-2021"]

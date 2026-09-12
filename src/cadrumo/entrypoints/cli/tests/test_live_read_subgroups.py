@@ -250,7 +250,7 @@ class TestBorrador100Subgroup:
             period=Period.from_year_and_code(2024, "0A"),
             captured_at=datetime(2025, 3, 15, tzinfo=UTC),
             source_url=aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax")),
-            binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("1000.00")},
+            binding_values={"renta-modelo-111-retenciones-periodicas": Decimal("1000.00")},
         )
 
         listed = _invoke_borrador_100("list")
@@ -276,7 +276,7 @@ class TestBorrador100Subgroup:
         payload = json.loads(shown_json.output)
         assert payload["command"] == "app.live.borrador.100.view"
         assert payload["result"]["binding_values"] == {
-            "renta-2025-modelo-111-retenciones-periodicas": "1000.00",
+            "renta-modelo-111-retenciones-periodicas": "1000.00",
         }
 
     def test_borrador_100_list_rejects_unknown_state(self) -> None:

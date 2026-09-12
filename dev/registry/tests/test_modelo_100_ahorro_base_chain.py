@@ -38,11 +38,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 
 from cadrumo.core.aggregation import RelationAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.relation_aggregation import relation_aggregation_op
 from cadrumo.domain.calculations.registry.relations import resolve_relation_values
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
@@ -58,29 +58,29 @@ _DATE_2025 = {"filing_period": date(2025, 12, 31)}
 
 # ── minimal binding_values required by M100 2024/2025 bound casillas ─────────
 _BINDINGS_2024: dict[str, Decimal] = {
-    "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-    "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
-    "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+    "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+    "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+    "renta-modelo-193-retenciones-anuales": Decimal("0"),
     # declaration_type = 1 (individual) → 0461 computed = 0
-    "renta-2024-profile-declaration-type": Decimal("1"),
-    "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+    "renta-profile-declaration-type": Decimal("1"),
+    "renta-profile-family-minor-children-in-unit": Decimal("0"),
     # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero default for
     # scenarios that do not exercise the maternidad-guarderia chain.
-    "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
-    "renta-2024-profile-incremento-guarderia": Decimal("0"),
-    "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
-    "renta-2024-profile-descendientes-guarderia": Decimal("0"),
+    "renta-profile-guarderia-gastos-reales": Decimal("0"),
+    "renta-profile-incremento-guarderia": Decimal("0"),
+    "renta-profile-cotizaciones-ss-madre": Decimal("0"),
+    "renta-profile-descendientes-guarderia": Decimal("0"),
     **_m100_2024_deduccion_maternidad_bindings(),
-    "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-    "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
+    "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+    "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
-    "renta-2024-profile-marriage-full-year": Decimal("0"),
-    "renta-2024-profile-marriage-month-start": Decimal("0"),
-    "renta-2024-profile-marriage-month-end": Decimal("0"),
+    "renta-profile-marriage-full-year": Decimal("0"),
+    "renta-profile-marriage-month-start": Decimal("0"),
+    "renta-profile-marriage-month-end": Decimal("0"),
     # BIN-pendiente fresh-filer baseline: previous_filing binding for
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
-    "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
 }
 
 _ENUM_BINDINGS_2024 = {"renta-2024-profile-tax-residence-ccaa": "madrid"}
@@ -257,23 +257,23 @@ def test_2025_0029_dividends_20000_populates_0460(m100_2025_snapshot: RegistrySn
     _bindings_2025: dict[str, Decimal] = {
         # The production profile resolver supplies this predicate as 1/0 from
         # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
-        "renta-2025-profile-has-economic-activity": Decimal("1"),
-        "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-profile-has-economic-activity": Decimal("1"),
+        "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0
-        "renta-2025-profile-declaration-type": Decimal("1"),
-        "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-profile-declaration-type": Decimal("1"),
+        "renta-profile-family-minor-children-in-unit": Decimal("0"),
         # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
-        "renta-2025-profile-marriage-full-year": Decimal("0"),
-        "renta-2025-profile-marriage-month-start": Decimal("0"),
-        "renta-2025-profile-marriage-month-end": Decimal("0"),
-        "renta-2025-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-profile-marriage-full-year": Decimal("0"),
+        "renta-profile-marriage-month-start": Decimal("0"),
+        "renta-profile-marriage-month-end": Decimal("0"),
+        "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.
-        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
-        "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-        "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
+        "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
+        "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+        "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     # 2025 revision requires all cross-model relation values; supply zeros for
     # all relations so the ahorro chain can be exercised in isolation.

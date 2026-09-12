@@ -104,7 +104,6 @@ def _live_iva_outcome_label(value: object) -> str:
         outcome_mode = LiveIvaAcquisitionFailureMode.UNKNOWN
     return tr(
         f"cli.app.live.iva_wallet.acquisition.outcome.{outcome_mode.value}",
-        default=normalized.replace("_", " "),
     )
 
 
@@ -1221,11 +1220,6 @@ def _limit_reached_notice(reached_count: int, *, limit: int | None) -> Notice | 
         code="live.filed.limit_reached",
         message=tr(
             "cli.app.live.filed.limit_reached_factual",
-            default=(
-                "The sweep stopped at the --limit of {limit} after reaching {reached} declaration(s); "
-                "pairs beyond that point were not walked. A missing pair is not evidence that nothing "
-                "was filed."
-            ),
             limit=limit,
             reached=reached_count,
         ),
@@ -1258,10 +1252,6 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None
                 code="live.filed.pull_all.pairs_refused",
                 message=tr(
                     "cli.app.live.filed.pull_all_pairs_refused_factual",
-                    default=(
-                        "{count} modelo/ejercicio pair(s) could not be read and were NOT reported as empty: "
-                        "{pairs}. A refusal is not evidence that nothing was filed."
-                    ),
                     count=len(refused),
                     pairs=", ".join(f"{pair.modelo}/{pair.ejercicio}" for pair in refused),
                 ),
@@ -1533,11 +1523,6 @@ def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | 
         code="live.filed.pull.casillas_not_enrolled",
         message=tr(
             "cli.app.live.filed.casillas_not_enrolled",
-            default=(
-                "{count} casilla(s) in the captured filings hold values that are not amounts, "
-                "so they were not enrolled as calculation evidence: {affected}. "
-                "Everything numeric in those filings was enrolled normally."
-            ),
             count=len(skipped),
             affected=affected,
         ),

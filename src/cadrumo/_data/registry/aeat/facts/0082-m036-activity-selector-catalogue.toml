@@ -11,6 +11,19 @@ source_refs = ["aeat-m036-activity-code-table-2026-03-26", "boe-rirpf-art-95-202
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-m036-activity-code-table-2026-03-26"
+required_text = ["Actividad"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-95-2023-01-26"
+required_text = ["articulo 95"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-109-2007-04-01"
+required_text = ["articulo 109"]
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-110-2018-12-23"
+required_text = ["articulo 110"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

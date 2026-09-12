@@ -12,24 +12,26 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
-    selector_as_dict as _selector_as_dict,
+    provider_member,
 )
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition
 from .schema_exports import ExportFieldDataType
 
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
+
 __all__ = [
+    "Gasto193ContributorProvider",
     "Gasto193Observation",
-    "_Gasto193Selector",
     "validate_gasto193_binding_selector_shape",
 ]
 
@@ -63,8 +65,12 @@ class Gasto193Observation(BaseModel):
             raise RegistryValidationError("gasto amounts must be non-negative")
 
 
-class _Gasto193Selector(BaseModel):
+class Gasto193ContributorProvider(BaseModel):
+    """The Modelo 193 expense-contributor provider over the detail-record store."""
+
     model_config = STRICT_FROZEN_CONFIG
+
+    kind: Literal[BindingSourceKind.GASTO193_CONTRIBUTOR] = BindingSourceKind.GASTO193_CONTRIBUTOR
 
     fact: _Gasto193Fact
     claves: tuple[str, ...] = ()
@@ -74,21 +80,17 @@ class _Gasto193Selector(BaseModel):
     data_type: ExportFieldDataType | None = None
 
 
-def _gasto193_selector(binding: DataBindingDefinition) -> _Gasto193Selector:
-    try:
-        return _Gasto193Selector.model_validate(_selector_as_dict(binding))
-    except ValueError as exc:
-        raise RegistryValidationError(f"binding {binding.id!r} has malformed gasto193 selector") from exc
+def _gasto193_selector(binding: BindingDefinition) -> Gasto193ContributorProvider:
+    return provider_member(binding, Gasto193ContributorProvider)
 
 
-def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> list[str]:
-    """Validate a ``gasto193`` binding's selector shape and fact/aggregation invariants."""
-    try:
-        selector = _gasto193_selector(binding)
-    except ValueError as exc:
-        return [
-            f"binding {binding.id!r} (source={binding.source!r}) selector violates {_Gasto193Selector.__name__}: {exc}",
-        ]
+def validate_gasto193_binding_selector_shape(binding: BindingDefinition) -> list[str]:
+    """Validate a ``gasto193`` binding's fact/aggregation invariants.
+
+    The provider shape is the union member's own gate; only the fact/op
+    cross-invariant needs lifting to build time.
+    """
+    selector = _gasto193_selector(binding)
     try:
         op = binding_aggregation_op(binding)
         if selector.fact == "row_field":

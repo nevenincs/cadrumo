@@ -110,53 +110,28 @@ def _root_help() -> HelpDocument:
         surface=HelpSurface.ROOT,
         heading=tr(
             "cli.operator_surface.help.root.heading",
-            default="CADRUMO - local-first workflow with the Spanish Tax Agency (AEAT)",
         ),
         paragraphs=(
             tr(
                 "cli.operator_surface.help.root.paragraph_local_first",
-                default="CADRUMO keeps taxpayer data local and exposes exactly two command roots.",
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_config_root",
-                default=(
-                    "The config root manages profiles, encrypted local data, recovery keys, "
-                    "profile sessions, AEAT authentication, and repair."
-                ),
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_app_root",
-                default=(
-                    "The app root manages profile overview, ledger, modelo, review, and authenticated AEAT reads."
-                ),
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_profile_terms",
-                default=(
-                    "A profile stores one taxpayer's local facts and settings. The active profile is the selected "
-                    "taxpayer context. A profile session provides resumable access to encrypted profile data."
-                ),
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_tax_terms",
-                default=(
-                    "The ledger contains imported money movements. A modelo is an official AEAT declaration form, "
-                    "distinct from its local work unit or export."
-                ),
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_review_terms",
-                default=(
-                    "The review queue contains findings that need operator action. The registry contains validated, "
-                    "versioned tax-rule data and sources; it holds no taxpayer data and performs no live submission."
-                ),
             ),
             tr(
                 "cli.operator_surface.help.root.paragraph_privacy",
-                default=(
-                    "Profile labels stay visible. Tax identities, credentials, storage identifiers, object keys, "
-                    "and sensitive web-address content stay protected."
-                ),
             ),
             # Deliberately the CONFIG document's key, rendered here as well. An
             # operator cannot set what no surface names, and this operator is
@@ -166,11 +141,6 @@ def _root_help() -> HelpDocument:
             # a root one keeps one translated sentence instead of two that drift.
             tr(
                 "cli.operator_surface.help.config.paragraph_storage_isolation",
-                default=(
-                    "For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT and CADRUMO_SECRET_STORE_DIR. "
-                    "Pass profile secrets through --profile-secrets-stdin or --profile-secrets-fd, "
-                    "and command secrets through --secrets-stdin or --secrets-fd."
-                ),
             ),
         ),
         sections=(
@@ -262,10 +232,6 @@ def _root_help() -> HelpDocument:
         ),
         footer=tr(
             "cli.operator_surface.help.root.footer",
-            default=(
-                "Add --help for details. Remove sensitive log values, then report bugs at "
-                "github.com/nevenincs/cadrumo/issues."
-            ),
         ),
     )
 
@@ -339,20 +305,13 @@ def _config_help() -> HelpDocument:
         surface=HelpSurface.CONFIG,
         heading=tr(
             "cli.operator_surface.help.config.heading",
-            default="aeat config - profile, auth, diagnostics",
         ),
         paragraphs=(
             tr(
                 "cli.operator_surface.help.config.paragraph_durable_state",
-                default="Config commands manage local durable state.",
             ),
             tr(
                 "cli.operator_surface.help.config.paragraph_storage_isolation",
-                default=(
-                    "For isolated state, set CADRUMO_LOCAL_STORAGE_ROOT and CADRUMO_SECRET_STORE_DIR. "
-                    "Pass profile secrets through --profile-secrets-stdin or --profile-secrets-fd, "
-                    "and command secrets through --secrets-stdin or --secrets-fd."
-                ),
             ),
         ),
         sections=(
@@ -483,18 +442,21 @@ def _config_help() -> HelpDocument:
             ),
             _config_storage_section(),
         ),
-        footer=tr("cli.operator_surface.help.config.footer", default="Run aeat --help for the full overview."),
+        footer=tr(
+            "cli.operator_surface.help.config.footer",
+        ),
     )
 
 
 def _app_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.APP,
-        heading=tr("cli.operator_surface.help.app.heading", default="aeat app - operational tax work"),
+        heading=tr(
+            "cli.operator_surface.help.app.heading",
+        ),
         paragraphs=(
             tr(
                 "cli.operator_surface.help.app.paragraph_operational_workflow",
-                default="App commands operate on the active profile bucket.",
             ),
         ),
         sections=(
@@ -652,7 +614,9 @@ def _app_help() -> HelpDocument:
                 ),
             ),
         ),
-        footer=tr("cli.operator_surface.help.app.footer", default="Run aeat --help for the full overview."),
+        footer=tr(
+            "cli.operator_surface.help.app.footer",
+        ),
     )
 
 

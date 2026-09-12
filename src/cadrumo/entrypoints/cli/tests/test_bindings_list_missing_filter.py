@@ -45,15 +45,15 @@ _PERIOD = "0A"
 _RESOLVED_BINDING_IDS = frozenset(
     {
         "renta-2025-profile-tax-residence-ccaa",
-        "renta-2025-profile-declaration-type",
+        "renta-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
-        "renta-2025-profile-family-minor-children-in-unit",
-        "renta-2025-profile-has-economic-activity",
-        "renta-2025-profile-anualidades-sin-minimo-descendientes",
-        "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
-        "renta-2025-profile-unidad-familiar-otros-miembros-base",
-        "renta-2025-profile-minimo-descendientes-estatal",
-        "renta-2025-profile-minimo-descendientes-autonomico",
+        "renta-profile-family-minor-children-in-unit",
+        "renta-profile-has-economic-activity",
+        "renta-profile-anualidades-sin-minimo-descendientes",
+        "renta-profile-madrid-nacimiento-adopcion-eligible-count",
+        "renta-profile-unidad-familiar-otros-miembros-base",
+        "renta-profile-minimo-descendientes-estatal",
+        "renta-profile-minimo-descendientes-autonomico",
     },
 )
 

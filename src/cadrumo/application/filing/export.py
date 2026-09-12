@@ -613,7 +613,7 @@ def _render_export_layout(
             dictionary_values=dictionary_values,
             schema_provider=schema_provider,
         )
-    return _render_layout(
+    return render_filing_layout(
         layout,
         registry_snapshot=registry_snapshot,
         draft=draft,
@@ -624,7 +624,7 @@ def _render_export_layout(
     )
 
 
-def _render_layout(
+def render_filing_layout(
     layout: ExportLayoutDefinition,
     *,
     registry_snapshot: RegistrySnapshot,
@@ -809,4 +809,5 @@ __all__ = [
     "_projection_field_value",
     "_render_record",
     "export_draft",
+    "render_filing_layout",
 ]

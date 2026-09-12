@@ -7,10 +7,15 @@ from decimal import Decimal
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from .....tests.registry_snapshot import build_snapshot
 from ..formula_runtime import evaluate_expression
-from ..schema import DataBindingDefinition, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema import (
+    BindingDefinition,
+    ModeloDefinition,
+    RegistryCatalogues,
+    RegistrySnapshot,
+)
 from ..schema_formula import FormulaExpression, ParameterDefinition
+from .snapshot_support import build_snapshot
 
 
 def _evaluate(
@@ -122,5 +127,5 @@ def _modelo_180_snapshot_with_inactive_relation_period(
     )
 
 
-def _previous_year_net_income_binding(snapshot: RegistrySnapshot) -> DataBindingDefinition:
+def _previous_year_net_income_binding(snapshot: RegistrySnapshot) -> BindingDefinition:
     return next(binding for binding in snapshot.revision.bindings if binding.id == _PREVIOUS_YEAR_NET_INCOME_BINDING)
