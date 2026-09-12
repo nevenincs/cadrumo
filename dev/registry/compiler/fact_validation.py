@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
-from datetime import date, timedelta
+from datetime import timedelta
 from itertools import pairwise
 from pathlib import Path
 
@@ -75,7 +75,6 @@ def governed_fact_catalogue_failures(
         source_root=source_root,
     )
     for fact_id, fact in sorted(catalogue.facts.items()):
-        failures.extend(_fact_precedence_failures(fact))
         for variant in fact.variants:
             if not variant.legal_refs and not variant.source_refs:
                 failures.append(
@@ -169,7 +168,7 @@ def retired_fact_provider_closure_failures(
                 failures.append(f"{context} must retain source provenance")
                 continue
             if not any(
-                _source_window_covers_variant(source_refs.get(source_ref), variant)
+                _source_window_covers_variant(fact, source_refs.get(source_ref), variant)
                 for source_ref in variant.source_refs
             ):
                 failures.append(f"{context} has no cited source covering its temporal applicability window")
@@ -177,78 +176,36 @@ def retired_fact_provider_closure_failures(
 
 
 def _temporal_coverage_failures(fact: GovernedFact) -> tuple[str, ...]:
-    """Require continuous coverage after the first source-grounded variant."""
-    variants = tuple(sorted(fact.variants, key=lambda variant: variant.valid_from))
+    """Require continuous coverage independently on every exact temporal track."""
+    windows = fact.materialized_windows()
+    tracks: dict[tuple[object, ...], list[GovernedFactVariant]] = {}
+    for variant in fact.variants:
+        tracks.setdefault(fact.track_key(variant), []).append(variant)
     failures: list[str] = []
-    for current, successor in pairwise(variants):
-        if current.valid_to is None or current.valid_to + timedelta(days=1) != successor.valid_from:
+    for track, variants in tracks.items():
+        ordered = tuple(sorted(variants, key=lambda variant: windows[variant.variant_id].valid_from))
+        for current, successor in pairwise(ordered):
+            current_window = windows[current.variant_id]
+            successor_window = windows[successor.variant_id]
+            if current_window.valid_to is None or current_window.valid_to + timedelta(days=1) != successor_window.valid_from:
+                failures.append(
+                    f"retired-provider fact {fact.fact_id!r} track {track!r} has a gap in its "
+                    "source-grounded temporal coverage",
+                )
+        if windows[ordered[-1].variant_id].valid_to is not None and fact.support is None:
             failures.append(
-                f"retired-provider fact {fact.fact_id!r} has a gap in its source-grounded temporal coverage",
+                f"retired-provider fact {fact.fact_id!r} track {track!r} must retain an open current "
+                "applicability window or declare bounded support",
             )
-    if variants[-1].valid_to is not None:
-        failures.append(
-            f"retired-provider fact {fact.fact_id!r} must retain an open current applicability window",
-        )
     return tuple(failures)
 
 
 def _source_window_covers_variant(
+    fact: GovernedFact,
     source: SourceReference | None,
     variant: GovernedFactVariant,
 ) -> bool:
-    if source is None or source.applies_from is None or source.applies_from > variant.valid_from:
+    window = fact.validity_window(variant)
+    if source is None or source.applies_from is None or source.applies_from > window.valid_from:
         return False
-    return source.applies_to is None or (variant.valid_to is not None and source.applies_to >= variant.valid_to)
-
-
-def _fact_precedence_failures(fact: GovernedFact) -> tuple[str, ...]:
-    edges = {variant.variant_id: variant.precedence_over for variant in fact.variants}
-    failures: list[str] = []
-    for variant in fact.variants:
-        if _reaches(variant.variant_id, variant.variant_id, edges):
-            failures.append(
-                f"governed fact {fact.fact_id!r} variant {variant.variant_id!r} precedence graph contains a cycle",
-            )
-    for index, left in enumerate(fact.variants):
-        for right in fact.variants[index + 1 :]:
-            overlaps = _overlap(left, right)
-            ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(
-                right.variant_id,
-                left.variant_id,
-                edges,
-            )
-            directly_ordered = right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
-            if overlaps and not ordered:
-                failures.append(
-                    f"governed fact {fact.fact_id!r} variants {left.variant_id!r} and {right.variant_id!r} "
-                    "overlap without explicit precedence",
-                )
-            elif directly_ordered and not overlaps:
-                failures.append(
-                    f"governed fact {fact.fact_id!r} variants {left.variant_id!r} and {right.variant_id!r} "
-                    "declare precedence across non-overlapping coordinates",
-                )
-    return tuple(failures)
-
-
-def _selector_key(variant: GovernedFactVariant) -> tuple[tuple[str, str, str], ...]:
-    return tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
-
-
-def _overlap(left: GovernedFactVariant, right: GovernedFactVariant) -> bool:
-    if left.date_axis != right.date_axis or _selector_key(left) != _selector_key(right):
-        return False
-    return left.valid_from <= (right.valid_to or date.max) and right.valid_from <= (left.valid_to or date.max)
-
-
-def _reaches(start: str, target: str, edges: Mapping[str, tuple[str, ...]]) -> bool:
-    pending = list(edges.get(start, ()))
-    seen: set[str] = set()
-    while pending:
-        current = pending.pop()
-        if current == target:
-            return True
-        if current not in seen:
-            seen.add(current)
-            pending.extend(edges.get(current, ()))
-    return False
+    return source.applies_to is None or (window.valid_to is not None and source.applies_to >= window.valid_to)

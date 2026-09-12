@@ -37,16 +37,27 @@ def test_lane_transport_accepts_caller_owned_names_and_continues(
     assert "test-all run log" not in log
 
 
+@pytest.mark.parametrize(
+    ("preflight_statuses", "failed_preflights", "expected_status"),
+    (
+        pytest.param({"collect": 2, "load": 0}, ("collect",), 2, id="collect-fails-load-passes"),
+        pytest.param({"collect": 0, "load": 3}, ("load",), 3, id="collect-passes-load-fails"),
+        pytest.param({"collect": 2, "load": 3}, ("collect", "load"), 2, id="both-preflights-fail"),
+    ),
+)
 def test_preflight_prefix_runs_completely_then_blocks_execution_lanes(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
+    preflight_statuses: dict[str, int],
+    failed_preflights: tuple[str, ...],
+    expected_status: int,
 ) -> None:
     observed: list[str] = []
 
     def fake_run_lane(name: str, _env: dict[str, str]) -> LaneResult:
         observed.append(name)
-        return LaneResult(name, 2 if name == "collect" else 0, 1)
+        return LaneResult(name, preflight_statuses.get(name, 0), 1)
 
     monkeypatch.setattr(lane_runner, "_run_lane", fake_run_lane)
 
@@ -59,7 +70,7 @@ def test_preflight_prefix_runs_completely_then_blocks_execution_lanes(
         lane_kinds={"collect": "collection", "load": "load"},
     )
 
-    assert status == 2
+    assert status == expected_status
     assert observed == ["collect", "load"]
     events = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith("{")]
     assert [(event["event"], event["lane"]) for event in events] == [
@@ -78,5 +89,8 @@ def test_preflight_prefix_runs_completely_then_blocks_execution_lanes(
         "command",
         "command",
     ]
-    assert events[-1]["blocked_by"] == ["collect"]
-    assert events[-1]["role"] == "execution"
+    skipped = events[4:]
+    assert [event["event"] for event in skipped] == ["lane_skipped", "lane_skipped"]
+    assert [event["lane"] for event in skipped] == ["parallel", "serial"]
+    assert [event["blocked_by"] for event in skipped] == [list(failed_preflights)] * 2
+    assert all(event["reason"] == "preflight_failed" and event["role"] == "execution" for event in skipped)

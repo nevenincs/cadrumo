@@ -45,6 +45,10 @@ def test_command_run_finalizes_metadata_when_interrupted(
             return self
 
         def __next__(self) -> str:
+            run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+            seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+            assert seeded["exit_status"] == 130
+            assert seeded["finished_at"]
             raise KeyboardInterrupt
 
     class InterruptingProcess:
@@ -310,6 +314,7 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
         "lanes_failed": 2,
         "lanes_blocked": 0,
         "lanes_not_run": 0,
+        "lanes_load_failed": 0,
         "lanes_tool_failed": 1,
         "passed": 16,
         "pytest_invocations": 2,
@@ -366,7 +371,7 @@ def test_pytest_summary_fails_closed_when_expected_lanes_never_emit_events(
     assert [lane["result"] for lane in finished["lanes"]] == ["not_run", "not_run"]
 
 
-def test_pytest_summary_classifies_summaryless_nonzero_lane_as_tool_failure(
+def test_pytest_summary_classifies_typed_summaryless_load_as_load_failure(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -376,7 +381,8 @@ def test_pytest_summary_classifies_summaryless_nonzero_lane_as_tool_failure(
             "================ 1 passed in 0.25s ================",
             '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
             '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
-            "ImportError: registry import failed before pytest started",
+            "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
+            "AuthorityArtifactFormatError: published authority artifact has an invalid authority payload",
             '{"event":"lane_finished","exit_status":2,"kind":"load","lane":"load","role":"preflight","seconds":1}',
         )
     )
@@ -392,11 +398,19 @@ def test_pytest_summary_classifies_summaryless_nonzero_lane_as_tool_failure(
 
     assert status == 2
     finished = json.loads(capsys.readouterr().out.splitlines()[-1])
-    assert finished["classification"] == "tool_failure"
-    assert finished["summary"]["lanes_tool_failed"] == 1
-    assert finished["lanes"][1]["classification"] == "tool_failure"
+    assert finished["classification"] == "load_failure"
+    assert finished["summary"]["lanes_load_failed"] == 1
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][1]["classification"] == "load_failure"
     assert finished["lanes"][1]["kind"] == "load"
-    assert finished["lanes"][1]["root_causes"][0]["phase"] == "tool"
+    assert finished["lanes"][1]["root_causes"] == [
+        {
+            "count": 1,
+            "exception": "AuthorityArtifactFormatError",
+            "message": "published authority artifact has an invalid authority payload",
+            "phase": "load",
+        }
+    ]
 
 
 def test_pytest_summary_classifies_summaryless_collection_preflight_as_collection_failure(
@@ -439,7 +453,8 @@ def test_pytest_summary_reports_collection_preflight_and_blocked_lanes(
             "================ 314 tests collected in 1.25s ================",
             '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":2}',
             '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
-            "registry-runtime-load status=failed loadable=false",
+            "registry-runtime-load\tstatus=failed\tloadable=false\tdetail="
+            "AuthorityArtifactFormatError: published authority artifact has an invalid authority payload",
             '{"event":"lane_finished","exit_status":1,"kind":"load","lane":"load","role":"preflight","seconds":1}',
             '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"parallel","reason":"preflight_failed","role":"execution"}',
             '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"serial","reason":"preflight_failed","role":"execution"}',
@@ -463,6 +478,9 @@ def test_pytest_summary_reports_collection_preflight_and_blocked_lanes(
     assert finished["summary"]["lanes_completed"] == 2
     assert finished["summary"]["lanes_blocked"] == 2
     assert finished["summary"]["lanes_not_run"] == 0
-    assert finished["lanes"][1]["classification"] == "tool_failure"
+    assert finished["summary"]["lanes_load_failed"] == 1
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][1]["classification"] == "load_failure"
+    assert finished["lanes"][1]["root_causes"][0]["phase"] == "load"
     assert [lane["kind"] for lane in finished["lanes"]] == ["collection", "load", "command", "command"]
     assert [lane["result"] for lane in finished["lanes"][2:]] == ["blocked", "blocked"]

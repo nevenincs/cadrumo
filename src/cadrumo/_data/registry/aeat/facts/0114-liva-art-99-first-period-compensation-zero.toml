@@ -11,6 +11,10 @@ source_refs = ["boe-liva-art-99-statutory-facts"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-99-statutory-facts"
+required_text = ["Cuando la cuantía de las deducciones procedentes supere el importe de las cuotas devengadas en el mismo periodo de liquidación"]
+
 [fact.variants.payload]
 kind = "scalar"
 value = 0

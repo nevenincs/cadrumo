@@ -1152,7 +1152,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
     empty-tuple default for the criterio-de-caja axis, so the exact shape
     that broke (a save/load cycle over a NON-EMPTY payment-evidence tuple,
     ``246ba49ae4``, fixed by ``f514824d18``) was untested. Builds a
-    TAXPAYER_REGIME row satisfying every ``_enforce_cash_accounting_axis``
+    SUPPLIER_REGIME row satisfying every ``_enforce_cash_accounting_axis``
     invariant (a real operation date, a payment-evidence tuple whose totals
     stay within taxable_base/iva_amount/recargo_amount, and a payment_date at
     or before the statutory 31 December fallback), saves it, reloads through a
@@ -1162,10 +1162,10 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        cash_sale = Transaction.model_validate(
+        cash_purchase = Transaction.model_validate(
             {
-                "raw": _raw("provider-cash-accounting", Decimal("1210.00"), "Venta criterio de caja"),
-                "direction": TransactionDirection.INCOMING,
+                "raw": _raw("provider-cash-accounting", Decimal("1210.00"), "Compra criterio de caja"),
+                "direction": TransactionDirection.OUTGOING,
                 "group_label": None,
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
@@ -1173,7 +1173,7 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
                 "iva_rate": Decimal("0.21"),
                 "iva_amount": Decimal("210.00"),
                 "iva_category": IvaCategory.DOMESTIC_GENERAL,
-                "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
+                "cash_accounting_treatment": IvaCashAccountingTreatment.SUPPLIER_REGIME,
                 "operation_date": date(2026, 3, 20),
                 "cash_accounting_payment_evidence": (
                     IvaCashAccountingPaymentEvidence(
@@ -1189,13 +1189,13 @@ def test_transaction_catalogue_preserves_populated_cash_accounting_evidence_thro
                 ),
             },
         )
-        original = TransactionCatalogue.from_transactions([cash_sale])
+        original = TransactionCatalogue.from_transactions([cash_purchase])
         repo.save(original)
         loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
     assert loaded == original
-    loaded_txn = loaded.transactions[cash_sale.transaction_id]
-    assert loaded_txn.cash_accounting_treatment is IvaCashAccountingTreatment.TAXPAYER_REGIME
+    loaded_txn = loaded.transactions[cash_purchase.transaction_id]
+    assert loaded_txn.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
     assert loaded_txn.operation_date == date(2026, 3, 20)
     assert len(loaded_txn.cash_accounting_payment_evidence) == 2
     first, second = loaded_txn.cash_accounting_payment_evidence

@@ -134,7 +134,6 @@ class IvaCashAccountingTreatment(StrEnum):
     """
 
     NONE = "none"
-    TAXPAYER_REGIME = "taxpayer_regime"
     SUPPLIER_REGIME = "supplier_regime"
 
 

@@ -251,7 +251,13 @@ class ValidatedRegistryAuthority:
         """
         with self._state_lock:
             modelo = self.modelo(modelo_id)
-            revision = select_revision(modelo, filing_year=filing_year, period=period, on=on)
+            revision = select_revision(
+                modelo,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+                support=self.catalogues.supported_filing_years,
+            )
             return RegistryRevisionInspection.from_revision(
                 modelo=modelo,
                 revision=revision,
@@ -518,6 +524,7 @@ class ValidatedRegistryAuthority:
                     modelo,
                     filing_year=window.period.filing_year,
                     period=window.period.registry_token,
+                    support=self.catalogues.supported_filing_years,
                 )
                 if selected_revision.id != containing_revision.id:
                     continue

@@ -84,7 +84,7 @@ _RENTAS_GRAMMAR_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
-_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-band-catalogue"
+_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-grade-catalogue"
 
 _DESCENDIENTE_FLAG_KEYS = frozenset(
     {

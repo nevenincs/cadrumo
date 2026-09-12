@@ -6,6 +6,8 @@ from enum import StrEnum
 from pathlib import Path
 import tomllib
 
+from .errors.hierarchy import CoreValidationError
+
 __all__ = ["TaxDomain"]
 
 
@@ -26,7 +28,7 @@ def _catalogue_codes() -> tuple[str, ...]:
     declarations = {str(entry["key"]): str(entry["value"]) for entry in entries}
     codes = tuple(token.strip() for token in declarations["catalogue.codes"].split(",") if token.strip())
     if not codes or len(codes) != len(set(codes)):
-        raise ValueError("tax-domain catalogue codes must be unique and non-empty")
+        raise CoreValidationError("tax-domain catalogue codes must be unique and non-empty")
     return codes
 
 

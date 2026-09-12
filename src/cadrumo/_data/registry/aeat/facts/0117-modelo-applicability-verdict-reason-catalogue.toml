@@ -1,0 +1,29 @@
+[fact]
+fact_id = "modelo-applicability-verdict-reason-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-applicability-verdict-reason-catalogue:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = [
+  "ley-35-2006:art-86",
+  "ley-35-2006:art-87",
+  "ley-35-2006:art-93",
+  "ley-7-2012:da-1",
+  "orden-hap-72-2013:art-1",
+]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["régimen de atribución de rentas"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "attribution_pass_through.reason", value = "Una entidad en régimen de atribución de rentas (comunidad de bienes, sociedad civil sin objeto mercantil) no presenta autoliquidación de cuota propia: no tributa por el Impuesto sobre Sociedades ni por el IRPF. La renta se atribuye a cada socio, comunero o partícipe y tributa en la declaración de cada miembro. La obligación propia de la entidad es informativa (Modelo 184)." },
+  { key = "impatriado_m720_exempt.reason", value = "Modelo 720 no aplica: el contribuyente tiene activado el régimen especial para trabajadores desplazados a territorio español (LIRPF Art. 93). En este régimen el contribuyente tributa conforme al IRNR y no tiene la consideración de contribuyente residente del IRPF a efectos de la obligación de declarar bienes y derechos en el extranjero. La obligación del Modelo 720 corresponde exclusivamente a los residentes fiscales contribuyentes del IRPF (DA 18ª Ley 58/2003 LGT introducida por la Ley 7/2012 DA 1ª)." },
+]

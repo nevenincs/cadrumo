@@ -11,6 +11,14 @@ source_refs = ["boe-lirpf-statutory-facts", "boe-ley-39-2015-art-43-statutory-fa
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["1.500 euros anuales"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-ley-39-2015-art-43-statutory-facts"
+required_text = ["diez días naturales"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

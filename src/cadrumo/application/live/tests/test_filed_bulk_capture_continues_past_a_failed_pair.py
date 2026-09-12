@@ -54,15 +54,16 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....tests.offline_aeat_register import (
     aeat_sede_fixture,
     declared_register_total,
     open_routed_declarations_register,
     rendered_register_rows,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..filed_data_capture import capture_filed_data_bulk
 from ..remote_state_models import BulkFiledDataCaptureReport
+from .filed_observation_test_support import in_memory_filed_observation_test_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,10 +84,12 @@ def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
 
     async def _run() -> BulkFiledDataCaptureReport:
         async with open_routed_declarations_register(documents, ver_click_timeout_ms=1500) as (register, routed):
+            bundle = in_memory_filed_observation_test_bundle()
             report = await capture_filed_data_bulk(
                 year_from=_YEAR_FROM,
                 year_to=_YEAR_TO,
                 output_root=output_root,
+                ports=bundle.ports,
                 modelos=(_MODELO,),
                 register=register,
                 sync_run_repository=SyncRunRecordRepository(),

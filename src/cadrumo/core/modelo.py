@@ -8,11 +8,13 @@ for callers that still need the scope partition.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Collection, Mapping
 from enum import StrEnum
 from pathlib import Path
 from types import MappingProxyType
 import tomllib
+
+from .errors.hierarchy import CoreValidationError
 
 __all__ = ["NON_REGISTRY_MODELOS", "OUT_OF_SCOPE_OBLIGATIONS", "UNMODELED_OBLIGATIONS", "Modelo"]
 
@@ -33,7 +35,7 @@ def _fact_declarations() -> dict[str, str]:
         document = tomllib.load(stream)
     variants = document["fact"]["variants"]
     if not variants:
-        raise ValueError("Modelo obligation scope fact has no variants")
+        raise CoreValidationError("Modelo obligation scope fact has no variants")
     entries = variants[0]["payload"]["entries"]
     return {str(entry["key"]): str(entry["value"]) for entry in entries}
 
@@ -44,16 +46,16 @@ _DECLARATIONS = _fact_declarations()
 def _csv(value: str) -> tuple[str, ...]:
     values = tuple(token.strip() for token in value.split(",") if token.strip())
     if not values:
-        raise ValueError("Modelo catalogue declaration must not be empty")
+        raise CoreValidationError("Modelo catalogue declaration must not be empty")
     return values
 
 
 def _build_modelo_type() -> type[StrEnum]:
     codes = _csv(_DECLARATIONS["catalogue.codes"])
     if len(codes) != len(set(codes)):
-        raise ValueError("Modelo catalogue codes must be unique")
+        raise CoreValidationError("Modelo catalogue codes must be unique")
     if any(len(code) != 3 or not code.isdigit() for code in codes):
-        raise ValueError("Modelo catalogue codes must be three-digit strings")
+        raise CoreValidationError("Modelo catalogue codes must be three-digit strings")
     return StrEnum("Modelo", {f"M{code}": code for code in codes}, module=__name__)
 
 
@@ -75,24 +77,34 @@ def _scope_reasons() -> dict[str, str]:
         codes = _csv(fields.get("codes", ""))
         reason = fields.get("reason")
         if reason is None or not reason.strip():
-            raise ValueError(f"Modelo scope group {group!r} has no reason")
+            raise CoreValidationError(f"Modelo scope group {group!r} has no reason")
         for code in codes:
             if code in reasons and reasons[code] != reason:
-                raise ValueError(f"Modelo scope code {code!r} has conflicting reasons")
+                raise CoreValidationError(f"Modelo scope code {code!r} has conflicting reasons")
             reasons[code] = reason
     unknown = set(reasons).difference(_csv(_DECLARATIONS["catalogue.codes"]))
     if unknown:
-        raise ValueError(f"Modelo scope declares unknown codes: {sorted(unknown)!r}")
+        raise CoreValidationError(f"Modelo scope declares unknown codes: {sorted(unknown)!r}")
     return reasons
 
 
 _SCOPE_REASONS = _scope_reasons()
 _SUPPRESSED_CODES = frozenset(_csv(_DECLARATIONS["scope.suppressed.codes"]))
 _REGISTRY_OUT_OF_SCOPE_CODES = frozenset(_csv(_DECLARATIONS["scope.registry_out_of_scope.codes"]))
-if not _SUPPRESSED_CODES.issubset(_SCOPE_REASONS):
-    raise ValueError("suppressed Modelo codes must carry a scope declaration")
-if not _REGISTRY_OUT_OF_SCOPE_CODES.issubset(_SCOPE_REASONS):
-    raise ValueError("registry out-of-scope Modelo codes must carry a scope declaration")
+
+
+def _validate_scope_partitions(
+    scope_reasons: Mapping[str, str],
+    suppressed_codes: Collection[str],
+    registry_out_of_scope_codes: Collection[str],
+) -> None:
+    if not set(suppressed_codes).issubset(scope_reasons):
+        raise CoreValidationError("suppressed Modelo codes must carry a scope declaration")
+    if not set(registry_out_of_scope_codes).issubset(scope_reasons):
+        raise CoreValidationError("registry out-of-scope Modelo codes must carry a scope declaration")
+
+
+_validate_scope_partitions(_SCOPE_REASONS, _SUPPRESSED_CODES, _REGISTRY_OUT_OF_SCOPE_CODES)
 
 OUT_OF_SCOPE_OBLIGATIONS: Mapping[Modelo, str] = MappingProxyType(
     {Modelo(code): reason for code, reason in _SCOPE_REASONS.items() if code not in _SUPPRESSED_CODES},

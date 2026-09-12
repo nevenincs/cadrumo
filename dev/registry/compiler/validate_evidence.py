@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import warnings
 from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -40,6 +41,8 @@ _CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_
 # where the path is source.corpus_path with the leading "corpus/" prefix stripped.
 # The payload shape itself is the shared ManualCorpusTextSidecar contract in core.
 _MANUAL_CORPUS_TEXT_DIR = "manual_corpus_text"
+_MAX_XLSX_CITATION_CELLS = 1_000_000
+_MAX_XLSX_CITATION_TEXT_CHARS = 16 * 1024 * 1024
 
 
 def _validated_sidecar_text(raw: str, corpus_path: str, actual_sha256: str) -> str | None:
@@ -155,7 +158,47 @@ def _read_source_text(source: SourceReference, source_path: Path) -> str:
         if sidecar_text is not None:
             return sidecar_text
         return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+    if source_path.suffix.casefold() == ".xlsx":
+        return normalise_corpus_text(_extract_xlsx_text_impl(str(source_path)))
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
+
+
+def _extract_xlsx_text_impl(path: str) -> str:
+    """Return cell text from an enrolled XLSX record-design authority."""
+    try:
+        from openpyxl import load_workbook
+    except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
+        raise OSError("openpyxl is required to validate XLSX source citations") from exc
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            workbook = load_workbook(path, read_only=True, data_only=False)
+            try:
+                cells: list[str] = []
+                text_chars = 0
+                for worksheet in workbook.worksheets:
+                    for row in worksheet.iter_rows(values_only=True):
+                        for value in row:
+                            if value is None:
+                                continue
+                            if len(cells) >= _MAX_XLSX_CITATION_CELLS:
+                                raise OSError(
+                                    f"XLSX source {path} exceeds the citation extraction cell limit "
+                                    f"({_MAX_XLSX_CITATION_CELLS})"
+                                )
+                            rendered = str(value)
+                            text_chars += len(rendered) + 1
+                            if text_chars > _MAX_XLSX_CITATION_TEXT_CHARS:
+                                raise OSError(
+                                    f"XLSX source {path} exceeds the citation extraction text limit "
+                                    f"({_MAX_XLSX_CITATION_TEXT_CHARS} characters)"
+                                )
+                            cells.append(rendered)
+                return "\n".join(cells)
+            finally:
+                workbook.close()
+    except Exception as exc:
+        raise OSError(f"could not extract text from XLSX source {path}") from exc
 
 
 _disk_cache: dict[str, str] | None = None
@@ -394,14 +437,15 @@ class EvidenceValidator:
             return ""
         source_path = _resolve_source_path(source, source_root)
         stat = source_path.stat()
-        source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
+        extraction_contract = f"{source.kind}:xlsx-text-v1" if source_path.suffix.casefold() == ".xlsx" else source.kind
+        source_key = (extraction_contract, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
         if global_cached is not None:
             self._source_text_cache[source.id] = global_cached
             return global_cached
 
         # Check disk cache
-        cache_key_str = f"{source.kind}:{source_path}:{stat.st_size}:{stat.st_mtime_ns}"
+        cache_key_str = f"{extraction_contract}:{source_path}:{stat.st_size}:{stat.st_mtime_ns}"
         disk_cache = _load_disk_cache()
         if cache_key_str in disk_cache:
             normalised = disk_cache[cache_key_str]

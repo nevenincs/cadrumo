@@ -38,6 +38,7 @@ from ..categories.proportionality import (
     StatutoryCapVariant,
 )
 from ..categories.spending_category import SpendingCategory, SpendingCategoryFamily, family_for
+from ..calculations.registry.renta_expense_policy import renta_expense_policy_declarations
 from ..contribuyente.ccaa import CCAA
 from ._first_slice_routing import FIRST_SLICE_EXPENSE_CASILLAS
 from .errors import RentaValidationError
@@ -128,15 +129,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     wired to this axis -- a named follow-up, not silently covered here.
     """
     residence_ccaa: CCAA | None = None
-    """Ordinary residence comunidad autonoma, sourced from ``TaxResidenceProfile.ccaa``.
-
-    Optional and inert for the general expense path: LIRPF arts. 28-30 base-imponible
-    deductibility is state law and does not vary by comunidad (Ley 22/2009 cesion
-    framework grants no base competence to the CCAA). The axis only selects a
-    territorial-regime override where one is declared for the fact's category; when
-    an override exists but this field is ``None`` the evaluation fails closed rather
-    than silently choosing a base (see :func:`select_deductibility_profile`).
-    """
+    """Optional residence axis consumed by the governed territorial policy."""
 
     @field_validator("usage_ratios", mode="after")
     @classmethod
@@ -349,7 +342,9 @@ def resolve_region_category_profiles(
         Mapping from :class:`CCAA` to a per-:class:`SpendingCategory` override
         profile mapping; empty until a territorial regime is enrolled.
     """
-    del profile_year
+    declarations = renta_expense_policy_declarations(profile_year)
+    if declarations.get("territorial_variant_state") != "empty":
+        raise RentaValidationError("Renta expense territorial policy is not an empty catalogue")
     empty: dict[CCAA, Mapping[SpendingCategory, CategoryProfile]] = {}
     return MappingProxyType(empty)
 

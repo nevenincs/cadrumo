@@ -743,12 +743,19 @@ def _materialised_keys(edition: EditionStatus, by_edition: Mapping[str, EditionS
 @cache
 def _scenario_editions(modelo_id: str) -> frozenset[str] | None:
     """The editions the round-trip gate can render export bytes for, or ``None`` when unknowable."""
+    # The call is guarded as well as the import. The scenarios module builds its
+    # scenarios eagerly from typed models, so a governed fact it depends on going
+    # unregistered raises HERE rather than at import, and a guard around the
+    # import alone turns an unknowable answer into a crashed screen. This screen
+    # reports; it does not gate, and it must keep reporting when a neighbour is
+    # mid-edit.
     try:
         from ..edition_export_scenarios import edition_export_scenarios
+
+        return frozenset(edition_export_scenarios(modelo_id))
     except Exception as exc:
         _note_limitation(f"export_scenarios_unavailable: {type(exc).__name__}")
         return None
-    return frozenset(edition_export_scenarios(modelo_id))
 
 
 def _blockers(
@@ -1129,31 +1136,50 @@ class LedgerScope:
     and no ``retired`` continuity evolution withdraws -- a retirement gap, owned
     by the migration drop path, where the answer is to inherit it or retire it.
 
-    ``unnamed_successor`` is a row in a later edition that the ledger should
-    have named and did not. That one is a genuine miss.
+    ``outside_ledger_scope`` is a row in an edition whose manifest declares an
+    explicit no-predecessor. The seeder never judges such a revision at all --
+    the domain's predecessor judgement returns none for it, and the totality
+    gate skips the whole revision -- so a ledger entry written for one of these
+    rows comes back as stale and fails that gate. Counting them as misses read
+    as debt and would have produced exactly that bad write.
+
+    ``unnamed_successor`` is a row in a later edition the seeder does judge,
+    which the ledger should have named and did not. That one is a genuine miss.
+
+    The distinction is decided from the manifest rather than from the domain.
+    This screen reads the raw tree so it keeps reporting when the domain does
+    not import, and it therefore cannot call the predecessor judgement -- but it
+    does not need to, because the fact that judgement reads is the declaration
+    sitting in the TOML. Agreeing with the rule is enough; consulting the
+    function is not required.
     """
 
     unchained_on_edge: int
     named: int
     unclaimed_predecessor: int
+    outside_ledger_scope: int
     unnamed_successor: int
 
 
-def ledger_scope(statuses: tuple[EditionStatus, ...], found_edges: tuple[Edge, ...]) -> LedgerScope | None:
+def ledger_scope(
+    statuses: tuple[EditionStatus, ...],
+    found_edges: tuple[Edge, ...],
+    path: Path = _LEDGER_FILE,
+) -> LedgerScope | None:
     """Measure the campaign's unchained rows against the seeder ledger's coverage.
 
     Returns ``None`` when the ledger cannot be read, recording a limitation, so
     an unreadable ledger never renders as a ledger that accounts for nothing.
     """
     try:
-        rows = tomllib.loads(_LEDGER_FILE.read_text(encoding="utf-8")).get("refusal", ())
+        rows = tomllib.loads(path.read_text(encoding="utf-8")).get("refusal", ())
         named = {(row["modelo"], row["revision"], row["casilla"]) for row in rows}
     except (OSError, tomllib.TOMLDecodeError, KeyError, TypeError) as exc:
         _note_limitation(f"lineage_ledger_unreadable: {type(exc).__name__}; ledger coverage is unmeasured")
         return None
     predecessors = {(edge.modelo, edge.predecessor) for edge in found_edges}
     successors = {(edge.modelo, edge.successor) for edge in found_edges}
-    counted = first_edition = later = 0
+    counted = first_edition = outside = later = 0
     for status in statuses:
         key = (status.modelo, status.edition)
         if key not in predecessors:
@@ -1164,14 +1190,17 @@ def ledger_scope(statuses: tuple[EditionStatus, ...], found_edges: tuple[Edge, .
             counted += 1
             if (status.modelo, status.edition, finding.locus) in named:
                 continue
-            if key in successors:
-                later += 1
-            else:
+            if key not in successors:
                 first_edition += 1
+            elif status.declares_no_predecessor:
+                outside += 1
+            else:
+                later += 1
     return LedgerScope(
         unchained_on_edge=counted,
-        named=counted - first_edition - later,
+        named=counted - first_edition - outside - later,
         unclaimed_predecessor=first_edition,
+        outside_ledger_scope=outside,
         unnamed_successor=later,
     )
 
@@ -1941,7 +1970,8 @@ def _signal_lines(report: Report) -> list[str]:
     if scope is not None:
         lines.append(
             f"ledger unchained_on_edge={scope.unchained_on_edge} named={scope.named} "
-            f"unclaimed_predecessor={scope.unclaimed_predecessor} unnamed_successor={scope.unnamed_successor}"
+            f"unclaimed_predecessor={scope.unclaimed_predecessor} unnamed_successor={scope.unnamed_successor} "
+            f"outside_ledger_scope={scope.outside_ledger_scope}"
         )
     lines += _family_lines(report)
     lines += [
@@ -2103,6 +2133,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
             f"  {'unchained rows on an edge':<32} {_fmt(scope.unchained_on_edge):>8}",
             f"  {'named by the ledger':<32} {_fmt(scope.named):>8}",
             f"  {'unclaimed predecessor (retire/inherit)':<38} {_fmt(scope.unclaimed_predecessor):>8}",
+            f"  {'outside ledger scope (no-predecessor)':<38} {_fmt(scope.outside_ledger_scope):>8}",
             f"  {'unnamed successor (ledger miss)':<38} {_fmt(scope.unnamed_successor):>8}",
             "",
         ]

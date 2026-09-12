@@ -20,6 +20,7 @@ from ....adapters.persistence.operations.journal import OperationJournalReposito
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.operations import (
     OperationCancellation,
@@ -33,7 +34,6 @@ from ....core.operations import (
 from ....core.register_scoping_signal import RegisterScopingSignal
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -72,6 +72,7 @@ from ..filed_history_operation import (
     build_filed_history_operation_definition,
     build_filed_history_operation_registration,
 )
+from .filed_observation_test_support import in_memory_filed_observation_test_bundle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -128,8 +129,10 @@ def _local_pull(
 ):
     """Bind the canonical composition to deterministic discovery/register inputs."""
 
-    async def pull(payload, profile, repository, events):
+    async def pull(payload, profile, repository, events, ports, iva_remote_state_port):
         return await pull_filed_history(
+            iva_remote_state_port=iva_remote_state_port,
+            ports=ports,
             output_root=payload.output_root,
             profile=profile,
             today=payload.today,
@@ -156,9 +159,11 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
     """Run canonical composition through the real locally routed register adapter."""
     document = aeat_sede_fixture("declaraciones-register-form-complete-synthetic")
 
-    async def pull(payload, profile, repository, events):
+    async def pull(payload, profile, repository, events, ports, iva_remote_state_port):
         async with open_routed_declarations_register((document,), ver_click_timeout_ms=1500) as (register, routed):
             run = await pull_filed_history(
+                iva_remote_state_port=iva_remote_state_port,
+                ports=ports,
                 output_root=payload.output_root,
                 profile=profile,
                 today=payload.today,
@@ -206,8 +211,11 @@ def _composition_pair(modelo: str = "100") -> FiledHistoryDiscoveryPair:
 
 
 def _run_composition(*pairs: FiledHistoryDiscoveryPair, tmp_path: Path, dry_run: bool = False):
+    bundle = in_memory_filed_observation_test_bundle()
     return asyncio.run(
         pull_filed_history(
+            iva_remote_state_port=bundle.iva_remote_state_port,
+            ports=bundle.ports,
             output_root=tmp_path,
             today=date(2026, 3, 15),
             dry_run=dry_run,
@@ -230,8 +238,16 @@ def test_canonical_composition_preserves_the_discovery_scoping_signal(tmp_path: 
         _composition_pair("303"),
         scoping_signal=RegisterScopingSignal.LIKELY_UNIVERSAL,
     )
+    bundle = in_memory_filed_observation_test_bundle()
 
-    run = asyncio.run(pull_filed_history(output_root=tmp_path, discover=discovery))
+    run = asyncio.run(
+        pull_filed_history(
+            iva_remote_state_port=bundle.iva_remote_state_port,
+            ports=bundle.ports,
+            output_root=tmp_path,
+            discover=discovery,
+        )
+    )
 
     assert run.scoping_signal is RegisterScopingSignal.LIKELY_UNIVERSAL
 
@@ -252,7 +268,15 @@ def test_canonical_composition_dry_run_preserves_scope_without_provenance(tmp_pa
 
 def test_canonical_composition_empty_discovery_short_circuits_truthfully(tmp_path: Path) -> None:
     discovery = _composition_discovery(scoping_signal=RegisterScopingSignal.LIKELY_NIF_SCOPED)
-    run = asyncio.run(pull_filed_history(output_root=tmp_path, discover=discovery))
+    bundle = in_memory_filed_observation_test_bundle()
+    run = asyncio.run(
+        pull_filed_history(
+            iva_remote_state_port=bundle.iva_remote_state_port,
+            ports=bundle.ports,
+            output_root=tmp_path,
+            discover=discovery,
+        )
+    )
 
     assert run.pairs == ()
     assert run.scoping_signal is RegisterScopingSignal.LIKELY_NIF_SCOPED

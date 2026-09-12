@@ -317,7 +317,6 @@ class _InvoiceLedgerScreenShape(NamedTuple):
 
 _INVOICE_LEDGER_SCREEN_CASH_ACCOUNTING_TREATMENTS: tuple[IvaCashAccountingTreatment, ...] = (
     IvaCashAccountingTreatment.NONE,
-    IvaCashAccountingTreatment.TAXPAYER_REGIME,
     IvaCashAccountingTreatment.SUPPLIER_REGIME,
 )
 _INVOICE_LEDGER_SCREEN_OBSERVATION_ROLES: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,)

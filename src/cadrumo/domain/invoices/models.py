@@ -32,6 +32,10 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.time.utc import UtcInstant
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
 from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.errors import IvaRateNotFoundError
@@ -67,21 +71,29 @@ where the issuer rounded. One cent is the same slack
 product, for the same reason.
 """
 
-_SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
-    {
-        # RD 1619/2012 art. 6.1.d, 1.º: entrega intracomunitaria exenta (LIVA art. 25).
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        # RD 1619/2012 art. 6.1.d, 2.º: the destinatario is the sujeto pasivo.
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-    },
-)
-"""Categories where a factura simplificada's counterparty tax id stays mandatory.
+_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID = "invoice-simplificada-counterparty-tax-id-applicability"
 
-Case 3.º of art. 6.1.d (a domestic operation where the issuer is established
-in the territorio de aplicación del impuesto) is deliberately absent: this
-record carries no field naming where its issuer is established, so that case
-cannot be read from an :class:`Invoice` and is not modelled here.
-"""
+
+def _simplificada_mandatory_tax_id_categories() -> frozenset[IvaCategory]:
+    """Resolve the dated simplified-invoice applicability catalogue."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("invoice applicability must resolve as a mapping fact")
+    entries = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    try:
+        encoded = entries["mandatory_tax_id_categories"]
+    except KeyError as exc:
+        raise RegistryValidationError("invoice applicability is missing mandatory_tax_id_categories") from exc
+    try:
+        return frozenset(IvaCategory(token.strip()) for token in encoded.split(",") if token.strip())
+    except ValueError as exc:
+        raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
 
 _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
     {PaymentStatus.PAID, PaymentStatus.PARTIALLY_PAID},
@@ -809,7 +821,7 @@ class Invoice(BaseModel):
                     "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
                 ),
                 (
-                    (missing_tax_id, category in _SIMPLIFICADA_MANDATORY_TAX_ID_CATEGORIES) == (True, True),
+                    (missing_tax_id, category in _simplificada_mandatory_tax_id_categories()) == (True, True),
                     "counterparty_tax_id is required on a factura simplificada whose iva_category is "
                     f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
                 ),

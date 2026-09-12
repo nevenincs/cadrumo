@@ -114,8 +114,10 @@ from .applicability_payer_facts import PayerFact, payer_fact_holds
 from .applicability_routes import TAX_ROUTE_FOR_ENTITY_TYPE as _TAX_ROUTE_FOR_ENTITY_TYPE
 from .applicability_routes import TaxRoute
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
+from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .ids import LegalRefId, ModeloId
 from .schema_revision_members import ApplicabilityRuleDefinition
+from .schema_base import DateAxis
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -288,7 +290,7 @@ class ModeloApplicabilityRule(BaseModel):
             return ModeloApplicability(
                 modelo=self.modelo,
                 verdict=ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
-                reason=_ATTRIBUTION_PASS_THROUGH_REASON,
+                reason=_registry_applicability_reason("attribution_pass_through.reason"),
                 legal_refs=_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
             )
         return self._not_applicable()
@@ -454,20 +456,27 @@ _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-87",  # LIRPF art. 87 — entidades en régimen de atribución.
 )
 
-_ATTRIBUTION_PASS_THROUGH_REASON = (
-    "Una entidad en régimen de atribución de rentas (comunidad de bienes, "
-    "sociedad civil sin objeto mercantil) no presenta autoliquidación de "
-    "cuota propia: no tributa por el Impuesto sobre Sociedades ni por el "
-    "IRPF. La renta se atribuye a cada socio, comunero o partícipe y "
-    "tributa en la declaración de cada miembro. La obligación propia de la "
-    "entidad es informativa (Modelo 184)."
-)
-"""``ATTRIBUTION_PASS_THROUGH`` rationale.
+_APPLICABILITY_VERDICT_REASON_FACT_ID = "modelo-applicability-verdict-reason-catalogue"
 
-The honest answer to "what is my cuota" for an attribution entity: it
-files no IS and no IRPF cuota of its own. The substantive tax is each
-member's; the entity's own obligation is the informational Modelo 184.
-"""
+
+def _registry_applicability_reason(key: str) -> str:
+    """Resolve an operator-facing verdict reason from the authored catalogue."""
+    from .authority import bundled_authority
+
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_APPLICABILITY_VERDICT_REASON_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("modelo applicability reasons must resolve as a mapping fact")
+    entries = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    try:
+        return entries[key]
+    except KeyError as exc:
+        raise RegistryValidationError(f"modelo applicability reason is missing {key!r}") from exc
 
 _INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
@@ -520,25 +529,6 @@ non-residents or to IRPF taxpayers who have opted into the IRNR-rate
 regime. The general Art. 93 key resolves in the registry table
 ``legal/irpf-impatriados.toml``; the two Modelo 720 keys resolve in the
 table ``legal/modelo-720.toml``.
-"""
-
-_IMPATRIADO_M720_EXEMPT_REASON = (
-    "Modelo 720 no aplica: el contribuyente tiene activado el régimen "
-    "especial para trabajadores desplazados a territorio español (LIRPF "
-    "Art. 93). En este régimen el contribuyente tributa conforme al IRNR "
-    "y no tiene la consideración de contribuyente residente del IRPF a "
-    "efectos de la obligación de declarar bienes y derechos en el "
-    "extranjero. La obligación del Modelo 720 corresponde exclusivamente "
-    "a los residentes fiscales contribuyentes del IRPF (DA 18ª Ley "
-    "58/2003 LGT introducida por la Ley 7/2012 DA 1ª)."
-)
-"""``NOT_APPLICABLE`` rationale for the impatriado Art. 93 M720 exemption.
-
-Surfaced when ``profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO``
-and ``modelo == "720"``. The pre-check in :func:`derive_modelo_applicability`
-fires before the :data:`MODELO_APPLICABILITY_RULES` lookup to guarantee the
-exemption is enforced even when ``bienes_extranjero_above_threshold`` is
-``True``.
 """
 
 _IMPATRIADO_M151_ROUTE_LEGAL_REFS: tuple[LegalRefId, ...] = (
@@ -1064,7 +1054,7 @@ def derive_modelo_applicability(
         return ModeloApplicability(
             modelo=Modelo.M720,
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
-            reason=_IMPATRIADO_M720_EXEMPT_REASON,
+            reason=_registry_applicability_reason("impatriado_m720_exempt.reason"),
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
         )
     rule = _modelo_applicability_rule(modelo, authority=authority)

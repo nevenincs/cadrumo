@@ -132,7 +132,7 @@ def compile_registered_fact_providers(
                     f"is already owned by provider {previous_owner!r}",
                 )
             owner_by_fact_id[fact.fact_id] = registration.provider_id
-            facts[fact.fact_id] = fact
+            facts[fact.fact_id] = fact.model_copy(update={"provider_id": registration.provider_id})
     return GovernedFactCatalogue(facts=facts)
 
 

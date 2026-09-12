@@ -1,9 +1,9 @@
 [fact]
-fact_id = "lirpf-descendant-disability-band-catalogue"
+fact_id = "lirpf-descendant-disability-grade-catalogue"
 family = "mapping"
 
 [[fact.variants]]
-variant_id = "lirpf-descendant-disability-band-catalogue:2007-04-01"
+variant_id = "lirpf-descendant-disability-grade-catalogue:2007-04-01"
 date_axis = "filing_period"
 valid_from = 2007-04-01
 legal_refs = ["ley-35-2006:art-60", "rd-439-2007:art-72"]
@@ -21,9 +21,6 @@ required_text = ["Mínimo por discapacidad"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
-    { key = "grade.0.band", value = "ordinary" },
-    { key = "grade.33.band", value = "33_to_64" },
-    { key = "grade.65.band", value = "65_or_more" },
-    { key = "grade.33.minimum_percent", value = "33" },
-    { key = "grade.65.minimum_percent", value = "65" },
+    { key = "catalogue.ids", value = "0,33,65" },
+    { key = "accepted_grades", value = "0,33,65" },
 ]

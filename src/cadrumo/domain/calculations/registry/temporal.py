@@ -6,12 +6,32 @@ given a filing year, period, and optional date constraint.
 
 from __future__ import annotations
 
+from calendar import monthrange
 from datetime import date
 
 from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
 from .ids import RevisionId
 from .period_selector_match import selector_token_for_request
-from .schema import ModeloDefinition, ModeloRevision
+from .schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
+
+
+def _supported_filing_year(
+    filing_year: int,
+    support: SupportedFilingYearsCatalogue | None,
+) -> int | None:
+    """Project an admitted year through the shared support-envelope mechanics."""
+    if support is None:
+        return filing_year
+    return support.projection_coordinate(filing_year)
+
+
+def _project_reference_date(on: date | None, *, requested_year: int, selection_year: int) -> date | None:
+    """Preserve a reference date's filing-year offset when support projects the year."""
+    if on is None or requested_year == selection_year:
+        return on
+    projected_year = on.year - (requested_year - selection_year)
+    projected_day = min(on.day, monthrange(projected_year, on.month)[1])
+    return on.replace(year=projected_year, day=projected_day)
 
 
 def _declared_filing_window_covers(
@@ -40,7 +60,7 @@ def _declared_filing_window_covers(
 
 def _revision_governs_period_on(revision: ModeloRevision, on: date) -> bool:
     """Return whether ``on`` falls inside the tax periods a revision governs."""
-    return revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to)
+    return revision.contains_date(on)
 
 
 def _effective_candidates(
@@ -152,6 +172,7 @@ def select_revision_for_year(
     *,
     filing_year: int,
     on: date | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
 ) -> ModeloRevision:
     """Select exactly one revision for a filing year and effective date.
 
@@ -168,10 +189,20 @@ def select_revision_for_year(
         on: Optional reference date at which the revision must be the
             applicable design: inside the tax periods it governs, or inside a
             filing window it declares for this coordinate.
+        support: Optional registry envelope that hard-gates the request and
+            carries a year beyond its authored horizon back to that horizon.
     """
+    selection_year = _supported_filing_year(filing_year, support)
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
     return _select_single_year_revision(
         modelo,
-        _year_revision_candidates(modelo, filing_year=filing_year, on=on),
+        []
+        if selection_year is None
+        else _year_revision_candidates(modelo, filing_year=selection_year, on=selection_on),
         filing_year=filing_year,
     )
 
@@ -183,6 +214,7 @@ def select_revision(
     period: str,
     on: date | None = None,
     revision_id: RevisionId | None = None,
+    support: SupportedFilingYearsCatalogue | None = None,
 ) -> ModeloRevision:
     """Select exactly one :class:`ModeloRevision` for a filing period.
 
@@ -197,18 +229,31 @@ def select_revision(
             filing window it declares for this coordinate.
         revision_id: Optional explicit revision id; restricts candidates to
             the matching revision when supplied.
+        support: Optional registry envelope that hard-gates the request and
+            carries a year beyond its authored horizon back to that horizon.
     """
-    matching = [
+    selection_year = _supported_filing_year(filing_year, support)
+    matching = [] if selection_year is None else [
         revision
         for revision in modelo.revisions.values()
         if _revision_matches_request(
             revision,
-            filing_year=filing_year,
+            filing_year=selection_year,
             period=period,
             revision_id=revision_id,
         )
     ]
-    candidates = _effective_candidates(matching, on=on, filing_year=filing_year, period=period)
+    selection_on = (
+        None
+        if selection_year is None
+        else _project_reference_date(on, requested_year=filing_year, selection_year=selection_year)
+    )
+    candidates = _effective_candidates(
+        matching,
+        on=selection_on,
+        filing_year=filing_year if selection_year is None else selection_year,
+        period=period,
+    )
     return _select_single_revision(
         modelo,
         candidates,

@@ -19,6 +19,18 @@ source_refs = [
 review_status = "agent_reviewed"
 ownership = "authored"
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-390-procedure"
+required_text = ["Modelo 390. IVA. Declaración Resumen Anual."]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-390-2025"
+required_text = ["% de prorrata"]
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-390-2009-form"
+required_text = ["modelo 390 de declaración-resumen anual del Impuesto sobre el Valor Añadido"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [

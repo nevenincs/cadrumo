@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import hashlib
+import io
 import json
 import re
 import tomllib
@@ -13,6 +14,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Final, cast
 
+from babel.messages.mofile import write_mo
 from babel.messages.pofile import read_po
 
 from cadrumo.core.i18n.render import extract_placeholders
@@ -84,6 +86,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         or parallel_inventory["docs_source_drift_pages"]
         or parallel_inventory["docs_orphan_catalogue_files"]
         or parallel_inventory["docs_missing_catalogue_files"]
+        or parallel_inventory["docs_generated_source_failures"]
         or spelling_inventory["spelling_tool_failures"]
         or spelling_inventory["spelling_unknown_cells"]
         or unresolved_families
@@ -125,6 +128,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> dict[
         + parallel_inventory["docs_source_drift_pages"]
         + parallel_inventory["docs_orphan_catalogue_files"]
         + parallel_inventory["docs_missing_catalogue_files"]
+        + parallel_inventory["docs_generated_source_failures"]
         + spelling_inventory["spelling_tool_failures"]
         + spelling_inventory["spelling_unknown_cells"]
         + len(unresolved_families)
@@ -630,7 +634,9 @@ def _parallel_localization_inventory(
     for path in sorted(docs_root.rglob("*.po")) if docs_root.is_dir() else ():
         try:
             with path.open(encoding=UTF_8) as handle:
-                messages = [message for message in read_po(handle) if message.id]
+                catalogue_payload = read_po(handle)
+            write_mo(io.BytesIO(), catalogue_payload)
+            messages = [message for message in catalogue_payload if message.id]
         except (OSError, UnicodeError, ValueError) as exc:
             counts["invalid_data_files"] += 1
             findings.append(_data_finding("invalid_localization_data", path, "", type(exc).__name__))
@@ -647,6 +653,8 @@ def _parallel_localization_inventory(
         locale = relative.parts[0]
         catalogue = Path(*relative.parts[2:]).as_posix()
         docs_catalogue_files.add((locale, catalogue))
+        counts["docs_catalogues_compiled"] += 1
+        counts[f"docs_catalogues_compiled_{locale}"] += 1
         for message in messages:
             message_id = _po_message_identity(message)
             translations = _po_translation_strings(message.string)
@@ -682,6 +690,11 @@ def _parallel_localization_inventory(
         "parallel_localization_declarations": counts["parallel_localization_declarations"],
         "parallel_localization_cells": counts["parallel_localization_cells"],
         "invalid_data_files": counts["invalid_data_files"],
+        "docs_catalogues_compiled": counts["docs_catalogues_compiled"],
+        **{
+            f"docs_catalogues_compiled_{locale}": counts[f"docs_catalogues_compiled_{locale}"]
+            for locale in ("ca", "es", "hu")
+        },
         **docs_inventory,
     }, findings
 
@@ -737,12 +750,36 @@ def _documentation_source_inventory(
         )
         return _documentation_counts(counts), findings
     generated_roots = (docs_root / "cli", docs_root / "_generated")
-    counts["docs_generated_english_only_pages"] = sum(
-        1
+    generated_pages = sorted(
+        path
         for root in generated_roots
         for path in (root.rglob("*") if root.is_dir() else ())
         if path.is_file() and path.suffix in {".md", ".rst"}
     )
+    counts["docs_generated_english_only_pages"] = len(generated_pages)
+    for path in generated_pages:
+        try:
+            prose = _visible_document_prose(path)
+        except Exception as exc:  # Parsing is part of the measured docs surface.
+            counts["docs_generated_source_failures"] += 1
+            findings.append(
+                {
+                    "classification": "blocking",
+                    "kind": "docs_generated_source_unreadable",
+                    "domain": "docs",
+                    "path": path.relative_to(repository).as_posix(),
+                    "error_type": type(exc).__name__,
+                    "detail": str(exc),
+                    "next_action": "repair the generated user document, then rerun check-locales",
+                }
+            )
+            continue
+        counts["docs_generated_spellchecked_pages"] += 1
+        counts["docs_generated_prose_cells"] += len(prose)
+        if spelling_values is not None:
+            relative = path.relative_to(repository).as_posix()
+            for line, text in prose:
+                spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
     extracted = pot_root(docs_root)
     for locale in TARGET_LANGUAGES:
         counts[f"docs_catalogue_files_expected_{locale}"] = len(pages)
@@ -894,6 +931,9 @@ def _documentation_counts(counts: Counter[str]) -> dict[str, int]:
         "docs_missing_catalogue_files": counts["docs_missing_catalogue_files"],
         "docs_orphan_source_templates": counts["docs_orphan_source_templates"],
         "docs_generated_english_only_pages": counts["docs_generated_english_only_pages"],
+        "docs_generated_spellchecked_pages": counts["docs_generated_spellchecked_pages"],
+        "docs_generated_prose_cells": counts["docs_generated_prose_cells"],
+        "docs_generated_source_failures": counts["docs_generated_source_failures"],
         **{
             f"docs_catalogue_files_expected_{locale}": counts[f"docs_catalogue_files_expected_{locale}"]
             for locale in ("ca", "es", "hu")
@@ -916,6 +956,52 @@ def _docs_extraction_finding(path: Path, exc: BaseException) -> dict[str, object
         "detail": str(exc),
         "next_action": "restore the user-doc gettext extraction path, then rerun check-locales",
     }
+
+
+def _visible_document_prose(path: Path) -> tuple[tuple[int, str], ...]:
+    """Extract visible RST/Markdown prose while excluding literal syntax."""
+    if path.suffix == ".rst":
+        from docutils import nodes
+        from docutils.core import publish_doctree
+
+        source = path.read_text(encoding=UTF_8)
+        document = publish_doctree(
+            source,
+            source_path=str(path),
+            settings_overrides={"report_level": 5, "halt_level": 6, "warning_stream": io.StringIO()},
+        )
+        excluded = (nodes.literal, nodes.literal_block, nodes.option_string, nodes.raw)
+        blocks: list[tuple[int, str]] = []
+        blocks_to_read = (nodes.title, nodes.paragraph, nodes.term, nodes.caption)
+        for node in document.findall(lambda candidate: isinstance(candidate, blocks_to_read)):
+            parts = [
+                str(text)
+                for text in node.findall(nodes.Text)
+                if not _node_has_ancestor(text, excluded)
+            ]
+            value = " ".join("".join(parts).split())
+            if value:
+                blocks.append((int(node.line or 0), value))
+        return tuple(blocks)
+    from markdown_it import MarkdownIt
+
+    tokens = MarkdownIt("commonmark").parse(path.read_text(encoding=UTF_8))
+    return tuple(
+        ((token.map or [0])[0] + 1, " ".join(child.content for child in (token.children or ()) if child.type == "text"))
+        for token in tokens
+        if token.type == "inline"
+        if any(child.type == "text" and child.content.strip() for child in (token.children or ()))
+    )
+
+
+def _node_has_ancestor(node: object, node_types: tuple[type[object], ...]) -> bool:
+    """Return whether a docutils node is nested below excluded syntax."""
+    parent = getattr(node, "parent", None)
+    while parent is not None:
+        if isinstance(parent, node_types):
+            return True
+        parent = getattr(parent, "parent", None)
+    return False
 
 
 def _po_translation_strings(value: object) -> tuple[str, ...]:

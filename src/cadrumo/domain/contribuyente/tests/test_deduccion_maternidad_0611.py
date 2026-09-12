@@ -36,7 +36,6 @@ import pytest
 
 from ....core.descendant_relacion import (
     ART_58_2_ENTITLING_RELACIONES,
-    ART_81_1_MATERNIDAD_RELACIONES,
     DescendantRelacion,
 )
 from ..descendant import DescendantInfo
@@ -45,6 +44,7 @@ from ..descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..descendant_maternity import ART_81_1_MATERNIDAD_RELACIONES
 from ..family_profile import RentaFamilyProfile
 from ..meses_trabajo import parse_meses_trabajo
 from ._registry_thresholds import registry_thresholds

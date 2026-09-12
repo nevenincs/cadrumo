@@ -195,7 +195,14 @@ def build_validated_snapshot(
     forcing it to would make a scheduling question unanswerable rather than safe.
     """
     _install_cross_domain_snapshot_checks()
-    revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    revision = select_revision(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        on=on,
+        revision_id=revision_id,
+        support=catalogues.supported_filing_years,
+    )
     _check_snapshot_authority_grade(modelo, revision, requested_grade=grade)
     if grade is RegistryAuthorityGrade.FILING:
         _check_snapshot_revision_review_status(modelo, revision)

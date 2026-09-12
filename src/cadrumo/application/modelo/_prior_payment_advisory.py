@@ -32,7 +32,7 @@ def _selected_registry_declaration(revision: ModeloRevision) -> ResolvedMappingF
     effective_date = getattr(revision, "valid_from", None) or date.today()
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
-            fact_id="m131-prior-payment-verification-mapping",
+            fact_id="m130-prior-payment-verification-mapping",
             date_axis=DateAxis.FILING_PERIOD,
             effective_date=effective_date,
         ),
