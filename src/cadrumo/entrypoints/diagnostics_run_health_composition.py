@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..application.auth.operator_probe_ports import OperatorProbePorts
+from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.diagnostics_run_health_ports import (
     DiagnosticAuthProbePort,
     DiagnosticAuthProbeResult,
     DiagnosticRunTelemetryPort,
 )
-from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.state_projection_ports import StateProjectionReadPorts
 
 
@@ -18,9 +20,13 @@ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
         self,
         read_ports: StateProjectionReadPorts,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_probe_ports: OperatorProbePorts,
+        operator_scope_ports: OperatorScopePorts,
     ) -> None:
         self._read_ports = read_ports
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._operator_probe_ports = operator_probe_ports
+        self._operator_scope_ports = operator_scope_ports
 
     def probe(self) -> DiagnosticAuthProbeResult:
         """Read auth readiness through the root-composed state projection ports."""
@@ -28,6 +34,8 @@ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
 
         result = test_operator_auth(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            operator_probe_ports=self._operator_probe_ports,
+            operator_scope_ports=self._operator_scope_ports,
             read_ports=self._read_ports,
         )
         return DiagnosticAuthProbeResult(
@@ -53,10 +61,17 @@ def compose_diagnostics_run_health_port() -> DiagnosticRunTelemetryPort:
 def compose_diagnostics_auth_probe_port(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
 ) -> DiagnosticAuthProbePort:
     """Bind the diagnostics auth probe to the root-composed state projection."""
-    return _DiagnosticsAuthProbeAdapter(read_ports, certificate_secret_backend_factory)
+    return _DiagnosticsAuthProbeAdapter(
+        read_ports,
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+    )
 
 
 __all__ = ["compose_diagnostics_auth_probe_port", "compose_diagnostics_run_health_port"]

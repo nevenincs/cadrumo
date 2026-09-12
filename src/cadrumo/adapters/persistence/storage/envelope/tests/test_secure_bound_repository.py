@@ -23,7 +23,7 @@ from sqlalchemy import Engine, text
 
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ...runtime_readiness import StorageRuntimeReadinessCode
 from ...sql.secure_object_records import SecureObjectRecord, SecureObjectUnreadable

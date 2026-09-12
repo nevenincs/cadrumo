@@ -255,14 +255,6 @@ modelo:
             help: Información fiscal sobre información fiscal de la casilla 731 del
               Modelo 322.
             label: Casilla 731 — información fiscal
-          '75':
-            help: Información fiscal sobre información fiscal de la casilla 75 del
-              Modelo 322.
-            label: Casilla 75 — información fiscal
-          '84':
-            help: Información fiscal sobre información fiscal de la casilla 84 del
-              Modelo 322.
-            label: Casilla 84 — información fiscal
           filing-period:
             help: 'Consulte la información correspondiente a la casilla: Período de
               la declaración.'
@@ -346,10 +338,6 @@ modelo:
             help: Información fiscal sobre información fiscal de la casilla 718 del
               Modelo 322.
             label: Casilla 718 — información fiscal
-          m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas:
-            help: Información fiscal sobre información fiscal de la casilla 74 del
-              Modelo 322.
-            label: Casilla 74 — información fiscal
           m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo:
             help: Información fiscal sobre información fiscal de la casilla 10 del
               Modelo 322.

@@ -124,12 +124,17 @@ def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     """
     from ...domain.iva.errors import IvaRateNotFoundError
     from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
-    from ...domain.iva.schema import EUMemberState, IvaRateKind
+    from ...domain.iva.schema import EUMemberState
+    from ...domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
     overlapping: set[Decimal] = set()
     on_date = period.start_date
     while on_date <= period.end_date:
-        for kind in IvaRateKind:
+        kinds = tuple(
+            definition.token
+            for definition in resolve_iva_rate_kind_catalogue(effective_date=on_date).definitions
+        )
+        for kind in kinds:
             try:
                 overlapping.add(lookup_rate(EUMemberState.ES, kind, on_date).pct)
             except IvaRateNotFoundError:
@@ -167,14 +172,16 @@ def resolve_invoice_extraction_authority_values(*, period: Period) -> InvoiceExt
         IvaCatalogueError: When the bundled IVA rate registry cannot be read.
         TransactionValidationError: When the retención parameters cannot be read.
     """
+    from ...domain.iva.components import registry_category_projection
     from ...domain.iva.regime_legend import regime_legend_phrases
-    from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES
     from ...domain.transactions.retencion_facts import statutory_activity_retencion_rates
 
     return InvoiceExtractionAuthorityValues(
         period=period,
         iva_rate_pcts=_overlapping_iva_rate_pcts(period),
         retencion_rate_pcts=_as_pcts(statutory_activity_retencion_rates(effective_date=period.end_date)),
-        no_printed_tax_categories=tuple(sorted(NO_PRINTED_TAX_IVA_CATEGORIES, key=lambda member: member.value)),
+        no_printed_tax_categories=tuple(
+            sorted(registry_category_projection("no_printed_tax"), key=lambda member: member.value),
+        ),
         regime_legend_phrases=regime_legend_phrases(),
     )

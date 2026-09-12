@@ -11,6 +11,8 @@ still being mounted.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
@@ -81,6 +83,8 @@ from .....tests.aeat_literal_fixtures import aeat_url
 from ..controller import OperationController
 from ..modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalOutcomeV1
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "operation-modal-lifecycle-passphrase"  # noqa: S105 - isolated integration fixture
@@ -146,8 +150,9 @@ def _runtime(
         censal_definition = build_censal_operation_definition(
             acquire=acquire_censo,
             before_irreversible_section=before_irreversible_section,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
-        verify_definition = build_modelo_work_verify_definition()
+        verify_definition = build_modelo_work_verify_definition(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         registry = OperationRegistry(
             definitions=(*auth_definitions, censal_definition, verify_definition),
             public_registrations=tuple(

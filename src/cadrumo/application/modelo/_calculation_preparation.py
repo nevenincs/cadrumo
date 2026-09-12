@@ -38,13 +38,20 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
 )
+from ...domain.calculations.registry.iva_schema_vocabulary import (
+    iva_regime_simplificado_token,
+    require_iva_regime,
+)
 from ...domain.deadlines.models import IVARegime
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.period import calculation_filing_date
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..calculations.observations_repository import IvaWalletDecisionRepository
+from ..calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
@@ -104,7 +111,8 @@ def prepare_calculation(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     iva_compensation_decision: object | None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     binding_values: Mapping[BindingId, Decimal] | None,
     enum_binding_values: Mapping[BindingId, str] | None,
     backend_binding_values: Mapping[BindingId, Decimal] | None,
@@ -120,7 +128,7 @@ def prepare_calculation(
     requirements. ``ledger_preflight_transaction_repository`` may provide a
     :class:`TransactionCatalogueRepository` for the ledger-tax readiness check.
     ``iva_compensation_decision_repository`` may provide the matching
-    :class:`~application.calculations.IvaWalletDecisionRepository` for the
+    :class:`~application.calculations.IvaWalletDecisionRepositoryProtocol` for the
     Modelo 303 wallet authority, while
     :class:`~application.live.Borrador100SnapshotRepository` supplies the
     optional Modelo 100 borrador tier.
@@ -163,6 +171,7 @@ def prepare_calculation(
         work_unit,
         snapshot=snapshot,
         supplied_decision=iva_compensation_decision,
+        observation_repository=observation_repository,
         repository=iva_compensation_decision_repository,
         binding_values=binding_values,
         backend_binding_values=backend_binding_values,
@@ -248,7 +257,7 @@ def _resolved_binding_ids_for_required_binding_gate(
     return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))
 
 
-def _iva_regime_for_bucket(bucket_id: str) -> str | None:
+def _iva_regime_for_bucket(bucket_id: str) -> IVARegime | None:
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
@@ -260,7 +269,7 @@ def _iva_regime_for_bucket(bucket_id: str) -> str | None:
     value = record_to_path_values(record).get("iva.regime")
     if value is None or not str(value).strip():
         return None
-    return str(value).strip()
+    return require_iva_regime(str(value).strip())
 
 
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
@@ -279,7 +288,6 @@ _IVA_ONLY_PREFLIGHT_REASONS = frozenset(
         "anomaly_non_declarable_recargo_equivalencia",
     },
 )
-_IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
 _M200_ACCOUNTING_RESULT_CASILLA: CasillaId = "00501"
 _M200_ACCOUNTING_LEDGER_DIRECTIONS = frozenset(
     {
@@ -302,7 +310,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     if not ledger_preflight_sources:
         return
     iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
-    if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
+    if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
         return
     from ..ledger.preflight import preflight_ledger_tax_readiness
 

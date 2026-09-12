@@ -13,9 +13,11 @@ Two boundaries get coverage:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from ....core.casilla_id import CasillaId
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
@@ -23,10 +25,20 @@ from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings im
 )
 from ...categories.spending_category import SpendingCategory
 from .._first_slice_routing import (
-    FIRST_SLICE_EXPENSE_CASILLAS,
+    resolve_first_slice_expense_routing,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _first_slice_expense_routing() -> dict[SpendingCategory, CasillaId]:
+    return resolve_first_slice_expense_routing(
+        category_type=SpendingCategory,
+        casilla_factory=validated_casilla_id,
+        model_code="100",
+        fact_id="modelo-100-first-slice-expense-routing-mapping",
+        effective_date=date(2025, 12, 31),
+    )
 
 
 def test_first_slice_target_casillas_is_closed_set() -> None:
@@ -38,7 +50,7 @@ def test_first_slice_target_casillas_is_closed_set() -> None:
     test failures so the migration is intentional.
     """
 
-    assert frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values()) == frozenset(
+    assert frozenset(_first_slice_expense_routing().values()) == frozenset(
         {
             "0183",
             "0186",
@@ -63,13 +75,14 @@ def test_every_spending_category_routes_to_a_first_slice_casilla() -> None:
 
     Every deducible autónomo expense category resolves to a real
     Modelo 100 estimación-directa casilla. A category left out of
-    :data:`FIRST_SLICE_EXPENSE_CASILLAS` would silently drop that
+    dated first-slice routing projection would silently drop that
     expense class from the annual filing while the M130 quarterly
     path still accepted it (``no-silent-under-declaration``,
     ``aeat-calculation-aggregation``).
     """
 
-    unrouted = [category for category in SpendingCategory if category not in FIRST_SLICE_EXPENSE_CASILLAS]
+    routing = _first_slice_expense_routing()
+    unrouted = [category for category in SpendingCategory if category not in routing]
     assert unrouted == []
 
 
@@ -89,7 +102,7 @@ def test_first_slice_routing_targets_exist_in_modelo_100_registry() -> None:
     for revision in modelo_100.revisions.values():
         all_casilla_ids.update(casilla.id for casilla in revision.casillas)
 
-    missing = frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values()) - all_casilla_ids
+    missing = frozenset(_first_slice_expense_routing().values()) - all_casilla_ids
     assert not missing, f"first-slice routing targets casillas absent from modelo-100: {sorted(missing)!r}"
 
 
@@ -165,7 +178,7 @@ def test_renta_first_slice_binding_target_casillas_is_revision_scoped() -> None:
     for year in ("2024", "2025"):
         revision = modelo_100.revisions[year]
         targets = renta_first_slice_binding_target_casillas(revision)
-        assert targets == frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values())
+        assert targets == frozenset(_first_slice_expense_routing().values())
         assert "0195" in targets
 
 
@@ -183,5 +196,5 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision() -> None:
 
     authority = bundled_authority()
     for year in (2020, 2021, 2022, 2023, 2024, 2025):
-        snapshot = authority.snapshot(Modelo.M100, filing_year=year, period="0A")
+        snapshot = authority.snapshot(Modelo("100"), filing_year=year, period="0A")
         assert snapshot.revision.id == str(year)

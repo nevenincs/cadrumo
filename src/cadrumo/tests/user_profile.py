@@ -19,7 +19,7 @@ from ..application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ..application.user_profile.validation import COMPLETENESS_ISSUE_CODES, ProfileValidationService
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
-from ..core.identity.documents import nif_check_letter
+from ..domain.calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from ..domain.deadlines.models import IVARegime
 from ..domain.user_profile.schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType
 from ..domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ..domain.user_profile.schema import ProfileFieldDefinition, ProfileSchemaDefinition
 
 
-_PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+_PLACEHOLDER_TAX_ID = f"12345678{runtime_nif_check_letter(12345678)}"
 
 #: Identity handed to the validator purely to read back its completeness
 #: report. Nothing is persisted under it.
@@ -66,7 +66,7 @@ def _distinct_valid_nif(profile_id: str) -> str:
     """Return a stable checksum-valid Spanish NIF for ``profile_id``."""
     digest = sha256_hex(profile_id.encode("utf-8"))
     number = int(digest, 16) % 100_000_000
-    return f"{number:08d}{nif_check_letter(number)}"
+    return f"{number:08d}{runtime_nif_check_letter(number)}"
 
 
 _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {

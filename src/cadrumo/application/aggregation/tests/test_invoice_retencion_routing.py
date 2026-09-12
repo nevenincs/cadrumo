@@ -52,7 +52,7 @@ from ..retenciones import RetencionObservation, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_PROFESIONAL = RetencionScheme.PROFESSIONAL
+_PROFESIONAL = RetencionScheme("actividades_profesionales")
 
 
 def _invoice(
@@ -322,13 +322,13 @@ def test_the_scheme_is_supplied_never_inferred_from_the_invoice() -> None:
     """
     invoice = _invoice()
 
-    profesional = project_received_invoice_retencion(invoice, scheme=RetencionScheme.PROFESSIONAL)
-    economica = project_received_invoice_retencion(invoice, scheme=RetencionScheme.ECONOMIC_ACTIVITY)
+    profesional = project_received_invoice_retencion(invoice, scheme=RetencionScheme("actividades_profesionales"))
+    economica = project_received_invoice_retencion(invoice, scheme=RetencionScheme("actividades_economicas"))
 
     assert profesional.observation is not None
     assert economica.observation is not None
-    assert profesional.observation.scheme is RetencionScheme.PROFESSIONAL
-    assert economica.observation.scheme is RetencionScheme.ECONOMIC_ACTIVITY
+    assert profesional.observation.scheme == RetencionScheme("actividades_profesionales")
+    assert economica.observation.scheme == RetencionScheme("actividades_economicas")
 
 
 def test_routed_retencion_lands_in_the_existing_encrypted_store(tmp_path: Path) -> None:
@@ -434,7 +434,7 @@ def _modelo_111_revision() -> ModeloRevision:
     return (
         bundled_authority()
         .snapshot(
-            Modelo.M111.value,
+            Modelo("111").value,
             filing_year=2026,
             period="1T",
         )

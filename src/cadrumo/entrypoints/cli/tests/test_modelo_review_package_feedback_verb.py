@@ -45,6 +45,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
 )
@@ -110,7 +111,10 @@ def _register_originator(recipient_id: str) -> str:
     from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
-    keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
+    keypair = ensure_recipient_encryption_keypair(
+        bucket_id=_BUCKET_ID,
+        recipient_encryption=RecipientEncryptionAdapter(repository=repository, bucket_id=_BUCKET_ID),
+    )
     public_key = keypair
     registry = RecipientFingerprintRegistryRepository(bucket_id=_BUCKET_ID)
     registry.add(recipient_id=recipient_id, public_key_hex=public_key.public_key_hex)

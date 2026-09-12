@@ -32,6 +32,7 @@ from .declarations_register_test_support import (
     declared_register_total,
     open_routed_declarations_register,
     rendered_register_rows,
+    RoutedFiledDataCapturePort,
 )
 from ......application.live.filed_data import BulkFiledDataListingReport
 from ......application.live.filed_data_capture import list_filed_data_bulk
@@ -70,7 +71,7 @@ def test_a_truncated_pair_is_reported_while_the_other_pair_still_yields_rows() -
                 year_from=_YEAR_FROM,
                 year_to=_YEAR_TO,
                 modelos=(_MODELO,),
-                register=register,
+                filed_data_port=RoutedFiledDataCapturePort(register),
             )
             assert not routed.pending
             return report

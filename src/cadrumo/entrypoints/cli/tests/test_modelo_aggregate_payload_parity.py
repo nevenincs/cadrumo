@@ -49,7 +49,7 @@ def _real_result() -> PerModeloAggregationResult:
     )
     return aggregate_per_modelo(
         PerModeloAggregationCommand(
-            modelo=Modelo.M347.value,
+            modelo=Modelo("347").value,
             period=_PERIOD,
             counterpart_observations=(observation,),
         ),
@@ -85,8 +85,8 @@ def test_projection_carries_the_canonical_result_verbatim() -> None:
 def test_projection_json_round_trips_through_its_own_rendering() -> None:
     """The JSON rendering re-validates to an equal payload.
 
-    The closed enums render as their string tokens on the wire and are lifted
-    back to members on re-validation, so the transport shape stays JSON-safe
+    Syntax-only identifiers render as their string tokens on the wire and are
+    reconstructed on re-validation, so the transport shape stays JSON-safe
     without loosening the field types.
     """
     payload = ModeloAggregateResult.from_aggregation_result(_real_result())

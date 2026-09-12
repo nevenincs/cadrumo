@@ -16,9 +16,8 @@ cross-period facts into :class:`ModeloVerificationFinding` records.
 
 Verification emits bucket-history entries through
 :class:`BucketEventHistoryRepository`, stores casilla-level
-:class:`CasillaObservation` provenance, and uses
-:class:`TransactionCatalogueRepository` only for evidence advisories over source
-transactions.
+:class:`CasillaObservation` provenance, and consumes the required
+:class:`VerificationRepositoryBundle` for all persistence capabilities.
 
 Draft-construction structural validation is a distinct, nested stage, not a
 parallel pipeline. When verification grants, this module runs the revision
@@ -47,19 +46,11 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
@@ -89,7 +80,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
-from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
+from ...domain.iva.components import registry_category_projection
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -103,6 +94,7 @@ from ...domain.modelos.participation_index import TransactionRevisionParticipati
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
+    TransactionParticipationIndexRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.repository import upsert_work_unit
@@ -118,6 +110,7 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.verification_repository import upsert_verification_report
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.evidence_advisory import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
@@ -133,10 +126,8 @@ from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, Cr
 from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
-from ..calculations.observations_repository import CalculationObservationRepository
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
-from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.run_models import WorkflowPurpose
 from ._art109_activity_income import derive_art109_activity_income_coverage_for_work_unit as _derive_art109_coverage
 from ._attribution_received_advisory import _attribution_received_omission_advisory_findings
@@ -191,10 +182,15 @@ from .verification_preconditions import (
 from .work_lifecycle import RevisionParentOperation, require_revision_parent_active
 from .workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from .workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
+from .verification_repository_ports import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+    VerificationRepositoryBundle,
+)
 
 if TYPE_CHECKING:
+    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
-    from ..calculations.observations_repository import IvaWalletDecisionRepository
 
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .verification_predicates import (
@@ -296,7 +292,7 @@ def _cuota_less_without_base_findings(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     blocking_finding_observer: Callable[[ModeloVerificationFinding, str, str], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Refuse a row whose declared category can only ever contribute a base it lacks.
@@ -325,17 +321,17 @@ def _cuota_less_without_base_findings(
     """
     if not target.source_transaction_ids:
         return []
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    catalogue = tx_repo.load()
+    catalogue = transaction_repository.load()
     registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
 
+    cuota_less_categories = registry_category_projection("cuota_less_m303")
     findings: list[ModeloVerificationFinding] = []
     for transaction_id in sorted(target.source_transaction_ids):
         transaction = catalogue.get(transaction_id)
         if transaction is None:
             continue
         category = transaction.iva_category
-        if category is None or category not in CUOTA_LESS_M303_IVA_CATEGORIES:
+        if category is None or category not in cuota_less_categories:
             continue
         if transaction.taxable_base is not None:
             continue
@@ -360,7 +356,7 @@ def _missing_evidence_findings(
     *,
     target: CalculationRevision,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     blocking_finding_observer: Callable[[ModeloVerificationFinding, CalculationSourceDiagnostic], None] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Build verification findings for evidence-less positive IVA rows.
@@ -388,8 +384,7 @@ def _missing_evidence_findings(
     """
     if not target.source_transaction_ids:
         return []
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    catalogue = tx_repo.load()
+    catalogue = transaction_repository.load()
     transactions = [
         transaction
         for transaction_id in target.source_transaction_ids
@@ -444,12 +439,12 @@ def _collect_verification_gate_findings(
     work_unit: WorkUnit,
     target: CalculationRevision,
     workflow_profile: TaxpayerProfile,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    transaction_repository: TransactionCatalogueRepository | None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> tuple[
     list[ModeloVerificationFinding],
@@ -705,7 +700,7 @@ def _append_model_specific_findings(
     target: CalculationRevision,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> None:
     """Append cross-model and detail-row verification findings in one place."""
     findings.extend(
@@ -748,63 +743,14 @@ def _append_model_specific_findings(
     )
 
 
-@dataclass(frozen=True, slots=True)
-class _VerificationRepositories:
-    """Resolved repository ports for one verification run."""
-
-    calculation: CalculationRevisionCatalogueRepositoryProtocol
-    work_unit: WorkUnitCatalogueRepositoryProtocol
-    verification: VerificationReportCatalogueRepositoryProtocol
-    filing: ModeloRecordCatalogueRepositoryProtocol
-    observation: CalculationObservationRepository
-    bucket_event: BucketEventHistoryRepositoryProtocol
-    run: WorkflowRunRepository
-
-
-def _resolve_verification_repositories(
-    *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
-    calculation_observation_repository: CalculationObservationRepository | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
-) -> _VerificationRepositories:
-    """Default every unset verification repository port and derive the workflow-run store."""
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    obs_repo = calculation_observation_repository or CalculationObservationRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
-    run_repo = WorkflowRunRepository(objects=_secure_objects)
-    return _VerificationRepositories(
-        calculation=cr_repo,
-        work_unit=wu_repo,
-        verification=vr_repo,
-        filing=fr_repo,
-        observation=obs_repo,
-        bucket_event=bv_repo,
-        run=run_repo,
-    )
-
-
 def verify_modelo_revision_with_preconditions(
     calculation_revision_id: CalculationRevisionId,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
     actor: str,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    calculation_observation_repository: CalculationObservationRepository | None = None,
-    participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    verification_repositories: VerificationRepositoryBundle,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
@@ -821,11 +767,11 @@ def verify_modelo_revision_with_preconditions(
     verified-complete transition is granted.
 
     The supplied :class:`TaxpayerProfile` scopes
-    deadline/applicability decisions, while
-    :class:`TransactionCatalogueRepository` supplies
-    non-blocking transaction-evidence advisories for source rows attached to the
-    revision. WARNING-severity advisories remain report content; only BLOCKING
-    severity can refuse the transition.
+    deadline/applicability decisions. The transaction port in the required
+    :class:`VerificationRepositoryBundle` supplies non-blocking
+    transaction-evidence advisories for source rows attached to the revision.
+    WARNING-severity advisories remain report content; only BLOCKING severity
+    can refuse the transition.
 
     Args:
         calculation_revision_id: Stable id of the draft
@@ -835,21 +781,10 @@ def verify_modelo_revision_with_preconditions(
         workflow_profile: :class:`TaxpayerProfile`
             supplying profile facts for workflow, deadline, applicability, and
             registry predicate gates.
-        work_unit_repository: Optional work-unit repository port.
-        calculation_repository: Optional calculation-revision repository port.
-        filing_repository: Optional modelo-record repository port for filed-state
-            and cross-period checks.
-        transaction_repository: Optional
-            :class:`TransactionCatalogueRepository` used for transaction-evidence
-            advisories.
-        verification_repository: Optional verification-report repository port.
-        bucket_event_repository: Optional bucket-event history repository port.
-        iva_compensation_decision_repository: Optional IVA-wallet decision
-            repository used by Modelo 303 verification gates.
-        calculation_observation_repository: Optional calculation-observation
-            repository used by cross-period clean-state checks.
-        participation_index_repository: Optional transaction participation-index
-            repository co-emitted with verified revisions.
+        verification_repositories: Required application-owned bundle containing
+            every repository capability used by the verification gates and
+            persistence path. The outer composition root binds all concrete
+            implementations for one profile bucket.
         cross_period_expected_member_sets: Optional expected-member overrides
             for the cross-period clean-state gate.
         workflow_engine: Optional :class:`~cadrumo.application.workflow.WorkflowEngine`
@@ -873,14 +808,7 @@ def verify_modelo_revision_with_preconditions(
         :class:`~cadrumo.application.modelo.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
     """
-    repos = _resolve_verification_repositories(
-        calculation_repository=calculation_repository,
-        work_unit_repository=work_unit_repository,
-        verification_repository=verification_repository,
-        filing_repository=filing_repository,
-        calculation_observation_repository=calculation_observation_repository,
-        bucket_event_repository=bucket_event_repository,
-    )
+    repos = verification_repositories
     cr_repo = repos.calculation
     wu_repo = repos.work_unit
     vr_repo = repos.verification
@@ -963,8 +891,8 @@ def verify_modelo_revision_with_preconditions(
             filing_repository=repos.filing,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
-            transaction_repository=transaction_repository,
-            iva_compensation_decision_repository=iva_compensation_decision_repository,
+            transaction_repository=repos.transaction,
+            iva_compensation_decision_repository=repos.iva_compensation_decision,
             cross_period_expected_member_sets=cross_period_expected_member_sets,
         )
     )
@@ -998,12 +926,14 @@ def verify_modelo_revision_with_preconditions(
     if granted:
         gate_engine = workflow_engine or _build_revision_workflow_engine(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
             revision=target,
             work_unit=work_unit,
             profile=workflow_profile,
             actor=actor.strip(),
             clock=now,
             settings=settings,
+            observation_repository=repos.observation,
         )
         _run_revision_workflow_gate(
             engine=gate_engine,
@@ -1011,7 +941,7 @@ def verify_modelo_revision_with_preconditions(
             work_unit=work_unit,
             today=now.date(),
             runs_dir=workflow_runs_dir,
-            run_repository=repos.run,
+            run_repository=repos.workflow_run,
             purpose=WorkflowPurpose.VERIFY,
         )
 
@@ -1027,9 +957,9 @@ def verify_modelo_revision_with_preconditions(
             revisions=revisions,
             revisions_revision_id=revisions_revision_id,
             work_unit=work_unit,
-            transaction_repository=transaction_repository,
+            transaction_repository=repos.transaction,
             calculation_repository=cr_repo,
-            participation_index_repository=participation_index_repository,
+            participation_index_repository=repos.participation_index,
         )
         _repair_verified_revision_current_pointer(
             work_unit=work_unit,
@@ -1065,17 +995,10 @@ def verify_modelo_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
     actor: str,
     workflow_profile: TaxpayerProfile,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    calculation_observation_repository: CalculationObservationRepository | None = None,
-    participation_index_repository: TransactionParticipationIndexRepository | None = None,
+    verification_repositories: VerificationRepositoryBundle,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet] = (),
     workflow_engine: WorkflowEngine | None = None,
     workflow_runs_dir: Path | None = None,
@@ -1084,27 +1007,18 @@ def verify_modelo_revision(
 ) -> VerificationReport:
     """Persist and return the domain verification report without transport recovery data.
 
-    The thin arm over :func:`verify_modelo_revision_with_preconditions`, for
-    callers that want the report and none of the transport-recovery envelope.
-    It takes the same inputs the gates are evaluated against: the
-    :class:`TaxpayerProfile` the workflow gate reads, and the
-    :class:`TransactionCatalogueRepository` the ledger-derived casillas are
-    reconciled from.
+        The thin arm over :func:`verify_modelo_revision_with_preconditions`, for
+        callers that want the report and none of the transport-recovery envelope.
+        It takes the same required application-owned repository bundle the gates
+        are evaluated against.
     """
     return verify_modelo_revision_with_preconditions(
         calculation_revision_id,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
         actor=actor,
         workflow_profile=workflow_profile,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
-        transaction_repository=transaction_repository,
-        verification_repository=verification_repository,
-        bucket_event_repository=bucket_event_repository,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        calculation_observation_repository=calculation_observation_repository,
-        participation_index_repository=participation_index_repository,
+        verification_repositories=verification_repositories,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
         workflow_engine=workflow_engine,
         workflow_runs_dir=workflow_runs_dir,
@@ -1161,7 +1075,7 @@ def _build_participation_writes(
     *,
     verified: CalculationRevision,
     work_unit: WorkUnit,
-    participation_index_repository: TransactionParticipationIndexRepository,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
 ) -> tuple[SecureObjectWrite, ...]:
     """Build the per-transaction participation-index co-emission writes.
 
@@ -1197,12 +1111,11 @@ def _persist_verified_revision_evidence(
     revisions: CalculationRevisionCatalogue,
     revisions_revision_id: str,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    participation_index_repository: TransactionParticipationIndexRepository | None,
+    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
 ) -> None:
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    catalogue = tx_repo.load()
+    catalogue = transaction_repository.load()
     filing_snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=target.source_transaction_ids,
         catalogue=catalogue,
@@ -1226,13 +1139,10 @@ def _persist_verified_revision_evidence(
         },
     )
     updated_catalogue = upsert_calculation_revision(revisions, verified)
-    participation_repo = participation_index_repository or TransactionParticipationIndexRepository(
-        bucket_id=work_unit.bucket_id,
-    )
     participation_writes = _build_participation_writes(
         verified=verified,
         work_unit=work_unit,
-        participation_index_repository=participation_repo,
+        participation_index_repository=participation_index_repository,
     )
     # Co-emit the participation index atomically with the revision save (per the
     # composition-service single-writer discipline): the index and the verified
@@ -1681,7 +1591,7 @@ def _collect_revision_verification_findings(
     work_unit: WorkUnit,
     target: CalculationRevision,
     profile: TaxpayerProfile,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> tuple[
     list[ModeloVerificationFinding],
     list[CasillaId],
@@ -1771,7 +1681,7 @@ def _profile_with_art109_period_evidence(
     *,
     work_unit: WorkUnit,
     profile: TaxpayerProfile,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> TaxpayerProfile:
     coverage = _derive_art109_coverage(
         work_unit,

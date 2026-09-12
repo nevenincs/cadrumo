@@ -68,7 +68,7 @@ from .cross_period_models import (
 )
 from .m111_no_retenciones import is_m111_no_retenciones_period
 from .observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     ObservationSourceKind,
     is_official_aeat_observation_source,
 )
@@ -198,7 +198,7 @@ def cross_period_dependency_inventory(
             # snapshot consumed below, and therefore cannot own filing blockers.
             if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            for period in revision.period_selector.periods:
+            for period in revision.period_selector.periods_for_year(filing_year):
                 snapshot = authority.snapshot(
                     str(modelo.id),
                     filing_year=filing_year,
@@ -529,7 +529,7 @@ def _evaluate_in_scope_dependencies(
     scope: _CleanStateRequirementScope,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     repositories: _CleanStateRepositories,
     taxpayer_tax_id: str | None,
     expected_member_sets_by_key: Mapping[
@@ -623,7 +623,7 @@ def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
@@ -863,7 +863,7 @@ def _aeat_register_provenance_blockers(
 
 def _member_payloads_for_requirement(
     requirement: CrossPeriodDependencyRequirement,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[ObservationPayload, ...]:
     # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
     return tuple(
@@ -881,7 +881,7 @@ def _member_payloads_for_requirement(
 
 def _select_member_source_payloads(
     requirement: CrossPeriodDependencyRequirement,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
 ) -> _MemberSourceSelection:
     member_payloads = _member_payloads_for_requirement(requirement, observation_repository)
@@ -942,7 +942,7 @@ def _member_source_revision_blockers(
 
 def _single_source_payload(
     requirement: CrossPeriodDependencyRequirement,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> ObservationPayload | None:
     # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
     # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
@@ -976,7 +976,7 @@ def _single_source_revision_blockers(
 
 def _resolve_cross_period_source(
     requirement: CrossPeriodDependencyRequirement,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
     taxpayer_tax_id: str | None,
 ) -> _CrossPeriodSource:
@@ -1105,7 +1105,7 @@ def _evaluate_requirement(
     requirement: CrossPeriodDependencyRequirement,
     *,
     bucket_id: str,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
     calculation_catalogue: CalculationRevisionCatalogue,
     verification_catalogue: VerificationReportCatalogue,

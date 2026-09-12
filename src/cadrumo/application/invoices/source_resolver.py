@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import ClassVar, Final
+from typing import ClassVar
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.errors import (
@@ -51,6 +51,7 @@ from ...domain.calculations.registry.invoice_bindings import (
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
+from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue, require_iva_category
 from ...domain.invoices.decomposition import InvoiceDecomposition, InvoiceDecompositionDefect, decompose_invoice
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
@@ -139,21 +140,25 @@ _PAYABLE_M349_OPERATION_TYPES: frozenset[IntracomOperationType] = frozenset(
 #:   type, and the resolver discloses the ambiguity rather than guessing.
 #: - ``R``/``D``/``C`` (the call-off stock claves) report movements that carry
 #:   no invoice at all, so no invoice-sourced path can reach them.
-_CLAVE_BY_KIND_AND_CATEGORY: dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType] = {
-    (InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SUPPLY): IntracomOperationType.E,
-    # Goods and services stay separate rather than folding into E/A: Modelo 349
-    # reports them under distinct claves, so a service declared as E would be
-    # filed as an entrega de bienes.
-    (InvoiceKind.ISSUED, IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY): IntracomOperationType.S,
-    (
-        InvoiceKind.RECEIVED,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-    ): IntracomOperationType.ADQUISICION_SERVICIOS,
-    (
-        InvoiceKind.RECEIVED,
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    ): IntracomOperationType.A,
-}
+def _clave_by_kind_and_category() -> dict[tuple[InvoiceKind, IvaCategory], IntracomOperationType]:
+    """Project the dated Modelo 349 category-to-clave bindings."""
+    catalogue = resolve_iva_category_catalogue()
+    return {
+        (InvoiceKind.ISSUED, catalogue.require("intra_community_supply")): IntracomOperationType(
+            catalogue.operation_type("issued.intra_community_supply")
+        ),
+        (InvoiceKind.ISSUED, catalogue.require("intra_community_service_supply")): IntracomOperationType(
+            catalogue.operation_type("issued.intra_community_service_supply")
+        ),
+        (
+            InvoiceKind.RECEIVED,
+            catalogue.require("intra_community_service_acquisition_reverse_charge"),
+        ): IntracomOperationType(catalogue.operation_type("received.intra_community_service_acquisition_reverse_charge")),
+        (
+            InvoiceKind.RECEIVED,
+            catalogue.require("intra_community_acquisition_reverse_charge"),
+        ): IntracomOperationType(catalogue.operation_type("received.intra_community_acquisition_reverse_charge")),
+    }
 
 
 def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
@@ -441,7 +446,7 @@ def _clave_was_inferred_as_entrega(invoice: Invoice) -> bool:
     return (
         invoice.operation_type is None
         and invoice.kind is InvoiceKind.ISSUED
-        and invoice.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+        and invoice.iva_category == require_iva_category("intra_community_supply")
     )
 
 
@@ -479,7 +484,7 @@ def _m349_inferred_clave_diagnostics(
     # Read across the whole bucket, not the declared set: an importation is a
     # RECEIVED record that produces no Modelo 349 row of its own, so it is absent
     # from ``declared`` by construction and invisible to a scan of it.
-    if not any(invoice.iva_category is IvaCategory.IMPORT_THIRD_COUNTRY for invoice in bucket_invoices):
+    if not any(invoice.iva_category == require_iva_category("import_third_country") for invoice in bucket_invoices):
         return ()
     numbers = ", ".join(sorted(invoice.invoice_number for invoice in inferred))
     return (
@@ -937,11 +942,11 @@ def _intracommunity_clave(invoice: Invoice) -> str | None:
     # Triangulation first, and kind-independent: LIVA art. 26.3 exempts the
     # intermediary's adquisición while the onward leg is a supply, so the
     # taxpayer files clave T from either side of the operation.
-    if invoice.iva_category is IvaCategory.INTRA_COMMUNITY_TRIANGULATION:
+    if invoice.iva_category == require_iva_category("intra_community_triangulation"):
         return IntracomOperationType.T.value
     if invoice.iva_category is None:
         return None
-    derived = _CLAVE_BY_KIND_AND_CATEGORY.get((invoice.kind, invoice.iva_category))
+    derived = _clave_by_kind_and_category().get((invoice.kind, invoice.iva_category))
     return None if derived is None else derived.value
 
 
@@ -1080,18 +1085,6 @@ def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> Ca
 #: rather than an omission: triangulation is filed from either side of the
 #: operation, so it carries no kind and the kind-keyed inverse cannot express
 #: it. It is special-cased ahead of that lookup instead.
-_IVA_CATEGORY_BY_OPERATION_TYPE: Final[dict[IntracomOperationType, IvaCategory]] = {
-    IntracomOperationType.E: IvaCategory.INTRA_COMMUNITY_SUPPLY,
-    IntracomOperationType.A: IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    IntracomOperationType.T: IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
-    # Goods and services stay separate: a service declared under E would be
-    # filed as an entrega de bienes. A service is no sujeta by the art. 69
-    # localisation rule, where an entrega de bienes is exempt under art. 25.
-    IntracomOperationType.S: IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-    IntracomOperationType.ADQUISICION_SERVICIOS: IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-}
-
-
 def iva_category_for_operation_type(operation_type: IntracomOperationType | None) -> IvaCategory | None:
     """Return the IVA treatment an operator stated by choosing a 349 clave.
 
@@ -1106,7 +1099,7 @@ def iva_category_for_operation_type(operation_type: IntracomOperationType | None
     """
     if operation_type is None:
         return None
-    return _IVA_CATEGORY_BY_OPERATION_TYPE.get(operation_type)
+    return resolve_iva_category_catalogue().category_for_operation_type(operation_type.value)
 
 
 __all__ = [

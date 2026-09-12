@@ -49,7 +49,8 @@ class ApoderadoRepresentedNifInvalidError(CadrumoError):
     Both the flag-driven and the paged-flow transports commit through
     :meth:`ApoderadoService.configure`, which validates the represented
     party's identifier through the canonical
-    :func:`cadrumo.core.identity.documents.validate_identity` authority. The raised
+    :func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
+    authority. The raised
     error carries NO raw identifier in its context -- the value is
     identity-sensitive and must never leak into a diagnostic.
     """
@@ -78,10 +79,11 @@ RepresentedNif = Annotated[str, StringConstraints(min_length=1, max_length=16)]
 
 The LENGTH bound only. Whether the value is a well-formed Spanish tax
 identifier is checked by the apoderamiento flow, through
-:func:`cadrumo.core.identity.documents.validate_identity`, and is deliberately not
+:func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`,
+and is deliberately not
 attached here: the two identity validators in ``core.identity`` currently
 disagree about one CIF leader class, so typing this field with the canonical
-:data:`~cadrumo.core.identity.tax_id.SubjectTaxId` alias would silently move it from
+:data:`~cadrumo.domain.calculations.registry.tax_id_format.SubjectTaxId` alias would silently move it from
 the flow's policy to the opposite one. The length is uncontested and was
 written out at four sites; it is declared once here until that ruling lands.
 """
@@ -187,7 +189,8 @@ class ApoderadoService:
         """Persist apoderado config and return the resulting :class:`ApoderadoConfiguration`.
 
         Validates the represented party's tax identifier through the
-        canonical :func:`cadrumo.core.identity.documents.validate_identity` authority
+        authority-aware
+        :func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
         (the single validation law both the flag path and the paged flow
         commit through), then validates and dedups scopes against the
         catalogue.
@@ -195,10 +198,11 @@ class ApoderadoService:
         :raises ApoderadoRepresentedNifInvalidError: When ``represented_nif``
             is not a valid NIF, NIE, or CIF.
         """
-        from ...core.identity.documents import IdentityError, validate_identity
+        from ...core.identity.documents import IdentityError
+        from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 
         try:
-            validate_identity(represented_nif)
+            validate_runtime_identity(represented_nif)
         except IdentityError as exc:
             raise ApoderadoRepresentedNifInvalidError(
                 translated_message="errors.refused.refused_apoderado_invalid_represented_nif",

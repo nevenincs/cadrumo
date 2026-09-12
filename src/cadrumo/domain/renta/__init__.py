@@ -13,11 +13,11 @@ into :class:`RentaDeductibilityResult` values, then materialises binding-ready
 resolved usage-ratio, statutory-cap, and exclusive-use facts; profile
 proportionality rules and citations remain in
 :mod:`domain.categories`, while persisted operator overrides remain in
-:mod:`domain.usage_ratios`. The
-:data:`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` table is the single Renta-domain
-mapping from :class:`domain.categories.SpendingCategory` to registry
-casilla ids for the supported first slice; the registry validates those targets
-through a cross-domain snapshot check installed by the registry snapshot builder.
+:mod:`domain.usage_ratios`. The dated first-slice routing resolver is the
+single Renta-domain projection from :class:`domain.categories.SpendingCategory`
+to registry casilla ids for the supported first slice; the registry validates
+those targets through a cross-domain snapshot check installed by the registry
+snapshot builder.
 The M130 retenciones-a-cuenta route is selected from governed registry data
 and validated by the same cross-domain mechanism.
 

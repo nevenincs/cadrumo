@@ -1,9 +1,8 @@
 """Bucket-scoped expedientes snapshot service.
 
-Wraps the read-only AEAT sede declarations walker
-(:mod:`cadrumo.adapters.outbound.aeat.sede.declarations`) with
-bucket-scoped persistence. Read-only by construction: no method calls
-AEAT to mutate expediente state.
+Coordinates the read-only declaration-register capability supplied by the
+outer composition root with bucket-scoped persistence. Read-only by
+construction: no method calls AEAT to mutate expediente state.
 
 Verbs:
   capture(snapshot)   persist a fresh expedientes capture, deduplicated
@@ -28,12 +27,6 @@ from typing import override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
-from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-from ...core.config import Settings, load_settings
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -41,9 +34,11 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_authority
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .errors import LiveApplicationInputError
+from .expedientes_ports import ExpedientesDeclaration, ExpedientesPorts
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .remote_state_outcomes import bounded_context_text
 from .session import active_verified_session
+from ..auth.operator_scope_ports import OperatorScopePorts
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
@@ -56,7 +51,7 @@ class ExpedientesSnapshotNotFoundError(SnapshotNotFoundError):
 
 
 class ExpedientesCapture(BaseModel):
-    """Slim wrapper around a Declaracion walker result.
+    """Slim wrapper around translated declaration-register rows.
 
     Mirrors the read-only marker pattern from
     :class:`NotificationsSnapshot`: ``mode='read'`` is the structural
@@ -65,7 +60,7 @@ class ExpedientesCapture(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    declarations: tuple[Declaracion, ...]
+    declarations: tuple[ExpedientesDeclaration, ...]
     captured_at: datetime
     source_url: str = Field(min_length=1)
     authenticated_identity: str | None = Field(default=None, max_length=32)
@@ -82,7 +77,7 @@ class PersistedExpedientesSnapshot(BaseModel):
     captured_at: datetime
     source_url: str = Field(min_length=1)
     authenticated_identity: str | None = Field(default=None, max_length=32)
-    declarations: tuple[Declaracion, ...]
+    declarations: tuple[ExpedientesDeclaration, ...]
     persisted_at: datetime
 
 
@@ -101,29 +96,6 @@ def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     return f"expedientes-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
 
 
-def _expedientes_repository(
-    settings: Settings,
-    bucket_id: str,
-) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
-    return SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=PersistedExpedientesSnapshot,
-        namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
-        object_key=expedientes_snapshot_object_key,
-        not_found_factory=lambda snapshot_id: ExpedientesSnapshotNotFoundError(
-            translated_message="application.live.expedientes.errors.snapshot_not_found",
-            context={"snapshot_id": snapshot_id},
-        ),
-        ambiguous_prefix_factory=lambda snapshot_id, full_ids: ExpedientesSnapshotNotFoundError(
-            translated_message="application.live.expedientes.errors.snapshot_prefix_ambiguous",
-            context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
-        ),
-        domain_label="expedientes",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_object_repository_for_bucket(bucket_id, settings),
-    )
-
-
 class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, ExpedientesCapture]):
     """Bucket-scoped persistence + read surface over expedientes snapshots.
 
@@ -133,10 +105,9 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot, 
     row per captured snapshot.
     """
 
-    def __init__(self, settings: Settings | None = None) -> None:
-        """Initialize this public contract."""
-        self._settings = settings or load_settings()
-        super().__init__(repository_factory=lambda bucket_id: _expedientes_repository(self._settings, bucket_id))
+    def __init__(self, *, ports: ExpedientesPorts) -> None:
+        """Bind the required application-owned expedientes capabilities."""
+        super().__init__(repository_factory=ports.snapshot_repository_factory)
 
     def capture(
         self,
@@ -198,17 +169,17 @@ async def capture_expedientes(
     bucket_id: str,
     modelo: str,
     year: int,
+    ports: ExpedientesPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> PersistedExpedientesSnapshot:
     """Capture the selected declaration-register view as encrypted local evidence."""
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operation=LIVE_EXPEDIENTES_READ_OPERATION,
+        operator_scope_ports=operator_scope_ports,
     )
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(session, settings=settings, playwright=playwright) as register,
-    ):
+    async with ports.declaration_reader.open_register(session, settings=settings) as register:
         declarations = await register.walk(modelo=modelo, ejercicio=year)
     capture = ExpedientesCapture(
         declarations=tuple(declarations),
@@ -216,7 +187,7 @@ async def capture_expedientes(
         source_url=f"declarations:modelo={modelo}:ejercicio={year}",
         authenticated_identity=session.identity_nif,
     )
-    return ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
+    return ExpedientesService(ports=ports).capture(bucket_id=bucket_id, capture=capture)
 
 
 async def capture_expedientes_bulk(
@@ -225,7 +196,9 @@ async def capture_expedientes_bulk(
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
+    ports: ExpedientesPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> ExpedientesBulkCaptureReport:
     """Capture each requested declaration-register view while reporting isolated failures."""
     if year_from > year_to:
@@ -239,17 +212,15 @@ async def capture_expedientes_bulk(
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         operation=LIVE_EXPEDIENTES_READ_OPERATION,
+        operator_scope_ports=operator_scope_ports,
     )
-    service = ExpedientesService(settings=settings)
+    service = ExpedientesService(ports=ports)
     snapshot_ids: list[str] = []
     failures: list[ExpedientesBulkCaptureFailureRow] = []
-    declarations_for_snapshot: list[Declaracion] = []
+    declarations_for_snapshot: list[ExpedientesDeclaration] = []
     successful_query_count = 0
 
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(session, settings=settings, playwright=playwright) as register,
-    ):
+    async with ports.declaration_reader.open_register(session, settings=settings) as register:
         for code in resolved_modelos:
             for year in range(year_to, year_from - 1, -1):
                 try:

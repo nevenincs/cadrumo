@@ -66,6 +66,8 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment, require_iva_exemption_article
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.ledger_binding_selector_support import LedgerIvaFact
 from ...domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
@@ -98,6 +100,7 @@ from ...domain.iva.schema import (
     IvaExemptionArticle,
     IvaLedgerObservationRole,
     IvaRateKind,
+    default_iva_cash_accounting_treatment,
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
@@ -378,14 +381,17 @@ class IvaLedgerCandidate(BaseModel):
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
     rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
     prorrata_reference_id: _LedgerId | None = None
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
     observation_role: IvaLedgerObservationRole
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
-        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+        require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
+        if self.exemption_article is not None:
+            require_iva_exemption_article(self.exemption_article)
+        if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
             raise AggregationValidationError(
                 t("aggregation.iva_ledger.errors.unsupported_iva_category"),
                 context={
@@ -394,7 +400,7 @@ class IvaLedgerCandidate(BaseModel):
                     "exemption_article": self.exemption_article.value,
                 },
             )
-        if not is_deducible_flow(self.flow_direction) or self.category is IvaCategory.RECARGO_EQUIVALENCIA:
+        if not is_deducible_flow(self.flow_direction) or self.category == require_iva_category("recargo_equivalencia"):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
                 raise AggregationValidationError(
                     t("aggregation.iva_ledger.errors.output_facts_carry_deduction_authority"),
@@ -654,7 +660,10 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
     declarable ledger facts; the category, rate, and flow axes must have
     been resolved upstream from invoice/operation evidence.
     """
-    if candidate.category in {IvaCategory.UNKNOWN, IvaCategory.ERRONEOUS_INVOICE}:
+    if candidate.category in {
+        require_iva_category("unknown"),
+        require_iva_category("erroneous_invoice"),
+    }:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.unsupported_iva_category"),
             context={
@@ -1508,7 +1517,7 @@ def _registry_export_categories() -> frozenset[IvaCategory]:
     if raw_categories is None:
         raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
     try:
-        categories = frozenset(IvaCategory(token.strip()) for token in raw_categories.split(",") if token.strip())
+        categories = frozenset(require_iva_category(token.strip()) for token in raw_categories.split(",") if token.strip())
     except ValueError as exc:
         raise ValueError("IVA classification catalogue contains an unknown export category") from exc
     if not categories:
@@ -1577,7 +1586,7 @@ def validate_intracom_export_counterparty(
     under-declaring a German-established acquirer purchasing under a Spanish
     NIF-IVA.
     """
-    if category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
+    if category == require_iva_category("intra_community_supply"):
         if identification_state is None:
             return IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,

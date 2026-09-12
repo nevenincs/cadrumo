@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import shutil
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -16,6 +18,8 @@ from ...adapters.persistence.storage.custody.acceleration_receipt import profile
 from ...core.bucket_pointer import read_pointer
 from ...core.directory_scan import iter_directory, scan_directory
 from ...tests.profile_capsule import open_test_profile_session
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -215,9 +219,9 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
 
     with _isolated_reset_root(tmp_path):
         with pytest.raises(ConfigResetConfirmationRequiredError):
-            start_config_reset(confirmed=False)
+            start_config_reset(confirmed=False, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         with pytest.raises(ConfigResetConfirmationRequiredError):
-            resume_config_reset("a" * 64, confirmed=False)
+            resume_config_reset("a" * 64, confirmed=False, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def test_start_discovers_live_and_dangling_targets_then_completes(
@@ -275,10 +279,12 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
             register_operator_certificate_source(
                 name="personal",
                 certificate_path=certificate_path,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
             set_operator_certificate_source_secret(
                 name="personal",
                 secret=SecretStr("test-passphrase"),
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             )
 
         settings = load_settings()
@@ -301,7 +307,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
         ):
             assert lock_path.is_file()
             _write_active_pointer(root, _DANGLING_ID)
-            operation = start_config_reset(confirmed=True)
+            operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
             assert lock_path.exists() is False
 
         assert operation.status is ConfigResetOperationStatus.COMPLETE
@@ -397,7 +403,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
             operation="test-dangling-target-auth-phase",
         ):
             assert lock_path.is_file()
-            operation = start_config_reset(confirmed=True)
+            operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         assert operation.status is ConfigResetOperationStatus.COMPLETE
         target = operation.targets[0]
@@ -474,7 +480,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             _PROFILE_B_ID: _fingerprint(_PROFILE_B_ID),
         }
 
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         assert operation.status is ConfigResetOperationStatus.PAUSED
         assert operation.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
@@ -492,7 +498,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
         assert all(target.retention is not None for target in operation.targets)
 
         with pytest.raises(ConfigResetAlreadyRunningError) as raised:
-            start_config_reset(confirmed=True)
+            start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         assert raised.value.context == {"operation_id": operation.operation_id}
 
         completed = resume_config_reset(
@@ -500,6 +506,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert completed.summary is not None
@@ -522,13 +529,13 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         _persist_filing(_PROFILE_B_ID, filing_year=2025, seed="a")
         _write_active_pointer(root, _PROFILE_A_ID)
 
-        paused = start_config_reset(confirmed=True)
+        paused = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         assert paused.status is ConfigResetOperationStatus.PAUSED
         assert paused.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
 
         _remove_bucket_directory_out_of_band(_PROFILE_B_ID, root=root)
 
-        changed = resume_config_reset(paused.operation_id, confirmed=True)
+        changed = resume_config_reset(paused.operation_id, confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         assert changed.status is ConfigResetOperationStatus.PAUSED
         assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
         assert changed.paused_target_ids == (_PROFILE_B_ID,)
@@ -536,7 +543,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
         assert vanished.exists_at_snapshot is False
         assert vanished.fingerprint is None
 
-        completed = resume_config_reset(changed.operation_id, confirmed=True)
+        completed = resume_config_reset(changed.operation_id, confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert completed.summary is not None
         assert completed.summary.deleted_count == 1
@@ -555,7 +562,7 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
     with _isolated_reset_root(tmp_path):
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         repository = ConfigResetJournalRepository()
         journal_path = repository.path_for(operation.operation_id)
         before = journal_path.read_bytes()
@@ -574,7 +581,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="e")
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         original_fingerprint = operation.targets[0].fingerprint
         assert original_fingerprint is not None
 
@@ -588,6 +595,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
         assert changed.status is ConfigResetOperationStatus.PAUSED
@@ -601,6 +609,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
 
@@ -615,7 +624,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="3")
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
         _create_profile(_PROFILE_C_ID, label="Gamma operator", tax_id="00000002W")
         changed = resume_config_reset(
@@ -623,6 +632,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
         assert changed.status is ConfigResetOperationStatus.PAUSED
@@ -640,6 +650,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert tuple(target.bucket_id for target in completed.targets) == (
@@ -657,7 +668,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
     with _isolated_reset_root(tmp_path) as root:
         _create_profile(_PROFILE_A_ID, label="Alpha operator", tax_id="00000000T")
         _persist_filing(_PROFILE_A_ID, filing_year=2025, seed="c")
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         before = operation.pointer_snapshot.record
         assert before.bucket_id == _PROFILE_A_ID
 
@@ -674,6 +685,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
         assert resumed.pointer_snapshot.record == returned

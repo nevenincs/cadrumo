@@ -79,7 +79,7 @@ def _active_snapshot(
 
     captured_at = datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC)
     snapshot_id = derive_justificante_capture_snapshot_id(
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period=_PERIOD_2T,
         pdf_sha256=pdf_sha256,
@@ -87,7 +87,7 @@ def _active_snapshot(
     return JustificanteCaptureSnapshot(
         snapshot_id=snapshot_id,
         bucket_id=bucket_id,
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period=_PERIOD_2T,
         expediente_id="202613000522456T",
@@ -127,13 +127,13 @@ def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
     ):
         JustificanteCaptureSnapshot(
             snapshot_id=derive_justificante_capture_snapshot_id(
-                modelo=Modelo.M130.value,
+                modelo=Modelo("130").value,
                 filing_year=2026,
                 period=_PERIOD_2T,
                 pdf_sha256=_OTHER_PDF_SHA256,
             ),
             bucket_id=_BUCKET_ID,
-            modelo=Modelo.M130.value,
+            modelo=Modelo("130").value,
             filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
@@ -254,7 +254,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
         first = service.capture(
-            modelo=Modelo.M130.value,
+            modelo=Modelo("130").value,
             filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
@@ -264,7 +264,7 @@ def test_service_capture_supersedes_prior_on_refile(tmp_path: Path) -> None:
             captured_at=datetime(2026, 7, 18, 10, 5, 0, tzinfo=UTC),
         )
         second = service.capture(
-            modelo=Modelo.M130.value,
+            modelo=Modelo("130").value,
             filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",
@@ -288,7 +288,7 @@ def test_service_capture_is_idempotent_on_same_receipt(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         service = JustificanteCaptureSnapshotService(bucket_id=bucket_id)
         kwargs = _CaptureKwargs(
-            modelo=Modelo.M130.value,
+            modelo=Modelo("130").value,
             filing_year=2026,
             period=_PERIOD_2T,
             expediente_id="202613000522456T",

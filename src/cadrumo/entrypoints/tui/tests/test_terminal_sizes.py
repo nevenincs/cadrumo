@@ -16,6 +16,8 @@ from the same catalogue the surface reads would be tautological.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -56,6 +58,8 @@ from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
 from ..profile.overview import ProfileManagerScreen
 from ..secret.login import LoginScreen
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -174,7 +178,7 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
         # Custody resolves the session's real data key; registration closes
         # its own session, so the profile must be unlocked again first.
         login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSWORD)
-        verify_definition = build_modelo_work_verify_definition()
+        verify_definition = build_modelo_work_verify_definition(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         registry = OperationRegistry(
             definitions=(verify_definition,),
             public_registrations=(build_modelo_work_verify_registration(verify_definition),),

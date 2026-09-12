@@ -34,7 +34,7 @@ _CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
 _CASILLA_1577 = "1577"
 _BASE = Decimal("58100.00")
 _FILING_YEAR = 2024
-_M100_CODE = ModeloCode(Modelo.M100.value)
+_M100_CODE = ModeloCode(Modelo("100").value)
 
 
 @pytest.fixture(scope="module")
@@ -147,7 +147,7 @@ def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot) -> None:
 
 def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot) -> None:
     findings = _attribution_received_omission_advisory_findings(
-        work_unit=_work_unit(ModeloCode(Modelo.M130.value)),
+        work_unit=_work_unit(ModeloCode(Modelo("130").value)),
         snapshot=snapshot,
         casilla_values={},
         profile_record=_profile(*_received_facts()),

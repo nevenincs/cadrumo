@@ -11,7 +11,7 @@ from ....domain.calculations.registry.schema_verification import VerificationPre
 from ....domain.modelos.errors import ModeloError
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_advisory_predicate_fires, evaluate_verification_predicates
-from .verification_substance_support import (
+from cadrumo.application.modelo.tests.verification_substance_fixtures import (
     _CASILLA_00501,
     _CASILLA_01,
     _CASILLA_06,

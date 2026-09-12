@@ -192,12 +192,6 @@ modelo:
           '731':
             help: A Modelo 322 731. casilla adóügyi adatai.
             label: Casilla 731 — adóügyi mező
-          '75':
-            help: 'A Modelo 322 75. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 75 — adóügyi információ
-          '84':
-            help: 'A Modelo 322 84. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 84 — adóügyi információ
           filing-period:
             help: A Modelo 322 . casilla adóügyi adatai.
             label: Casilla — adóügyi mező
@@ -271,9 +265,6 @@ modelo:
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores:
             help: A Modelo 322 718. casilla adóügyi adatai.
             label: Casilla 718 — adóügyi mező
-          m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas:
-            help: 'A Modelo 322 74. casilla adóügyi adatai: adóügyi információ.'
-            label: Casilla 74 — adóügyi információ
           m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo:
             help: 'A Modelo 322 10. casilla adóügyi adatai: adóügyi információ.'
             label: Casilla 10 — adóügyi információ

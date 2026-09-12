@@ -42,6 +42,10 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
+from ..calculations.observations_repository import (
+    CalculationObservationRepositoryProtocol,
+    IvaWalletDecisionRepositoryProtocol,
+)
 from .iva_wallet_gate import taxpayer_nif_for_bucket
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
@@ -378,6 +382,8 @@ def record_iva_compensation_override_for_bucket(
     amount: Decimal,
     reason: str,
     evidence_locator: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    decision_repository: IvaWalletDecisionRepositoryProtocol,
 ) -> IvaCompensationReconciliationDecision:
     """Record an explicit taxpayer override for Modelo 303 prior compensation.
 
@@ -427,7 +433,7 @@ def record_iva_compensation_override_for_bucket(
         :func:`cadrumo.application.calculations.reconcile_modelo_303_iva_compensation`
         Persists the non-blocking taxpayer-override wallet decision consumed by
         later Modelo 303 calculations.
-        :class:`cadrumo.application.calculations.IvaWalletDecisionRepository`
+        :class:`cadrumo.application.calculations.IvaWalletDecisionRepositoryProtocol`
         Repository used to detect an existing fresh AEAT-wallet decision before
         allowing an override.
         :func:`cadrumo.application.modelo.iva_wallet_gate.require_persisted_iva_compensation_decision_matches_revision`
@@ -455,9 +461,8 @@ def record_iva_compensation_override_for_bucket(
         )
 
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-    from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
-    existing = IvaWalletDecisionRepository().load_decision(taxpayer_nif, period)
+    existing = decision_repository.load_decision(taxpayer_nif, period)
     if existing is not None and not existing.blocked and str(existing.selected_authority) == "aeat_wallet":
         raise ModeloIvaWalletOverrideFreshWalletError(
             translated_message="application.modelo.iva_wallet.override_fresh_wallet_blocked",
@@ -483,7 +488,6 @@ def record_iva_compensation_override_for_bucket(
     )
     from ..calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 
-    observation_repository = CalculationObservationRepository()
     local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=observation_repository,
@@ -493,6 +497,7 @@ def record_iva_compensation_override_for_bucket(
         taxpayer_nif=taxpayer_nif,
         wallet=None,
         repository=observation_repository,
+        decision_repository=decision_repository,
         override=override,
         local_recurrence=local_recurrence,
         prefill_report=prefill_report,

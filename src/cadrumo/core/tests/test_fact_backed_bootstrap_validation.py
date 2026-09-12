@@ -1,147 +1,104 @@
-"""Typed validation boundaries for the fact-backed core catalogues."""
+"""Syntax-only identifier values do not bootstrap from governed facts."""
 
 from __future__ import annotations
 
-import tomllib
-from pathlib import Path
-
 import pytest
+from pydantic import TypeAdapter, ValidationError
 
-from .. import modelo as modelo_module
-from .. import tax_domain as tax_domain_module
 from ..errors.hierarchy import CadrumoError, CoreValidationError
+from ..modelo import Modelo
+from ..tax_domain import TaxDomain
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _assert_core_validation(operation: object, message: str) -> None:
-    with pytest.raises(CoreValidationError, match=message) as caught:
-        operation()  # type: ignore[operator]
+@pytest.mark.parametrize("code", ["000", "037", "179", "999"])
+def test_modelo_accepts_every_three_digit_ascii_identifier(code: str) -> None:
+    modelo = Modelo(code)
+
+    assert modelo.value == code
+    assert modelo == code
+    assert hash(modelo) == hash(code)
+
+
+@pytest.mark.parametrize("code", ["", "37", "0037", " 037", "037 ", "M37", "\uff11\uff12\uff13"])
+def test_modelo_rejects_noncanonical_syntax_with_typed_error(code: str) -> None:
+    with pytest.raises(CoreValidationError) as caught:
+        Modelo(code)
+
     assert isinstance(caught.value, ValueError)
     assert isinstance(caught.value, CadrumoError)
     assert caught.value.code.code == "INTEGRITY_CADRUMO_CORE_VALIDATION"
 
 
-def test_empty_modelo_csv_uses_typed_core_validation() -> None:
-    _assert_core_validation(lambda: modelo_module._csv(""), "must not be empty")
+@pytest.mark.parametrize("identifier", ["censo", "iva", "irpf_actividad", "future_domain_2"])
+def test_tax_domain_accepts_open_canonical_identifiers(identifier: str) -> None:
+    domain = TaxDomain(identifier)
+
+    assert domain.value == identifier
+    assert domain == identifier
+    assert hash(domain) == hash(identifier)
 
 
 @pytest.mark.parametrize(
-    ("declarations", "message"),
-    [
-        ({"catalogue.codes": "001,001"}, "must be unique"),
-        ({"catalogue.codes": "01A"}, "three-digit strings"),
-    ],
+    "identifier",
+    ["", "CENSO", "iva-domain", "_iva", "iva_", "iva__general", "iva general"],
 )
-def test_modelo_catalogue_bootstrap_validation_is_typed(
-    monkeypatch: pytest.MonkeyPatch,
-    declarations: dict[str, str],
-    message: str,
-) -> None:
-    monkeypatch.setattr(modelo_module, "_DECLARATIONS", declarations)
-    _assert_core_validation(modelo_module._build_modelo_type, message)
+def test_tax_domain_rejects_noncanonical_syntax_with_typed_error(identifier: str) -> None:
+    with pytest.raises(CoreValidationError) as caught:
+        TaxDomain(identifier)
+
+    assert isinstance(caught.value, ValueError)
+    assert isinstance(caught.value, CadrumoError)
+    assert caught.value.code.code == "INTEGRITY_CADRUMO_CORE_VALIDATION"
 
 
-def test_modelo_fact_without_variants_is_typed(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    fact_path = tmp_path / "modelo.toml"
-    fact_path.write_text("[fact]\nvariants = []\n", encoding="utf-8")
-    monkeypatch.setattr(modelo_module, "_FACT_PATH", fact_path)
-    _assert_core_validation(modelo_module._fact_declarations, "has no variants")
+def test_identifier_types_remain_distinct() -> None:
+    assert isinstance(Modelo("303"), Modelo)
+    assert not isinstance(Modelo("303"), TaxDomain)
+    assert isinstance(TaxDomain("iva"), TaxDomain)
+    assert not isinstance(TaxDomain("iva"), Modelo)
 
 
 @pytest.mark.parametrize(
-    ("declarations", "message"),
+    ("adapter", "raw", "expected"),
     [
-        (
-            {"catalogue.codes": "001", "scope.group.missing_reason.codes": "001"},
-            "has no reason",
-        ),
-        (
-            {
-                "catalogue.codes": "001",
-                "scope.code.001.reason": "explicit",
-                "scope.group.conflict.codes": "001",
-                "scope.group.conflict.reason": "group",
-            },
-            "has conflicting reasons",
-        ),
-        (
-            {"catalogue.codes": "001", "scope.code.999.reason": "unknown"},
-            "unknown codes",
-        ),
+        (TypeAdapter(Modelo), "303", Modelo("303")),
+        (TypeAdapter(TaxDomain), "iva_general", TaxDomain("iva_general")),
     ],
 )
-def test_modelo_scope_declaration_validation_is_typed(
-    monkeypatch: pytest.MonkeyPatch,
-    declarations: dict[str, str],
-    message: str,
+def test_pydantic_round_trip_preserves_typed_identifier(
+    adapter: TypeAdapter[object],
+    raw: str,
+    expected: object,
 ) -> None:
-    monkeypatch.setattr(modelo_module, "_DECLARATIONS", declarations)
-    _assert_core_validation(modelo_module._scope_reasons, message)
+    parsed = adapter.validate_json(f'"{raw}"')
+
+    assert parsed == expected
+    assert type(parsed) is type(expected)
+    assert adapter.dump_json(parsed) == f'"{raw}"'.encode()
 
 
 @pytest.mark.parametrize(
-    ("suppressed_codes", "registry_out_of_scope_codes", "message"),
+    ("adapter", "raw"),
     [
-        ({"001"}, set(), "suppressed Modelo codes"),
-        (set(), {"001"}, "registry out-of-scope Modelo codes"),
+        (TypeAdapter(Modelo), "30"),
+        (TypeAdapter(TaxDomain), "IVA"),
     ],
 )
-def test_modelo_scope_partition_validation_is_typed(
-    suppressed_codes: set[str],
-    registry_out_of_scope_codes: set[str],
-    message: str,
+def test_pydantic_boundary_rejects_invalid_identifier_syntax(
+    adapter: TypeAdapter[object],
+    raw: str,
 ) -> None:
-    _assert_core_validation(
-        lambda: modelo_module._validate_scope_partitions(
-            {"002": "declared"},
-            suppressed_codes,
-            registry_out_of_scope_codes,
-        ),
-        message,
-    )
+    with pytest.raises(ValidationError):
+        adapter.validate_python(raw)
 
 
-def _tax_fact(codes: str) -> str:
-    return (
-        "[fact]\n"
-        "[[fact.variants]]\n"
-        "[fact.variants.payload]\n"
-        'entries = [{ key = "catalogue.codes", value = "'
-        f"{codes}"
-        '" }]\n'
-    )
+def test_core_identifier_modules_expose_no_authoring_source_hooks() -> None:
+    import cadrumo.core.modelo as modelo_module
+    import cadrumo.core.tax_domain as tax_domain_module
 
-
-@pytest.mark.parametrize("codes", ["censo, censo", " , "])
-def test_tax_domain_catalogue_validation_is_typed(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    codes: str,
-) -> None:
-    fact_path = tmp_path / "tax-domain.toml"
-    fact_path.write_text(_tax_fact(codes), encoding="utf-8")
-    monkeypatch.setattr(tax_domain_module, "_FACT_PATH", fact_path)
-    _assert_core_validation(tax_domain_module._catalogue_codes, "unique and non-empty")
-
-
-def test_native_toml_errors_remain_unmasked(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    fact_path = tmp_path / "invalid.toml"
-    fact_path.write_text("[fact\n", encoding="utf-8")
-    monkeypatch.setattr(tax_domain_module, "_FACT_PATH", fact_path)
-    with pytest.raises(tomllib.TOMLDecodeError):
-        tax_domain_module._catalogue_codes()
-
-
-def test_real_fact_backed_catalogues_remain_positive_controls() -> None:
-    assert len(modelo_module.Modelo) == 149
-    assert modelo_module.Modelo.M037.value == "037"
-    assert modelo_module.Modelo.M179.value == "179"
-    assert len(tax_domain_module.TaxDomain) == 14
-    assert tax_domain_module.TaxDomain.CENSO.value == "censo"
+    for module in (modelo_module, tax_domain_module):
+        assert not hasattr(module, "_FACT_PATH")
+        assert not hasattr(module, "_fact_declarations")
+        assert not hasattr(module, "_catalogue_codes")

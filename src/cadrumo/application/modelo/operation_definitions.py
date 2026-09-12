@@ -35,7 +35,6 @@ from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, ModeloEditBaselineId, WorkUnitId
-from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -68,6 +67,7 @@ from ...domain.modelos.row_models import (
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
 )
+from ...domain.transactions.m210_income_classification import resolve_m210_payer_mode
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -87,6 +87,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ._edit_execution import apply_modelo_edit
+from .amendment_action_ports import AmendmentActionPortsFactory
+from .calculation_action_ports import CalculationActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
@@ -111,12 +113,16 @@ from .edit_models import (
 )
 from .edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR
 from .export import ModeloExportCommand, export_modelo_revision
+from .export_ports import ModeloExportPortsFactory
+from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
+    from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_scope_ports import OperatorScopePorts
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
     from ..operations.models import OperationRequest
@@ -485,9 +491,15 @@ repeated in two places is one typo away from that refusal at runtime.
 class ModeloWorkVerifyExecutor:
     """Run the existing verification authority under a recorded identity."""
 
-    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+    def __init__(
+        self,
+        *,
+        profile_resolver: ModeloWorkVerifyProfileResolver,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> None:
         """Bind the live profile the gates are evaluated against."""
         self._profile_resolver = profile_resolver
+        self._operator_scope_ports = operator_scope_ports
 
     async def execute(
         self,
@@ -509,6 +521,7 @@ class ModeloWorkVerifyExecutor:
                 request.payload.calculation_revision_id,
                 actor=request.payload.actor,
                 workflow_profile=self._profile_resolver(),
+                operator_scope_ports=self._operator_scope_ports,
             )
         )
         await context.events.effect(OperationEffect.UPDATED)
@@ -517,12 +530,16 @@ class ModeloWorkVerifyExecutor:
 
 def build_modelo_work_verify_definition(
     *,
+    operator_scope_ports: OperatorScopePorts,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the verification authority to its registered operation contract."""
 
     def build() -> ModeloWorkVerifyExecutor:
-        return ModeloWorkVerifyExecutor(profile_resolver=profile_resolver)
+        return ModeloWorkVerifyExecutor(
+            profile_resolver=profile_resolver,
+            operator_scope_ports=operator_scope_ports,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
@@ -651,9 +668,19 @@ class ModeloWorkFileExecutor:
     operation's whole output is a local record plus the operator's handoff.
     """
 
-    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+    def __init__(
+        self,
+        *,
+        profile_resolver: ModeloWorkVerifyProfileResolver,
+        operator_scope_ports: OperatorScopePorts,
+        filing_action_ports_factory: FilingActionPortsFactory,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    ) -> None:
         """Bind the live profile the filing gates are judged against."""
         self._profile_resolver = profile_resolver
+        self._operator_scope_ports = operator_scope_ports
+        self._filing_action_ports_factory = filing_action_ports_factory
+        self._certificate_secret_backend_factory = certificate_secret_backend_factory
 
     async def execute(
         self,
@@ -670,12 +697,18 @@ class ModeloWorkFileExecutor:
         await context.events.phase("modelo.work.file.preconditions")
         await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
+        from ...core.bucket_pointer import require_active_bucket_id
+
+        filing_ports = self._filing_action_ports_factory(bucket_id=require_active_bucket_id())
         record = await asyncio.to_thread(
             functools.partial(
                 file_modelo_revision,
                 payload.approval.calculation_revision_id,
                 actor=request.payload.actor,
                 workflow_profile=self._profile_resolver(),
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                operator_scope_ports=self._operator_scope_ports,
+                ports=filing_ports,
                 notes=payload.notes,
                 refund_election=payload.refund_election,
                 payment_election=payload.payment_election,
@@ -687,12 +720,20 @@ class ModeloWorkFileExecutor:
 
 def build_modelo_work_file_definition(
     *,
+    operator_scope_ports: OperatorScopePorts,
+    filing_action_ports_factory: FilingActionPortsFactory,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
 ) -> OperationDefinition:
     """Bind the local filing authority to its registered operation contract."""
 
     def build() -> ModeloWorkFileExecutor:
-        return ModeloWorkFileExecutor(profile_resolver=profile_resolver)
+        return ModeloWorkFileExecutor(
+            profile_resolver=profile_resolver,
+            operator_scope_ports=operator_scope_ports,
+            filing_action_ports_factory=filing_action_ports_factory,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
@@ -799,9 +840,15 @@ class ModeloExportExecutor:
     the tax authority only when a human carries it there.
     """
 
-    def __init__(self, *, profile_resolver: ModeloWorkVerifyProfileResolver) -> None:
+    def __init__(
+        self,
+        *,
+        profile_resolver: ModeloWorkVerifyProfileResolver,
+        export_ports_factory: ModeloExportPortsFactory,
+    ) -> None:
         """Bind the live profile the export gates are judged against."""
         self._profile_resolver = profile_resolver
+        self._export_ports_factory = export_ports_factory
 
     async def execute(
         self,
@@ -824,7 +871,17 @@ class ModeloExportExecutor:
             output_path=Path(payload.output_path),
             actor=payload.actor,
         )
-        result = export_modelo_revision(command, workflow_profile=self._profile_resolver())
+        from ...core.bucket_pointer import require_active_bucket_id
+
+        workflow_profile = self._profile_resolver()
+        result = export_modelo_revision(
+            command,
+            workflow_profile=workflow_profile,
+            export_ports=self._export_ports_factory(
+                bucket_id=require_active_bucket_id(),
+                m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+            ),
+        )
         await context.events.effect(OperationEffect.UPDATED)
         return str(result.file_sha256)
 
@@ -832,11 +889,15 @@ class ModeloExportExecutor:
 def build_modelo_export_definition(
     *,
     profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
+    export_ports_factory: ModeloExportPortsFactory,
 ) -> OperationDefinition:
     """Bind the export authority to its registered operation contract."""
 
     def build() -> ModeloExportExecutor:
-        return ModeloExportExecutor(profile_resolver=profile_resolver)
+        return ModeloExportExecutor(
+            profile_resolver=profile_resolver,
+            export_ports_factory=export_ports_factory,
+        )
 
     return OperationDefinition(
         definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -997,6 +1058,10 @@ class ModeloWorkAmendExecutor:
     recorded here, and the operator submits it themselves.
     """
 
+    def __init__(self, *, amendment_action_ports_factory: AmendmentActionPortsFactory) -> None:
+        """Bind the amendment authorities supplied by the composition root."""
+        self._amendment_action_ports_factory = amendment_action_ports_factory
+
     async def execute(
         self,
         request: OperationRequest[ModeloWorkAmendRequest],
@@ -1012,6 +1077,8 @@ class ModeloWorkAmendExecutor:
         await context.events.phase("modelo.work.amend.baseline")
         await context.events.effect(OperationEffect.UNKNOWN)
         payload = request.payload
+        from ...core.bucket_pointer import require_active_bucket_id
+
         record = amend_modelo_revision(
             from_filing_record_id=payload.baseline.from_filing_record_id,
             overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
@@ -1020,16 +1087,20 @@ class ModeloWorkAmendExecutor:
             detail_rows=(None if payload.detail_rows is None else tuple(row.to_row() for row in payload.detail_rows)),
             reason=payload.reason,
             actor=request.payload.actor,
+            ports=self._amendment_action_ports_factory(bucket_id=require_active_bucket_id()),
         )
         await context.events.effect(OperationEffect.UPDATED)
         return str(record.filing_record_id)
 
 
-def build_modelo_work_amend_definition() -> OperationDefinition:
+def build_modelo_work_amend_definition(
+    *,
+    amendment_action_ports_factory: AmendmentActionPortsFactory,
+) -> OperationDefinition:
     """Bind the amendment authority to its registered operation contract."""
 
     def build() -> ModeloWorkAmendExecutor:
-        return ModeloWorkAmendExecutor()
+        return ModeloWorkAmendExecutor(amendment_action_ports_factory=amendment_action_ports_factory)
 
     return OperationDefinition(
         definition_id=MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
@@ -1536,7 +1607,7 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
     tipo_renta_code: Annotated[str, Field(min_length=2, max_length=2)]
     importe: _WireAmount
     tipo_gravamen: _WireAmount
-    pagador_mode: M210PayerMode
+    pagador_mode: str
     pagador_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
     deriva_de_bien_derecho: bool
     bien_derecho_id: Annotated[str, Field(min_length=1, max_length=200)] | None = None
@@ -1548,7 +1619,7 @@ class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
             tipo_renta_code=self.tipo_renta_code,
             importe=Decimal(self.importe),
             tipo_gravamen=Decimal(self.tipo_gravamen),
-            pagador_mode=self.pagador_mode,
+            pagador_mode=resolve_m210_payer_mode(self.pagador_mode),
             pagador_id=self.pagador_id,
             deriva_de_bien_derecho=self.deriva_de_bien_derecho,
             bien_derecho_id=self.bien_derecho_id,
@@ -1781,6 +1852,10 @@ class ModeloEditApplyExecutor:
     no lifecycle policy.
     """
 
+    def __init__(self, *, calculation_action_ports_factory: CalculationActionPortsFactory) -> None:
+        """Bind the calculation authorities supplied by the composition root."""
+        self._calculation_action_ports_factory = calculation_action_ports_factory
+
     async def execute(
         self,
         request: OperationRequest[ModeloEditApplyOperationRequestV1],
@@ -1809,6 +1884,7 @@ class ModeloEditApplyExecutor:
         )
         outcome = apply_modelo_edit(
             apply_request,
+            ports=self._calculation_action_ports_factory(bucket_id=baseline.bucket_id),
             now=datetime.now(UTC),
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
@@ -1822,11 +1898,14 @@ class ModeloEditApplyExecutor:
         return str(outcome.receipt.receipt_id)
 
 
-def build_modelo_edit_apply_definition() -> OperationDefinition:
+def build_modelo_edit_apply_definition(
+    *,
+    calculation_action_ports_factory: CalculationActionPortsFactory,
+) -> OperationDefinition:
     """Bind the Edit Contract's guarded apply path to its registered operation contract."""
 
     def build() -> ModeloEditApplyExecutor:
-        return ModeloEditApplyExecutor()
+        return ModeloEditApplyExecutor(calculation_action_ports_factory=calculation_action_ports_factory)
 
     return OperationDefinition(
         definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
@@ -1988,7 +2067,15 @@ __all__ = [
 ]
 
 
-def build_modelo_lifecycle_operation_definitions() -> tuple[OperationDefinition, ...]:
+def build_modelo_lifecycle_operation_definitions(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
+    export_ports_factory: ModeloExportPortsFactory,
+    calculation_action_ports_factory: CalculationActionPortsFactory,
+    amendment_action_ports_factory: AmendmentActionPortsFactory,
+    filing_action_ports_factory: FilingActionPortsFactory,
+) -> tuple[OperationDefinition, ...]:
     """Return the one canonical modelo lifecycle operation population.
 
     Every definition this module exports belongs here. A definition that is
@@ -1996,13 +2083,17 @@ def build_modelo_lifecycle_operation_definitions() -> tuple[OperationDefinition,
     shape this population exists to make impossible to ship.
     """
     return (
-        build_modelo_edit_apply_definition(),
-        build_modelo_export_definition(),
-        build_modelo_work_amend_definition(),
+        build_modelo_edit_apply_definition(calculation_action_ports_factory=calculation_action_ports_factory),
+        build_modelo_export_definition(export_ports_factory=export_ports_factory),
+        build_modelo_work_amend_definition(amendment_action_ports_factory=amendment_action_ports_factory),
         build_modelo_work_discard_definition(),
-        build_modelo_work_file_definition(),
+        build_modelo_work_file_definition(
+            operator_scope_ports=operator_scope_ports,
+            filing_action_ports_factory=filing_action_ports_factory,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+        ),
         build_modelo_work_rename_definition(),
-        build_modelo_work_verify_definition(),
+        build_modelo_work_verify_definition(operator_scope_ports=operator_scope_ports),
     )
 
 

@@ -15,6 +15,8 @@ real lifecycle service; no test doubles stand in for the read.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import pytest
 from pydantic import SecretStr
 
@@ -30,6 +32,9 @@ from ..operator_probes import (
     live_auth_identity_state,
     probe_clave_credentials,
 )
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -37,6 +42,7 @@ _BUCKET_ID = "55555555-5555-4555-8555-555555555555"
 _PROFILE_LABEL = "probe-operator"
 _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
 def _register_profile(**overrides: str) -> None:
@@ -55,7 +61,11 @@ def test_probe_reports_a_profile_borne_credential_as_configured() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+        credentials = probe_clave_credentials(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        )
 
     assert credentials is not None
     assert credentials.dni_nie == _TAX_ID
@@ -74,7 +84,7 @@ def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
             "auth.clave_movil_route": "qr",
         },
     )
-    configure_operator_auth("clave_movil")
+    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     state = workflow_state_repository().load()
 
     with override_settings(cadrumo_clave_movil_dni_nie=None):
@@ -86,6 +96,8 @@ def test_backend_readiness_describes_the_profile_bound_clave_provider() -> None:
             probe_live_backend=True,
             credential_bucket_id=_BUCKET_ID,
             certificate_credentials=None,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     assert readiness.provider == "clave_movil"
@@ -106,6 +118,7 @@ def test_alignment_reports_a_match_for_a_profile_borne_credential() -> None:
         profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
         )
 
     assert profile_present is True
@@ -126,6 +139,7 @@ def test_alignment_still_reports_a_mismatch_it_should_catch() -> None:
         _profile_present, _provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
         )
 
     assert alignment == "mismatch"
@@ -143,6 +157,7 @@ def test_alignment_still_reports_an_absent_credential() -> None:
         _profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
         )
 
     assert provider_present is False
@@ -158,7 +173,11 @@ def test_identity_kind_classifies_a_profile_borne_credential() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        kind = live_auth_identity_kind(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+        kind = live_auth_identity_kind(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        )
 
     assert kind == "DNI"
 
@@ -174,7 +193,11 @@ def test_login_precondition_admits_a_profile_borne_credential() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        _assert_login_precondition(settings, AuthProviderKind.CLAVE_MOVIL)
+        _assert_login_precondition(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        )
 
 
 def test_login_precondition_still_refuses_when_no_credential_exists() -> None:
@@ -187,7 +210,11 @@ def test_login_precondition_still_refuses_when_no_credential_exists() -> None:
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(AuthLoginPreconditionError) as raised,
     ):
-        _assert_login_precondition(settings, AuthProviderKind.CLAVE_MOVIL)
+        _assert_login_precondition(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        )
 
     assert raised.value.translated_message == "application.auth.operator.login.refused_clave_movil_identity_unset"
 
@@ -205,6 +232,7 @@ def test_settings_still_win_when_the_profile_carries_nothing() -> None:
         _profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
         )
 
     assert provider_present is True
@@ -226,7 +254,11 @@ def test_preflight_reports_a_profile_borne_soporte_as_configured() -> None:
         cadrumo_clave_movil_nie_soporte=None,
         cadrumo_clave_movil_dni_fecha=None,
     ):
-        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+        report = build_live_auth_preflight_report(
+            AuthProviderKind.CLAVE_MOVIL.value,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert report.nie_soporte_configured is True
     assert report.dni_fecha_configured is False
@@ -241,7 +273,11 @@ def test_preflight_reports_a_profile_borne_validity_date_as_configured() -> None
         cadrumo_clave_movil_nie_soporte=None,
         cadrumo_clave_movil_dni_fecha=None,
     ):
-        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+        report = build_live_auth_preflight_report(
+            AuthProviderKind.CLAVE_MOVIL.value,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert report.dni_fecha_configured is True
     assert report.nie_soporte_configured is False
@@ -260,7 +296,11 @@ def test_preflight_still_reports_an_absent_contraste() -> None:
         cadrumo_clave_movil_nie_soporte=None,
         cadrumo_clave_movil_dni_fecha=None,
     ):
-        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+        report = build_live_auth_preflight_report(
+            AuthProviderKind.CLAVE_MOVIL.value,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     assert report.dni_fecha_configured is False
     assert report.nie_soporte_configured is False
@@ -281,7 +321,11 @@ def test_preflight_report_carries_no_identity_material() -> None:
         cadrumo_clave_movil_nie_soporte=None,
         cadrumo_clave_movil_dni_fecha=None,
     ):
-        report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+        report = build_live_auth_preflight_report(
+            AuthProviderKind.CLAVE_MOVIL.value,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
     serialised = report.model_dump_json()
     assert soporte not in serialised
@@ -292,7 +336,14 @@ def test_certificate_provider_is_not_probed_for_clave_credentials() -> None:
     """A certificate profile has no Cl@ve credential to resolve."""
 
     _register_profile(**{"auth.dni_nie": _TAX_ID})
-    assert probe_clave_credentials(AuthProviderKind.CERTIFICATE, settings=load_settings()) is None
+    assert (
+        probe_clave_credentials(
+            AuthProviderKind.CERTIFICATE,
+            settings=load_settings(),
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+        )
+        is None
+    )
 
 
 _isolated_backend = bucket_session_storage_fixture(_BUCKET_ID)

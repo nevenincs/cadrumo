@@ -79,6 +79,7 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ....domain.iva.flow import derive_flow_for_classification
 from ....domain.iva.lookup import rate_kinds_for_declared_rate
+from ....domain.calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
@@ -294,9 +295,9 @@ def _migrated_iva_rate_kind(
     fact: _MigratedIvaDeductionFact,
 ) -> IvaRateKind:
     """Resolve the one dated legal rate tier for persisted IVA evidence."""
-    if fact.kind is IvaDeductionFactKind.REAGP_COMPENSATION:
-        return IvaRateKind.EXEMPT
     operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+    if fact.kind is IvaDeductionFactKind.REAGP_COMPENSATION:
+        return resolve_iva_rate_kind_catalogue(effective_date=operation_date).exempt_token
     rate_kinds = rate_kinds_for_declared_rate(EUMemberState.ES, fact.iva_rate, operation_date)
     if len(rate_kinds) != 1:
         raise LedgerStorageError(

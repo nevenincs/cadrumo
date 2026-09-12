@@ -184,7 +184,7 @@ def test_deleting_a_persisted_field_makes_the_load_refuse() -> None:
 
     from pydantic import ValidationError
 
-    from ..extraction_draft_store import StoredExtractionDraft
+    from .....application.ledger.extraction_draft_store import StoredExtractionDraft
 
     payload = ExtractionDraftDocument(
         bucket_id=_BUCKET_ID,
@@ -225,7 +225,7 @@ def test_a_dropped_line_set_is_not_silently_re_defaulted_to_empty() -> None:
     """
     from datetime import UTC, datetime
 
-    from ..extraction_draft_store import StoredExtractionDraft
+    from .....application.ledger.extraction_draft_store import StoredExtractionDraft
 
     payload = ExtractionDraftDocument(
         bucket_id=_BUCKET_ID,

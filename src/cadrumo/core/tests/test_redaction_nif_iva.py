@@ -32,7 +32,11 @@ from __future__ import annotations
 
 import pytest
 
-from ..identity.documents import IdentityError, validate_identity
+from ..identity.documents import (
+    SPANISH_TAX_ID_BOOTSTRAP_FORMAT,
+    IdentityError,
+    validate_identity,
+)
 from ..identity.nif_iva import NIF_IVA_FORMATS
 from ..redaction.rules import redact_for_cli_output, redact_for_log
 
@@ -97,7 +101,7 @@ def test_a_prefixed_spanish_identifier_failing_its_check_character_is_not_an_ide
     to protect a value that was never an identity.
     """
     with pytest.raises(IdentityError):
-        validate_identity("B99999999")
+        validate_identity("B99999999", SPANISH_TAX_ID_BOOTSTRAP_FORMAT)
 
     assert not _redacts("ESB99999999")
 

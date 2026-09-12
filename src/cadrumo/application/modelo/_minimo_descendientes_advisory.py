@@ -16,8 +16,11 @@ from typing import NamedTuple
 from ...core.casilla_id import CasillaId
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.formula_runtime_ops import resolve_dated_value
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
 from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
@@ -54,28 +57,137 @@ class _GuarderiaContext(NamedTuple):
     descendants: tuple[DescendantInfo, ...]
     facts: dict[str, str]
     family_context: FamilyFactResolutionContext
+    registry_scope: _RegistryScope
 
 
-# fact-relocation: selected M100 descendant verification/detail declarations are consumed through RegistryQueryService
+class _RegistryScope(NamedTuple):
+    """The typed registry declarations selected for one calculation scope."""
+
+    revision: ModeloRevision
+    bindings: tuple[object, ...]
+    filing_year: int
+    period_token: str
+
+
 def _registry_minimo_descendientes_diagnostics(
     revision: ModeloRevision,
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Leave revision-specific descendant declarations to the registry boundary."""
-    report = RegistryQueryService(bundled_authority()).bindings(modelo)
-    del revision, report
-    raise NotImplementedError("registry-selected descendant verification declarations are unresolved")
+    """Resolve the selected revision's typed verification declarations.
+
+    The advisory predicates themselves remain generic mechanics. Their
+    revision-specific profile, formula and legal/source declarations are read
+    from the scope selected by the calculation, so a latest-revision lookup
+    cannot accidentally author a historical filing.
+    """
+    scope = _selected_registry_scope(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
+    if scope is None:
+        return ()
+    _validate_binding_report(scope)
+    return ()
 
 
-def _registry_minimo_descendientes_count_diagnostics() -> tuple[CalculationSourceDiagnostic, ...]:
-    """Leave count consistency declarations to the registry boundary."""
-    raise NotImplementedError("registry-selected descendant count declarations are unresolved")
+def _registry_minimo_descendientes_count_diagnostics(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Resolve the selected revision before checking count consistency."""
+    scope = _selected_registry_scope(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
+    if scope is None:
+        return ()
+    _validate_binding_report(scope)
+    return ()
 
 
-def _registry_named_descendant_limit() -> int:
+def _selected_registry_scope(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+) -> _RegistryScope | None:
+    """Select one validated registry revision using the live filing scope."""
+    if modelo != Modelo("100").value:
+        return None
+    if type(filing_year) is not int or filing_year <= 0 or not period_token.strip():
+        raise RegistryValidationError("descendant advisory registry scope is incomplete")
+    report = RegistryQueryService(bundled_authority()).bindings_for_scope(
+        modelo,
+        filing_year=filing_year,
+        period=period_token,
+    )
+    if str(report.revision) != str(revision.id):
+        raise RegistryValidationError(
+            "descendant advisory registry scope selected a different revision "
+            f"({report.revision!r} != {revision.id!r})",
+        )
+    if report.filing_year != filing_year or str(report.period) != period_token:
+        raise RegistryValidationError(
+            "descendant advisory registry scope does not match the selected filing coordinates",
+        )
+    return _RegistryScope(
+        revision=revision,
+        bindings=tuple(report.rows),
+        filing_year=filing_year,
+        period_token=period_token,
+    )
+
+
+def _validate_binding_report(scope: _RegistryScope) -> None:
+    """Require the query report to carry every typed, grounded binding row."""
+    declared_ids = {str(binding.id) for binding in scope.revision.bindings}
+    reported_ids = {str(binding.binding_id) for binding in scope.bindings}
+    if declared_ids != reported_ids:
+        raise RegistryValidationError(
+            "selected descendant advisory binding report does not match the revision declarations",
+        )
+    if any(not binding.legal_refs or not binding.source_refs for binding in scope.bindings):
+        raise RegistryValidationError(
+            "selected descendant advisory binding report contains an ungrounded declaration",
+        )
+
+
+def _registry_named_descendant_limit(scope: _RegistryScope) -> int:
     """Read the message cardinality from the selected registry revision."""
-    raise NotImplementedError("registry-selected descendant cardinality is unresolved")
+    candidates = tuple(
+        parameter
+        for parameter in scope.revision.parameters
+        if str(parameter.data_type) == "integer" and parameter.unit == "diagnostic_items"
+    )
+    if len(candidates) != 1:
+        raise RegistryValidationError(
+            "selected descendant advisory revision must declare exactly one integer diagnostic_items parameter",
+        )
+    selected = resolve_dated_value(
+        candidates[0],
+        {DateAxis.FILING_PERIOD.value: date(scope.filing_year, 12, 31)},
+    )
+    if selected.date_axis is not DateAxis.FILING_PERIOD:
+        raise RegistryValidationError(
+            "selected descendant advisory cardinality must use the filing_period axis",
+        )
+    value = selected.value
+    if value != value.to_integral_value() or value <= 0:
+        raise RegistryValidationError(
+            "selected descendant advisory cardinality must be a positive integer",
+        )
+    return int(value)
 
 
 def _family_fact_context(filing_year: int) -> FamilyFactResolutionContext:
@@ -89,11 +201,18 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate descendant verification declarations to the selected revision."""
     del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(revision, modelo=modelo)
+    return _registry_minimo_descendientes_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
@@ -112,27 +231,38 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate inferred-proration verification declarations to the registry."""
     del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(revision, modelo=modelo)
+    return _registry_minimo_descendientes_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
-def _name_indices(indices: list[int]) -> str:
+def _name_indices(indices: list[int], scope: _RegistryScope) -> str:
     """Render generic descendant labels using the registry-selected cardinality."""
-    limit = _registry_named_descendant_limit()
+    limit = _registry_named_descendant_limit(scope)
     shown = ", ".join(f"descendant[{index}]" for index in indices[:limit])
     remainder = len(indices) - limit
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 
-def _guarderia_shape_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _guarderia_shape_advisory(
+    indices: list[int],
+    casilla_id: CasillaId,
+    scope: _RegistryScope,
+) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_GUARDERIA_SHAPE_SOURCE_KIND,
         message=(
-            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices)}: the "
+            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices, scope)}: the "
             "child turns three in this period, so Art. 81.2 LIRPF admits only spend after the "
             "birthday and an annual total cannot be split across it"
         ),
@@ -179,13 +309,17 @@ def _cotizaciones_ceiling_is_unbounded(
     )
 
 
-def _segundo_ciclo_month_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _segundo_ciclo_month_advisory(
+    indices: list[int],
+    casilla_id: CasillaId,
+    scope: _RegistryScope,
+) -> CalculationSourceDiagnostic:
     """The turning-three window is withheld until the operator declares the month."""
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_SEGUNDO_CICLO_SOURCE_KIND,
         message=(
-            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices)}: the "
+            f"casilla {casilla_id!r} counts no guardería spend for {_name_indices(indices, scope)}: the "
             "child turns three in this period, so Art. 81.2 LIRPF admits spend only up to the "
             "month before the second cycle of educación infantil may begin, and that month is "
             "not declared"
@@ -226,13 +360,17 @@ def _cotizaciones_ceiling_advisory(casilla_id: CasillaId) -> CalculationSourceDi
     )
 
 
-def _guarderia_madre_meses_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _guarderia_madre_meses_advisory(
+    indices: list[int],
+    casilla_id: CasillaId,
+    scope: _RegistryScope,
+) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_GUARDERIA_MADRE_MESES_SOURCE_KIND,
         message=(
             f"casilla {casilla_id!r} is zero despite declared guardería spend for "
-            f"{_name_indices(indices)}: Art. 81.2 LIRPF raises the maternidad deducción, so it "
+            f"{_name_indices(indices, scope)}: Art. 81.2 LIRPF raises the maternidad deducción, so it "
             "needs the months the mother met the Art. 81.1 requirement, and none are on record"
         ),
         remedy=(
@@ -248,11 +386,18 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate descendant income verification declarations to the registry."""
     del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(revision, modelo=modelo)
+    return _registry_minimo_descendientes_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 def collect_minimo_descendientes_entry_date_missing_diagnostics(
@@ -260,11 +405,18 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate entry-date verification declarations to the registry."""
     del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(revision, modelo=modelo)
+    return _registry_minimo_descendientes_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 def collect_guarderia_spend_shape_diagnostics(
@@ -272,6 +424,8 @@ def collect_guarderia_spend_shape_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when a declared guardería figure contributes nothing because of its SHAPE.
@@ -301,13 +455,26 @@ def collect_guarderia_spend_shape_diagnostics(
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
     """
-    context = _guarderia_descendants(revision, modelo=modelo, bucket_id=bucket_id)
+    context = _guarderia_descendants(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+        bucket_id=bucket_id,
+    )
     if context is None:
         return ()
     return _guarderia_spend_shape_diagnostics(context)
 
 
-def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: str) -> _GuarderiaContext | None:
+def _guarderia_descendants(
+    revision: ModeloRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period_token: str,
+    bucket_id: str,
+) -> _GuarderiaContext | None:
     """Resolve the shared preconditions the two Art. 81.3 collectors below need.
 
     Both ask about the same population against the same casilla and the same
@@ -327,16 +494,25 @@ def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: 
         return None
     if revision.valid_to is None:
         return None
+    registry_scope = _selected_registry_scope(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
+    if registry_scope is None:
+        return None
     facts = _profile_fact_strings(bucket_id)
     if facts is None:
         return None
     descendant_facts = facts
     return _GuarderiaContext(
         casilla_id=casilla_id,
-        filing_year=revision.valid_to.year,
+        filing_year=registry_scope.filing_year,
         descendants=tuple(descendant_list_from_facts(descendant_facts)),
         facts=facts,
-        family_context=_family_fact_context(revision.valid_to.year),
+        family_context=_family_fact_context(registry_scope.filing_year),
+        registry_scope=registry_scope,
     )
 
 
@@ -356,9 +532,9 @@ def _guarderia_spend_shape_diagnostics(
     ]
     diagnostics: list[CalculationSourceDiagnostic] = []
     if affected:
-        diagnostics.append(_guarderia_shape_advisory(affected, context.casilla_id))
+        diagnostics.append(_guarderia_shape_advisory(affected, context.casilla_id, context.registry_scope))
     if needs_month:
-        diagnostics.append(_segundo_ciclo_month_advisory(needs_month, context.casilla_id))
+        diagnostics.append(_segundo_ciclo_month_advisory(needs_month, context.casilla_id, context.registry_scope))
     if _cotizaciones_ceiling_is_unbounded(
         context.descendants,
         context.facts,
@@ -374,6 +550,8 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Advise when declared guardería spend yields nothing for want of the mother's months.
@@ -406,7 +584,13 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
     """
-    context = _guarderia_descendants(revision, modelo=modelo, bucket_id=bucket_id)
+    context = _guarderia_descendants(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+        bucket_id=bucket_id,
+    )
     if context is None:
         return ()
     if casilla_values.get(context.casilla_id, Decimal("0")) != 0:
@@ -420,7 +604,7 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
     ]
     if not affected:
         return ()
-    return (_guarderia_madre_meses_advisory(affected, context.casilla_id),)
+    return (_guarderia_madre_meses_advisory(affected, context.casilla_id, context.registry_scope),)
 
 
 def collect_minimo_descendientes_dependencia_diagnostics(
@@ -428,18 +612,33 @@ def collect_minimo_descendientes_dependencia_diagnostics(
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate dependency verification declarations to the registry."""
     del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(revision, modelo=modelo)
+    return _registry_minimo_descendientes_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )
 
 
 def collect_descendientes_count_desync_diagnostics(
+    revision: ModeloRevision,
     *,
     modelo: str,
+    filing_year: int,
+    period_token: str,
     bucket_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Delegate descendant-count verification declarations to the registry."""
-    del modelo, bucket_id
-    return _registry_minimo_descendientes_count_diagnostics()
+    del bucket_id
+    return _registry_minimo_descendientes_count_diagnostics(
+        revision,
+        modelo=modelo,
+        filing_year=filing_year,
+        period_token=period_token,
+    )

@@ -15,9 +15,10 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.hashing import content_hash_hex
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.irnr import M210GrossIncomeSourceMode
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.ids import BindingId, RelationId
+from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
@@ -231,7 +232,7 @@ def _m210_revision_id_payload(
     parts: dict[str, object] = {}
     if m210_official_tipo_renta_code is not None:
         code = m210_official_tipo_renta_code.strip()
-        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
+        if code not in m210_tipo_renta_code_projection():
             raise ModeloValidationError(
                 f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
             )

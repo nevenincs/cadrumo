@@ -38,15 +38,6 @@ from typing import override
 
 from pydantic import BaseModel, Field
 
-from ...adapters.outbound.aeat.sede.notifications import (
-    NotificationsSnapshot,
-    RemoteNotification,
-    fetch_notifications_query,
-)
-from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
-from ...core.config import Settings, load_settings
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
@@ -55,7 +46,13 @@ from ...core.time.clock import now
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .errors import LiveApplicationInputError
 from .notification_documents import NotificationDocumentService
+from .notification_ports import (
+    NotificationsPorts,
+    NotificationsSnapshot,
+    RemoteNotification,
+)
 from .session import active_verified_session
+from ..auth.operator_scope_ports import OperatorScopePorts
 from .snapshot_base import (
     SnapshotNotFoundError,
     StatelessSnapshotService,
@@ -122,29 +119,6 @@ def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     return f"notifications-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
 
 
-def _notifications_repository(
-    settings: Settings,
-    bucket_id: str,
-) -> SecureSnapshotRepository[PersistedNotificationsSnapshot]:
-    return SecureSnapshotRepository(
-        bucket_id=bucket_id,
-        payload_model=PersistedNotificationsSnapshot,
-        namespace_definition=LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
-        object_key=notifications_snapshot_object_key,
-        not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
-            translated_message="application.live.notifications.errors.snapshot_not_found",
-            context={"snapshot_id": snapshot_id},
-        ),
-        ambiguous_prefix_factory=lambda snapshot_id, full_ids: NotificationsSnapshotNotFoundError(
-            translated_message="application.live.notifications.errors.snapshot_prefix_ambiguous",
-            context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
-        ),
-        domain_label="notifications",
-        input_error_cls=LiveApplicationInputError,
-        objects=secure_object_repository_for_bucket(bucket_id, settings),
-    )
-
-
 class _NotificationsCaptureRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
@@ -167,10 +141,9 @@ class NotificationsService(
     encrypted secure-object row per captured snapshot.
     """
 
-    def __init__(self, settings: Settings | None = None) -> None:
-        """Initialize this public contract."""
-        self._settings = settings or load_settings()
-        super().__init__(repository_factory=lambda bucket_id: _notifications_repository(self._settings, bucket_id))
+    def __init__(self, *, ports: NotificationsPorts) -> None:
+        """Bind the service to the explicitly composed application capabilities."""
+        super().__init__(repository_factory=ports.snapshot_repository_factory)
 
     def capture(
         self,
@@ -248,25 +221,33 @@ class NotificationsService(
 async def capture_notifications(
     *,
     bucket_id: str,
+    ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> PersistedNotificationsSnapshot:
     """Capture the authenticated taxpayer's notifications as encrypted local evidence."""
     session, settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
-    snapshot = await fetch_notifications_query(session, settings=settings)
-    return NotificationsService(settings=settings).capture(
+    snapshot = await ports.snapshot_query.fetch(session, settings=settings)
+    return NotificationsService(ports=ports).capture(
         bucket_id=bucket_id,
         snapshot=snapshot,
         authenticated_identity=session.identity_nif,
     )
 
 
-def resolve_notification_row(*, bucket_id: str, certificado_id: str) -> RemoteNotification:
+def resolve_notification_row(
+    *,
+    bucket_id: str,
+    certificado_id: str,
+    ports: NotificationsPorts,
+) -> RemoteNotification:
     """Resolve the newest stored notification row for one certificado identifier."""
     wanted = certificado_id.strip()
     snapshots = sorted(
-        NotificationsService().list_snapshots(bucket_id=bucket_id),
+        NotificationsService(ports=ports).list_snapshots(bucket_id=bucket_id),
         key=lambda snapshot: snapshot.captured_at,
         reverse=True,
     )
@@ -284,13 +265,20 @@ async def pull_notification_document(
     *,
     bucket_id: str,
     certificado_id: str,
+    ports: NotificationsPorts,
     service: NotificationDocumentService,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ):
     """Fetch encrypted custody for a notification that AEAT already records as read."""
-    row = resolve_notification_row(bucket_id=bucket_id, certificado_id=certificado_id)
+    row = resolve_notification_row(
+        bucket_id=bucket_id,
+        certificado_id=certificado_id,
+        ports=ports,
+    )
     session, _settings = await active_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
     return await service.pull_document(bucket_id=bucket_id, session=session, row=row)
 

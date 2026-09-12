@@ -29,7 +29,7 @@ from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
 from ...core.parsing.dates import parse_iso8601_date
-from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
+from ...core.prorrata_exclusions import Art104TresExclusion
 from ...core.text_fold import fold_diacritics
 from ...core.time.clock import now
 from ...core.time.utc import parse_iso_datetime
@@ -45,8 +45,13 @@ from ..iva.schema import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
+    default_iva_cash_accounting_treatment,
 )
 from .cash_accounting_validation import validate_cash_accounting_axis
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.iva_schema_vocabulary import require_iva_exemption_article
+from ..calculations.registry.prorrata_exclusions import resolve_art104_tres_exclusion_catalogue
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
 from .gross_validation import validate_gross_reconstitution
@@ -307,7 +312,7 @@ class Transaction(BaseModel):
             is sufficient.
         exemption_article: Optional Ley 37/1992 Art. 20 sub-article
             discriminator. Valid only when ``iva_category`` is
-            :attr:`IvaCategory.DOMESTIC_EXEMPT`; ``None`` preserves
+            the registry-declared domestic-exempt category; ``None`` preserves
             the broad exempt category with no sub-article distinction.
         counterparty_country: Where the counterparty is ESTABLISHED --
             an address fact, ISO 3166-1 alpha-2. It answers
@@ -349,7 +354,7 @@ class Transaction(BaseModel):
             one can purchase under a Spanish NIF-IVA. This is the operative
             fact for the Ley 37/1992 art. 25 exemption, so the aggregation
             gate requires it non-ES when ``iva_category`` is
-            :attr:`IvaCategory.INTRA_COMMUNITY_SUPPLY`.
+            the registry-declared intra-community-supply category.
 
             ``None`` means the identification was not established, never
             that the party is identified nowhere and above all never that
@@ -458,7 +463,7 @@ class Transaction(BaseModel):
     exemption_article: IvaExemptionArticle | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
     operation_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
@@ -785,7 +790,9 @@ class Transaction(BaseModel):
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> Self:
         """Keep the Art. 20 discriminator coupled to domestic exempt IVA rows."""
-        if self.exemption_article is not None and self.iva_category is not IvaCategory.DOMESTIC_EXEMPT:
+        if self.exemption_article is not None:
+            require_iva_exemption_article(self.exemption_article)
+        if self.exemption_article is not None and self.iva_category != require_iva_category("domestic_exempt"):
             actual = self.iva_category.value if self.iva_category is not None else None
             raise TransactionValidationError(
                 f"exemption_article is only valid when iva_category is DOMESTIC_EXEMPT; got iva_category {actual!r}",
@@ -794,25 +801,21 @@ class Transaction(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_art_104_tres_exclusion_is_operator_declared(self) -> Self:
-        """Reject an auto-derived art. 104.Tres exclusion as an operator transaction tag.
-
-        Only the two judgment exclusions (foreign PE, non-habitual
-        inmobiliario/financiero) are operator-declared. The other four are
-        recognised structurally, from the IVA category, or from the
-        bienes-inversión register; declaring one on a transaction would
-        double-count or misroute a value the ledger already excludes, so the
-        boundary refuses it loudly rather than silently mis-scoping the
-        prorrata denominator.
-        """
-        if (
-            self.art_104_tres_exclusion is not None
-            and self.art_104_tres_exclusion not in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
-        ):
-            accepted = ", ".join(sorted(member.value for member in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS))
+        """Reject registry-declared auto-derived exclusions as transaction tags."""
+        if self.art_104_tres_exclusion is None:
+            return self
+        try:
+            catalogue = resolve_art104_tres_exclusion_catalogue()
+            exclusion = catalogue.require(self.art_104_tres_exclusion)
+        except RegistryValidationError as exc:
             raise TransactionValidationError(
-                "art_104_tres_exclusion is operator-declared only for the two judgment exclusions "
-                f"({accepted}); {self.art_104_tres_exclusion.value!r} is auto-derived and must not be tagged on a "
-                "transaction",
+                "art_104_tres_exclusion must be declared by the facts registry",
+            ) from exc
+        if exclusion not in catalogue.operator_declared:
+            accepted = ", ".join(sorted(str(member) for member in catalogue.operator_declared))
+            raise TransactionValidationError(
+                "art_104_tres_exclusion is operator-declared only for registry-declared judgment exclusions "
+                f"({accepted}); {str(exclusion)!r} is auto-derived and must not be tagged on a transaction",
             )
         return self
 

@@ -406,14 +406,12 @@ def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
 
     Every verb in this family resolves a registry revision from
     ``(modelo, filing_year, period)``, so a code with no registry definition can
-    never address one. The accepted set is therefore the core taxonomy minus
-    :data:`NON_REGISTRY_MODELOS`, derived here from the same two core objects the
-    CLI derives it from rather than restated as a literal list.
+    never address one. The accepted set therefore comes directly from the
+    published authority, as it does at the CLI boundary.
 
     The surface is asserted to be complete rather than sampled: a new ``work``
     verb that declares a bare ``str`` modelo option reds this gate instead of
-    quietly shipping an unhinted axis. ``NON_REGISTRY_MODELOS`` is asserted
-    non-empty so the exclusion cannot become vacuous and let a retired code in.
+    quietly shipping an unhinted axis.
 
     ``modelo.work.create`` is exempt, and the exemption is the interesting part.
     It is the one verb an operator reaches with a modelo the application does not
@@ -424,11 +422,9 @@ def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
     trading an actionable answer for an unhinted one. The exemption is asserted to
     still be bare, so silently pinning it later also reds this gate.
     """
-    from cadrumo.core.modelo import Modelo
-    from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
+    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    expected = [modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]
-    assert NON_REGISTRY_MODELOS, "the exclusion must exclude something, or this gate is vacuous"
+    expected = sorted(definition.id for definition in bundled_authority().modelos)
     assert expected
 
     #: Accepts out-of-taxonomy codes on purpose; see the docstring.

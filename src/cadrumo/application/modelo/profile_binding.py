@@ -47,7 +47,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingTypedEnumKind, CalculationSourceLineageRole
 from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
@@ -60,6 +60,8 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
+from ...domain.calculations.registry.rental_reduction import require_rental_reduction_art232_tier
+from ...domain.calculations.registry.iva_schema_vocabulary import m303_tax_territory_state_attribution_ratio
 from ...domain.calculations.registry.runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -1232,16 +1234,16 @@ def _inject_derived_deduccion_maternidad_facts(
 
 def _inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
+    *,
+    effective_date: date | None = None,
 ) -> None:
     """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
 
     The IVA model attributes the periodic result to the State (territorio
     común) vs the foral administrations as a percentage in casilla 65. The
-    profile records the operator's jurisdiction as the typed enum
-    ``tax_residence.jurisdiction_scope`` with values ``common_regime`` (the
-    full State attribution applies) or ``foral_unsupported`` (the foral
-    branch is not supported; the calc downstream emits zero, blocking the
-    filing). Project the enum onto the Decimal-channel synthetic key
+    profile records the operator's jurisdiction as the registry-projected
+    ``tax_residence.jurisdiction_scope`` token. Project that token onto the
+    Decimal-channel synthetic key
     ``tax_residence.state_attribution_ratio`` so the registry binding
     consumes it through the existing Decimal-channel resolver without a
     new enum→Decimal transform op.
@@ -1256,16 +1258,15 @@ def _inject_derived_state_attribution_facts(
         raise ProfileBindingResolutionError(
             "tax_residence.jurisdiction_scope is required; state attribution cannot default to common regime",
         )
-    if scope == "foral_unsupported":
-        # Explicit foral selection: the foral branch is unsupported; the calc
-        # downstream emits zero, blocking the filing.
-        fact_index[synthetic_key] = Decimal("0")
-    elif scope == "common_regime":
-        fact_index[synthetic_key] = Decimal("100")
-    else:
+    try:
+        fact_index[synthetic_key] = m303_tax_territory_state_attribution_ratio(
+            scope,
+            effective_date=effective_date,
+        )
+    except RegistryValidationError as exc:
         raise ProfileBindingResolutionError(
             f"unsupported tax_residence.jurisdiction_scope {scope!r}; state attribution is unresolved",
-        )
+        ) from exc
 
 
 def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
@@ -1556,7 +1557,10 @@ def _load_profile_facts(
     if "tax_residence.state_attribution_ratio" in {
         selector for binding in selected_bindings for selector in profile_binding_selectors(binding.provider)
     }:
-        _inject_derived_state_attribution_facts(fact_index)
+        _inject_derived_state_attribution_facts(
+            fact_index,
+            effective_date=date(snapshot.filing_year, 1, 1),
+        )
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 
 
@@ -1567,6 +1571,7 @@ def resolve_profile_binding_channels(
     caller_binding_ids: frozenset[BindingId],
     formula_date_consumed: frozenset[BindingId],
     enum_bindings: frozenset[BindingId],
+    effective_date: date | None = None,
 ) -> _ResolvedBindingChannels:
     """Resolve each selected binding into the Decimal / enum / date / boolean channels."""
     channels = _ResolvedBindingChannels()
@@ -1577,6 +1582,11 @@ def resolve_profile_binding_channels(
         value = resolve_profile_binding_value(binding, fact_index)
         if value is None:
             continue
+        if binding.value.typed_enum is BindingTypedEnumKind.RENTAL_REDUCTION_ART_23_2_TIER:
+            value = require_rental_reduction_art232_tier(
+                value,
+                effective_date=effective_date,
+            )
         _route_resolved_binding(
             binding_id,
             value,
@@ -1682,6 +1692,7 @@ def resolve_profile_sourced_bindings(
         caller_binding_ids=caller_binding_ids,
         formula_date_consumed=selection.formula_date_consumed,
         enum_bindings=enum_consumed_binding_ids(snapshot.revision),
+        effective_date=date(snapshot.filing_year, 1, 1),
     )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values

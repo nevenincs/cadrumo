@@ -24,7 +24,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from .._profile_export_binding import compose_legal_full_name, resolve_profile_export_values
+from ..profile_export_binding import compose_legal_full_name, resolve_profile_export_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -60,7 +60,7 @@ def _record(facts: tuple[UserProfileFact, ...]) -> UserProfileRecord:
 def _export_bindings() -> tuple[BindingDefinition, ...]:
     """The real Modelo 100 2024 profile bindings that carry an export address."""
     snapshot = bundled_authority().snapshot(
-        Modelo.M100.value,
+        Modelo("100").value,
         filing_year=2024,
         period="0A",
     )

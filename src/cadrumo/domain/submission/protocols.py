@@ -33,7 +33,7 @@ from ...core.errors.severity import BaseSeverity
 from .models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
-    from ...core.identity.tax_id import SubjectTaxId
+    from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
     from ...core.period import Period
 
 

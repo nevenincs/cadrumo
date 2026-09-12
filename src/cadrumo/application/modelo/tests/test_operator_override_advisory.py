@@ -35,12 +35,12 @@ _GUARDED_SOURCES = frozenset(CALCULATION_ROUTE_ENROLLED_SOURCES) - frozenset(CAL
 
 @pytest.fixture(scope="module")
 def m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot(Modelo.M303, filing_year=2024, period="1T").revision
+    return bundled_authority().snapshot(Modelo("303"), filing_year=2024, period="1T").revision
 
 
 @pytest.fixture(scope="module")
 def m390_revision() -> ModeloRevision:
-    return bundled_authority().snapshot(Modelo.M390, filing_year=2024, period="0A").revision
+    return bundled_authority().snapshot(Modelo("390"), filing_year=2024, period="0A").revision
 
 
 def test_divergent_operator_value_raises_one_advisory_naming_both_figures(

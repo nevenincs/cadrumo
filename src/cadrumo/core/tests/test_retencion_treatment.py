@@ -1,49 +1,42 @@
-"""Structural retención-treatment taxonomy for rendimientos-del-trabajo schemes.
-
-``WorkIncomeRetencionTreatment`` carries only the STRUCTURAL fact of which
-procedure a scheme follows (personalised progressive vs fixed statutory rate);
-the fixed-rate VALUES themselves are registry data covered by
-``domain/transactions/tests/test_administrador_retencion_facts.py``, not
-here (``aeat-registry-authority-flow``: this ``core`` layer is imported BY the
-registry schema and must not import back from it).
-"""
+"""Syntax-only retención-scheme value behavior at the core boundary."""
 
 from __future__ import annotations
 
 import pytest
+from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ..aggregation import RetencionScheme, WorkIncomeRetencionTreatment, work_income_retencion_treatment
+from ..aggregation import RetencionScheme
+from ..errors.hierarchy import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def test_director_scheme_is_distinct_from_empleado_scheme() -> None:
-    """clave A (empleado) and clave E (administrador) are separate closed-axis members."""
-    assert RetencionScheme.WORK_INCOME.value == "rendimientos_trabajo"
-    assert RetencionScheme.WORK_INCOME_DIRECTOR.value == "rendimientos_trabajo_administrador"
-    assert RetencionScheme.WORK_INCOME != RetencionScheme.WORK_INCOME_DIRECTOR
+class _SchemeCarrier(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    scheme: RetencionScheme
 
 
-def test_work_income_treatment_matches_statutory_scheme() -> None:
-    """Trabajo schemes preserve the art. 101.1 progressive and art. 101.2 fixed-rate split."""
-    cases: tuple[tuple[str, RetencionScheme, bool], ...] = (
-        ("administrador-fixed-art-101-2", RetencionScheme.WORK_INCOME_DIRECTOR, True),
-        ("empleado-progressive-art-101-1", RetencionScheme.WORK_INCOME, False),
-    )
+def test_retencion_scheme_preserves_distinct_valid_wire_tokens() -> None:
+    empleado = RetencionScheme("rendimientos_trabajo")
+    administrador = RetencionScheme("rendimientos_trabajo_administrador")
 
-    for case_id, scheme, is_fixed_rate in cases:
-        treatment = work_income_retencion_treatment(scheme)
-        assert isinstance(treatment, WorkIncomeRetencionTreatment), case_id
-        assert treatment.is_fixed_rate is is_fixed_rate, case_id
+    assert empleado.value == "rendimientos_trabajo"
+    assert administrador.value == "rendimientos_trabajo_administrador"
+    assert empleado != administrador
+    assert hash(empleado) == hash("rendimientos_trabajo")
 
 
-def test_non_work_income_schemes_have_no_trabajo_treatment() -> None:
-    """Actividades, premios, capital, and arrendamiento are not art. 101.1/101.2 trabajo."""
-    for scheme in (
-        RetencionScheme.ECONOMIC_ACTIVITY,
-        RetencionScheme.PROFESSIONAL,
-        RetencionScheme.PRIZE,
-        RetencionScheme.URBAN_RENTAL,
-        RetencionScheme.CAPITAL_INTEREST,
-    ):
-        assert work_income_retencion_treatment(scheme) is None
+@pytest.mark.parametrize("token", ["", "UPPER", "contains-hyphen", " leading"])
+def test_retencion_scheme_rejects_invalid_wire_syntax(token: str) -> None:
+    with pytest.raises(CoreValidationError, match="invalid retencion scheme token"):
+        RetencionScheme(token)
+
+
+def test_retencion_scheme_validates_and_serializes_through_pydantic() -> None:
+    carrier = _SchemeCarrier.model_validate({"scheme": "rendimientos_trabajo"})
+
+    assert carrier.scheme == RetencionScheme("rendimientos_trabajo")
+    assert carrier.model_dump(mode="json") == {"scheme": "rendimientos_trabajo"}
+    with pytest.raises(ValidationError):
+        _SchemeCarrier.model_validate({"scheme": "invalid-token"})

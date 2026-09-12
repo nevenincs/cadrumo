@@ -71,7 +71,8 @@ from ._modelo_rendering import (
     verification_report_lines,
     verification_report_payload,
 )
-from .common import declared_tax_id, emit_envelope
+from .common import active_bucket_id_or_refuse, declared_tax_id, emit_envelope
+from .state_projection_support import calculation_action_ports_factory, filing_action_ports_factory
 
 
 def _work_unit_id(raw: str) -> str:
@@ -136,6 +137,7 @@ def _import_input_values(
 
 def _import_record(
     *,
+    ctx: typer.Context,
     work_unit_id: str,
     casilla_values: dict[CasillaId, Decimal],
     evidence_kind: ExternalEvidenceKind,
@@ -148,8 +150,9 @@ def _import_record(
         from ...application.workflow.persistence import workflow_state_repository
 
         expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
+        work_unit = get_work_unit(work_unit_id)
+        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=work_unit.bucket_id)
         if file is not None:
-            work_unit = get_work_unit(work_unit_id)
             return import_external_filing_source(
                 ExternalFilingBaselineSource(
                     modelo=str(work_unit.modelo),
@@ -163,6 +166,7 @@ def _import_record(
                 ),
                 bucket_id=work_unit.bucket_id,
                 actor=actor or _actor(),
+                observation_repository=calculation_ports.observation_repository,
             )
         return import_external_filing_evidence(
             work_unit_id=work_unit_id,
@@ -171,6 +175,7 @@ def _import_record(
             evidence_reference_id=evidence_reference_id,
             actor=actor or _actor(),
             expected_tax_id=expected_tax_id,
+            observation_repository=calculation_ports.observation_repository,
         )
     except WorkUnitMutationRefusedError:
         raise
@@ -183,7 +188,12 @@ def filing_record_list(
 ) -> None:
     """List filing records."""
     modelo_code = _modelo_filter(modelo)
-    records = list_filing_records(bucket_id=bucket_id, modelo=modelo_code, include_superseded=include_superseded)
+    records = list_filing_records(
+        ports=filing_action_ports_factory(ctx)(bucket_id=bucket_id or active_bucket_id_or_refuse()),
+        bucket_id=bucket_id,
+        modelo=modelo_code,
+        include_superseded=include_superseded,
+    )
     result = ModeloRecordListResult(
         bucket_id_filter=bucket_id,
         modelo_filter=str(modelo_code) if modelo_code is not None else None,
@@ -220,7 +230,10 @@ def filing_record_list(
 def filing_record_show(ctx: typer.Context, filing_record_id: str) -> None:
     """View one filing record by id."""
     try:
-        record = get_filing_record(filing_record_id)
+        record = get_filing_record(
+            filing_record_id,
+            ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
+        )
     except ModeloRecordNotFoundError as exc:
         raise _bad_from_error(exc) from exc
     result = ModeloRecordShowResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
@@ -250,6 +263,7 @@ def filing_record_import(
     validated_work_unit_id = _work_unit_id(work_unit_id)
     casilla_values = _import_input_values(set_overrides, file)
     record = _import_record(
+        ctx=ctx,
         work_unit_id=validated_work_unit_id,
         casilla_values=casilla_values,
         evidence_kind=evidence_kind,
@@ -303,6 +317,7 @@ def _local_observation_values(
 
 def _record_local_observation(
     *,
+    ctx: typer.Context,
     modelo: str,
     year: int,
     period: Period,
@@ -312,6 +327,7 @@ def _record_local_observation(
 ) -> ModeloLocalObservationResult:
     """Delegate the validated local observation to its application owner."""
     try:
+        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
         return record_operator_local_observation(
             modelo=modelo,
             filing_year=year,
@@ -319,6 +335,7 @@ def _record_local_observation(
             casilla_values=casilla_values,
             actor=actor or _actor(),
             replace_official_evidence=replace_official_evidence,
+            repository=calculation_ports.observation_repository,
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc
@@ -350,6 +367,7 @@ def filing_record_observe_local(
     filing_period = _filing_period(year, period)
     casilla_values = _local_observation_values(file, set_overrides)
     local_observation = _record_local_observation(
+        ctx=ctx,
         modelo=str(modelo_code),
         year=year,
         period=filing_period,
@@ -409,7 +427,10 @@ def verification_report_list(ctx: typer.Context, calculation_revision_id: str | 
     :class:`VerificationReportPayload`,
     preserving the same findings surface as ``aeat app modelo work verify``.
     """
-    reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
+    reports = list_verification_reports(
+        ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
+        calculation_revision_id=calculation_revision_id,
+    )
     result = VerificationReportListResult(
         calculation_revision_id_filter=calculation_revision_id,
         report_count=len(reports),
@@ -449,7 +470,10 @@ def verification_report_show(ctx: typer.Context, verification_report_id: str) ->
     by ``aeat app modelo work verify``.
     """
     try:
-        report = get_verification_report(verification_report_id)
+        report = get_verification_report(
+            verification_report_id,
+            ports=filing_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse()),
+        )
     except VerificationReportNotFoundError as exc:
         raise _bad_from_error(exc) from exc
     result = VerificationReportShowResult.model_validate(verification_report_payload(report).model_dump(mode="python"))

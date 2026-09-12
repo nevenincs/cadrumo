@@ -9,8 +9,8 @@ SDK-independent - it returns ranked string candidates - so ``_server`` adapts it
 to the MCP ``Completion`` type.
 
 Modelo codes are NOT a prompt argument here (the workflow's own skill implies the
-modelo), so completions cover the filing year and period axes; the ``Modelo``
-enum remains the completion source if a modelo argument is ever added.
+modelo), so completions cover the filing year and period axes. If a modelo
+argument is added, its candidates must come from the published authority.
 """
 
 from __future__ import annotations

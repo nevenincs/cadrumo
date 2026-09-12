@@ -60,6 +60,7 @@ from .declarations_register_test_support import (
     declared_register_total,
     open_routed_declarations_register,
     rendered_register_rows,
+    RoutedFiledDataCapturePort,
 )
 from ......application.live.filed_data_capture import capture_filed_data_bulk
 from ......application.live.remote_state_models import BulkFiledDataCaptureReport
@@ -91,7 +92,7 @@ def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
                 output_root=output_root,
                 ports=bundle.ports,
                 modelos=(_MODELO,),
-                register=register,
+                filed_data_port=RoutedFiledDataCapturePort(register),
                 sync_run_repository=SyncRunRecordRepository(),
             )
             assert not routed.pending

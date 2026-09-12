@@ -44,6 +44,7 @@ from ...core.prorrata_register import regime_apportions_deduction
 from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_exento_token, require_iva_regime
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.categories.profile import CategoryProfile
@@ -54,7 +55,6 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
-from ...domain.deadlines.models import IVARegime
 from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
@@ -353,11 +353,8 @@ def resolve_iva_deduction_ratio(
     if record is not None:
         raw_regime = fact_value(record, "iva.regime")
         if raw_regime is not None:
-            try:
-                regime = IVARegime(str(raw_regime).strip().upper())
-            except ValueError:
-                regime = None
-            if regime is IVARegime.EXENTO:
+            regime = require_iva_regime(str(raw_regime).strip().upper())
+            if regime == iva_regime_exento_token():
                 return exempt_ratio
 
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())

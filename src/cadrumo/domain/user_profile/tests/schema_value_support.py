@@ -9,11 +9,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
-from ....core.identity.documents import nif_check_letter
+from ...calculations.registry.tax_id_runtime import runtime_nif_check_letter
 from ...deadlines.models import IVARegime
 from ..schema import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldDefinition, ProfileFieldType
 
-_PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+_PLACEHOLDER_TAX_ID = f"12345678{runtime_nif_check_letter(12345678)}"
 _PLACEHOLDER_DATE = "1990-01-01"
 _PLACEHOLDER_BOOLEAN = "false"
 

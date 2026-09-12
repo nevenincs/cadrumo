@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -59,6 +61,8 @@ from cadrumo.core.operations import OperationEffect, OperationLifecycle, Operati
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.tests.aeat_literal_fixtures import aeat_url
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 8, 24, 18, tzinfo=UTC)
@@ -69,6 +73,7 @@ _RESPONSE_TOKEN = "a" * 64
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 

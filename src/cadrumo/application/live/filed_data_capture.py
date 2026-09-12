@@ -3,7 +3,7 @@
 The listing helpers read AEAT declaration-register rows without downloading
 artefacts. The capture helpers download the selected filed-declaration artefacts
 through the authenticated Sede adapter, persist encrypted
-:class:`~cadrumo.adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+:class:`~cadrumo.application.live.filed_observation_ports.FiledObservationProtocol`
 payloads and artefacts, promote extracted casillas into registry-grounded
 calculation observations, and attempt to stamp matching current
 :class:`~ModeloRecord` filings with live
@@ -18,8 +18,8 @@ module never creates a remote submission or mutates AEAT state; filing-record
 stamping is local evidence enrollment against an existing current record.
 
 See Also:
-    :func:`cadrumo.application.live.session.active_verified_session`
-        Enforces the read-only live gate before the register walker is opened.
+    :class:`~cadrumo.application.live.filed_data_ports.FiledDataCapturePort`
+        Supplies the authenticated register and source-capture capabilities.
     :func:`cadrumo.application.live.filed_capture_finalizer.finalize_filed_capture`
         Persists the latest captured filed observations as calculation-history
         evidence, and is the function this module actually calls. Each
@@ -34,8 +34,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Mapping, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import Awaitable, Mapping, Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -47,22 +46,9 @@ if TYPE_CHECKING:
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...adapters.outbound.aeat.sede.declarations import (
-    DeclaracionesRegisterSession,
-    discover_filed_declaration_availability,
-    open_declarations_register,
-    shared_playwright,
-)
-from ...adapters.outbound.aeat.sede.declarations_capture import (
-    capture_previous_filing_observations,
-    capture_relation_source_observations,
-)
-from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
-from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionObservation, FiledDeclarationAvailabilityReport
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.casilla_value_kind import CasillaValueKind
-from ...core.config import load_settings
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
@@ -91,7 +77,14 @@ from ..storage.sync_runs.records import (
     sync_run_record_key,
 )
 from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from ..auth.operator_scope_ports import OperatorScopePorts
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
+from .filed_data_ports import (
+    FiledDataCapturePort,
+    FiledDataRegisterPort,
+    FiledDeclarationAvailabilityReportProtocol,
+    FiledRegisterDeclarationProtocol,
+)
 from .filed_data import (
     BulkFiledDataListingReport,
     FiledDataListingReport,
@@ -104,7 +97,9 @@ from .filed_observation_persistence import (
     filed_observation_identity_key,
     import_complete_filed_observation_baseline,
 )
-from .filed_observation_ports import FiledObservationPersistencePorts
+from .filed_observation_ports import FiledObservationPersistencePorts, FiledObservationProtocol
+from ..calculations.observations_repository import require_observation_envelope_coordinates_current
+from .notification_ports import NotificationsPorts
 from .remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
@@ -112,13 +107,12 @@ from .remote_state_models import (
     SourceFiledDataCaptureReport,
 )
 from .remote_state_outcomes import bounded_context_text
-from .session import active_verified_session
 
 if TYPE_CHECKING:
     from datetime import date
 
     from ...domain.deadlines.models import TaxpayerProfile
-    from ..calculations.observations_repository import CalculationObservationRepository
+    from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 
 
 FILED_HISTORY_PHASE_DISCOVERY = "filed-history.discovery"
@@ -169,7 +163,7 @@ def filed_data_capture_failure_row(
     modelo: str,
     year: int,
     error: BaseException,
-    declaration: Declaracion | None = None,
+    declaration: FiledRegisterDeclarationProtocol | None = None,
 ) -> FiledDataCaptureFailureRow:
     """Map one failed capture into a :class:`FiledDataCaptureFailureRow`."""
     failed_period = declaration.period if declaration is not None else None
@@ -275,12 +269,12 @@ def _plan_filed_capture_queries(
 
 
 async def _await_filed_register_walk(
-    awaitable: Awaitable[tuple[Declaracion, ...]],
+    awaitable: Awaitable[tuple[FiledRegisterDeclarationProtocol, ...]],
     *,
     modelo: str,
     year: int,
     timeout_ms: int,
-) -> tuple[Declaracion, ...]:
+) -> tuple[FiledRegisterDeclarationProtocol, ...]:
     """Bound one AEAT filed-register modelo/year query."""
     try:
         return await asyncio.wait_for(awaitable, timeout=timeout_ms / 1000)
@@ -294,52 +288,14 @@ async def _await_filed_register_walk(
         ) from exc
 
 
-@asynccontextmanager
-async def _resolved_declarations_register(
-    register: DeclaracionesRegisterSession | None,
-    *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    operation: str,
-) -> AsyncGenerator[tuple[DeclaracionesRegisterSession, int]]:
-    """Yield an open register plus its walk timeout, resolving a session only when needed.
-
-    Shared by :func:`list_filed_data_bulk` and :func:`capture_filed_data_bulk`.
-    With no ``register`` supplied this is exactly what both functions did inline:
-    resolve a verified session, amortise one Playwright instance across the sweep,
-    and open the register against it.
-
-    An already-open register short-circuits SESSION RESOLUTION, which is the only
-    thing it can usefully bypass. The browser itself is reachable offline through
-    route interception with no production change at all; what is not reachable is
-    :func:`active_verified_session`, because it runs the live-read access gate and
-    then drives the central live-session writer, which wants an active bucket and
-    real credentials. Satisfying that gate to reach this code would ARM real AEAT
-    access, so the seam exists to let a caller never request live access at all.
-    The walk timeout still comes from :func:`load_settings`, which reads local
-    deployment configuration and contacts nothing.
-    """
-    if register is not None:
-        yield register, load_settings().cadrumo_live_filed_register_walk_timeout_ms
-        return
-    session, settings = await active_verified_session(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operation=operation,
-    )
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(session, settings=settings, playwright=playwright) as opened,
-    ):
-        yield opened, settings.cadrumo_live_filed_register_walk_timeout_ms
-
-
 async def _walk_or_failure_row(
-    awaitable: Awaitable[tuple[Declaracion, ...]],
+    awaitable: Awaitable[tuple[FiledRegisterDeclarationProtocol, ...]],
     *,
     modelo: str,
     year: int,
     timeout_ms: int,
     failures: list[FiledDataCaptureFailureRow],
-) -> tuple[Declaracion, ...] | None:
+) -> tuple[FiledRegisterDeclarationProtocol, ...] | None:
     """Absorb one modelo/year register query's failure into a row, or return its rows.
 
     Takes the walk awaitable rather than the register that produces it: the
@@ -376,7 +332,7 @@ FILED_SUBMITTED_FILE_EXTRACTION_NOTICE_CODE = "live.filed.pull.submitted_file_ex
 _SUBMITTED_FILE_EXTRACTION_ERROR_METADATA_KEY = "submitted_file_extraction_error"
 
 
-def submitted_file_extraction_notices(observation: FiledDeclaracionObservation) -> tuple[Notice, ...]:
+def submitted_file_extraction_notices(observation: FiledObservationProtocol) -> tuple[Notice, ...]:
     """Project a recorded submitted-file layout refusal onto the notice channel.
 
     The Sede adapter is the authority for both parsing and the persisted error
@@ -447,7 +403,7 @@ class _CaptureAccumulator:
     justificante_csvs: list[str] = field(default_factory=list)
     filing_record_ids: list[str] = field(default_factory=list)
     conflicting_filing_record_ids: list[str] = field(default_factory=list)
-    observations_for_calculation: list[FiledDeclaracionObservation] = field(default_factory=list)
+    observations_for_calculation: list[FiledObservationProtocol] = field(default_factory=list)
     evidence_notices: list[Notice] = field(default_factory=list)
     #: Recapture-divergence advisories, one per re-captured filing whose casilla
     #: values this sweep changed. Read before each upsert, never after.
@@ -481,7 +437,7 @@ class _CaptureAccumulator:
 
     def absorb(
         self,
-        observation: FiledDeclaracionObservation,
+        observation: FiledObservationProtocol,
         *,
         ports: FiledObservationPersistencePorts,
         bucket_id: str,
@@ -502,7 +458,12 @@ class _CaptureAccumulator:
         # the advisory it produces was built and exported but never called from
         # any production path, so a corrected filing silently overwrote the
         # previously observed values and the operator was never told.
-        self.recapture_notices.extend(recapture_divergence_notices((observation,)))
+        self.recapture_notices.extend(
+            recapture_divergence_notices(
+                (observation,),
+                repository=ports.calculation_repository,
+            )
+        )
         # The Sede capture deliberately preserves a submitted-file layout
         # refusal as observation metadata and then keeps the declaration-PDF
         # fallback available. Metadata alone is not an operator surface,
@@ -567,7 +528,7 @@ class _CaptureAccumulator:
 
 async def list_filed_data(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     modelo: str,
     year_from: int,
     year_to: int,
@@ -578,26 +539,14 @@ async def list_filed_data(
             translated_message="live.errors.year_range_invalid",
         )
 
-    session, settings = await active_verified_session(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operation="live-expedientes-read",
-    )
-    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     rows: list[FiledDataListingRow] = []
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
-            session,
-            settings=settings,
-            playwright=playwright,
-        ) as register,
-    ):
+    async with filed_data_port.open_register(operation="live-expedientes-read") as register:
         for year in range(year_to, year_from - 1, -1):
             declarations = await _await_filed_register_walk(
                 register.walk(modelo=modelo, ejercicio=year),
                 modelo=modelo,
                 year=year,
-                timeout_ms=walk_timeout_ms,
+                timeout_ms=register.walk_timeout_ms,
             )
             rows.extend(filed_data_listing_row(declaration) for declaration in declarations)
     return FiledDataListingReport(
@@ -611,11 +560,10 @@ async def list_filed_data(
 
 async def list_filed_data_bulk(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None = None,
-    register: DeclaracionesRegisterSession | None = None,
 ) -> BulkFiledDataListingReport:
     """List filed declarations across modelos with one authenticated register session.
 
@@ -623,9 +571,8 @@ async def list_filed_data_bulk(
         year_from: First filing year to query.
         year_to: Last filing year to query.
         modelos: Modelo codes to walk; every registry modelo when omitted.
-        register: An already-open register to walk instead of resolving a session,
-            per :func:`_resolved_declarations_register`. Omitted by every
-            production caller, which keeps the session-resolving path.
+        filed_data_port: Composed register acquisition capability. Its outer
+            implementation owns session and browser lifecycles.
 
     Returns:
         A :class:`BulkFiledDataListingReport` of the per-modelo rows and failures.
@@ -650,20 +597,13 @@ async def list_filed_data_bulk(
             failures=tuple(failures),
         )
 
-    async with _resolved_declarations_register(
-        register,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operation="live-expedientes-read",
-    ) as (
-        opened_register,
-        walk_timeout_ms,
-    ):
+    async with filed_data_port.open_register(operation="live-expedientes-read") as register:
         for code, year in query_pairs:
             declarations = await _walk_or_failure_row(
-                opened_register.walk(modelo=code, ejercicio=year),
+                register.walk(modelo=code, ejercicio=year),
                 modelo=code,
                 year=year,
-                timeout_ms=walk_timeout_ms,
+                timeout_ms=register.walk_timeout_ms,
                 failures=failures,
             )
             if declarations is None:
@@ -683,7 +623,7 @@ async def list_filed_data_bulk(
 
 async def capture_filed_data(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     modelo: str,
     year: int,
     output_root: Path,
@@ -699,25 +639,15 @@ async def capture_filed_data(
     :class:`~ModeloRecord` ids, conflicts, and calculation
     observation keys produced from the captured AEAT rows.
     """
-    session, settings = await active_verified_session(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-    )
-    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     accumulator = _CaptureAccumulator()
     bucket_id = require_active_bucket_id()
 
-    async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
-            session,
-            playwright=playwright,
-        ) as register,
-    ):
+    async with filed_data_port.open_register(operation="live-filed-read") as register:
         declarations = await _await_filed_register_walk(
             register.walk(modelo=modelo, ejercicio=year),
             modelo=modelo,
             year=year,
-            timeout_ms=walk_timeout_ms,
+            timeout_ms=register.walk_timeout_ms,
         )
         selected = select_declarations_for_capture(
             declarations,
@@ -751,11 +681,11 @@ async def capture_filed_data(
 
 
 def _declarations_within_limit(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     *,
     limit: int | None,
     reached_count: int,
-) -> tuple[Declaracion, ...] | None:
+) -> tuple[FiledRegisterDeclarationProtocol, ...] | None:
     """Narrow one batch to what remains under the cap, or ``None`` once it is met.
 
     ``None`` means the sweep is finished rather than that this batch is empty:
@@ -771,9 +701,9 @@ def _declarations_within_limit(
 
 
 async def _absorb_declarations(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     *,
-    opened_register: DeclaracionesRegisterSession,
+    opened_register: FiledDataRegisterPort,
     accumulator: _CaptureAccumulator,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
@@ -874,7 +804,7 @@ class _CapturePairPhaseState:
 async def _emit_filed_capture_pair_phases(
     *,
     events: OperationEventEmitter | None,
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     dry_run: bool,
     state: _CapturePairPhaseState,
 ) -> None:
@@ -894,7 +824,7 @@ async def _capture_filed_data_query_pair(
     code: str,
     year: int,
     *,
-    opened_register: DeclaracionesRegisterSession,
+    opened_register: FiledDataRegisterPort,
     walk_timeout_ms: int,
     accumulator: _CaptureAccumulator,
     ports: FiledObservationPersistencePorts,
@@ -959,8 +889,7 @@ async def _capture_filed_data_query_pair(
 async def _capture_filed_data_query_pairs(
     query_pairs: Sequence[tuple[str, int]],
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
-    register: DeclaracionesRegisterSession | None,
+    filed_data_port: FiledDataCapturePort,
     accumulator: _CaptureAccumulator,
     ports: FiledObservationPersistencePorts,
     bucket_id: str,
@@ -977,20 +906,13 @@ async def _capture_filed_data_query_pairs(
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_REGISTER_ACCESS)
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_PAIR_WALK)
     phase_state = _CapturePairPhaseState()
-    async with _resolved_declarations_register(
-        register,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operation="live-expedientes-read",
-    ) as (
-        opened_register,
-        walk_timeout_ms,
-    ):
+    async with filed_data_port.open_register(operation="live-expedientes-read") as opened_register:
         for code, year in query_pairs:
             pair_completed, limit_reached = await _capture_filed_data_query_pair(
                 code,
                 year,
                 opened_register=opened_register,
-                walk_timeout_ms=walk_timeout_ms,
+                walk_timeout_ms=opened_register.walk_timeout_ms,
                 accumulator=accumulator,
                 ports=ports,
                 bucket_id=bucket_id,
@@ -1125,14 +1047,13 @@ def _require_bulk_capture_dependencies(
 
 async def capture_filed_data_bulk(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     year_from: int,
     year_to: int,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
     modelos: tuple[str, ...] | None = None,
     limit: int | None = None,
-    register: DeclaracionesRegisterSession | None = None,
     dry_run: bool = False,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: OperationEventEmitter | None = None,
@@ -1151,9 +1072,8 @@ async def capture_filed_data_bulk(
         ports: Composed filed-observation persistence and transformation ports.
         modelos: Modelo codes to walk; every registry modelo when omitted.
         limit: Cap on captured observations; unbounded when omitted.
-        register: An already-open register to walk instead of resolving a session,
-            per :func:`_resolved_declarations_register`. Omitted by every
-            production caller, which keeps the session-resolving path.
+        filed_data_port: Composed register acquisition capability. Its outer
+            implementation owns session and browser lifecycles.
         dry_run: Preview the sweep. AEAT is still read and the divergence set
             the upsert would introduce is still computed, but nothing is
             written: no observation persisted, no justificante evidence
@@ -1196,8 +1116,7 @@ async def capture_filed_data_bulk(
 
     await _capture_filed_data_query_pairs(
         query_pairs,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        register=register,
+        filed_data_port=filed_data_port,
         accumulator=accumulator,
         ports=ports,
         bucket_id=bucket_id,
@@ -1241,7 +1160,7 @@ async def capture_filed_data_bulk(
 
 async def capture_source_filed_data(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     modelo: str,
     year: int,
     period: Period,
@@ -1254,9 +1173,6 @@ async def capture_source_filed_data(
     Caller-controlled registry and source roots are deliberately not accepted:
     live evidence capture must use the same validated legal snapshot as filing.
     """
-    session, settings = await active_verified_session(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-    )
     revision = (
         bundled_authority()
         .snapshot(
@@ -1270,28 +1186,13 @@ async def capture_source_filed_data(
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
 
-    async with shared_playwright(session) as playwright:
-        observations = (
-            await capture_previous_filing_observations(
-                session,
-                revision,
-                filing_year=year,
-                period=period,
-                settings=settings,
-                playwright=playwright,
-                artefact_sink=ports.observation_persistence.persist_artefact,
-            )
-        ) + (
-            await capture_relation_source_observations(
-                session,
-                revision,
-                filing_year=year,
-                period=period,
-                settings=settings,
-                playwright=playwright,
-                artefact_sink=ports.observation_persistence.persist_artefact,
-            )
-        )
+    observations = await filed_data_port.capture_source_observations(
+        revision,
+        filing_year=year,
+        period=period,
+        artefact_sink=ports.observation_persistence.persist_artefact,
+        operation="live-filed-read",
+    )
     for observation in observations:
         key = (
             observation.modelo,
@@ -1325,7 +1226,7 @@ async def capture_source_filed_data(
 
 async def discover_filed_history(
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     profile: TaxpayerProfile | None = None,
     today: date | None = None,
 ) -> FiledHistoryDiscoveryReport:
@@ -1362,16 +1263,7 @@ async def discover_filed_history(
     """
     from ...core.time.clock import today_madrid
 
-    session, settings = await active_verified_session(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
-        operation="live-expedientes-read",
-    )
-    async with shared_playwright(session) as playwright:
-        availability = await discover_filed_declaration_availability(
-            session,
-            settings=settings,
-            playwright=playwright,
-        )
+    availability = await filed_data_port.discover_availability(operation="live-expedientes-read")
     resolved_today = today or today_madrid()
     expected = (
         expected_filed_declaration_grid(profile, today=resolved_today)
@@ -1603,7 +1495,7 @@ def expected_filed_declaration_grid(
 
 
 def casillas_a_recapture_would_change(
-    fresh: FiledDeclaracionObservation,
+    fresh: FiledObservationProtocol,
     stored: RegistryModeloObservation,
     *,
     tolerance: Decimal = Decimal("0"),
@@ -1671,7 +1563,7 @@ def casillas_a_recapture_would_change(
 
 def classify_register_scoping_signal(
     profile: TaxpayerProfile,
-    availability: FiledDeclarationAvailabilityReport,
+    availability: FiledDeclarationAvailabilityReportProtocol,
     *,
     today: date,
 ) -> RegisterScopingSignal:
@@ -1725,7 +1617,7 @@ def classify_register_scoping_signal(
 def filed_history_discovery_report(
     *,
     expected: ExpectedFiledDeclarationGrid,
-    availability: FiledDeclarationAvailabilityReport | None = None,
+    availability: FiledDeclarationAvailabilityReportProtocol | None = None,
     scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE,
 ) -> FiledHistoryDiscoveryReport:
     """Union the two discovery signals into one provenance-tagged walk grid.
@@ -1907,9 +1799,9 @@ def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | No
 
 
 def recapture_divergence_notices(
-    captured: tuple[FiledDeclaracionObservation, ...],
+    captured: tuple[FiledObservationProtocol, ...],
     *,
-    repository: CalculationObservationRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[Notice, ...]:
     """Warn for every re-captured filing whose casilla values changed.
 
@@ -1921,13 +1813,9 @@ def recapture_divergence_notices(
 
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
-    from ..calculations.observations_repository import CalculationObservationRepository as _Repository
-    from ..calculations.observations_repository import require_observation_envelope_coordinates_current
-
-    repo = repository if repository is not None else _Repository()
     notices: list[Notice] = []
     for observation in captured:
-        stored = repo.load_observation(observation.modelo, observation.period)
+        stored = repository.load_observation(observation.modelo, observation.period)
         if stored is None:
             continue
         require_observation_envelope_coordinates_current(stored)
@@ -1987,7 +1875,7 @@ class FiledHistoryDiscoveryPort(Protocol):
     async def __call__(
         self,
         *,
-        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        filed_data_port: FiledDataCapturePort,
         profile: TaxpayerProfile | None = None,
         today: date | None = None,
     ) -> FiledHistoryDiscoveryReport: ...
@@ -2033,12 +1921,11 @@ def _filed_history_pair_outcome(
 async def _capture_discovered_filed_history(
     walk_pairs: Sequence[tuple[str, int]],
     *,
-    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    filed_data_port: FiledDataCapturePort,
     output_root: Path,
     ports: FiledObservationPersistencePorts,
     limit: int | None,
     dry_run: bool,
-    register: DeclaracionesRegisterSession | None,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None,
     events: OperationEventEmitter | None = None,
 ) -> BulkFiledDataCaptureReport:
@@ -2046,14 +1933,13 @@ async def _capture_discovered_filed_history(
     modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
     years = tuple(year for _modelo, year in walk_pairs)
     return await capture_filed_data_bulk(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        filed_data_port=filed_data_port,
         year_from=min(years),
         year_to=max(years),
         output_root=output_root,
         ports=ports,
         modelos=modelos,
         limit=limit,
-        register=register,
         dry_run=dry_run,
         sync_run_repository=sync_run_repository,
         events=events,
@@ -2110,6 +1996,8 @@ class _FiledHistoryNotificationsStage:
 async def _capture_filed_history_notifications(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    notifications_ports: NotificationsPorts,
+    operator_scope_ports: OperatorScopePorts,
     events: OperationEventEmitter | None = None,
 ) -> _FiledHistoryNotificationsStage:
     """Capture notifications without allowing an independent failure to erase filed history."""
@@ -2118,7 +2006,9 @@ async def _capture_filed_history_notifications(
 
         snapshot = await capture_notifications(
             bucket_id=require_active_bucket_id(),
+            ports=notifications_ports,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
         )
     except Exception as exc:
         await _emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
@@ -2136,7 +2026,10 @@ async def _capture_filed_history_notifications(
 async def pull_filed_history(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
+    filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,
+    notifications_ports: NotificationsPorts,
     ports: FiledObservationPersistencePorts,
     output_root: Path,
     profile: TaxpayerProfile | None = None,
@@ -2144,7 +2037,6 @@ async def pull_filed_history(
     limit: int | None = None,
     dry_run: bool = False,
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
-    register: DeclaracionesRegisterSession | None = None,
     sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
     events: OperationEventEmitter | None = None,
 ) -> FiledHistoryOnboardingRun:
@@ -2165,6 +2057,7 @@ async def pull_filed_history(
 
     Args:
         iva_remote_state_port: Composed IVA wallet acquisition and persistence port.
+        notifications_ports: Composed notifications query and snapshot persistence bundle.
         output_root: Root the capture writes its encrypted stores under.
         ports: Composed filed-observation persistence and transformation ports.
         profile: The taxpayer's declared :class:`TaxpayerProfile`, supplying the load-bearing
@@ -2179,9 +2072,8 @@ async def pull_filed_history(
         discover: The discovery step to sequence, defaulting to
             :func:`discover_filed_history`. Injected so the composition itself is
             reachable without an authenticated session; production never passes it.
-        register: An already-open declarations register forwarded to the bulk
-            capture boundary. Production omits it; deterministic composition
-            proofs supply it to avoid live access and browser lifecycle.
+        filed_data_port: Composed filed-data acquisition capability. The same
+            bundle is used for discovery, register walks, and source capture.
         sync_run_repository: Completed-run persistence port forwarded to the
             bulk capture after discovery finds a supported pair.
         events: Optional operation event emitter that receives only stable stage
@@ -2195,7 +2087,7 @@ async def pull_filed_history(
     resolved_today = today or today_madrid()
     await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_DISCOVERY)
     discovery = await discover(
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        filed_data_port=filed_data_port,
         profile=profile,
         today=resolved_today,
     )
@@ -2212,12 +2104,11 @@ async def pull_filed_history(
 
     capture = await _capture_discovered_filed_history(
         walk_pairs,
-        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        filed_data_port=filed_data_port,
         output_root=output_root,
         ports=ports,
         limit=limit,
         dry_run=dry_run,
-        register=register,
         sync_run_repository=sync_run_repository,
         events=events,
     )
@@ -2239,6 +2130,8 @@ async def pull_filed_history(
         await _emit_filed_history_phase(events, FILED_HISTORY_PHASE_NOTIFICATIONS)
         notifications = await _capture_filed_history_notifications(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            notifications_ports=notifications_ports,
+            operator_scope_ports=operator_scope_ports,
             events=events,
         )
     stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)

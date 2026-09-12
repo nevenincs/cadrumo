@@ -107,7 +107,7 @@ def _populated_run() -> WorkflowResult:
         final_stage=WorkflowStage.ABORTED,
         aborted_reason=WorkflowAbortReason.DEADLINE_PASSED,
         obligation=WorkflowObligationFacts(
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             period=_PERIOD,
             opens_on=date(2025, 4, 1),
             closes_on=date(2025, 4, 20),
@@ -135,7 +135,7 @@ def _populated_run() -> WorkflowResult:
                 summary_locale_key="application.workflow.steps.profile_loaded",
                 details=WorkflowDeadlineContextDetails(
                     kind="deadline_context",
-                    modelo=Modelo.M303,
+                    modelo=Modelo("303"),
                     period=_PERIOD,
                     opens_on=date(2025, 4, 1),
                     closes_on=date(2025, 4, 20),
@@ -159,7 +159,7 @@ def _populated_run() -> WorkflowResult:
         summary_locale_key="application.workflow.results.aborted",
         summary_details=WorkflowDeadlineContextDetails(
             kind="deadline_context",
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             period=_PERIOD,
             closes_on=date(2025, 4, 20),
         ),
@@ -390,7 +390,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
 
     import json as _json
 
-    from ....core.classification.policies import SensitivityClass
+    from .....core.classification.policies import SensitivityClass
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         objects = profile.repository

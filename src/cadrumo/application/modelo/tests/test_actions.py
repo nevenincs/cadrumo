@@ -1,8 +1,7 @@
 """Real-behavior tests for modelo action module surfaces.
 
-contract: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
-than raw strings, so the frozenset membership check is typed at the schema
-boundary and cannot silently drift from the canonical enum.
+contract: the ledger-preflight exemption is projected by the IVA facts
+vocabulary rather than copied into the calculation-preparation module.
 
 contract: verification finding messages and next_action strings are routed
 through ``tr()`` so the operator-facing surface is localised.
@@ -30,6 +29,10 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
+from ....domain.calculations.registry.iva_schema_vocabulary import (
+    iva_regime_simplificado_token,
+    require_iva_regime,
+)
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationDivergence, IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
@@ -41,7 +44,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...workflow.errors import WorkflowInputMismatchError
-from .._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES
 from .._revision_replay_inputs import _informational_casilla_replay_inputs
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
@@ -343,30 +345,22 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
     )
 
 
-def test_iva_ledger_exempt_regimes_contains_enum_members() -> None:
-    """Every element of _IVA_LEDGER_EXEMPT_REGIMES must be an IVARegime member.
-
-    A bare string like ``"SIMPLIFICADO"`` would pass a membership test but
-    would bypass the typed surface: IVARegime values compared via StrEnum
-    equality will match, but the frozenset must be authored with enum members
-    so static analysis and future mypy strict checks can verify the boundary.
-    """
-    for member in _IVA_LEDGER_EXEMPT_REGIMES:
-        assert isinstance(member, IVARegime), (
-            f"_IVA_LEDGER_EXEMPT_REGIMES contains a bare string {member!r}; expected an IVARegime enum member"
-        )
+def test_iva_ledger_preflight_exemption_is_registry_projected() -> None:
+    """The ledger-preflight exemption comes from the IVA vocabulary authority."""
+    assert isinstance(iva_regime_simplificado_token(), IVARegime)
 
 
 @pytest.mark.parametrize(
-    ("regime", "expected_member"),
+    ("regime_token", "expected_member"),
     (
-        pytest.param(IVARegime.SIMPLIFICADO, True, id="simplificado-bypasses-ledger"),
-        pytest.param(IVARegime.GENERAL, False, id="general-requires-ledger"),
+        pytest.param("simplificado", True, id="simplificado-bypasses-ledger"),
+        pytest.param("general", False, id="general-requires-ledger"),
     ),
 )
-def test_iva_ledger_exempt_regime_membership_matches_contract(regime: IVARegime, expected_member: bool) -> None:
-    """Only exempt IVA regimes bypass ledger preflight."""
-    assert (regime in _IVA_LEDGER_EXEMPT_REGIMES) is expected_member
+def test_iva_ledger_exempt_regime_membership_matches_contract(regime_token: str, expected_member: bool) -> None:
+    """Only the registry-declared simplified regime bypasses ledger preflight."""
+    regime = require_iva_regime(regime_token)
+    assert (regime == iva_regime_simplificado_token()) is expected_member
 
 
 @pytest.mark.parametrize(

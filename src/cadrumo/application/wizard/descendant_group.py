@@ -36,11 +36,12 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
 from ...core.errors.hierarchy import ProfileAnswerTypeError
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, FlowWidgetKind
-from ...core.identity.documents import IdentityError, validate_identity
+from ...core.identity.documents import IdentityError
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CALENDAR_MONTH_MAX, CALENDAR_MONTH_MIN, is_calendar_month
 from ...core.time.clock import today_madrid
-from ...domain.contribuyente.entity_type import EntityType
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
+from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ..flows.definition import (
     FlowChoice,
     FlowCondition,
@@ -264,7 +265,8 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
 
     A descendant may legitimately lack a NIF (a minor without one), so a
     blank canonical passes; a non-blank value must satisfy the Spanish
-    NIF / NIE / CIF checksum in :func:`cadrumo.core.identity.documents.validate_identity`
+    NIF / NIE / CIF checksum in
+    :func:`cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_identity`
     -- the same authority the identity pages bind. A malformed value
     returns the ``wizard.errors.invalid_tax_id`` verdict carrying only the
     page id; the raw answer never enters the diagnostic.
@@ -272,7 +274,7 @@ def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdic
     if not canonical:
         return ValidationVerdict.passed()
     try:
-        validate_identity(canonical)
+        validate_runtime_identity(canonical)
     except IdentityError:
         return ValidationVerdict.failed(NIF_INVALID_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
@@ -564,7 +566,7 @@ register_cross_field_validator(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, _validate_de
 # The count question is gated to a natural person: only an IRPF-personal
 # taxpayer has descendants, and hiding it for a legal / attribution entity
 # yields a zero instance count so the whole group disappears.
-_NATURAL_PERSON_GATE = FlowCondition(page_id="entity-type", equals=EntityType.NATURAL_PERSON.value)
+_NATURAL_PERSON_GATE = FlowCondition(page_id="entity-type", equals=entity_type_natural_person_token().value)
 
 
 DESCENDANTS_COUNT_PAGE: FlowPage = FlowPage(

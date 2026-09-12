@@ -5,7 +5,7 @@ Three private dispatch helpers back the config-repair rendering:
 - ``_overall_status(checks)`` — rolls up a tuple of
   :class:`DiagnosticCheck` into a single :class:`DiagnosticStatus`
   with priority ``fail`` > ``warn`` > ``ok``.
-- ``_profile_check(report)`` — projects a
+- ``build_profile_check(report)`` — projects a
   :class:`WizardStatusReport` into the ``profile.readiness``
   diagnostic row. Three branches: no active profile, missing
   required keys, happy path; all carry the same row name with the
@@ -35,7 +35,7 @@ from ..diagnostic_models import DiagnosticCheck, diagnostic_no_recovery_verdict
 from ..diagnostics import (
     _auth_check,
     _overall_status,
-    _profile_check,
+    build_profile_check,
 )
 from ..wizard.status import WizardStatusReport
 
@@ -182,14 +182,14 @@ def test_overall_status_returns_fail_when_every_check_is_fail() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _profile_check — 3 branches
+# build_profile_check — 3 branches
 # ---------------------------------------------------------------------------
 
 
 def test_profile_check_no_active_profile_returns_warn_with_setup_action() -> None:
     report = _wizard_status(active_profile=None, profile_ready=False)
 
-    result = _profile_check(report)
+    result = build_profile_check(report)
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
@@ -219,7 +219,7 @@ def test_profile_check_missing_required_keys_returns_warn_with_profile_edit_acti
         missing_required=("tax_id", "ccaa"),
     )
 
-    result = _profile_check(report)
+    result = build_profile_check(report)
 
     assert result.name == "profile.readiness"
     assert result.status == "warn"
@@ -250,7 +250,7 @@ def test_profile_check_happy_path_returns_ok_with_present_total_summary() -> Non
         profile_total_keys=4,
     )
 
-    result = _profile_check(report)
+    result = build_profile_check(report)
 
     assert result.name == "profile.readiness"
     assert result.status == "ok"
@@ -269,7 +269,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
         missing_required=("tax_id",),
     )
 
-    result = _profile_check(report)
+    result = build_profile_check(report)
 
     assert result.name == "profile.readiness"
 

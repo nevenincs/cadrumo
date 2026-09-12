@@ -12,20 +12,24 @@ from pydantic import BaseModel
 from ....application.aggregation.percepciones_observations_repository import PercepcionObservationRepository
 from ....application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from ....application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
-from ....application.calculations.observations_repository import (
+from ....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
-    IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
+)
+from ....application.calculations.observations_repository import (
+    IvaWalletDecisionEnvelopePayload,
     iva_wallet_decision_event_key,
 )
 from ....application.evidence.service import EvidenceBundleRepository
+from ....adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
+from ....application.filing.history_ports import FilingHistoryPorts
 from ....application.filing.history_repository import ModeloHistoryRepository
 from ....application.ledger.confirmation_record import (
     ConfirmationRecordDocument,
     confirmation_record_object_key,
 )
 from ....application.ledger.counterparty_establishment import ConfirmedCounterpartyFactsRepository
-from ....application.ledger.evidence import PurchaseInvoiceEvidenceRepository
+from ....application.ledger.evidence import PurchaseInvoiceEvidenceDocument
 from ....application.ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
 from ....application.live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
@@ -149,7 +153,7 @@ def _sha256_payload_resolver(record: SecureObjectRecord, _bucket_id: str) -> str
     return sha256_hex(record.payload)
 
 
-def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
+def _natural_key_resolvers(*, bucket_id: str) -> dict[str, NaturalKeyResolver]:
     """Return the single natural-key resolver registry for carried namespaces."""
     resolvers: dict[str, NaturalKeyResolver] = {}
 
@@ -199,7 +203,14 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers["cadrumo.withholding.observations"] = _bound_resolver(_percepciones_repo)
 
     def _filing_history_repo() -> ModeloHistoryRepository:
-        return ModeloHistoryRepository()
+        return ModeloHistoryRepository(
+            ports=FilingHistoryPorts(
+                repository=FilingHistoryRepositoryAdapter(
+                    objects=secure_object_repository_for_bucket(bucket_id),
+                ),
+                bucket_id=bucket_id,
+            ),
+        )
 
     resolvers["cadrumo.application.filing.history"] = _bound_resolver(_filing_history_repo)
 
@@ -213,12 +224,11 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
 
     resolvers["cadrumo.application.evidence.bundles"] = _bound_resolver(_evidence_bundle_repo)
 
-    def _purchase_invoice_evidence_repo() -> PurchaseInvoiceEvidenceRepository:
-        return PurchaseInvoiceEvidenceRepository()
+    def _purchase_invoice_evidence_key(record: SecureObjectRecord, _bucket_id: str) -> str:
+        document = _envelope_payload(record, PurchaseInvoiceEvidenceDocument)
+        return document.bucket_id
 
-    resolvers["cadrumo.application.ledger.purchase_invoice_evidence"] = _bound_resolver(
-        _purchase_invoice_evidence_repo,
-    )
+    resolvers["cadrumo.application.ledger.purchase_invoice_evidence"] = _purchase_invoice_evidence_key
 
     def _classification_rule_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         rule = _envelope_payload(record, LedgerClassificationRule)
@@ -411,7 +421,7 @@ def _serialize_carried_objects(
     definitions: tuple[SecureObjectNamespaceDefinition, ...],
 ) -> tuple[CarriedSecureObject, ...]:
     repository = secure_object_repository_for_bucket(bucket_id)
-    resolvers = _natural_key_resolvers()
+    resolvers = _natural_key_resolvers(bucket_id=bucket_id)
     carried: list[CarriedSecureObject] = []
     for definition in definitions:
         keys = repository.list_keys(definition.namespace)

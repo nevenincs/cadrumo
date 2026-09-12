@@ -6,8 +6,10 @@ from collections.abc import Callable
 
 import typer
 
-from ...application.auth.operator import build_live_auth_preflight_report
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...application.auth.operator import build_live_auth_preflight_report
+from ...application.auth.operator_probe_ports import OperatorProbePorts
+from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...application.auth.operator_results import LiveAuthPreflightReport
 from ...core.redaction.rules import redact_for_cli_output
 
@@ -30,11 +32,15 @@ def resolve_active_bucket(active_bucket_id: Callable[[], str] | None, *, family:
 
 def emit_live_auth_preflight(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     provider: str | None = None,
 ) -> None:
     report = build_live_auth_preflight_report(
         provider,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
     )
     for line in _live_auth_preflight_lines(report):
         typer.echo(redact_for_cli_output(line), err=True)

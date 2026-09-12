@@ -28,7 +28,7 @@ from .custody_ports import (
     verify_profile_custody_dek_against_sentinel,
 )
 from .custody_repository import profile_custody_transaction_lock
-from .custody_service import _ProfileCustodyTransactionCapability
+from .custody_service import ProfileCustodyTransactionService
 from .custody_transactions import (
     ProfileCustodyDeleteConfirmation,
     ProfileCustodyTransactionJournal,
@@ -50,7 +50,7 @@ class ProfileCapsuleLifecycle:
     def __init__(self, *, root: Path | None = None) -> None:
         """Initialize lifecycle actions rooted at the optional storage path."""
         self._profiles = CommittedProfileRepository(root=root)
-        self._transactions = _ProfileCustodyTransactionCapability(root=self._profiles.root)
+        self._transactions = ProfileCustodyTransactionService(root=self._profiles.root)
 
     @property
     def root(self) -> Path:

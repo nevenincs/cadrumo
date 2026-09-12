@@ -59,6 +59,7 @@ from .calculate_input import ModeloCalculateBindingInputError
 from .calculate_input import decimal_binding_value as _decimal_binding_value
 from .calculate_input import validated_binding_input_channel as _validated_binding_input_channel
 from .calculation_actions import list_calculation_revisions
+from .calculation_action_ports import CalculationActionPorts
 from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
 
@@ -454,6 +455,7 @@ def _best_revision_for_compare(
     *,
     modelo: str,
     filing_year: int,
+    ports: CalculationActionPorts,
 ) -> tuple[CalculationRevision, bool, str]:
     units_for_year = _comparison_work_units(modelo=modelo, filing_year=filing_year)
     if not units_for_year:
@@ -463,7 +465,7 @@ def _best_revision_for_compare(
         )
 
     period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
-    all_revisions = _comparison_revisions_for_units(units_for_year)
+    all_revisions = _comparison_revisions_for_units(units_for_year, ports=ports)
 
     if not all_revisions:
         raise ModeloCompareNoRevisionsError(
@@ -490,11 +492,15 @@ def _comparison_work_units(*, modelo: str, filing_year: int) -> list[WorkUnit]:
     return [unit for unit in list_work_units() if str(unit.modelo) == modelo and unit.filing_year == filing_year]
 
 
-def _comparison_revisions_for_units(units: Iterable[WorkUnit]) -> list[CalculationRevision]:
+def _comparison_revisions_for_units(
+    units: Iterable[WorkUnit],
+    *,
+    ports: CalculationActionPorts,
+) -> list[CalculationRevision]:
     """Flatten the revisions belonging to comparison work units in unit order."""
     revisions: list[CalculationRevision] = []
     for unit in units:
-        revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
+        revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id, ports=ports))
     return revisions
 
 
@@ -620,6 +626,7 @@ def compare_modelo_years(
     *,
     modelo: str,
     years: Iterable[int],
+    ports: CalculationActionPorts,
 ) -> ModeloCompareServiceResult:
     """Compare the best persisted revision for two filing years.
 
@@ -632,8 +639,8 @@ def compare_modelo_years(
     """
     year_a, year_b = _comparison_year_pair(years)
 
-    rev_a, draft_a, period_a = _best_revision_for_compare(modelo=modelo, filing_year=year_a)
-    rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b)
+    rev_a, draft_a, period_a = _best_revision_for_compare(modelo=modelo, filing_year=year_a, ports=ports)
+    rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b, ports=ports)
 
     rev_a_static, rev_b_static = _comparison_static_revisions(
         modelo=modelo,

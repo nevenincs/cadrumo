@@ -12,7 +12,7 @@ from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionOb
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....application.calculations.observations_repository import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....core.config import load_settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority

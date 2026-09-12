@@ -38,13 +38,13 @@ def _work_unit() -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET,
-            modelo=ModeloCode(Modelo.M100.value),
+            modelo=ModeloCode(Modelo("100").value),
             filing_year=_FILING_YEAR,
             period=period,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET,
-        modelo=ModeloCode(Modelo.M100.value),
+        modelo=ModeloCode(Modelo("100").value),
         filing_year=_FILING_YEAR,
         period=period,
         revision_id=revision_id,

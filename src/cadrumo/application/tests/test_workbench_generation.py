@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -55,6 +57,8 @@ from ..workbench_generation import (
     assemble_workbench_generation_from,
 )
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
@@ -64,6 +68,7 @@ _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 

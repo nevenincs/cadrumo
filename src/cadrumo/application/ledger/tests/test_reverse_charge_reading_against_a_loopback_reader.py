@@ -45,7 +45,10 @@ from ....core.config import load_settings, override_settings
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.field_origin import FieldOrigin
 from ....domain.iva.legend_derivation import LegendDerivationOutcome, derive_category_from_regime_legend
-from ....domain.iva.schema import IvaCategory
+from ....domain.calculations.registry.iva_category_catalogue import (
+    registry_category_projection,
+    require_iva_category,
+)
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -53,7 +56,6 @@ from ....tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
-from ..classification_assembly import _RELIEF_ON_AN_ESTABLISHMENT_PREMISE
 from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..invoice_draft_extraction import _read_transcription_semantically
@@ -200,7 +202,7 @@ def test_a_mention_with_no_repercutido_line_derives_the_reverse_charge(serve) ->
         has_repercutido_line=draft_prints_a_repercutido_line(draft),
     )
     assert derivation.outcome is LegendDerivationOutcome.DERIVED
-    assert derivation.category is IvaCategory.DOMESTIC_REVERSE_CHARGE
+    assert derivation.category == require_iva_category("domestic_reverse_charge")
     assert regime_contradiction_finding(draft) is None
 
 
@@ -215,13 +217,14 @@ def test_the_reverse_charge_is_not_relieved_on_an_establishment_premise() -> Non
     relieved. Admitting reverse charge would withhold a treatment on a premise
     that does not apply to it.
     """
-    assert IvaCategory.DOMESTIC_REVERSE_CHARGE not in _RELIEF_ON_AN_ESTABLISHMENT_PREMISE
+    relief_categories = registry_category_projection("relief_on_establishment_premise")
+    assert require_iva_category("domestic_reverse_charge") not in relief_categories
     # The membership assertion alone would pass against an empty set, which is
     # the shape that proves nothing about the distinction being drawn.
     assert {
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
-    } == _RELIEF_ON_AN_ESTABLISHMENT_PREMISE
+        require_iva_category("intra_community_supply"),
+        require_iva_category("export_third_country_zero_rated"),
+    } == relief_categories
 
 
 def test_a_mention_beside_a_repercutido_line_raises_a_blocking_finding(serve) -> None:

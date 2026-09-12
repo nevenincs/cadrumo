@@ -98,7 +98,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     PriorDomiciliationElectionProjection,
 )
 from ..filing.retention import try_record_filing_retention_snapshot
@@ -1051,7 +1051,7 @@ def persist_filed_revision(
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol,
-    calculation_observation_repository: CalculationObservationRepository | None = None,
+    calculation_observation_repository: CalculationObservationRepositoryProtocol,
     participation_index_repository: TransactionParticipationIndexRepository | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
     result_disposition: ResultDisposition | None = None,
@@ -1066,8 +1066,7 @@ def persist_filed_revision(
     The parent :class:`WorkUnit` is advanced to the new current filing record
     after the calculation and filing catalogues are saved.
 
-    When ``calculation_observation_repository`` is supplied, the filed revision's
-    observations are co-emitted with ``MODELO_FILED`` through
+    The filed revision's observations are co-emitted with ``MODELO_FILED`` through
     :func:`~application.modelo.filed_revision_observation.persist_filed_revision_observation`,
     so later calculations can carry them through the ``previous_filing`` resolver.
     The record is stamped with NON-official ``app_filing`` and never satisfies the
@@ -1094,11 +1093,9 @@ def persist_filed_revision(
     # is downstream of the filing catalogue, the advanced WorkUnit pointer, the
     # participation index, any prorrata writeback and the MODELO_FILED events --
     # all of which have already landed by then. A filing refused there would be
-    # refused after being filed. Conditioned on the observation repository being
-    # supplied so the set of filings that must carry a disposition is unchanged;
-    # only when the refusal happens moves.
-    if calculation_observation_repository is not None:
-        require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
+    # refused after being filed. The observation repository is required by this
+    # persistence boundary, so the filing result disposition is required too.
+    require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
     calculation_revision_id = target.calculation_revision_id
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
@@ -1241,17 +1238,16 @@ def persist_filed_revision(
     # a later period's calculate carries them forward through the previous_filing
     # resolver. Runs after the catalogue saves succeed so a failed filing never
     # leaves a carry row behind.
-    if calculation_observation_repository is not None:
-        persist_filed_revision_observation(
-            revision=filed_target,
-            work_unit=work_unit,
-            repository=calculation_observation_repository,
-            captured_at=now,
-            result_disposition=result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election,
-            taxpayer_nif=taxpayer_nif,
-            filing_record_id=new_filing_id,
-        )
+    persist_filed_revision_observation(
+        revision=filed_target,
+        work_unit=work_unit,
+        repository=calculation_observation_repository,
+        captured_at=now,
+        result_disposition=result_disposition,
+        prior_domiciliation_election=prior_domiciliation_election,
+        taxpayer_nif=taxpayer_nif,
+        filing_record_id=new_filing_id,
+    )
 
     return new_filing
 

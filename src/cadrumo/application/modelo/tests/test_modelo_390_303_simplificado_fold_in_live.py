@@ -8,10 +8,13 @@ hand-authored calculation result is involved.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 from pydantic import ValidationError
@@ -70,9 +73,12 @@ from ...calculations.m303_regimen_simplificado_annual_summary import M303Regimen
 from .._registry_helpers import assert_revision_content_integrity
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..export import ModeloExportCommand, export_modelo_revision
+from ..export_ports import ModeloExportPorts
 from ..filing_actions import file_modelo_revision
 from ..verification_actions import verify_modelo_revision
 from ..work_lifecycle import create_work_unit
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,6 +89,24 @@ _T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
 _T2 = datetime(2026, 8, 14, 11, 0, tzinfo=UTC)
 _TAX_ID = "12345678Z"
 _SOURCE_CASILLA_IDS: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
+
+
+def _inward_export_ports(*, work_unit: object, calculation: object, filing: object) -> ModeloExportPorts:
+    """Provide inward fakes for authorities unused by this handoff gate."""
+    authority = Mock()
+    return ModeloExportPorts(
+        calculation=calculation,
+        work_unit=work_unit,
+        filing=filing,
+        verification=authority,
+        bucket_event=authority,
+        observation=authority,
+        iva_compensation_decision=authority,
+        justificante=authority,
+        prorrata_register=authority,
+        bienes_inversion=authority,
+        transaction=authority,
+    )
 
 
 def _summary_casilla_ids() -> tuple[CasillaId, ...]:
@@ -583,6 +607,7 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
 
@@ -616,6 +641,7 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
 
@@ -677,6 +703,7 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
 
@@ -715,6 +742,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     verified_target = target.model_copy(
@@ -734,6 +762,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
             work_unit_repository=work_units,
             calculation_repository=calculations,
             filing_repository=filings,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
         export_modelo_revision(
@@ -743,9 +772,11 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
                 actor="operator",
             ),
             workflow_profile=workflow_profile(),
-            work_unit_repository=work_units,
-            calculation_repository=calculations,
-            filing_repository=filings,
+            export_ports=_inward_export_ports(
+                work_unit=work_units,
+                calculation=calculations,
+                filing=filings,
+            ),
         )
 
 

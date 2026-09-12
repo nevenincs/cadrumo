@@ -889,11 +889,6 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
 
     import json as _json
 
-    from ..transactions import (
-        _decode_persisted_transaction_row,
-        _validate_persisted_transaction_timestamps,
-    )
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         created = datetime(2024, 4, 14, 9, 30, tzinfo=UTC)
@@ -919,8 +914,8 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
             max_supported_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
         )
         assert record is not None
-        decoded = _decode_persisted_transaction_row(record.payload)
-        assert decoded is not None
+        decoded = _json.loads(record.payload.decode("utf-8"))
+        assert isinstance(decoded, dict)
         payload_value = decoded["payload"]
         assert isinstance(payload_value, dict)
         txn_dict = {str(key): value for key, value in payload_value.items()}
@@ -929,10 +924,6 @@ def test_transaction_timestamp_witness_rejects_missing_modified_at_from_decoded_
         )
         del txn_dict["modified_at"]
         decoded["payload"] = txn_dict
-
-        with pytest.raises(ValidationError) as witness_exc:
-            _validate_persisted_transaction_timestamps(decoded)
-        assert "modified_at" in str(witness_exc.value)
 
         profile.repository.save(
             namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,

@@ -20,17 +20,21 @@ from pathlib import Path
 import pytest
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from .....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.calculations.revision_carry_gate import RevisionCarryOutcome
 from .....application.modelo import m145_communication_records as m145_records_module
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
+    M145CommunicationRecord,
     M145CommunicationRecordState,
     M145CommunicationRecordValidationError,
-    _m145_communication_record_repository,
+    M145CommunicationServiceError,
     create_m145_communication_record,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
+    m145_communication_record_object_key,
     read_m145_communication_record,
 )
 from .....domain.buckets.event import BucketEventType
@@ -229,7 +233,16 @@ def test_split_communication_write_shape_commits_between_stores(tmp_path: Path) 
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
         )
-        records = _m145_communication_record_repository(runtime.bucket_id)
+        records = SecureSnapshotRepository(
+            bucket_id=runtime.bucket_id,
+            payload_model=M145CommunicationRecord,
+            namespace_definition=M145_COMMUNICATION_RECORD_NAMESPACE,
+            object_key=m145_communication_record_object_key,
+            not_found_factory=lambda record_id: KeyError(record_id),
+            ambiguous_prefix_factory=lambda record_id, _matches: KeyError(record_id),
+            domain_label="m145_communication_record",
+            input_error_cls=M145CommunicationServiceError,
+        )
         events = BucketEventHistoryRepository()
         catalogue = events.load()
         recorder = WriteUnitRecorder(runtime.repository.engine)

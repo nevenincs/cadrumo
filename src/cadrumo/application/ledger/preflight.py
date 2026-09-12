@@ -44,6 +44,7 @@ from ...domain.categories.spending_category import (
     home_office_categories,
 )
 from ...domain.iva.schema import IvaCategory
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -398,18 +399,6 @@ def _transaction_needs_expense_category(transaction: Transaction) -> bool:
     )
 
 
-_ANOMALY_IVA_REASONS: dict[IvaCategory, tuple[LedgerPreflightIssueReason, str]] = {
-    IvaCategory.UNKNOWN: (
-        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
-        "iva_category 'unknown' is not declarable; classify the row or query the source",
-    ),
-    IvaCategory.ERRONEOUS_INVOICE: (
-        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
-        "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
-    ),
-}
-
-
 def _preflight_issue(
     transaction: Transaction,
     reason: LedgerPreflightIssueReason,
@@ -435,11 +424,19 @@ def _missing_business_classification_issue(transaction: Transaction) -> LedgerPr
 def _non_declarable_iva_issue(transaction: Transaction) -> LedgerPreflightIssue | None:
     iva_category = transaction.iva_category
     if iva_category is not None:
-        anomaly = _ANOMALY_IVA_REASONS.get(iva_category)
-        if anomaly is not None:
-            reason, detail = anomaly
-            return _preflight_issue(transaction, reason, detail)
-    if iva_category is IvaCategory.RECARGO_EQUIVALENCIA:
+        if iva_category == require_iva_category("unknown"):
+            return _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+                "iva_category 'unknown' is not declarable; classify the row or query the source",
+            )
+        if iva_category == require_iva_category("erroneous_invoice"):
+            return _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY,
+                "iva_category 'erroneous_invoice' marks a rectified/void row; not declarable",
+            )
+    if iva_category == require_iva_category("recargo_equivalencia"):
         return _preflight_issue(
             transaction,
             LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,

@@ -37,7 +37,7 @@ def test_reconcile_from_persisted_capture_matches() -> None:
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -68,7 +68,7 @@ def test_reconcile_from_persisted_capture_writes_nothing_to_disk(tmp_path: Path)
     pdf_bytes = MODELO_130_FIXTURE.read_bytes()
     snapshot = _persist_capture(
         pdf_bytes=pdf_bytes,
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -227,7 +227,7 @@ def test_reconcile_from_persisted_capture_mismatches_on_modelo() -> None:
     work_unit_id = _seed_work_unit(modelo="303", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )
@@ -247,7 +247,7 @@ def test_reconcile_from_malformed_capture_raises_without_leaking_temp_path() -> 
     work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
     snapshot = _persist_capture(
         pdf_bytes=b"%PDF-1.4\nnot a real justificante\n%%EOF\n",
-        modelo=Modelo.M130.value,
+        modelo=Modelo("130").value,
         filing_year=2026,
         period="1T",
     )

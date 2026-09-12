@@ -6,7 +6,13 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.decimal.constants import ZERO
-from ..iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment
+from ..calculations.registry.iva_schema_vocabulary import require_iva_cash_accounting_treatment
+from ..iva.schema import (
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
+    is_iva_cash_accounting_none,
+    is_iva_cash_accounting_supplier_regime,
+)
 from .enums import TransactionDirection
 from .errors import TransactionValidationError
 
@@ -49,7 +55,7 @@ def _require_supplier_regime_direction(
     direction: TransactionDirection,
 ) -> None:
     """Keep supplier-regime treatment on received/purchase rows only."""
-    if treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME and direction is not TransactionDirection.OUTGOING:
+    if is_iva_cash_accounting_supplier_regime(treatment) and direction is not TransactionDirection.OUTGOING:
         raise TransactionValidationError(
             "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
         )
@@ -100,7 +106,8 @@ def validate_cash_accounting_axis(
     direction: TransactionDirection,
 ) -> None:
     """Validate timing, direction, substrate, and settlement evidence coupling."""
-    if treatment is IvaCashAccountingTreatment.NONE:
+    treatment = require_iva_cash_accounting_treatment(treatment)
+    if is_iva_cash_accounting_none(treatment):
         if payment_evidence:
             raise TransactionValidationError(
                 "cash_accounting_payment_evidence requires a non-NONE cash_accounting_treatment",

@@ -94,8 +94,56 @@ async def open_routed_declarations_register(
             await browser.close()
 
 
+class RoutedFiledDataCapturePort:
+    """Bind a routed concrete register to the application capture port in tests."""
+
+    def __init__(self, register: DeclaracionesRegisterSession, *, walk_timeout_ms: int = 30_000) -> None:
+        """Keep the routed register open while the application service runs."""
+        self._register = register
+        self._walk_timeout_ms = walk_timeout_ms
+
+    @asynccontextmanager
+    async def open_register(self, *, operation: str):
+        """Yield the already-open routed register through its application view."""
+        del operation
+        yield _RoutedFiledDataRegister(self._register, walk_timeout_ms=self._walk_timeout_ms)
+
+    async def discover_availability(self, *, operation: str):
+        """Reject discovery because these tests inject deterministic discovery facts."""
+        del operation
+        raise AssertionError("routed capture tests inject discovery instead of reading register options")
+
+    async def capture_source_observations(self, *args: object, **kwargs: object):
+        """Reject source capture because it is outside these register-sweep proofs."""
+        del args, kwargs
+        raise AssertionError("routed capture tests do not exercise source capture")
+
+
+class _RoutedFiledDataRegister:
+    """Expose the required timeout alongside a concrete routed register."""
+
+    def __init__(self, register: DeclaracionesRegisterSession, *, walk_timeout_ms: int) -> None:
+        """Bind the concrete register and timeout."""
+        self._register = register
+        self._walk_timeout_ms = walk_timeout_ms
+
+    @property
+    def walk_timeout_ms(self) -> int:
+        """Return the deterministic timeout for the routed page."""
+        return self._walk_timeout_ms
+
+    async def walk(self, *, modelo: str, ejercicio: int):
+        """Delegate one register walk."""
+        return await self._register.walk(modelo=modelo, ejercicio=ejercicio)
+
+    async def capture_observation(self, declaration, *, artefact_sink=None):
+        """Delegate one row capture."""
+        return await self._register.capture_observation(declaration, artefact_sink=artefact_sink)
+
+
 __all__ = [
     "RoutedRegisterDocuments",
+    "RoutedFiledDataCapturePort",
     "aeat_sede_fixture",
     "declared_register_total",
     "offline_aeat_session",

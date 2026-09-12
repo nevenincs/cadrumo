@@ -7,9 +7,9 @@ from typing import cast
 
 import pytest
 
-from ....core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
+from ...calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...calculations.registry.schema import ModeloRevision
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ..errors import DeadlineValidationError
@@ -68,7 +68,8 @@ def test_qualified_resolution_reuses_atomic_coordinate_scope_expansion() -> None
 
 
 def test_official_codes_with_a_shared_rate_concept_remain_distinct_coordinates() -> None:
-    assert M210_TIPO_RENTA_CODE_PROJECTION["01"] is M210_TIPO_RENTA_CODE_PROJECTION["35"]
+    projection = m210_tipo_renta_code_projection()
+    assert projection["01"] == projection["35"]
 
     arrendamiento = _window(
         "arrendamiento",

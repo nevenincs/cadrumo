@@ -37,6 +37,7 @@ from ...application.modelo.work_addressing import (
 )
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_history
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -81,6 +82,7 @@ from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
 from .common import activate_subcommand_output_language
+from .state_projection_support import amendment_action_ports_factory, modelo_history_ports_factory
 
 
 def work_compare_taxation(
@@ -232,7 +234,10 @@ def work_history(
         revision=revision,
         bucket_id=bucket_id,
     )
-    history = assemble_work_unit_history(unit.work_unit_id)
+    history = assemble_work_unit_history(
+        unit.work_unit_id,
+        ports=modelo_history_ports_factory(ctx)(bucket_id=unit.bucket_id),
+    )
     from .common import emit_envelope, resolve_lifecycle_continuation_notice
     from .modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload
 
@@ -421,8 +426,6 @@ def work_amend(
     detail_rows = _resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
 
     try:
-        from ...adapters.persistence.profile.justificante import JustificanteRepository
-
         record = amend_modelo_revision(
             from_filing_record_id=from_filing_record_id,
             overrides=overrides,
@@ -431,7 +434,7 @@ def work_amend(
             detail_rows=detail_rows,
             reason=reason,
             actor=actor or _resolve_default_actor(),
-            justificante_repository=JustificanteRepository(),
+            ports=amendment_action_ports_factory(ctx)(bucket_id=require_active_bucket_id()),
         )
     except (
         ModeloRecordNotFoundError,
@@ -485,7 +488,12 @@ def modelo_history(
     from ._modelo_payloads import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .common import emit_envelope
 
-    matches = assemble_modelo_lifecycle_history(modelo, filing_year=year, period=period).events
+    matches = assemble_modelo_lifecycle_history(
+        modelo,
+        filing_year=year,
+        period=period,
+        ports=modelo_history_ports_factory(ctx)(bucket_id=require_active_bucket_id()),
+    ).events
 
     history_result = ModeloHistoryResult(
         modelo=modelo,

@@ -15,6 +15,7 @@ from ..adapters.persistence.operations.journal import OperationJournalRepository
 from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
@@ -38,6 +39,10 @@ from ..application.modelo.operation_definitions import (
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
 )
+from ..application.modelo.calculation_action_ports import CalculationActionPortsFactory
+from ..application.modelo.amendment_action_ports import AmendmentActionPortsFactory
+from ..application.modelo.filing_action_ports import FilingActionPortsFactory
+from ..application.modelo.export_ports import ModeloExportPortsFactory
 from ..application.operations.composition import (
     OperationComposedServices,
     compose_operation_services,
@@ -52,6 +57,7 @@ from ..application.user_profile.censal_operation import (
     build_censal_operation_definition,
     build_censal_operation_registration,
 )
+from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
@@ -59,6 +65,12 @@ from ..application.user_profile.operations import (
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
+from .adapter_composition import (
+    build_amendment_action_ports,
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_modelo_export_ports,
+)
 from .live_state_composition import compose_live_state, pull_filed_history_with_shared_composition
 
 _LEASE_DURATION = timedelta(minutes=10)
@@ -139,12 +151,24 @@ def build_production_operation_registry(
     auth_definitions: tuple[OperationDefinition, ...] | None = None,
     censal_definition: OperationDefinition | None = None,
     google_export_definition: OperationDefinition | None = None,
+    modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
+    calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
+    filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
+    operator_scope_ports: OperatorScopePorts,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
     resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
-    modelo_definitions = build_modelo_lifecycle_operation_definitions()
+    modelo_definitions = build_modelo_lifecycle_operation_definitions(
+        certificate_secret_backend_factory=build_certificate_secret_backend,
+        operator_scope_ports=operator_scope_ports,
+        export_ports_factory=modelo_export_ports_factory,
+        calculation_action_ports_factory=calculation_action_ports_factory,
+        amendment_action_ports_factory=amendment_action_ports_factory,
+        filing_action_ports_factory=filing_action_ports_factory,
+    )
     resolved_google_export_definition = (
         google_export_definition
         if google_export_definition is not None
@@ -162,6 +186,7 @@ def build_production_operation_registry(
         if censal_definition is not None
         else build_censal_operation_definition(
             certificate_secret_backend_factory=build_certificate_secret_backend,
+            operator_scope_ports=operator_scope_ports,
         )
     )
     definitions = tuple(
@@ -198,6 +223,11 @@ def build_production_operation_registry(
 def compose_operation_dependencies(
     *,
     settings: Settings | None = None,
+    modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
+    calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
+    filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
+    operator_scope_ports: OperatorScopePorts,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -208,7 +238,14 @@ def compose_operation_dependencies(
     """
     resolved_settings = settings or load_settings()
     storage_root = effective_storage_root(settings=resolved_settings)
-    registry = build_production_operation_registry(settings=resolved_settings)
+    registry = build_production_operation_registry(
+        settings=resolved_settings,
+        modelo_export_ports_factory=modelo_export_ports_factory,
+        calculation_action_ports_factory=calculation_action_ports_factory,
+        amendment_action_ports_factory=amendment_action_ports_factory,
+        filing_action_ports_factory=filing_action_ports_factory,
+        operator_scope_ports=operator_scope_ports,
+    )
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)
     operands = operation_secure_reference_repository()

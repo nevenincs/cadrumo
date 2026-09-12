@@ -335,7 +335,7 @@ def test_every_declared_module_cuota_endpoint_selects_the_complete_typed_result(
         },
     )
     producer = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),

@@ -63,7 +63,7 @@ def _resolves(target: str) -> bool:
 
     Walks back from the longest dotted prefix because the split between module
     path and attribute path is not knowable from the string alone:
-    ``cadrumo.core.Modelo.M303`` is a module, a class and a member.
+    ``cadrumo.core.Modelo.value`` is a module, a class and an attribute.
     """
     parts = target.split(".")
     for cut in range(len(parts), 0, -1):

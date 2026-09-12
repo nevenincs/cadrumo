@@ -31,20 +31,15 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_edit_receipts import ModeloEditReceiptRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...core.secure_object_write import SecureObjectWrite
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import ModeloDetailRow
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1
 from .edit_models import (
@@ -289,9 +284,7 @@ def _execute_modelo_edit(
     text_casilla_inputs: dict[str, str],
     cleared_casilla_ids: tuple[CasillaId, ...],
     detail_rows: tuple[ModeloDetailRow, ...],
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: CalculationActionPorts,
     receipt_repository: ModeloEditReceiptRepository,
     now: datetime,
     result_destination: str,
@@ -318,9 +311,7 @@ def _execute_modelo_edit(
         text_casilla_inputs=text_casilla_inputs or None,
         cleared_casilla_ids=cleared_casilla_ids,
         detail_rows=detail_rows,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         clock=now,
         additional_secure_object_writes_for_revision=_co_commit_receipt,
     )
@@ -354,9 +345,7 @@ def _reconstruct_current_edit_detail_rows(
 def apply_modelo_edit(
     request: ModeloEditApplyRequestV1,
     *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: CalculationActionPorts,
     receipt_repository: ModeloEditReceiptRepository | None = None,
     now: datetime,
     result_destination: str,
@@ -368,16 +357,10 @@ def apply_modelo_edit(
     the commit-point recheck, the intent-reachability gate, and the
     atomically co-committed result receipt.
 
-    Every repository port defaults when omitted, matching the sibling
-    lifecycle actions (:func:`verify_modelo_revision`,
-    :func:`amend_modelo_revision`, :func:`file_modelo_revision`,
-    :func:`export_modelo_revision`): the single writer this function is
-    owns default construction, so a caller - an operation executor among
-    them - never opens its own repository to reach it.
+    The required calculation ports arrive as one bucket-bound bundle from the
+    outer composition root. This executor owns no calculation repository
+    construction.
     """
-    work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
-    calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
-    bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
     receipt_repository = receipt_repository or ModeloEditReceiptRepository()
     submission = request.submission
     baseline = submission.baseline
@@ -394,8 +377,8 @@ def apply_modelo_edit(
     # every baseline coordinate. No re-read happens between this check and
     # the guarded commit below other than the calculation boundary's own
     # internal, independently CAS-guarded reads.
-    work_catalogue = work_unit_repository.load()
-    calculation_catalogue = calculation_repository.load()
+    work_catalogue = ports.work_unit_repository.load()
+    calculation_catalogue = ports.calculation_repository.load()
     stale = reconfirm_modelo_edit_baseline(
         baseline, work_catalogue=work_catalogue, calculation_catalogue=calculation_catalogue
     )
@@ -417,9 +400,7 @@ def apply_modelo_edit(
         text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
         detail_rows=reconstructed_detail_rows,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
         receipt_repository=receipt_repository,
         now=now,
         result_destination=result_destination,

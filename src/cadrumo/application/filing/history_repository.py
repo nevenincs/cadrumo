@@ -1,112 +1,89 @@
-"""Governed-persistence repository for filing-history records.
+"""Application repository facade for local filing-history records.
 
-This repository persists lightweight :class:`application.filing.ModeloHistory`
-payloads keyed by modelo. Each payload contains submitted modelos, typed
-periods, timestamps, and recorded status strings; richer current /
-superseded filing lifecycle records live in
-:class:`~ModeloRecordCatalogue`.
-
-Records are stored as encrypted byte objects in the primary SQL backend at
-``AUDIT`` :class:`~adapters.persistence.storage.SensitivityClass` via a
-:class:`~adapters.persistence.storage.SecureObjectRepository`; no
-plaintext filing-history JSON or envelope file lands on disk.
-
-See Also:
-    :class:`application.filing.ModeloHistory`
-        Strict payload persisted by this repository.
-    :mod:`application.filing.persistence_wiring`
-        Active-profile bucket resolution and runtime secure-object creation.
-    :class:`adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
-        FINANCIAL-class repository for authoritative work-unit filing records.
-    :data:`adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`
-        Namespace, sensitivity, schema-version, and object-key contract for
-        these secure objects.
+The repository persists lightweight :class:`ModeloHistory` payloads keyed by
+modelo.  Encrypted storage, envelope validation, and persistence failures are
+owned by the required outer capability in :mod:`history_ports`.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import ClassVar, override
+from pathlib import Path
+from typing import ClassVar
 
-from pydantic import BaseModel
-
-from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
-from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.secure_object_namespaces import APPLICATION_FILING_HISTORY_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification.policies import SensitivityClass
 from .history_models import ModeloHistory
-from .persistence_wiring import (
-    resolve_application_filing_bucket_id,
-    secure_objects_for_application_filing_bucket,
+from .history_ports import (
+    FILING_HISTORY_NAMESPACE,
+    FILING_HISTORY_SCHEMA_VERSION,
+    FILING_HISTORY_SENSITIVITY,
+    FilingHistoryPorts,
 )
 
 
-class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
-    """Encrypted filing-history store for bucket-local :class:`ModeloHistory`.
+class ModeloHistoryRepository:
+    """Bucket-bound application facade over the filing-history capability."""
 
-    The :class:`~adapters.persistence.storage.SecureBoundRepository`
-    base wraps each payload in an
-    :class:`~adapters.persistence.storage.Envelope` and binds it to
-    :data:`adapters.persistence.storage.APPLICATION_FILING_HISTORY_NAMESPACE`.
-    The modelo identifier is the natural object key, so list and iteration APIs
-    expose one lightweight history per modelo rather than the authoritative
-    work-unit filing catalogue. The namespace definition supplies the ``AUDIT``
-    :class:`~adapters.persistence.storage.SensitivityClass`, schema
-    version, bucket-local scope, ``{modelo}`` key grammar, and custody
-    contract.
+    namespace: ClassVar[str] = FILING_HISTORY_NAMESPACE
+    sensitivity: ClassVar[SensitivityClass] = FILING_HISTORY_SENSITIVITY
+    schema_version: ClassVar[int] = FILING_HISTORY_SCHEMA_VERSION
+    payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
 
-    See Also:
-        :class:`ModeloHistory`
-            Strict payload stored by this repository.
-        :class:`adapters.persistence.profile.modelos_filing.ModeloRecordCatalogueRepository`
-            FINANCIAL-class filing-record catalogue for current and superseded
-            work-unit lifecycle records.
-    """
-
-    namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = APPLICATION_FILING_HISTORY_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = ModeloHistory
-
-    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
-        """Bind the repository to a profile bucket or to supplied secure storage.
-
-        Args:
-            bucket_id: Explicit profile bucket to scope storage to; the active
-                profile bucket is resolved when omitted and ``objects`` is not
-                supplied.
-            objects: Already-constructed secure-object storage. When supplied,
-                no bucket resolution and no runtime storage construction occur.
-        """
-        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
-        if objects is None:
-            self._bucket_id = resolve_application_filing_bucket_id(bucket_id)
-            objects = secure_objects_for_application_filing_bucket(self._bucket_id)
-        super().__init__(objects=objects)
+    def __init__(self, *, ports: FilingHistoryPorts) -> None:
+        """Bind one complete, already-composed filing-history capability."""
+        if not ports.bucket_id.strip():
+            raise ValueError("filing-history bucket_id must not be blank")
+        self._ports = ports
 
     @property
-    def bucket_id(self) -> str | None:
-        """Return the profile bucket id when this repository resolved one."""
-        return self._bucket_id
+    def bucket_id(self) -> str:
+        """Return the bucket identity carried by the required port bundle."""
+        return self._ports.bucket_id
 
-    @override
+    @property
+    def store_dir(self) -> Path:
+        """Return the logical secure-store marker for this repository."""
+        return self._ports.repository.store_dir
+
+    def envelope_path_for(self, identifier: str) -> Path:
+        """Return the logical marker for ``identifier``."""
+        return self._ports.repository.envelope_path_for(identifier)
+
+    def lock_target_for(self, identifier: str) -> Path:
+        """Return the logical lock marker for ``identifier``."""
+        return self._ports.repository.lock_target_for(identifier)
+
     def extract_identifier(self, payload: ModeloHistory) -> str:
+        """Return the natural modelo identifier carried by ``payload``."""
         return str(payload.modelo)
+
+    def load(self, identifier: str) -> ModeloHistory | None:
+        """Load one history through the composed application capability."""
+        return self._ports.repository.load(identifier)
+
+    def save(self, payload: ModeloHistory) -> None:
+        """Persist one history through the composed application capability."""
+        self._ports.repository.save(payload)
+
+    def delete(self, identifier: str) -> bool:
+        """Delete one history through the composed application capability."""
+        return self._ports.repository.delete(identifier)
+
+    def iter_records(self) -> Iterator[ModeloHistory]:
+        """Iterate all histories through the composed application capability."""
+        return self._ports.repository.iter_records()
 
     def list_modelos(self) -> tuple[str, ...]:
         """Return every modelo persisted in this repository, sorted."""
-        return tuple(sorted(self.iter_ids()))
+        return tuple(sorted(str(history.modelo) for history in self.iter_records()))
 
     def iter_histories(self) -> Iterator[tuple[str, ModeloHistory]]:
         """Yield ``(modelo, history)`` tuples of :class:`ModeloHistory` for every persisted modelo."""
-        for history in self.iter_records():
+        for history in self._ports.repository.iter_records():
             yield str(history.modelo), history
 
 
 __all__ = [
-    "ClassificationError",
-    "EnvelopeVersionError",
     "ModeloHistory",
     "ModeloHistoryRepository",
 ]

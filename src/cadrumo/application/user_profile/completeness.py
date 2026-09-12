@@ -5,8 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...domain.contribuyente.entity_type import EntityType
-from ...domain.contribuyente.renta_codes import FiscalResidency
+from ...domain.contribuyente.entity_type import (
+    entity_type_legal_entity_token,
+    entity_type_natural_person_token,
+)
+from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.deadlines.models import IrpfIncomeCategory, irnr_representante_fiscal_required
 from ...domain.deadlines.profiles import modelo_iva_profile_required_paths
 
@@ -61,7 +64,7 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
 
     required.extend(modelo_iva_profile_required_paths(values))
 
-    if _token(values.get(ENTITY_TYPE_PATH)).lower() == EntityType.LEGAL_ENTITY.value:
+    if _token(values.get(ENTITY_TYPE_PATH)).lower() == entity_type_legal_entity_token().value:
         # A legal entity without a declared form has no selector for its
         # corporate tax rate schedule; the schema's `required` axis is
         # unconditional so the conditional requirement lives here.
@@ -75,7 +78,7 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
         # rather than merely redundant.
         required.append(LEGAL_NAME_PATH)
 
-    if _token(values.get(FISCAL_RESIDENCY_PATH)).lower() != FiscalResidency.NON_RESIDENT_IRNR.value:
+    if not fiscal_residency_requires_country(_token(values.get(FISCAL_RESIDENCY_PATH))):
         return tuple(required)
 
     country = _token(values.get(COUNTRY_OF_FISCAL_RESIDENCE_PATH)).upper()
@@ -157,7 +160,7 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     profile persistence.
     """
     entity_type = _token(values.get(ENTITY_TYPE_PATH))
-    if entity_type != EntityType.NATURAL_PERSON.value:
+    if entity_type != entity_type_natural_person_token().value:
         return True
     categories = {
         token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()

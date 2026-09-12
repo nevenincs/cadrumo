@@ -35,11 +35,13 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTE
 from ..calculations.registry.authority import bundled_authority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from ..calculations.registry.schema_base import DateAxis
 from ..identifiers import canonical_decimal_string
-from ..iva.classification import InvoiceKind, TransactionKind
-from ..iva.errors import IvaRateNotFoundError
-from ..iva.oss import OssIossRegime
+from ..iva.classification import InvoiceKind, TransactionKind, resolve_transaction_kind_catalogue
+from ..iva.errors import IvaRateNotFoundError, IvaValidationError
+from ..iva.oss import OssIossRegime, resolve_oss_ioss_regime_catalogue
 from ..iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from . import normalization as _normalization
 from ._payload_normalisation import normalise_invoice_enum_fields, normalise_invoice_string_fields
@@ -50,6 +52,7 @@ from .enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
+    resolve_iva_rate_token,
 )
 from .errors import InvoiceValidationError
 
@@ -91,7 +94,7 @@ def _simplificada_mandatory_tax_id_categories() -> frozenset[IvaCategory]:
     except KeyError as exc:
         raise RegistryValidationError("invoice applicability is missing mandatory_tax_id_categories") from exc
     try:
-        return frozenset(IvaCategory(token.strip()) for token in encoded.split(",") if token.strip())
+        return frozenset(require_iva_category(token.strip()) for token in encoded.split(",") if token.strip())
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
 
@@ -181,11 +184,19 @@ class InvoiceLine(BaseModel):
             if key in payload:
                 payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
-            payload["iva_rate"] = IvaRate(payload["iva_rate"])
+            payload["iva_rate"] = resolve_iva_rate_token(payload["iva_rate"], date.today())
         if "oss_rate_kind" in payload and isinstance(payload["oss_rate_kind"], str):
             stripped = payload["oss_rate_kind"].strip()
-            payload["oss_rate_kind"] = IvaRateKind(stripped) if stripped else None
+            payload["oss_rate_kind"] = require_iva_rate_kind(stripped, effective_date=date.today()) if stripped else None
         return payload
+
+    @field_validator("oss_rate_kind")
+    @classmethod
+    def _validate_oss_rate_kind(cls, value: IvaRateKind | None) -> IvaRateKind | None:
+        """Refuse an OSS/IOSS rate tier absent from the IVA facts catalogue."""
+        if value is None:
+            return None
+        return require_iva_rate_kind(value, effective_date=date.today())
 
     @field_validator("description")
     @classmethod
@@ -466,9 +477,9 @@ class Invoice(BaseModel):
         # and without a declared element type the lambda parameters and the
         # loop variable all read as unknown.
         normalisers: tuple[Callable[[dict[str, object]], dict[str, object]], ...] = (
+            _normalization.normalise_invoice_dates,
             normalise_invoice_enum_fields,
             normalise_invoice_string_fields,
-            _normalization.normalise_invoice_dates,
             _normalization.normalise_invoice_counterparty,
             _normalization.normalise_invoice_currency,
             _normalization.normalise_invoice_monetary_fields,
@@ -563,7 +574,7 @@ class Invoice(BaseModel):
                 continue
             if rate is None:
                 if line.iva_amount != Decimal("0"):
-                    raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
+                    raise InvoiceValidationError("iva_amount must be zero for nonnumeric IVA lines")
                 continue
             expected_iva = (line.subtotal * rate).quantize(Decimal("0.0001"))
             if abs(line.iva_amount - expected_iva) > CENT:
@@ -591,7 +602,11 @@ class Invoice(BaseModel):
             self.base_total + self.iva_total + recargo + suplido,
             "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
         )
-        all_non_numeric = all(line.iva_rate in {IvaRate.EXEMPT, IvaRate.NOT_SUBJECT} for line in self.lines)
+        devengo_date = self.operation_date or self.issued_at
+        all_non_numeric = all(
+            iva_rate_percentage(line.iva_rate, devengo_date) is None
+            for line in self.lines
+        )
         if all_non_numeric:
             # Checked before the grand-total equality below so the operator is
             # told which component is impossible, rather than being handed a
@@ -605,15 +620,15 @@ class Invoice(BaseModel):
                 (
                     (
                         self.iva_total != Decimal("0"),
-                        "iva_total must be zero when every line is EXEMPT or NOT_SUBJECT",
+                        "iva_total must be zero when every line is nonnumeric",
                     ),
                     (
                         recargo != Decimal("0"),
-                        "recargo_amount must be zero when every line is EXEMPT or NOT_SUBJECT",
+                        "recargo_amount must be zero when every line is nonnumeric",
                     ),
                     (
                         self.grand_total != self.base_total + suplido,
-                        "grand_total must equal base_total + suplido_amount when every line is EXEMPT or NOT_SUBJECT",
+                        "grand_total must equal base_total + suplido_amount when every line is nonnumeric",
                     ),
                 ),
             )
@@ -812,7 +827,8 @@ class Invoice(BaseModel):
                     "rectifies_invoice_number only applies to a factura rectificativa",
                 ),
                 (
-                    (self.invoice_class, category) == (InvoiceClass.SIMPLIFICADA, IvaCategory.INTRA_COMMUNITY_SUPPLY),
+                    (self.invoice_class, category)
+                    == (InvoiceClass.SIMPLIFICADA, require_iva_category("intra_community_supply")),
                     "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
                     "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
                 ),
@@ -861,7 +877,7 @@ class Invoice(BaseModel):
         one identification the category can never legitimately name.
         """
         if (
-            self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+            self.iva_category == require_iva_category("intra_community_supply")
             and self.counterparty_identification_state is EUMemberState.ES
         ):
             raise InvoiceValidationError(
@@ -891,7 +907,7 @@ class Invoice(BaseModel):
         if (self.operation_date is None) != (self.operation_date_role is None):
             raise InvoiceValidationError("operation_date and operation_date_role must be set together")
         if self.operation_date_role is InvoiceOperationDateRole.ADVANCE_PAYMENT_RECEIVED:
-            if self.iva_category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
+            if self.iva_category == require_iva_category("intra_community_supply"):
                 raise InvoiceValidationError(
                     "a pago anticipado devengo does not apply to an entrega intracomunitaria exenta "
                     "(LIVA art. 75.Dos, párrafo segundo, excludes art. 25 entregas)",
@@ -922,20 +938,19 @@ class Invoice(BaseModel):
                 ),
             )
             return self
-        regime = cast(OssIossRegime, self.oss_ioss_regime)
-        transaction_kind = cast(TransactionKind, self.oss_transaction_kind)
-
-        allowed_kinds_by_regime: Mapping[OssIossRegime, frozenset[TransactionKind]] = {
-            OssIossRegime.EXTERNAL_SCHEME: frozenset({TransactionKind.EXTERNAL_SCHEME_SERVICES}),
-            OssIossRegime.UNION_SCHEME: frozenset(
-                {
-                    TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
-                    TransactionKind.OSS_UNION_GOODS_INTERFACE_FACILITATED,
-                    TransactionKind.OSS_UNION_SERVICES,
-                },
-            ),
-            OssIossRegime.IMPORT_SCHEME: frozenset({TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE}),
-        }
+        try:
+            transaction_kind = resolve_transaction_kind_catalogue(
+                self.operation_date or self.issued_at,
+            ).require(self.oss_transaction_kind)
+        except IvaValidationError as exc:
+            raise InvoiceValidationError("oss_transaction_kind must be declared by the facts registry") from exc
+        try:
+            catalogue = resolve_oss_ioss_regime_catalogue(
+                effective_date=self.operation_date or self.issued_at,
+            )
+            regime = catalogue.require(self.oss_ioss_regime)
+        except RegistryValidationError as exc:
+            raise InvoiceValidationError("oss_ioss_regime must be declared by the facts registry") from exc
         _normalization.raise_first_invoice_violation(
             (
                 (
@@ -947,7 +962,7 @@ class Invoice(BaseModel):
                     "OSS/IOSS invoice projection requires an EU destination member state",
                 ),
                 (
-                    transaction_kind not in allowed_kinds_by_regime[regime],
+                    transaction_kind.value not in catalogue.transaction_kinds_for(regime),
                     "oss_transaction_kind is not valid for the supplied oss_ioss_regime",
                 ),
             ),

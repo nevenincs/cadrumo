@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import NoReturn
 
 from ...core.money.rounding import round_to_cents
+from ..calculations.registry.iva_category_catalogue import registry_category_projection
 from ..iva.schema import IvaCategory
 from .enums import TransactionDirection
 from .errors import TransactionValidationError
@@ -17,15 +18,6 @@ from .irpf_categories import (
     is_net_paid_related_category,
 )
 from .retencion_facts import maximum_supported_activity_retencion_rate
-
-_SELF_ASSESSED_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
-    {
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        IvaCategory.IMPORT_THIRD_COUNTRY,
-    },
-)
-
 
 def _activity_withholding_is_supported(
     *,
@@ -174,7 +166,7 @@ def validate_gross_reconstitution(
     if taxable_base is None or iva_amount is None:
         return
     expected = round_to_cents(abs(raw_amount))
-    if iva_category in _SELF_ASSESSED_IVA_CATEGORIES:
+    if iva_category in registry_category_projection("self_assessed"):
         reconstituted = round_to_cents(taxable_base)
         if reconstituted != expected:
             _raise_self_assessed_gross_mismatch(taxable_base=taxable_base, expected=expected)

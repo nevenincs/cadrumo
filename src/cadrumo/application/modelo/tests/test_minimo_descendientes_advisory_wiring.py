@@ -97,7 +97,7 @@ def _source_kinds(casilla_values: dict[CasillaId, Decimal]) -> set[str]:
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         casilla_values,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
@@ -166,7 +166,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
         filing_year=2020,
         bucket_id=_BUCKET_ID,
@@ -185,7 +185,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         period_token=_ANNUAL_PERIOD,
         filing_year=2024,
         bucket_id=_BUCKET_ID,
@@ -228,7 +228,7 @@ def test_the_undeclared_advisory_grounds_from_the_casilla_it_addresses() -> None
     diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
         _revision(),
         {_ESTATAL_CASILLA: Decimal("0")},
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
     assert len(diagnostics) == 1

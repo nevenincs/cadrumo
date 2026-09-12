@@ -38,13 +38,15 @@ from ....core.descendant_relacion import (
     ART_58_2_ENTITLING_RELACIONES,
     DescendantRelacion,
 )
+from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..descendant_maternity import ART_81_1_MATERNIDAD_RELACIONES
+from ..descendant_maternity import art_81_1_maternity_relations
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..meses_trabajo import parse_meses_trabajo
 from ._registry_thresholds import registry_thresholds
@@ -55,6 +57,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: retyped, so a revision that moves either cannot leave this module asserting
 #: against a stale figure while the engine uses the new one.
 _THRESHOLDS = registry_thresholds(2024)
+_FACT_CONTEXT = FamilyFactResolutionContext(bundled_authority(), date(2024, 12, 31), date(2024, 12, 31))
+_ART_81_1_MATERNITY_RELATIONS = art_81_1_maternity_relations(context=_FACT_CONTEXT)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -647,9 +651,9 @@ class TestArt811PopulationGate:
         The temporal carer above passes the Art. 58.1 test and fails this one.
         Were the two ever merged, that carer would collect again.
         """
-        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in _ART_81_1_MATERNITY_RELATIONS
         assert DescendantRelacion.ACOGIMIENTO_TEMPORAL not in ART_58_2_ENTITLING_RELACIONES
-        assert DescendantRelacion.TUTELA in ART_81_1_MATERNIDAD_RELACIONES
+        assert DescendantRelacion.TUTELA in _ART_81_1_MATERNITY_RELATIONS
         assert DescendantRelacion.TUTELA not in ART_58_2_ENTITLING_RELACIONES
 
     def test_every_admitted_relacion_still_contributes(self) -> None:
@@ -660,7 +664,7 @@ class TestArt811PopulationGate:
         importe de la deducción que corresponda al tiempo que reste hasta que el
         tutelado alcance los tres años de edad".
         """
-        for relacion in ART_81_1_MATERNIDAD_RELACIONES:
+        for relacion in _ART_81_1_MATERNITY_RELATIONS:
             contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
             assert contributed == 12, relacion
 
@@ -672,7 +676,7 @@ class TestArt811PopulationGate:
         which is the under-granting direction.
         """
         for relacion in DescendantRelacion:
-            if relacion in ART_81_1_MATERNIDAD_RELACIONES:
+            if relacion in _ART_81_1_MATERNITY_RELATIONS:
                 continue
             contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
             assert contributed == 0, relacion

@@ -18,6 +18,8 @@ proved here:
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
@@ -32,8 +34,6 @@ from pydantic import SecretStr
 from ...adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from ...adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ...adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
-from ...adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from ...adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import Settings, override_settings
 from ...core.config_support import SecretStoreBackend
@@ -41,13 +41,14 @@ from ...core.period import Period
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.bucket_layout import provision_bucket_directory
-from ..modelo.tests.registry_revision import active_registry_revision_id
 from ...tests.user_profile import register_minimal_profile
-from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..auth.operator import inspect_operator_auth
 from ..auth.operator import test_operator_auth as probe_operator_auth
+from ._operator_probe_fakes import fake_operator_probe_ports
+from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.actions_manual import create_manual_transaction
 from ..ledger.models import ManualLedgerTransactionCommand
+from ..modelo.tests.registry_revision import active_registry_revision_id
 from ..modelo.work_lifecycle import (
     create_work_unit,
     discard_work_unit,
@@ -66,6 +67,8 @@ from ..user_profile.registration import register_profile_with_credentials
 from ..wizard.catalogue import WIZARD_FLOWS
 from ..workflow.persistence import workflow_state_repository
 from ..workflow.state_models import WorkflowState
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -88,6 +91,7 @@ _ACTIVE_STORAGE_STACK: ExitStack | None = None
 _PROFILE_SPAN_OPEN = False
 _ACTIVE_PROFILE_ID: str | None = None
 _OPERATOR_PASSPHRASE = "state projection test passphrase 123"  # noqa: S105 - test-only credential
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 
 
 @pytest.fixture(autouse=True)
@@ -162,7 +166,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
     unlocked = unlock_profile_custody(material.envelope, _OPERATOR_PASSPHRASE, sentinel=material.sentinel)
     instant = datetime.now(UTC)
-    session = BucketSession.open_resumed(
+    session = profile_login_session_port().open_resumed_session(
         bucket_id=outcome.profile_id,
         dek=unlocked.dek,
         idle_minutes=15,
@@ -172,7 +176,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         storage_root=storage_root,
     )
     profile_login_session_port().bind_session(session)
-    _ACTIVE_STORAGE_STACK.callback(close_active_bucket_session)
+    _ACTIVE_STORAGE_STACK.callback(profile_login_session_port().close_active_session)
     _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
     register_minimal_profile(
         profile_id=outcome.profile_id,
@@ -219,7 +223,9 @@ def test_overview_status_reports_modelo_work_units(tmp_path: Path, state_project
 
     report = build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert report.work_units == 1, "overview status must surface modelo work units, not zero"
@@ -243,7 +249,9 @@ def test_overview_status_distinguishes_drafts_from_work_units(state_projection_d
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert projection.workspace.work_units == 2
@@ -278,7 +286,9 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert projection.workspace.work_units == 3, "discarded units must not inflate the active counter"
@@ -286,7 +296,9 @@ def test_work_units_counter_excludes_discarded_units(state_projection_dependenci
 
     report = build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert report.work_units == 3
     assert report.discarded_work_units == 1
@@ -317,6 +329,7 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -327,19 +340,26 @@ def test_surfaces_agree_on_one_projection(state_projection_dependencies) -> None
             ),
         ),
         probe_live_backend=True,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     overview = build_overview_status_report(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     auth_status = inspect_operator_auth(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     auth_test = probe_operator_auth(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     # auth status and auth test report the SAME configured — the
@@ -385,6 +405,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -394,6 +415,7 @@ def test_modelo_303_readiness_includes_ledger_preflight_blockers(state_projectio
                 period=Period.from_year_and_code(2026, "1T"),
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -412,6 +434,7 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -421,6 +444,7 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
                 period=Period.from_year_and_code(2026, "1T"),
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -458,6 +482,7 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -467,6 +492,7 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
                 period=Period.from_year_and_code(2026, "1T"),
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -517,6 +543,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -526,6 +553,7 @@ def test_modelo_303_readiness_does_not_report_ledger_bindings_missing_after_clea
                 period=Period.from_year_and_code(2026, "2T"),
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -543,6 +571,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -552,6 +581,7 @@ def test_modelo_309_ad_hoc_readiness_fails_closed_for_non_span_ledger_period(
                 period=Period.from_year_and_code(2026, "AD-HOC"),
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -582,6 +612,7 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         modelo_readiness_requests=(
             ModeloReadinessRequest(
@@ -590,6 +621,7 @@ def test_modelo_readiness_without_period_uses_annual_period(state_projection_dep
                 filing_year=2026,
             ),
         ),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     readiness = projection.modelo_readiness[0]
@@ -613,11 +645,15 @@ def test_projection_is_pure_read(state_projection_dependencies) -> None:
 
     first = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     second = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert first == second
@@ -630,7 +666,9 @@ def test_projection_without_active_profile_is_empty(state_projection_dependencie
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert projection.active_profile.profile_id is None
@@ -655,10 +693,12 @@ def test_projection_profile_read_refuses_explicit_database_route(
     ):
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
             read_ports=read_ports,
             state=WorkflowState(),
             include_workspace_summary=False,
             include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     assert projection.active_profile.profile_id == profile_id
@@ -683,13 +723,17 @@ def test_auth_readiness_no_provider_matches_with_and_without_probe(state_project
 
     unprobed = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=False,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     probed = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=True,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert unprobed.auth.provider == ""
@@ -709,11 +753,13 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
     with caplog.at_level(logging.WARNING, logger="cadrumo.application.state_projection"):
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
             read_ports=read_ports,
             requested_provider=sensitive_provider,
             probe_live_backend=True,
             include_workspace_summary=False,
             include_pending_obligations=False,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
     assert projection.auth.available is False
@@ -736,12 +782,14 @@ def test_auth_readiness_configured_is_coherent_with_health_summary(state_project
 
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
-    configure_operator_auth("certificate")
+    configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=True,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     auth = projection.auth
@@ -782,19 +830,23 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(
     cert_file = tmp_path / "operator-cert.pfx"
     cert_file.write_bytes(b"placeholder pkcs12 bytes")
 
-    configure_operator_auth("certificate", certificate_path=cert_file)
+    configure_operator_auth("certificate", certificate_path=cert_file, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     after_cert = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=False,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert after_cert.auth.certificate_path == str(cert_file)
 
-    configure_operator_auth("clave_movil")
+    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     after_switch = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=False,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
     assert after_switch.auth.provider == "clave_movil"
@@ -817,12 +869,14 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider(
 
     certificate_secret_backend_factory, read_ports = state_projection_dependencies
     _register_active_profile()
-    configure_operator_auth("clave_movil")
+    configure_operator_auth("clave_movil", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     auth = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=True,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     ).auth
 
     # Round-5 M5: ``info`` is now a valid severity for benign undeclared
@@ -838,8 +892,10 @@ def test_auth_readiness_health_severity_empty_only_when_no_provider(state_projec
 
     auth = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=_OPERATOR_PROBE_PORTS,
         read_ports=read_ports,
         probe_live_backend=True,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     ).auth
 
     assert auth.provider == ""

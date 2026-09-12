@@ -13,6 +13,8 @@ by, or claiming an action nothing granted, is.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import ast
 import pickle
 from datetime import UTC, date, datetime
@@ -65,6 +67,8 @@ from ..workspace import (
     project_aeat_sync_workspace,
 )
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 BUCKET = "11111111-1111-4111-8111-111111111111"
@@ -104,6 +108,7 @@ the only way any of this could start leaking.
 def _censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
 

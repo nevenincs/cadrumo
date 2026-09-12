@@ -6,9 +6,9 @@ borrador, IVA-wallet, and bucket aggregation channels, and execute
 :func:`~domain.calculations.registry.calculate_registry_snapshot` against
 the asserted :class:`~domain.calculations.registry.ModeloRevision`.
 
-Persistence is centralized through :class:`~CalculationRevision`,
-:class:`~adapters.persistence.profile.modelos_calculation.CalculationRevisionCatalogueRepository`,
-and :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`, so the work-unit pointer and
+Persistence is centralized through :class:`~CalculationRevision` and the
+application-owned :class:`~.calculation_action_ports.CalculationActionPorts`,
+so the work-unit pointer and
 ``modelo.calculation.created`` event advance with the stored draft revision.
 
 :func:`~application.modelo.calculate_modelo_revision` is the lower-level
@@ -49,23 +49,13 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.calculation_revision_override_migration import (
-    migrate_stored_relation_overrides_to_binding_ids,
-)
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
@@ -97,19 +87,13 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
     FilingInstanceEvidence,
     M303RegimenSimplificadoAnnualSummaryHandoff,
 )
+from ...domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
-from ...domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-)
+from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import Modelo210AgrupacionRentaRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculations.observations_repository import CalculationObservationRepository
-from ..filing.persistence_wiring import modelo_record_repository_for_application
-from ..inventory.service import inventory_ledger_repository_for_bucket
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (
@@ -157,6 +141,10 @@ from ._m349_ledger_guard import (
 from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
+from .calculation_action_ports import (
+    CalculationActionPorts,
+    CalculationTransactionRepositoryProtocol,
+)
 from .action_errors import (
     CalculationRevisionNotFoundError,
     ModeloAggregationBindingError,
@@ -184,8 +172,6 @@ if TYPE_CHECKING:
         CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
     )
-    from ..calculations.observations_repository import IvaWalletDecisionRepository
-    from ..live.borrador_100 import Borrador100SnapshotRepository
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +222,7 @@ class _BucketAggregationChannels:
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
+    ports: CalculationActionPorts,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
@@ -245,8 +232,6 @@ def calculate_modelo_revision(
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
@@ -255,10 +240,6 @@ def calculate_modelo_revision(
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
@@ -281,10 +262,8 @@ def calculate_modelo_revision(
         row_binding_values: Optional detail-row binding values keyed by binding and row.
         backend_casilla_inputs: Optional casilla values resolved by backend authorities.
         iva_compensation_decision: Optional IVA compensation election for this calculation.
-        iva_compensation_decision_repository: Repository used to persist the IVA election.
-        ledger_preflight_transaction_repository: Optional
-            :class:`TransactionCatalogueRepository` used for the ledger
-            preflight check before calculation.
+        ports: Required application-owned persistence capabilities for this
+            calculation and its source mesh.
         borrador_snapshot_id: Optional Modelo 100 draft snapshot selected as input.
         relation_values: Optional numeric overrides for declared registry relations.
         unresolved_relation_ids: Relations that source resolution could not satisfy.
@@ -293,10 +272,6 @@ def calculate_modelo_revision(
         m210_official_tipo_renta_code: Optional official Modelo 210 income-type code.
         m210_gross_income_source_mode: Selected Modelo 210 gross-income source authority.
         filing_period_date: Date used to resolve the applicable filing period.
-        work_unit_repository: Repository from which the calculation work unit is loaded.
-        calculation_repository: Repository used to persist the resulting revision.
-        bucket_event_repository: Repository used to persist bucket lifecycle events.
-        borrador_snapshot_repository: Repository used to load Modelo 100 draft snapshots.
         detail_rows: Repeating detail rows supplied to the registry engine.
         filing_instance_evidence: Immutable operator-selected Modelo 303 filing facts.
         clock: Optional deterministic timestamp for the persisted revision.
@@ -304,6 +279,7 @@ def calculate_modelo_revision(
     """
     return _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
+        ports=ports,
         actor=actor,
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
@@ -314,8 +290,6 @@ def calculate_modelo_revision(
         row_source_identities=None,
         backend_casilla_inputs=backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        ledger_preflight_transaction_repository=ledger_preflight_transaction_repository,
         borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
@@ -325,10 +299,6 @@ def calculate_modelo_revision(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         filing_period_date=filing_period_date,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-        borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
         filing_instance_evidence=filing_instance_evidence,
         source_issues=(),
@@ -340,7 +310,7 @@ def _draft_ledger_anchor(
     *,
     work_unit: WorkUnit,
     source_transaction_ids: tuple[str, ...],
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    transaction_repository: CalculationTransactionRepositoryProtocol,
     captured_at: datetime,
 ) -> LedgerFilingSnapshot | None:
     """Return the ledger snapshot this calculation consumed, or ``None``.
@@ -366,29 +336,10 @@ def _draft_ledger_anchor(
         return None
     from ..aggregation.ledger_filing_snapshot import compute_ledger_filing_snapshot
 
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
     return compute_ledger_filing_snapshot(
         source_transaction_ids=source_transaction_ids,
-        catalogue=tx_repo.load_by_ids(source_transaction_ids),
+        catalogue=transaction_repository.load_by_ids(source_transaction_ids),
         captured_at=captured_at,
-    )
-
-
-def _calculation_action_repositories(
-    *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
-) -> tuple[
-    WorkUnitCatalogueRepositoryProtocol,
-    CalculationRevisionCatalogueRepositoryProtocol,
-    BucketEventHistoryRepositoryProtocol,
-]:
-    """Resolve the repositories used by one trusted calculation action."""
-    return (
-        work_unit_repository or WorkUnitCatalogueRepository(),
-        calculation_repository or CalculationRevisionCatalogueRepository(),
-        bucket_event_repository or BucketEventHistoryRepository(),
     )
 
 
@@ -424,6 +375,7 @@ def _trusted_calculation_clock(clock: datetime | None) -> datetime:
 def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_unit_id: str,
     *,
+    ports: CalculationActionPorts,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal],
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
@@ -437,8 +389,6 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
-    ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
@@ -447,10 +397,6 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
     filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -470,8 +416,8 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     :func:`persist_calculation_revision`; see that function for why it is a
     factory keyed by the resolved revision id rather than a plain tuple.
 
-    ``ledger_preflight_transaction_repository`` is a :class:`TransactionCatalogueRepository`
-    used for the ledger preflight check before calculation.
+    ``ports`` is the required application-owned capability bundle.  It is
+    passed unchanged to every repository-consuming step of the action.
 
     Pipeline:
 
@@ -511,25 +457,22 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             Owns duplicate detection, work-unit pointer advancement, and event
             emission.
     """
-    wu_repo, cr_repo, bv_repo = _calculation_action_repositories(
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        bucket_event_repository=bucket_event_repository,
-    )
+    ports.relation_override_migration.migrate(ports.calculation_repository)
     prepared = _prepare_calculation(
         work_unit_id=work_unit_id,
-        work_unit_repository=wu_repo,
+        work_unit_repository=ports.work_unit_repository,
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
-        ledger_preflight_transaction_repository=ledger_preflight_transaction_repository,
+        ledger_preflight_transaction_repository=ports.transaction_repository,
         iva_compensation_decision=iva_compensation_decision,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
+        observation_repository=ports.observation_repository,
+        iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         backend_binding_values=backend_binding_values,
         filing_period_date=filing_period_date,
         borrador_snapshot_id=borrador_snapshot_id,
-        borrador_snapshot_repository=borrador_snapshot_repository,
+        borrador_snapshot_repository=ports.borrador_snapshot_repository,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
     )
@@ -620,7 +563,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         ledger_filing_snapshot=_draft_ledger_anchor(
             work_unit=work_unit,
             source_transaction_ids=source_transaction_ids,
-            transaction_repository=ledger_preflight_transaction_repository,
+            transaction_repository=ports.transaction_repository,
             captured_at=now,
         ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},
@@ -647,9 +590,9 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         formula_count=len(engine_result.entries),
         actor=actor,
         now=now,
-        calculation_repository=cr_repo,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        calculation_repository=ports.calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
+        bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
 
@@ -688,12 +631,7 @@ def resolve_bucket_source_mesh(
     snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
     *,
-    transaction_repository: TransactionCatalogueRepository | None,
-    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    ports: CalculationActionPorts,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
@@ -715,18 +653,14 @@ def resolve_bucket_source_mesh(
     source with no enrolled resolver. Returns the merged
     :class:`~application.aggregation.CalculationSourceResolution`.
 
-    The transaction repository is wrapped in :class:`MemoizedTransactionCatalogueRepository`
-    so every enrolled ledger resolver shares one ``load()`` of the bucket's
-    transaction catalogue instead of each resolver independently re-scanning
-    and re-decrypting it (see that class's docstring).
+    The transaction repository from ``ports`` is wrapped in
+    :class:`MemoizedTransactionCatalogueRepository` so every enrolled ledger
+    resolver shares one ``load()`` of the bucket's transaction catalogue
+    instead of each resolver independently re-scanning and re-decrypting it.
     """
-    resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
-        bucket_id=work_unit.bucket_id,
-    )
-    memoized_transaction_repository = transaction_read_repository or MemoizedTransactionCatalogueRepository(
-        resolved_transaction_repository,
-    )
-    prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
+    resolved_transaction_repository = ports.transaction_repository
+    memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    prorrata_register_repository = ports.prorrata_register_repository
     iva_investment_asset_register = None
     iva_investment_asset_profile_id = None
     if any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings):
@@ -763,20 +697,8 @@ def resolve_bucket_source_mesh(
     from ..calculations.relation_prefill import RelationPrefillSourceResolver
     from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 
-    resolved_work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
-    if calculation_repository is None:
-        # Mirrors the bienes-inversion authority migration above: a repository
-        # this function constructs is migrated to the current override keying
-        # before any resolver reads it, while an injected repository is the
-        # caller's to migrate. The migration is a no-op once applied, so the
-        # extra revisioned read costs one load on an already-current store.
-        concrete_calculation_repository = CalculationRevisionCatalogueRepository()
-        migrate_stored_relation_overrides_to_binding_ids(concrete_calculation_repository)
-        resolved_calculation_repository: CalculationRevisionCatalogueRepositoryProtocol = (
-            concrete_calculation_repository
-        )
-    else:
-        resolved_calculation_repository = calculation_repository
+    resolved_work_unit_repository = ports.work_unit_repository
+    resolved_calculation_repository = ports.calculation_repository
     context = CalculationSourceContext(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
@@ -796,26 +718,24 @@ def resolve_bucket_source_mesh(
         _require_calculation_route_resolver(stage, resolver)
         return resolver.resolve(context)
 
-    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = ()
-    if filing_repository is not None:
-        annual_summary_resolutions = (
-            resolve_declared(
-                M303RegimenSimplificadoAnnualSummarySourceResolver(
-                    registry_snapshot=snapshot,
-                    work_unit_repository=resolved_work_unit_repository,
-                    calculation_repository=resolved_calculation_repository,
-                    filing_repository=filing_repository,
-                    regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
-                ),
-                stage="conditional",
+    annual_summary_resolutions: tuple[CalculationSourceResolution, ...] = (
+        resolve_declared(
+            M303RegimenSimplificadoAnnualSummarySourceResolver(
+                registry_snapshot=snapshot,
+                work_unit_repository=resolved_work_unit_repository,
+                calculation_repository=resolved_calculation_repository,
+                filing_repository=ports.filing_repository,
+                regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
             ),
-        )
+            stage="conditional",
+        ),
+    )
     inventory_resolutions: tuple[CalculationSourceResolution, ...] = ()
     if any(binding.source is BindingSourceKind.INVENTORY for binding in snapshot.revision.bindings):
         inventory_resolutions = (
             resolve_declared(
                 InventorySourceResolver(
-                    inventory_repository=inventory_ledger_repository_for_bucket(work_unit.bucket_id),
+                    inventory_repository=ports.inventory_repository,
                 ),
             ),
         )
@@ -832,7 +752,7 @@ def resolve_bucket_source_mesh(
             resolve_declared(
                 LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
-                    invoice_repository=invoice_repository,
+                    invoice_repository=ports.invoice_repository,
                     prorrata_register_repository=prorrata_register_repository,
                 )
             ),
@@ -872,7 +792,7 @@ def resolve_bucket_source_mesh(
             # OSS/IOSS-tagged issued invoices into validated ledger candidates;
             # pre-classified callers can still pass candidates directly through
             # the resolver constructor.
-            resolve_declared(OssIossLedgerSourceResolver(invoice_repository=invoice_repository)),
+            resolve_declared(OssIossLedgerSourceResolver(invoice_repository=ports.invoice_repository)),
             # Retenciones family source (retenciones_aggregation): M115 reads the
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
@@ -888,7 +808,7 @@ def resolve_bucket_source_mesh(
             # binding values for intra-community transactions in scope.
             resolve_declared(
                 InvoiceCatalogueSourceResolver(
-                    invoice_repository=invoice_repository,
+                    invoice_repository=ports.invoice_repository,
                 )
             ),
             # Modelo 720 foreign assets (foreign_asset). This resolver is
@@ -914,6 +834,7 @@ def resolve_bucket_source_mesh(
             resolve_declared(
                 PreviousFilingSourceResolver(
                     registry_snapshot=snapshot,
+                    repository=ports.observation_repository,
                     excluded_binding_ids=iva_wallet_owned_binding_ids_for_revision(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
@@ -930,11 +851,21 @@ def resolve_bucket_source_mesh(
             # entire relation corpus (M100 pagos-fraccionados + retenciones
             # credits, M180/M190/M193 reconciliations, M200/M202 carries) live on
             # the operator calculate path.
-            resolve_declared(RelationPrefillSourceResolver(registry_snapshot=snapshot)),
+            resolve_declared(
+                RelationPrefillSourceResolver(
+                    registry_snapshot=snapshot,
+                    repository=ports.observation_repository,
+                )
+            ),
             # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
             # partition over filed Modelo 303 compensation states, not two
             # independent relation copy/sum folds.
-            resolve_declared(IvaCompensationAnnualPartitionSourceResolver(registry_snapshot=snapshot)),
+            resolve_declared(
+                IvaCompensationAnnualPartitionSourceResolver(
+                    registry_snapshot=snapshot,
+                    repository=ports.observation_repository,
+                )
+            ),
             *annual_summary_resolutions,
         ),
     )
@@ -952,7 +883,7 @@ def resolve_bucket_source_mesh(
         relation_values=relation_values,
         filing_period_date=filing_period_date,
         prorrata_register_repository=prorrata_register_repository,
-        observation_repository=CalculationObservationRepository(bucket_id=work_unit.bucket_id),
+        observation_repository=ports.observation_repository,
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     source_resolution = _add_terminal_origin_diagnostics(snapshot.revision, source_resolution)
@@ -1271,12 +1202,7 @@ def _require_decimal_input(value: object) -> Decimal:
 def _resolve_bucket_aggregation_source_resolution(
     *,
     preparation: _BucketAggregationPreparation,
-    transaction_repository: TransactionCatalogueRepository | None,
-    transaction_read_repository: TransactionCatalogueRepositoryProtocol | None,
-    invoice_repository: InvoiceCatalogueRepository | None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
+    ports: CalculationActionPorts,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
     text_casilla_inputs: Mapping[CasillaId, str] | None,
@@ -1288,12 +1214,7 @@ def _resolve_bucket_aggregation_source_resolution(
     source_resolution = resolve_bucket_source_mesh(
         preparation.snapshot,
         preparation.work_unit,
-        transaction_repository=transaction_repository,
-        transaction_read_repository=transaction_read_repository,
-        invoice_repository=invoice_repository,
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=filing_repository,
+        ports=ports,
         foreign_asset_observations=foreign_asset_observations,
         foreign_asset_row_observations=foreign_asset_row_observations,
         casilla_inputs=preparation.source_casilla_inputs,
@@ -1318,7 +1239,7 @@ def _bucket_aggregation_channels(
     *,
     preparation: _BucketAggregationPreparation,
     source_resolution: CalculationSourceResolution,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: CalculationTransactionRepositoryProtocol,
     detail_rows: tuple[ModeloDetailRow, ...],
 ) -> _BucketAggregationChannels:
     """Compose mesh, detail-row, and caller channels in their established order."""
@@ -1389,6 +1310,7 @@ def _source_bound_casilla_inputs(
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
+    ports: CalculationActionPorts,
     actor: str = "system",
     casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
     text_casilla_inputs: Mapping[CasillaId, str] | None = None,
@@ -1398,19 +1320,11 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     binding_values: Mapping[BindingId, Decimal] | None = None,
     enum_binding_values: Mapping[BindingId, str] | None = None,
     iva_compensation_decision: object | None = None,
-    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
     borrador_snapshot_id: str | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
     foreign_asset_row_observations: tuple[Modelo720RowObservation, ...] = (),
-    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
@@ -1428,19 +1342,15 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     unconsumed-declarable-IVA advisories the operator-facing CLI surfaces so an
     unrouted observation is never silently under-declared).
 
-    The bucket evidence is read from the injected
-    :class:`TransactionCatalogueRepository` and
-    :class:`InvoiceCatalogueRepository`; the source mesh projects their
+    The bucket evidence is read from the injected calculation ports; the source mesh projects their
     contributing rows plus explicitly supplied foreign-asset observations,
     previous-filing, relation-prefill, withholding, retenciones, and detail-row
     sources into the backend channels that feed the revision.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or modelo_record_repository_for_application()
+    ports.relation_override_migration.migrate(ports.calculation_repository)
     preparation = _prepare_bucket_aggregation_calculation(
         work_unit_id=work_unit_id,
-        work_unit_repository=wu_repo,
+        work_unit_repository=ports.work_unit_repository,
         casilla_inputs=casilla_inputs,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
@@ -1449,18 +1359,10 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
     )
-    resolved_transaction_repository = transaction_repository or TransactionCatalogueRepository(
-        bucket_id=preparation.work_unit.bucket_id,
-    )
-    transaction_reads = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    transaction_reads = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
-        transaction_repository=resolved_transaction_repository,
-        transaction_read_repository=transaction_reads,
-        invoice_repository=invoice_repository,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
+        ports=ports,
         foreign_asset_observations=foreign_asset_observations,
         foreign_asset_row_observations=foreign_asset_row_observations,
         text_casilla_inputs=text_casilla_inputs,
@@ -1471,11 +1373,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     channels = _bucket_aggregation_channels(
         preparation=preparation,
         source_resolution=source_resolution,
-        transaction_repository=resolved_transaction_repository,
+        transaction_repository=ports.transaction_repository,
         detail_rows=detail_rows,
     )
     revision = _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
+        ports=ports,
         actor=actor,
         casilla_inputs=preparation.casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
@@ -1490,8 +1393,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         row_casilla_provenance=channels.source_resolution.row_casilla_provenance,
         backend_casilla_inputs=channels.backend_casilla_inputs,
         iva_compensation_decision=iva_compensation_decision,
-        iva_compensation_decision_repository=iva_compensation_decision_repository,
-        ledger_preflight_transaction_repository=transaction_reads,
         enum_binding_values={
             **dict(channels.source_resolution.enum_binding_values),
             **dict(enum_binding_values or {}),
@@ -1508,10 +1409,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             channels.source_resolution.m303_regimen_simplificado_annual_summary_handoff
         ),
         filing_period_date=filing_period_date,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bucket_event_repository,
-        borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=channels.detail_rows,
         clock=clock,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
@@ -1523,6 +1420,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         period_token=preparation.work_unit.period.registry_token,
         filing_year=preparation.work_unit.filing_year,
         bucket_id=preparation.work_unit.bucket_id,
+        observation_repository=ports.observation_repository,
     )
     source_diagnostics = (
         channels.reconciliation.source_diagnostics + channels.override_diagnostics + advisory_diagnostics
@@ -1653,7 +1551,7 @@ def _validate_m210_official_tipo_renta_selection(
                 translated_message="application.modelo.errors.m210_ledger_source_selection_required",
             )
         return
-    expected_tipo_renta = M210_TIPO_RENTA_CODE_PROJECTION.get(m210_official_tipo_renta_code)
+    expected_tipo_renta = m210_tipo_renta_code_projection().get(m210_official_tipo_renta_code)
     if expected_tipo_renta is None or text_casilla_inputs.get("tipo_renta") != expected_tipo_renta.value:
         raise ModeloAggregationBindingError(
             translated_message="application.modelo.errors.m210_official_tipo_renta_selection_mismatch",
@@ -1932,8 +1830,8 @@ def _reject_caller_overrides_of_source_bindings(
 
 def list_calculation_revisions(
     *,
+    ports: CalculationActionPorts,
     work_unit_id: str | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> tuple[CalculationRevision, ...]:
     """List calculation revisions, optionally filtered to one work unit.
 
@@ -1943,8 +1841,8 @@ def list_calculation_revisions(
 
     Each element is a :class:`CalculationRevision`.
     """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
+    ports.relation_override_migration.migrate(ports.calculation_repository)
+    catalogue = ports.calculation_repository.load()
     revisions = tuple(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
@@ -1956,21 +1854,19 @@ def list_calculation_revisions(
 def get_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Return one calculation revision by id, or raise.
 
     Returns the :class:`CalculationRevision` matching
     ``calculation_revision_id``.
     """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    ports.relation_override_migration.migrate(ports.calculation_repository)
     revision, _ = _calculation_revision_in_repository_bucket(
         calculation_revision_id,
-        catalogue=cr_repo.load(),
-        calculation_repository=cr_repo,
-        work_unit_repository=wu_repo,
+        catalogue=ports.calculation_repository.load(),
+        calculation_repository=ports.calculation_repository,
+        work_unit_repository=ports.work_unit_repository,
     )
     return revision
 

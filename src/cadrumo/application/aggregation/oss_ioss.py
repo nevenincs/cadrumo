@@ -27,9 +27,9 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, ClassVar
+from typing import Annotated, ClassVar, Self
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.errors import (
@@ -55,9 +55,14 @@ from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ...domain.iva.classification import InvoiceKind, TransactionKind
+from ...domain.iva.classification import (
+    InvoiceKind,
+    TransactionKind,
+    require_transaction_kind,
+    resolve_transaction_kind_catalogue,
+)
 from ...domain.iva.lookup import lookup_rate
-from ...domain.iva.oss import OssIossRegime
+from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, IvaRateKind
 from .errors import AggregationValidationError
 from .invoice_devengo import (
@@ -119,6 +124,21 @@ class OssIossLedgerCandidate(BaseModel):
     transaction_kind: TransactionKind
     base_amount: Decimal = Field(ge=Decimal("0"))
     iva_amount: Decimal = Field(ge=Decimal("0"))
+
+    @model_validator(mode="after")
+    def _validate_registry_regime(self) -> Self:
+        """Refuse a candidate whose regime is absent from facts authority."""
+        regime = require_oss_ioss_regime(self.regime, effective_date=self.transaction_date)
+        transaction_kind = require_transaction_kind(
+            self.transaction_kind,
+            effective_date=self.transaction_date,
+        )
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=self.transaction_date)
+        if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
+            raise AggregationValidationError(
+                "transaction_kind is not admitted by the supplied OSS/IOSS regime",
+            )
+        return self
 
 
 #: Tolerance applied when comparing a persisted IVA amount against the
@@ -308,10 +328,16 @@ def _group_exterior_service_observations(
 ) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
     """Group Exterior service observations by destination and supported rate."""
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
+    effective_date = observations[0].transaction_date if observations else date.today()
+    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date)
+    external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
+    external_regime = resolve_oss_ioss_regime_catalogue(
+        effective_date=effective_date,
+    ).regime_for_transaction_kind(next(iter(external_kinds)).value)
     for observation in observations:
-        if observation.regime is not OssIossRegime.EXTERNAL_SCHEME:
+        if observation.regime != external_regime:
             continue
-        if observation.transaction_kind is not TransactionKind.EXTERNAL_SCHEME_SERVICES:
+        if observation.transaction_kind not in external_kinds:
             continue
         _validate_exterior_rate_kind(observation)
         grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
@@ -320,7 +346,8 @@ def _group_exterior_service_observations(
 
 def _validate_exterior_rate_kind(observation: OssIossLedgerObservation) -> None:
     """Refuse Exterior rate tiers that have no official positional code."""
-    if observation.rate_kind in {IvaRateKind.GENERAL, IvaRateKind.REDUCED}:
+    declarations = _exterior_projection_declarations(observation.transaction_date)
+    if f"rate_code.{observation.rate_kind.value}" in declarations:
         return
     raise AggregationValidationError(
         t("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),

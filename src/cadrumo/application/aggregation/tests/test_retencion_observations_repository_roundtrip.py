@@ -55,7 +55,9 @@ def _observation(*, nif: str, scheme: RetencionScheme, retencion: Decimal) -> Re
 def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """A populated RetencionObservation roundtrips byte-for-byte through the encrypted repo."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        original = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("142.48"))
+        original = _observation(
+            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("142.48")
+        )
         captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = RetencionObservationRepository()
         repo.save_observation(
@@ -78,10 +80,10 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
         repo = RetencionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         records = (
-            _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
+            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
             # Same NIF as the first, different scheme — a distinct row, not an overwrite.
-            _observation(nif="11111111H", scheme=RetencionScheme.WORK_INCOME, retencion=Decimal("300")),
+            _observation(nif="11111111H", scheme=RetencionScheme("rendimientos_trabajo"), retencion=Decimal("300")),
         )
         for record in records:
             repo.save_observation(
@@ -96,9 +98,9 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
         # distinct because the scheme is part of the key.
         assert len(loaded) == 3
         assert {(o.perceptor_nif, o.scheme) for o in loaded} == {
-            ("11111111H", RetencionScheme.ECONOMIC_ACTIVITY),
-            ("22222222J", RetencionScheme.ECONOMIC_ACTIVITY),
-            ("11111111H", RetencionScheme.WORK_INCOME),
+            ("11111111H", RetencionScheme("actividades_economicas")),
+            ("22222222J", RetencionScheme("actividades_economicas")),
+            ("11111111H", RetencionScheme("rendimientos_trabajo")),
         }
         # Distinct-NIF count for the distinct-perceptor primitive is 2, not 3.
         assert len({o.perceptor_nif for o in loaded}) == 2
@@ -111,19 +113,19 @@ def test_object_key_hashes_the_nif_never_cleartext() -> None:
         2024,
         Period.from_year_and_code(2024, "0A"),
         "11111111H",
-        RetencionScheme.ECONOMIC_ACTIVITY,
+        RetencionScheme("actividades_economicas"),
     )
     assert "11111111H" not in key
     digest = hashlib.sha256("11111111H".encode(UTF_8_ENCODING)).hexdigest()
     assert digest in key
-    assert key == f"180:2024:0A:{digest}:{RetencionScheme.ECONOMIC_ACTIVITY.value}"
+    assert key == f"180:2024:0A:{digest}:{RetencionScheme('actividades_economicas').value}"
 
 
 def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
     """load_observations returns only the requested (modelo, year, period)."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = RetencionObservationRepository()
-        obs = _observation(nif="33333333P", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("50"))
+        obs = _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("50"))
         repo.save_observation(
             modelo="180",
             filing_year=2023,
@@ -150,7 +152,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
         "period": Period.from_year_and_code(2024, "0A"),
         "observation": _observation(
             nif="44444444A",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("10"),
         ),
         "captured_at": datetime.now(UTC),
@@ -175,9 +177,9 @@ def test_replace_observations_drops_removed_perceptor_no_stale_row(tmp_path: Pat
         repo = RetencionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         full = (
-            _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
-            _observation(nif="33333333P", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("300")),
+            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
+            _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
         repo.replace_observations(
             modelo="180",
@@ -205,8 +207,8 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         period = Period.from_year_and_code(2024, "0A")
         observations = (
-            _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
+            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
         )
         persist_retencion_observations(modelo="180", filing_year=2024, period=period, observations=observations)
         loaded = RetencionObservationRepository().load_observations("180", period)
@@ -227,9 +229,9 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
         repo = RetencionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
         declared = (
-            _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
-            _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
-            _observation(nif="33333333P", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("300")),
+            _observation(nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")),
+            _observation(nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")),
+            _observation(nif="33333333P", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("300")),
         )
         repo.replace_observations(
             modelo="180",
@@ -245,7 +247,7 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             period=period,
             observation=_observation(
                 nif="44444444A",
-                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                scheme=RetencionScheme("actividades_economicas"),
                 retencion=Decimal("400"),
             ),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -274,12 +276,18 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
             filing_year=2024,
             period=period,
             observations=(
-                _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
-                _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
+                _observation(
+                    nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+                ),
+                _observation(
+                    nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
+                ),
             ),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
-        carried = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("175"))
+        carried = _observation(
+            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("175")
+        )
         repo.replace_observations(
             modelo="180",
             filing_year=2024,
@@ -299,7 +307,7 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         neighbour = Period.from_year_and_code(2023, "0A")
         neighbour_row = _observation(
             nif="99999999R",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("900"),
         )
         repo.replace_observations(
@@ -314,7 +322,9 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
             filing_year=2024,
             period=target,
             observations=(
-                _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
+                _observation(
+                    nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+                ),
             ),
             source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
@@ -338,12 +348,12 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
         period = Period.from_year_and_code(2024, "0A")
         padded = _observation(
             nif=" 12345678z ",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("10"),
         )
         canonical = _observation(
             nif="12345678Z",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("20"),
         )
 
@@ -369,8 +379,12 @@ def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_
 def test_padded_nif_keys_to_the_canonical_object_key() -> None:
     """A padded declaration and its canonical form address the same stored row."""
     period = Period.from_year_and_code(2024, "0A")
-    padded_key = retencion_observation_key("180", 2024, period, " 12345678z ", RetencionScheme.ECONOMIC_ACTIVITY)
-    canonical_key = retencion_observation_key("180", 2024, period, "12345678Z", RetencionScheme.ECONOMIC_ACTIVITY)
+    padded_key = retencion_observation_key(
+        "180", 2024, period, " 12345678z ", RetencionScheme("actividades_economicas")
+    )
+    canonical_key = retencion_observation_key(
+        "180", 2024, period, "12345678Z", RetencionScheme("actividades_economicas")
+    )
     assert padded_key == canonical_key
 
 
@@ -387,8 +401,12 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = RetencionObservationRepository()
         period = Period.from_year_and_code(2024, "0A")
-        row_a = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100"))
-        row_b = _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200"))
+        row_a = _observation(
+            nif="11111111H", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("100")
+        )
+        row_b = _observation(
+            nif="22222222J", scheme=RetencionScheme("actividades_economicas"), retencion=Decimal("200")
+        )
         repo.replace_observations(
             modelo="180",
             filing_year=2024,
@@ -456,7 +474,7 @@ def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -
             period=Period.from_year_and_code(2024, "0A"),
             observation=_observation(
                 nif="11111111H",
-                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                scheme=RetencionScheme("actividades_economicas"),
                 retencion=Decimal("100"),
             ),
             captured_at=captured_at,
@@ -474,7 +492,7 @@ def test_envelope_accepts_a_utc_capture_instant() -> None:
         period=Period.from_year_and_code(2024, "0A"),
         observation=_observation(
             nif="11111111H",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("100"),
         ),
         captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
@@ -492,7 +510,7 @@ def _capture_payload(period: Period) -> _RetencionObservationEnvelopePayload:
         period=period,
         observation=_observation(
             nif="11111111H",
-            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            scheme=RetencionScheme("actividades_economicas"),
             retencion=Decimal("100"),
         ),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
@@ -569,7 +587,7 @@ def test_an_evidence_authority_value_cannot_enter_this_store() -> None:
                 "period": Period.from_year_and_code(2024, "0A"),
                 "observation": _observation(
                     nif="11111111H",
-                    scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                    scheme=RetencionScheme("actividades_economicas"),
                     retencion=Decimal("100"),
                 ),
                 "captured_at": datetime.now(UTC),

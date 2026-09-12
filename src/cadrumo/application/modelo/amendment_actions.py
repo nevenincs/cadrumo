@@ -7,7 +7,7 @@
 baseline filing, and stores the new amendment record as current.
 
 The side effects update the work-unit pointers and emit ``modelo.amended``
-through :class:`BucketEventHistoryRepository`, matching the
+through the application-owned bucket-event capability, matching the
 event-history path used by imported and locally filed returns.
 
 Only filing records carrying
@@ -40,23 +40,16 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -83,14 +76,10 @@ from ...domain.modelos.filing_record import (
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
-from ...domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-)
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.ledger_filing_snapshot import (
     assert_evidence_covers_snapshot,
     compute_ledger_filing_snapshot,
@@ -103,9 +92,10 @@ from ._calculation_helpers import amendment_observations as _amendment_observati
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._profile_export_binding import resolve_export_identity
+from .profile_export_binding import resolve_export_identity
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
+from .amendment_action_ports import AmendmentActionPorts
 from .action_errors import (
     AmendmentDetailRowsRequiredError,
     AmendmentEvidenceMissingError,
@@ -125,12 +115,10 @@ def _load_amendment_baseline[CasillaKey](
     *,
     from_filing_record_id: str,
     overrides: Mapping[CasillaKey, Decimal],
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    ports: AmendmentActionPorts,
 ):
     """Load and validate the current externally evidenced baseline filing."""
-    filing_catalogue = filing_repository.load()
+    filing_catalogue = ports.filing_repository.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
         raise ModeloRecordNotFoundError(
@@ -154,7 +142,7 @@ def _load_amendment_baseline[CasillaKey](
             },
         )
 
-    work_units = work_unit_repository.load()
+    work_units = ports.work_unit_repository.load()
     work_unit = work_units.get(baseline.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
@@ -167,11 +155,7 @@ def _load_amendment_baseline[CasillaKey](
 
     export_identity = resolve_export_identity(bucket_id=str(work_unit.bucket_id))
     taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None
-    resolved_calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository(
-        bucket_id=str(work_unit.bucket_id),
-        m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
-    )
-    revisions = resolved_calculation_repository.load()
+    revisions = ports.calculation_repository.load()
     baseline_revision = revisions.get(baseline.calculation_revision_id)
     if baseline_revision is None:
         raise CalculationRevisionNotFoundError(
@@ -202,7 +186,6 @@ def _load_amendment_baseline[CasillaKey](
         revisions,
         baseline_revision,
         canonical_overrides,
-        resolved_calculation_repository,
         taxpayer_tax_id,
     )
 
@@ -298,12 +281,7 @@ def amend_modelo_revision[CasillaKey](
     detail_rows: Sequence[ModeloDetailRow] | None = None,
     reason: str,
     actor: str,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
+    ports: AmendmentActionPorts,
     clock: datetime | None = None,
 ) -> ModeloRecord:
     """Build and file an amendment over an externally filed return.
@@ -341,11 +319,6 @@ def amend_modelo_revision[CasillaKey](
             Builds the :class:`CasillaObservation`
             rows persisted on the amendment revision.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    justificante_repo = justificante_repository
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-
     (
         filing_catalogue,
         baseline,
@@ -354,14 +327,11 @@ def amend_modelo_revision[CasillaKey](
         revisions,
         baseline_revision,
         canonical_overrides,
-        cr_repo,
         taxpayer_tax_id,
     ) = _load_amendment_baseline(
         from_filing_record_id=from_filing_record_id,
         overrides=overrides,
-        work_unit_repository=wu_repo,
-        calculation_repository=calculation_repository,
-        filing_repository=fr_repo,
+        ports=ports,
     )
 
     now = clock or _utc_now()
@@ -456,7 +426,7 @@ def amend_modelo_revision[CasillaKey](
         casilla_values=corrected_values,
         observations=amendment_observations,
     )
-    justificantes = tuple(justificante_repo.iter_justificantes()) if justificante_repo is not None else ()
+    justificantes = tuple(ports.justificante_repository.iter_justificantes())
     aggregate_context = CalculationRevisionAggregateContext(
         work_units=work_units,
         filing_records=filing_catalogue,
@@ -504,7 +474,7 @@ def amend_modelo_revision[CasillaKey](
     ledger_snapshot, ledger_evidence = _amendment_ledger_anchor(
         amendment_draft=amendment_draft,
         work_unit=work_unit,
-        transaction_repository=transaction_repository,
+        transaction_repository=ports.transaction_repository,
         now=now,
     )
     verified_amendment = _verified_amendment_revision(
@@ -528,10 +498,7 @@ def amend_modelo_revision[CasillaKey](
     revisions = upsert_calculation_revision(revisions, filed_amendment, aggregate_context=aggregate_context)
 
     _persist_amendment_side_effects(
-        calculation_repository=cr_repo,
-        filing_repository=fr_repo,
-        work_unit_repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=ports,
         revisions=revisions,
         filing_catalogue=updated_filing_catalogue,
         work_units=work_units,
@@ -680,7 +647,7 @@ def _amendment_ledger_anchor(
     *,
     amendment_draft: CalculationRevision,
     work_unit: WorkUnit,
-    transaction_repository: TransactionCatalogueRepository | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
     now: datetime,
 ) -> tuple[LedgerFilingSnapshot, LedgerFilingEvidence] | tuple[None, None]:
     """Capture the ledger facts an amendment is verified against, at amend time.
@@ -703,8 +670,7 @@ def _amendment_ledger_anchor(
     """
     if not amendment_draft.source_transaction_ids:
         return (None, None)
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    catalogue = tx_repo.load()
+    catalogue = transaction_repository.load()
     snapshot = compute_ledger_filing_snapshot(
         source_transaction_ids=amendment_draft.source_transaction_ids,
         catalogue=catalogue,
@@ -786,10 +752,7 @@ def _build_amendment_filing_record(
 
 def _persist_amendment_side_effects(
     *,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    ports: AmendmentActionPorts,
     revisions: CalculationRevisionCatalogue,
     filing_catalogue: ModeloRecordCatalogue,
     work_units: WorkUnitCatalogue,
@@ -839,11 +802,11 @@ def _persist_amendment_side_effects(
             "override_count": str(override_count),
         },
     )
-    filing_repository.save_with_secure_object_writes(
+    ports.filing_repository.save_with_secure_object_writes(
         filing_catalogue,
         (
-            calculation_repository.to_secure_object_write(revisions),
-            work_unit_repository.to_secure_object_write(advanced_work_units),
-            _bucket_event_write(bucket_event_repository, (amended_event,)),
+            ports.calculation_repository.to_secure_object_write(revisions),
+            ports.work_unit_repository.to_secure_object_write(advanced_work_units),
+            _bucket_event_write(ports.bucket_event_repository, (amended_event,)),
         ),
     )

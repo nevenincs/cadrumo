@@ -61,7 +61,7 @@ def _advise() -> tuple[str, ...]:
     """
     return tuple(
         d.message if d.remedy is None else f"{d.message} {d.remedy}"
-        for d in collect_descendientes_count_desync_diagnostics(modelo=Modelo.M100.value, bucket_id=_BUCKET_ID)
+        for d in collect_descendientes_count_desync_diagnostics(modelo=Modelo("100").value, bucket_id=_BUCKET_ID)
     )
 
 
@@ -115,4 +115,4 @@ def test_another_modelo_is_left_alone() -> None:
     _write(*_two_descendants())
     _write(UserProfileFact(path=_COUNT_PATH, value="7"))
 
-    assert collect_descendientes_count_desync_diagnostics(modelo=Modelo.M303.value, bucket_id=_BUCKET_ID) == ()
+    assert collect_descendientes_count_desync_diagnostics(modelo=Modelo("303").value, bucket_id=_BUCKET_ID) == ()

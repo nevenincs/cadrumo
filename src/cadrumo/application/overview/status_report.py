@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from ...core.decimal.coercion import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
 from ...core.modelo import Modelo as _Modelo
+from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
 from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
 from .calendar_models import (
@@ -24,6 +25,8 @@ from .calendar_models import (
 
 if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ..auth.operator_probe_ports import OperatorProbePorts
+    from ..auth.operator_scope_ports import OperatorScopePorts
     from ..state_projection import OperatorStateProjection
     from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
@@ -139,7 +142,7 @@ def build_unsupported_work_create_modelos(
         .strip()
         .lower()
     )
-    if fiscal_residency == "non_resident_irnr":
+    if fiscal_residency_requires_country(fiscal_residency):
         return (_Modelo("210").value,)
     return ()
 
@@ -184,6 +187,8 @@ def overview_status_report_from_projection(
 def build_overview_status_report(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     raw_values: Mapping[str, object] | None = None,
@@ -202,6 +207,8 @@ def build_overview_status_report(
 
     projection = build_operator_state_projection(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
         state=state,
         read_ports=read_ports,
     )

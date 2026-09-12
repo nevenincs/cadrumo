@@ -20,7 +20,7 @@ from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
-from ...core.identity.tax_id import SubjectTaxId
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN

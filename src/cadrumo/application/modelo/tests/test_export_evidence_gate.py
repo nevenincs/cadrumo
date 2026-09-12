@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -30,6 +31,7 @@ from ..export import (
     _raise_if_ledger_export_evidence_missing,
     export_modelo_revision,
 )
+from ..export_ports import ModeloExportPorts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -39,6 +41,24 @@ _BASE_CASILLA: CasillaId = validated_casilla_id("base", surface="_BASE_CASILLA")
 _CUOTA_CASILLA: CasillaId = validated_casilla_id("cuota", surface="_CUOTA_CASILLA")
 
 active_profile = active_profile_isolated_backend_fixture(autouse=False, name="active_profile")
+
+
+def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
+    """Provide application-owned fakes for authorities unused by this gate."""
+    authority = Mock()
+    return ModeloExportPorts(
+        calculation=calculation,
+        work_unit=authority,
+        filing=authority,
+        verification=authority,
+        bucket_event=authority,
+        observation=authority,
+        iva_compensation_decision=authority,
+        justificante=authority,
+        prorrata_register=authority,
+        bienes_inversion=authority,
+        transaction=authority,
+    )
 
 
 def _revision(
@@ -120,7 +140,7 @@ def test_export_service_refuses_ledger_revision_without_evidence_reference(
                 actor="operator",
             ),
             workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
-            calculation_repository=repository,
+            export_ports=_inward_export_ports(calculation=repository),
         )
 
     assert not output_path.exists()

@@ -31,12 +31,44 @@ from __future__ import annotations
 import pytest
 
 from ...i18n.render import tr
-from ..documents import IdentityError, nif_check_letter
-from ..tax_id import validate_spanish_tax_id
+from ..documents import IdentityError, SpanishTaxIdFormat
+from ..documents import nif_check_letter as _nif_check_letter
+from ..tax_id import validate_spanish_tax_id as _validate_spanish_tax_id
+from .tax_id_format_support import SPANISH_TAX_ID_FORMAT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SUPPORTED_LOCALES = ("en", "es", "ca", "hu")
+
+
+def nif_check_letter(number: int) -> str:
+    return _nif_check_letter(number, SPANISH_TAX_ID_FORMAT)
+
+
+def validate_spanish_tax_id(value: str) -> str:
+    return _validate_spanish_tax_id(value, SPANISH_TAX_ID_FORMAT)
+
+
+def test_kernel_obeys_an_entirely_altered_injected_format() -> None:
+    """The pure kernel has no hidden copy of the familiar Spanish values."""
+    altered = SpanishTaxIdFormat(
+        width=7,
+        country_prefix="ZZ",
+        country_prefixed_width=9,
+        country_prefix_strip_width=2,
+        prefixed_nif_leaders="P",
+        nie_leaders="Q",
+        cif_leaders="TU",
+        nif_letters="EKCLHVQSZJNBXDPFYMGAWRT",
+        nie_prefix_substitutions=(("Q", "5"),),
+        cif_digit_only_kinds="T",
+        cif_letter_only_kinds="U",
+        cif_letter_table="ABCDEFGHIJ",
+    )
+    assert _validate_spanish_tax_id("ZZ000000E", altered) == "000000E"
+    with pytest.raises(IdentityError):
+        _validate_spanish_tax_id("000000T", altered)
+
 
 # Placeholder superset spanning every interpolation token any identity
 # translation carries; str.format ignores the unused kwargs, so one dict

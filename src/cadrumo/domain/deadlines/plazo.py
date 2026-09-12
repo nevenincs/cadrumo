@@ -15,11 +15,11 @@ from datetime import date
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...core.result_disposition import ResultDisposition
 from .errors import DeadlineValidationError
+from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 
 if TYPE_CHECKING:
     from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
@@ -140,7 +140,7 @@ def resolve_filing_window(
     from ..calculations.registry.authority import bundled_authority
 
     if tipo_renta_code is not None and (
-        modelo != Modelo("210") or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
+        modelo != Modelo("210") or tipo_renta_code not in m210_tipo_renta_code_projection()
     ):
         raise DeadlineValidationError(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",

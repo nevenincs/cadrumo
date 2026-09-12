@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 
 from ...domain.iva.classification import (
     CustomerTaxStatus,
@@ -11,43 +12,37 @@ from ...domain.iva.classification import (
     PartyFact,
     TransactionKind,
     domestic_rate_tier_is_required,
+    resolve_transaction_kind_catalogue,
 )
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 
 __all__ = [
-    "NATURE_INDIFFERENT_KIND",
-    "NATURE_TO_KIND",
     "axis_forks_the_law",
     "counterparty_identification_field",
     "domestic_rate_tier_is_reachable",
     "facts_consumed",
     "state_for_field",
+    "transaction_kind_candidates",
+    "transaction_kind_for_nature",
+    "transaction_kind_indifferent",
 ]
 
-#: What a printed supply nature contributes to the table's kind axis.
-#:
-#: Only the general services member is reachable from printed evidence. The
-#: specialised kinds — land-related, passenger transport, the reverse-charge
-#: sub-kinds — each carry legal consequences a bare goods/services reading does
-#: not establish, so none of them is inferred here. A document that needs one
-#: gets it from an operator assertion, never from this map.
-NATURE_TO_KIND: dict[SupplyNature, TransactionKind] = {
-    SupplyNature.GOODS: TransactionKind.GOODS,
-    SupplyNature.SERVICES: TransactionKind.SERVICES_GENERAL,
-}
+def transaction_kind_for_nature(nature: SupplyNature, *, effective_date: date) -> TransactionKind:
+    """Project a printed supply nature through the registry kind catalogue."""
+    return resolve_transaction_kind_catalogue(effective_date).for_supply_nature(nature.value)
 
 
-#: The kind supplied on a branch the law does not fork on, where the document
-#: established no nature.
-#:
-#: Not a guess about the document, and it is only sound because the branch was
-#: checked rather than assumed: the domestic rule consults ``kind`` ONLY to
-#: exclude the three reverse-charge kinds, and neither value this module can
-#: produce is in that set. So both reachable kinds yield the identical category,
-#: which is then picked from the rate tier. A test proves that indifference by
-#: classifying the same operation under both, rather than trusting this note.
-NATURE_INDIFFERENT_KIND: TransactionKind = TransactionKind.GOODS
+def transaction_kind_candidates(*, effective_date: date) -> tuple[TransactionKind, ...]:
+    """Return the registry-projected kinds reachable from printed nature evidence."""
+    catalogue = resolve_transaction_kind_catalogue(effective_date)
+    return tuple(catalogue.for_supply_nature(nature.value) for nature in SupplyNature)
+
+
+def transaction_kind_indifferent(*, effective_date: date) -> TransactionKind:
+    """Return the registry-projected neutral kind used on an unbranched path."""
+    return transaction_kind_for_nature(SupplyNature.GOODS, effective_date=effective_date)
 
 
 def counterparty_identification_field(direction: InvoiceKind) -> str:
@@ -112,7 +107,7 @@ def axis_forks_the_law(
 
     * A probe that cannot classify at all forks, because an operation that could
       not be placed may still land on a branch needing the answer.
-    * **A verdict of** :attr:`~domain.iva.IvaCategory.UNKNOWN` **forks**, because
+    * A verdict of the registry-declared ``unknown`` category forks, because
       that is the table's no-rule-matched sentinel rather than a treatment.
       Without this, an operation no rule places would agree with itself across
       every candidate and be certified indifferent on the strength of that
@@ -125,7 +120,7 @@ def axis_forks_the_law(
             verdicts = {probe(status, kind) for status in statuses for kind in kinds}
         except Exception:  # reason: an unclassifiable probe is not evidence of indifference.
             return True
-        if len(verdicts) > 1 or IvaCategory.UNKNOWN in verdicts:
+        if len(verdicts) > 1 or require_iva_category("unknown") in verdicts:
             return True
     return False
 
@@ -191,6 +186,8 @@ def domestic_rate_tier_is_reachable(
     customer_scope: IvaTerritorialScope | None,
     supply_nature: SupplyNature | None,
     customer_tax_status: CustomerTaxStatus | None = None,
+    *,
+    effective_date: date | None = None,
 ) -> bool:
     """Whether any branch this operation can still reach demands a rate tier.
 
@@ -211,12 +208,18 @@ def domestic_rate_tier_is_reachable(
     """
     if issuer_scope is None or customer_scope is None:
         return False
-    kinds = (NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(NATURE_TO_KIND.values())
+    coordinate = effective_date or date.today()
+    kinds = (
+        (transaction_kind_for_nature(supply_nature, effective_date=coordinate),)
+        if supply_nature is not None
+        else transaction_kind_candidates(effective_date=coordinate)
+    )
     return any(
         domestic_rate_tier_is_required(
             issuer_residency=issuer_scope,
             customer_residency=customer_scope,
             kind=kind,
+            transaction_date=coordinate,
             customer_tax_status=customer_tax_status,
         )
         for kind in kinds

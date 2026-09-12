@@ -20,7 +20,7 @@ from pydantic import ValidationError
 from ......core.classification.policies import SensitivityClass
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.external_constants import UTF_8_ENCODING
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
 from ...blob_store.blob_store import EncryptedBlobStore
 from ...errors import (

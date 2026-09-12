@@ -25,7 +25,7 @@ import pytest
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, derive_filing_record_id
-from ....domain.retention.floor import TAX_RECORD_RETENTION_FLOOR_YEARS
+from ....domain.retention.floor import retention_floor_years
 from ..retention import FilingRetentionAuthority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -71,7 +71,7 @@ def test_the_assessment_names_the_records_the_flag_only_counts(tmp_path: Path) -
 
     assert assessment.blocks_erase is True
     assert len(assessment.retained) == 2
-    assert assessment.floor_years == TAX_RECORD_RETENTION_FLOOR_YEARS
+    assert assessment.floor_years == retention_floor_years(effective_date=_NOW.date())
     assert assessment.latest_safe_erase_date is not None
     # The operator can act on this: the whole set clears at the latest of the
     # per-record boundaries, which must lie beyond the assessment instant.
@@ -95,7 +95,7 @@ def test_the_detailed_and_gate_views_cannot_disagree(tmp_path: Path) -> None:
     assert authority.assess(_PROFILE_ID, now=_NOW).blocks_erase is True
     assert authority.project(_PROFILE_ID, now=_NOW).blocks_local_deletion is True
 
-    long_past = _NOW.replace(year=_NOW.year - (TAX_RECORD_RETENTION_FLOOR_YEARS + 2))
+    long_past = _NOW.replace(year=_NOW.year - (retention_floor_years(effective_date=_NOW.date()) + 2))
     authority.record_filing_catalogue(
         profile_id=_PROFILE_ID,
         records=(_filed_record(filed_at=long_past, seed="a"),),

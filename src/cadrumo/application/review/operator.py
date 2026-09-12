@@ -20,6 +20,7 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.utc import UtcInstant
 from ...domain.calculations.registry.ids import LegalRefId
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ..filing.draft_review import describe_stale_reason
 from ._aggregator import ReviewQueue
 from .enums import ReviewItemKind, ReviewSeverity, ReviewState
@@ -109,6 +110,7 @@ def project_review_queue(
     state: ReviewState = ReviewState.PENDING,
     modelo: str | None = None,
     confidence_below: Decimal | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> ReviewQueueReport:
     """Return a :class:`ReviewQueueReport` using accepted source-kind vocabulary.
 
@@ -127,6 +129,7 @@ def project_review_queue(
     items = ReviewQueue.collect(
         settings or _load_settings(),
         bucket_id=bucket_id,
+        observation_repository=observation_repository,
         kinds=selected,
         state=state,
         modelo=modelo,
@@ -143,12 +146,21 @@ def project_review_queue(
     return ReviewQueueReport(rows=rows)
 
 
-def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
+def project_review_item(
+    item_id: str,
+    *,
+    settings: Settings | None = None,
+    observation_repository: CalculationObservationRepositoryProtocol,
+) -> ReviewQueueRow:
     """Return one review row by id.
 
     Returns a :class:`ReviewQueueRow` matching ``item_id``.
     """
-    report = project_review_queue(settings=settings, state=ReviewState.ALL)
+    report = project_review_queue(
+        settings=settings,
+        state=ReviewState.ALL,
+        observation_repository=observation_repository,
+    )
     for row in report.rows:
         if row.item_id == item_id:
             return row

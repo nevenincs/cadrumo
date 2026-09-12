@@ -19,6 +19,7 @@ from typing import TypeGuard
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.iva_schema_vocabulary import default_iva_regime
 from ...domain.deadlines.models import IVARegime, TaxpayerProfile
 from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
 from ...domain.user_profile.loader import load_user_profile_schema
@@ -254,7 +255,7 @@ def projection_for_taxpayer(
     facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
     *,
     tax_id_default: str = "00000000T",
-    iva_regime_default: IVARegime = IVARegime.GENERAL,
+    iva_regime_default: IVARegime | None = None,
     schema: ProfileSchemaDefinition | None = None,
 ) -> TaxpayerProfile:
     """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
@@ -273,7 +274,11 @@ def projection_for_taxpayer(
         mapping = _merged_taxpayer_values(facts, schema=schema)
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
-    return taxpayer_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)
+    return taxpayer_profile_from_mapping(
+        mapping,
+        tax_id_default=tax_id_default,
+        iva_regime_default=iva_regime_default or default_iva_regime(),
+    )
 
 
 def _merged_taxpayer_values(

@@ -2,7 +2,7 @@
 
 This module is the read-only selector boundary between the authenticated
 Sede declaration register and the heavier capture pipeline. It works only
-with :class:`~cadrumo.adapters.outbound.aeat.sede.Declaracion` register rows:
+with application-owned register-row facts:
 listing reports expose which AEAT artefact links are available, and selector
 helpers narrow one in-memory register result by period, expediente id, and
 caller limit before any artefact is downloaded.
@@ -20,11 +20,11 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from ...adapters.outbound.aeat.sede.declarations_schema import Declaracion
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from .errors import LiveApplicationInputError
+from .filed_data_ports import FiledRegisterDeclarationProtocol
 from .remote_state_models import FiledDataCaptureFailureRow
 
 
@@ -71,13 +71,13 @@ class BulkFiledDataListingReport(BaseModel):
 
 
 def select_declarations_for_capture(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[FiledRegisterDeclarationProtocol, ...],
     *,
     period: Period | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
-) -> tuple[Declaracion, ...]:
-    """Select register :class:`~cadrumo.adapters.outbound.aeat.sede.Declaracion` rows.
+) -> tuple[FiledRegisterDeclarationProtocol, ...]:
+    """Select application-owned register-row facts.
 
     Selection is an in-memory filter over one already-read register result. It
     does not fetch AEAT artefacts or persist local evidence; the capture service
@@ -98,7 +98,7 @@ def select_declarations_for_capture(
     return selected
 
 
-def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
+def filed_data_listing_row(declaration: FiledRegisterDeclarationProtocol) -> FiledDataListingRow:
     """Return link-availability metadata for one AEAT declaration register item.
 
     Returns:

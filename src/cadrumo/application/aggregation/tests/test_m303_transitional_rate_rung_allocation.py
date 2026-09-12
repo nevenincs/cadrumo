@@ -76,7 +76,7 @@ _PERIOD_3T_2024 = Period.from_year_and_code(2024, "3T")
 
 
 def _revision() -> ModeloRevision:
-    return bundled_authority().snapshot(Modelo.M303, filing_year=2024, period="4T").revision
+    return bundled_authority().snapshot(Modelo("303"), filing_year=2024, period="4T").revision
 
 
 def _transaction(

@@ -53,6 +53,7 @@ from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedM
 from ..calculations.registry.m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_base import DateAxis
+from ..transactions.m210_income_classification import resolve_m210_payer_mode
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -680,6 +681,12 @@ class Modelo210AgrupacionRentaRow(BaseModel):
     pagador_id: _RequiredNameStr | None = None
     deriva_de_bien_derecho: bool
     bien_derecho_id: _RequiredNameStr | None = None
+
+    @field_validator("pagador_mode", mode="before")
+    @classmethod
+    def _project_pagador_mode(cls, value: object) -> M210PayerMode:
+        """Project the row's payer mode through the selected detail catalogue."""
+        return resolve_m210_payer_mode(value)
 
     @field_validator("tipo_renta_code")
     @classmethod

@@ -40,7 +40,15 @@ from .common import (
     filing_taxpayer_or_refuse,
     no_active_profile_refusal,
 )
-from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+from .state_projection_support import (
+    calculation_action_ports_factory,
+    certificate_secret_backend_factory,
+    modelo_export_ports_factory,
+    operator_probe_ports,
+    operator_scope_ports,
+    state_projection_read_ports,
+    verification_repository_bundle_factory,
+)
 
 
 def _require_active_profile() -> str:
@@ -100,10 +108,12 @@ def quickfile(
         period=resolved_period,
         evidence_file=m303_filing_evidence,
     )
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=resolved_bucket)
 
     def _build_inputs(work_unit_id: str):
         return work_calculate_input_bundle_from_cli(
             work_unit_id=work_unit_id,
+            ports=calculation_ports,
             casilla=casilla,
             binding=binding,
             relation=relation,
@@ -135,6 +145,14 @@ def quickfile(
             filing_instance_evidence=filing_instance_evidence,
         ),
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
+        verification_repositories=verification_repository_bundle_factory(ctx)(resolved_bucket),
+        calculation_action_ports=calculation_ports,
+        modelo_export_ports=modelo_export_ports_factory(ctx)(
+            bucket_id=resolved_bucket,
+            m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
+        ),
         read_ports=state_projection_read_ports(ctx),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,

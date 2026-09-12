@@ -37,6 +37,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import TypeGuard
 
+from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from ..bucket.errors import BucketLockedError
@@ -185,6 +186,14 @@ def has_active_bucket_session() -> bool:
     return active_session.get() is not None
 
 
+class ActiveProfileSessionPresenceAdapter(ActiveProfileSessionPresencePort):
+    """Expose active-session presence through the application probe contract."""
+
+    def is_bound(self) -> bool:
+        """Return the current active bucket-session presence."""
+        return has_active_bucket_session()
+
+
 def current_active_bucket_session() -> BucketSession | None:
     """Return the currently-bound :class:`BucketSession`, or ``None``.
 
@@ -310,6 +319,7 @@ _atexit.register(_close_active_session_at_exit)
 
 
 __all__ = [
+    "ActiveProfileSessionPresenceAdapter",
     "NoActiveBucketSessionError",
     "activate_session",
     "active_bucket_session_serves",

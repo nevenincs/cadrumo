@@ -36,11 +36,11 @@ from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import (
     same_tax_identifier,
     tax_id_identity_token,
-    validate_spanish_tax_id,
 )
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
 from ..workflow.persistence import workflow_state_repository
@@ -58,6 +58,7 @@ from .operator_scope import (
     assert_auth_recovery_not_in_progress,
     auth_mutation_span,
 )
+from .operator_scope_ports import OperatorScopePorts
 from .protocols import (
     BrowserSessionFactoryPort,
     SessionStoreProtocol,
@@ -344,14 +345,19 @@ async def ensure_authenticated_aeat_session(
     target_url: str | None = None,
     browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthenticatedAeatSessionResult:
     """Serialize and fail-close the central live-session writer."""
-    with active_profile_storage_span(settings) as bucket_id:
+    with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
         if bucket_id is None:
             raise AuthSessionUnavailableError(
                 translated_message="application.auth.sessions.errors.no_session",
             )
-        with auth_mutation_span(settings=settings, bucket_id=bucket_id):
+        with auth_mutation_span(
+            settings=settings,
+            bucket_id=bucket_id,
+            operator_scope_ports=operator_scope_ports,
+        ):
             assert_auth_recovery_not_in_progress(workflow_state_repository().load())
             return await _ensure_authenticated_aeat_session_locked(
                 settings,
@@ -363,6 +369,7 @@ async def ensure_authenticated_aeat_session(
                 target_url=target_url,
                 browser_session_factory=browser_session_factory,
                 certificate_credentials=certificate_credentials,
+                operator_scope_ports=operator_scope_ports,
             )
 
 
@@ -377,6 +384,7 @@ async def _ensure_authenticated_aeat_session_locked(
     target_url: str | None = None,
     browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -398,6 +406,7 @@ async def _ensure_authenticated_aeat_session_locked(
         settings,
         kind,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
     settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
     reset_status = (
@@ -413,6 +422,7 @@ async def _ensure_authenticated_aeat_session_locked(
             target_url=target_url,
             browser_session_factory=browser_session_factory,
             certificate_credentials=certificate_credentials,
+            operator_scope_ports=operator_scope_ports,
         )
         if reused is not None:
             session, assertion = reused
@@ -440,6 +450,7 @@ async def _ensure_authenticated_aeat_session_locked(
                 target_url=target_url,
                 browser_session_factory=browser_session_factory,
                 certificate_credentials=certificate_credentials,
+                operator_scope_ports=operator_scope_ports,
             )
             if reused is not None:
                 session, assertion = reused
@@ -461,6 +472,7 @@ async def _ensure_authenticated_aeat_session_locked(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             browser_session_factory=browser_session_factory,
             certificate_credentials=certificate_credentials,
+            operator_scope_ports=operator_scope_ports,
         )
         async with _provider_lifecycle(provider):
             session, assertion = await _authenticate_and_verify_provider(
@@ -567,6 +579,7 @@ def _resolve_provider_kind(
     kind: AuthProviderKind | None,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthProviderKind:
     """Resolve the provider this session should authenticate through.
 
@@ -585,6 +598,7 @@ def _resolve_provider_kind(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,
             fallback_provider=fallback,
+            operator_scope_ports=operator_scope_ports,
         )
         or (AuthProviderKind.CERTIFICATE)
     )
@@ -857,7 +871,8 @@ def _assert_active_profile_identity_matches_provider(
     and the caller supplies the profile identity as the expectation.
 
     Both sides are compared in the CANONICAL form
-    :func:`~core.identity.tax_id.validate_spanish_tax_id` returns, not as raw
+    :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`
+    returns, not as raw
     strings. Both fields are unconstrained ``str``, so a bare ``!=`` was wrong
     in two opposite directions at once: ``12345678-Z`` against ``12345678Z``
     REFUSED a session the operator legitimately owns, while two equal-but-
@@ -878,13 +893,13 @@ def _assert_active_profile_identity_matches_provider(
             context={"requirements": _grounded_profile_identity_requirement()},
         )
     try:
-        profile_identity = validate_spanish_tax_id(credentials.profile_tax_id)
+        profile_identity = validate_runtime_spanish_tax_id(credentials.profile_tax_id)
     except IdentityError as exc:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_identity_malformed",
         ) from exc
     try:
-        clave_identity = validate_spanish_tax_id(credentials.dni_nie)
+        clave_identity = validate_runtime_spanish_tax_id(credentials.dni_nie)
     except IdentityError as exc:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.clave_identity_malformed",
@@ -1049,6 +1064,7 @@ async def _try_probe_verified_session(
     target_url: str | None,
     browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> tuple[AeatSession, AeatLoginAssertion] | None:
     provider = _build_provider(
         settings,
@@ -1056,6 +1072,7 @@ async def _try_probe_verified_session(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         certificate_credentials=certificate_credentials,
+        operator_scope_ports=operator_scope_ports,
     )
     async with _provider_lifecycle(provider):
         try:
@@ -1075,6 +1092,7 @@ def _build_provider(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort | None,
     certificate_credentials: ActiveCertificateCredentials | None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthProvider:
     if browser_session_factory is None:
         from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
@@ -1086,6 +1104,7 @@ def _build_provider(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         browser_session_factory=browser_session_factory,
         certificate_credentials=certificate_credentials,
+        operator_scope_ports=operator_scope_ports,
     )
 
 

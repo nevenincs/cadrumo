@@ -15,10 +15,10 @@ exception, no diagnostic, no operator-visible signal.
 
 The correspondence closing it is registry DATA, a column in the same bundled
 vocabulary the printed names are matched against, so both code systems and every
-printed name resolve onto one code in one reviewable place. The cases below are
-in two halves: what the lookup answers, and what the loader refuses to load. The
-second half is what makes the first trustworthy -- a table that can load a
-contradiction resolves a country by file ordering.
+printed name resolve onto one code in one reviewable place. The lookup cases
+below stay in the domain owner; malformed source rows and schema refusals are
+owned by the development compiler, which validates a candidate before it can be
+published.
 
 See Also:
     :func:`~domain.iva.country_code_for_stated_country_code`
@@ -29,47 +29,12 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
-from collections.abc import Mapping
-
 import pytest
 
-from ....core.resources.bundled_data import bundled_path
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha3
-from ..country_vocabulary import _index_country_alpha3
-from ..errors import IvaCatalogueError
 from ..establishment import country_code_for_stated_country_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-
-def _bundled() -> dict[str, object]:
-    raw_payload = tomllib.loads(
-        bundled_path("registry", "aeat", "iva", "country_names.toml").read_text(encoding="utf-8"),
-    )
-    payload: dict[str, object] = {}
-    for key, value in raw_payload.items():
-        assert isinstance(key, str)
-        payload[key] = value
-    return payload
-
-
-def _bundled_country_records() -> list[Mapping[str, object]]:
-    """Read the shipped country rows, asserting only that they ARE rows.
-
-    Deliberately typed no tighter than that. A row missing ``alpha3``, or
-    repeating one another row already carries, is precisely what the gates
-    below look for on the shipped file -- so a model requiring the column
-    would refuse the defect at parse time and leave every assertion passing
-    over a population that can no longer contain it.
-    """
-    records = _bundled()["country"]
-    assert isinstance(records, list), "the shipped catalogue no longer stores countries as an array of tables"
-    rows: list[Mapping[str, object]] = []
-    for record in records:
-        assert isinstance(record, dict), f"country row is not a table: {record!r}"
-        rows.append(record)
-    return rows
 
 
 class TestTheLookup:
@@ -140,104 +105,3 @@ class TestTheLookup:
             if country_code_for_stated_country_code(code) == "ES"
         }
         assert spanish == {"ESP", "ES"}
-
-
-class TestTheBundledColumn:
-    """The shipped table's own invariants, asserted against the file rather than a copy."""
-
-    def test_every_record_carries_an_alpha3_code(self) -> None:
-        """The column is required, so no country can be silently unresolvable.
-
-        Read from the file rather than restated, so this cannot become a second
-        copy of the table that drifts against it and passes while doing so.
-        """
-        records = _bundled_country_records()
-        assert records
-        missing = [record["code"] for record in records if not str(record.get("alpha3", "")).strip()]
-        assert not missing, f"records carrying no alpha-3 code: {missing}"
-
-    def test_the_column_names_each_country_exactly_once(self) -> None:
-        """One alpha-3 per country and one country per alpha-3, on the shipped data."""
-        records = _bundled_country_records()
-        codes = [str(record["alpha3"]) for record in records]
-        assert len(set(codes)) == len(codes)
-        assert len(_index_country_alpha3(_bundled(), source="bundled")) == len(codes)
-
-    def test_northern_ireland_is_absent_from_both_columns(self) -> None:
-        """``XI`` is an IVA jurisdiction rather than an ISO country, and has no alpha-3.
-
-        Asserted because the name column deliberately excludes it too: it is
-        established by a printed NIF-IVA prefix or not at all, and a country
-        record inventing an alpha-3 for it would be fabricated data.
-        """
-        indexed = _index_country_alpha3(_bundled(), source="bundled")
-        assert "XI" not in indexed.values()
-
-
-class TestWhatTheLoaderRefuses:
-    """The refusals that make the lookup trustworthy, reachable with a payload.
-
-    Exercised against payloads rather than only against the bundled file, because
-    a refusal that can be reached only by corrupting shipped data is a refusal
-    nothing proves.
-    """
-
-    def test_a_record_carrying_no_alpha3_is_refused(self) -> None:
-        """Optional would be indistinguishable from "this country has no alpha-3".
-
-        Both yield nothing at the call site, and the caller reads nothing as "the
-        document stated no country" -- the exact silent blank the column exists to
-        close, reintroduced by an omission nobody would notice.
-        """
-        with pytest.raises(IvaCatalogueError, match="no alpha-3 code"):
-            _index_country_alpha3({"country": [{"code": "DE", "names": ["Alemania"]}]}, source="probe")
-
-    @pytest.mark.parametrize("alpha3", ["", "DE", "DEUT", "D3U", "  "])
-    def test_a_malformed_alpha3_is_refused(self, alpha3: str) -> None:
-        with pytest.raises(IvaCatalogueError, match="no alpha-3 code"):
-            _index_country_alpha3({"country": [{"code": "DE", "alpha3": alpha3}]}, source="probe")
-
-    def test_two_countries_claiming_one_alpha3_are_refused(self) -> None:
-        """That code would name two countries, and the last read would win silently.
-
-        The direct analogue of the name-collision refusal beside it: a code that
-        cannot name one country cannot establish one, so the table is refused
-        whole rather than resolved by file ordering.
-        """
-        payload = {
-            "country": [
-                {"code": "DE", "alpha3": "DEU"},
-                {"code": "AT", "alpha3": "DEU"},
-            ],
-        }
-        with pytest.raises(IvaCatalogueError, match="claimed by both"):
-            _index_country_alpha3(payload, source="probe")
-
-    def test_one_country_stating_two_alpha3_codes_is_refused(self) -> None:
-        """The same contradiction from the other side: a record disagreeing with itself."""
-        payload = {
-            "country": [
-                {"code": "DE", "alpha3": "DEU"},
-                {"code": "DE", "alpha3": "GER"},
-            ],
-        }
-        with pytest.raises(IvaCatalogueError, match="two different alpha-3 codes"):
-            _index_country_alpha3(payload, source="probe")
-
-    def test_a_country_repeated_consistently_is_accepted(self) -> None:
-        """The permitted half, so the two refusals above are not over-broad."""
-        payload = {
-            "country": [
-                {"code": "DE", "alpha3": "DEU"},
-                {"code": "DE", "alpha3": "DEU"},
-            ],
-        }
-        assert _index_country_alpha3(payload, source="probe") == {"DEU": "DE"}
-
-    def test_a_record_naming_no_alpha2_code_is_refused(self) -> None:
-        with pytest.raises(IvaCatalogueError, match="alpha-2"):
-            _index_country_alpha3({"country": [{"alpha3": "DEU"}]}, source="probe")
-
-    def test_an_empty_column_is_refused(self) -> None:
-        with pytest.raises(IvaCatalogueError, match="no alpha-3 correspondence"):
-            _index_country_alpha3({"country": []}, source="probe")

@@ -47,7 +47,6 @@ from collections.abc import Callable
 
 import pytest
 
-from .._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
 from ..inventory import InventoryLedgerRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -72,9 +71,6 @@ _BYPASSING_WRITE_PATHS = (
 #: rather than delegating to a repository verb, and all three share one helper
 #: so they cannot drift into three different answers.
 _GUARDED_SERVICE_SEAM = "mutate_catalogue("
-
-#: The one private retry loop that both singleton wire-format kernels delegate to.
-_GUARDED_KERNEL_HELPER = "mutate_revision_guarded_singleton("
 
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
@@ -161,53 +157,3 @@ def test_the_invoice_catalogue_services_route_through_the_guarded_helper(name: s
         f"{name} reaches storage directly via {reintroduced}; the guarded helper is the "
         f"only write path for a singleton catalogue"
     )
-
-
-def test_the_seam_these_verbs_depend_on_still_exists() -> None:
-    """POSITIVE CONTROL for the two gates above.
-
-    Both assert on the presence or absence of substrings. If ``mutate`` were
-    renamed or removed, the routing assertion would fail for the right reason
-    but the bypass assertion would pass vacuously, and a reader could conclude
-    the surface was fine. Pin that the seam is real and is the guarded one.
-    """
-    from .._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
-    from .._secure_model_document import ProfileBareModelSecurePersistence
-
-    kernel_mutators = (
-        ("ProfileBareModelSecurePersistence", ProfileBareModelSecurePersistence.mutate),
-        ("ProfileEnvelopedModelSecurePersistence", ProfileEnvelopedModelSecurePersistence.mutate),
-    )
-
-    for name, mutate in kernel_mutators:
-        source = inspect.getsource(mutate)
-        assert callable(mutate)
-        assert _GUARDED_KERNEL_HELPER in source, (
-            f"{name}.mutate no longer delegates to the shared revision-guarded singleton helper"
-        )
-
-
-def test_shared_kernel_helper_applies_the_revision_its_load_callback_reported() -> None:
-    """The shared loop passes each read's revision to its write callback."""
-    saved: list[tuple[str, str]] = []
-
-    def load_revisioned() -> tuple[str, str]:
-        return "current", "read-revision"
-
-    def write(document: str, *, expected_revision_id: str) -> tuple[str, str]:
-        return document, expected_revision_id
-
-    def save(guarded_write: tuple[str, str]) -> None:
-        saved.append(guarded_write)
-
-    assert (
-        mutate_revision_guarded_singleton(
-            lambda document: f"{document}-updated",
-            load_revisioned=load_revisioned,
-            write=write,
-            save=save,
-            attempts=1,
-        )
-        == "current-updated"
-    )
-    assert saved == [("current-updated", "read-revision")]

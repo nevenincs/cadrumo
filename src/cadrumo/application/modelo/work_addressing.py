@@ -54,6 +54,7 @@ from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitSta
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .action_errors import CalculationRevisionNotFoundError, CalculationRevisionStateError, ModeloPreconditionErrorMixin
 from .calculation_actions import get_calculation_revision
+from .calculation_action_ports import CalculationActionPorts
 from .preconditions import (
     build_modelo_precondition_failure_for_scenario,
     build_modelo_work_file_unverified_revision_failure,
@@ -475,6 +476,7 @@ def resolve_modelo_revision_for_operator_target(
     default_for: ModeloCalculationRevisionDefault | None = None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve one :class:`CalculationRevision` from exact or visible operator input.
 
@@ -498,6 +500,7 @@ def resolve_modelo_revision_for_operator_target(
         default_for=default_for,
         catalogue=catalogue,
         resolved_bucket_id=resolved_bucket_id,
+        ports=ports,
     )
 
 
@@ -539,6 +542,7 @@ def _resolve_revision_with_precondition_translation(
     default_for: ModeloCalculationRevisionDefault | None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     try:
         return _resolve_revision_for_default(
@@ -548,6 +552,7 @@ def _resolve_revision_with_precondition_translation(
             default_for=default_for,
             catalogue=catalogue,
             resolved_bucket_id=resolved_bucket_id,
+            ports=ports,
         )
     except CalculationRevisionNotFoundError as error:
         recovery_error = _calculation_revision_work_unit_target_error(
@@ -589,6 +594,7 @@ def _resolve_revision_for_default(
     default_for: ModeloCalculationRevisionDefault | None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     resolver = (
         {
@@ -607,6 +613,7 @@ def _resolve_revision_for_default(
         selector=selector,
         catalogue=catalogue,
         resolved_bucket_id=resolved_bucket_id,
+        ports=ports,
     )
 
 
@@ -1245,6 +1252,7 @@ def resolve_modelo_calculation_revision_address(
     default_for: ModeloCalculationRevisionDefault | None = None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve a :class:`CalculationRevision` by exact id or under a modelo work address.
 
@@ -1263,6 +1271,7 @@ def resolve_modelo_calculation_revision_address(
             default_for=default_for,
             catalogue=catalogue,
             resolved_bucket_id=resolved_bucket_id,
+            ports=ports,
         )
         return _require_revision_parent_admitted_for_operation(
             revision,
@@ -1296,6 +1305,7 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     default_for: ModeloCalculationRevisionDefault | None,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve an exact revision, or a current revision reached through its work unit.
 
@@ -1308,7 +1318,7 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     caller's typed error path.
     """
     try:
-        return get_calculation_revision(calculation_revision_id)
+        return get_calculation_revision(calculation_revision_id, ports=ports)
     except CalculationRevisionNotFoundError as revision_error:
         if default_for not in {"verify", "file"}:
             raise
@@ -1322,7 +1332,7 @@ def _resolve_exact_calculation_revision_or_current_work_unit_revision(
             raise revision_error from None
         if work_unit.state is not WorkUnitState.BORRADOR or work_unit.current_calculation_revision_id is None:
             raise revision_error from None
-        return get_calculation_revision(work_unit.current_calculation_revision_id)
+        return get_calculation_revision(work_unit.current_calculation_revision_id, ports=ports)
 
 
 def _require_revision_parent_admitted_for_operation(
@@ -1398,6 +1408,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve the :class:`CalculationRevision` that ``work verify`` addresses.
 
@@ -1417,6 +1428,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
         default_for="verify",
         catalogue=catalogue,
         resolved_bucket_id=resolved_bucket_id,
+        ports=ports,
     )
 
 
@@ -1427,6 +1439,7 @@ def resolve_fileable_modelo_calculation_revision_address(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve the verified-complete :class:`CalculationRevision` that ``work file`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
@@ -1436,6 +1449,7 @@ def resolve_fileable_modelo_calculation_revision_address(
         default_for="file",
         catalogue=catalogue,
         resolved_bucket_id=resolved_bucket_id,
+        ports=ports,
     )
     if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
         return revision
@@ -1462,6 +1476,7 @@ def resolve_exportable_modelo_calculation_revision_address(
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     catalogue: WorkUnitCatalogue,
     resolved_bucket_id: str,
+    ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve the filed or verified-complete :class:`CalculationRevision` that ``modelo export`` may consume."""
     revision = resolve_modelo_calculation_revision_address(
@@ -1471,6 +1486,7 @@ def resolve_exportable_modelo_calculation_revision_address(
         default_for="export",
         catalogue=catalogue,
         resolved_bucket_id=resolved_bucket_id,
+        ports=ports,
     )
     return _require_revision_state(
         revision,

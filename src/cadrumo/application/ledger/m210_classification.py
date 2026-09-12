@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Final
 from ...core.irnr import M210PayerMode
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.m210_income_classification import M210IncomeClassification
+from ...domain.transactions.m210_income_classification import M210IncomeClassification, resolve_m210_payer_mode
 from .actions_common import resolve_transaction_repository
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ def _resolve_m210_answers(
     tipo_renta_code: str | None,
     gross_income_amount: Decimal | None,
     applicable_rate: Decimal | None,
-    payer_mode: M210PayerMode | None,
+    payer_mode: str | M210PayerMode | None,
 ) -> tuple[str, Decimal, Decimal, M210PayerMode] | None:
     """Return a complete answer set, or refuse a partial one."""
     supplied = {
@@ -63,7 +63,7 @@ def _resolve_m210_answers(
                 "missing": ", ".join(name for name in _REQUIRED_ANSWERS if supplied[name] is None),
             },
         )
-    return tipo_renta_code, gross_income_amount, applicable_rate, payer_mode
+    return tipo_renta_code, gross_income_amount, applicable_rate, resolve_m210_payer_mode(payer_mode)
 
 
 def _require_incoming_m210_transaction(
@@ -93,7 +93,7 @@ def resolve_m210_income_classification(
     tipo_renta_code: str | None = None,
     gross_income_amount: Decimal | None = None,
     applicable_rate: Decimal | None = None,
-    payer_mode: M210PayerMode | None = None,
+    payer_mode: str | M210PayerMode | None = None,
     payer_id: str | None = None,
     asset_or_right_id: str | None = None,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,

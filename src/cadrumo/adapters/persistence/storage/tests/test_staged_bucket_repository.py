@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from .....core.secure_object_write import SecureObjectWrite
-from .....tests.master_key import EphemeralMasterKeyProvider
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 from ..errors import StorageError, StorageValidationError
 from ..master_key.active_session import activate_session
 from ..master_key.bucket_session import BucketSession

@@ -42,6 +42,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.contribuyente.renta_codes import FiscalResidency
+from ...domain.calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
+from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
 from ...domain.deadlines.models import IrpfSpecialRegime
 
 __all__ = [
@@ -159,9 +161,9 @@ def resolve_source_jurisdiction(
             outcome=SourceJurisdictionOutcome.STATED,
             jurisdiction=operator_value,
         )
-    if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
+    if fiscal_residency_requires_country(fiscal_residency):
         return SourceJurisdictionResolution(outcome=SourceJurisdictionOutcome.REQUIRED_NON_RESIDENT_IRNR)
-    if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
+    if irpf_special_regime == irpf_special_regime_impatriado_token():
         return SourceJurisdictionResolution(outcome=SourceJurisdictionOutcome.REQUIRED_IMPATRIADO)
     if fiscal_residency is None:
         return SourceJurisdictionResolution(outcome=SourceJurisdictionOutcome.UNRESOLVED)

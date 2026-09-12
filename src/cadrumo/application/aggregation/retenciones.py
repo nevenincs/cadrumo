@@ -29,6 +29,7 @@ from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     BindingSourceKind,
     RetencionScheme,
+    WorkIncomeRetencionTreatment,
 )
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.modelo import Modelo
@@ -164,16 +165,13 @@ class _RetencionesRegistryCatalogue:
     model_schemes: Mapping[str, frozenset[RetencionScheme]]
 
 
-# fact-relocation: selected withholding scheme declarations are consumed through RegistryQueryService and the dated mapping fact
-def _registry_retenciones_catalogue(
+def _resolved_withholding_scheme_fact(
     effective_date: date,
     *,
-    modelo: str,
     authority: ValidatedRegistryAuthority | None = None,
-) -> _RetencionesRegistryCatalogue:
-    """Resolve the selected modelo's scheme catalogue without a Python fallback."""
+) -> ResolvedMappingFact:
+    """Resolve the dated withholding-scheme mapping without a Python fallback."""
     selected_authority = authority or bundled_authority()
-    RegistryQueryService(selected_authority).describe_modelo(modelo, as_of=effective_date)
     resolved = selected_authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="m111-m115-m123-withholding-scheme-catalogue",
@@ -183,6 +181,68 @@ def _registry_retenciones_catalogue(
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise TypeError("withholding scheme declarations must resolve as a mapping fact")
+    return resolved
+
+
+def registry_work_income_retencion_treatments(
+    effective_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> Mapping[RetencionScheme, WorkIncomeRetencionTreatment]:
+    """Resolve work-income treatment declarations from the dated fact mapping."""
+    resolved = _resolved_withholding_scheme_fact(effective_date, authority=authority)
+    scheme_tokens: set[RetencionScheme] = set()
+    treatment_values: list[str] = []
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise TypeError("withholding scheme mapping entries must be string-to-string")
+        if entry.key.endswith(".schemes"):
+            scheme_tokens.update(RetencionScheme(token.strip()) for token in entry.value.split(",") if token.strip())
+        elif entry.key == "retencion.work_income.treatment":
+            treatment_values.append(entry.value)
+    if len(treatment_values) != 1:
+        raise ValueError("withholding scheme catalogue must declare exactly one work-income treatment mapping")
+    treatments: dict[RetencionScheme, WorkIncomeRetencionTreatment] = {}
+    for declaration in (token.strip() for token in treatment_values[0].split(",") if token.strip()):
+        scheme_token, separator, fixed_flag = declaration.partition("=")
+        scheme_token = scheme_token.strip()
+        fixed_flag = fixed_flag.strip()
+        if not separator or not scheme_token or fixed_flag not in {"true", "false"}:
+            raise ValueError(f"malformed work-income treatment declaration {declaration!r}")
+        scheme = RetencionScheme(scheme_token)
+        if scheme not in scheme_tokens:
+            raise ValueError(f"work-income treatment names undeclared scheme {scheme.value!r}")
+        if scheme in treatments:
+            raise ValueError(f"duplicate work-income treatment declaration for {scheme.value!r}")
+        treatments[scheme] = WorkIncomeRetencionTreatment(
+            scheme=scheme,
+            is_fixed_rate=fixed_flag == "true",
+        )
+    if not treatments:
+        raise ValueError("work-income treatment mapping is empty")
+    if not any(treatment.is_fixed_rate for treatment in treatments.values()) or not any(
+        not treatment.is_fixed_rate for treatment in treatments.values()
+    ):
+        raise ValueError("work-income treatment mapping must include fixed and non-fixed declarations")
+    return treatments
+
+
+# Selected withholding schemes come from RegistryQueryService and the dated mapping fact.
+def _registry_retenciones_catalogue(
+    period: Period,
+    *,
+    modelo: str,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> _RetencionesRegistryCatalogue:
+    """Resolve the selected modelo's scheme catalogue without a Python fallback."""
+    selected_authority = authority or bundled_authority()
+    RegistryQueryService(selected_authority).describe_modelo_for_scope(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.code,
+        as_of=period.end_date,
+    )
+    resolved = _resolved_withholding_scheme_fact(period.end_date, authority=selected_authority)
     model_schemes: dict[str, frozenset[RetencionScheme]] = {}
     prefix = "modelo."
     suffix = ".schemes"
@@ -215,14 +275,8 @@ def _aggregate_for_modelo(
     modelo: str,
     period: Period,
 ) -> RetencionesAggregation:
-    """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up.
-
-    Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY + PROFESSIONAL +
-    PRIZE. Modelo 115 covers URBAN_RENTAL. Modelo 123 covers capital
-    income schemes, and annual summaries 180/190/193 reuse the matching
-    quarterly scheme catalogue over an annual period.
-    """
-    registry_catalogue = _registry_retenciones_catalogue(period.end_date, modelo=modelo)
+    """Shared per-modelo aggregation using the selected registry catalogue."""
+    registry_catalogue = _registry_retenciones_catalogue(period, modelo=modelo)
     filtered = filter_observations_for_modelo(
         observations,
         modelo=modelo,
@@ -288,7 +342,7 @@ def aggregate_retenciones_115(
 ) -> RetencionesAggregation:
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
-    Only ``URBAN_RENTAL`` scheme observations are in scope.
+    Only the schemes declared for this modelo by the registry are in scope.
 
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
@@ -303,8 +357,7 @@ def aggregate_retenciones_123(
 ) -> RetencionesAggregation:
     """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
-    Covers rendimientos del capital mobiliario: intereses, dividendos, y otros.
-    In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
+    Covers the capital-income schemes selected by the registry.
     """
     return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period)
 
@@ -316,8 +369,8 @@ def aggregate_retenciones_180(
 ) -> RetencionesAggregation:
     """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
 
-    Shares the URBAN_RENTAL scheme catalogue with Modelo 115; the
-    difference is the period scope (full year vs quarter) which the
+    Shares the selected scheme catalogue with the corresponding quarterly
+    model; the difference is the period scope (full year vs quarter) which the
     caller supplies. Callers should pass an annual period string
     (e.g. ``"2025"``) and feed in the union of the year's 115
     observations.
@@ -334,8 +387,7 @@ def aggregate_retenciones_190(
 ) -> RetencionesAggregation:
     """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
 
-    Shares the 111 scheme catalogue (WORK_INCOME + ECONOMIC_ACTIVITY +
-    PROFESSIONAL + PRIZE) widened over the annual period.
+    Shares the selected quarterly scheme catalogue widened over the annual period.
 
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.

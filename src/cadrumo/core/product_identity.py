@@ -1,4 +1,4 @@
-"""Canonical Cadrumo product identity and AEAT authority vocabulary.
+"""Canonical, import-light Cadrumo product identity vocabulary.
 
 This module is the single runtime authority for names that identify the
 application.  :data:`PRODUCT_IDENTITY` projects the accepted CADRUMO tuple into
@@ -14,13 +14,7 @@ provides no legacy spelling, compatibility lookup, or fallback.
 from __future__ import annotations
 
 import re
-from typing import Annotated, Final, NamedTuple
-
-from pydantic import BaseModel, Field, StringConstraints, model_validator
-
-from .identity.digest import ContentDigest
-from .identity.tax_id import SubjectTaxId
-from .models import STRICT_FROZEN_CONFIG
+from typing import Final, NamedTuple
 
 
 class ProductIdentity(NamedTuple):
@@ -39,54 +33,6 @@ class ProductIdentity(NamedTuple):
     environment_prefix: str
     companion_distributions: tuple[str, str]
     companion_namespace: str
-
-
-type AeatProgramIdentifier = Annotated[
-    str,
-    StringConstraints(min_length=4, max_length=4, pattern=r"^[A-Z0-9]{4}$"),
-]
-"""Exact four-byte AEAT-assigned program identifier for one export header."""
-
-
-class AeatProductSoftwareEvidence(BaseModel):
-    """One immutable evidence item authorising an AEAT software identity.
-
-    This is deliberately distinct from legal, taxpayer, presenter and filing
-    producer evidence.  A product developer must be explicitly authorised to
-    emit its program and tax identifiers; neither identifier may be guessed
-    from a filing participant.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    reference: str = Field(min_length=1, max_length=512)
-    digest: ContentDigest
-
-
-class AeatProductSoftwareIdentity(BaseModel):
-    """The one explicit product/software authority for an AEAT export header.
-
-    No module-level instance is supplied.  A caller must provide both the AEAT
-    program identifier and the developer's validated Spanish tax identifier
-    with reviewed evidence for every generated or emitted envelope.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    program_identifier: AeatProgramIdentifier
-    developer_tax_id: SubjectTaxId
-    evidence: tuple[AeatProductSoftwareEvidence, ...] = Field(min_length=1)
-
-    @model_validator(mode="after")
-    def _require_exact_wire_widths(self) -> AeatProductSoftwareIdentity:
-        if len(self.program_identifier.encode("ascii")) != 4:
-            raise ValueError("AEAT program identifier must encode to exactly four ASCII bytes")
-        if len(self.developer_tax_id.encode("ascii")) != 9:
-            raise ValueError("AEAT developer tax identifier must encode to exactly nine ASCII bytes")
-        references = tuple(item.reference for item in self.evidence)
-        if len(set(references)) != len(references):
-            raise ValueError("AEAT product software evidence must not repeat a reference")
-        return self
 
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
@@ -116,9 +62,6 @@ def normalise_product_identity_references(value: str) -> str:
 __all__ = [
     "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
-    "AeatProductSoftwareEvidence",
-    "AeatProductSoftwareIdentity",
-    "AeatProgramIdentifier",
     "ProductIdentity",
     "normalise_product_identity_references",
 ]

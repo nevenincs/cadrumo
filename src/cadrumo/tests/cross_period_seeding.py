@@ -28,7 +28,7 @@ from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..application.calculations.observations_repository import CalculationObservationRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ..application.modelo.external_import_actions import import_external_filing_evidence
 from ..application.modelo.tests.justificante_metadata import persist_justificante_metadata
 from ..application.modelo.work_lifecycle import create_work_unit

@@ -40,7 +40,8 @@ from ...domain.iva.flow import (
     is_deducible_flow,
     is_devengada_flow,
 )
-from ...domain.iva.schema import EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
+from ...domain.iva.components import registry_category_projection
+from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from .invoice_kind import invoice_kind_for_direction
@@ -113,10 +114,10 @@ def _is_cuota_bearing_iva_category(category: IvaCategory | None) -> bool:
     """Return whether ``category`` is legally expected to bear a routed cuota.
 
     ``None`` is treated as "not yet a cuota-bearing classification" and is
-    likewise excluded, alongside the categories named in
-    :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES`.
+    likewise excluded, alongside the categories named in the published 0084
+    evidence-exempt projection.
     """
-    return category is None or category not in EVIDENCE_EXEMPT_IVA_CATEGORIES
+    return category is None or category not in registry_category_projection("evidence_exempt")
 
 
 def _flow_for_transaction(transaction: Transaction) -> IvaFlowDirection | None:
@@ -200,8 +201,8 @@ def missing_evidence_advisory_observations(
       diagnostic blocks verification downstream.
     - an output-IVA row whose IVA category is legally expected to bear a
       devengada cuota — i.e. not in
-      :data:`~cadrumo.domain.iva.EVIDENCE_EXEMPT_IVA_CATEGORIES` — carrying no
-      linked evidence of any kind (the issued-invoice evidence gap remains
+      the published 0084 evidence-exempt projection — carrying no linked
+      evidence of any kind (the issued-invoice evidence gap remains
       visible but advisory).
 
     Rows that legitimately bear no evidence requirement — non-business /

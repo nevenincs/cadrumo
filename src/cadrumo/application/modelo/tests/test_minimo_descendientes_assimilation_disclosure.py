@@ -104,7 +104,7 @@ def _rentas_advisories() -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_minimo_descendientes_rentas_undeclared_diagnostics(
         _revision(),
         _CLAIMED,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
 
@@ -113,7 +113,7 @@ def _entry_date_advisories() -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_minimo_descendientes_entry_date_missing_diagnostics(
         _revision(),
         _CLAIMED,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
 

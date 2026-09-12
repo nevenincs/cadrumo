@@ -63,7 +63,7 @@ from ..calculations.iva_compensation_history import (
 )
 from ..calculations.observations_repository import (
     APP_FILING_SOURCE_KIND,
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
     observation_key,
@@ -74,7 +74,7 @@ from .action_errors import ModeloLocalObservationError
 def _history_repository_in_observation_context(
     override: IvaCompensationHistoryRepository | None,
     *,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> IvaCompensationHistoryRepository:
     """Return the IVA history repository bound to the observation's own store.
 
@@ -144,7 +144,7 @@ def persist_filed_revision_observation(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime,
     result_disposition: ResultDisposition | None = None,
     prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
@@ -161,7 +161,7 @@ def persist_filed_revision_observation(
     :class:`~cadrumo.domain.calculations.registry.RegistryModeloObservation` keyed
     by the work unit's ``(modelo, filing_year, period)`` and saves it through the
     bucket-scoped
-    :class:`~cadrumo.application.calculations.CalculationObservationRepository` with
+    :class:`~cadrumo.application.calculations.CalculationObservationRepositoryProtocol` with
     the NON-official ``source_kind = "app_filing"``.
 
     Args:
@@ -208,7 +208,7 @@ def persist_filed_revision_observation(
     path, not as a second direct owner of the effective casilla 110 value.
 
     See Also:
-        :class:`~cadrumo.application.calculations.CalculationObservationRepository`:
+        :class:`~cadrumo.application.calculations.CalculationObservationRepositoryProtocol`:
             Stores the non-official cross-period observation envelope.
         :class:`~cadrumo.application.calculations.IvaCompensationHistoryRepository`:
             Stores the profile-local Modelo 303 compensation period state.

@@ -26,13 +26,14 @@ isolation helper's default of no pointer would have hidden.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
-from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
@@ -45,6 +46,9 @@ from ..operator_probes import (
     live_auth_identity_state,
     probe_clave_credentials,
 )
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,6 +59,8 @@ _SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
 
 _BUCKET_ID = "99999999-9999-4999-8999-999999999999"
 _TAX_ID = "12345678Z"
+_LOCKED_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
+_BOUND_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=True)
 
 
 def test_the_fixture_leaves_a_readable_profile_and_no_session() -> None:
@@ -66,10 +72,10 @@ def test_the_fixture_leaves_a_readable_profile_and_no_session() -> None:
     the wrong reason and every assertion below would still pass.
     """
 
-    assert has_active_bucket_session() is False
+    assert _LOCKED_OPERATOR_PROBE_PORTS.active_profile_session.is_bound() is False
 
     with open_test_profile_session(_BUCKET_ID):
-        readable = _active_profile_path_values()
+        readable = _active_profile_path_values(operator_probe_ports=_BOUND_OPERATOR_PROBE_PORTS)
 
     assert readable.get("identity.tax_id") == _TAX_ID
 
@@ -82,7 +88,7 @@ def test_the_profile_read_is_declined_when_no_session_is_bound() -> None:
     keychain. Asserting the decline catches both.
     """
 
-    assert _active_profile_path_values() == {}
+    assert _active_profile_path_values(operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS) == {}
 
 
 def test_the_credential_probe_reports_nothing_from_an_unread_profile() -> None:
@@ -93,7 +99,11 @@ def test_the_credential_probe_reports_nothing_from_an_unread_profile() -> None:
     """
 
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        credentials = probe_clave_credentials(AuthProviderKind.CLAVE_MOVIL, settings=settings)
+        credentials = probe_clave_credentials(
+            AuthProviderKind.CLAVE_MOVIL,
+            settings=settings,
+            operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS,
+        )
 
     assert credentials is not None
     assert credentials.dni_nie == ""
@@ -106,6 +116,7 @@ def test_the_identity_state_probe_answers_without_a_session() -> None:
         profile_present, provider_present, alignment = live_auth_identity_state(
             AuthProviderKind.CLAVE_MOVIL,
             settings=settings,
+            operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS,
         )
 
     assert profile_present is False
@@ -116,7 +127,11 @@ def test_the_identity_state_probe_answers_without_a_session() -> None:
 def test_the_preflight_report_builds_without_a_session() -> None:
     """An operator asks whether auth is ready before unlocking anything."""
 
-    report = build_live_auth_preflight_report(AuthProviderKind.CLAVE_MOVIL.value)
+    report = build_live_auth_preflight_report(
+        AuthProviderKind.CLAVE_MOVIL.value,
+        operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+    )
 
     assert report.provider == AuthProviderKind.CLAVE_MOVIL.value
 
@@ -128,7 +143,10 @@ def test_the_preflight_aggregate_returns_rows_without_a_session() -> None:
     broke, which the operator met as a refusal to run at all.
     """
 
-    rows = run_preflight_checks(object_path_suffix_length=_SUFFIX_LENGTH)
+    rows = run_preflight_checks(
+        object_path_suffix_length=_SUFFIX_LENGTH,
+        operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS,
+    )
 
     assert rows
     assert any(row.check.startswith("auth") for row in rows), (

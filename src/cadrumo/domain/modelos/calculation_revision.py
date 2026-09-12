@@ -60,12 +60,13 @@ from pydantic import (
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
-from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
+from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.utc import validate_utc_aware
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId
+from ..calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
@@ -941,7 +942,7 @@ class CalculationRevision(BaseModel):
         if value is None:
             return None
         code = value.strip()
-        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
+        if code not in m210_tipo_renta_code_projection():
             raise ModeloValidationError(
                 f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
             )

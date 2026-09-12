@@ -11,7 +11,7 @@ persist casilla values.
 
 The prior-payment collectors need persisted filing observations, so the
 coordinator shares one
-:class:`~application.calculations.CalculationObservationRepository` instance
+:class:`~application.calculations.CalculationObservationRepositoryProtocol` instance
 across them. The official-box and settlement collectors read only the revision
 structure and calculated casilla values. Together the collectors extend the
 source mesh's no-silent-under-declaration diagnostics with checks whose evidence
@@ -40,7 +40,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 from ._minimo_descendientes_advisory import (
     collect_descendientes_count_desync_diagnostics,
@@ -72,6 +72,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     period_token: str,
     filing_year: int,
     bucket_id: str,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Return advisory diagnostics raised after bucket aggregation calculation.
 
@@ -119,14 +120,13 @@ def collect_bucket_aggregation_advisory_diagnostics(
         advisory rows, or an empty tuple when no post-calculation advisory fires.
 
     See Also:
-        :class:`~application.calculations.CalculationObservationRepository`:
+        :class:`~application.calculations.CalculationObservationRepositoryProtocol`:
             Supplies the prior-filing observation catalogue used by the Modelo
             130 prior-payment advisory collectors.
         :func:`~application.modelo.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
             Appends this tuple to the source mesh diagnostics on the returned
             bucket aggregation result.
     """
-    observation_repository = CalculationObservationRepository()
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)
         + collect_prior_payment_not_deducted_diagnostics(
@@ -149,46 +149,63 @@ def collect_bucket_aggregation_advisory_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_minimo_descendientes_prorrata_inferred_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_minimo_descendientes_rentas_undeclared_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_minimo_descendientes_entry_date_missing_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_minimo_descendientes_dependencia_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_guarderia_spend_shape_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_guarderia_madre_meses_undeclared_diagnostics(
             revision,
             casilla_values,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_descendientes_count_desync_diagnostics(
+            revision,
             modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
             bucket_id=bucket_id,
         )
         + collect_bienes_inversion_regularizacion_diagnostics(

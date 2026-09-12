@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ......core.classification.policies import SensitivityClass
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     _repo_at,
 )

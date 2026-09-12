@@ -17,7 +17,7 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
-from .observations_repository import CalculationObservationRepository
+from .observations_repository import CalculationObservationRepositoryProtocol
 
 STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 
@@ -50,11 +50,11 @@ class PreviousFilingSourceResolver:
     def __init__(
         self,
         *,
-        repository: CalculationObservationRepository | None = None,
+        repository: CalculationObservationRepositoryProtocol,
         registry_snapshot: RegistrySnapshot | None = None,
         excluded_binding_ids: frozenset[BindingId] | None = None,
     ) -> None:
-        """Bind optional storage and registry collaborators."""
+        """Bind the composed observation repository and registry collaborators."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
         self._excluded_binding_ids = excluded_binding_ids or frozenset()

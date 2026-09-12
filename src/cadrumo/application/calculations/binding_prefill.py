@@ -32,7 +32,7 @@ The strict registry boundary remains
 and
 :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`;
 this module is the application reader that supplies local observations from
-:class:`~.observations_repository.CalculationObservationRepository` and returns
+:class:`~.observations_repository.CalculationObservationRepositoryProtocol` and returns
 :class:`BindingPrefillReport` coverage.
 """
 
@@ -99,7 +99,7 @@ from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceErr
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from .errors import BindingPrefillTypeError
 from .iva_compensation_history import IvaCompensationHistoryRepository
-from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
@@ -299,7 +299,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
 def _gather_grouped_member_observations(
     req_key: tuple[str, int, str],
     *,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     needed: dict[tuple[str, int, str, int], _GatheredObservation],
     seen_member: dict[tuple[str, int, str], int],
 ) -> None:
@@ -349,7 +349,7 @@ def _gather_single_key_observation(
     requirement_filing_year: int,
     requirement_period: str,
     *,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepository | None,
 ) -> _GatheredObservation | None:
     """Load one observation by key, folding in any secure Modelo 303 IVA history.
@@ -383,7 +383,7 @@ def _gather_single_key_observation(
 def _gather_observations(
     snapshot: RegistrySnapshot,
     *,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
     excluded_binding_ids: frozenset[BindingId] | None = None,
 ) -> tuple[_GatheredObservation, ...]:
@@ -796,7 +796,7 @@ def _prefilled_bindings(
 def resolve_bindings_from_local_store(
     snapshot: RegistrySnapshot,
     *,
-    repository: CalculationObservationRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
     captured_at: datetime | None = None,
     activity_start_date: date | None = None,
@@ -814,8 +814,7 @@ def resolve_bindings_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
             bindings are resolved from the local calculation observation store.
-        repository: Optional :class:`CalculationObservationRepository`;
-            defaults to the active-bucket repository when ``None``.
+        repository: The composed :class:`CalculationObservationRepositoryProtocol`.
         iva_history_repository: Optional
             :class:`IvaCompensationHistoryRepository` consulted for the IVA
             compensation prior-balance bindings; defaults to the
@@ -845,7 +844,7 @@ def resolve_bindings_from_local_store(
         the separate ``relation_prefill`` source family over the same
         observation repository.
     """
-    repo = repository if repository is not None else CalculationObservationRepository()
+    repo = repository
     # The Modelo 303 IVA-compensation-history merge is NO LONGER an implicit
     # default: the live calculate path's compensación value is owned exclusively
     # by the iva-wallet decision (ruling D3), so the previous_filing gather stays
@@ -902,7 +901,7 @@ def resolve_bindings_from_local_store(
 def extract_modelo_303_local_iva_compensation_recurrence(
     snapshot: RegistrySnapshot,
     *,
-    repository: CalculationObservationRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
     captured_at: datetime | None = None,
 ) -> tuple[LocalIvaCompensationRecurrence | None, BindingPrefillReport]:
@@ -916,8 +915,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
 
     Args:
         snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
-        repository: Optional :class:`CalculationObservationRepository`;
-            defaults to the active-bucket repository when ``None``.
+        repository: The composed :class:`CalculationObservationRepositoryProtocol`.
         iva_history_repository: Optional
             :class:`IvaCompensationHistoryRepository` consulted for prior
             compensation balances; defaults to the active-bucket repository

@@ -272,8 +272,9 @@ async def _run_logout_operation(profile_id: UUID) -> None:
     """
     from ....application.user_profile.operations import build_profile_logout_operation_request
     from ...operation_composition import compose_operation_dependencies
+    from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 
-    services = compose_operation_dependencies()
+    services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
     try:
         submission = await services.submission.submit(
             build_profile_logout_operation_request(profile_id),

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo.export import modelo_export_readiness_refusal
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...application.auth.operator_probe_ports import OperatorProbePorts
+from ...application.auth.operator_scope_ports import OperatorScopePorts
+from ...application.modelo.export import modelo_export_readiness_refusal
 from ...application.state_projection import (
     ModeloReadinessRequest,
     ProjectionModeloReadiness,
@@ -25,7 +27,12 @@ from ._modelo_payloads import (
 )
 from .common import emit_envelope, no_active_profile_refusal, resolve_cli_precondition_action
 from .errors import CliRefusedBoundaryError
-from .state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+from .state_projection_support import (
+    certificate_secret_backend_factory,
+    operator_probe_ports,
+    operator_scope_ports,
+    state_projection_read_ports,
+)
 
 
 def modelo_readiness(
@@ -62,6 +69,8 @@ def modelo_readiness(
     report = _readiness_report(
         request,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
     )
     readiness_result = _readiness_result(
@@ -117,6 +126,8 @@ def _readiness_report(
     request: ModeloReadinessRequest,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
 ) -> ProjectionModeloReadiness:
     from ...core.bucket_pointer import resolve_active_bucket_id
@@ -127,6 +138,8 @@ def _readiness_report(
     try:
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             modelo_readiness_requests=(request,),
         )

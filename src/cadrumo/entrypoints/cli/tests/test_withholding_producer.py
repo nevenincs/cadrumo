@@ -68,7 +68,7 @@ def test_command_carries_withholding_observations() -> None:
     """PerModeloAggregationCommand carries the parsed withholding observations."""
     parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
     command = PerModeloAggregationCommand(
-        modelo=Modelo.M190.value,
+        modelo=Modelo("190").value,
         period=Period.from_year_and_code(2024, "0A"),
         withholding_observations=parsed,
     )
@@ -81,10 +81,10 @@ def test_persisted_withholding_set_is_readable_by_the_store(tmp_path: Path) -> N
         parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
         period = Period.from_year_and_code(2024, "0A")
         persist_percepcion_observations(
-            modelo=Modelo.M190.value,
+            modelo=Modelo("190").value,
             filing_year=2024,
             period=period,
             observations=parsed,
         )
-        loaded = PercepcionObservationRepository().load_observations(Modelo.M190.value, period)
+        loaded = PercepcionObservationRepository().load_observations(Modelo("190").value, period)
         assert set(loaded) == set(parsed)

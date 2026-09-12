@@ -9,12 +9,18 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[None]:
+def profile_adapter_composition() -> Generator[OperatorProbePorts]:
     """Bind every concrete adapter port used by one MCP server process."""
     from cadrumo.adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
+    from cadrumo.adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
+    from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
     from cadrumo.adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from cadrumo.adapters.outbound.aeat.auth.session_store import build_session_store
     from cadrumo.adapters.outbound.llm.column_role_mapping import resolve_column_roles as resolve_outbound_column_roles
@@ -34,9 +40,11 @@ def profile_adapter_composition() -> Generator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
+    from cadrumo.adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
     from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
     from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from cadrumo.adapters.persistence.workflow import build_workflow_persistence_port
+    from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
     from cadrumo.application.auth.protocols import bind_session_store
     from cadrumo.application.auth.providers import bind_auth_provider_selector
     from cadrumo.application.bucket_event_repository import bind_bucket_event_history_repository_factory
@@ -93,7 +101,11 @@ def profile_adapter_composition() -> Generator[None]:
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
         register_language_resolver()
-        yield
+        yield OperatorProbePorts(
+            active_profile_session=ActiveProfileSessionPresenceAdapter(),
+            certificate_health=CertificateHealthProbeAdapter(),
+            clave_identity=ClaveIdentityProbeAdapter(),
+        )
 
 
 __all__ = ["profile_adapter_composition"]

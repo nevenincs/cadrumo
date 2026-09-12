@@ -114,5 +114,5 @@ def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:
     """
     authority = bundled_authority()
     for period in ("1T", "2T", "3T", "4T"):
-        snapshot = authority.snapshot(Modelo.M130, filing_year=2026, period=period)
+        snapshot = authority.snapshot(Modelo("130"), filing_year=2026, period=period)
         assert snapshot.revision.id == "2019-y-siguientes"

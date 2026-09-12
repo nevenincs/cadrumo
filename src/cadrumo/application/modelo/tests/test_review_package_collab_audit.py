@@ -45,6 +45,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.review_package_recipient_encryption import RecipientEncryptionAdapter
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -80,6 +81,7 @@ _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
 _BASE_CASILLA = validated_casilla_id("base", surface="test_review_package_collab_audit")
 _CUOTA_CASILLA = validated_casilla_id("cuota", surface="test_review_package_collab_audit")
 _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-COLLAB-AUDIT-TEST"
+_CRYPTO_CAPABILITY = RecipientEncryptionAdapter(repository=object())
 
 
 def _work_unit(*, bucket_id: str) -> WorkUnit:
@@ -206,6 +208,7 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
         envelope = encrypt_review_package_for_recipient(
             package_bytes,
             recipient_public_key_hex=recipient_public_key_hex,
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
         encrypted_event = emit_collab_package_encrypted_event(
             envelope,
@@ -217,7 +220,11 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
         assert encrypted_event.payload["envelope_nonce_hex"] == envelope.envelope_nonce_hex
         assert encrypted_event.payload["review_only"] == "false"
 
-        decrypted = decrypt_review_package_for_recipient(envelope, recipient_private_key=recipient_private_key)
+        decrypted = decrypt_review_package_for_recipient(
+            envelope,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
+        )
         assert decrypted.package_bytes == package_bytes
 
         decrypted_event = emit_collab_package_decrypted_event(

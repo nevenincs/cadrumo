@@ -65,7 +65,7 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from .m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
-from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
 
 _log = get_logger(__name__)
@@ -189,7 +189,7 @@ def _load_303_observations_for_partition(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[ObservationEnvelopePayload, ...]:
     requirement = iva_compensation_annual_partition_requirement(revision)
     if requirement is None:
@@ -257,18 +257,18 @@ def _select_partition_revision(
     )
 
 
-def _partition_repository(repository: CalculationObservationRepository | None) -> CalculationObservationRepository:
-    """Return the configured observation repository or the local default."""
+def _partition_repository(repository: CalculationObservationRepositoryProtocol | None) -> CalculationObservationRepositoryProtocol:
+    """Require the observation repository composed by the caller."""
     if repository is not None:
         return repository
-    return CalculationObservationRepository()
+    raise TypeError("iva compensation annual partition requires an observation repository")
 
 
 def _load_partition_envelopes_or_degrade(
     revision: ModeloRevision,
     *,
     filing_year: int,
-    repository: CalculationObservationRepository,
+    repository: CalculationObservationRepositoryProtocol,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> tuple[ObservationEnvelopePayload, ...] | CalculationSourceResolution:
@@ -338,10 +338,10 @@ class IvaCompensationAnnualPartitionSourceResolver:
     def __init__(
         self,
         *,
-        repository: CalculationObservationRepository | None = None,
+        repository: CalculationObservationRepositoryProtocol,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
-        """Initialize the resolver with the optional observation repository and registry snapshot."""
+        """Initialize the resolver with its composed observation repository and registry snapshot."""
         self._repository = repository
         self._registry_snapshot = registry_snapshot
 

@@ -10,6 +10,8 @@ screen subclass.  The central visual-surface registry can consume
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -146,6 +148,8 @@ _AT: Final[datetime] = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 class WorkbenchFixtureScenario(StrEnum):
     """Closed fixture states shared by the workbench candidates."""
 
@@ -228,6 +232,7 @@ def _operation_contracts() -> OperationPublicContractSetV1:
     """Build the canonical censo contract with its existing action join."""
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     ).model_copy(
         update={"action_reference": ActionReference(action_id="operator.profile.edit")}
     )

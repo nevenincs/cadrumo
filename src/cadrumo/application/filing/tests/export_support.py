@@ -52,7 +52,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
         else None
     )
     return build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -77,7 +77,7 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
 
 def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
     return build_filing_producer_snapshot(
-        modelo=Modelo.M131,
+        modelo=Modelo("131"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,
@@ -615,7 +615,7 @@ def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) 
 def m151_producer_snapshot() -> FilingProducerSnapshot:
     """Producer facts for the Modelo 151 export coordinate."""
     return build_filing_producer_snapshot(
-        modelo=Modelo.M151,
+        modelo=Modelo("151"),
         taxpayer_tax_id="12345678Z",
         taxpayer_identity=TaxpayerIdentityFacts(
             legal_name=None,

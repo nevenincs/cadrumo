@@ -46,7 +46,7 @@ from ...domain.deadlines.engine import DeadlineEngine
 from ...domain.deadlines.errors import DeadlineValidationError, NoDeadlineWindowsError
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.deadlines.recargo import twelve_month_anniversary
-from ...domain.retention.floor import TAX_RECORD_RETENTION_FLOOR_YEARS
+from ...domain.retention.floor import retention_floor_years
 from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
@@ -391,7 +391,10 @@ def _out_of_plazo_warning(
     if today < twelve_month_boundary:
         return None
     days_late = (today - closes_on).days
-    prescription_boundary = shift_by_calendar_years(closes_on, TAX_RECORD_RETENTION_FLOOR_YEARS)
+    prescription_boundary = shift_by_calendar_years(
+        closes_on,
+        retention_floor_years(effective_date=today),
+    )
     prescription_state = (
         "inside the ordinary four-year LGT arts. 66-67 prescription horizon"
         if today <= prescription_boundary

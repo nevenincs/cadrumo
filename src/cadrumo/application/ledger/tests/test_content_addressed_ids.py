@@ -130,7 +130,8 @@ class TestEvidenceIdContentAddressed:
         and assert the reload surfaces the tampered content as strict inequality —
         so a broken save/load path could not pass this test.
         """
-        from ..evidence import PurchaseInvoiceEvidenceDocument, PurchaseInvoiceEvidenceRepository
+        from ....adapters.persistence.profile.purchase_invoice_evidence import PurchaseInvoiceEvidenceRepository
+        from ..evidence import PurchaseInvoiceEvidenceDocument
 
         svc = _make_svc(isolated_settings, secure_objects)
         original = svc.add(

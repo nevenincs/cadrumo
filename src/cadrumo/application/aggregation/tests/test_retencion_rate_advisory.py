@@ -45,7 +45,7 @@ def _administrador(base: str, withheld: str, *, nif: str = "87654321X") -> Reten
         source_object_id=f"administrador-{nif}-{withheld}",
         perceptor_nif=nif,
         perceptor_name="Administrador Ejemplo",
-        scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
+        scheme=RetencionScheme("rendimientos_trabajo_administrador"),
         taxable_base=Decimal(base),
         retencion_amount=Decimal(withheld),
         accrued_on="2026-03-15",
@@ -58,7 +58,7 @@ def _empleado(base: str, withheld: str) -> RetencionObservation:
         source_object_id="empleado-001",
         perceptor_nif="12345678Z",
         perceptor_name="Empleado Ejemplo",
-        scheme=RetencionScheme.WORK_INCOME,
+        scheme=RetencionScheme("rendimientos_trabajo"),
         taxable_base=Decimal(base),
         retencion_amount=Decimal(withheld),
         accrued_on="2026-03-15",
@@ -158,20 +158,18 @@ def test_the_art95_grounding_is_read_from_the_registry_parameters() -> None:
     """The refs come from the parameters the rate set is loaded from."""
     from .._retencion_rate_advisory import _art95_refs
 
-    assert _art95_refs() == ("rd-439-2007:art-95",)
+    assert _art95_refs(effective_date=_EFFECTIVE_DATE) == ("rd-439-2007:art-95",)
 
 
 def test_the_administrador_grounding_is_read_from_the_registry() -> None:
-    """Both provisions the message names arrive as refs, not just as prose.
+    """The selected rate provision arrives from the dated scalar facts.
 
-    Read from the registry-backed parameter set
-    (``domain.transactions.administrador_retencion_legal_refs``), not from
-    ``WorkIncomeRetencionTreatment`` -- that ``core`` descriptor carries only
-    the structural fixed-vs-progressive fact, never the grounding refs.
+    Read from the dated registry-backed parameter set, not from a core-level
+    closed catalogue or structural fallback.
     """
     from .._retencion_rate_advisory import _administrador_refs
 
-    assert set(_administrador_refs()) == {"ley-35-2006:art-101", "rd-439-2007:art-80"}
+    assert _administrador_refs(effective_date=_EFFECTIVE_DATE) == ("ley-35-2006:art-101",)
 
 
 def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
@@ -189,7 +187,10 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     legal_root = bundled_path("registry", "aeat") / "legal"
     declared = "".join(path.read_text(encoding="utf-8") for path in scan_directory(legal_root, pattern="*.toml"))
 
-    for reference in (*_art95_refs(), *_administrador_refs()):
+    for reference in (
+        *_art95_refs(effective_date=_EFFECTIVE_DATE),
+        *_administrador_refs(effective_date=_EFFECTIVE_DATE),
+    ):
         assert f'[legal."{reference}"]' in declared, (
             f"{reference} is cited by an advisory but not defined in the legal catalogue"
         )

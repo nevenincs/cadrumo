@@ -21,11 +21,7 @@ from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.post_filing_event import PostFilingEventKind
 from ....domain.calculations.registry.authority import bundled_authority
-from .._overview_rendering import (
-    DEEMED_SERVED_LEGAL_REF,
-    overview_deemed_served_notification_notices,
-    overview_post_filing_event_notices,
-)
+from .._overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -65,7 +61,7 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
     assert isinstance(notice.action, ResolvedNoticeAction)
 
     context = notice.context or {}
-    assert context["legal_ref"] == DEEMED_SERVED_LEGAL_REF == "ley-39-2015:art-43.2"
+    assert context["legal_ref"] == "ley-39-2015:art-43.2"
     assert context["count"] == "2"
     # Only the lapsed rows, sorted, and never the in-window one.
     assert context["certificado_ids"] == "2596230606501,2596230606502"
@@ -75,11 +71,13 @@ def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> No
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
     authority = bundled_authority()
     catalogue = authority.catalogues.legal
-    assert DEEMED_SERVED_LEGAL_REF in catalogue, (
-        f"the notice cites {DEEMED_SERVED_LEGAL_REF!r}, absent from the registry legal catalogue"
-    )
-    reference = catalogue[DEEMED_SERVED_LEGAL_REF]
-    assert authority.legal_evidence_text(DEEMED_SERVED_LEGAL_REF).strip()
+    notice = overview_deemed_served_notification_notices(
+        (_notificacion(reference_id="2596230606502", estado=NotificacionEstadoServicio.RECHAZO_TACITO),),
+    )[0]
+    legal_ref = str((notice.context or {})["legal_ref"])
+    assert legal_ref in catalogue, f"the notice cites {legal_ref!r}, absent from the registry legal catalogue"
+    reference = catalogue[legal_ref]
+    assert authority.legal_evidence_text(legal_ref).strip()
     assert reference.article == "43.2"
 
 

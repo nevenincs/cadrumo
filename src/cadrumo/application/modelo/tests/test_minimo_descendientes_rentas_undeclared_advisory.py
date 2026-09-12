@@ -70,7 +70,7 @@ def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[Ca
     return collect_minimo_descendientes_rentas_undeclared_diagnostics(
         _revision(),
         _CLAIMED if casilla_values is None else casilla_values,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
 
@@ -252,7 +252,7 @@ def test_this_covers_the_state_the_sibling_undeclared_advisory_returns_early_on(
     sibling = collect_minimo_descendientes_undeclared_diagnostics(
         _revision(),
         _CLAIMED,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
     assert sibling == (), "sibling unexpectedly covers this state; the overlap claim needs re-checking"

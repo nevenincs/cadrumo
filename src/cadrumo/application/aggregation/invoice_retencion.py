@@ -18,11 +18,9 @@ operator-declared path builds, so a received invoice becomes one more
 observation in the one store rather than a second retención path with its own
 totals to reconcile.
 
-**The scheme is not inferred.** Which retención scheme a payment falls under --
-trabajo, actividades económicas, actividades profesionales, premios -- is a
-legal fact about the perceptor's activity, not a property of the invoice. An
-invoice record carries no field that settles it, and the closed IRPF-category
-enum that might is deliberately deferred to its own decision. So the caller
+**The scheme is not inferred.** Which registry-owned retención scheme a payment
+falls under is a legal fact about the perceptor's activity, not a property of
+the invoice. An invoice record carries no field that settles it. So the caller
 declares it, and this module refuses to guess: choosing a scheme here would
 file a figure under a clave the taxpayer never asserted.
 

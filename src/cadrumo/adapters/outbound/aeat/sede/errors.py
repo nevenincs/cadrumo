@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
+from .....application.live.errors import LiveIvaAcquisitionFailureMode
 from .....core.errors.hierarchy import CadrumoError, CoreError
 
 
@@ -43,6 +44,21 @@ class SedeError(CadrumoError):
             context=enriched_context or None,
             translated_message=translated_message,
         )
+
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        """Translate the Sede taxonomy into the live application contract."""
+        if self.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value:
+            context = self.context if isinstance(self.context, dict) else {}
+            required_provider = str(context.get("required_auth_provider") or "").casefold()
+            if required_provider in {"certificate", "certificado"}:
+                return LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED
+            return LiveIvaAcquisitionFailureMode.AEAT_403
+        if self.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED.value:
+            return LiveIvaAcquisitionFailureMode.DOM_DRIFT
+        if self.failure_mode == SedeFailureMode.LIVE_NAVIGATION_FAILED.value:
+            return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+        return LiveIvaAcquisitionFailureMode.UNKNOWN
 
 
 class SedeFailureMode(StrEnum):

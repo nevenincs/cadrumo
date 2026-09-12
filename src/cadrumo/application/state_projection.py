@@ -94,6 +94,8 @@ from ._state_projection_readiness import (
     readiness_binding_input_channel,
 )
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
+from .auth.operator_probe_ports import OperatorProbePorts
+from .auth.operator_scope_ports import OperatorScopePorts
 from .auth_credentials import ActiveCertificateCredentials
 from .ledger.preflight import (
     LedgerPreflightIssue,
@@ -109,9 +111,9 @@ from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_
 from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
-    from .auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ..domain.user_profile.values import UserProfileRecord
+    from .auth.certificate_secret_backend import CertificateSecretBackendFactory
 
 _log = get_logger(__name__)
 
@@ -256,7 +258,7 @@ class OperatorStateProjection(BaseModel):
     pending_obligations: tuple[ProjectionObligation, ...] = ()
 
 
-def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfile:
+def build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfile:
     """Project one coherent profile-health snapshot into the public record."""
     return ProjectionActiveProfile(
         profile_id=health.active_profile,
@@ -1083,6 +1085,8 @@ def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Peri
 def build_operator_state_projection(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
     state: WorkflowState | None = None,
     auth_snapshot: ActiveAuthProjectionSnapshot | None = None,
@@ -1100,6 +1104,9 @@ def build_operator_state_projection(
     no surface re-derives state.
 
     Args:
+        certificate_secret_backend_factory: Application-owned certificate-secret
+            backend factory used by auth readiness.
+        operator_probe_ports: Required inward operator-auth probe capabilities.
         read_ports: Required application-owned profile and workspace reads
             composed by the outer entrypoint for this profile scope.
         state: Pre-loaded workflow state. When ``None`` and a profile
@@ -1147,6 +1154,8 @@ def build_operator_state_projection(
         return _assemble_operator_state_projection(
             auth_snapshot.state or WorkflowState(),
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             active_bucket_id=auth_snapshot.bucket_id,
             credential_bucket_id=(auth_snapshot.bucket_id if auth_snapshot.state is not None else None),
@@ -1164,6 +1173,8 @@ def build_operator_state_projection(
         return _assemble_operator_state_projection(
             state,
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             active_bucket_id=resolve_active_bucket_id(),
             credential_bucket_id=None,
@@ -1180,10 +1191,13 @@ def build_operator_state_projection(
     with active_auth_projection_span(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
         requested_provider=requested_provider,
+        operator_scope_ports=operator_scope_ports,
     ) as snapshot:
         return _assemble_operator_state_projection(
             snapshot.state or WorkflowState(),
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_probe_ports=operator_probe_ports,
+            operator_scope_ports=operator_scope_ports,
             read_ports=read_ports,
             active_bucket_id=snapshot.bucket_id,
             credential_bucket_id=(snapshot.bucket_id if snapshot.state is not None else None),
@@ -1203,6 +1217,8 @@ def _assemble_operator_state_projection(
     resolved_state: WorkflowState,
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_probe_ports: OperatorProbePorts,
+    operator_scope_ports: OperatorScopePorts,
     read_ports: StateProjectionReadPorts,
     active_bucket_id: str | None,
     credential_bucket_id: str | None,
@@ -1231,6 +1247,8 @@ def _assemble_operator_state_projection(
     auth = build_auth_readiness(
         resolved_state,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_probe_ports=operator_probe_ports,
+        operator_scope_ports=operator_scope_ports,
         provider_kind=provider_kind,
         provider_kind_is_authoritative=provider_kind_is_authoritative,
         requested_provider=requested_provider,
@@ -1238,7 +1256,7 @@ def _assemble_operator_state_projection(
         credential_bucket_id=credential_bucket_id,
         certificate_credentials=certificate_credentials,
     )
-    active_profile = _build_active_profile(profile_health)
+    active_profile = build_active_profile(profile_health)
 
     if has_active_profile and include_pending_obligations:
         pending_obligations = build_pending_obligations(
@@ -1275,6 +1293,7 @@ __all__ = [
     "ProjectionModeloReadiness",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
+    "build_active_profile",
     "build_auth_readiness",
     "build_operator_state_projection",
     "build_pending_obligations",

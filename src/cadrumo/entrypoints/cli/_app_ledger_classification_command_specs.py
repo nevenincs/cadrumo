@@ -111,7 +111,7 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             OptionSpec(
                 name="m210_payer_mode",
                 declarations=("--m210-payer-mode",),
-                value=ValueContract(DeferredTarget("...core.irnr", "M210PayerMode", __package__)),
+                value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.value(None),
                 help_key=TranslationKey("cli.ledger.classify.m210_payer_mode_help"),
                 metavar=None,

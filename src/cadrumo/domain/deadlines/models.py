@@ -14,46 +14,58 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    GetCoreSchemaHandler,
+    NonNegativeInt,
+    field_validator,
+    model_validator,
+)
+from pydantic_core import CoreSchema, core_schema
 
 from ...core.aggregation import ThirdPartyDeclarationRole
+from ...core.errors.hierarchy import CoreValidationError
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
-from ...core.identity.tax_id import SubjectTaxId
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
-from ..contribuyente.renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
+from ..contribuyente.renta_codes import FiscalResidency
+from ..calculations.registry.renta_codes_catalogue import (
+    fiscal_residency_requires_country,
+    is_ue_eea_country_code as _registry_is_ue_eea_country_code,
+)
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
 
 
-class IVARegime(StrEnum):
-    """The IVA regime a taxpayer files under.
+class IVARegime(str):
+    """Opaque registry-projected IVA regime token.
 
-    Registry deadline applicability can reference this value. The closed
-    set tracks the IVA regimes the project supports.
-
-    Attributes:
-        GENERAL: Régimen general (Ley 37/1992 LIVA).
-        SIMPLIFICADO: Régimen simplificado (módulos), coordinated with
-            IRPF estimación objetiva.
-        RECARGO_EQUIVALENCIA: Recargo de equivalencia for retail traders.
-        REAGP: Régimen especial de la agricultura, ganadería y pesca.
-        EXENTO: IVA-exempt activity.
-        NO_APLICA: Internal projection sentinel for profiles that are
-            not enrolled in IVA.
+    Membership, deadline applicability, descriptions, and legal references
+    are selected from the 0098 IVA schema-vocabulary fact. This type retains
+    only the stable public string token shape.
     """
 
-    GENERAL = "GENERAL"
-    SIMPLIFICADO = "SIMPLIFICADO"
-    RECARGO_EQUIVALENCIA = "RECARGO_EQUIVALENCIA"
-    REAGP = "REAGP"
-    EXENTO = "EXENTO"
-    NO_APLICA = "NO_APLICA"
+    __slots__ = ()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a non-empty string to Pydantic."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema(min_length=1))
+
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
 
 
 class IrpfIncomeCategory(StrEnum):
@@ -89,26 +101,47 @@ class IrpfIncomeCategory(StrEnum):
     PENSION = "pension"
 
 
-class IrpfEstimationRegime(StrEnum):
-    """The IRPF method for determining net economic-activity income.
+class IrpfEstimationRegime(str):
+    """Opaque IRPF estimation-regime token projected from the facts registry."""
 
-    A closed regime choice for a natural person with rendimientos de
-    actividades económicas (LIRPF Arts. 16, 28-31; RIRPF RD 439/2007).
-    The regime selects Modelo 130 vs Modelo 131 and the
-    deductible-expense computation.
+    __slots__ = ()
 
-    Attributes:
-        DIRECTA_NORMAL: Estimación directa normal — full accounting;
-            pago fraccionado on Modelo 130.
-        DIRECTA_SIMPLIFICADA: Estimación directa simplificada — applies
-            below the INCN threshold; pago fraccionado on Modelo 130.
-        OBJETIVA: Estimación objetiva (módulos) — net income from
-            signos, índices y módulos; pago fraccionado on Modelo 131.
-    """
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IRPF estimation-regime tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IRPF estimation-regime token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    DIRECTA_NORMAL = "directa_normal"
-    DIRECTA_SIMPLIFICADA = "directa_simplificada"
-    OBJETIVA = "objetiva"
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IRPF estimation-regime must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class IrpfActivityKind(StrEnum):
@@ -179,30 +212,47 @@ class IrpfActivityKind(StrEnum):
     SECTORIAL = "sectorial"
 
 
-class IrpfSpecialRegime(StrEnum):
-    """IRPF special-regime category for natural persons.
+class IrpfSpecialRegime(str):
+    """Opaque IRPF special-regime token projected from the facts registry."""
 
-    Most taxpayers file under the general IRPF regime. The ``IMPATRIADO``
-    value represents the régimen especial aplicable a los trabajadores
-    desplazados a territorio español (LIRPF Art. 93, "Ley Beckham"),
-    introduced by Ley 62/2003 and extended by Ley 26/2014. Under this
-    regime the taxpayer files Modelo 151 (not Modelo 100) and is taxed
-    at the flat IRNR rate on Spanish-source income.
+    __slots__ = ()
 
-    Grounded in LIRPF Ley 35/2006 Art. 93 (BOE-A-2006-20764) and
-    RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820).
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("IRPF special-regime tokens must be projected from the facts registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("IRPF special-regime token must be a non-empty string")
+        return str.__new__(cls, value)
 
-    Attributes:
-        GENERAL: Standard IRPF — files Modelo 100, subject to the
-            progressive tarifa general / del ahorro.
-        IMPATRIADO: Régimen especial impatriados (Art. 93 LIRPF) —
-            files Modelo 151, taxed at the flat IRNR rate. The regime
-            has a six-year window triggered by the opt-in election date
-            (``special_regime_start_date`` on the profile).
-    """
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
 
-    GENERAL = "general"
-    IMPATRIADO = "impatriado"
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("IRPF special-regime must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _source_type: object,
+        _handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class ObligationStatus(StrEnum):
@@ -361,19 +411,101 @@ class ChargeAccount(BaseModel):
         return canonical
 
 
-class M303TaxTerritory(StrEnum):
-    """Exclusive tax-territory authority for Modelo 303 identification."""
+class M303TaxTerritory(str):
+    """Opaque Modelo 303 territory token projected from fact 0098.
 
-    COMMON_REGIME = "common_regime"
-    FORAL = "foral_unsupported"
+    The facts registry owns territory membership, descriptions, and the
+    downstream attribution semantics. This type intentionally has no Python
+    member list; callers must obtain a token through the typed registry
+    resolver.
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("M303TaxTerritory tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("M303TaxTerritory token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("M303TaxTerritory must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        """Accept only an already projected token and serialize it as text."""
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        """Return the canonical registry token for serialization."""
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        """Return the canonical registry token for diagnostics."""
+        return str(self)
 
 
-class M303RegimeComposition(StrEnum):
-    """Closed composition of IVA regimes declared for Modelo 303."""
+class M303RegimeComposition(str):
+    """Opaque Modelo 303 regime-composition token projected from fact 0098."""
 
-    GENERAL = "general"
-    SIMPLIFIED = "simplified"
-    MIXED = "mixed"
+    __slots__ = ()
+
+    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        if not _registry_validated:
+            raise TypeError("M303 regime-composition tokens must be projected from the registry")
+        if not isinstance(value, str) or not value:
+            raise ValueError("M303 regime-composition token must be a non-empty string")
+        return str.__new__(cls, value)
+
+    @classmethod
+    def _from_registry(cls, value: str) -> Self:
+        return cls(value, _registry_validated=True)
+
+    @classmethod
+    def _require_registry_token(cls, value: object) -> Self:
+        if isinstance(value, cls):
+            return value
+        raise CoreValidationError("M303 regime-composition must be a registry-projected token")
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source_type: type[object],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        del source_type, handler
+        return core_schema.no_info_plain_validator_function(
+            cls._require_registry_token,
+            json_schema_input_schema=core_schema.str_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
+
+    @property
+    def value(self) -> str:
+        return str(self)
+
+    @property
+    def name(self) -> str:
+        return str(self)
 
 
 class ModeloIVAProfile(BaseModel):
@@ -495,9 +627,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
 def is_ue_eee_country_code(country_code: str | None) -> bool:
     """Return True when ``country_code`` is in the EU + EEA country set."""
-    if country_code is None:
-        return False
-    return country_code.upper() in UE_EEA_COUNTRY_CODES
+    return _registry_is_ue_eea_country_code(country_code)
 
 
 def irnr_representante_fiscal_required(country_code: str | None) -> bool:
@@ -719,16 +849,19 @@ class TaxpayerProfile(BaseModel):
     """
 
     @model_validator(mode="after")
-    def _check_impatriado_requires_start_date(self) -> Self:
-        """Reject an IMPATRIADO regime declared without a start date.
+    def _validate_iva_regime_registry_membership(self) -> Self:
+        """Reject IVA regime tokens that are absent from fact 0098."""
+        from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
 
-        The six-year Beckham window (RIRPF Art. 116) cannot be computed
-        without the opt-in election date. Any caller that constructs an
-        IMPATRIADO profile without a ``special_regime_start_date`` has an
-        incomplete model — reject it at the boundary so downstream
-        consumers never see a nil start date for an active impatriado.
-        """
-        if self.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO and self.special_regime_start_date is None:
+        require_iva_regime(self.iva_regime)
+        return self
+
+    @model_validator(mode="after")
+    def _check_impatriado_requires_start_date(self) -> Self:
+        """Reject the active special-regime token without its start date."""
+        from ..calculations.registry.irpf_regimes import irpf_special_regime_impatriado_token
+
+        if self.irpf_special_regime == irpf_special_regime_impatriado_token() and self.special_regime_start_date is None:
             raise DeadlineValidationError(
                 "special_regime_start_date is required when "
                 "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)",
@@ -744,10 +877,10 @@ class TaxpayerProfile(BaseModel):
         residence is therefore mandatory for any meaningful downstream
         computation (EU/EEA status, convenio lookup, Modelo 210 routing).
         """
-        if self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and self.country_of_fiscal_residence is None:
+        if fiscal_residency_requires_country(self.fiscal_residency) and self.country_of_fiscal_residence is None:
             raise DeadlineValidationError(
                 "country_of_fiscal_residence is required when "
-                "fiscal_residency is NON_RESIDENT_IRNR (TRLIRNR RDLeg 5/2004 Art. 2)",
+                "the declared fiscal residency requires a country of residence (TRLIRNR RDLeg 5/2004 Art. 2)",
             )
         return self
 
@@ -760,7 +893,7 @@ class TaxpayerProfile(BaseModel):
         representative in Spain. Both NIF and name are required together;
         partial declaration is rejected.
         """
-        if self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR and irnr_representante_fiscal_required(
+        if fiscal_residency_requires_country(self.fiscal_residency) and irnr_representante_fiscal_required(
             self.country_of_fiscal_residence
         ):
             nif_missing = self.representante_fiscal_nif is None
@@ -778,25 +911,16 @@ class TaxpayerProfile(BaseModel):
         return self
 
     def beckham_window_active(self, today: date) -> bool:
-        """Return True if the Beckham window (Art. 93 LIRPF) is active on *today*.
+        """Return whether the selected special-regime window covers *today*."""
+        from ..calculations.registry.irpf_regimes import (
+            irpf_special_regime_impatriado_token,
+            irpf_special_regime_impatriado_window_years,
+        )
 
-        The window covers the year of election and the following five
-        calendar years — six years total (RIRPF Art. 116.1). Year-7 and
-        beyond return False; the taxpayer reverts to the general IRPF regime.
-        Returns False for any non-IMPATRIADO profile regardless of date.
-
-        Args:
-            today: Reference date for the window check (caller supplies
-                the canonical Europe/Madrid civil date in production; tests
-                supply a fixed date).
-
-        Returns:
-            True only when ``irpf_special_regime is IMPATRIADO`` and
-            ``start_date.year <= today.year <= start_date.year + 5``.
-        """
-        if self.irpf_special_regime is not IrpfSpecialRegime.IMPATRIADO or self.special_regime_start_date is None:
+        if self.irpf_special_regime != irpf_special_regime_impatriado_token() or self.special_regime_start_date is None:
             return False
-        return self.special_regime_start_date.year <= today.year <= self.special_regime_start_date.year + 5
+        window_years = irpf_special_regime_impatriado_window_years()
+        return self.special_regime_start_date.year <= today.year < self.special_regime_start_date.year + window_years
 
     @property
     def ue_eee_status(self) -> bool:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..application.ledger.action_ports import LedgerActionPorts
+from ..application.ledger.import_ports import LedgerImportPorts
 
 
 def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
@@ -15,12 +16,14 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.attachment import resolve_attachment_store
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..application.ledger.evidence import PurchaseInvoiceEvidenceRepository
+    from .adapter_composition import build_ledger_evidence_ports
     from ..core.config import load_settings
 
     settings = load_settings()
     objects = secure_object_repository_for_bucket(bucket_id, settings)
-    evidence_document = PurchaseInvoiceEvidenceRepository(objects=objects).load(bucket_id)
+    evidence_records = build_ledger_evidence_ports(
+        bucket_id=bucket_id,
+    ).evidence_repository.load(bucket_id=bucket_id)
 
     return LedgerActionPorts(
         transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
@@ -30,8 +33,15 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
         usage_ratio_profile=load_usage_ratios(bucket_id=bucket_id),
         work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
         calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id),
-        purchase_invoice_evidence_records=() if evidence_document is None else evidence_document.records,
+        purchase_invoice_evidence_records=evidence_records,
     )
 
 
-__all__ = ["compose_ledger_action_ports"]
+def compose_ledger_import_ports() -> LedgerImportPorts:
+    """Bind the concrete financial source and catalogue-location adapters."""
+    from ..adapters.inbound.financial.ledger_import import build_ledger_import_ports
+
+    return build_ledger_import_ports()
+
+
+__all__ = ["compose_ledger_action_ports", "compose_ledger_import_ports"]

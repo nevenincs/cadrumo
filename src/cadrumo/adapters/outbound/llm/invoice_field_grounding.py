@@ -11,7 +11,8 @@ That second step is the whole point. The reading model is probabilistic and a
 fabricated taxable base or supplier identifier would flow into a Modelo 303/390
 filing looking exactly like a read one. Every field here is therefore checked
 against an independent authority -- the AEAT checksum algorithm
-(:func:`~core.identity.tax_id.validate_spanish_tax_id`), the EU VIES structural format
+(:func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`),
+the EU VIES structural format
 table (:data:`~core.identity.nif_iva.NIF_IVA_FORMATS`), the date parser
 (:func:`~core.parsing.parse_date`), the finite European-decimal authority
 (:func:`~core.decimal.coerce_finite_european_decimal`) -- and a field that fails
@@ -25,7 +26,7 @@ it lives here rather than beside either reader.
 See Also:
     :class:`~application.ledger.invoice_draft_records.InvoiceDraft`
         Typed draft every grounded reader returns.
-    :func:`~core.identity.tax_id.validate_spanish_tax_id`
+    :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`
         Spanish NIF/NIE/CIF checksum authority.
     :func:`~core.identity.nif_iva.nif_iva_format_for_country`
         EU intra-community NIF-IVA structural format authority.
@@ -51,11 +52,11 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.identity.documents import IdentityError
 from ....core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
-from ....core.identity.tax_id import validate_spanish_tax_id
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
 from ....core.parsing.codes import normalise_iso_4217_currency
 from ....core.parsing.dates import parse_date
+from ....domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ....domain.iva.establishment import country_code_for_printed_country_name
 from .invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
@@ -345,7 +346,7 @@ def _grounded_tax_id(raw: str | None) -> str | None:
     if raw is None:
         return None
     try:
-        return validate_spanish_tax_id(raw)
+        return validate_runtime_spanish_tax_id(raw)
     except IdentityError:
         return _grounded_intra_community_tax_id(normalise_nif_iva(raw))
 

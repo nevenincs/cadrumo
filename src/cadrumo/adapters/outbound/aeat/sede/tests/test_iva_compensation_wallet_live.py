@@ -9,6 +9,8 @@ never embeds an operator's tax amounts into source or snapshots.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 from datetime import date
 from urllib.parse import urlsplit
 
@@ -27,6 +29,8 @@ from ..iva_compensation_wallet import (
     fetch_iva_compensation_wallet,
 )
 from ..iva_compensation_wallet_parsing import is_aeat_wallet_read_url
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -70,6 +74,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
             kind=AuthProviderKind.CLAVE_MOVIL,
             operation="sede-iva-wallet-live-test",
             target_url=PRE303_PRESENTATION_SERVICE_URL,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available: {exc}")
@@ -89,7 +94,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
 
     if observation.mode != "read":
         pytest.fail("live IVA wallet observation was not read-only")
-    if observation.target_modelo != Modelo.M303:
+    if observation.target_modelo != Modelo("303"):
         pytest.fail("live IVA wallet observation target modelo was not 303")
     if observation.target_year != target_year or observation.target_period != target_period:
         pytest.fail("live IVA wallet observation target period did not match requested period")

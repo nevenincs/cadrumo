@@ -124,12 +124,17 @@ def _compose_diagnostics_run_health_port():
 def _compose_diagnostics_auth_probe_port(ctx: typer.Context):
     """Compose the diagnostics auth probe from the root-owned state ports."""
     from ...entrypoints.diagnostics_run_health_composition import compose_diagnostics_auth_probe_port
-    from .state_projection_support import state_projection_read_ports
-
-    from .state_projection_support import certificate_secret_backend_factory
+    from .state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
 
     return compose_diagnostics_auth_probe_port(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_probe_ports=operator_probe_ports(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         read_ports=state_projection_read_ports(ctx),
     )
 

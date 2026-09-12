@@ -562,9 +562,14 @@ class MovementRecord(BaseModel):
         if not isinstance(movement_date, date):
             raise InventoryValidationError("inventory IVA default requires a valid movement_date")
         from ...iva.lookup import lookup_rate
-        from ...iva.schema import EUMemberState, IvaRateKind
+        from ...iva.schema import EUMemberState, IvaCategory
+        from ...calculations.registry.iva_category_catalogue import require_iva_category
+        from ...calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
 
-        return lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, movement_date).pct
+        rate_kind = resolve_iva_rate_kind_catalogue(effective_date=movement_date).for_category(
+            require_iva_category("domestic_general", effective_date=movement_date),
+        )
+        return lookup_rate(EUMemberState.ES, rate_kind, movement_date).pct
 
     @classmethod
     def from_purchase_acquisition(

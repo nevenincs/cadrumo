@@ -18,7 +18,8 @@ from ...domain.iva.flow import (
     flow_direction_for_invoice_kind,
     is_deducible_flow,
 )
-from ...domain.iva.schema import EVIDENCE_EXEMPT_IVA_CATEGORIES, IvaCategory
+from ...domain.iva.components import registry_category_projection
+from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
@@ -138,7 +139,7 @@ def _row_flow(row: LedgerEvidenceRow, *, direction: TransactionDirection) -> Iva
     category = _enum_or_none(IvaCategory, row.iva_category)
     if category is None:
         return flow_direction_for_invoice_kind(invoice_kind)
-    if category in EVIDENCE_EXEMPT_IVA_CATEGORIES:
+    if category in registry_category_projection("evidence_exempt"):
         return None
     return derive_flow_for_classification(
         category=category,

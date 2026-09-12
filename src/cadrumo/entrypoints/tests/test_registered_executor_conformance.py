@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Mapping
 from contextlib import contextmanager
@@ -101,6 +103,8 @@ from ...tests.cross_period_seeding import (
 from ...tests.profile_capsule import seed_modelo_ready_profile_record
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -490,6 +494,7 @@ def _seeded_modelo_verification_report(profile_id: UUID) -> tuple[str, str]:
         revision_id,
         actor=_ACTOR,
         workflow_profile=resolve_active_workflow_profile(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     # Verifying SUCCESSFULLY and GRANTING completeness are different outcomes: a
     # run that reports blocking findings settles fine while leaving the revision
@@ -837,6 +842,7 @@ def _runtime(
             censal_definition=build_censal_operation_definition(
                 acquire=acquire_censo,
                 before_irreversible_section=before_irreversible_section,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             ),
             google_export_definition=build_google_sheets_export_operation_definition(),
         )
@@ -1114,6 +1120,7 @@ def test_the_filing_authority_succeeds_on_the_same_fixture_its_operation_fails_o
             actor=_ACTOR,
             workflow_profile=resolve_active_workflow_profile(),
             notes=None,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
         assert record is not None, "the filing authority produced no record for a verified-complete revision"

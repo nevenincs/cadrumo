@@ -50,7 +50,7 @@ See Also:
     :mod:`~application.modelo._review_package_recipient_registry`
         Owns the recipient-fingerprint registry this module's
         register/remove events describe.
-    :mod:`~application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo.review_package_recipient_encryption`
         Owns the encrypt/decrypt primitives this module's package events
         describe.
     :mod:`~application.modelo._review_package_counter_sign`
@@ -77,7 +77,7 @@ if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from .review_package_counter_sign import CounterSignedReceipt
     from .review_package_feedback import ImportedFeedback
-    from .review_package_recipient_encryption import RecipientEncryptedPackage
+    from .recipient_encryption import RecipientEncryptedPackage
 
 
 def emit_collab_recipient_registered_event(

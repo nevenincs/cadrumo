@@ -19,6 +19,7 @@ from .status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
     from ....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+    from ....application.auth.operator_scope_ports import OperatorScopePorts
     from ....application.auth.operator_results import AuthConfigureResult
 
 
@@ -54,6 +55,7 @@ def _run_provider_auth_operation[AuthResultT](
     operation: Callable[..., AuthResultT],
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
     provider: str | None,
     all_providers: bool,
 ) -> AuthResultT:
@@ -79,6 +81,7 @@ def _run_provider_auth_operation[AuthResultT](
     try:
         return operation(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
             provider=provider,
             all_providers=all_providers,
         )
@@ -131,9 +134,14 @@ def auth_configure(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import configure_operator_auth
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import operator_scope_ports
 
     try:
-        result = configure_operator_auth(provider, certificate_path=file)
+        result = configure_operator_auth(
+            provider,
+            certificate_path=file,
+            operator_scope_ports=operator_scope_ports(ctx),
+        )
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
@@ -169,12 +177,19 @@ def auth_status(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import inspect_operator_auth
     from ..config_payloads import AuthStatusPayload
-    from ..state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+    from ..state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
 
     try:
         result = inspect_operator_auth(
             provider,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_probe_ports=operator_probe_ports(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
             read_ports=state_projection_read_ports(ctx),
         )
     except KeyError as exc:
@@ -236,12 +251,19 @@ def auth_test(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import test_operator_auth
     from ..config_payloads import AuthTestPayload
-    from ..state_projection_support import certificate_secret_backend_factory, state_projection_read_ports
+    from ..state_projection_support import (
+        certificate_secret_backend_factory,
+        operator_probe_ports,
+        operator_scope_ports,
+        state_projection_read_ports,
+    )
 
     try:
         result = test_operator_auth(
             provider,
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+            operator_probe_ports=operator_probe_ports(ctx),
+            operator_scope_ports=operator_scope_ports(ctx),
             read_ports=state_projection_read_ports(ctx),
         )
     except KeyError as exc:
@@ -281,13 +303,15 @@ def auth_login(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import login_operator_auth
     from ..config_payloads import AuthLoginPayload
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_probe_ports, operator_scope_ports
 
     try:
         result = asyncio.run(
             login_operator_auth(
                 provider,
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                operator_probe_ports=operator_probe_ports(ctx),
+                operator_scope_ports=operator_scope_ports(ctx),
                 fresh=fresh,
                 reset_lock=reset_lock,
             )
@@ -316,11 +340,12 @@ def auth_logout(
     """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import logout_operator_auth
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     result = _run_provider_auth_operation(
         logout_operator_auth,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         provider=provider,
         all_providers=all_providers,
     )
@@ -354,11 +379,12 @@ def auth_reset(
             translated_message="cli.config.auth.reset_requires_yes",
         )
     from ....application.auth.operator import reset_operator_auth
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     result = _run_provider_auth_operation(
         reset_operator_auth,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         provider=provider,
         all_providers=all_providers,
     )

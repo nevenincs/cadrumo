@@ -55,8 +55,8 @@ class WithholdingClaveBreakdownPayload(OutputSchema):
 
     JSON projection of
     :class:`WithholdingClaveBreakdown`: the
-    ``clave`` keeps its typed :class:`RetencionClave`
-    member (the closed AEAT clave-de-percepción axis) and the magnitudes are
+    ``clave`` keeps its typed, registry-projected :class:`RetencionClave`
+    token (the AEAT clave-de-percepción axis) and the magnitudes are
     rendered as canonical decimal strings. Re-exported through
     :mod:`_modelo_payloads` so the
     :class:`ModeloAggregateResult`

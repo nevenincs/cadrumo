@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.iva_category_catalogue import require_iva_category
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaValidationError
@@ -169,7 +170,7 @@ def registry_citation_catalogue(
         if not key.startswith("category."):
             continue
         try:
-            category = IvaCategory(key.removeprefix("category."))
+            category = require_iva_category(key.removeprefix("category."))
         except ValueError as exc:
             raise IvaValidationError(f"unknown IVA category {key!r} in statutory citation mapping") from exc
         category_citations[category] = tuple(reference.strip() for reference in value.split(",") if reference.strip())

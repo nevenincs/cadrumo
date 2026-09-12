@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....application.calculations.observations_repository import IvaWalletDecisionRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import M303RegimeComposition

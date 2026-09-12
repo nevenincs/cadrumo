@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 from ......core.classification.policies import SensitivityClass
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import SecureObjectUnreadableError
 from ..secure_object_records import SecureObjectUnreadable
 from ._secure_objects_support import (

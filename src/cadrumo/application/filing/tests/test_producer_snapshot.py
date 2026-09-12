@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
@@ -67,7 +68,6 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
 )
 from ....domain.submission.models import ModeloDraftStatus
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ...aggregation.m303_arrivals import (
     M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
@@ -456,7 +456,7 @@ def _m303_foral_snapshot(
         },
     )
     return build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -472,7 +472,7 @@ def _m303_foral_snapshot(
 def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     presenter = _presenter()
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=presenter,
@@ -494,7 +494,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
 
 def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -512,7 +512,7 @@ def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> No
 def test_modelo_111_unknown_profile_fact_refuses_snapshot_but_false_is_valid() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="colegio_concertado"):
         build_filing_producer_snapshot(
-            modelo=Modelo.M111,
+            modelo=Modelo("111"),
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
@@ -567,7 +567,7 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
 
     with pytest.raises(FilingProducerSnapshotError) as exc_info:
         build_filing_producer_snapshot(
-            modelo=Modelo.M202,
+            modelo=Modelo("202"),
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
@@ -584,7 +584,7 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
 
 def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -655,7 +655,7 @@ def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
         M303FilingFacts.model_validate(payload)
 
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -671,7 +671,7 @@ def test_modelo_303_annual_volume_marker_requires_explicit_evidence() -> None:
 
 def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -765,7 +765,7 @@ def test_m303_regime_composition_projects_only_the_exclusively_simplified_arm(
     expected: str,
 ) -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -799,7 +799,7 @@ def test_m303_insolvency_fact_projects_coupled_date_and_official_subtype_code(
         },
     )
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -925,7 +925,7 @@ def test_modelo_iva_profile_refuses_absent_tax_territory() -> None:
 
 def test_modelo_without_specific_producers_requires_explicit_general_profile() -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M131,
+        modelo=Modelo("131"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -953,7 +953,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
         charge_account=charge_account,
     )
     refund_snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -975,7 +975,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     assert refund_values[FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC] == ""
 
     charge_snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -997,7 +997,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
 def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained() -> None:
     with pytest.raises(FilingProducerSnapshotError, match="charge account"):
         build_filing_producer_snapshot(
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
@@ -1010,7 +1010,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
         )
     with pytest.raises(FilingProducerSnapshotError, match="refund account"):
         build_filing_producer_snapshot(
-            modelo=Modelo.M303,
+            modelo=Modelo("303"),
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             taxpayer_identity=_taxpayer_identity(),
             presenter=_presenter(),
@@ -1023,7 +1023,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
         )
 
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -1061,7 +1061,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     assert set(evidence.model_dump()) == {"kind", "m303_rectificativa_motive", "original_aeat_receipt"}
 
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -1086,7 +1086,7 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
         original_aeat_receipt="1234567890123",
     )
     complemented = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -1098,7 +1098,7 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
         m303_filing_facts=_m303_filing_facts(),
     )
     ordinary = build_filing_producer_snapshot(
-        modelo=Modelo.M303,
+        modelo=Modelo("303"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -1121,7 +1121,7 @@ def test_m303_source_markers_share_immutable_amendment_and_disposition_evidence(
 
 def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> None:
     snapshot = build_filing_producer_snapshot(
-        modelo=Modelo.M111,
+        modelo=Modelo("111"),
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
@@ -1142,15 +1142,15 @@ def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> 
 @pytest.mark.parametrize(
     ("modelo", "model_profile"),
     (
-        (Modelo.M111, Modelo111ProfileFacts(colegio_concertado=False)),
+        (Modelo("111"), Modelo111ProfileFacts(colegio_concertado=False)),
         (
-            Modelo.M202,
+            Modelo("202"),
             Modelo202ProducerProfile(
                 taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime.GENERAL),
                 activities=(),
             ),
         ),
-        (Modelo.M131, GeneralFilingProfileFacts()),
+        (Modelo("131"), GeneralFilingProfileFacts()),
     ),
 )
 def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(

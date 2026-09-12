@@ -12,6 +12,7 @@ from ..auth_credentials import ActiveCertificateCredentials
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import resolve_active_certificate_credentials
 from .protocols import BrowserSessionFactoryPort
+from .operator_scope_ports import OperatorScopePorts
 from .session_types import AeatLoginAssertion, AeatSession
 
 if TYPE_CHECKING:
@@ -85,6 +86,7 @@ def select_provider(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
     browser_session_factory: BrowserSessionFactoryPort | None = None,
     certificate_credentials: ActiveCertificateCredentials | None = None,
+    operator_scope_ports: OperatorScopePorts,
 ) -> AuthProvider:
     """Construct the concrete outbound provider for ``kind``.
 
@@ -97,6 +99,7 @@ def select_provider(
         credentials = resolve_active_certificate_credentials(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             settings=settings,
+            operator_scope_ports=operator_scope_ports,
         )
     return _auth_provider_selector()(
         kind,

@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from pydantic import BaseModel, model_validator
 
 from ...core.i18n.translatable import Translatable as tr
@@ -23,12 +21,22 @@ class _CategoryProfileStrictFrozenModel(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
-class IvaDeductibilityHint(StrEnum):
-    """Local IVA hint kept decoupled from the IVA taxonomy branch."""
+class IvaDeductibilityHint(str):
+    """Opaque registry-projected IVA deductibility hint token."""
 
-    GENERAL = "general"
-    EXEMPT_OR_NON_SUBJECT = "exempt_or_non_subject"
-    NON_DEDUCTIBLE_INPUT = "non_deductible_input"
+    __slots__ = ()
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a string to Pydantic without a catalogue."""
+        from pydantic_core import core_schema
+
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
+
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
 
 
 class CategoryProfile(_CategoryProfileStrictFrozenModel):

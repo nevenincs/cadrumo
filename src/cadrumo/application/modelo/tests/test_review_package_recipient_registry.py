@@ -15,7 +15,7 @@ See Also:
         Encrypted public-key trust register under test.
     :class:`~application.modelo.RecipientFingerprintRegister`:
         Strict register model roundtripped through the secure object store.
-    :mod:`~application.modelo._review_package_recipient_encryption`:
+    :mod:`~application.modelo.review_package_recipient_encryption`:
         Consumer that encrypts review packages to registered public keys.
     :mod:`~entrypoints.cli.config._collab`:
         CLI surface that lets operators add, list, and remove recipients.

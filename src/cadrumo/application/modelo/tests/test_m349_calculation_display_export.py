@@ -31,7 +31,7 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.registry_snapshot import build_snapshot
+from ....domain.calculations.registry.tests.snapshot_support import build_snapshot
 from ...filing.draft_construction import filing_binding_values
 from .._calculation_helpers import build_typed_observations
 from .._calculation_modelo_adjustments import suppress_m349_row_field_template_outputs
@@ -62,7 +62,7 @@ _DECL_IMPORTE_RECTIFICACIONES: CasillaId = validated_casilla_id(
 
 def _m349_snapshot(*, period: str) -> RegistrySnapshot:
     authority = bundled_authority()
-    modelo = authority.modelo(Modelo.M349.value)
+    modelo = authority.modelo(Modelo("349").value)
     return build_snapshot(
         modelo,
         authority.catalogues,

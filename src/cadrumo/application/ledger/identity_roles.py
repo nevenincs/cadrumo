@@ -77,8 +77,9 @@ from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.identity.documents import IdentityError
 from ...core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
-from ...core.identity.tax_id import same_tax_identifier, validate_spanish_tax_id
+from ...core.identity.tax_id import same_tax_identifier
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.iva.establishment import country_code_for_printed_tax_identifier
 from .grounding_anchor import ground_ambiguous_candidates
 from .invoice_draft_records import DraftDiscrepancyFinding, FieldAmbiguityCandidate, FieldProvenance
@@ -186,7 +187,7 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     country = (country_code or country_code_for_printed_tax_identifier(stripped) or "ES").strip().upper()
     if country == "ES":
         try:
-            return validate_spanish_tax_id(stripped)
+            return validate_runtime_spanish_tax_id(stripped)
         except IdentityError:
             return None
 

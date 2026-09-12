@@ -233,6 +233,10 @@ class TransactionParticipationIndexRepositoryProtocol(Protocol):
         """Persist ``index`` as the encrypted per-transaction object."""
         ...
 
+    def to_secure_object_write(self, index: TransactionRevisionParticipationIndex) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``index`` without committing it."""
+        ...
+
 
 __all__ = [
     "CalculationRevisionCatalogueRepositoryProtocol",

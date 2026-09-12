@@ -20,7 +20,6 @@ import pytest
 
 from ....core.modelo import Modelo
 from ..m145_communication import (
-    M145_COMMUNICATION_PERIOD,
     M145_COMMUNICATION_SERVICE_OWNER,
     M145CommunicationAction,
     build_m145_communication_service_contract,
@@ -33,8 +32,8 @@ def test_m145_communication_service_contract_is_backend_owned_and_registry_backe
     contract = build_m145_communication_service_contract()
 
     assert contract.service_owner == M145_COMMUNICATION_SERVICE_OWNER
-    assert contract.modelo == Modelo.M145.value
-    assert contract.period_token == M145_COMMUNICATION_PERIOD
+    assert contract.modelo == Modelo("145").value
+    assert contract.period_token == "ANNUAL"
     assert contract.revision_id == "2012-01-31-y-siguientes"
     assert contract.surfaces == ("communication", "payer_delivery", "export")
     assert contract.actions == (

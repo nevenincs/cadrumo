@@ -109,7 +109,7 @@ def censo_pull(
     from ....application.user_profile.projections import record_to_effective_facts
     from ....entrypoints.censal_review import run_censal_review
     from ._censo_review_cli import confirm_censal_review
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     # Refuse an absent active profile before the read, not after: the live
     # navigation can trigger a Cl@ve push, and asking the operator to
@@ -135,6 +135,7 @@ def censo_pull(
         read = asyncio.run(
             pull_censal_datos(
                 certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+                operator_scope_ports=operator_scope_ports(ctx),
             )
         )
         adopted, unchanged, divergences, source_url = _preview_pull_outcomes(

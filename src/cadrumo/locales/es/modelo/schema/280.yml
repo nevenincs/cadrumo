@@ -6,6 +6,116 @@ modelo:
           a Largo Plazo.
         title: Declaración informativa anual de Planes de Ahorro a Largo Plazo
       revision:
+        2022-2024:
+          casilla:
+            aportaciones-ejercicio:
+              help: 'Consulte la información correspondiente a la casilla: Aportaciones
+                efectuadas en el ejercicio.'
+              label: Aportaciones efectuadas en el ejercicio
+            base-retencion-practicada:
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 280.
+              label: Base de la retención practicada
+            base-retenciones:
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 280.
+              label: Base de retenciones
+            clave-alta:
+              help: 'Consulte la información correspondiente a la casilla: Clave de
+                alta.'
+              label: Clave de alta
+            declaracion-complementaria-sustitutiva:
+              help: 'Consulte la información correspondiente a la casilla: Declaración
+                complementaria o sustitutiva.'
+              label: Declaración complementaria o sustitutiva
+            declarado-nif:
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                declarado.'
+              label: NIF del declarado
+            declarado-nombre:
+              help: 'Consulte la información correspondiente a la casilla: Apellidos
+                y nombre del declarado.'
+              label: Apellidos y nombre del declarado
+            declarante-nif:
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                declarante.'
+              label: NIF del declarante
+            declarante-razon-social:
+              help: Información fiscal sobre información fiscal de la casilla  del
+                Modelo 280.
+              label: Razon social del declarante
+            ejercicio-declaracion:
+              help: 'Consulte la información correspondiente a la casilla: Ejercicio
+                de declaración.'
+              label: Ejercicio de declaración
+            extincion-plan:
+              help: 'Consulte la información correspondiente a la casilla: Extincion
+                del Plan de Ahorro a Largo Plazo.'
+              label: Extincion del Plan de Ahorro a Largo Plazo
+            fecha-apertura:
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                apertura.'
+              label: Fecha de apertura
+            fecha-extincion:
+              help: 'Consulte la información correspondiente a la casilla: Fecha de
+                extincion.'
+              label: Fecha de extincion
+            identificador-producto:
+              help: 'Consulte la información correspondiente a la casilla: Identificador
+                del producto contratado.'
+              label: Identificador del producto contratado
+            importe-total-aportaciones:
+              help: 'Consulte la información correspondiente a la casilla: Importe
+                total de aportaciones.'
+              label: Importe total de aportaciones
+            numero-identificativo-anterior:
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración anterior.'
+              label: Número identificativo de la declaración anterior
+            numero-identificativo-declaracion:
+              help: 'Consulte la información correspondiente a la casilla: Número
+                identificativo de la declaración.'
+              label: Número identificativo de la declaración
+            numero-total-declarados:
+              help: 'Consulte la información correspondiente a la casilla: Número
+                total de declarados.'
+              label: Número total de declarados
+            persona-relacion:
+              help: 'Consulte la información correspondiente a la casilla: Persona
+                con quien relacionarse.'
+              label: Persona con quien relacionarse
+            rendimientos-negativos-acumulados:
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                negativos acumulados.'
+              label: Rendimientos negativos acumulados
+            rendimientos-negativos-ejercicio:
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                negativos obtenidos durante el ejercicio.'
+              label: Rendimientos negativos obtenidos durante el ejercicio
+            rendimientos-negativos-imputables:
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                negativos imputables.'
+              label: Rendimientos negativos imputables
+            rendimientos-positivos-acumulados:
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                positivos acumulados.'
+              label: Rendimientos positivos acumulados
+            rendimientos-positivos-ejercicio:
+              help: 'Consulte la información correspondiente a la casilla: Rendimientos
+                positivos obtenidos durante el ejercicio.'
+              label: Rendimientos positivos obtenidos durante el ejercicio
+            representante-legal-nif:
+              help: 'Consulte la información correspondiente a la casilla: NIF del
+                representante legal.'
+              label: NIF del representante legal
+            tipo-identificador:
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                identificador.'
+              label: Tipo de identificador
+            tipo-plan-ahorro:
+              help: 'Consulte la información correspondiente a la casilla: Tipo de
+                Plan de Ahorro a Largo Plazo.'
+              label: Tipo de Plan de Ahorro a Largo Plazo
         '2025':
           casilla:
             aportaciones-ejercicio:

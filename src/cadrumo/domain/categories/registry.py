@@ -21,7 +21,8 @@ from ..calculations.registry.facts.resolution import (
 from ..calculations.registry.facts.schema import FactSelector, ScalarFactPayload
 from ..calculations.registry.schema_base import DateAxis
 from .errors import CategoryValidationError
-from .profile import CategoryProfile, IvaDeductibilityHint
+from .iva_hint import require_iva_deductibility_hint
+from .profile import CategoryProfile
 from .proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -180,7 +181,15 @@ def _profile_from_authority_fact(
         category=SpendingCategory(category),
         display_label=tr(str(values["display_label"])),
         proportionality=proportionality,
-        iva_hint=IvaDeductibilityHint(str(values["iva_hint"])) if "iva_hint" in values else None,
+        iva_hint=(
+            require_iva_deductibility_hint(
+                values["iva_hint"],
+                authority=authority,
+                effective_date=date(year, 12, 31),
+            )
+            if "iva_hint" in values
+            else None
+        ),
     )
 
 

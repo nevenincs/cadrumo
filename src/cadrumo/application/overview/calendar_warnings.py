@@ -33,7 +33,8 @@ from ...domain.calculations.registry.applicability import (
 )
 from ...domain.calculations.registry.applicability_payer_facts import PayerFact as _PayerFact
 from ...domain.calculations.registry.authority import bundled_authority
-from ...domain.deadlines.models import IrpfEstimationRegime as _IrpfEstimationRegime
+from ...domain.calculations.registry.iva_schema_vocabulary import iva_regime_simplificado_token
+from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.deadlines.models import IVARegime as _IVARegime
 from ..operator_actions.models import DeclaredNextAction
 from .calendar_models import (
@@ -91,8 +92,8 @@ _PAYER_FACT_PROFILE_KEYS: dict[_PayerFact, tuple[str, ...]] = {
     _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: ("third_party_transactions_above_347_threshold",),
 }
 
-_ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
-    _IrpfEstimationRegime.OBJETIVA: (
+_ESTIMATION_REGIME_PROFILE_KEY: dict[str, tuple[str, str]] = {
+    irpf_estimation_regime_objetiva_token(): (
         "irpf.estimation_regime",
         "cli.overview.warning.estimacion_objetiva_unset",
     ),
@@ -382,7 +383,7 @@ def _calendar_regime_incompatibility_warnings(
     entries: tuple[OverviewCalendarEntry, ...],
 ) -> tuple[CalendarWarning, ...]:
     """Return warnings where a surfaced modelo row lacks regime-specific calculation support."""
-    if iva_regime is not _IVARegime.SIMPLIFICADO:
+    if iva_regime != iva_regime_simplificado_token():
         return ()
     if not any(entry.modelo == _Modelo("303").value for entry in entries):
         return ()

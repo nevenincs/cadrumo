@@ -12,21 +12,13 @@ depending on broad exception swallowing.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from pathlib import Path
 from typing import cast
 
 import pytest
-from cryptography import x509
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.serialization import pkcs12
-from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
 from ...core.aggregation import BindingSourceKind
-from ...core.errors.error_codes import get_registered_error_code
-from ...core.errors.hierarchy import CadrumoError
+from ._operator_probe_fakes import fake_operator_probe_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -134,62 +126,30 @@ def test_source_mesh_error_raised_on_duplicate_owned_source() -> None:
 # Narrowed except-clause types do not swallow programmer errors
 # ---------------------------------------------------------------------------
 
-_PKCS12_TEST_TEXT = "correct-horse-battery-staple"
-
-
-def _build_valid_pkcs12_bundle(tmp_path: Path) -> Path:
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    subject = issuer = x509.Name(
-        [
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.COMMON_NAME, "application-auth-probe"),
-        ],
-    )
-    certificate = (
-        x509.CertificateBuilder()
-        .subject_name(subject)
-        .issuer_name(issuer)
-        .public_key(key.public_key())
-        .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime(2026, 1, 1, tzinfo=UTC))
-        .not_valid_after(datetime(2099, 1, 1, tzinfo=UTC))
-        .sign(key, hashes.SHA256())
-    )
-    out = tmp_path / "probe-valid.p12"
-    out.write_bytes(
-        pkcs12.serialize_key_and_certificates(
-            name=b"application-auth-probe",
-            key=key,
-            cert=certificate,
-            cas=None,
-            encryption_algorithm=serialization.BestAvailableEncryption(_PKCS12_TEST_TEXT.encode("utf-8")),
-        ),
-    )
-    return out
-
-
-def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(tmp_path: Path) -> None:
-    """The public certificate probe propagates non-CertificateError/non-OSError failures.
-
-    The narrowed ``except CertificateError`` clause around the PKCS#12
-    health evaluation must not widen back to a bare ``except Exception``
-    that would mask a genuine programmer error as a merely-corrupt
-    certificate.
-    """
+def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(tmp_path) -> None:
+    """The application probe propagates an unrelated inward-port failure."""
     from ...core.auth_provider import AuthProviderKind
     from ...core.config import Settings
     from ..auth.operator_probes import probe_provider_configuration
 
+    certificate_path = tmp_path / "probe.p12"
+    certificate_path.write_bytes(b"placeholder certificate bytes")
     settings = Settings(
-        cadrumo_certificate_path=_build_valid_pkcs12_bundle(tmp_path),
-        cadrumo_certificate_password_secret=SecretStr(_PKCS12_TEST_TEXT),
+        cadrumo_certificate_path=certificate_path,
+        cadrumo_certificate_password_secret=SecretStr("certificate-password"),
         cadrumo_cert_warn_days=10,
         cadrumo_cert_critical_days=30,
     )
 
-    with pytest.raises(CadrumoError, match=r"warn_days.*critical_days") as exc_info:
-        probe_provider_configuration(AuthProviderKind.CERTIFICATE.value, settings=settings)
-    assert get_registered_error_code(exc_info.value).code == "AUTH_AUTH_VALIDATION"
+    def raise_programmer_error(_request):
+        raise RuntimeError("programmer failure")
+
+    with pytest.raises(RuntimeError, match="programmer failure"):
+        probe_provider_configuration(
+            AuthProviderKind.CERTIFICATE.value,
+            settings=settings,
+            operator_probe_ports=fake_operator_probe_ports(certificate_evaluator=raise_programmer_error),
+        )
 
 
 def test_live_auth_identity_state_does_not_swallow_unrelated_exceptions() -> None:

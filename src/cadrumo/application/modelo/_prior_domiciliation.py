@@ -24,9 +24,9 @@ from ...domain.modelos.calculation_revision_amendment import CalculationRevision
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord
 from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
-from ..calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
+from ..calculations.m303_carry_ingress import m303_declaration_type_header_key
 from ..calculations.observations_repository import (
-    CalculationObservationRepository,
+    CalculationObservationRepositoryProtocol,
     ObservationEnvelopePayload,
     PriorDomiciliationElectionProjection,
     require_observation_envelope_coordinates_current,
@@ -101,7 +101,7 @@ def _require_official_baseline_observation(
     baseline: ModeloRecord,
     baseline_evidence: ExternalEvidence,
     baseline_id: str,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> ObservationEnvelopePayload:
     """Return the official filed observation joined to the baseline, or refuse.
 
@@ -139,7 +139,10 @@ def _require_submitted_file_domiciliacion_header(
     Exactly one is required rather than at least one: two headers disagreeing
     about the baseline's disposition leave no fact to rectify against.
     """
-    header_key = M303_DECLARATION_TYPE_HEADER_KEY
+    header_key = m303_declaration_type_header_key(
+        filing_year=observation.observation.filing_year,
+        period=observation.observation.period,
+    )
     declaration_type_headers = tuple(header for header in observation.source_headers if header.header_key == header_key)
     if len(declaration_type_headers) != 1:
         raise ModeloPriorDomiciliationElectionRefusedError(
@@ -170,7 +173,7 @@ def resolve_prior_domiciliation_election(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    observation_repository: CalculationObservationRepository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> PriorDomiciliationElectionProjection:
     """Return safe election provenance, refusing any unproven ``X`` request.
 

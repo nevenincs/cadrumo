@@ -60,7 +60,7 @@ def test_minimo_personal_familiar_amount_matches_aeat() -> None:
     for year in _GROUNDING_YEARS:
         for stem, expected in _MINIMO_AMOUNTS:
             value = read_parameter(
-                Modelo.M100.value,
+                Modelo("100").value,
                 str(year),
                 f"renta-{year}-{stem}-{year}",
                 date_context={"filing_period": date(year, 12, 31)},

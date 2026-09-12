@@ -264,7 +264,7 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
     This is the property the registry-unmodeled disposition exists to guarantee,
     and it is unreachable through the real declaration while that declaration is
     empty — so the declaration the builder reads is substituted for one naming a
-    genuinely registry-less obligation (:data:`~core.Modelo.M037`, retired by
+    genuinely registry-less obligation (Modelo 037, retired by
     Orden HAC/1526/2024 and therefore absent from every registry directory).
     Only the input data is substituted: registry loading, the universe union and
     the disposition walk all run unmodified.
@@ -274,13 +274,13 @@ def test_a_recognized_unmodeled_obligation_is_advised_not_invisible() -> None:
     after, so a filter that stopped classifying it — or a substitution that
     never reached the live holder — fails here rather than reading green.
     """
-    unmodelled_code = str(Modelo.M037)
+    unmodelled_code = str(Modelo("037"))
     surfaced_input = {"100", "303"}
 
     baseline = build_obligation_coverage(_paying_autonomo(), surfaced_input, today=_TODAY)
     assert unmodelled_code not in _dispositions(baseline)
 
-    declared = {Modelo.M037: "censo simplificada suprimida; reconocida sin definicion en el registro"}
+    declared = {Modelo("037"): "censo simplificada suprimida; reconocida sin definicion en el registro"}
     assert _coverage._UNMODELED_OBLIGATIONS is UNMODELED_OBLIGATIONS, (
         "the builder no longer reads the module-level declaration this test rebinds"
     )

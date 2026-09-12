@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import ast
 from collections.abc import Callable
 from datetime import UTC, date, datetime
@@ -75,6 +77,8 @@ from ..screens import (
     AeatSyncReconciliationScreen,
     AeatSyncWorkspaceScreen,
 )
+
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -300,6 +304,7 @@ def _contracts(
     """Build a public contract whose operation/action join is explicit."""
     definition = build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
+        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     ).model_copy(
         update={
             "action_reference": ActionReference(action_id=action_id),

@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ....domain.contribuyente.entity_type import entity_type_tokens, legal_entity_form_tokens
+from ....domain.calculations.registry.irpf_regimes import irpf_estimation_regime_tokens, irpf_special_regime_tokens
 from ..command_spec import (
     FLAG_VALUE,
     PATH_VALUE,
@@ -53,6 +55,10 @@ _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
 )
+_ENTITY_TYPE_CHOICES = tuple(token.value for token in entity_type_tokens())
+_LEGAL_ENTITY_FORM_CHOICES = tuple(token.value for token in legal_entity_form_tokens())
+_IRPF_ESTIMATION_REGIME_CHOICES = tuple(token.value for token in irpf_estimation_regime_tokens())
+_IRPF_SPECIAL_REGIME_CHOICES = tuple(token.value for token in irpf_special_regime_tokens())
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
@@ -236,16 +242,10 @@ bienes-extranjero-above-threshold monedas-virtuales-extranjero-above-threshold l
 #: validator upper-cases the token before constructing the enum, so it accepts
 #: lowercase input a Choice would refuse.
 _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
-    "entity-type": ValueContract(DeferredTarget("....domain.contribuyente.entity_type", "EntityType", __package__)),
-    "legal-entity-form": ValueContract(
-        DeferredTarget("....domain.contribuyente.entity_type", "LegalEntityForm", __package__)
-    ),
-    "irpf-estimation-regime": ValueContract(
-        DeferredTarget("....domain.deadlines.models", "IrpfEstimationRegime", __package__)
-    ),
-    "irpf-special-regime": ValueContract(
-        DeferredTarget("....domain.deadlines.models", "IrpfSpecialRegime", __package__)
-    ),
+    "entity-type": ValueContract(DeferredTarget("builtins", "str"), choices=_ENTITY_TYPE_CHOICES),
+    "legal-entity-form": ValueContract(DeferredTarget("builtins", "str"), choices=_LEGAL_ENTITY_FORM_CHOICES),
+    "irpf-estimation-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_ESTIMATION_REGIME_CHOICES),
+    "irpf-special-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_SPECIAL_REGIME_CHOICES),
     "fiscal-residency": ValueContract(
         DeferredTarget("....domain.contribuyente.renta_codes", "FiscalResidency", __package__)
     ),

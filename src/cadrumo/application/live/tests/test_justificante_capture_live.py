@@ -10,6 +10,8 @@ expectations.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import asyncio
 import hashlib
 
@@ -26,6 +28,8 @@ from ..justificante import (
 )
 from ..snapshot_base import SnapshotLifecycleState
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
 # A quarterly modelo exercises the period-disambiguation path that the
@@ -35,7 +39,7 @@ _LIVE_MODELO = "130"
 
 
 async def _discover_filed_period(*, bucket_id: str, modelo: str, year: int) -> Period | None:
-    snapshot = await capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year)
+    snapshot = await capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     for declaration in snapshot.declarations:
         if declaration.modelo == modelo:
             period = declaration.period

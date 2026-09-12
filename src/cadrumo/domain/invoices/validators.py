@@ -19,7 +19,7 @@ import re
 
 from ...core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ...core.identity.nif_iva import nif_iva_format_for_country, normalise_nif_iva
-from ...core.identity.tax_id import validate_spanish_tax_id
+from ..calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..iva.schema import EUMemberState
 from .errors import InvoiceValidationError
 
@@ -171,5 +171,5 @@ def validate_counterparty_tax_id(tax_id: str, *, country: str | None) -> str:
     if country is None:
         return tax_id
     if country == _SPAIN_COUNTRY_CODE:
-        return validate_spanish_tax_id(tax_id)
+        return validate_runtime_spanish_tax_id(tax_id)
     return validate_iva_number(tax_id, country)

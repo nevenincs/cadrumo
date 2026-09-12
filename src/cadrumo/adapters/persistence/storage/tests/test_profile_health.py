@@ -19,7 +19,7 @@ from .....adapters.persistence.storage.custody.records import (
 from .....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....adapters.persistence.storage.master_key.bucket_session import BucketSession
-from .....application.state_projection import _build_active_profile
+from .....application.state_projection import build_active_profile
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from .....application.user_profile.login_session_port import profile_login_session_port
@@ -108,7 +108,7 @@ def test_active_profile_health_is_ready_from_one_current_capsule_projection(tmp_
         assert health.registered_bucket is True
         assert health.profile_record_present is True
         assert health.precondition_verdict is None
-        assert _build_active_profile(health).label == _PROFILE_LABEL
+        assert build_active_profile(health).label == _PROFILE_LABEL
         assert "active_profile_label" not in health.model_dump(mode="json")
     finally:
         session.close()

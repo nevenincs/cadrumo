@@ -83,10 +83,11 @@ def config_reset_start(
     """Start and execute one new reset operation."""
     override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from ....application.config_reset import start_config_reset
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     operation = start_config_reset(
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         confirmed=True,
         acknowledge_retention_override=override_retention,
         retention_override_reason=reason,
@@ -130,7 +131,7 @@ def config_reset_resume(
         config_reset_status,
         resume_config_reset,
     )
-    from ..state_projection_support import certificate_secret_backend_factory
+    from ..state_projection_support import certificate_secret_backend_factory, operator_scope_ports
 
     resolved_operation_id = operation_id
     if resolved_operation_id is None:
@@ -143,6 +144,7 @@ def config_reset_resume(
     operation = resume_config_reset(
         resolved_operation_id,
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        operator_scope_ports=operator_scope_ports(ctx),
         confirmed=True,
         acknowledge_retention_override=override_retention,
         retention_override_reason=reason,

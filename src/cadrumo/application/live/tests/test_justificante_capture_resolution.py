@@ -23,7 +23,7 @@ from ..justificante import resolve_period_expediente
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_MODELO = Modelo.M130.value
+_MODELO = Modelo("130").value
 _YEAR = 2026
 _EXP_1T = "202613000010001A"
 _EXP_2T = "202613000020002B"

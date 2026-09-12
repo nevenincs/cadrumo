@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -13,8 +15,12 @@ from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_b
 from ..credentials import active_auth_projection_span
 from ..operator import login_operator_auth
 from ..operator_results import AuthConfigureNoActiveBucketError
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
 
 
 def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(tmp_path: Path) -> None:
@@ -39,6 +45,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
         with active_auth_projection_span(
             settings=settings,
             requested_provider=AuthProviderKind.CERTIFICATE.value,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         ) as snapshot:
             assert snapshot.bucket_id is None
             assert snapshot.provider is AuthProviderKind.CERTIFICATE
@@ -51,5 +58,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
                     AuthProviderKind.CERTIFICATE.value,
                     settings=settings,
                     guarded_read_context="",
+                    operator_probe_ports=_OPERATOR_PROBE_PORTS,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ),
             )

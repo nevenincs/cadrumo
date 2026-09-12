@@ -3,7 +3,7 @@
 :class:`RetentionFloorError` is the refusal RESERVED for a destructive erase
 that would destroy filed tax records still inside their legal retention window
 (Ley 58/2003 art. 66/70; see
-:data:`~domain.retention.TAX_RECORD_RETENTION_FLOOR_YEARS`).
+:func:`~domain.retention.floor.retention_floor_years`).
 
 It IS raised: the configuration reset refuses at the point it would destroy a
 bucket, when the target's recorded retention still blocks erasure and no

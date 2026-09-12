@@ -306,7 +306,7 @@ def _seed_m100_profile_facts(bucket_id: str) -> None:
 
 
 def _seed_prior_m100_zero_carry() -> None:
-    from ....application.calculations.observations_repository import CalculationObservationRepository
+    from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
@@ -663,7 +663,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     # A local_recurrence decision with selected_amount=0 satisfies the guard
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
-        from ....application.calculations.observations_repository import IvaWalletDecisionRepository
+        from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
         from ....domain.iva_compensation.reconciliation import (
             IvaCompensationAuthoritySource,
             IvaCompensationReconciliationDecision,
@@ -830,7 +830,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with ``selected_amount=0`` satisfies the guard while leaving the source-mesh
     advisory assertions meaningful.
     """
-    from ....application.calculations.observations_repository import IvaWalletDecisionRepository
+    from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
     from ....domain.iva_compensation.reconciliation import (
         IvaCompensationAuthoritySource,
         IvaCompensationReconciliationDecision,

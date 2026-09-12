@@ -45,7 +45,7 @@ from .....application.aggregation.iva_ledger import (
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_ledger_binding_values,
 )
-from .....application.aggregation.prorrata_register.sector_lifecycle import (
+from .....application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
 )

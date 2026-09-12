@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CANONICAL_FIELDS = {
     "filing_year": 2025,
-    "modelo": Modelo.M100,
+    "modelo": Modelo("100"),
     "revision": "2025-y-siguientes",
     "conjunta_cuota_resultante": "1200.00",
     "individual_cuota_resultante": "1500.00",
@@ -55,7 +55,7 @@ def test_canonical_row_is_accepted() -> None:
     payload = _payload()
 
     assert payload.recommendation is TaxationRecommendation.CONJUNTA
-    assert payload.modelo is Modelo.M100
+    assert payload.modelo == Modelo("100")
     assert payload.individual_branch_single_earner_only is True
     assert payload.delta_resultado == "450.00"
 

@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ...core.bucket_pointer import BucketPointer
 from ...core.directory_scan import scan_directory
 from ...core.storage_taxonomy import StorageCategory
@@ -271,7 +270,7 @@ def test_repository_refuses_linked_root_redirected_into_bucket(
     tmp_path: Path,
 ) -> None:
     """A link-like journal root cannot redirect operation bytes into a target."""
-    bucket_dir = bucket_paths(tmp_path, _BUCKET_ID).bucket_dir
+    bucket_dir = tmp_path / "buckets" / _BUCKET_ID
     bucket_dir.mkdir(parents=True)
     linked_root = tmp_path / "reset-operations"
     linked_root.symlink_to(bucket_dir, target_is_directory=True)

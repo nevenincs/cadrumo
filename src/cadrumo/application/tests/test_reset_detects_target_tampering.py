@@ -28,6 +28,8 @@ lives in `adapters/persistence/storage/custody/tests/`.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from pathlib import Path
 
 import pytest
@@ -38,6 +40,8 @@ from .test_config_reset import (
     _isolated_reset_root,
     _persist_filing,
 )
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -67,7 +71,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
         # a target could be tampered with.
         _persist_filing(_PROFILE_ID, filing_year=2025, seed="7")
 
-        operation = start_config_reset(confirmed=True)
+        operation = start_config_reset(confirmed=True, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         original = operation.targets[0].fingerprint
         assert original is not None
 
@@ -80,6 +84,7 @@ def test_resume_pauses_when_a_content_covered_custody_record_changed(tmp_path: P
             confirmed=True,
             acknowledge_retention_override=True,
             retention_override_reason=_OVERRIDE_REASON,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
 
         assert resumed.status is ConfigResetOperationStatus.PAUSED

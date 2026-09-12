@@ -87,7 +87,7 @@ def _collect() -> tuple[CalculationSourceDiagnostic, ...]:
     return collect_guarderia_spend_shape_diagnostics(
         _revision(),
         {_GUARDERIA_CASILLA: Decimal("0")},
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
 
@@ -139,7 +139,7 @@ def test_it_reaches_the_operator_through_the_coordinator() -> None:
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         _revision(),
         {_GUARDERIA_CASILLA: Decimal("0")},
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
         period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
@@ -219,7 +219,7 @@ def test_silent_for_another_modelo() -> None:
         collect_guarderia_spend_shape_diagnostics(
             _revision(),
             {_GUARDERIA_CASILLA: Decimal("0")},
-            modelo=Modelo.M303.value,
+            modelo=Modelo("303").value,
             bucket_id=_BUCKET_ID,
         )
         == ()

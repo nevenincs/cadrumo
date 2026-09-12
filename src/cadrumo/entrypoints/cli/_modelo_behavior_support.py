@@ -122,6 +122,7 @@ def resolve_revision_for_cli(
     period: str | Period | None,
     registry_revision: str | None,
     bucket_id: str | None = None,
+    calculation_ports,
     selector: str = ModeloCalculationRevisionSelector.CURRENT.value,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
@@ -147,6 +148,7 @@ def resolve_revision_for_cli(
             default_for=default_for,
             catalogue=catalogue,
             resolved_bucket_id=resolved_bucket_id,
+            ports=calculation_ports,
         )
     except ModeloWorkAddressNotFoundError as exc:
         if exc.precondition_failure is not None:
@@ -171,6 +173,7 @@ def resolve_exportable_revision_for_cli(
     registry_revision: str | None,
     bucket_id: str | None,
     select: str,
+    calculation_ports,
 ) -> CalculationRevision:
     """Resolve one exportable revision from raw CLI target options.
 
@@ -189,6 +192,7 @@ def resolve_exportable_revision_for_cli(
             bucket_id=bucket_id,
             selector=parse_revision_selector(select),
             default_for="export",
+            calculation_ports=calculation_ports,
         )
     except CalculationRevisionNotFoundError as exc:
         if revision is not None:
@@ -214,7 +218,7 @@ def require_active_profile() -> None:
 def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     """Return the registry-declared period tokens for one modelo.
 
-    Pulls ``period_selector.periods`` from every revision of the modelo
+    Pulls ``period_selector.declared_periods`` from every revision of the modelo
     so the CLI period-validation error can enumerate exactly the tokens
     AEAT accepts for that form (``0A`` for an annual modelo, ``1T``..``4T``
     for a quarterly one, etc.). Returns an empty tuple when the modelo is

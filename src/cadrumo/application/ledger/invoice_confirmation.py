@@ -95,6 +95,7 @@ from .confirmed_field_resolution import (
     resolve_invoice_class,
 )
 from .evidence import PurchaseInvoiceEvidenceService
+from .evidence_ports import LedgerEvidencePorts
 from .evidence_draft import (
     PrintedTotalDiscrepancy,
     counterparty_draft_side,
@@ -275,6 +276,7 @@ def _written_confirmation_record(
     blockers: tuple[ConfirmationBlocker, ...],
     resolutions: Sequence[FindingResolution],
     settings: Settings,
+    evidence_ports: LedgerEvidencePorts,
 ) -> InvoiceConfirmationRecord:
     """Build and persist the confirmation record for one confirmed invoice.
 
@@ -293,7 +295,7 @@ def _written_confirmation_record(
             evidence_sha256=_evidence_content_address(
                 bucket_id=bucket_id,
                 evidence_id=evidence_id,
-                settings=settings,
+                evidence_ports=evidence_ports,
             ),
             draft=draft,
             extractor=_confirmed_extractor(draft),
@@ -319,7 +321,12 @@ def _confirmed_extractor(draft: InvoiceDraft) -> str:
     return "+".join(origins) if origins else "unrecorded"
 
 
-def _evidence_content_address(*, bucket_id: str, evidence_id: str | None, settings: Settings) -> str | None:
+def _evidence_content_address(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    evidence_ports: LedgerEvidencePorts,
+) -> str | None:
     """Return the content address of the confirmed evidence bytes, when known.
 
     Resolved from the ``purchase_invoice_evidence`` record's own
@@ -333,7 +340,7 @@ def _evidence_content_address(*, bucket_id: str, evidence_id: str | None, settin
         return None
     record = find_bytes_bearing_evidence_record(
         evidence_id,
-        evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+        evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(bucket_id=bucket_id),
     )
     return record.source_sha256 if record is not None else None
 
@@ -343,7 +350,7 @@ def _resolve_evidence_attachment_id(
     bucket_id: str,
     evidence_id: str | None,
     attachment_id: str | None,
-    settings: Settings,
+    evidence_ports: LedgerEvidencePorts,
 ) -> str:
     """Return the in-store ``attachment_id`` backing one evidence reference.
 
@@ -370,7 +377,7 @@ def _resolve_evidence_attachment_id(
         )
     record = find_bytes_bearing_evidence_record(
         evidence_id,
-        evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+        evidence_records=PurchaseInvoiceEvidenceService(ports=evidence_ports).list_all(bucket_id=bucket_id),
     )
     if record is None:
         raise refuse_reference_without_document_bytes(evidence_id)
@@ -485,6 +492,7 @@ def _prepare_invoice_confirmation(
     iva_amount: Decimal | None,
     supply_nature: SupplyNature | None,
     settings: Settings | None,
+    evidence_ports: LedgerEvidencePorts,
     resolutions: Sequence[FindingResolution],
     counterparty_tax_id: str | None,
     counterparty_name: str | None,
@@ -518,7 +526,7 @@ def _prepare_invoice_confirmation(
         bucket_id=bucket_id,
         evidence_id=evidence_id,
         attachment_id=attachment_id,
-        settings=resolved_settings,
+        evidence_ports=evidence_ports,
     )
     counterparty_side = counterparty_draft_side(draft, kind=kind)
     operator_restated_amounts = operator_restated_the_amounts(
@@ -672,6 +680,7 @@ def _persist_confirmed_invoice(
     confirmed_by: str,
     resolutions: Sequence[FindingResolution],
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+    evidence_ports: LedgerEvidencePorts,
 ) -> InvoiceConfirmationResult:
     """Apply idempotency, link evidence, and persist the confirmation record."""
     from .confirmation_record import re_stamped_provenance
@@ -715,6 +724,7 @@ def _persist_confirmed_invoice(
             blockers=preparation.blockers,
             resolutions=resolutions,
             settings=preparation.settings,
+            evidence_ports=evidence_ports,
         )
         return InvoiceConfirmationResult(
             invoice=existing,
@@ -745,6 +755,7 @@ def _persist_confirmed_invoice(
         blockers=preparation.blockers,
         resolutions=resolutions,
         settings=preparation.settings,
+        evidence_ports=evidence_ports,
     )
     return InvoiceConfirmationResult(
         invoice=result.invoice,
@@ -791,6 +802,7 @@ def confirm_invoice_draft_from_evidence(
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     rate_provider: ExchangeRateProvider | None = None,
+    evidence_ports: LedgerEvidencePorts,
     extraction_ports: InvoiceDraftExtractionPorts,
 ) -> InvoiceConfirmationResult:
     """Re-extract one evidence reference and confirm it into a real :class:`Invoice`.
@@ -915,6 +927,7 @@ def confirm_invoice_draft_from_evidence(
         iva_amount=iva_amount,
         supply_nature=supply_nature,
         settings=settings,
+        evidence_ports=evidence_ports,
         resolutions=resolutions,
         counterparty_tax_id=counterparty_tax_id,
         counterparty_name=counterparty_name,
@@ -960,4 +973,5 @@ def confirm_invoice_draft_from_evidence(
         confirmed_by=confirmed_by,
         resolutions=resolutions,
         invoice_repository=invoice_repository,
+        evidence_ports=evidence_ports,
     )

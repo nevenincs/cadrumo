@@ -24,6 +24,7 @@ from ...domain.modelos.errors import ModeloError
 from ._modelo_iva_wallet_payloads import IvaWalletBalanceResult, IvaWalletOverrideResult, IvaWalletSeedResult
 from ._modelo_payloads_m036 import IvaWalletCorrectResult
 from .common import active_bucket_id_or_refuse, emit_envelope
+from .state_projection_support import calculation_action_ports_factory
 
 
 def _wallet_amount(amount: str) -> Decimal:
@@ -224,13 +225,17 @@ def iva_wallet_override_cmd(
         )
     override_amount = _wallet_amount(amount)
     filing_period = Period.from_year_and_code(filing_year, period)
+    bucket_id = active_bucket_id_or_refuse()
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
     try:
         decision = record_iva_compensation_override_for_bucket(
-            bucket_id=active_bucket_id_or_refuse(),
+            bucket_id=bucket_id,
             period=filing_period,
             amount=override_amount,
             reason=clean_reason,
             evidence_locator=clean_locator,
+            observation_repository=calculation_ports.observation_repository,
+            decision_repository=calculation_ports.iva_compensation_decision_repository,
         )
     except ModeloIvaWalletSeedNegativeAmountError as exc:
         raise typer.BadParameter(resolve_error_message(exc)) from exc

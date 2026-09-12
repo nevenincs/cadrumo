@@ -48,11 +48,6 @@ from collections.abc import Iterable, Mapping
 
 from pydantic import BaseModel, Field, ValidationError
 
-from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -63,19 +58,14 @@ from ...domain.buckets.event import (
     BucketEventType,
     bucket_event_order_key,
 )
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import ModeloRecord
-from ...domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    ModeloRecordCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-)
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from .action_errors import WorkUnitNotFoundError
+from .history_ports import ModeloHistoryPorts
 from .work_selection import (
     ModeloWorkResolution,
     ModeloWorkSelectorRequest,
@@ -177,11 +167,7 @@ def _filing_history_events(
 def assemble_work_unit_history(
     work_unit_id: str,
     *,
-    work_unit_repository: WorkUnitCatalogueRepository | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: ModeloHistoryPorts,
 ) -> WorkUnitHistory:
     """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
@@ -209,11 +195,11 @@ def assemble_work_unit_history(
         :class:`WorkUnitHistory`:
             The immutable read model returned to callers.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    wu_repo = ports.work_unit_repository
+    cr_repo = ports.calculation_repository
+    fr_repo = ports.filing_repository
+    vr_repo = ports.verification_repository
+    bv_repo = ports.bucket_event_repository
 
     try:
         request = ModeloWorkSelectorRequest(work_unit_id=work_unit_id)
@@ -335,7 +321,7 @@ def assemble_modelo_lifecycle_history(
     *,
     filing_year: int | None = None,
     period: str | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: ModeloHistoryPorts,
 ) -> ModeloLifecycleHistory:
     """Return a :class:`ModeloLifecycleHistory` covering every bucket event recorded against ``modelo``.
 
@@ -362,7 +348,7 @@ def assemble_modelo_lifecycle_history(
             The same projection at the single-work-unit subject grain.
     """
     subject = ModeloCode(modelo)
-    repository = bucket_event_repository or BucketEventHistoryRepository()
+    repository = ports.bucket_event_repository
     admitted = admitted_modelo_history_event_types()
     wanted_year = None if filing_year is None else str(filing_year)
 

@@ -14,7 +14,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.queries import RegistryQueryService
-from ...domain.iva.schema import IvaCashAccountingTreatment
+from ...domain.iva.schema import IvaCashAccountingTreatment, is_iva_cash_accounting_supplier_regime
 from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from .errors import AggregationValidationError
 from .iva_ledger import IvaLedgerAggregation
@@ -215,7 +215,7 @@ def resolve_m303_supplier_regime_arrival(
         dict.fromkeys(
             observation.ledger_id
             for observation in observations
-            if observation.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+            if is_iva_cash_accounting_supplier_regime(observation.cash_accounting_treatment)
         )
     )
     return M303SupplierRegimeArrival(

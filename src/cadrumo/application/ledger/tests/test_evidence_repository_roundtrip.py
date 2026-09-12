@@ -3,7 +3,7 @@
 ``PurchaseInvoiceEvidence`` is a persisted record: it rides an encrypted
 :class:`~adapters.persistence.storage.Envelope` in the bucket-local
 ``LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE`` through
-:class:`~application.ledger.evidence.PurchaseInvoiceEvidenceRepository`. The catalogue had
+:class:`~adapters.persistence.profile.purchase_invoice_evidence.PurchaseInvoiceEvidenceRepository`. The catalogue had
 save/load coverage that only asserted records survived, never that they survived
 *unchanged*, so a save-drops-field / load-re-defaults-field regression on any of
 the seven optional fiscal fields was invisible.
@@ -29,6 +29,7 @@ from ._ledger_value_fixtures import secure_objects
 __all__ = ["secure_objects"]
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.purchase_invoice_evidence import PurchaseInvoiceEvidenceRepository
 from ....adapters.persistence.storage.secure_object_namespaces import LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
@@ -36,7 +37,6 @@ from ..evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceDocument,
-    PurchaseInvoiceEvidenceRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

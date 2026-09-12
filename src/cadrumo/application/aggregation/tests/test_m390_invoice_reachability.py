@@ -74,8 +74,8 @@ def test_the_invoice_versus_ledger_screen_now_covers_m390() -> None:
     screen, because what matters is that M390 has an ENTRY -- a screen that ran
     but compared an empty binding set would pass this call and guard nothing.
     """
-    revision = _revision(Modelo.M390.value, "0A")
-    assert invoice_ledger_screen_binding_ids(revision, modelo=Modelo.M390.value)
+    revision = _revision(Modelo("390").value, "0A")
+    assert invoice_ledger_screen_binding_ids(revision, modelo=Modelo("390").value)
 
 
 def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
@@ -88,8 +88,8 @@ def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
     missing recargo tiers survived on the M303 side for as long as they did.
     """
     revisions = {
-        Modelo.M303.value: _revision(Modelo.M303.value, "1T"),
-        Modelo.M390.value: _revision(Modelo.M390.value, "0A"),
+        Modelo("303").value: _revision(Modelo("303").value, "1T"),
+        Modelo("390").value: _revision(Modelo("390").value, "0A"),
     }
     stripped = {
         modelo: sorted(
@@ -99,7 +99,7 @@ def test_the_two_screened_modelos_cover_the_same_concepts() -> None:
         for modelo, revision in revisions.items()
     }
 
-    assert stripped[Modelo.M303.value] == stripped[Modelo.M390.value]
+    assert stripped[Modelo("303").value] == stripped[Modelo("390").value]
 
 
 def test_m390_declares_no_invoice_sourced_binding() -> None:

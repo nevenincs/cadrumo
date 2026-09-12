@@ -11,7 +11,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
-from .verification_substance_support import _CASILLA_06, _CASILLA_09, workflow_profile
+from cadrumo.application.modelo.tests.verification_substance_fixtures import _CASILLA_06, _CASILLA_09, workflow_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

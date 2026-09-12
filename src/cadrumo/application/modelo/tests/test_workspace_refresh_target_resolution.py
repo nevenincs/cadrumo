@@ -9,6 +9,8 @@ operations-layer envelope, and prove the subject validation fails closed.
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -45,6 +47,8 @@ from ..operation_definitions import (
 )
 from ..workspace_models import ModeloWorkspaceRefreshTargetV1
 
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 3, 4, 9, 0, 0, tzinfo=UTC)
@@ -64,7 +68,7 @@ def _work_unit_id() -> str:
 
 def _registry() -> OperationRegistry:
     """The shipped Modelo enrolments, composed exactly as production composes them."""
-    definitions = build_modelo_lifecycle_operation_definitions()
+    definitions = build_modelo_lifecycle_operation_definitions(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     return OperationRegistry(
         definitions=definitions,
         public_registrations=build_modelo_lifecycle_operation_registrations(definitions),

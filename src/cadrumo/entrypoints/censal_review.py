@@ -200,7 +200,9 @@ async def _run(
     services: OperationComposedServices | None = None,
 ) -> CensalReviewedFrontendResult:
     request = _active_censal_operation_request()
-    composed = services or compose_operation_dependencies()
+    from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
+    composed = services or compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
     owns_services = services is None
     try:
         submitted = await composed.submission.submit(

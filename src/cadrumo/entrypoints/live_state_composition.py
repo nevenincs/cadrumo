@@ -14,8 +14,11 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
+from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
+from ..adapters.outbound.aeat.sede.filed_data_capture_port import SedeFiledDataCapturePort
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
     BaselineImportAdapter,
     BucketEventRepositoryAdapter,
@@ -32,6 +35,7 @@ from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     fetch_iva_compensation_wallet,
 )
+from ..adapters.outbound.aeat.sede.notifications import fetch_notifications_query
 from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -40,29 +44,46 @@ from ..adapters.persistence.profile.justificante import JustificanteRepository
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ..adapters.persistence.storage.errors import StorageValidationError
+from ..adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from ..adapters.persistence.storage.errors import StorageValidationError
 from ..adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ..adapters.persistence.storage.secure_object_namespaces import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ..application.auth.session_types import AeatSession
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..application.auth.session_types import AeatSession
 from ..application.auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
+from ..application.auth.operator_scope_ports import OperatorScopePorts
 from ..application.calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-from ..application.calculations.observations_repository import (
+from ..adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
-    iva_wallet_decision_key,
 )
-from ..application.live.errors import LiveApplicationError
+from ..application.calculations.observations_repository import iva_wallet_decision_key
+from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
 from ..application.live.filed_data_capture import capture_report_path
+from ..application.live.filed_data_ports import FiledDataCapturePort
 from ..application.live.filed_observation_persistence import (
     latest_declarations_by_period,
     persist_iva_compensation_history_observations_strict,
 )
 from ..application.live.filed_observation_ports import FiledObservationPersistencePorts
 from ..application.live.iva_remote_state_ports import IvaRemoteStatePort
+from ..application.live.notification_ports import (
+    NotificationSnapshotQueryProtocol,
+    NotificationsPorts,
+    NotificationsSnapshot,
+    NotificationType,
+    RemoteNotification,
+)
+from ..application.live.notifications import (
+    NotificationsSnapshotNotFoundError,
+    PersistedNotificationsSnapshot,
+    notifications_snapshot_object_key,
+)
 from ..application.live.remote_state_models import (
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryCaptureReport,
@@ -90,6 +111,85 @@ from ..domain.iva_compensation.carry_forward import build_iva_compensation_carry
 _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).subpath).name
 
 
+class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
+    """Translate Sede notification records into the application snapshot DTO."""
+
+    async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
+        """Read the Sede query and translate adapter DTOs/errors at this boundary."""
+        try:
+            captured = await fetch_notifications_query(session, settings=settings)
+        except SedeError as exc:
+            if isinstance(exc, SedeParseError):
+                failure_kind = "parse"
+            elif isinstance(exc, SedeNavigationError):
+                failure_kind = "navigation"
+            else:
+                failure_kind = "transport"
+            raise LiveApplicationError(
+                translated_message="errors.error.error_application_live",
+                context={"surface": "notifications", "failure_kind": failure_kind},
+            ) from exc
+        return NotificationsSnapshot(
+            rows=tuple(_notification_row(row) for row in captured.rows),
+            captured_at=captured.captured_at,
+            source_url=str(captured.source_url),
+        )
+
+
+def _notification_row(row: Any) -> RemoteNotification:
+    """Translate one adapter-owned notification row to the application DTO."""
+    return RemoteNotification(
+        certificado_id=row.certificado_id,
+        tipo=NotificationType(str(row.tipo)),
+        concepto=row.concepto,
+        titular_nif=row.titular_nif,
+        titular_nombre=row.titular_nombre,
+        destinatario_nif=row.destinatario_nif,
+        destinatario_nombre=row.destinatario_nombre,
+        fecha_emision=row.fecha_emision,
+        fecha_notificacion=row.fecha_notificacion,
+        modo_notificacion=row.modo_notificacion,
+        leida=row.leida,
+        source_url=str(row.source_url),
+    )
+
+
+def _notifications_snapshot_repository(
+    *,
+    settings: Settings,
+    bucket_id: str,
+) -> SecureSnapshotRepository[PersistedNotificationsSnapshot]:
+    """Bind encrypted snapshot persistence for one bucket at the outer edge."""
+    return SecureSnapshotRepository(
+        bucket_id=bucket_id,
+        payload_model=PersistedNotificationsSnapshot,
+        namespace_definition=LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+        object_key=notifications_snapshot_object_key,
+        not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
+            translated_message="application.live.notifications.errors.snapshot_not_found",
+            context={"snapshot_id": snapshot_id},
+        ),
+        ambiguous_prefix_factory=lambda snapshot_id, full_ids: NotificationsSnapshotNotFoundError(
+            translated_message="application.live.notifications.errors.snapshot_prefix_ambiguous",
+            context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
+        ),
+        domain_label="notifications",
+        input_error_cls=LiveApplicationInputError,
+        objects=secure_object_repository_for_bucket(bucket_id, settings),
+    )
+
+
+def compose_notifications_ports(*, settings: Settings) -> NotificationsPorts:
+    """Compose the complete live-notifications capability bundle."""
+    return NotificationsPorts(
+        snapshot_query=_SedeNotificationSnapshotQuery(),
+        snapshot_repository_factory=lambda bucket_id: _notifications_snapshot_repository(
+            settings=settings,
+            bucket_id=bucket_id,
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class LiveStateComposition:
     """One immutable live-state dependency bundle for one bucket and root."""
@@ -98,8 +198,11 @@ class LiveStateComposition:
     output_root: Path
     objects: SecureObjectRepository
     ports: FiledObservationPersistencePorts
+    filed_data_port: FiledDataCapturePort
     iva_remote_state_port: IvaRemoteStatePort
+    notifications_ports: NotificationsPorts
     certificate_secret_backend_factory: CertificateSecretBackendFactory
+    operator_scope_ports: OperatorScopePorts
 
 
 def compose_filed_observation_persistence_ports(
@@ -156,18 +259,27 @@ def compose_live_state(
         objects=secure_objects,
     )
     certificate_secret_backend_factory = build_certificate_secret_backend
+    operator_scope_ports = build_operator_scope_ports()
+    filed_data_port = SedeFiledDataCapturePort(
+        certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
+    )
     remote_port = AppIvaRemoteStatePort(
         objects=secure_objects,
         filed_observation_ports=filed_ports,
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
     return LiveStateComposition(
         bucket_id=resolved_bucket_id,
         output_root=resolved_root,
         objects=secure_objects,
         ports=filed_ports,
+        filed_data_port=filed_data_port,
         iva_remote_state_port=remote_port,
+        notifications_ports=compose_notifications_ports(settings=settings),
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
 
 
@@ -180,11 +292,13 @@ class AppIvaRemoteStatePort:
         objects: SecureObjectRepository,
         filed_observation_ports: FiledObservationPersistencePorts,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_scope_ports: OperatorScopePorts,
     ) -> None:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._operator_scope_ports = operator_scope_ports
 
     @property
     def wallet_target_url(self) -> str:
@@ -209,6 +323,7 @@ class AppIvaRemoteStatePort:
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
             operation=operation,
             target_url=target_url,
+            operator_scope_ports=self._operator_scope_ports,
         )
 
     def ensure_authenticated_session(
@@ -224,6 +339,7 @@ class AppIvaRemoteStatePort:
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
             operation=operation,
             target_url=target_url,
+            operator_scope_ports=self._operator_scope_ports,
         )
 
     def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
@@ -466,15 +582,21 @@ async def pull_filed_history_with_shared_composition(
     repository: object,
     events: object,
     ports: FiledObservationPersistencePorts,
+    filed_data_port: FiledDataCapturePort,
     iva_remote_state_port: IvaRemoteStatePort,
+    notifications_ports: NotificationsPorts,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ):
     """Invoke the filed-history service with the explicitly composed bundle."""
     from ..application.live.filed_data_capture import pull_filed_history
 
     return await pull_filed_history(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
+        filed_data_port=filed_data_port,
         iva_remote_state_port=iva_remote_state_port,
+        notifications_ports=notifications_ports,
         ports=ports,
         output_root=payload.output_root,
         profile=profile,
@@ -569,6 +691,7 @@ __all__ = [
     "carry_forward_lot_row",
     "compose_filed_observation_persistence_ports",
     "compose_live_state",
+    "compose_notifications_ports",
     "persist_and_reconcile_iva_compensation_wallet",
     "pull_filed_history_with_shared_composition",
     "taxpayer_ref",

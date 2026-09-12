@@ -85,7 +85,7 @@ def _collect(casilla_values: dict[CasillaId, Decimal] | None = None) -> tuple[Ca
     return collect_minimo_descendientes_prorrata_inferred_diagnostics(
         _revision(),
         _CLAIMED if casilla_values is None else casilla_values,
-        modelo=Modelo.M100.value,
+        modelo=Modelo("100").value,
         bucket_id=_BUCKET_ID,
     )
 

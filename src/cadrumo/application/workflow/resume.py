@@ -68,6 +68,7 @@ from .abort import WorkflowAbortReason
 from .errors import WorkflowError
 from .persistence import list_runs, load_run
 from .run_models import WorkflowObligationFacts, WorkflowResult, WorkflowStage
+from ..modelo.calculation_action_ports import CalculationActionPorts
 
 if TYPE_CHECKING:
     #: ``RevisionId`` is an ``Annotated[str, ...]`` alias, but importing it from
@@ -289,6 +290,7 @@ def resolve_modelo_workflow_resume_target(
     registry_revision_id: RevisionId | None = None,
     bucket_id: str | None = None,
     selector: object | None = None,
+    ports: CalculationActionPorts,
 ) -> WorkflowResumeTargetResolution:
     """Resolve the operator's resume address and return a target resolution.
 
@@ -319,7 +321,7 @@ def resolve_modelo_workflow_resume_target(
     if inputs.workflow_run_id is not None:
         return _workflow_run_id_resolution(inputs.workflow_run_id, source="workflow_run_id")
     if inputs.calculation_revision_id is not None:
-        return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id)
+        return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id, ports=ports)
     if inputs.work_unit_id is not None:
         return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector)
     if inputs.visible_supplied:
@@ -423,11 +425,13 @@ def _workflow_run_id_resolution(run_id: str, *, source: str) -> WorkflowResumeTa
 
 def _resolve_resume_from_calculation_revision(
     calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo.calculation_actions import get_calculation_revision
     from ..modelo.work_lifecycle import get_work_unit
 
-    revision = get_calculation_revision(calculation_revision_id)
+    revision = get_calculation_revision(calculation_revision_id, ports=ports)
     work_unit = get_work_unit(revision.work_unit_id)
     return _resolve_resume_from_work_unit(
         work_unit,

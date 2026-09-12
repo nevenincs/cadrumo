@@ -6,7 +6,7 @@ import pytest
 
 from ....core.identity.documents import IdentityError
 from ....core.identity.nif_iva import NIF_IVA_FORMATS, nif_iva_prefix_for_country
-from ....core.identity.tax_id import validate_spanish_tax_id
+from ...calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...iva.schema import EUMemberState
 from ..validators import validate_country_code, validate_iva_number
 
@@ -23,7 +23,7 @@ def test_validate_spanish_tax_id_accepts_known_valid_nif() -> None:
     )
 
     for value in values:
-        assert validate_spanish_tax_id(value) == value
+        assert validate_runtime_spanish_tax_id(value) == value
 
 
 def test_validate_spanish_tax_id_accepts_known_valid_nie() -> None:
@@ -35,7 +35,7 @@ def test_validate_spanish_tax_id_accepts_known_valid_nie() -> None:
     )
 
     for value in values:
-        assert validate_spanish_tax_id(value) == value
+        assert validate_runtime_spanish_tax_id(value) == value
 
 
 def test_validate_spanish_tax_id_accepts_cif_digit_control() -> None:
@@ -51,7 +51,7 @@ def test_validate_spanish_tax_id_accepts_cif_digit_control() -> None:
     )
 
     for value in values:
-        assert validate_spanish_tax_id(value) == value
+        assert validate_runtime_spanish_tax_id(value) == value
 
 
 def test_validate_spanish_tax_id_accepts_cif_letter_control() -> None:
@@ -71,7 +71,7 @@ def test_validate_spanish_tax_id_accepts_cif_letter_control() -> None:
     )
 
     for value in values:
-        assert validate_spanish_tax_id(value) == value
+        assert validate_runtime_spanish_tax_id(value) == value
 
 
 def test_validate_spanish_tax_id_refuses_abeh_letter_form() -> None:
@@ -86,10 +86,10 @@ def test_validate_spanish_tax_id_refuses_abeh_letter_form() -> None:
     merged: one of them carried its own leader policy that read ABEH as mixed,
     contradicting its own module docstring.
     """
-    assert validate_spanish_tax_id("B12345674") == "B12345674"
+    assert validate_runtime_spanish_tax_id("B12345674") == "B12345674"
 
     with pytest.raises(IdentityError) as excinfo:
-        validate_spanish_tax_id("B1234567D")
+        validate_runtime_spanish_tax_id("B1234567D")
     assert excinfo.value.translated_message == "errors.identity.cif_check_digit_mismatch"
     assert excinfo.value.context == {"kind": "B", "expected": "4", "got": "D"}
 
@@ -112,7 +112,7 @@ def test_validate_spanish_tax_id_rejects_invalid_checksum() -> None:
 
     for value in values:
         with pytest.raises(IdentityError, match=r"checksum"):
-            validate_spanish_tax_id(value)
+            validate_runtime_spanish_tax_id(value)
 
 
 def test_validate_spanish_tax_id_rejects_malformed_shapes() -> None:
@@ -125,7 +125,7 @@ def test_validate_spanish_tax_id_rejects_malformed_shapes() -> None:
     """
     for value in ("", "12345", "12345678ZA", "?23456781"):
         with pytest.raises(IdentityError, match=r"tax identifier"):
-            validate_spanish_tax_id(value)
+            validate_runtime_spanish_tax_id(value)
 
 
 def test_validate_spanish_tax_id_strips_common_separators() -> None:
@@ -138,7 +138,7 @@ def test_validate_spanish_tax_id_strips_common_separators() -> None:
     )
 
     for value, expected in cases:
-        assert validate_spanish_tax_id(value) == expected, value
+        assert validate_runtime_spanish_tax_id(value) == expected, value
 
 
 def test_validate_spanish_tax_id_strips_es_iva_prefix() -> None:
@@ -150,7 +150,7 @@ def test_validate_spanish_tax_id_strips_es_iva_prefix() -> None:
     )
 
     for value, expected in cases:
-        assert validate_spanish_tax_id(value) == expected, value
+        assert validate_runtime_spanish_tax_id(value) == expected, value
 
 
 def test_validate_iva_number_strips_dot_separators() -> None:

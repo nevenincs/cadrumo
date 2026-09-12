@@ -24,7 +24,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ..iva.schema import IvaCashAccountingTreatment
+from ..iva.schema import IvaCashAccountingTreatment, is_iva_cash_accounting_none
 
 if TYPE_CHECKING:  # pragma: no cover — typing-only import
     from .models import Transaction
@@ -72,7 +72,7 @@ def transaction_eligible_date_span(transaction: Transaction) -> tuple[date, date
     if operation_date is None:
         return filing_date, filing_date
     candidates = [filing_date, operation_date]
-    if transaction.cash_accounting_treatment is not IvaCashAccountingTreatment.NONE:
+    if not is_iva_cash_accounting_none(transaction.cash_accounting_treatment):
         # Both extras are criterio-de-caja constructs and must not widen a
         # general-regime row. That row files on its art. 75 devengo date, full
         # stop: it settles in one movement, so there is no collection series

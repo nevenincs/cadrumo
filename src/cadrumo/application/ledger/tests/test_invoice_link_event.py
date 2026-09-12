@@ -5,7 +5,7 @@ linkage did not, so the one verb that binds a transaction to an invoice left
 no trace an operator or auditor could later read. These tests pin the event
 to the same unit of work as the two catalogue writes, using real adapters
 throughout: a real
-:class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`, a real
+:class:`~cadrumo.adapters.persistence.storage.tests.ephemeral_master_key.EphemeralMasterKeyProvider`, a real
 SQLite-backed
 :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`, and the
 production serializers. The failure injected below is the production

@@ -20,7 +20,7 @@ from .....core.config import Settings, load_settings, override_settings
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
 from .....core.errors.hierarchy import CadrumoError
 from .....core.storage_taxonomy import StorageCategory
-from .....tests.master_key import EphemeralMasterKeyProvider
+from .ephemeral_master_key import EphemeralMasterKeyProvider
 from .....tests.storage_scope import storage_overrides
 from ..bucket.directory_layout import BucketPaths
 from ..crypto.encrypted_columns import (

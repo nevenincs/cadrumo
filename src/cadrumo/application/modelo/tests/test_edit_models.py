@@ -99,7 +99,7 @@ def _baseline(
     return ModeloEditBaselineV1(
         compatibility=_compatibility(),
         bucket_id="edit-bucket",
-        modelo=ModeloCode(Modelo.M130.value),
+        modelo=ModeloCode(Modelo("130").value),
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         work_unit_id=_WORK_UNIT_ID,

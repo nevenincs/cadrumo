@@ -17,7 +17,7 @@ import pytest
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...errors import StorageValidationError
 from ..encrypted_columns import HashedLookup
 

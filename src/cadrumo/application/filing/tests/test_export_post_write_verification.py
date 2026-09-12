@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _modelo_131_snapshot() -> FilingProducerSnapshot:
     base = _typed_producer_snapshot()
     return build_filing_producer_snapshot(
-        modelo=Modelo.M131,
+        modelo=Modelo("131"),
         taxpayer_tax_id=base.taxpayer_tax_id,
         taxpayer_identity=base.taxpayer_identity,
         presenter=base.presenter,

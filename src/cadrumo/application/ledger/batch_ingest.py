@@ -47,7 +47,6 @@ from ...core.directory_scan import scan_directory
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
@@ -56,6 +55,7 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from ..provisioning import HardwareProfile
     from .evidence import PurchaseInvoiceEvidenceService
+    from .evidence_ports import LedgerEvidencePorts
     from .extraction_draft_store import StoredExtractionDraft
     from .invoice_draft_records import InvoiceDraft
 
@@ -537,8 +537,8 @@ def run_evidence_batch(
     bucket_id: str,
     sources: Iterable[Path | str],
     direction: InvoiceKind,
+    evidence_ports: LedgerEvidencePorts,
     settings: Settings | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     on_item: Callable[[BatchItemResult], None] | None = None,
     profile: HardwareProfile | None = None,
 ) -> BatchRunResult:
@@ -570,10 +570,10 @@ def run_evidence_batch(
         direction: The direction declared for the whole run. Part of each
             item's identity, so the same document filed both ways is two
             records rather than one.
+        evidence_ports: Required evidence catalogue, attachment, and event
+            capabilities for this bucket.
         settings: Resolved ``Settings``; ``load_settings()`` when omitted, so
             ``override_settings()`` is honoured.
-        bucket_event_repository: Repository the evidence lifecycle events are
-            appended to.
         on_item: Called with each row as it completes, for progress reporting.
             A raising callback must not lose the run, so it is guarded like any
             other per-item failure.
@@ -593,8 +593,7 @@ def run_evidence_batch(
 
     resolved_settings = settings or _load_settings()
     service = PurchaseInvoiceEvidenceService(
-        settings=resolved_settings,
-        bucket_event_repository=bucket_event_repository,
+        ports=evidence_ports,
     )
 
     addressed: dict[tuple[str, str], Path] = {}

@@ -55,7 +55,7 @@ def _schema() -> ProfileSchemaDefinition:
                         sensitivity=SensitivityClass.FINANCIAL,
                         description="Whether the withholder is a colegio concertado",
                         model_selectors=("colegio_concertado",),
-                        required_for_modelos=(Modelo.M111,),
+                        required_for_modelos=(Modelo("111"),),
                     ),
                 ),
             ),
@@ -75,12 +75,12 @@ def _missing_paths(modelo: str) -> tuple[str, ...]:
 
 
 def test_the_declaring_modelo_is_asked_for_the_fact() -> None:
-    assert _FIELD_PATH in _missing_paths(Modelo.M111.value)
+    assert _FIELD_PATH in _missing_paths(Modelo("111").value)
 
 
 def test_a_modelo_that_does_not_declare_it_is_never_asked() -> None:
     """The whole point: an unrelated modelo must not inherit the requirement."""
-    for modelo in (Modelo.M303, Modelo.M100, Modelo.M115):
+    for modelo in (Modelo("303"), Modelo("100"), Modelo("115")):
         assert _FIELD_PATH not in _missing_paths(modelo.value), modelo
 
 
@@ -88,7 +88,7 @@ def test_the_registry_declares_the_requirement_rather_than_a_code_branch() -> No
     """The shipped schema carries the axis, so no handler needs a modelo branch."""
     schema = load_user_profile_schema()
     declared = tuple(
-        field for section in schema.sections for field in section.fields if Modelo.M111 in field.required_for_modelos
+        field for section in schema.sections for field in section.fields if Modelo("111") in field.required_for_modelos
     )
     assert declared, "the shipped schema must declare the Modelo 111 requirement"
     assert all(not field.required for field in declared), (

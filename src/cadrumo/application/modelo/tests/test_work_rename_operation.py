@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 import ast
 import inspect
 import textwrap
@@ -53,6 +55,8 @@ from ..operation_definitions import (
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
 )
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -220,7 +224,7 @@ def test_the_two_enrolments_are_distinct_registered_subjects() -> None:
 
 
 def _verify_definition():
-    return build_modelo_work_verify_definition(profile_resolver=_test_profile_resolver)
+    return build_modelo_work_verify_definition(profile_resolver=_test_profile_resolver, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def test_verify_declares_its_progress_phases_and_claims_no_interaction() -> None:
@@ -285,7 +289,7 @@ def test_every_enrolment_here_targets_a_distinct_subject() -> None:
 
 
 def _file_definition():
-    return build_modelo_work_file_definition(profile_resolver=_test_profile_resolver)
+    return build_modelo_work_file_definition(profile_resolver=_test_profile_resolver, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
 
 def test_filing_approval_names_the_verification_that_justified_it() -> None:

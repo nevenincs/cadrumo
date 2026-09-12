@@ -8,6 +8,8 @@ never see more than the public frontend contracts C0 already froze.
 
 from __future__ import annotations
 
+from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+
 import asyncio
 from collections.abc import Awaitable, Callable, Generator
 from contextlib import contextmanager
@@ -83,6 +85,8 @@ from ..logs import build_initial_log_view, fold_event_page
 from ..modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalSettledOutcomeV1
 from ..projection import OperationModalViewModelV1, build_operation_modal_view_model
 
+_OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PASSPHRASE = "operation-modal-conformance-passphrase"  # noqa: S105 - isolated integration fixture
@@ -130,6 +134,7 @@ def _runtime(
         censal_definition = build_censal_operation_definition(
             acquire=acquire_censo,
             before_irreversible_section=before_irreversible_section,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
         registry = OperationRegistry(
             definitions=(*auth_definitions, censal_definition),

@@ -49,10 +49,9 @@ See Also:
 
 from __future__ import annotations
 
-from typing import Final
-
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
+from ..calculations.registry.tax_id_format import runtime_tax_id_format, tax_id_format_value
 from .establishment import country_code_for_printed_tax_identifier
 from .schema import EUMemberState
 
@@ -96,14 +95,6 @@ def identification_state_for_printed_tax_identifier(
         return None
 
 
-_SPANISH_IVA_PREFIX: Final[str] = "ES"
-"""The prefix RGAT art. 25 puts in front of a Spanish NIF-IVA.
-
-Declared here rather than borrowed from the establishment vocabulary, because
-that vocabulary deliberately does not carry it and must not start to.
-"""
-
-
 def _spanish_identification(printed_identifier: str | None) -> EUMemberState | None:
     """Return Spain when the printed number is an ES-prefixed Spanish identifier.
 
@@ -132,10 +123,11 @@ def _spanish_identification(printed_identifier: str | None) -> EUMemberState | N
     if printed_identifier is None:
         return None
     compact = "".join(printed_identifier.split()).replace("-", "").replace(".", "").upper()
-    if not compact.startswith(_SPANISH_IVA_PREFIX):
+    spanish_prefix = tax_id_format_value("tax_id.country_prefix")
+    if not compact.startswith(spanish_prefix):
         return None
     try:
-        validate_spanish_tax_id(compact[len(_SPANISH_IVA_PREFIX) :])
+        validate_spanish_tax_id(compact[len(spanish_prefix) :], runtime_tax_id_format())
     except IdentityError:
         # An ES prefix over a body that fails the control letter is not a
         # Spanish identification; it is a misread or a different country's

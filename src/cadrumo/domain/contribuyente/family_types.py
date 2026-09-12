@@ -16,7 +16,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
-from ...core.identity.tax_id import SubjectTaxId
+from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth, NonNegativeDecimal

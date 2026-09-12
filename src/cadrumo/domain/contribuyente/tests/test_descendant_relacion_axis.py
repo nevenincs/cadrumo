@@ -26,12 +26,15 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES, DescendantRelacion
+from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
+from ..descendant_maternity import art_81_1_maternity_relations
+from ..family_fact_context import FamilyFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -502,9 +505,8 @@ class TestGuardaYCustodiaJudicial:
         is a non-member, so a later reader does not admit it on the assumption
         that its omission was an oversight.
         """
-        from ..descendant_maternity import ART_81_1_MATERNIDAD_RELACIONES
-
-        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in ART_81_1_MATERNIDAD_RELACIONES
+        context = FamilyFactResolutionContext(bundled_authority(), date(_YEAR, 12, 31), date(_YEAR, 12, 31))
+        assert DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL not in art_81_1_maternity_relations(context=context)
 
     def test_the_entry_surface_ships_with_the_member(self) -> None:
         """A member no operator can select is not a modelled case."""

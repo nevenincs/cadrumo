@@ -241,6 +241,14 @@ class DescendantMaternityMixin(DescendantRecordBase):
         return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year, context=context))
 
 
+def art_81_1_maternity_relations(
+    *,
+    context: FamilyFactResolutionContext,
+) -> frozenset[DescendantRelacion]:
+    """Resolve the dated Art. 81.1 relationship population from authority."""
+    return DescendantMaternityMixin._art_81_1_maternity_relations(context=context)
+
+
 def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:
     """Whether a declared relación cannot distinguish an Art. 81.1 child from a mínimo-only descendant.
 

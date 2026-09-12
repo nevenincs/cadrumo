@@ -51,6 +51,7 @@ from ...domain.calculations.registry.schema_scalars import (
     validate_registry_text_scalar as _validate_registry_text_scalar,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
+from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format as _runtime_tax_id_format
 from ...domain.filing.protocols import CasillaCollection as _CasillaCollection
 from ...domain.filing.protocols import CasillaSchemaProvider as _CasillaSchemaProvider
 from ...domain.filing.protocols import DeadlineChecker as _DeadlineChecker
@@ -690,7 +691,11 @@ def _text_inputs_for_ids(inputs: _ModeloInputs, input_data_types: Mapping[_Casil
                 },
             )
         try:
-            text_inputs[input_id] = _validate_registry_text_scalar(data_type, value)
+            text_inputs[input_id] = _validate_registry_text_scalar(
+                data_type,
+                value,
+                tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
+            )
         except _RegistryValidationError as exc:
             raise _ModeloBuilderError(
                 translated_message="application.filing.build_draft.errors.text_casilla_invalid",
@@ -875,7 +880,11 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
         # validator is an identity for ``text`` and a real check for the
         # specific families, which previously bypassed their validators.
         try:
-            return _validate_registry_text_scalar(data_type, str(value))
+            return _validate_registry_text_scalar(
+                data_type,
+                str(value),
+                tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
+            )
         except _RegistryValidationError as exc:
             raise _ModeloBuilderError(
                 translated_message="application.filing.build_draft.errors.binding_text_value_invalid",

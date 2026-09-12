@@ -47,7 +47,6 @@ from typing import Protocol
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
-from ...core.identity.tax_id import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -89,6 +88,7 @@ from ...domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
 )
 from ...domain.calculations.registry.schema_verification import fold_reconciliation_total_casilla_ids
+from ...domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...domain.calculations.registry.validate_revision_identity import revision_reference_identity_failures
 from ...domain.filing.protocols import CasillaCollection, CasillaSchema
 from ...domain.filing.schema import registry_schema_version
@@ -715,7 +715,7 @@ def _snapshot_for_provider(
     return authority.snapshot(
         modelo.id,
         filing_year=provider_year,
-        period=selector.periods[0],
+        period=selector.periods_for_year(provider_year)[0],
         revision_id=revision.id,
     )
 
@@ -782,6 +782,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
 
 
 def subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
+    """Project a validated snapshot into the modelo subview the filing handoff carries."""
     reconciliation_total_casilla_ids = fold_reconciliation_total_casilla_ids(
         snapshot.revision.verification_expectations,
     )
@@ -793,7 +794,7 @@ def subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
             revision_id=snapshot.revision.id,
         ),
         cadence=snapshot.modelo.cadence,
-        period_selector_periods=snapshot.revision.period_selector.periods,
+        period_selector_periods=snapshot.revision.period_selector.periods_for_year(snapshot.filing_year),
         legal_ref_ids=tuple(sorted(snapshot.legal)),
         source_ref_ids=tuple(sorted(snapshot.sources)),
         extraction_profile_ids=tuple(sorted(snapshot.extraction_profiles)),

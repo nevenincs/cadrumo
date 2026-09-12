@@ -192,12 +192,6 @@ modelo:
           '731':
             help: Tax information for casilla 731 of Modelo 322.
             label: Casilla 731 — tax field
-          '75':
-            help: Tax information about tax information in casilla 75 of Modelo 322.
-            label: Casilla 75 — tax information
-          '84':
-            help: Tax information about tax information in casilla 84 of Modelo 322.
-            label: Casilla 84 — tax information
           filing-period:
             help: Tax information for casilla of Modelo 322.
             label: Casilla — tax field
@@ -267,9 +261,6 @@ modelo:
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-iva-deducible-en-operaciones-interiores:
             help: Tax information for casilla 718 of Modelo 322.
             label: Casilla 718 — tax field
-          m322-informacion-adicional-exclusivamente-para-aquellos-sujetos-pasivos-que-sean-destinatarios-de-operaciones-afectadas:
-            help: Tax information about tax information in casilla 74 of Modelo 322.
-            label: Casilla 74 — tax information
           m322-liquidacion-iva-devengado-modificacion-bases-y-cuotas-de-operaciones-intragrupo:
             help: Tax information about tax information in casilla 10 of Modelo 322.
             label: Casilla 10 — tax information

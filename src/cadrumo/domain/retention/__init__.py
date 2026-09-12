@@ -5,7 +5,7 @@ it has prescribed. Ley 58/2003 (Ley General Tributaria) art. 66 sets that
 prescription at four years, art. 67 runs it from the day after the voluntary
 self-assessment deadline, and art. 70.2 ties the obligation to conserve the
 supporting documentation to the same window. The whole-year floor is the
-grounded regulatory constant :data:`TAX_RECORD_RETENTION_FLOOR_YEARS`.
+grounded regulatory resolver :func:`~cadrumo.domain.retention.floor.retention_floor_years`.
 
 Contracts, imported from their defining modules:
 

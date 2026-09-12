@@ -12,12 +12,13 @@ holds for a fabricated session object.
 
 from __future__ import annotations
 
+from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
@@ -30,11 +31,15 @@ from ..operator import test_operator_auth as run_operator_auth_test
 from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
+from ._operator_probe_fakes import fake_operator_probe_ports
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_A = "6a6a6a6a-6a6a-4a6a-8a6a-6a6a6a6a6a6a"
 _BUCKET_B = "6b6b6b6b-6b6b-4b6b-8b6b-6b6b6b6b6b6b"
+_OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
 
 
 @pytest.fixture
@@ -61,7 +66,7 @@ def test_span_yields_the_target_when_its_custody_session_is_open(bucket_a_sessio
     span that refused unconditionally, which is a different (and broken)
     behaviour from the one under test.
     """
-    with active_profile_storage_span(load_settings()) as bucket_id:
+    with active_profile_storage_span(load_settings(), operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id:
         assert bucket_id == _BUCKET_A
 
 
@@ -70,7 +75,7 @@ def test_span_yields_none_when_no_target_bucket_resolves(tmp_path: Path) -> None
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_active_profile=None) as settings,
-        active_profile_storage_span(settings) as bucket_id,
+        active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id,
     ):
         assert bucket_id is None
 
@@ -80,7 +85,7 @@ def test_span_refuses_a_bucket_the_open_session_does_not_serve(bucket_a_session:
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b):
+    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
         pytest.fail("the span must refuse before yielding a borrowed session")
 
     context = raised.value.context
@@ -92,7 +97,7 @@ def test_span_refuses_an_explicit_target_bucket_argument_it_cannot_serve(bucket_
     """The ``target_bucket_id`` argument is guarded on the same terms as the route."""
     with (
         pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
-        active_profile_storage_span(load_settings(), target_bucket_id=_BUCKET_B),
+        active_profile_storage_span(load_settings(), target_bucket_id=_BUCKET_B, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
     ):
         pytest.fail("an explicit target bucket must not bypass the custody guard")
 
@@ -118,13 +123,13 @@ def test_span_refuses_the_same_bucket_id_on_a_different_storage_root(
     ) as settings_other_root:
         pass
 
-    ambient_before = current_active_bucket_session()
+    ambient_before = _OPERATOR_SCOPE_PORTS.session.current()
     assert ambient_before is not None
     assert ambient_before.bucket_id == _BUCKET_A
 
     with (
         pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
-        active_profile_storage_span(settings_other_root),
+        active_profile_storage_span(settings_other_root, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
     ):
         pytest.fail("a same-id bucket on another root must not reuse this root's session")
 
@@ -132,7 +137,7 @@ def test_span_refuses_the_same_bucket_id_on_a_different_storage_root(
     assert context is not None
     assert context["bucket_id"] == _BUCKET_A
     assert Path(str(context["storage_root"])).name == other_root.name
-    assert current_active_bucket_session() is ambient_before
+    assert _OPERATOR_SCOPE_PORTS.session.current() is ambient_before
 
 
 def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
@@ -153,7 +158,7 @@ def test_span_refuses_a_pointer_target_whose_session_was_never_opened(
     with (
         override_settings(cadrumo_active_profile=None) as pointer_settings,
         pytest.raises(AuthOperationRequiresCustodySessionError) as raised,
-        active_profile_storage_span(pointer_settings),
+        active_profile_storage_span(pointer_settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS),
     ):
         pytest.fail("a pointer to an unopened profile must not resolve a session")
 
@@ -173,7 +178,7 @@ def test_refusal_carries_its_own_code_and_an_actionable_remedy(bucket_a_session:
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b):
+    with pytest.raises(AuthOperationRequiresCustodySessionError) as raised, active_profile_storage_span(settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS):
         pytest.fail("the span must refuse before yielding a borrowed session")
 
     error = raised.value
@@ -198,7 +203,12 @@ def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target(
         pass
 
     with pytest.raises(AuthOperationRequiresCustodySessionError):
-        run_operator_auth_test(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
+        run_operator_auth_test(
+            AuthProviderKind.CERTIFICATE.value,
+            settings=settings_b,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
 
 def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
@@ -218,9 +228,13 @@ def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all(
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_active_profile=_BUCKET_A),
     ):
-        assert current_active_bucket_session() is None
+        assert _OPERATOR_SCOPE_PORTS.session.current() is None
 
-        report = build_live_auth_preflight_report(AuthProviderKind.CERTIFICATE.value)
+        report = build_live_auth_preflight_report(
+            AuthProviderKind.CERTIFICATE.value,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
         assert report.provider == AuthProviderKind.CERTIFICATE.value
         assert report.configured is False
@@ -240,7 +254,12 @@ def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target
         pass
 
     with pytest.raises(AuthOperationRequiresCustodySessionError):
-        build_live_auth_preflight_report(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
+        build_live_auth_preflight_report(
+            AuthProviderKind.CERTIFICATE.value,
+            settings=settings_b,
+            operator_probe_ports=_OPERATOR_PROBE_PORTS,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+        )
 
 
 def test_local_session_probe_degrades_to_absent_instead_of_raising(bucket_a_session: Path) -> None:
@@ -253,7 +272,7 @@ def test_local_session_probe_degrades_to_absent_instead_of_raising(bucket_a_sess
     with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
         pass
 
-    probe = probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b)
+    probe = probe_local_session(AuthProviderKind.CERTIFICATE.value, settings=settings_b, operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     assert probe.present is False
     assert probe.state == "no_session"

@@ -28,8 +28,18 @@ from ...core.parsing.dates import parse_date as _parse_date_canonical
 from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period
 from ..user_profile.setup_answers import SetupAnswers
-from ..contribuyente.entity_type import EntityType, LegalEntityForm
+from ..contribuyente.entity_type import EntityType, LegalEntityForm, entity_type_natural_person_token
 from ..contribuyente.renta_codes import FiscalResidency
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.iva_schema_vocabulary import (
+    default_iva_regime as _default_iva_regime,
+    iva_regime_no_aplica_token,
+    m303_tax_territory_choices,
+    require_m303_tax_territory,
+    require_iva_regime,
+)
+from ..calculations.registry.irpf_regimes import require_irpf_special_regime
+from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
 from .errors import ProfileError
 from .models import (
     CrossPeriodGroupMemberRoster,
@@ -51,7 +61,7 @@ def taxpayer_profile_from_mapping(
     values: Mapping[str, object],
     *,
     tax_id_default: str,
-    iva_regime_default: IVARegime = IVARegime.GENERAL,
+    iva_regime_default: IVARegime | None = None,
 ) -> TaxpayerProfile:
     """Build an :class:`TaxpayerProfile` from a profile-values mapping.
 
@@ -64,6 +74,10 @@ def taxpayer_profile_from_mapping(
     and to ``iva_regime_default`` for profiles that still require an
     IVA regime declaration.
     """
+    if iva_regime_default is None:
+        iva_regime_default = _default_iva_regime()
+    else:
+        iva_regime_default = require_iva_regime(iva_regime_default)
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     typed = project_setup_answers(padded)
     return _build_taxpayer_profile(
@@ -499,16 +513,20 @@ def _accepted(enum: type[StrEnum]) -> str:
 
 
 def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
+    try:
+        accepted = ", ".join(sorted(token.value for token in m303_tax_territory_choices()))
+    except RegistryValidationError as exc:
+        raise ProfileError("Modelo IVA tax-territory vocabulary is unavailable from the facts registry") from exc
     if not raw.strip():
         raise ProfileError(
             f"tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA; "
-            f"accepted values: {_accepted(M303TaxTerritory)}",
+            f"accepted values: {accepted}",
         )
     try:
-        return M303TaxTerritory(raw)
-    except ValueError as exc:
+        return require_m303_tax_territory(raw)
+    except RegistryValidationError as exc:
         raise ProfileError(
-            f"unsupported tax_residence.jurisdiction_scope {raw!r}; accepted values: {_accepted(M303TaxTerritory)}",
+            f"unsupported tax_residence.jurisdiction_scope {raw!r}; accepted values: {accepted}",
         ) from exc
 
 
@@ -740,7 +758,7 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
     if raw is None or raw == "":
         return default
     canonical = raw.strip().upper().replace("-", "_")
-    return IVARegime(canonical)
+    return require_iva_regime(canonical)
 
 
 def _default_iva_regime_for_profile(
@@ -749,8 +767,8 @@ def _default_iva_regime_for_profile(
     income_categories: frozenset[IrpfIncomeCategory],
     configured_default: IVARegime,
 ) -> IVARegime:
-    if entity_type is EntityType.NATURAL_PERSON and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories:
-        return IVARegime.NO_APLICA
+    if entity_type == entity_type_natural_person_token() and IrpfIncomeCategory.ACTIVIDAD_ECONOMICA not in income_categories:
+        return iva_regime_no_aplica_token()
     return configured_default
 
 
@@ -764,7 +782,7 @@ def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | N
         return None
     if isinstance(raw, FiscalResidency):
         return raw
-    return FiscalResidency(raw)
+    return require_fiscal_residency(raw)
 
 
 def _coerce_country_code(raw: str) -> str | None:
@@ -783,6 +801,4 @@ def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime |
     """
     if raw == "":
         return None
-    if isinstance(raw, IrpfSpecialRegime):
-        return raw
-    return IrpfSpecialRegime(raw)
+    return require_irpf_special_regime(raw)

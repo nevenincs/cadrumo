@@ -1,21 +1,18 @@
-"""Tests for the official Modelo 210 tipo-de-renta code axis and projection.
+"""Tests for the registry-owned Modelo 210 tipo-de-renta code projection.
 
-Grounds the code-to-:class:`~cadrumo.core.TipoRentaIrnr` projection declared in
-:mod:`cadrumo.core.irnr` against the M210 IRNR implementation decision: the
-code list is the bundled Orden EHA/3316/2010 HOJA INFORMATIVA 210, and only the
-rate-concept-grounded codes are declared (the fetch-gated special-rate codes are
-absent by design, not by omission).
+The dated fact catalogue owns the official code list and its projection onto
+the opaque :class:`~cadrumo.core.TipoRentaIrnr` token. These tests consume that
+public catalogue surface rather than reaching into the core transport type for
+membership or grounding data.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ..irnr import (
-    M210_TIPO_RENTA_CODE_PROJECTION,
-    OFFICIAL_M210_TIPO_RENTA_CODES,
-    TipoRentaGroundingTier,
-    TipoRentaIrnr,
+from ...domain.calculations.registry.irnr_tipo_renta import (
+    m210_tipo_renta_code_projection,
+    resolve_tipo_renta_irnr_catalogue,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -26,38 +23,38 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # Derived from the bundled HOJA INFORMATIVA 210 income-type labels; NOT copied
 # from engine output.
 _EXPECTED_CONCEPT = {
-    "01": TipoRentaIrnr.GENERAL,
-    "02": TipoRentaIrnr.INMOBILIARIA,
-    "03": TipoRentaIrnr.GENERAL,
-    "04": TipoRentaIrnr.DIVIDEND,
-    "05": TipoRentaIrnr.INTEREST,
-    "06": TipoRentaIrnr.INTEREST,
-    "07": TipoRentaIrnr.INTEREST,
-    "08": TipoRentaIrnr.CANONES,
-    "09": TipoRentaIrnr.CANONES,
-    "10": TipoRentaIrnr.CANONES,
-    "11": TipoRentaIrnr.CANONES,
-    "12": TipoRentaIrnr.CANONES,
-    "14": TipoRentaIrnr.GENERAL,
-    "15": TipoRentaIrnr.GENERAL,
-    "16": TipoRentaIrnr.GENERAL,
-    "17": TipoRentaIrnr.GENERAL,
-    "18": TipoRentaIrnr.PENSION,
-    "21": TipoRentaIrnr.GENERAL,
-    "22": TipoRentaIrnr.GENERAL,
-    "24": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "25": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "26": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "28": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "29": TipoRentaIrnr.DIVIDEND,
-    "30": TipoRentaIrnr.DIVIDEND,
-    "32": TipoRentaIrnr.CANONES,
-    "33": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "34": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "35": TipoRentaIrnr.GENERAL,
-    "36": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
-    "37": TipoRentaIrnr.INTEREST,
-    "38": TipoRentaIrnr.GANANCIA_PATRIMONIAL,
+    "01": "general",
+    "02": "inmobiliaria",
+    "03": "general",
+    "04": "dividend",
+    "05": "interest",
+    "06": "interest",
+    "07": "interest",
+    "08": "canones",
+    "09": "canones",
+    "10": "canones",
+    "11": "canones",
+    "12": "canones",
+    "14": "general",
+    "15": "general",
+    "16": "general",
+    "17": "general",
+    "18": "pension",
+    "21": "general",
+    "22": "general",
+    "24": "ganancia_patrimonial",
+    "25": "ganancia_patrimonial",
+    "26": "ganancia_patrimonial",
+    "28": "ganancia_patrimonial",
+    "29": "dividend",
+    "30": "dividend",
+    "32": "canones",
+    "33": "ganancia_patrimonial",
+    "34": "ganancia_patrimonial",
+    "35": "general",
+    "36": "ganancia_patrimonial",
+    "37": "interest",
+    "38": "ganancia_patrimonial",
 }
 
 # The codes deliberately NOT declared: their rate is not bundle-verifiable.
@@ -73,11 +70,14 @@ _FETCH_GATED_CODES = frozenset({"13", "19", "20", "27", "31"})
 
 
 def test_projection_maps_every_declared_code_to_its_grounded_concept() -> None:
-    assert dict(M210_TIPO_RENTA_CODE_PROJECTION) == _EXPECTED_CONCEPT
+    projection = m210_tipo_renta_code_projection()
+    assert {code: concept.value for code, concept in projection.items()} == _EXPECTED_CONCEPT
 
 
 def test_declared_code_set_is_exactly_the_grounded_set() -> None:
-    declared = {entry.code for entry in OFFICIAL_M210_TIPO_RENTA_CODES}
+    catalogue = resolve_tipo_renta_irnr_catalogue()
+    grounded = tuple(entry for entry in catalogue.code_definitions if entry.concept is not None)
+    declared = {entry.code for entry in grounded}
     assert declared == set(_EXPECTED_CONCEPT)
     # No fetch-gated code leaks into the declared set (no fabricated rate).
     assert declared.isdisjoint(_FETCH_GATED_CODES)
@@ -92,16 +92,19 @@ def test_grounding_tier_matches_the_rate_letter() -> None:
     # Art. 25 letter (pension 25.1.b; dividend/interest/ganancia 25.1.f) or the
     # bundled Art. 13.1.h imputed real-estate mechanism (inmobiliaria — carried at
     # the 25.1.a general rate but rate-verified), so it is RATE_VERIFIED.
-    residual_concepts = {TipoRentaIrnr.GENERAL, TipoRentaIrnr.CANONES}
-    for entry in OFFICIAL_M210_TIPO_RENTA_CODES:
-        if entry.concept in residual_concepts:
-            assert entry.grounding_tier is TipoRentaGroundingTier.RESIDUAL
+    residual_concepts = {"general", "canones"}
+    catalogue = resolve_tipo_renta_irnr_catalogue()
+    grounded = tuple(entry for entry in catalogue.code_definitions if entry.concept is not None)
+    for entry in grounded:
+        if entry.concept is not None and entry.concept.value in residual_concepts:
+            assert entry.grounding_tier == "residual"
             assert entry.rate_legal_ref == "trlirnr-rdleg-5-2004:art-25.1.a"
         else:
-            assert entry.grounding_tier is TipoRentaGroundingTier.RATE_VERIFIED
+            assert entry.grounding_tier == "rate_verified"
 
 
 def test_every_code_is_two_digit_and_unique() -> None:
-    codes = [entry.code for entry in OFFICIAL_M210_TIPO_RENTA_CODES]
+    catalogue = resolve_tipo_renta_irnr_catalogue()
+    codes = [entry.code for entry in catalogue.code_definitions if entry.concept is not None]
     assert len(codes) == len(set(codes))
     assert all(len(code) == 2 and code.isdigit() for code in codes)

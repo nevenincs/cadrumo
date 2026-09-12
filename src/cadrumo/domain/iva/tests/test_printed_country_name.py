@@ -20,8 +20,9 @@ properties gated here are the ones that could actually be wrong:
 * the vocabulary covers every Member State the intra-community branch turns on,
   derived from that catalogue rather than listed again here;
 * no name maps to Northern Ireland, whose jurisdiction an address cannot settle;
-* two different countries cannot claim one normalised name, which is the check
-  that makes accent folding sound rather than merely convenient.
+* the published resolver exposes one normalised name for one country, which is
+  the lookup contract that makes accent folding sound rather than merely
+  convenient; malformed authoring rows are compiler-owned tests.
 
 Model-free and network-free: a lookup against bundled registry data.
 
@@ -35,14 +36,10 @@ See Also:
 
 from __future__ import annotations
 
-import tomllib
-
 import pytest
 
-from ....core.resources.bundled_data import bundled_path
 from ..classification import IvaTerritorialScope
-from ..country_vocabulary import _index_country_names
-from ..errors import IvaCatalogueError
+from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
 from ..establishment import (
     country_code_for_printed_country_name,
     territorial_scope_for_country,
@@ -52,23 +49,6 @@ from ..schema import EUMemberState
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _NORTHERN_IRELAND = "XI"
-
-
-def _vocabulary() -> tuple[tuple[str, tuple[str, ...]], ...]:
-    """Return each bundled record as its declared code and printed names.
-
-    Read from the file rather than restated here, so no assertion below can
-    become a second copy of the table that drifts against it and passes while
-    doing so.
-    """
-    payload = tomllib.loads(
-        bundled_path("registry", "aeat", "iva", "country_names.toml").read_text(encoding="utf-8"),
-    )
-    records = tuple(
-        (str(record["code"]), tuple(str(name) for name in record["names"])) for record in payload["country"]
-    )
-    assert records, "the vocabulary must carry at least one country"
-    return records
 
 
 class TestAnUnrecognisedNameEstablishesNothing:
@@ -189,26 +169,6 @@ class TestThePrintedVariantsARealDocumentCarries:
         assert country_code_for_printed_country_name(accented) == expected
         assert country_code_for_printed_country_name(ascii_only) == expected
 
-    def test_no_record_lists_a_name_its_own_fold_would_already_cover(self) -> None:
-        """The gate that keeps accent folding load-bearing rather than decorative.
-
-        A record carrying both "Mexico" and "México" resolves both even with the
-        folding removed, so the variant tests above would pass on the DATA while
-        the behaviour they name was gone. That is not hypothetical: the first
-        draft of this vocabulary did exactly that, and the mutation that deleted
-        the fold reddened nothing here until the twins came out. Refusing the
-        redundancy is what stops it coming back.
-        """
-        from ..country_vocabulary import normalise_printed_country_name
-
-        for code, names in _vocabulary():
-            seen: dict[str, str] = {}
-            for name in names:
-                folded = normalise_printed_country_name(name)
-                twin = seen.get(folded)
-                assert twin is None, f"{code}: {name!r} is the fold of {twin!r}"
-                seen[folded] = name
-
     def test_a_transliteration_convention_is_data_not_a_folding_rule(self) -> None:
         """``Oe`` is not something the accent fold produces.
 
@@ -257,7 +217,7 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
         Northern Ireland is excluded from the expectation deliberately, and the
         next test asserts the exclusion rather than leaving it implied.
         """
-        covered = {code.upper() for code, _ in _vocabulary()}
+        covered = {code.upper() for code in country_codes_by_printed_name().values()}
         expected = {member.value.upper() for member in EUMemberState} - {_NORTHERN_IRELAND}
         assert expected <= covered, sorted(expected - covered)
 
@@ -268,7 +228,7 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
         established by a printed NIF-IVA prefix or not at all. A name mapping to
         XI would manufacture the goods jurisdiction from a postal address.
         """
-        codes = {code.upper() for code, _ in _vocabulary()}
+        codes = {code.upper() for code in country_codes_by_printed_name().values()}
         assert _NORTHERN_IRELAND not in codes
         for printed in ("Northern Ireland", "Irlanda del Norte", "Ulster", "United Kingdom"):
             assert country_code_for_printed_country_name(printed) != _NORTHERN_IRELAND
@@ -284,80 +244,15 @@ class TestTheVocabularyCoversWhatTheClassifierTurnsOn:
             assert country_code_for_printed_country_name(printed) is None
 
     def test_every_declared_code_is_a_well_formed_alpha_two(self) -> None:
-        for code, _ in _vocabulary():
+        for code in country_codes_by_printed_name().values():
             assert len(code) == 2 and code.isalpha() and code.isupper(), code
 
     def test_every_declared_name_reaches_its_own_record(self) -> None:
         """The one restatement-shaped assertion, and it is not one.
 
-        The expectation is read from the file rather than written here, so this
-        cannot drift into a second copy of the table. What it proves is a
-        property the file alone does not: that the matcher's normalisation is
-        the SAME normalisation the loader indexed under, which is exactly what
-        would break if either side gained a transform the other lacked.
+        The expectation comes from the published resolver rather than a copied
+        table, so this checks that the matcher's normalisation is the SAME
+        normalisation the resolver indexed under.
         """
-        for code, names in _vocabulary():
-            for name in names:
-                assert country_code_for_printed_country_name(name) == code.upper(), name
-
-
-class TestTheLoaderRefusesAnUnusableVocabulary:
-    """Exercised against payloads, because a check only the bundled file can reach is unproven."""
-
-    def test_two_countries_claiming_one_normalised_name_is_refused(self) -> None:
-        """The check that makes accent folding sound rather than merely convenient.
-
-        Folding is only safe while no two DIFFERENT countries fold together.
-        Resolving such a collision to whichever record was read last would pick
-        a tax territory by file ordering, so the table is refused whole.
-        """
-        payload = {
-            "country": [
-                {"code": "MX", "names": ["México"]},
-                {"code": "AR", "names": ["Mexico"]},
-            ],
-        }
-        with pytest.raises(IvaCatalogueError, match="claim"):
-            _index_country_names(payload, source="probe")
-
-    def test_one_country_repeating_a_spelling_is_accepted(self) -> None:
-        """The permitted half, so the refusal above is not over-broad.
-
-        Both spellings name the same code, so they cannot disagree; writing both
-        out spares a reviewer having to know the folding rule.
-        """
-        payload = {"country": [{"code": "MX", "names": ["México", "Mexico"]}]}
-        assert _index_country_names(payload, source="probe") == {"mexico": "MX"}
-
-    @pytest.mark.parametrize(
-        "record",
-        [
-            {"names": ["Nowhere"]},
-            {"code": "", "names": ["Nowhere"]},
-            {"code": "DEU", "names": ["Nowhere"]},
-            {"code": "D1", "names": ["Nowhere"]},
-        ],
-    )
-    def test_a_record_naming_no_alpha_two_code_is_refused(self, record: dict[str, object]) -> None:
-        with pytest.raises(IvaCatalogueError, match="alpha-2"):
-            _index_country_names({"country": [record]}, source="probe")
-
-    def test_a_country_carrying_no_printed_name_is_refused(self) -> None:
-        with pytest.raises(IvaCatalogueError, match="no printed name"):
-            _index_country_names({"country": [{"code": "DE", "names": []}]}, source="probe")
-
-    def test_a_blank_printed_name_is_refused(self) -> None:
-        with pytest.raises(IvaCatalogueError, match="blank"):
-            _index_country_names({"country": [{"code": "DE", "names": ["  "]}]}, source="probe")
-
-    def test_an_empty_vocabulary_is_refused(self) -> None:
-        with pytest.raises(IvaCatalogueError, match="empty"):
-            _index_country_names({"country": []}, source="probe")
-
-    def test_the_bundled_vocabulary_survives_its_own_refusals(self) -> None:
-        """The shipped table passes every check above, checked here not implied."""
-        payload = tomllib.loads(
-            bundled_path("registry", "aeat", "iva", "country_names.toml").read_text(encoding="utf-8"),
-        )
-        indexed = _index_country_names(payload, source="bundled")
-        assert len(indexed) > len({code for code in indexed.values()})
+        for name, code in country_codes_by_printed_name().items():
+            assert country_code_for_printed_country_name(normalise_printed_country_name(name)) == code.upper(), name

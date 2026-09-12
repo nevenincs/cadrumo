@@ -55,7 +55,7 @@ _CASILLA_05 = "05"
 @cache
 def _m131_revision() -> ModeloRevision:
     """The real Modelo 131 revision, so the grounding assertions read real refs."""
-    return bundled_authority().modelo(Modelo.M131.value).revisions["2026"]
+    return bundled_authority().modelo(Modelo("131").value).revisions["2026"]
 
 
 def _income_row(

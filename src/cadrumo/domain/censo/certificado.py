@@ -34,8 +34,8 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
-from ...core.identity.tax_id import validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_CONFIG
+from ..calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ..user_profile.values import UserProfileFact
 
 
@@ -82,7 +82,7 @@ class CertificadoSituacionCensal(BaseModel):
     @classmethod
     def _validate_representantes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Every certified representative NIF validates through the core identity authority."""
-        return tuple(validate_spanish_tax_id(nif) for nif in value)
+        return tuple(validate_runtime_spanish_tax_id(nif) for nif in value)
 
 
 def censo_facts_from_certificado(certificado: CertificadoSituacionCensal) -> tuple[UserProfileFact, ...]:

@@ -18,6 +18,7 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.secure_object_namespaces import LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE
 from ...application.live.errors import LiveApplicationInputError
 from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ...application.auth.operator_scope_ports import OperatorScopePorts
 from ...application.live.justificante import (
     JustificanteCaptureSnapshot,
     JustificanteCaptureSnapshotNotFoundError,
@@ -101,8 +102,13 @@ class _RegistrationEvents:
 
 
 class _LiveRead:
-    def __init__(self, certificate_secret_backend_factory: CertificateSecretBackendFactory) -> None:
+    def __init__(
+        self,
+        certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_scope_ports: OperatorScopePorts,
+    ) -> None:
         self._certificate_secret_backend_factory = certificate_secret_backend_factory
+        self._operator_scope_ports = operator_scope_ports
         self._session: object | None = None
         self._settings: object | None = None
         self._expedientes: dict[str, object] = {}
@@ -112,6 +118,7 @@ class _LiveRead:
     ) -> tuple[Sequence[JustificanteDeclaration], Sequence[JustificanteExpediente]]:
         session, settings = await active_verified_session(
             certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+            operator_scope_ports=self._operator_scope_ports,
             operation="live-justificante-read",
         )
         async with (
@@ -184,8 +191,9 @@ def build_justificante_registration_ports() -> JustificanteRegistrationPorts:
 
 def build_justificante_live_read_port(
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> JustificanteLiveReadPort:
-    return _LiveRead(certificate_secret_backend_factory)
+    return _LiveRead(certificate_secret_backend_factory, operator_scope_ports)
 
 
 def build_justificante_authenticity_verifier() -> JustificanteAuthenticityVerifierPort:

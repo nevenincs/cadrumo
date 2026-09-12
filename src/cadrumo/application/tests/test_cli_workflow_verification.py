@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
+
 from pathlib import Path
 
 import pytest
@@ -12,6 +14,8 @@ from ...tests.profile_capsule import open_test_profile_session
 from ...tests.user_profile import register_minimal_profile
 from ..auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
 from ..workflow.persistence import workflow_state_repository
+
+_OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,7 +44,7 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     register_minimal_profile(profile_id=_BUCKET_ID, display_name=_PROFILE_LABEL)
     repository = workflow_state_repository()
 
-    configured = configure_operator_auth("certificate")
+    configured = configure_operator_auth("certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
     repository.update(
         lambda state: state.model_copy(
             update={
@@ -53,8 +57,8 @@ def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
             },
         ),
     )
-    logged_out = logout_operator_auth(provider="certificate")
-    reset = reset_operator_auth(provider="certificate")
+    logged_out = logout_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
+    reset = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
 
     reloaded = workflow_state_repository().load()
     events = [(event.action, event.bucket_id, event.object_id) for event in reloaded.bucket_events]

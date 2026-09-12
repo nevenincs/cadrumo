@@ -72,6 +72,7 @@ from ._prorrata_register_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import bad, emit_envelope
+from .state_projection_support import calculation_action_ports_factory
 
 #: Machine-readable notice codes for the carried-seed advisory channel. They are
 #: transport tokens, never localised presentation text.
@@ -438,13 +439,17 @@ def _seed_findings_with_existing_entry(
     ejercicio: int,
     sector: str | None,
     findings: tuple[ProrrataSeedFinding, ...],
+    observation_repository,
 ) -> tuple[ProrrataSeedFinding, ...]:
     """Cross-check an existing entry before allowing a carried seed to replace it."""
     existing = service.get(ejercicio, sector_id=sector)
     if existing is None:
         return findings
 
-    cross_findings = cross_check_prorrata_entry_against_prior_observation(existing)
+    cross_findings = cross_check_prorrata_entry_against_prior_observation(
+        existing,
+        observation_repository=observation_repository,
+    )
     _refuse_blocking_findings(cross_findings)
     standing_provenance = existing.provisional_provenance
     if (
@@ -476,7 +481,12 @@ def prorrata_seed(
     absent prior observation refuses as absent rather than seeding a zero.
     """
     bucket_id = _register_bucket_id()
-    evaluation = evaluate_carried_prior_definitiva_seed(ejercicio=ejercicio, sector_id=sector)
+    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
+    evaluation = evaluate_carried_prior_definitiva_seed(
+        ejercicio=ejercicio,
+        observation_repository=calculation_ports.observation_repository,
+        sector_id=sector,
+    )
     _refuse_blocking_findings(evaluation.findings)
     seed = evaluation.seed
     if seed is None:
@@ -488,6 +498,7 @@ def prorrata_seed(
         ejercicio=ejercicio,
         sector=sector,
         findings=evaluation.findings,
+        observation_repository=calculation_ports.observation_repository,
     )
 
     try:

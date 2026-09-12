@@ -35,7 +35,7 @@ import pytest
 
 from ......core.classification.policies import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
-from ......tests.master_key import EphemeralMasterKeyProvider
+from ...tests.ephemeral_master_key import EphemeralMasterKeyProvider
 from ...crypto.aead import KEY_SIZE
 from ...errors import BlobIntegrityError
 from ..blob_store import BlobReference, EncryptedBlobStore

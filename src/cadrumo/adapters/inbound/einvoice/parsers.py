@@ -32,6 +32,7 @@ from xml.etree.ElementTree import Element
 
 from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
+from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from .shape import iter_pdf_embedded_files, probe_document_shape
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
 from .xml import local_tag_name as _local
@@ -42,24 +43,6 @@ __all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "pars
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
 # names the person-type/residence explicitly.
 _IVA_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
-
-# EN16931 UNTDID 5305 tax-category codes -> IvaCategory member values. Mapped
-# from the DOCUMENT'S OWN stated code: this is a capability only a structured
-# reader has, since the code is IN the document and no regex or vision reader
-# can supply it. Where the document states NO category the parser leaves it
-# unset -- an absent category refuses visibly downstream, whereas a guessed one
-# mis-declares silently, and only the first is recoverable.
-_UNTDID_CATEGORY: dict[str, str] = {
-    "S": "",  # standard rate: the rate itself carries the meaning, no special category
-    "Z": "domestic_zero",
-    "E": "domestic_exempt",
-    "AE": "domestic_reverse_charge",
-    "K": "intra_community_supply",
-    "G": "export_third_country_zero_rated",
-    "O": "operacion_no_sujeta",
-    "B": "recargo_equivalencia",
-}
-
 
 class FacturaeInvoiceClass(StrEnum):
     """Class code stated by Facturae's ``InvoiceHeader/InvoiceClass``."""
@@ -472,8 +455,7 @@ def _category_for(code: str | None) -> str | None:
     """
     if not code:
         return None
-    mapped = _UNTDID_CATEGORY.get(code.strip().upper())
-    return mapped or None
+    return resolve_iva_category_catalogue().category_for_untdid_code(code.strip().upper())
 
 
 def _apply_cii_document_header(root: Element, parsed: ParsedEInvoice) -> None:

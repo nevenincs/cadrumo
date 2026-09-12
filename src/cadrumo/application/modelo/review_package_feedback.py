@@ -38,7 +38,7 @@ collaboration integrity: an unverifiable countersignature is not evidence of
 review).
 
 See Also:
-    :mod:`~application.modelo._review_package_recipient_encryption`
+    :mod:`~application.modelo.review_package_recipient_encryption`
         Owns the X25519 ECIES primitive this module reuses verbatim, in both
         directions.
     :mod:`~application.modelo._review_package_counter_sign`
@@ -53,8 +53,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
@@ -65,16 +63,16 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now as _utc_now
 from ...core.time.utc import UtcInstant
 from .review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
-from .review_package_recipient_encryption import (
+from .recipient_encryption import (
     RecipientDecryptedPackage,
     RecipientEncryptedPackage,
+    RecipientEncryptionCapability,
+)
+from .review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
 )
 from .review_package_text import ReviewFeedbackNote
-
-if TYPE_CHECKING:
-    from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 
 #: Wire-format version of the feedback-package document. Bumped when the
 #: document schema changes shape.
@@ -173,6 +171,7 @@ def encrypt_feedback_package_for_originator(
     feedback: FeedbackPackage,
     *,
     originator_public_key_hex: str,
+    recipient_encryption: RecipientEncryptionCapability,
     review_only: bool = False,
     valid_for: timedelta | None = None,
     issued_at: datetime | None = None,
@@ -193,6 +192,7 @@ def encrypt_feedback_package_for_originator(
         feedback: The :class:`FeedbackPackage` document to seal.
         originator_public_key_hex: The originator's raw 32-byte X25519
             public key, hex-encoded.
+        recipient_encryption: The composed recipient-encryption capability.
         review_only: Passed straight through to
             :func:`~application.modelo.encrypt_review_package_for_recipient`;
             a review-only feedback envelope carries no filing authority
@@ -207,6 +207,7 @@ def encrypt_feedback_package_for_originator(
     return encrypt_review_package_for_recipient(
         feedback_bytes,
         recipient_public_key_hex=originator_public_key_hex,
+        recipient_encryption=recipient_encryption,
         review_only=review_only,
         valid_for=valid_for,
         issued_at=issued_at,
@@ -216,7 +217,8 @@ def encrypt_feedback_package_for_originator(
 def decrypt_feedback_package_from_originator_envelope(
     envelope: RecipientEncryptedPackage,
     *,
-    originator_private_key: X25519PrivateKey,
+    originator_private_key_hex: str,
+    recipient_encryption: RecipientEncryptionCapability,
     now: datetime | None = None,
 ) -> FeedbackPackage:
     """Reverse :func:`encrypt_feedback_package_for_originator` and parse the document.
@@ -233,8 +235,10 @@ def decrypt_feedback_package_from_originator_envelope(
     Args:
         envelope: The :class:`~application.modelo.RecipientEncryptedPackage`
             produced by :func:`encrypt_feedback_package_for_originator`.
-        originator_private_key: The originator's own X25519 private key from
+        originator_private_key_hex: The originator's own X25519 private key,
+            hex-encoded, from
             :func:`~application.modelo.ensure_recipient_encryption_keypair`.
+        recipient_encryption: The composed recipient-encryption capability.
         now: The instant to evaluate the envelope's expiry against; defaults
             to the current UTC time (tests inject an explicit value).
 
@@ -247,7 +251,8 @@ def decrypt_feedback_package_from_originator_envelope(
     """
     decrypted: RecipientDecryptedPackage = decrypt_review_package_for_recipient(
         envelope,
-        recipient_private_key=originator_private_key,
+        recipient_private_key_hex=originator_private_key_hex,
+        recipient_encryption=recipient_encryption,
         now=now,
     )
     try:
@@ -278,7 +283,8 @@ class ImportedFeedback(BaseModel):
 def import_feedback_package(
     envelope: RecipientEncryptedPackage,
     *,
-    originator_private_key: X25519PrivateKey,
+    originator_private_key_hex: str,
+    recipient_encryption: RecipientEncryptionCapability,
     reviewed_package_path: Path,
     operator_public_key_hex: str,
     counter_signer_public_key_hex: str | None = None,
@@ -302,7 +308,9 @@ def import_feedback_package(
 
     Args:
         envelope: The sealed feedback envelope received from the recipient.
-        originator_private_key: The originator's own X25519 private key.
+        originator_private_key_hex: The originator's own X25519 private key,
+            hex-encoded.
+        recipient_encryption: The composed recipient-encryption capability.
         reviewed_package_path: Path to the ORIGINAL review-package ZIP the
             originator built and (optionally) signed -- required only when
             the feedback carries a counter-signed receipt; unused for
@@ -334,7 +342,8 @@ def import_feedback_package(
     """
     feedback = decrypt_feedback_package_from_originator_envelope(
         envelope,
-        originator_private_key=originator_private_key,
+        originator_private_key_hex=originator_private_key_hex,
+        recipient_encryption=recipient_encryption,
         now=now,
     )
 

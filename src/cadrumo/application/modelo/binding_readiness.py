@@ -199,7 +199,7 @@ def annual_period_for_year(
             exc,
         )
         return None
-    periods = revision.period_selector.periods
+    periods = revision.period_selector.periods_for_year(filing_year)
     return periods[0] if periods else None
 
 

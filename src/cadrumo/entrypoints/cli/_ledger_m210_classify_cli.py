@@ -17,7 +17,6 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core.i18n.render import tr
-from ...core.irnr import M210PayerMode
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
 from ._ledger_support import ledger_transaction_validation_no_recovery, ledger_validation_bad, parse_decimal_option
@@ -31,7 +30,7 @@ class M210LedgerClassifyOptions:
     tipo_renta_code: str | None
     gross_income_amount: str | None
     applicable_rate: str | None
-    payer_mode: M210PayerMode | None
+    payer_mode: str | None
     payer_id: str | None
     asset_or_right_id: str | None
 

@@ -40,13 +40,24 @@ from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
+from .....application.auth.operator_probe_ports import (
+    CertificateHealthBand,
+    CertificateHealthFailure,
+    CertificateHealthObservation,
+    CertificateHealthProbePort,
+    CertificateHealthProbeRequest,
+    CertificateHealthProbeResult,
+)
 from .....core.errors.hierarchy import AuthError
 from .....core.external_constants import UTF_8_ENCODING
-from .....core.identity.documents import IdentityDocument, IdentityError, validate_identity
-from .....core.identity.tax_id import validate_spanish_tax_id
+from .....core.identity.documents import IdentityDocument, IdentityError
 from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.time.utc import coerce_utc_aware
+from .....domain.calculations.registry.tax_id_runtime import (
+    validate_runtime_identity,
+    validate_runtime_spanish_tax_id,
+)
 from .errors import AuthValidationError
 
 log = get_logger(__name__)
@@ -96,10 +107,9 @@ class CertificateNifParseError(CertificateError):
     FNMT certificate subject (canonical source: the ``serialNumber``
     RDN, OID 2.5.4.5). Certificates that carry no such attribute,
     that use a CIF (legal-entity) shape, or whose CN/serialNumber
-    lacks a recognisable DNI (``[0-9]{7,8}[A-Z]``) or NIE
-    (``[XYZ][0-9]{7}[A-Z]``) identifier produce this error. Callers
-    MUST propagate it rather than guess the identifier from other
-    fields.
+    lacks a registry-recognised persona-física identifier produce this
+    error. Callers MUST propagate it rather than guess the identifier from
+    other fields.
     """
 
 
@@ -592,13 +602,31 @@ def health(
     )
 
 
+class CertificateHealthProbeAdapter(CertificateHealthProbePort):
+    """Translate certificate adapter health records for the application probe."""
+
+    def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
+        """Return application-owned health facts, translating load failures."""
+        try:
+            result = health(
+                request.path,
+                password=request.password,
+                warn_days=request.warn_days,
+                critical_days=request.critical_days,
+                friendly_name=request.friendly_name,
+            )
+        except CertificateError as exc:
+            return CertificateHealthFailure(detail=str(exc))
+        return CertificateHealthObservation(
+            severity=CertificateHealthBand(result.severity.value.lower()),
+            days_until_expiry=result.days_until_expiry,
+        )
+
+
 # ── NIF / NIE extraction from FNMT subject ──────────────────────────────────
 
 
 _SERIAL_PREFIX_RE = re.compile(r"^IDCES-", re.IGNORECASE)
-_DNI_RE = re.compile(r"^[0-9]{7,8}[A-Z]$")
-_NIE_RE = re.compile(r"^[XYZ][0-9]{7}[A-Z]$")
-_TRAILING_NIF_RE = re.compile(r"([0-9]{7,8}[A-Z]|[XYZ][0-9]{7}[A-Z])\s*$", re.IGNORECASE)
 
 
 def _normalise_candidate(candidate: str) -> str:
@@ -608,21 +636,52 @@ def _normalise_candidate(candidate: str) -> str:
 
 
 def _persona_fisica_identifier(candidate: str) -> str | None:
-    """Return the canonical DNI/NIE ``candidate`` carries, or ``None``.
+    """Return the canonical registry-recognised persona-física identifier.
 
-    The shape gate admits a DNI written without its leading zero, so the
-    candidate is zero-padded to the canonical nine characters before
-    :func:`~core.identity.tax_id.validate_spanish_tax_id` verifies the checksum
-    letter. A shape-valid candidate whose checksum fails is not an identifier
-    this subject can be trusted to carry, so it is skipped and the caller
-    continues to the next attribute.
+    A DNI written without its leading zero is zero-padded to the canonical
+    width before :func:`validate_runtime_identity` resolves its document family and
+    :func:`~cadrumo.domain.calculations.registry.tax_id_runtime.validate_runtime_spanish_tax_id`
+    verifies it. A
+    checksum-invalid or non-persona candidate is skipped so the caller can
+    continue to the next subject attribute.
     """
-    if not (_DNI_RE.match(candidate) or _NIE_RE.match(candidate)):
+    normalised = candidate.strip().upper()
+    for candidate_form in (normalised, "0" + normalised):
+        try:
+            identity_kind = validate_runtime_identity(candidate_form)
+        except IdentityError:
+            continue
+        if identity_kind not in (IdentityDocument.NIF, IdentityDocument.NIE):
+            continue
+        try:
+            return validate_runtime_spanish_tax_id(candidate_form)
+        except IdentityError:
+            continue
+    return None
+
+
+def _trailing_persona_fisica_identifier(value: str) -> str | None:
+    """Resolve an identifier at the end of a common-name value.
+
+    FNMT common names may contain a human-readable name, separators, and an
+    identifier. The terminal alphanumeric run is searched through its
+    suffixes so the historical extraction contract remains intact for values
+    such as ``NAME - identifier`` and ``IDCES-identifier``. Every candidate
+    is classified by :func:`validate_runtime_identity`; this adapter declares no
+    identifier shape.
+    """
+    stripped = value.rstrip()
+    if not stripped or not stripped[-1].isalnum():
         return None
-    try:
-        return validate_spanish_tax_id(candidate.zfill(9))
-    except IdentityError:
-        return None
+    start = len(stripped)
+    while start and stripped[start - 1].isalnum():
+        start -= 1
+    terminal = stripped[start:].upper()
+    for candidate_start in range(len(terminal)):
+        identifier = _persona_fisica_identifier(terminal[candidate_start:])
+        if identifier is not None:
+            return identifier
+    return None
 
 
 def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
@@ -674,7 +733,7 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     for raw in _iter_rdn_values(subject, NameOID.SERIAL_NUMBER):
         candidate = _normalise_candidate(raw)
         try:
-            identity_kind = validate_identity(candidate)
+            identity_kind = validate_runtime_identity(candidate)
         except IdentityError:
             identity_kind = None
         if identity_kind is IdentityDocument.CIF:
@@ -688,11 +747,9 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
             return identifier
 
     for cn in _iter_rdn_values(subject, NameOID.COMMON_NAME):
-        trailing = _TRAILING_NIF_RE.search(cn)
-        if trailing is not None:
-            identifier = _persona_fisica_identifier(trailing.group(1).upper())
-            if identifier is not None:
-                return identifier
+        identifier = _trailing_persona_fisica_identifier(cn)
+        if identifier is not None:
+            return identifier
 
     raise CertificateNifParseError(
         f"cannot parse a DNI or NIE from certificate subject "
@@ -706,6 +763,7 @@ __all__ = [
     "CertificateError",
     "CertificateExpiredError",
     "CertificateHealth",
+    "CertificateHealthProbeAdapter",
     "CertificateHealthSeverity",
     "CertificateLoadError",
     "CertificateNifParseError",

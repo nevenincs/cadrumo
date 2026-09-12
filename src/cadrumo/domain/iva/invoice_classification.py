@@ -84,7 +84,7 @@ class IvaInvoiceClassification(BaseModel):
         category: Substrate :class:`IvaCategory` classifying the
             operation kind.
         rate_kind: Substrate :class:`IvaRateKind` rate tier; ``None``
-            for operations outside the scope of IVA (NOT_SUBJECT,
+            for operations outside the scope of IVA (out-of-scope,
             ERRONEOUS_INVOICE, UNKNOWN).
         flow_direction: Substrate :class:`IvaFlowDirection` —
             REPERCUTIDO (output), SOPORTADO (input), or
@@ -144,7 +144,8 @@ def classify_invoice_line_for_iva(
 
     Covers the most common autónomo operation: a domestic invoice
     issued to a Spanish customer or received from a Spanish supplier
-    at one of the four IVA rate slots (or EXEMPT). The record's
+    at one of the ordinary IVA rate slots (or a registry-declared exempt
+    slot). The record's
     flow direction is derived from ``invoice_kind``:
 
     - :attr:`InvoiceKind.ISSUED` → :attr:`IvaFlowDirection.REPERCUTIDO`
@@ -167,9 +168,9 @@ def classify_invoice_line_for_iva(
     drift from this one's classification rules.
 
     Args:
-        iva_rate: One of the closed :class:`IvaRate` slots.
-            :attr:`IvaRate.NOT_SUBJECT` is rejected — see module
-            docstring for the rationale.
+        iva_rate: One of the registry-governed :class:`IvaRate` slots. The
+            out-of-scope slot is rejected — see the module docstring for the
+            rationale.
         invoice_kind: Whether the invoice was issued (sale) or
             received (purchase).
 
@@ -178,23 +179,19 @@ def classify_invoice_line_for_iva(
         substrate triple and pre-computed settlement-side set.
 
     Raises:
-        InvoiceValidationError: If ``iva_rate`` is :attr:`IvaRate.NOT_SUBJECT`,
-            which has no rate-tier classification and cannot be
-            handled by the standard-case helper.
+        InvoiceValidationError: If ``iva_rate`` resolves without a rate-tier
+            classification and cannot be handled by the standard-case helper.
     """
-    from ..invoices.enums import IvaRate as _IvaRate
     from ..invoices.enums import iva_rate_kind
 
-    if iva_rate is _IvaRate.NOT_SUBJECT:
+    rate_kind = iva_rate_kind(iva_rate)
+    if rate_kind is None:
         raise _invoice_validation_error(
-            "classify_invoice_line_for_iva does not handle IvaRate.NOT_SUBJECT — "
+            "classify_invoice_line_for_iva does not handle an out-of-scope IVA slot — "
             "operations outside the scope of IVA must construct "
-            "IvaInvoiceClassification directly with IvaCategory.OPERACION_NO_SUJETA",
+            "IvaInvoiceClassification directly with the registry-declared out-of-scope category",
         )
 
-    rate_kind = iva_rate_kind(iva_rate)
-    if rate_kind is None:  # unreachable: NOT_SUBJECT (the only keyless rate) is rejected above
-        raise _invoice_validation_error(f"IvaRate {iva_rate!r} has no rate-tier classification")
     # One canonical rate-kind to domestic-category table, composed with the
     # public rate-kind accessor. A local IvaRate-keyed copy used to live here
     # and was exactly this composition, so it could drift without any symbol
@@ -245,8 +242,8 @@ def invoice_line_to_iva_observation(
             ``ledger_id`` on the observation).
         issued_at: Invoice issue date (becomes ``transaction_date``).
         invoice_kind: Whether the invoice was issued or received.
-        iva_rate: IvaRate slot for the line. NOT_SUBJECT raises
-            (substrate-NULL category needs explicit construction).
+        iva_rate: Registry-governed IvaRate slot for the line. An out-of-scope
+            slot raises (the substrate-NULL category needs explicit construction).
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR.
         deduction_fact_kind: Exact statutory deduction family for a received
@@ -271,7 +268,7 @@ def invoice_line_to_iva_observation(
 
     Raises:
         InvoiceValidationError: If the classification produces a ``None``
-            rate_kind (e.g. when ``iva_rate`` is ``NOT_SUBJECT``).
+            rate_kind (e.g. when ``iva_rate`` is outside the taxable scope).
         IvaRateNotFoundError: If ``iva_rate`` names a rate that was not in
             force for its tier on ``issued_at`` -- a transitional food slot
             used outside its statutory window. The line asserts a rate the
@@ -303,14 +300,13 @@ def invoice_line_to_iva_observation(
         # this tier mean" instead of "what was this line charged", and inventing
         # agreement with a tier default the line may not have carried.
         #
-        # That reasoning does not survive slots that name their own rate. The
-        # RD-ley 4/2024 food slots exist precisely because 2 % and 4 % were both
-        # correct super-reducido rates at once, so RATE_2 states a number the
-        # tier cannot supply, and iva_rate_percentage now reads it off the slot
-        # and confirms it was in force on issued_at rather than consulting the
-        # tier. The rate is measured, not inferred, so withholding it would drop
-        # the line out of every rate-specific box on the annual return -- the
-        # 2 % foodstuffs line silently missing from the 2 % box it belongs in.
+        # That reasoning does not survive registry slots that name a rate of
+        # their own. Transitional food slots can coexist with an ordinary
+        # tier, so iva_rate_percentage reads the selected slot's own authority
+        # record and confirms it was in force on issued_at rather than
+        # consulting the tier default. The rate is measured, not inferred, so
+        # withholding it would drop the line out of its rate-specific return
+        # bucket.
         applied_rate=iva_rate_percentage(iva_rate, issued_at),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )

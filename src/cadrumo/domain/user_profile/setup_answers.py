@@ -45,12 +45,14 @@ from ..contribuyente.renta_codes import (
     RentaSexCode,
     SituacionFamiliar,
 )
+from ..calculations.registry.entity_type import require_entity_type, require_legal_entity_form
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.iva_schema_vocabulary import require_iva_regime
+from ..calculations.registry.irpf_regimes import require_irpf_estimation_regime, require_irpf_special_regime
 from ..deadlines.models import (
     IVARegime,
     IrpfActivityKind,
-    IrpfEstimationRegime,
     IrpfIncomeCategory,
-    IrpfSpecialRegime,
 )
 
 
@@ -258,11 +260,17 @@ class SetupAnswers(BaseModel):
     @classmethod
     def _parse_iva_regime(cls, value: object) -> Any:
         if isinstance(value, IVARegime):
-            return value
+            try:
+                return require_iva_regime(value)
+            except ValueError as exc:
+                raise ProfileAnswerTypeError("iva_regime must be declared by the IVA facts registry") from exc
         if value is None or value == "":
             return ""
         if isinstance(value, str):
-            return IVARegime(value.upper())
+            try:
+                return require_iva_regime(value.upper())
+            except ValueError as exc:
+                raise ProfileAnswerTypeError("iva_regime must be declared by the IVA facts registry") from exc
         raise ProfileAnswerTypeError("iva_regime must be an IVARegime member or string token")
 
     @field_validator(
@@ -302,8 +310,11 @@ class SetupAnswers(BaseModel):
         if isinstance(value, EntityType):
             return value
         if isinstance(value, str):
-            return EntityType(value)
-        raise ProfileAnswerTypeError("entity_type must be an EntityType member, string token, or blank")
+            try:
+                return require_entity_type(value)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError("entity_type must be declared by the facts registry") from exc
+        raise ProfileAnswerTypeError("entity_type must be a registry token or blank")
 
     @field_validator("legal_entity_form", mode="before")
     @classmethod
@@ -313,21 +324,21 @@ class SetupAnswers(BaseModel):
         if isinstance(value, LegalEntityForm):
             return value
         if isinstance(value, str):
-            return LegalEntityForm(value)
-        raise ProfileAnswerTypeError("legal_entity_form must be a LegalEntityForm member, string token, or blank")
+            try:
+                return require_legal_entity_form(value)
+            except RegistryValidationError as exc:
+                raise ProfileAnswerTypeError("legal_entity_form must be declared by the facts registry") from exc
+        raise ProfileAnswerTypeError("legal_entity_form must be a registry token or blank")
 
     @field_validator("irpf_estimation_regime", mode="before")
     @classmethod
     def _parse_irpf_estimation_regime(cls, value: object) -> Any:
         if value == "":
             return ""
-        if isinstance(value, IrpfEstimationRegime):
-            return value
-        if isinstance(value, str):
-            return IrpfEstimationRegime(value)
-        raise ProfileAnswerTypeError(
-            "irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank",
-        )
+        try:
+            return require_irpf_estimation_regime(value)
+        except RegistryValidationError as exc:
+            raise ProfileAnswerTypeError("irpf_estimation_regime must be declared by the facts registry") from exc
 
     @field_validator("irpf_activity_kind", mode="before")
     @classmethod
@@ -377,11 +388,10 @@ class SetupAnswers(BaseModel):
     def _parse_irpf_special_regime(cls, value: object) -> Any:
         if value == "":
             return ""
-        if isinstance(value, IrpfSpecialRegime):
-            return value
-        if isinstance(value, str):
-            return IrpfSpecialRegime(value)
-        raise ProfileAnswerTypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
+        try:
+            return require_irpf_special_regime(value)
+        except RegistryValidationError as exc:
+            raise ProfileAnswerTypeError("irpf_special_regime must be declared by the facts registry") from exc
 
     @field_validator("fiscal_residency", mode="before")
     @classmethod
@@ -391,7 +401,14 @@ class SetupAnswers(BaseModel):
         if isinstance(value, FiscalResidency):
             return value
         if isinstance(value, str):
-            return FiscalResidency(value)
+            from ..calculations.registry.renta_codes_catalogue import require_fiscal_residency
+
+            try:
+                return require_fiscal_residency(value)
+            except ValueError as exc:
+                raise ProfileAnswerTypeError(
+                    "fiscal_residency must be declared by the residency facts registry",
+                ) from exc
         raise ProfileAnswerTypeError("fiscal_residency must be a FiscalResidency member, string token, or blank")
 
     @field_validator("irpf_income_categories")

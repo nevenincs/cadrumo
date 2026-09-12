@@ -23,15 +23,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.user_profile.login_session import (
-    _clear_handover_journal,
-    _handover_journal_path,
-    _HandoverPhase,
-    _load_handover_journal,
-    _ProfileLoginHandoverJournal,
-    _save_handover_journal,
-    login_profile,
+from cadrumo.adapters.persistence.storage.master_key.login_handover_journal import (
+    clear_handover_journal,
+    handover_journal_path,
+    load_handover_journal,
+    save_handover_journal,
 )
+from cadrumo.application.user_profile.login_handover import HandoverPhase, ProfileLoginHandoverJournal
+from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_pointer import ActiveProfilePointerTransactionError
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.bucket_pointer import BucketPointer, read_pointer
@@ -58,7 +57,7 @@ def _register(label: str, password: str) -> str:
     ).profile_id
 
 
-def _forge_interrupted_handover(*, storage_root: Path, profile_a: str, profile_b: str, phase: _HandoverPhase) -> None:
+def _forge_interrupted_handover(*, storage_root: Path, profile_a: str, profile_b: str, phase: HandoverPhase) -> None:
     """Publish a real journal chain up to ``phase`` over unrelated pointer bytes.
 
     Written through the production receipt writer, phase by phase, so the
@@ -67,22 +66,22 @@ def _forge_interrupted_handover(*, storage_root: Path, profile_a: str, profile_b
     anything reachable from it: that is the state the classifier must keep
     refusing.
     """
-    journal = _ProfileLoginHandoverJournal.prepare(
+    journal = ProfileLoginHandoverJournal.prepare(
         profile_a=profile_a,
         profile_b=profile_b,
         pointer_before=BucketPointer.selected(bucket_id="unrelated-before", transition_revision=70),
         pointer_after=BucketPointer.selected(bucket_id=profile_b, transition_revision=71),
         activation_at=_now(),
     )
-    _save_handover_journal(storage_root=storage_root, journal=journal)
+    save_handover_journal(storage_root=storage_root, journal=journal)
     for step in (
-        _HandoverPhase.POINTER_PUBLISHED,
-        _HandoverPhase.B_BOUND,
-        _HandoverPhase.ACCELERATED,
-        _HandoverPhase.ACTIVATED,
+        HandoverPhase.POINTER_PUBLISHED,
+        HandoverPhase.B_BOUND,
+        HandoverPhase.ACCELERATED,
+        HandoverPhase.ACTIVATED,
     ):
         journal = journal.at_phase(step)
-        _save_handover_journal(storage_root=storage_root, journal=journal)
+        save_handover_journal(storage_root=storage_root, journal=journal)
         if journal.phase is phase:
             return
 
@@ -104,9 +103,9 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
         try:
             login_profile(name=first, passphrase_callback=lambda: _PASSWORD_FIRST)
 
-            terminal = _load_handover_journal(storage_root=storage_root)
+            terminal = load_handover_journal(storage_root=storage_root)
             assert terminal is not None
-            assert terminal.phase is _HandoverPhase.A_RETIRED
+            assert terminal.phase is HandoverPhase.A_RETIRED
 
             second = _register("Sequential Two", _PASSWORD_SECOND)
             # The create transaction has moved the pointer, so the retained
@@ -141,9 +140,9 @@ def test_a_completed_handover_receipt_is_retired_by_the_next_login_after_a_point
 
             login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
 
-            surviving = _load_handover_journal(storage_root=storage_root)
+            surviving = load_handover_journal(storage_root=storage_root)
             assert surviving is not None, "the second login must leave its own terminal receipt"
-            assert surviving.phase is _HandoverPhase.A_RETIRED
+            assert surviving.phase is HandoverPhase.A_RETIRED
             assert surviving.profile_b == second
             assert surviving.profile_a == first, (
                 "the second login moved away from the first profile and must witness it"
@@ -215,15 +214,15 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
         second = _register("Interrupted Two", _PASSWORD_SECOND)
         try:
             login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
-            terminal = _load_handover_journal(storage_root=storage_root)
+            terminal = load_handover_journal(storage_root=storage_root)
             assert terminal is not None
-            _clear_handover_journal(storage_root=storage_root, journal=terminal)
+            clear_handover_journal(storage_root=storage_root, journal=terminal)
 
             _forge_interrupted_handover(
                 storage_root=storage_root,
                 profile_a=first,
                 profile_b=second,
-                phase=_HandoverPhase.ACTIVATED,
+                phase=HandoverPhase.ACTIVATED,
             )
 
             with pytest.raises(ActiveProfilePointerTransactionError) as refusal:
@@ -235,7 +234,7 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
             assert context["reason"] == "pointer no longer matches either witnessed handover state"
             # The refusal is fail-closed: the witness it could not classify is
             # left exactly where it was for an operator to inspect.
-            assert _handover_journal_path(storage_root).is_file()
+            assert handover_journal_path(storage_root).is_file()
         finally:
             _close_live_login()
 
@@ -268,26 +267,26 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
             _close_live_login()
             assert _probe_resumable_session(storage_root, first)["dek_length"] == 32
 
-            witness = _ProfileLoginHandoverJournal.prepare(
+            witness = ProfileLoginHandoverJournal.prepare(
                 profile_a=first,
                 profile_b=second,
                 pointer_before=BucketPointer.selected(bucket_id="unrelated-before", transition_revision=80),
                 pointer_after=BucketPointer.selected(bucket_id=second, transition_revision=81),
                 activation_at=_now(),
             )
-            existing = _load_handover_journal(storage_root=storage_root)
+            existing = load_handover_journal(storage_root=storage_root)
             if existing is not None:
-                _clear_handover_journal(storage_root=storage_root, journal=existing)
+                clear_handover_journal(storage_root=storage_root, journal=existing)
             for step in (
-                _HandoverPhase.PREPARED,
-                _HandoverPhase.POINTER_PUBLISHED,
-                _HandoverPhase.B_BOUND,
-                _HandoverPhase.ACCELERATED,
-                _HandoverPhase.ACTIVATED,
-                _HandoverPhase.A_RETIRED,
+                HandoverPhase.PREPARED,
+                HandoverPhase.POINTER_PUBLISHED,
+                HandoverPhase.B_BOUND,
+                HandoverPhase.ACCELERATED,
+                HandoverPhase.ACTIVATED,
+                HandoverPhase.A_RETIRED,
             ):
                 witness = witness.at_phase(step)
-                _save_handover_journal(storage_root=storage_root, journal=witness)
+                save_handover_journal(storage_root=storage_root, journal=witness)
 
             login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
 

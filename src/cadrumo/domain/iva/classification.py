@@ -31,24 +31,27 @@ Examples:
     ...     customer_residency=IvaTerritorialScope.EU_MEMBER,
     ...     customer_identification_state=EUMemberState.DE,
     ...     customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-    ...     kind=TransactionKind.GOODS,
+    ...     kind=registry_transaction_kind,
     ...     direction=InvoiceKind.ISSUED,
     ... )
     >>> classify_iva(criteria, rules=registry_rules).category
-    <IvaCategory.INTRA_COMMUNITY_SUPPLY: 'intra_community_supply'>
+    'intra_community_supply'
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import Field, model_validator
 
 from ...core.logging import get_logger
+from ..calculations.registry.iva_category_catalogue import require_iva_category
+from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from .errors import IvaRateNotFoundError, IvaValidationError
 from .lookup import lookup_rate
 from .place_of_supply import IvaPlaceOfSupplyRule, place_of_supply_rule
@@ -63,6 +66,9 @@ from .schema import (
 )
 
 _logger = get_logger(__name__)
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 
 # -- Closed enumerations --------------------------------------------------
@@ -81,7 +87,7 @@ class IvaTerritorialScope(StrEnum):
     the role label; the type carries the territorial framing). Parties
     in Canarias, Ceuta or Melilla are NOT subject to LIVA; the
     classifier short-circuits to
-    :attr:`cadrumo.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT` for issuers
+            the registry-declared domestic-not-subject category for issuers
     in those territories (out of TAI).
 
     Attributes:
@@ -180,71 +186,157 @@ class CustomerTaxStatus(StrEnum):
     UNKNOWN = "unknown"
 
 
-class TransactionKind(StrEnum):
-    """Kind-of-supply classification.
+class TransactionKind(str):
+    """Opaque registry-projected kind-of-supply token."""
 
-    Drives place-of-supply rules (services general vs. land-related vs. OSS),
-    reverse-charge sub-rules (construction, waste, consumer electronics) and
-    rate-tier defaulting (passenger transport at 10 %, restaurants at 10 %).
-    Kind is orthogonal to rate tier;
-    :attr:`IvaInvoiceClassificationCriteria.rate_tier` is the explicit rate-tier axis
-    the caller supplies for ES-to-ES domestic rules.
+    __slots__ = ()
 
-    Attributes:
-        GOODS: Tangible goods supply.
-        SERVICES_GENERAL: Services not covered by a specialised category.
-        SERVICES_LAND_RELATED: Land-related services (Art. 70).
-        SERVICES_PASSENGER_TRANSPORT: Passenger transport service.
-        SERVICES_RESTAURANT: Restaurant or catering service.
-        IMMOVABLE_PROPERTY: Real-estate transaction.
-        PASSENGER_CAR: Private-use passenger vehicle (deductibility flag).
-        CONSTRUCTION_REVERSE_CHARGE: Art. 84.Uno.2º.f construction works.
-        WASTE_REVERSE_CHARGE: Art. 84.Uno.2º.c waste / recovery materials.
-        ELECTRONICS_REVERSE_CHARGE: Art. 84.Uno.2º.g B2B consumer electronics.
-        EXTERNAL_SCHEME_SERVICES: Services from a non-EU taxable person to
-            an EU-resident consumer routed through Esquema Exterior. LIVA
-            art. 163 octiesdecies.
-        OSS_UNION_GOODS_DISTANCE_SALE: Intra-community distance sale of
-            goods routed through Esquema Unión. Admitted to the scheme by
-            LIVA art. 163 unvicies; located as a supply of goods by art. 68.
-        OSS_UNION_GOODS_INTERFACE_FACILITATED: Interior supply of goods
-            facilitated by an electronic interface, routed through Esquema
-            Unión. Admitted by LIVA art. 163 unvicies; located by art. 68.
-        OSS_UNION_SERVICES: Services from an EU-established taxable person
-            to a consumer in another Member State routed through Esquema
-            Unión. Admitted by LIVA art. 163 unvicies; located as a supply of
-            services by art. 69.
+    @classmethod
+    def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
+        """Expose the opaque token as a string to Pydantic without a catalogue."""
+        from pydantic_core import core_schema
 
-        IOSS_DISTANCE_SALE_LOW_VALUE: Distance sale of imported goods with
-            intrinsic value at or below 150 EUR routed through Esquema de
-            Importación (IOSS). LIVA art. 163 quinvicies.
+        return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
 
-    **Art. 163 unvicies admits an operation to the Union scheme; it does not say
-    which limb the operation is.** Its own scope paragraph reaches "presten
-    servicios" and "ventas a distancia intracomunitarias de bienes" alike, so
-    citing it alone establishes neither. The three Union-scheme members above
-    were previously documented as resting on it for their goods-or-services
-    character, and two separate readers took that at face value and derived the
-    wrong nature before going to the statute. What fixes the nature is the
-    placement article: art. 68 for *entregas de bienes*, art. 69 for
-    *prestaciones de servicios*.
-    """
+    @property
+    def value(self) -> str:
+        """Return the opaque token for string-oriented serialization."""
+        return str(self)
 
-    GOODS = "goods"
-    SERVICES_GENERAL = "services_general"
-    SERVICES_LAND_RELATED = "services_land_related"
-    SERVICES_PASSENGER_TRANSPORT = "services_passenger_transport"
-    SERVICES_RESTAURANT = "services_restaurant"
-    IMMOVABLE_PROPERTY = "immovable_property"
-    PASSENGER_CAR = "passenger_car"
-    CONSTRUCTION_REVERSE_CHARGE = "construction_reverse_charge"
-    WASTE_REVERSE_CHARGE = "waste_reverse_charge"
-    ELECTRONICS_REVERSE_CHARGE = "electronics_reverse_charge"
-    EXTERNAL_SCHEME_SERVICES = "external_scheme_services"
-    OSS_UNION_GOODS_DISTANCE_SALE = "oss_union_goods_distance_sale"
-    OSS_UNION_GOODS_INTERFACE_FACILITATED = "oss_union_goods_interface_facilitated"
-    OSS_UNION_SERVICES = "oss_union_services"
-    IOSS_DISTANCE_SALE_LOW_VALUE = "ioss_distance_sale_low_value"
+
+@dataclass(frozen=True, slots=True)
+class TransactionKindDefinition:
+    """One registry-declared transaction-kind token and its semantics."""
+
+    token: TransactionKind
+    description: str
+    legal_refs: str | None = None
+    supply_nature: str | None = None
+    oss_regime: str | None = None
+    default_rate_kind: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TransactionKindCatalogue:
+    """Typed projection of the dated IVA classification kind vocabulary."""
+
+    definitions: tuple[TransactionKindDefinition, ...]
+    common_semantics: str
+    union_scheme_semantics: str
+
+    @property
+    def all_kinds(self) -> frozenset[TransactionKind]:
+        """Return every registry-declared transaction-kind token."""
+        return frozenset(definition.token for definition in self.definitions)
+
+    def require(self, value: object) -> TransactionKind:
+        """Validate one opaque token against this registry projection."""
+        if isinstance(value, TransactionKind):
+            token = value
+        elif isinstance(value, str):
+            token = TransactionKind(value.strip())
+        else:
+            raise IvaValidationError("transaction kind must be a string token")
+        if not str(token):
+            raise IvaValidationError("transaction kind token must not be blank")
+        if token not in self.all_kinds:
+            raise IvaValidationError(f"transaction kind {str(token)!r} is not registry-declared")
+        return token
+
+    def for_supply_nature(self, supply_nature: str) -> TransactionKind:
+        """Return the unique kind projection for a registry supply-nature token."""
+        matches = tuple(
+            definition.token
+            for definition in self.definitions
+            if definition.supply_nature == supply_nature
+        )
+        if len(matches) != 1:
+            raise IvaValidationError(
+                f"supply nature {supply_nature!r} must map to exactly one transaction kind",
+            )
+        return matches[0]
+
+    def kinds_for_oss_regime(self, oss_regime: str) -> frozenset[TransactionKind]:
+        """Return registry kinds routed through one OSS regime token."""
+        matches = frozenset(
+            definition.token
+            for definition in self.definitions
+            if definition.oss_regime == oss_regime
+        )
+        if not matches:
+            raise IvaValidationError(
+                f"OSS regime {oss_regime!r} must map to at least one transaction kind",
+            )
+        return matches
+
+
+def _classification_mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
+    """Narrow the classification fact payload to a unique string map."""
+    entries: dict[str, str] = {}
+    for entry in resolved.payload.entries:
+        if not isinstance(entry.key, str) or not isinstance(entry.value, str):
+            raise IvaValidationError("IVA classification mapping entries must be string-to-string")
+        if entry.key in entries:
+            raise IvaValidationError(f"duplicate IVA classification mapping key {entry.key!r}")
+        entries[entry.key] = entry.value
+    return MappingProxyType(entries)
+
+
+def _required_classification_entry(entries: Mapping[str, str], key: str) -> str:
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise IvaValidationError(f"IVA classification mapping is missing {key!r}")
+    return value.strip()
+
+
+def _classification_csv(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
+    tokens = tuple(token.strip() for token in _required_classification_entry(entries, key).split(",") if token.strip())
+    if not tokens or len(set(tokens)) != len(tokens):
+        raise IvaValidationError(f"IVA classification mapping {key!r} must declare unique tokens")
+    return tokens
+
+
+def resolve_transaction_kind_catalogue(
+    effective_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> TransactionKindCatalogue:
+    """Resolve all transaction-kind membership through the 0083 fact query."""
+    resolved = _registry_iva_classification_catalogue(effective_date, authority=authority)
+    entries = _classification_mapping_entries(resolved)
+    definitions: list[TransactionKindDefinition] = []
+    for token in _classification_csv(entries, "transaction_kind.order"):
+        prefix = f"transaction_kind.{token}"
+        declared_token = _required_classification_entry(entries, f"{prefix}.value")
+        if declared_token != token:
+            raise IvaValidationError(
+                f"IVA classification mapping {prefix!r} declares value {declared_token!r}, not {token!r}",
+            )
+        definitions.append(
+            TransactionKindDefinition(
+                token=TransactionKind(token),
+                description=_required_classification_entry(entries, f"{prefix}.description"),
+                legal_refs=entries.get(f"{prefix}.legal_refs"),
+                supply_nature=entries.get(f"{prefix}.supply_nature"),
+                oss_regime=entries.get(f"{prefix}.oss_regime"),
+                default_rate_kind=entries.get(f"{prefix}.default_rate_kind"),
+            ),
+        )
+    return TransactionKindCatalogue(
+        definitions=tuple(definitions),
+        common_semantics=_required_classification_entry(entries, "transaction_kind.common_semantics"),
+        union_scheme_semantics=_required_classification_entry(entries, "transaction_kind.union_scheme_semantics"),
+    )
+
+
+def require_transaction_kind(
+    value: object,
+    *,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> TransactionKind:
+    """Return one registry-declared transaction-kind token or refuse it."""
+    return resolve_transaction_kind_catalogue(effective_date, authority=authority).require(value)
 
 
 # -- Criteria and classification records ----------------------------------
@@ -255,6 +347,7 @@ def domestic_rate_tier_is_required(
     issuer_residency: IvaTerritorialScope,
     customer_residency: IvaTerritorialScope,
     kind: TransactionKind,
+    transaction_date: date | None = None,
     customer_tax_status: CustomerTaxStatus | None = None,
     art_69_dos_service: IvaArt69DosService | None = None,
     exempt_kinds: frozenset[TransactionKind] = frozenset(),
@@ -269,10 +362,11 @@ def domestic_rate_tier_is_required(
         return False
     if issuer_residency is IvaTerritorialScope.ES_MAINLAND and customer_residency is IvaTerritorialScope.ES_MAINLAND:
         return True
+    services_kind = resolve_transaction_kind_catalogue(transaction_date or date.today()).for_supply_nature("services")
     return (
         issuer_residency is IvaTerritorialScope.ES_MAINLAND
         and customer_residency in outside_territories
-        and kind is TransactionKind.SERVICES_GENERAL
+        and kind == services_kind
         and (customer_tax_status is None or customer_tax_status is CustomerTaxStatus.B2C_CONSUMER)
         and art_69_dos_service is None
     )
@@ -343,18 +437,18 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
         default=None,
         description=(
             "Explicit rate-tier axis the caller resolves at invoice "
-            "generation time (e.g. ``GENERAL`` for 21 % goods, "
-            "``REDUCED`` for restaurants, ``SUPER_REDUCED`` for basic "
-            "food). The classifier consults it for ES-to-ES domestic "
-            "rules to pick between ``DOMESTIC_GENERAL`` / "
-            "``DOMESTIC_REDUCED`` / ``DOMESTIC_SUPER_REDUCED`` / "
-            "``DOMESTIC_ZERO``. Ignored for non-domestic rules."
+            "generation time. The classifier consults the registry-resolved "
+            "rate/category mapping for ES-to-ES domestic rules. Ignored for "
+            "non-domestic rules."
         ),
     )
 
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> IvaInvoiceClassificationCriteria:
         """Keep criteria validation independent from registry-owned facts."""
+        require_transaction_kind(self.kind, effective_date=self.transaction_date)
+        if self.rate_tier is not None:
+            require_iva_rate_kind(self.rate_tier, effective_date=self.transaction_date)
         return self
 
 
@@ -418,7 +512,7 @@ class IvaClassificationResult(IvaStrictFrozen):
         default=None,
         description=(
             "Optional Ley 37/1992 Art. 20 sub-article discriminator. Stamped"
-            " only when ``category`` is :attr:`IvaCategory.DOMESTIC_EXEMPT`"
+            " only when ``category`` is the registry-declared domestic-exempt token"
             " and the classification chain (or operator) has determined the"
             " specific sub-article. It adds classification context without"
             " creating a separate Modelo 303 route."
@@ -440,7 +534,7 @@ class IvaClassificationResult(IvaStrictFrozen):
 
     @model_validator(mode="after")
     def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
-        if self.exemption_article is not None and self.category is not IvaCategory.DOMESTIC_EXEMPT:
+        if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
             raise IvaValidationError(
                 f"exemption_article {self.exemption_article.value!r} is only valid when "
                 f"category is DOMESTIC_EXEMPT; got category {self.category.value!r}",
@@ -464,7 +558,7 @@ def rate_kind_for_domestic_category(
     """Resolve a domestic category through a caller-supplied registry mapping."""
     if mapping is None:
         raise IvaValidationError("IVA rate/category mapping must be supplied by registry authority")
-    return next((tier for tier, mapped_category in mapping.items() if mapped_category is category), None)
+    return next((tier for tier, mapped_category in mapping.items() if mapped_category == category), None)
 
 
 class IvaClassificationRule(NamedTuple):
@@ -481,13 +575,17 @@ class IvaClassificationRule(NamedTuple):
 # -- Public resolver ------------------------------------------------------
 
 
-def _registry_iva_classification_catalogue(effective_date: date) -> ResolvedMappingFact:
+def _registry_iva_classification_catalogue(
+    effective_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
     from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
 
-    authority = bundled_authority()
+    authority = authority or bundled_authority()
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
@@ -570,7 +668,7 @@ def _resolve_rate_for_category(
     """Resolve a rate through caller-supplied registry mappings."""
     if rate_categories is None or rate_territories is None:
         return None
-    tier = next((candidate for candidate, mapped in rate_categories.items() if mapped is category), None)
+    tier = next((candidate for candidate, mapped in rate_categories.items() if mapped == category), None)
     if tier is None:
         return None
     if criteria.issuer_residency not in rate_territories:
@@ -597,8 +695,12 @@ __all__ = [
     "IvaTerritorialScope",
     "PartyFact",
     "TransactionKind",
+    "TransactionKindCatalogue",
+    "TransactionKindDefinition",
     "classifiable_categories",
     "classify_iva",
     "domestic_categories_by_rate_kind",
     "rate_kind_for_domestic_category",
+    "require_transaction_kind",
+    "resolve_transaction_kind_catalogue",
 ]

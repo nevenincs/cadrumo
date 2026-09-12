@@ -14,8 +14,8 @@ ports such as
 and
 :class:`~domain.iva_compensation.reconciliation.LocalIvaCompensationRecurrenceProtocol`
 so the domain never imports the Sede adapter. This module orchestrates
-:class:`~.observations_repository.CalculationObservationRepository` reads,
-:class:`~.observations_repository.IvaWalletDecisionRepository` persistence, and
+:class:`~.observations_repository.CalculationObservationRepositoryProtocol` reads,
+:class:`~.observations_repository.IvaWalletDecisionRepositoryProtocol` persistence, and
 source-mesh resolution around that pure decision.
 
 Binding resolution reads its active revision through a
@@ -64,7 +64,7 @@ from ..aggregation.source_mesh import (
 
 if TYPE_CHECKING:
     from .binding_prefill import BindingPrefillReport, LocalIvaCompensationRecurrence
-    from .observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+    from .observations_repository import CalculationObservationRepositoryProtocol, IvaWalletDecisionRepositoryProtocol
 
 
 class IvaCompensationReconciliationReport(BaseModel):
@@ -227,24 +227,13 @@ def _resolve_first_period_compensation_amount(*, filing_year: int) -> Decimal:
 
 def _resolve_reconciliation_repositories(
     *,
-    repository: CalculationObservationRepository | None,
-    decision_repository: IvaWalletDecisionRepository | None,
+    repository: CalculationObservationRepositoryProtocol,
+    decision_repository: IvaWalletDecisionRepositoryProtocol,
     persist: bool,
-) -> tuple[CalculationObservationRepository, IvaWalletDecisionRepository]:
-    """Resolve both repositories, refusing an explicit pair that would split the encrypted backend.
-
-    A decision repository defaulted from the observation repository shares its
-    backend by construction; only an explicitly supplied one can diverge, and a
-    divergence is refused whenever the decision will actually be persisted.
-    """
-    from .observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
-
-    repo = repository if repository is not None else CalculationObservationRepository()
-    decision_repo = (
-        decision_repository
-        if decision_repository is not None
-        else IvaWalletDecisionRepository(objects=repo.secure_object_repository)
-    )
+) -> tuple[CalculationObservationRepositoryProtocol, IvaWalletDecisionRepositoryProtocol]:
+    """Validate the required repository pair and refuse a split secure backend."""
+    repo = repository
+    decision_repo = decision_repository
     if (
         persist
         and decision_repository is not None
@@ -262,8 +251,8 @@ def reconcile_modelo_303_iva_compensation(
     *,
     taxpayer_nif: str,
     wallet: IvaCompensationWalletObservationProtocol | None,
-    repository: CalculationObservationRepository | None = None,
-    decision_repository: IvaWalletDecisionRepository | None = None,
+    repository: CalculationObservationRepositoryProtocol,
+    decision_repository: IvaWalletDecisionRepositoryProtocol,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = DEFAULT_MAX_WALLET_AGE_DAYS,
@@ -282,7 +271,7 @@ def reconcile_modelo_303_iva_compensation(
     :func:`~domain.iva_compensation.reconciliation.reconcile_iva_compensation_wallet`,
     and persists the resulting
     :class:`~domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`
-    through :class:`~.observations_repository.IvaWalletDecisionRepository` when
+    through :class:`~.observations_repository.IvaWalletDecisionRepositoryProtocol` when
     ``persist`` is true.
 
     Args:
@@ -290,14 +279,13 @@ def reconcile_modelo_303_iva_compensation(
             identifying the Modelo 303 target revision.
         taxpayer_nif: Taxpayer identifier expected to match live wallet evidence.
         wallet: Live AEAT wallet observation to reconcile, when available.
-        repository: Optional
-            :class:`~application.calculations.observations_repository.CalculationObservationRepository`
+        repository: Required
+            :class:`~application.calculations.observations_repository.CalculationObservationRepositoryProtocol`
             used to read prior local recurrence.
-        decision_repository: Optional
-            :class:`~application.calculations.observations_repository.IvaWalletDecisionRepository`
+        decision_repository: Required
+            :class:`~application.calculations.observations_repository.IvaWalletDecisionRepositoryProtocol`
             used to persist the resulting wallet authority. When persistence is
-            enabled, an explicitly supplied repository must use the same
-            encrypted storage backend as ``repository``.
+            enabled, it must use the same encrypted storage backend as ``repository``.
         override: Optional
             :class:`~domain.iva_compensation.reconciliation.IvaCompensationOverride`
             evidence when the operator has resolved a divergence.

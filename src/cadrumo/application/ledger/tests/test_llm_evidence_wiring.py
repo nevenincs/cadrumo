@@ -25,7 +25,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..evidence import PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError
-from ..llm_classification import _resolve_evidence, suggest_llm_classification
+from ..llm_classification import resolve_llm_evidence, suggest_llm_classification
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -101,7 +101,7 @@ def _add_evidence(profile: TestRuntimeProfile, tmp_path: Path) -> str:
 
 def test_no_linked_evidence_returns_none(profile: TestRuntimeProfile) -> None:
     txn = _transaction(evidence_id=None)
-    resolved = _resolve_evidence(
+    resolved = resolve_llm_evidence(
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
@@ -128,7 +128,7 @@ def test_text_layer_evidence_resolves_with_no_consent_posture_at_all(
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
 
-    resolved = _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
+    resolved = resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
 
     assert resolved is not None, "a text-layer read no longer needs a consent posture"
 
@@ -143,7 +143,7 @@ def test_text_layer_read_returns_on_host_extracted_text(profile: TestRuntimeProf
     evidence_id = _add_evidence(profile, tmp_path)
     txn = _transaction(evidence_id=evidence_id)
 
-    resolved = _resolve_evidence(
+    resolved = resolve_llm_evidence(
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
@@ -170,7 +170,7 @@ def test_invoice_space_reference_reads_the_rows_own_attachment(
     record = _add_evidence_record(profile, tmp_path)
     txn = _transaction("INV-2026-001-not-in-the-evidence-store", attachment_ids=(record.attachment_id,))
 
-    resolved = _resolve_evidence(
+    resolved = resolve_llm_evidence(
         txn,
         bucket_id=_BUCKET_ID,
         settings=profile.settings,
@@ -194,7 +194,7 @@ def test_reference_without_bytes_or_attachments_refuses_naming_the_reference(
     txn = _transaction("INV-2026-002-not-in-the-evidence-store")
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as excinfo:
-        _resolve_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
+        resolve_llm_evidence(txn, bucket_id=_BUCKET_ID, settings=profile.settings)
 
     assert excinfo.value.context == {"evidence_id": "INV-2026-002-not-in-the-evidence-store"}
 

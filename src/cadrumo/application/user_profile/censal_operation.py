@@ -26,6 +26,7 @@ from ...core.operations import (
     OperationInteractionKind,
 )
 from ...domain.user_profile.values import UserProfileRecord
+from ..auth.operator_scope_ports import OperatorScopePorts
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -351,6 +352,7 @@ class CensalOperationExecutor:
         self,
         *,
         certificate_secret_backend_factory: CertificateSecretBackendFactory,
+        operator_scope_ports: OperatorScopePorts,
         acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
         apply: Callable[[CensalReviewedOperand], None] | None = None,
         before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -359,6 +361,7 @@ class CensalOperationExecutor:
         self._acquire = acquire or (
             lambda: _pull_censal_datos(
                 certificate_secret_backend_factory=certificate_secret_backend_factory,
+                operator_scope_ports=operator_scope_ports,
             )
         )
         self._apply = apply or _apply_reviewed_cotejo
@@ -476,12 +479,14 @@ class CensalOperationExecutor:
 async def _pull_censal_datos(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
 ) -> CensalObservation:
     """Acquire through the sole public live application door."""
     from ..live.censo import pull_censal_datos
 
     return await pull_censal_datos(
         certificate_secret_backend_factory=certificate_secret_backend_factory,
+        operator_scope_ports=operator_scope_ports,
     )
 
 
@@ -511,6 +516,7 @@ async def _ready_for_irreversible_section() -> None:
 def build_censal_operation_definition(
     *,
     certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    operator_scope_ports: OperatorScopePorts,
     acquire: Callable[[], Awaitable[CensalObservation | CensalOperationAcquisition]] | None = None,
     apply: Callable[[CensalReviewedOperand], None] | None = None,
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
@@ -520,6 +526,7 @@ def build_censal_operation_definition(
     def build() -> CensalOperationExecutor:
         return CensalOperationExecutor(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
+            operator_scope_ports=operator_scope_ports,
             acquire=acquire,
             apply=apply,
             before_irreversible_section=before_irreversible_section,
