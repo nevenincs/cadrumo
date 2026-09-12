@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -8,10 +8,10 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
 from ......core.errors.hierarchy import AeatLoginAssertionError
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import session_store as session_store
 from ..authenticator import AeatAuthenticator
 from ..authenticator_persistence import PersistedSessionMetadata

@@ -22,13 +22,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.export import ResolvedExportLayout, resolve_export_layout
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....tests.registry_snapshot import build_snapshot
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationExportResult,

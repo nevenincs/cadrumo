@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....core.config import Settings
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ....core.config import Settings
 from ..counterparty_establishment import ConfirmedCounterpartyFactsRepository
 
 

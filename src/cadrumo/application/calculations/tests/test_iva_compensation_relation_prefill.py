@@ -11,6 +11,7 @@ from typing import Literal
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.observed_header_fact import ObservedHeaderFact
@@ -24,7 +25,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..iva_compensation_annual_partition import (
     IvaCompensationAnnualPartitionSourceResolver,

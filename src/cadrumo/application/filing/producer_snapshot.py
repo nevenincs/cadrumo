@@ -1056,12 +1056,12 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
 
 
 def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
+    if snapshot.modelo != Modelo("303") and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
-    if snapshot.modelo is not Modelo.M390 and snapshot.m390_filing_facts is not None:
+    if snapshot.modelo != Modelo("390") and snapshot.m390_filing_facts is not None:
         raise ValueError("M390FilingFacts are valid only for modelo 390")
     if (
-        snapshot.modelo is not Modelo.M303
+        snapshot.modelo != Modelo("303")
         and snapshot.amendment_evidence is not None
         and snapshot.amendment_evidence.m303_rectificativa_motive is not None
     ):
@@ -1069,22 +1069,22 @@ def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> No
 
 
 def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
-    if snapshot.modelo is Modelo.M111:
+    if snapshot.modelo == Modelo("111"):
         _validate_modelo_111_snapshot(snapshot)
         return
-    if snapshot.modelo is Modelo.M202:
+    if snapshot.modelo == Modelo("202"):
         _validate_modelo_202_snapshot(snapshot)
         return
-    if snapshot.modelo is Modelo.M222:
+    if snapshot.modelo == Modelo("222"):
         _validate_modelo_222_snapshot(snapshot)
         return
-    if snapshot.modelo is Modelo.M303:
+    if snapshot.modelo == Modelo("303"):
         _validate_modelo_303_snapshot(snapshot)
         return
-    if snapshot.modelo is Modelo.M296:
+    if snapshot.modelo == Modelo("296"):
         _validate_modelo_296_snapshot(snapshot)
         return
-    if snapshot.modelo is Modelo.M353:
+    if snapshot.modelo == Modelo("353"):
         _validate_modelo_353_snapshot(snapshot)
         return
     _validate_general_modelo_snapshot(snapshot)

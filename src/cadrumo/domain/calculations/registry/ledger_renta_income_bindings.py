@@ -86,7 +86,7 @@ class LedgerRentaIncomeProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
 
-    modelo: Literal[Modelo.M130, Modelo.M100, Modelo.M131] = Modelo.M130
+    modelo: Literal[Modelo("130"), Modelo("100"), Modelo("131")] = Modelo("130")
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
 
@@ -120,9 +120,9 @@ _RENTA_100_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_100_IN
 # agrarian volumen de ingresos del trimestre, is a real ledger aggregation.
 _RENTA_131_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_131_INCOME_CASILLAS", "05")
 _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
-    Modelo.M130: _RENTA_130_INCOME_CASILLAS,
-    Modelo.M100: _RENTA_100_INCOME_CASILLAS,
-    Modelo.M131: _RENTA_131_INCOME_CASILLAS,
+    Modelo("130"): _RENTA_130_INCOME_CASILLAS,
+    Modelo("100"): _RENTA_100_INCOME_CASILLAS,
+    Modelo("131"): _RENTA_131_INCOME_CASILLAS,
 }
 
 

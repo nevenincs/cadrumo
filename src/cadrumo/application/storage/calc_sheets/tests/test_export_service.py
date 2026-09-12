@@ -20,11 +20,11 @@ from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
 from .....adapters.outbound.storage.errors import OutboundStorageValidationError
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.sync_surface import SyncSurface
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.google_credentials import unused_google_credentials
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..engine import build_export_plan
 from ..export_service import _export_scope_description, _SingleExportCoverage, export_modelo_to_sheets
 

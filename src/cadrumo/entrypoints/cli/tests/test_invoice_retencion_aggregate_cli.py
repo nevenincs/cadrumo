@@ -25,6 +25,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.errors import AggregationValidationError
 from ....application.aggregation.retencion_observations_repository import RetencionObservationRepository
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
@@ -40,7 +41,6 @@ from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

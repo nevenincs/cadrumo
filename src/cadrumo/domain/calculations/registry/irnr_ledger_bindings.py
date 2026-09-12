@@ -50,7 +50,7 @@ class LedgerIrnrIncomeProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
 
-    modelo: Literal[Modelo.M210] = Modelo.M210
+    modelo: Literal[Modelo("210")] = Modelo("210")
     target_casilla_id: CasillaId
     fact: Literal["gross_income_sum"] = "gross_income_sum"
 

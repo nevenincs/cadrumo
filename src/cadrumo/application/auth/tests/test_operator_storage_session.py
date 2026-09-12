@@ -17,13 +17,13 @@ from ....adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
     has_active_bucket_session,
 )
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import build_error_envelope, resolve_error_message
 from ....domain.contribuyente.keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
 from ..acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path

@@ -19,6 +19,7 @@ import pytest
 from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.passphrase_rotation import (
@@ -27,7 +28,6 @@ from .....application.user_profile.passphrase_rotation import (
 )
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.credentials import assess_profile_password
-from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ...components.host import ScreenHostApp
 from ...components.status import PinnedStatusBar

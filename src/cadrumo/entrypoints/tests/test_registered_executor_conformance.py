@@ -26,6 +26,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application.auth.operation_definitions import build_auth_operation_definitions
 from ...application.export.google_operation import build_google_sheets_export_operation_definition
 from ...application.modelo.calculation_actions import calculate_modelo_revision
@@ -98,7 +99,6 @@ from ...tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...tests.profile_capsule import seed_modelo_ready_profile_record
-from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..censal_review import _run as run_censal_review_through_services
 from ..operation_composition import build_production_operation_registry
 

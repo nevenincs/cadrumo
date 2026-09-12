@@ -243,7 +243,7 @@ def calculated_m210_plazo_resolution(
     matching rule.  A missing window produces no notice; notably, tipo 28 stays
     silent until its event-relative offset has authoritative registry backing.
     """
-    if work_unit.modelo != Modelo.M210:
+    if work_unit.modelo != Modelo("210"):
         return None
 
     from ...domain.deadlines.plazo import resolve_filing_window

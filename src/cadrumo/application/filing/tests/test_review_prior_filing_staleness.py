@@ -32,6 +32,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -39,7 +40,6 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..draft_construction import build_draft
 from ..draft_review import ModeloApprovalStaleReason, approval_stale_reasons, approve_draft

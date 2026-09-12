@@ -7,6 +7,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.period import Period
 from ....core.time.clock import now
@@ -16,7 +19,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._modelo_work_ux_support import _create_profile, _invoke
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

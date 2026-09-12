@@ -41,7 +41,7 @@ _PLAIN_SEGMENT: Final = re.compile(r"^[A-Za-z0-9_-]+$")
 _ENCODED_PREFIX: Final[str] = "x-"
 _SOURCE_LOCALE: Final[str] = "es"
 _MODEL_SCOPED_CONSTRUCTS: Final[frozenset[tuple[str, str]]] = frozenset(
-    {(Modelo.M303.value, "modelo-303-iva-autoliquidacion")},
+    {(Modelo("303").value, "modelo-303-iva-autoliquidacion")},
 )
 
 

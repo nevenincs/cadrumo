@@ -20,6 +20,7 @@ from ....adapters.outbound.aeat.sede.schema import (
 )
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
@@ -36,7 +37,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.registry_snapshot import build_snapshot
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
 

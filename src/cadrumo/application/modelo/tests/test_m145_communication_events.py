@@ -22,8 +22,8 @@ import pytest
 
 from ....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     create_m145_communication_record,

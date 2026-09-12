@@ -31,14 +31,10 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol as _Attachme
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
-from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -53,9 +49,9 @@ from ...domain.transactions.models import (
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...domain.usage_ratios.model import UsageRatioProfile
 from ..aggregation.currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ..review.filter import LedgerReviewStatus
+from .action_ports import LedgerActionPorts
 from .actions_common import (
     EventSpec,
     blocking_modelo_references,
@@ -89,7 +85,6 @@ from .actions_common import (
     verify_usage_ratio_reference,
 )
 from .actions_import import apply_fx_conversion as _apply_fx_conversion
-from .action_ports import LedgerActionPorts
 from .evidence import PurchaseInvoiceEvidence
 from .models import (
     LedgerReviewQuery,
@@ -129,7 +124,9 @@ def create_manual_transaction(
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=ports.bucket_event_repository)
+    event_repository = resolve_bucket_event_repository(
+        bucket_id=command.bucket_id, repository=ports.bucket_event_repository
+    )
     catalogue = repository.load()
     if command.idempotency_key is not None:
         # The idempotency key is authoritative for row identity: a keyed row
@@ -747,7 +744,9 @@ def update_manual_transaction(
     """
     now = normalise_timestamp(occurred_at)
     repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=ports.transaction_repository)
-    event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=ports.bucket_event_repository)
+    event_repository = resolve_bucket_event_repository(
+        bucket_id=command.bucket_id, repository=ports.bucket_event_repository
+    )
     catalogue = repository.load()
     current = require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -1371,11 +1370,7 @@ def _invoice_evidence_provenance(
         return None
     evidence_id = command.purchase_invoice_evidence_id
     record = next(
-        (
-            candidate
-            for candidate in evidence_records
-            if candidate.evidence_id == evidence_id
-        ),
+        (candidate for candidate in evidence_records if candidate.evidence_id == evidence_id),
         None,
     )
     if record is None:

@@ -140,7 +140,7 @@ def resolve_filing_window(
     from ..calculations.registry.authority import bundled_authority
 
     if tipo_renta_code is not None and (
-        modelo != Modelo.M210 or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
+        modelo != Modelo("210") or tipo_renta_code not in M210_TIPO_RENTA_CODE_PROJECTION
     ):
         raise DeadlineValidationError(
             f"filing window tipo_renta_code {tipo_renta_code!r} is not a canonical official Modelo 210 code",
@@ -206,7 +206,7 @@ def _is_qualified_m210_event(
     from ..calculations.registry.period_selector_match import selector_period_matches_request
 
     return (
-        modelo == Modelo.M210
+        modelo == Modelo("210")
         and selector_period_matches_request("EVENT-N", period.registry_token)
         and (resultado is not None or tipo_renta_code is not None)
     )

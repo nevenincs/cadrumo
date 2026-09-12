@@ -1508,11 +1508,7 @@ def _registry_export_categories() -> frozenset[IvaCategory]:
     if raw_categories is None:
         raise ValueError("IVA classification catalogue is missing counterparty.export_categories")
     try:
-        categories = frozenset(
-            IvaCategory(token.strip())
-            for token in raw_categories.split(",")
-            if token.strip()
-        )
+        categories = frozenset(IvaCategory(token.strip()) for token in raw_categories.split(",") if token.strip())
     except ValueError as exc:
         raise ValueError("IVA classification catalogue contains an unknown export category") from exc
     if not categories:

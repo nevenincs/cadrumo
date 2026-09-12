@@ -726,7 +726,7 @@ def _require_filing_instance_evidence_for_work_unit(
     operation: str,
 ) -> FilingInstanceEvidence | None:
     """Validate the closed Modelo 303 evidence branch at creation or replay."""
-    if work_unit.modelo == Modelo.M303.value:
+    if work_unit.modelo == Modelo("303").value:
         if evidence is None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(
@@ -849,7 +849,7 @@ def _prorrata_settlement_values(
     filed_target: CalculationRevision,
     work_unit: WorkUnit,
 ) -> tuple[Decimal, Decimal, Decimal] | None:
-    if str(work_unit.modelo) != Modelo.M303.value:
+    if str(work_unit.modelo) != Modelo("303").value:
         return None
     if not is_m303_annual_settlement_period(work_unit.period):
         return None

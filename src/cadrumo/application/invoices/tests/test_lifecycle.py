@@ -21,11 +21,11 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ..catalogue_lifecycle import (
     CatalogueInvoicePatch,

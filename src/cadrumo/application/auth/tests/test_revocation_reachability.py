@@ -22,11 +22,11 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

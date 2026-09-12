@@ -373,7 +373,7 @@ def _qualifies_for_first_year_fractional_suppression(
       year is the taxpayer's first IS year, so no prior IS return provides the
       art. 40.2 cuota basis.
     """
-    if requirement.source_modelo != Modelo.M202.value:
+    if requirement.source_modelo != Modelo("202").value:
         return False
     if modelo_202_modality is not Modelo202Modality.ART_40_2_OPTIONAL:
         return False

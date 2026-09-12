@@ -10,7 +10,6 @@ import pytest
 from .....core.config import Settings
 from .....core.config_state_root import FormerProductStateError
 from .....domain.buckets.errors import BucketImportError
-from .secure_sql import isolated_runtime_profile
 from ..bucket.export_archive_header import ARCHIVE_SCHEMA_VERSION, ExportArchiveHeader
 from ..bucket.sealed_archive_reader import read_sealed_archive
 from ..bucket.sealed_archive_writer import write_sealed_archive
@@ -18,6 +17,7 @@ from ..errors import StorageValidationError
 from ..runtime_repository import secure_object_repository_for_active_bucket
 from ..secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
 from ..sql.engine import create_engine_from_settings, dispose_engine
+from .secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

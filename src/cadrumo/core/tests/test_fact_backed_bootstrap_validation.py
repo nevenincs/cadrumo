@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 import tomllib
+from pathlib import Path
 
 import pytest
 
@@ -110,9 +110,9 @@ def _tax_fact(codes: str) -> str:
         "[fact]\n"
         "[[fact.variants]]\n"
         "[fact.variants.payload]\n"
-        "entries = [{ key = \"catalogue.codes\", value = \""
+        'entries = [{ key = "catalogue.codes", value = "'
         f"{codes}"
-        "\" }]\n"
+        '" }]\n'
     )
 
 

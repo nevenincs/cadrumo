@@ -70,7 +70,7 @@ def _resolve_maternidad_figure(filing_year: int, slug: str) -> int:
 
     return int(
         read_parameter(
-            Modelo.M100.value,
+            Modelo("1").value,
             str(filing_year),
             f"renta-{filing_year}-maternidad-{slug}",
             date_context={"filing_period": date(filing_year, 12, 31)},

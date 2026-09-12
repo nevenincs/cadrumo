@@ -12,9 +12,9 @@ import pytest
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from .._secure_model_document import ProfileBareModelSecurePersistence
 

@@ -17,6 +17,7 @@ __all__ = ["register_wizard_catalogue"]
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
@@ -51,7 +52,6 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.env_scope import ready_clave_settings
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ...calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,

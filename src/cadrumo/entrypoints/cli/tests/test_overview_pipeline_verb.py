@@ -24,6 +24,9 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
 from ....application.overview.pipeline_health import ModeloReadinessState
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -36,7 +39,6 @@ from ....domain.modelos.verification_repository import upsert_verification_repor
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke

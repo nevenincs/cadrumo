@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
@@ -55,7 +56,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 

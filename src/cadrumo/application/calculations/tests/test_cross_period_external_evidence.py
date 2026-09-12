@@ -10,11 +10,11 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cross_period_models import CrossPeriodCleanStateBlocker
 from ._cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,

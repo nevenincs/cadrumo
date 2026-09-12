@@ -31,6 +31,7 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
@@ -47,7 +48,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ..iva_wallet_gate import taxpayer_nif_for_bucket

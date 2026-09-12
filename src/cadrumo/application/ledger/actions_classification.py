@@ -35,11 +35,10 @@ from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent
-from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
+from .action_ports import LedgerActionPorts
 from .actions_common import (
     blockers_by_source_transaction_id,
     normalise_timestamp,
@@ -60,7 +59,6 @@ from .actions_manual import (
 from .actions_manual import (
     update_manual_transaction_fields,
 )
-from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -70,10 +68,6 @@ from .models import (
     BulkClassifyResult,
     BulkClassifyRow,
     ManualLedgerTransactionPatch,
-)
-from .protocols import (
-    BucketEventHistoryCoCommitWriterProtocol,
-    TransactionCatalogueCoCommitWriterProtocol,
 )
 
 _BULK_CLASSIFY_NON_PATCH_COLUMNS = frozenset({"transaction_id"})

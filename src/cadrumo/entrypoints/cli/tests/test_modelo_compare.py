@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
@@ -45,7 +46,6 @@ from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli

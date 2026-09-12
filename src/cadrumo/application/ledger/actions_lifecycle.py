@@ -29,6 +29,7 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from .action_ports import LedgerActionPorts
 from .actions_common import (
     blocking_modelo_references,
     build_ledger_bucket_event,
@@ -50,7 +51,6 @@ from .actions_common import (
     transaction_catalogue_object_id,
     transaction_modelo_source_ids,
 )
-from .action_ports import LedgerActionPorts
 from .models import (
     LedgerCatalogueResetReport,
     LedgerRemovalBlocker,

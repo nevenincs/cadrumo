@@ -9,12 +9,12 @@ from pathlib import Path
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ._cli_json_support import _json_object
 from ._ledger_llm_support import _import_one_transaction

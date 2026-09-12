@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.categories.spending_category import SpendingCategory
@@ -21,7 +22,6 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ..renta_ledger import RentaLedgerExpenseAggregation, aggregate_renta_ledger_expenses_from_repositories
 from ._secure_objects_fixtures import SECURE_OBJECTS_BUCKET_ID
 from .renta_income_aggregation_support import _period

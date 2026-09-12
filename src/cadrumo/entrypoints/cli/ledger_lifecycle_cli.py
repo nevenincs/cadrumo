@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import ValidationError
 
-from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.actions_lifecycle import (
     archive_manual_transaction,
     mark_transaction_reviewed_excluded,
@@ -26,6 +25,7 @@ from ...application.ledger.actions_lifecycle import (
 )
 from ...application.ledger.actions_split_merge import merge_transactions, split_transaction
 from ...application.ledger.id_resolution import compute_display_id_width
+from ...application.ledger.llm_classification_ports import LLMSplitApplyResult
 from ...application.ledger.models import SplitChildCommand
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings
@@ -36,15 +36,15 @@ from ...core.time.clock import now
 from ...domain.attachments.enums import AttachmentSource, DocumentLinkSource
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
+from ..ledger_action_composition import compose_ledger_action_ports
 from ._decimal_parsing import parse_decimal_amount
+from ._ledger_llm_composition import compose_ledger_llm
 from ._ledger_support import (
     emit_update_result,
     ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
     resolve_id,
 )
-from ._ledger_llm_composition import compose_ledger_llm
-from ..ledger_action_composition import compose_ledger_action_ports
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 if TYPE_CHECKING:

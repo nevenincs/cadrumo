@@ -56,6 +56,7 @@ from ....adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.config import Settings
@@ -75,7 +76,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.filing_evidence import general_m303_filing_evidence
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo.filed_revision_observation import persist_filed_revision_observation
 from ..binding_prefill import (

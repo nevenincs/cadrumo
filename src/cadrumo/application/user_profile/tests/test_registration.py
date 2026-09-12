@@ -30,6 +30,7 @@ import pytest
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from ....adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
     PROFILE_PASSWORD_MIN_SCALARS,
@@ -38,7 +39,6 @@ from ....core.credentials import (
     assess_profile_password,
 )
 from ....domain.user_profile.values import ProfileSetupState
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..custody_ports import unlock_profile_custody_password
 from ..login_session import logout_active_profile
 from ..registration import ProfileRegistrationError, register_profile_with_credentials

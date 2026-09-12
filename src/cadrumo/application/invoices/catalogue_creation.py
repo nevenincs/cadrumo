@@ -28,7 +28,6 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from functools import lru_cache
-from typing import Final
 
 from pydantic import BaseModel
 
@@ -42,11 +41,11 @@ from ...core.time.clock import now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import emit_bucket_event
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.currency.service import ExchangeRateProvider, resolve_fx_conversion_stamp
 from ...domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -184,7 +183,9 @@ def _registry_m349_operation_type_requirement(
         category = IvaCategory(required("modelo.349.operation_type_required_category"))
     except ValueError as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
-    tokens = tuple(token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip())
+    tokens = tuple(
+        token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip()
+    )
     if not tokens or len(set(tokens)) != len(tokens):
         raise ValueError("counterpart registry declares an empty or duplicate operation-type candidate set")
     try:

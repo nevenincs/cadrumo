@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....domain.buckets.event import BucketEventType
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....domain.buckets.event import BucketEventType
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...calculations.revision_carry_gate import RevisionCarryOutcome
 from .. import m145_communication_records as m145_records_module

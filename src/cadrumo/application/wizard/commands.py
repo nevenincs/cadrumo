@@ -1642,7 +1642,7 @@ def profile_next_step_modelo(profile_values: dict[str, str]) -> str | None:
     """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     if fiscal_residency == "non_resident_irnr":
-        return Modelo.M210.value
+        return Modelo("210").value
     return None
 
 

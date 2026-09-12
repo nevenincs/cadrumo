@@ -17,12 +17,12 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..action_errors import WorkUnitMutationRefusedError
 from ..work_lifecycle import create_work_unit, discard_work_unit, list_work_units
 

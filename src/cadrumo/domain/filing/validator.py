@@ -277,7 +277,7 @@ class ModeloValidator:
 
 
 def _required_casilla_satisfied_by_row_bindings(draft: ModeloDraft, casilla_id: str) -> bool:
-    if str(draft.modelo) != Modelo.M349.value:
+    if str(draft.modelo) != Modelo("3").value:
         return False
     binding_ids = _M349_OPERADOR_TEMPLATE_BINDINGS_BY_CASILLA.get(casilla_id)
     if binding_ids is not None:

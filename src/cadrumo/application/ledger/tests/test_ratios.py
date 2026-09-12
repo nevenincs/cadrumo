@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..ratios import (
     eligible_ratio_categories,
     list_eligible_ratios_for_bucket,

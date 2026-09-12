@@ -25,6 +25,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....adapters.persistence.storage.secure_object_namespaces import WORKFLOW_RUN_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.classification.policies import SensitivityClass
 from ....core.config import override_settings
 from ....core.errors.hierarchy import SiteHealthState
@@ -41,7 +42,6 @@ from ....core.storage_taxonomy import StorageCategory
 from ....core.storage_taxonomy_locations import storage_path
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.submission.models import ModeloDraftStatus
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 from ..abort import WorkflowAbortReason
 from ..errors import WorkflowError

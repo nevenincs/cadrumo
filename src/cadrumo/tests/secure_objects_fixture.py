@@ -20,8 +20,8 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from .bucket_id_fixture import bucket_id
 from ..adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .bucket_id_fixture import bucket_id
 
 
 @pytest.fixture

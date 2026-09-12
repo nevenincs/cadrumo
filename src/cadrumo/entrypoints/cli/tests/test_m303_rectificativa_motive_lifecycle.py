@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.filing.export_producer import m303_rectificativa_motive_producer_values
 from ....application.filing.producer_snapshot import (
     AmendmentEvidence,
@@ -70,7 +71,6 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ....tests.filing_evidence import general_m303_filing_evidence_from_regimen_snapshot
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

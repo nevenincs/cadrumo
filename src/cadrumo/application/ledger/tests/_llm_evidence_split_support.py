@@ -14,6 +14,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -23,7 +24,6 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.llm import LLMSplitChild, LLMSplitResponse, prompt_spec_with_saturation_fields
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ._subprocess_classifier_support import SubprocessLLMClassifier
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)

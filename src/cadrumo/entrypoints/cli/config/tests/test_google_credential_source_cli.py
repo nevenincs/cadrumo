@@ -68,10 +68,12 @@ import pytest
 from .....adapters.outbound.google.impersonation import GoogleAuthAdcUnavailableError
 from .....adapters.outbound.google.session_store import load_credential_source_selection
 from .....adapters.outbound.storage.factory import build_google_credentials
+from .....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....tests.env_scope import scoped_env_var
-from .....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....tests.user_profile import register_cli_profile
 from ...tests.cli_runner import invoke_cached_cli
 

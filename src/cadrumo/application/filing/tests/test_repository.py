@@ -18,6 +18,7 @@ from ....adapters.persistence.storage.bucket.directory_layout import bucket_path
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import ClassificationError
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
@@ -30,7 +31,6 @@ from ....domain.filing.schema import (
     registry_schema_version,
 )
 from ....domain.submission.models import ModeloDraftStatus
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..conftest import _BUCKET_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -33,6 +33,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -44,7 +45,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ..multi_year import PreviousFilingSourceResolver
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind

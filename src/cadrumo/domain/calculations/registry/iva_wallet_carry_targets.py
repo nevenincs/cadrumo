@@ -41,7 +41,7 @@ type IvaWalletCarryTarget = tuple[ModeloId, RevisionId, BindingId]
 #: from this set is governed by the ordinary fold rules even if it declares a
 #: binding of the same name.
 IVA_WALLET_OWNED_CARRY_TARGETS: frozenset[IvaWalletCarryTarget] = frozenset(
-    (Modelo.M303.value, revision_id, MODELO_303_IVA_COMPENSATION_BINDING_ID)
+    (Modelo("303").value, revision_id, MODELO_303_IVA_COMPENSATION_BINDING_ID)
     for revision_id in (
         "2022",
         "2023",

@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....domain.bienes_inversion.register import (
     BienInversionDisposal,
@@ -30,7 +31,6 @@ from ....domain.bienes_inversion.register import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

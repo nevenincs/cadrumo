@@ -162,7 +162,7 @@ def _evidence(
     receipt_number = receipt.presentation_id
     if receipt_number is None:
         _raise(command, "persisted justificante has no AEAT presentation receipt")
-    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo.M303.value:
+    if identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA or work_unit.modelo != Modelo("303").value:
         return identity.m303_rectificativa_motive, receipt_number
     validated = validate_calculation_revision_aggregate(
         revision,
@@ -172,7 +172,7 @@ def _evidence(
             justificantes=justificantes,
             registry_snapshots={
                 work_unit.work_unit_id: bundled_authority().snapshot(
-                    Modelo.M303.value,
+                    Modelo("303").value,
                     filing_year=work_unit.filing_year,
                     period=work_unit.period.registry_token,
                 )

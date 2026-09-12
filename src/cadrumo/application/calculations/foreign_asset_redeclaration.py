@@ -218,7 +218,7 @@ def modelo_720_redeclaration_advisory_findings(
             Supplies the strict per-obligation-block re-declaration delta.
     """
     return _redeclaration_advisory_findings(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         prior_positions=_modelo_720_positions(prior_observation),
         current_positions=_modelo_720_positions(current_observation),
         declared_positions=_modelo_720_positions(current_declaration_observation or current_observation),
@@ -240,7 +240,7 @@ def modelo_721_redeclaration_advisory_findings(
             re-declaration threshold.
     """
     return _redeclaration_advisory_findings(
-        modelo=Modelo.M721.value,
+        modelo=Modelo("721").value,
         prior_positions=_modelo_721_positions(
             prior_observation,
             registry_fields=_registry_modelo_721_fields(current_observation),
@@ -442,7 +442,7 @@ def modelo_720_declared_observation(
             ),
         )
     return RegistryModeloObservation(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         filing_year=filing_year,
         period=period,
         observations=tuple(observations),
@@ -490,7 +490,7 @@ def modelo_720_evidence_observation(
     )
     observations = _modelo_720_evidence_observations(totals, modelo_revision=modelo_revision)
     return RegistryModeloObservation(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         filing_year=filing_year,
         period=period,
         observations=observations,
@@ -632,7 +632,7 @@ def modelo_720_prior_baseline_observation(
             ),
         )
     return RegistryModeloObservation(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         filing_year=filing_year,
         period=period,
         observations=tuple(observations),

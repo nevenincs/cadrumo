@@ -26,6 +26,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
@@ -44,7 +45,6 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

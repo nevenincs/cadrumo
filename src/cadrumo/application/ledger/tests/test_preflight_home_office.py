@@ -9,11 +9,11 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..preflight import LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from ._preflight_test_support import (
     _BUCKET_ID,

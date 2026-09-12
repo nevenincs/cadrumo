@@ -12,15 +12,15 @@ from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
 from .....tests.os_keychain_hook import require_os_credential_store
+from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
+from ..master_key.active_session import has_active_bucket_session
+from ..sql.engine import get_engine
 from .secure_sql import (
     isolated_cli_runtime_profile,
     isolated_ephemeral_secure_sql,
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
-from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
-from ..master_key.active_session import has_active_bucket_session
-from ..sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

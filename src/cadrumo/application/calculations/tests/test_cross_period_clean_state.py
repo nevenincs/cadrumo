@@ -9,12 +9,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.filing_record import ModeloRecordCatalogue, ModeloRecordStatus
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cross_period_clean_state import (
     cross_period_dependency_inventory,
     cross_period_dependency_requirements,

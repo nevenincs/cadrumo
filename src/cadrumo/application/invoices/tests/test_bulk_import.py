@@ -28,9 +28,9 @@ from openpyxl import Workbook
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

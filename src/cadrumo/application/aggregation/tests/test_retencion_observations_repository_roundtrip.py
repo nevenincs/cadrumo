@@ -24,10 +24,10 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.storage.crypto.encrypted_columns import secure_object_key_digest
 from ....adapters.persistence.storage.errors import PathContainmentError, SecureObjectRowIdentityError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.period import Period
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..retencion_observations_repository import (
     RetencionObservationRepository,
     _RetencionObservationEnvelopePayload,

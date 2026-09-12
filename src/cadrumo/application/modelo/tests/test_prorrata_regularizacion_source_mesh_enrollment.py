@@ -29,6 +29,7 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -43,7 +44,6 @@ from ....domain.calculations.registry.tests.registry_observations import registr
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..calculation_actions import resolve_bucket_source_mesh
 

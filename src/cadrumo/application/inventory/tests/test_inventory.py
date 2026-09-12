@@ -37,8 +37,8 @@ from ....domain.contribuyente.inventory.records import (
 
 if TYPE_CHECKING:
     from ....domain.contribuyente.inventory import closing_authority_records as _closing_types
-from ....domain.filing_evidence import FilingEvidenceReference
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....domain.filing_evidence import FilingEvidenceReference
 from ..errors import InventoryActividadConflictError, InventoryActividadNotFoundError, InventoryServiceInputError
 from ..service import InventoryMovementCommand, InventoryService
 

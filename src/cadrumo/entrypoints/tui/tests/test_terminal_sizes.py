@@ -33,6 +33,7 @@ from ....adapters.persistence.operations.journal import OperationJournalReposito
 from ....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.operation_definitions import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
     build_modelo_work_verify_definition,
@@ -50,7 +51,6 @@ from ....application.user_profile.registration import register_profile_with_cred
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
 from ....tests.profile_capsule import load_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal

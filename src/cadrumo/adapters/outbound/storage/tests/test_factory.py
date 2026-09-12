@@ -16,13 +16,13 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.google_credential_source import GoogleCredentialSourceKind
 from .....core.i18n.render import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.env_scope import scoped_env_var
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...google.impersonation import (
     GoogleAuthAdcUnavailableError,
     GoogleCredentialSourceSelection,

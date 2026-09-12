@@ -325,7 +325,7 @@ class RegistryValidationError(RegistryError, CoreValidationError):
             f"modelo 303 per-activity prorrata rows are incomplete for ejercicio {ejercicio}",
             translated_message="application.filing.m303_prorrata_activity_rows.errors.activity_rows_incomplete",
             context={
-                "modelo": Modelo.M303.value,
+                "modelo": Modelo("303").value,
                 "filing_year": ejercicio,
                 "required_slot_first": 1,
                 "required_slot_last": 5,

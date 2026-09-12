@@ -112,7 +112,7 @@ def import_complete_filed_observation_baseline(
     if (
         not justificante_csvs
         or not observation.casillas
-        or observation.modelo == Modelo.M303
+        or observation.modelo == Modelo("303")
         or any(casilla.value_kind.value != "numeric" for casilla in observation.casillas)
     ):
         return None
@@ -212,7 +212,7 @@ def persist_filed_calculation_observation(
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
     )
-    if observation.modelo == Modelo.M303:
+    if observation.modelo == Modelo("303"):
         source_artefact_sha256 = next(
             (artefact.sha256 for artefact in observation.artefacts if artefact.kind == "submitted_file"),
             None,
@@ -433,7 +433,7 @@ def persist_iva_compensation_history_observations_strict(
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
     for observation in observations:
-        if observation.modelo != Modelo.M303:
+        if observation.modelo != Modelo("303"):
             raise LiveApplicationInputError(
                 translated_message="live.errors.iva_history_modelo_303_only",
                 context={"modelo": observation.modelo},
@@ -449,12 +449,12 @@ def persist_iva_compensation_history_observations_strict(
         except LiveApplicationError as exc:
             raise LiveApplicationError(
                 translated_message="application.live.filed_observations.errors.iva_history_promotion_failed",
-                context={"modelo": Modelo.M303.value, "period": str(observation.period)},
+                context={"modelo": Modelo("303").value, "period": str(observation.period)},
             ) from exc
         if history_repo.load_period(observation.period) is None:
             raise LiveApplicationError(
                 translated_message="application.live.filed_observations.errors.iva_history_reload_missing",
-                context={"modelo": Modelo.M303.value, "period": str(observation.period)},
+                context={"modelo": Modelo("303").value, "period": str(observation.period)},
             )
         keys.append(key)
     return tuple(keys)
@@ -524,7 +524,7 @@ def _existing_justificante_evidence_matches(filing: ModeloRecord, justificante: 
 
 def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> tuple[int, str]:
     """Use IVA filing order for Modelo 303 and historic numeric order elsewhere."""
-    if modelo == Modelo.M303.value:
+    if modelo == Modelo("303").value:
         return iva_compensation_period_sort_key(period)
     if period.is_quarterly:
         quarter_ordinal = period.quarter_ordinal

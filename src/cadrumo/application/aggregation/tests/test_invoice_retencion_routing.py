@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.modelo import Modelo
 from ....core.period import Period
@@ -35,7 +36,6 @@ from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.components import IvaRetencionRole, category_components
 from ....domain.iva.schema import IvaCategory
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..errors import AggregationValidationError
 from ..invoice_retencion import (
     INVOICE_RETENCION_DEFECT_GUIDANCE,

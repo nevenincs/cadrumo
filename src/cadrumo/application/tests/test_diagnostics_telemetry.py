@@ -38,10 +38,10 @@ from typing import Any, ClassVar, cast, override
 import pytest
 
 from ...adapters.outbound.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
+from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...core.config import Settings
 from ...core.telemetry.tier import TelemetryTier
 from ...tests.loopback_recording_server import run_loopback_server, stop_loopback_server
-from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_telemetry import (
     build_telemetry_flush_preview,
     build_telemetry_status_report,

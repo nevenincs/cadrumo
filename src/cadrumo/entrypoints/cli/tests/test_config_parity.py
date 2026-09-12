@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from ....tests.profile_capsule import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....tests.profile_capsule import open_test_profile_session
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

@@ -13,7 +13,7 @@ from pydantic import BeforeValidator, Field, ValidationInfo, field_validator, mo
 
 from .....core.frozen_mapping import FROZEN_MAPPING
 from ..errors import RegistryValidationError
-from ..ids import LegalRefId, RevisionId, SourceRefId
+from ..ids import LegalRefId, RegistryRevisionNodeId, RevisionId, SourceRefId
 from ..revision_contracts import (
     RegistryTemporalDeltaDeclaration,
     RevisionWindow,
@@ -27,13 +27,13 @@ from ..schema_base import (
     SourceCitation,
     coerce_enum_member,
 )
-from ..schema_scalars import DecimalValue
 from ..schema_references import (
     DateSupportEnvelope,
     RegistryValidityWindow,
     TemporalProjectionDirection,
     materialize_date_window_series,
 )
+from ..schema_scalars import DecimalValue
 
 __all__ = [
     "TAGGED_FACT_ATOM_CONTEXT",
@@ -45,6 +45,7 @@ __all__ = [
     "FactOwnership",
     "FactPayload",
     "FactProjectionDirection",
+    "FactProviderId",
     "FactSelector",
     "FactVariantId",
     "GovernedFact",
@@ -64,7 +65,11 @@ __all__ = [
 
 _REGISTRY_ID_PATTERN = r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$"
 FactId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REGISTRY_ID_PATTERN)]
-FactVariantId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REGISTRY_ID_PATTERN)]
+FactVariantId = RegistryRevisionNodeId
+FactProviderId = Annotated[
+    str,
+    Field(min_length=1, max_length=128, pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"),
+]
 FactAtom = str | int | Decimal | bool | date
 
 #: Validation-context key a reader sets when every non-string fact atom arrives
@@ -406,8 +411,9 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     """One evidence-bearing fact revision on an exact semantic track.
 
     ``variant_id`` is the stable revision identity. Bounds are delta-authored:
-    explicit dates remain authoritative, while an omitted endpoint can only be
-    materialised against the owning fact's declared support envelope.
+    explicit dates remain authoritative, an omitted lower endpoint requires a
+    support floor, and an omitted upper endpoint is open unless a successor or
+    support ceiling closes it.
     """
 
     variant_id: FactVariantId
@@ -420,6 +426,7 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     source_revision_id: RevisionId | None = Field(default=None, exclude_if=lambda value: value is None)
+    source_revision_ids: tuple[RevisionId, ...] = Field(default=(), exclude_if=lambda value: not value)
     precedence_over: tuple[FactVariantId, ...] = ()
 
     @model_validator(mode="after")
@@ -438,11 +445,29 @@ class GovernedFactVariant(RegistryTemporalDeltaDeclaration):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
         if not self.legal_refs and not self.source_refs:
             raise RegistryValidationError("governed fact variant must declare legal or source evidence")
-        if self.ownership is FactOwnership.GENERATED and self.source_revision_id is None:
-            raise RegistryValidationError("generated governed fact variant must retain its source revision id")
-        if self.ownership is FactOwnership.AUTHORED and self.source_revision_id is not None:
-            raise RegistryValidationError("authored governed fact variant cannot claim a generated source revision id")
+        source_revision_ids = self.effective_source_revision_ids
+        if len(set(source_revision_ids)) != len(source_revision_ids):
+            raise RegistryValidationError("governed fact source revision ids must be unique")
+        if (
+            self.source_revision_id is not None
+            and self.source_revision_ids
+            and self.source_revision_ids != (self.source_revision_id,)
+        ):
+            raise RegistryValidationError(
+                "governed fact singular and plural source revision declarations must name the same sole revision"
+            )
+        if self.ownership is FactOwnership.GENERATED and not source_revision_ids:
+            raise RegistryValidationError("generated governed fact variant must retain its source revision ids")
+        if self.ownership is FactOwnership.AUTHORED and source_revision_ids:
+            raise RegistryValidationError("authored governed fact variant cannot claim generated source revisions")
         return self
+
+    @property
+    def effective_source_revision_ids(self) -> tuple[RevisionId, ...]:
+        """Return every source revision, accepting the singular authored spelling."""
+        if self.source_revision_ids:
+            return self.source_revision_ids
+        return () if self.source_revision_id is None else (self.source_revision_id,)
 
     def revision_identity(self) -> str:
         """Return the stable fact revision identity used by shared predecessor mechanics."""
@@ -454,11 +479,7 @@ class GovernedFact(RegistryModel):
 
     fact_id: FactId
     family: GovernedFactFamilyField
-    provider_id: str | None = Field(
-        default=None,
-        pattern=r"^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$",
-        exclude_if=lambda value: value is None,
-    )
+    provider_id: FactProviderId | None = Field(default=None, exclude_if=lambda value: value is None)
     support: DateSupportEnvelope | None = Field(default=None, exclude_if=lambda value: value is None)
     variants: tuple[GovernedFactVariant, ...] = Field(min_length=1)
 
@@ -514,17 +535,15 @@ class GovernedFact(RegistryModel):
                     continue
                 left_window = materialized[left.variant_id]
                 right_window = materialized[right.variant_id]
-                overlaps = left_window.valid_from <= (right_window.valid_to or date.max) and right_window.valid_from <= (
-                    left_window.valid_to or date.max
-                )
+                overlaps = left_window.valid_from <= (
+                    right_window.valid_to or date.max
+                ) and right_window.valid_from <= (left_window.valid_to or date.max)
                 ordered = _graph_reaches(left.variant_id, right.variant_id, precedence) or _graph_reaches(
                     right.variant_id,
                     left.variant_id,
                     precedence,
                 )
-                directly_ordered = (
-                    right.variant_id in left.precedence_over or left.variant_id in right.precedence_over
-                )
+                directly_ordered = right.variant_id in left.precedence_over or left.variant_id in right.precedence_over
                 if overlaps and not ordered:
                     raise RegistryValidationError(
                         f"governed fact {self.fact_id!r} variants {left.variant_id!r} and "
@@ -558,7 +577,8 @@ class GovernedFact(RegistryModel):
                 for current, successor in pairwise(ordered):
                     current_window = materialized[current.variant_id]
                     successor_window = materialized[successor.variant_id]
-                    if current.valid_to is not None and current_window.valid_to != successor_window.valid_from - date.resolution:
+                    expected_end = successor_window.valid_from - date.resolution
+                    if current.valid_to is not None and current_window.valid_to != expected_end:
                         raise RegistryValidationError(
                             f"governed fact {self.fact_id!r} track {track!r} has an explicit internal gap"
                         )
@@ -575,7 +595,9 @@ class GovernedFact(RegistryModel):
     @staticmethod
     def track_key(variant: GovernedFactVariant) -> tuple[object, ...]:
         """Return the exact axis, selector, and typed-period identity of a revision track."""
-        selectors = tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
+        selectors = tuple(
+            sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors)
+        )
         period = variant.period_selector
         period_key = None if period is None else (period.years, period.year_from, period.year_to, period.periods)
         return variant.date_axis, selectors, period_key

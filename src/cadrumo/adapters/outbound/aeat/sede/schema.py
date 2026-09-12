@@ -339,7 +339,7 @@ class IvaCompensationWalletObservation(BaseModel):
 
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     authenticated_identity: str = Field(min_length=1, max_length=32)
-    target_modelo: Literal[Modelo.M303] = Modelo.M303
+    target_modelo: Literal[Modelo("303")] = Modelo("303")
     target_year: FilingYear
     target_period: Period
     rows: tuple[IvaCompensationWalletRow, ...] = ()

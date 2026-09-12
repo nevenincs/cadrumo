@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardLot,
@@ -17,7 +18,6 @@ from ....domain.iva_compensation.carry_forward import (
     build_iva_compensation_carry_forward_report,
 )
 from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource, reconcile_iva_compensation_wallet
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
 from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet, m303_registry_snapshot_ref
 

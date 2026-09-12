@@ -233,9 +233,7 @@ class VerifyService:
     ) -> VerifyObservation | None:
         """Return the most recent :class:`VerifyObservation` for (surface, nif), or None."""
         matches = [
-            o
-            for o in self._persistence.list_observations(bucket_id=bucket_id)
-            if o.surface is surface and o.nif == nif
+            o for o in self._persistence.list_observations(bucket_id=bucket_id) if o.surface is surface and o.nif == nif
         ]
         if not matches:
             return None

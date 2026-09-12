@@ -75,7 +75,7 @@ class M145CommunicationServiceContract(BaseModel):
         default=M145_COMMUNICATION_SERVICE_OWNER,
         pattern=r"^cadrumo\.application\.modelo$",
     )
-    modelo: str = Field(default=Modelo.M145.value, pattern=r"^145$")
+    modelo: str = Field(default=Modelo("145").value, pattern=r"^145$")
     period_token: str = Field(min_length=1)
     revision_id: RevisionId = Field(min_length=1)
     actions: tuple[M145CommunicationAction, ...] = _EXPECTED_ACTIONS
@@ -96,7 +96,7 @@ def build_m145_communication_service_contract(*, filing_year: int | None = None)
     through a filing-grade snapshot.
     """
     selected_filing_year = date.today().year if filing_year is None else filing_year
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M145.value)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("145").value)
     year_revision = select_revision_for_year(modelo, filing_year=selected_filing_year)
     period_tokens = tuple(str(period) for period in year_revision.period_selector.periods)
     if len(period_tokens) != 1:

@@ -108,7 +108,7 @@ def _m303_nota_three_requires_bank_account(
     The typed cancellation election alone disables this Nota-3 requirement.
     """
     return (
-        draft.modelo == Modelo.M303
+        draft.modelo == Modelo("303")
         and headers.get(_M303_RECTIFICATIVA_HEADER) is True
         and prior_domiciliation_election is PriorDomiciliationElection.KEEP
         and any(value.casilla_id == _M303_CASILLA_111 and value.value is not None for value in draft.values)

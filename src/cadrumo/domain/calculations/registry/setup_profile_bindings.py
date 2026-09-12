@@ -15,7 +15,7 @@ renders a setup value.
 from __future__ import annotations
 
 from datetime import date
-from functools import lru_cache
+from functools import cache
 
 from .errors import RegistryValidationError
 from .schema_references import LegalReferenceKind
@@ -25,7 +25,7 @@ _SETUP_FACT_ID = "-".join(
 )
 
 
-@lru_cache(maxsize=None)
+@cache
 def mapping_fact_entries(fact_id: str) -> dict[str, str]:
     """Resolve one string mapping fact and return its exact entries.
 

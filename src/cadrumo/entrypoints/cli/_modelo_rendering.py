@@ -66,6 +66,7 @@ if TYPE_CHECKING:
     # calculate module's own deferral of the same type.
     from ...application.aggregation.source_mesh import CalculationSourceDiagnostic
 
+
 def _modelo_rendering_value(key: str) -> str:
     """Resolve one registry-owned rendering declaration lazily at the CLI seam."""
     from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value

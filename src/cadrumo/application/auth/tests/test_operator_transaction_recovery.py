@@ -18,13 +18,13 @@ from ....adapters.outbound.aeat.auth import session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
 from ....adapters.persistence.storage.errors import RepositoryError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets.event import BucketEvent, BucketEventType
 from ....domain.contribuyente.keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import WorkflowStateRepository, workflow_state_repository
 from ...workflow.state_models import WorkflowState

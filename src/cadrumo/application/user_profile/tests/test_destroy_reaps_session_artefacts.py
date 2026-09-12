@@ -40,9 +40,9 @@ from ....adapters.persistence.storage.master_key.active_session import (
 )
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.bucket_pointer import read_pointer
 from ....core.time.clock import now as _now
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...evidence.profile_legal_hold import LegalHoldCaseAuthority
 from ...filing.retention import FilingRetentionAuthority
 from ..custody_service import (

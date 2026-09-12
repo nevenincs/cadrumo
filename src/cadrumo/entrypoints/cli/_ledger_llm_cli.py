@@ -23,14 +23,6 @@ from typing import TypedDict
 import typer
 from pydantic import BaseModel, ValidationError
 
-from ...application.ledger.llm_classification_ports import (
-    LLMClassificationSuggestion,
-    LLMSaturatedSuggestion,
-    LLMSplitApplyResult,
-    LLMSplitSuggestion,
-    LLMSuggestionRejectionResult,
-    OperatorIvaDerivationResult,
-)
 from ...application.ledger.actions_manual import ledger_transaction_payload
 from ...application.ledger.llm_classification import (
     apply_evidence_classification,
@@ -38,6 +30,14 @@ from ...application.ledger.llm_classification import (
     saturate_llm_classification,
     suggest_evidence_split,
     suggest_llm_classification,
+)
+from ...application.ledger.llm_classification_ports import (
+    LLMClassificationSuggestion,
+    LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
+    LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
 )
 from ...application.ledger.llm_review_workflow import (
     LlmReviewDecision,
@@ -55,13 +55,13 @@ from ...domain.iva.schema import IvaCategory
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ._ledger_llm_composition import LedgerLlmComposition, compose_ledger_llm
 from ._ledger_support import (
     ledger_transaction_validation_no_recovery,
     ledger_validation_bad,
     parse_decimal_option,
     resolve_id,
 )
-from ._ledger_llm_composition import LedgerLlmComposition, compose_ledger_llm
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 __all__ = [

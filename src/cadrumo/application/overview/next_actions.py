@@ -203,10 +203,10 @@ def _start_work_unit_step(
     diverted Modelo 210 row does: its description target needs only the modelo
     the diversion itself identified.
     """
-    if Modelo.M210.value in report.unsupported_work_create_modelos:
+    if Modelo("210").value in report.unsupported_work_create_modelos:
         return OverviewStatusNextStep(
             step_id=OverviewStatusNextStepId.MODELO_210_SEDE_ONLY,
-            next_action=declare_next_action("operator.modelo.describe", modelo=Modelo.M210.value),
+            next_action=declare_next_action("operator.modelo.describe", modelo=Modelo("210").value),
         )
     return OverviewStatusNextStep(step_id=step_id)
 

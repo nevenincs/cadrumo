@@ -29,6 +29,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.prorrata_register import (
@@ -50,7 +51,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from ....tests.filing_evidence import general_m303_filing_evidence
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..revision_persistence import persist_filed_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

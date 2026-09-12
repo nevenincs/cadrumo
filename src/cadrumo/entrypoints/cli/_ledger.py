@@ -487,6 +487,7 @@ def ledger_update(
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
+
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     # A leaked `pydantic.ValidationError` (negative amount, illegal field
@@ -722,6 +723,7 @@ def ledger_classify(
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
+
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
 
     if _dispatch_bulk_classification_route(
@@ -808,6 +810,7 @@ def ledger_allocate(
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
+
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     validated_category_id = validate_category_id(category_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)

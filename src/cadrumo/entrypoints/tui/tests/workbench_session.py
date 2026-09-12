@@ -18,12 +18,12 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Final
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import profile_login_choices
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.user_profile.values import UserProfileFact
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..installed_session import compose_authenticated_root_inputs_provider
 from ..launcher import InstalledWorkbenchRootCompositionV1, compose_installed_workbench_root, operation_services_scope
 

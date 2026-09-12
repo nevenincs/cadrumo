@@ -16,6 +16,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.participation_read import get_transaction_participation
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
@@ -23,7 +24,6 @@ from ....domain.modelos.participation_index import (
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
 from ..command_spec import ArgumentSpec, OptionSpec
 from ..command_specs import COMMAND_GRAPH

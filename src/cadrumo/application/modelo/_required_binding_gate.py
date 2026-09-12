@@ -87,7 +87,7 @@ def require_persisted_revision_required_bindings_resolved(
             from the previous calculation payload.
         action: Operator action name used in the refusal message.
     """
-    if str(work_unit.modelo) != Modelo.M202.value:
+    if str(work_unit.modelo) != Modelo("202").value:
         return
     modelo_definition = next(
         candidate for candidate in bundled_authority().modelos if candidate.id == str(work_unit.modelo)
@@ -121,7 +121,7 @@ def missing_modelo_required_binding_ids(
         resolved_binding_ids: Binding ids available from caller inputs or
             resolved source data.
     """
-    if str(work_unit.modelo) != Modelo.M202.value:
+    if str(work_unit.modelo) != Modelo("202").value:
         return ()
     resolved = frozenset(str(binding_id) for binding_id in resolved_binding_ids)
     return tuple(
@@ -142,7 +142,7 @@ def resolved_required_profile_binding_values(
         registry_revision: Registry :class:`ModeloRevision` whose required
             profile-sourced binding declarations are inspected.
     """
-    if str(work_unit.modelo) != Modelo.M202.value:
+    if str(work_unit.modelo) != Modelo("202").value:
         return {}
     facts = _profile_facts_for_bucket(work_unit.bucket_id)
     if facts is None:

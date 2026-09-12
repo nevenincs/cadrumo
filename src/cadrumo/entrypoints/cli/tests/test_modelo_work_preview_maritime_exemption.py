@@ -22,12 +22,12 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.maritime_preview import maritime_facts_from_active_profile
 from ....core.config import override_settings
 from ....core.errors.error_codes import ErrorCategory, get_error_exit_code
 from ....tests.cli_envelope import unwrap_schema_envelope as _unwrap
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._modelo_payloads import (
     WorkPreviewMaritimeExemptionResult,

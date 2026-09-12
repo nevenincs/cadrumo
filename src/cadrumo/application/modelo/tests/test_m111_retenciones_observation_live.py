@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -22,7 +23,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.retencion_observations_repository import RetencionObservationRepository
 from ...aggregation.retenciones import RetencionObservation
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics

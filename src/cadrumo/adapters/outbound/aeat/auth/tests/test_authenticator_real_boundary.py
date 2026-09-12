@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth.session_types import AeatSession, CertificateSessionDetail
 from ......application.auth_credentials import ActiveCertificateCredentials, unnamed_certificate_credentials
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from ...tests.process_support import wait_for_process_exit

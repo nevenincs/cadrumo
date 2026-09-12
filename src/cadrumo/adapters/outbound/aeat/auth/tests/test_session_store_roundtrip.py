@@ -23,11 +23,11 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time.clock import now
 from ......tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED, aeat_url
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....persistence.storage.secure_object_namespaces import AEAT_BROWSER_SESSION_NAMESPACE
 from .. import session_store as session_store

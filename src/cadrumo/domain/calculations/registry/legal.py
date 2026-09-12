@@ -13,6 +13,7 @@ from .citation_blocklist import find_known_bad
 from .errors import RegistryValidationError
 from .schema_references import LegalReference
 
+
 def verify_legal_reference(reference: LegalReference) -> None:
     """Reject an artifact citation that is not eligible for filing.
 

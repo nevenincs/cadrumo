@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId
 from ....core.modelo import Modelo
 from ....core.observed_header_fact import ObservedHeaderFact
@@ -23,7 +24,6 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..m303_carry_ingress import M303CarryIngressError
 from ..observations_repository import (
     CalculationObservationRepository,

@@ -233,16 +233,20 @@ def select_revision(
             carries a year beyond its authored horizon back to that horizon.
     """
     selection_year = _supported_filing_year(filing_year, support)
-    matching = [] if selection_year is None else [
-        revision
-        for revision in modelo.revisions.values()
-        if _revision_matches_request(
-            revision,
-            filing_year=selection_year,
-            period=period,
-            revision_id=revision_id,
-        )
-    ]
+    matching = (
+        []
+        if selection_year is None
+        else [
+            revision
+            for revision in modelo.revisions.values()
+            if _revision_matches_request(
+                revision,
+                filing_year=selection_year,
+                period=period,
+                revision_id=revision_id,
+            )
+        ]
+    )
     selection_on = (
         None
         if selection_year is None

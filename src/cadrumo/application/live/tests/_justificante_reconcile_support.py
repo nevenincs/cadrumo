@@ -8,6 +8,7 @@ from pathlib import Path
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordStatus, derive_filing_record_id
@@ -16,7 +17,6 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....tests.inventory import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...workflow.persistence import workflow_state_repository
 

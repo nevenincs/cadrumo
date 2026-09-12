@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 
 from ..adapters.persistence.storage.sql.engine import dispose_engine
+from ..adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..core.config import override_settings
 from .profile_capsule import open_test_profile_session
-from ..adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .user_profile import register_minimal_profile
 
 #: The bucket id most callers of this fixture share.

@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from .....core.config import override_settings
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....core.config import override_settings
 
 
 @pytest.fixture

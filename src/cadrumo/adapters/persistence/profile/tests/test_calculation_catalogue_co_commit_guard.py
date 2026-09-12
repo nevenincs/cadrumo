@@ -29,9 +29,9 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from .....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...storage.errors import SecureObjectRevisionConflictError
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 

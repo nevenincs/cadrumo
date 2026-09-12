@@ -22,10 +22,6 @@ from ..adapters.persistence.storage.tests.profile_capsule_runtime import (
     derive_test_bucket_key,
     publish_test_profile_capsule,
 )
-from ..core.classification.policies import SensitivityClass
-from ..core.config import load_settings, override_settings
-from ..core.storage_taxonomy import StorageCategory
-from ..core.storage_taxonomy_locations import storage_location
 from ..adapters.persistence.storage.tests.secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
@@ -34,6 +30,10 @@ from ..adapters.persistence.storage.tests.secure_sql import (
     read_db_at_rest_bytes,
     reap_profile_session_keys,
 )
+from ..core.classification.policies import SensitivityClass
+from ..core.config import load_settings, override_settings
+from ..core.storage_taxonomy import StorageCategory
+from ..core.storage_taxonomy_locations import storage_location
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -116,8 +116,8 @@ from .applicability_routes import TaxRoute
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .ids import LegalRefId, ModeloId
-from .schema_revision_members import ApplicabilityRuleDefinition
 from .schema_base import DateAxis
+from .schema_revision_members import ApplicabilityRuleDefinition
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -478,6 +478,7 @@ def _registry_applicability_reason(key: str) -> str:
     except KeyError as exc:
         raise RegistryValidationError(f"modelo applicability reason is missing {key!r}") from exc
 
+
 _INCOMPLETE_UNDECLARED_REASON = (
     "No se puede determinar la aplicabilidad: el tipo de contribuyente no "
     "está declarado. Faltan el tipo de entidad y, en su caso, las "
@@ -688,8 +689,8 @@ MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # applicability gate as Modelo 303. (SII filers are exempt from Modelo
     # 390; that suppression is not yet modelled and would gate on the SII
     # enrolment axis.)
-    Modelo.M390: ModeloApplicabilityRule(
-        modelo=Modelo.M390,
+    Modelo("390"): ModeloApplicabilityRule(
+        modelo=Modelo("390"),
         applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
@@ -719,8 +720,8 @@ MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # the seed gates natural persons on the actividad-económica category,
     # which a pure landlord does not declare. Finer rental-IVA nuance is a
     # deferred expansion.)
-    Modelo.M303: ModeloApplicabilityRule(
-        modelo=Modelo.M303,
+    Modelo("303"): ModeloApplicabilityRule(
+        modelo=Modelo("303"),
         applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         applicable_iva_regimes=_IVA_SELF_ASSESSMENT_REGIMES,
@@ -772,41 +773,41 @@ a rationale naming the deferred expansion, never a confident guess.
 #: applicability data at all -- it only reads it.
 REGISTRY_RESOLVED_APPLICABILITY_MODELOS: frozenset[Modelo] = frozenset(
     {
-        Modelo.M100,
-        Modelo.M111,
-        Modelo.M115,
-        Modelo.M117,
-        Modelo.M123,
-        Modelo.M126,
-        Modelo.M128,
-        Modelo.M130,
-        Modelo.M131,
-        Modelo.M136,
-        Modelo.M145,
-        Modelo.M151,
-        Modelo.M180,
-        Modelo.M184,
-        Modelo.M187,
-        Modelo.M188,
-        Modelo.M190,
-        Modelo.M193,
-        Modelo.M194,
-        Modelo.M200,
-        Modelo.M202,
-        Modelo.M210,
-        Modelo.M216,
-        Modelo.M232,
-        Modelo.M296,
-        Modelo.M322,
-        Modelo.M347,
-        Modelo.M349,
-        Modelo.M353,
-        Modelo.M360,
-        Modelo.M369,
-        Modelo.M714,
-        Modelo.M720,
-        Modelo.M721,
-        Modelo.M840,
+        Modelo("100"),
+        Modelo("111"),
+        Modelo("115"),
+        Modelo("117"),
+        Modelo("123"),
+        Modelo("126"),
+        Modelo("128"),
+        Modelo("130"),
+        Modelo("131"),
+        Modelo("136"),
+        Modelo("145"),
+        Modelo("151"),
+        Modelo("180"),
+        Modelo("184"),
+        Modelo("187"),
+        Modelo("188"),
+        Modelo("190"),
+        Modelo("193"),
+        Modelo("194"),
+        Modelo("200"),
+        Modelo("202"),
+        Modelo("210"),
+        Modelo("216"),
+        Modelo("232"),
+        Modelo("296"),
+        Modelo("322"),
+        Modelo("347"),
+        Modelo("349"),
+        Modelo("353"),
+        Modelo("360"),
+        Modelo("369"),
+        Modelo("714"),
+        Modelo("720"),
+        Modelo("721"),
+        Modelo("840"),
     },
 )
 
@@ -1025,16 +1026,16 @@ def derive_modelo_applicability(
     # filing route. Once the window expires, both modelos fall back to their
     # ordinary applicability rules: M100 through the seed table below, M151
     # to a positive NOT_APPLICABLE.
-    if beckham_window_active and modelo == Modelo.M100:
+    if beckham_window_active and modelo == Modelo("100"):
         return ModeloApplicability(
-            modelo=Modelo.M100,
+            modelo=Modelo("100"),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
             reason=_IMPATRIADO_M100_SUPPRESSED_REASON,
             legal_refs=_IMPATRIADO_M151_ROUTE_LEGAL_REFS,
         )
-    if modelo == Modelo.M151:
+    if modelo == Modelo("151"):
         return ModeloApplicability(
-            modelo=Modelo.M151,
+            modelo=Modelo("151"),
             verdict=(ApplicabilityVerdict.APPLICABLE if beckham_window_active else ApplicabilityVerdict.NOT_APPLICABLE),
             reason=(
                 _IMPATRIADO_M151_APPLICABLE_REASON if beckham_window_active else _IMPATRIADO_M151_NOT_APPLICABLE_REASON
@@ -1050,9 +1051,9 @@ def derive_modelo_applicability(
     # exemption before the rule table so the payer-fact gate is never reached.
     # Year-7+ filers whose window has expired revert to the general IRPF
     # regime and owe M720 again — the window-expiry check is wired here.
-    if modelo == Modelo.M720 and beckham_window_active:
+    if modelo == Modelo("720") and beckham_window_active:
         return ModeloApplicability(
-            modelo=Modelo.M720,
+            modelo=Modelo("720"),
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,
             reason=_registry_applicability_reason("impatriado_m720_exempt.reason"),
             legal_refs=_IMPATRIADO_M720_LEGAL_REFS,

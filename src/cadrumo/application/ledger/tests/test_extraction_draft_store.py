@@ -24,9 +24,9 @@ from ....tests.consent_profile_fixture import consent_profile
 
 __all__ = ["consent_profile"]
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..extraction_draft_store import (
     ExtractionDraftDocument,
     StoredExtractionDraft,

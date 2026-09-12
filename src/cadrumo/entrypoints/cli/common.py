@@ -40,23 +40,17 @@ from ...core.cli_metadata import is_metadata_invocation
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
-from ...core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.output_rendering import OutputFormat, render_command_output
 from ...core.text_bounds import NonEmptyStr
 from .command_suggestions import INVOCATION_REMAINDER_META_KEY
 from .operator_surface_reconciliation import current_operator_surface_reconciliation
 
-# The accepted-code set for every ``--modelo`` option and argument. It is derived
-# from the closed core identifier taxonomy rather than the registry authority:
-# help and parse-time refusals are introspection surfaces and must render even
-# while a peer's registry authoring slice is fail-hard invalid. Command bodies
-# still reach the registry-backed services for real data access.
-#
-# Non-registry members are excluded because every consumer of this choice resolves
-# a registry revision. Surfaces that legitimately address a retired code — the
-# portal catalogue ships an entry for the suppressed Modelo 037 — must NOT use
-# this constant; they need the full taxonomy.
+
+# The accepted-code set for every ``--modelo`` option and argument comes from the
+# same published authority the command body will query. A missing or invalid
+# publication therefore refuses the surface instead of falling back to a second
+# identifier universe maintained in Python.
 #
 # It is a module-level constant because ``from __future__ import annotations``
 # stringifies the ``Annotated`` metadata carrying ``click_type=...`` and Typer
@@ -67,9 +61,16 @@ from .operator_surface_reconciliation import current_operator_surface_reconcilia
 # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
 # are the same runtime object behind two static names; the cast bridges only that
 # static duality, with no Any escape.
+def _published_modelo_codes() -> list[str]:
+    """Return the identifiers admitted by the bundled published authority."""
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    return sorted(modelo.id for modelo in bundled_authority().modelos)
+
+
 MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
-    click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
+    click.Choice(_published_modelo_codes()),
 )
 
 # The application- and domain-layer symbols below are imported lazily,

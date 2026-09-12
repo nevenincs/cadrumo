@@ -243,7 +243,7 @@ def _validate_external_source_requirements(
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> JustificanteRepositoryProtocol:
     """Validate actor/evidence requirements and return the receipt repository."""
-    if source.modelo == Modelo.M303.value and filing_instance_evidence is None:
+    if source.modelo == Modelo("303").value and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
         )
@@ -480,7 +480,7 @@ def _validate_external_import_evidence_requirements(
     justificante_repository: JustificanteRepositoryProtocol | None,
 ) -> None:
     """Enforce filing-instance and receipt-bound evidence requirements."""
-    if work_unit.modelo == Modelo.M303.value and filing_instance_evidence is None:
+    if work_unit.modelo == Modelo("303").value and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
             context={"work_unit_id": work_unit.work_unit_id},

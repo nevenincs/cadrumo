@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.bundle_export import prepare_profile_export
 from ....application.user_profile.bundle_export_contracts import (
     ProfileBundleExportPurpose,
@@ -31,7 +32,6 @@ from ....application.user_profile.bundle_export_operation import (
 from ....core.directory_scan import scan_directory
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile.portable_export import UserProfilePortableExport
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

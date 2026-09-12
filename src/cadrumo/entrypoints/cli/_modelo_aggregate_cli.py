@@ -61,7 +61,7 @@ def _route_invoice_retenciones_into_command(
 
 def _persist_cli_owned_observations(command: PerModeloAggregationCommand) -> None:
     """Write the observation sets this entrypoint owns before the pure aggregation runs."""
-    if command.modelo == Modelo.M190.value:
+    if command.modelo == Modelo("190").value:
         persist_percepcion_observations(
             modelo=command.modelo,
             filing_year=command.period.filing_year,
@@ -83,7 +83,7 @@ def _clave_breakdown(command: PerModeloAggregationCommand) -> tuple[WithholdingC
     A pure projection of the same store the percepciones-count resolver reads
     (one-aggregation-path), not a recomputation of the calculation engine.
     """
-    if command.modelo != Modelo.M190.value:
+    if command.modelo != Modelo("190").value:
         return ()
     return tuple(aggregate_withholding_by_clave(command.withholding_observations))
 

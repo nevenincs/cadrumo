@@ -48,6 +48,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import (
     BindingSourceKind,
     RetencionClave,
@@ -72,7 +73,6 @@ from ....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.retenciones import (
     RetencionObservation,
     aggregate_retenciones_111,

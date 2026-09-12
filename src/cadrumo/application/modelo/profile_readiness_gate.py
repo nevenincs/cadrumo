@@ -61,7 +61,7 @@ from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
 from .action_errors import ModeloProfileReadinessError
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
-_PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo.M130.value, Modelo.M303.value})
+_PRE_ACTIVITY_LIFECYCLE_MODELOS = frozenset({Modelo("130").value, Modelo("303").value})
 _FILING_BASELINE_PROFILE_PATHS = ("identity.tax_id",)
 _PROFILE_ACTIVITY_DESCRIPTION_PATH = "activities.description"
 #: Shared with :mod:`.work_create_policy`, which runs the same applicability
@@ -132,7 +132,7 @@ def _modelo_work_baseline_paths(record: UserProfileRecord, *, modelo: str | None
         ):
             return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
         return _FILING_BASELINE_PROFILE_PATHS
-    if modelo.strip() != Modelo.M100.value or not income_categories or declares_economic_activity:
+    if modelo.strip() != Modelo("100").value or not income_categories or declares_economic_activity:
         return (*_FILING_BASELINE_PROFILE_PATHS, _PROFILE_ACTIVITY_DESCRIPTION_PATH)
     return _FILING_BASELINE_PROFILE_PATHS
 

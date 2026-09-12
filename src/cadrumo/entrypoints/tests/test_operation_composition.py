@@ -14,6 +14,7 @@ from ...adapters.persistence.operations.journal import OperationJournalRepositor
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -30,7 +31,6 @@ from ...application.operations.projection_services import (
     OperationWorkspaceRefreshTargetService,
 )
 from ...core.time.clock import now
-from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ..operation_composition import build_production_operation_registry, compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

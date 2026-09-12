@@ -8,11 +8,11 @@ from typing import TypedDict
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
     module_scoped_profile_isolated_backend_fixture,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....tests.seeded_isolated_backend_fixture import seeded_isolated_backend_fixture
 
 

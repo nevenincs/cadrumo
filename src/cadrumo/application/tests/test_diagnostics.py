@@ -21,11 +21,11 @@ from ...adapters.persistence.storage.runtime_repository import secure_object_rep
 from ...adapters.persistence.storage.secure_object_namespaces import SECURE_OBJECT_WORKFLOW_STATE_KEY
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...core.classification.policies import SensitivityClass
 from ...core.config import override_settings
 from ...core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...tests.master_key import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ...tests.user_profile import register_minimal_profile
 from ..diagnostic_models import (
     ConfigRepairReport,

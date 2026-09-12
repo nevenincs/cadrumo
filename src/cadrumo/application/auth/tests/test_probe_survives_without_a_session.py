@@ -33,10 +33,10 @@ import pytest
 
 from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
 from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...preflight import run_preflight_checks
 from ..operator import build_live_auth_preflight_report

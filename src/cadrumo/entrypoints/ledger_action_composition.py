@@ -15,8 +15,8 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.attachment import resolve_attachment_store
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-    from ..core.config import load_settings
     from ..application.ledger.evidence import PurchaseInvoiceEvidenceRepository
+    from ..core.config import load_settings
 
     settings = load_settings()
     objects = secure_object_repository_for_bucket(bucket_id, settings)

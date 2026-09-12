@@ -62,10 +62,6 @@ def validate_deferred_target(module: str, qualname: str, package: str | None = N
                 "deferred target package must be a dotted Python package name",
             ),
             (
-                module.startswith("cadrumo.") and package is None,
-                "first-party deferred target modules must use relative syntax",
-            ),
-            (
                 not qualname or any(not part.isidentifier() for part in qualname.split(".")),
                 "deferred target qualname must be a dotted Python identifier",
             ),

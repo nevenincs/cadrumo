@@ -16,12 +16,6 @@ from datetime import datetime
 from pathlib import Path
 
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
-from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
-    PRE303_PRESENTATION_SERVICE_URL,
-    fetch_iva_compensation_wallet,
-)
-from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
     BaselineImportAdapter,
     BucketEventRepositoryAdapter,
@@ -34,6 +28,12 @@ from ..adapters.outbound.aeat.sede.filed_observation_persistence import (
     IvaObservationPersistenceAdapter,
     JustificanteRepositoryAdapter,
 )
+from ..adapters.outbound.aeat.sede.iva_compensation_wallet import (
+    PRE303_PRESENTATION_SERVICE_URL,
+    fetch_iva_compensation_wallet,
+)
+from ..adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
+from ..adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation
 from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ..adapters.persistence.profile.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ..adapters.persistence.profile.justificante import JustificanteRepository
@@ -165,7 +165,9 @@ def compose_live_state(
 class AppIvaRemoteStatePort:
     """Outer implementation of the live IVA application port."""
 
-    def __init__(self, *, objects: SecureObjectRepository, filed_observation_ports: FiledObservationPersistencePorts) -> None:
+    def __init__(
+        self, *, objects: SecureObjectRepository, filed_observation_ports: FiledObservationPersistencePorts
+    ) -> None:
         """Bind the port to one secure backend and filed-observation bundle."""
         self._objects = objects
         self._filed_observation_ports = filed_observation_ports
@@ -241,9 +243,9 @@ class AppIvaRemoteStatePort:
             for year in range(year_to, year_from - 1, -1):
                 if progress_context is not None:
                     progress_context.update(
-                        {"stage": "walk_declarations_register", "modelo": Modelo.M303.value, "ejercicio": year}
+                        {"stage": "walk_declarations_register", "modelo": Modelo("303").value, "ejercicio": year}
                     )
-                declarations = await register.walk(modelo=Modelo.M303.value, ejercicio=year)
+                declarations = await register.walk(modelo=Modelo("303").value, ejercicio=year)
                 for declaration in latest_declarations_by_period(declarations):
                     if progress_context is not None:
                         progress_context.update(
@@ -358,7 +360,7 @@ def persist_and_reconcile_iva_compensation_wallet(
             },
         )
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=reloaded.target_year,
         period=reloaded.target_period.registry_token,
     )

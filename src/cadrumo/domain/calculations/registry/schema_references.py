@@ -39,11 +39,11 @@ from .schema_base import (
 )
 
 __all__ = [
-    "LegalReference",
     "DateSupportEnvelope",
+    "LegalReference",
     "OrderedSupportEnvelope",
-    "PeriodSelector",
     "PeriodScopedValidityWindow",
+    "PeriodSelector",
     "RegistryExternalLink",
     "RegistrySnapshotRef",
     "RegistryTemporalBounds",
@@ -52,9 +52,9 @@ __all__ = [
     "TemporalApplicability",
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
-    "resolve_validity_window",
-    "resolve_supported_validity_window",
     "materialize_date_window_series",
+    "resolve_supported_validity_window",
+    "resolve_validity_window",
     "source_window_applies_across",
 ]
 
@@ -376,9 +376,9 @@ class TemporalProjectionDirection(StrEnum):
 def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) -> None:
     if horizon < floor:  # type: ignore[operator]
         raise RegistryValidationError("temporal support horizon must be on or after floor")
-    if hard_ceiling is not None and hard_ceiling <= horizon:  # type: ignore[operator]
+    if hard_ceiling is not None and hard_ceiling < horizon:  # type: ignore[operator]
         raise RegistryValidationError(
-            "temporal support hard_ceiling must be after horizon; a ceiling at or below "
+            "temporal support hard_ceiling must be on or after horizon; a ceiling before "
             "the horizon would close a span the corpus already declares coverage for"
         )
 

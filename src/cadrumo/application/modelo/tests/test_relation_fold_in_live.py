@@ -42,6 +42,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -63,7 +64,6 @@ from ....domain.calculations.registry.tests.registry_tree import bundled_registr
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_snapshot import build_snapshot
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.errors import (
     AggregationValidationError,
 )

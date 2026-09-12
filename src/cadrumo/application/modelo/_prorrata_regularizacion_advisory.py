@@ -126,7 +126,7 @@ def _prior_year_definitiva_pct(
     """
     prior_year = filing_year - 1
     candidates: list[tuple[tuple[int, datetime], Decimal]] = []
-    for payload in repository.iter_modelo(Modelo.M303.value):
+    for payload in repository.iter_modelo(Modelo("303").value):
         require_observation_envelope_coordinates_current(payload)
         observation = payload.observation
         if observation.filing_year != prior_year:
@@ -329,7 +329,7 @@ def collect_prorrata_regularizacion_diagnostics(
         not yet derivable). Empty when no advisory fires (non-settlement period,
         no exempt-without-right operations, no resolvable prorrata register).
     """
-    if modelo != Modelo.M303.value:
+    if modelo != Modelo("303").value:
         return ()
 
     missing_carry_diagnostics = _missing_carry_diagnostics(

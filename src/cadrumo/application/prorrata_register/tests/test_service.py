@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.modelo import Modelo
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
@@ -30,7 +31,6 @@ from ....core.prorrata_register import (
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

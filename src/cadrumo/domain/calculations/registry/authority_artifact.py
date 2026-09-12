@@ -10,11 +10,13 @@ compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
 inputs on a failed read.
 
-Format ``cadrumo-authority-artifact-v3`` is a canonical JSON frame holding
+Format ``cadrumo-authority-artifact-v4`` is a canonical JSON frame holding
 ``schema_version``, ``payload`` and ``payload_sha256``, the SHA-256 of the
 canonical JSON of ``schema_version`` and ``payload`` together. The payload
-projects every schema field of every model, and a model that declares its own
-serialiser is written in that authored shape. Decimals and dates are JSON
+projects every required schema field and every non-default value. A field is
+omitted only when its schema declares a default and its typed value equals that
+default; the strict schema restores it while decoding. A model that declares
+its own serialiser is written in that authored shape. Decimals and dates are JSON
 strings wherever the schema types the field as a decimal or a date.
 Governed-fact atoms are typed ``str | int | Decimal | bool | date``, which JSON
 cannot tell apart, so every non-string atom in an atom position is written as a
@@ -64,8 +66,10 @@ __all__ = [
     "write_authority_artifact",
 ]
 
-AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v3"
-_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset({"cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2"})
+AUTHORITY_ARTIFACT_SCHEMA_VERSION: Final[str] = "cadrumo-authority-artifact-v4"
+_SUPERSEDED_SCHEMA_VERSIONS: Final = frozenset(
+    {"cadrumo-authority-artifact-v1", "cadrumo-authority-artifact-v2", "cadrumo-authority-artifact-v3"}
+)
 _FRAME_MEMBERS: Final = frozenset({"schema_version", "payload", "payload_sha256"})
 #: The validators that mark a governed-fact atom position, read from the schema's own field types.
 _FACT_ATOM_VALIDATORS: Final = frozenset(
@@ -405,7 +409,7 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
 
 
 def _json_value(value: object) -> object:
-    """Project registry values to JSON without omitting excluded model fields."""
+    """Project registry values to JSON, omitting only schema-declared defaults."""
     if isinstance(value, DeclaredPredecessor | NoPredecessor):
         # The predecessor union intentionally owns a compact authored wire
         # dialect. Its serializer is a semantic projection, unlike ordinary
@@ -424,6 +428,7 @@ def _json_value(value: object) -> object:
                 else _json_value(getattr(value, field_name))
             )
             for field_name, field in type(value).model_fields.items()
+            if not _field_equals_declared_default(value, field_name)
         }
     if isinstance(value, Mapping):
         return {_json_key(key): _json_value(item) for key, item in value.items()}
@@ -445,6 +450,20 @@ def _json_value(value: object) -> object:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     raise TypeError(f"authority artifact cannot serialize {type(value).__name__}")
+
+
+def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:
+    """Return whether the schema explicitly permits this field to be omitted."""
+    field = type(model).model_fields[field_name]
+    if field.is_required():
+        return False
+    try:
+        comparison = getattr(model, field_name) == field.get_default(call_default_factory=True)
+    except (TypeError, ValueError):
+        # A context-sensitive default factory, or a value whose equality is not
+        # scalar, is not sufficient authority to remove published information.
+        return False
+    return comparison if isinstance(comparison, bool) else False
 
 
 _DATE_FIELD_NAMES = frozenset(

@@ -21,6 +21,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.ledger.actions_common import blocking_modelo_references
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -35,7 +36,6 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..revision_persistence import persist_filed_revision
 from ..verification_actions import _persist_verified_revision_evidence
 

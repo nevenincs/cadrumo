@@ -11,6 +11,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -25,7 +26,6 @@ from ....domain.modelos.calculation_revision_amendment import CalculationRevisio
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..action_errors import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,

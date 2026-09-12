@@ -45,6 +45,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
@@ -59,7 +60,6 @@ from ....tests.profile_capsule import (
     load_test_profile_record,
     open_test_profile_session,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
 from ...user_profile.projections import record_to_path_values

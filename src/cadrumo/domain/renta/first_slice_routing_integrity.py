@@ -52,7 +52,7 @@ def check_first_slice_routing(
     registry validator prefixes each failure with the snapshot
     coordinates and raises a single ``RegistryValidationError``.
     """
-    if modelo_id != Modelo.M100:
+    if modelo_id != Modelo("1"):
         return []
     missing = renta_first_slice_binding_targets - casilla_ids
     if not missing:

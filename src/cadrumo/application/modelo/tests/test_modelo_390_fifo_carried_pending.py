@@ -66,6 +66,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -81,7 +82,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import (
     APP_FILING_SOURCE_KIND,
     CalculationObservationRepository,

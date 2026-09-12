@@ -56,7 +56,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     observations: Sequence[CasillaObservation],
 ) -> FilingInstanceEvidence | None:
     """Validate the complete revision evidence against every canonical owner."""
-    if work_unit.modelo != Modelo.M303:
+    if work_unit.modelo != Modelo("303"):
         if evidence is not None:
             raise M303FilingEvidenceError(
                 precondition_failure=m303_filing_evidence_failure(

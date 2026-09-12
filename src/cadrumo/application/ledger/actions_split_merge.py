@@ -32,6 +32,7 @@ from ...domain.transactions.models import (
     TransactionCatalogue,
 )
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .action_ports import LedgerActionPorts
 from .actions_common import (
     blocking_modelo_references,
     build_ledger_bucket_event,
@@ -51,13 +52,13 @@ from .actions_manual import (
 from .actions_manual import (
     prepare_manual_transaction_update as _prepare_manual_transaction_update,
 )
-from .action_ports import LedgerActionPorts
 from .models import (
     ManualLedgerTransactionPatch,
     MergeTransactionsResult,
     SplitChildCommand,
     SplitTransactionResult,
 )
+
 
 def split_transaction(
     *,

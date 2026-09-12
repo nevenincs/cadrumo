@@ -40,8 +40,8 @@ from .....application.modelo.external_import_actions import (
     ExternalFilingBaselineSource,
     import_external_filing_source,
 )
-from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.buckets.event import BucketEventHistoryCatalogue
 from .....domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -51,6 +51,7 @@ from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
 from .....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from .....domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
+from ....inbound.justificante.parser import parse_justificante_bytes
 from ....persistence.profile.buckets import BucketEventHistoryRepository
 from ....persistence.profile.justificante import JustificanteRepository
 from ....persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -63,7 +64,6 @@ from .declarations_observations import (
 )
 from .declarations_remote import extract_csv_from_url
 from .observation_store import FiledDeclaracionObservationStore
-from ....inbound.justificante.parser import parse_justificante_bytes
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite

@@ -7,7 +7,7 @@ import inspect
 
 import pytest
 
-from ...i18n.render import UnmatchedPlaceholderError, tr
+from ...i18n.render import UnmatchedPlaceholderError
 from ..error_codes import (
     _DEFERRED_BIND,
     _category_text_prefix,

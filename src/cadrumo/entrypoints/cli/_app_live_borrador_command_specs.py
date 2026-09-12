@@ -50,7 +50,7 @@ LIVE_BORRADOR_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_live_borrador_100",
         parent_key="app_live_borrador",
-        token=Modelo.M100.value,
+        token=Modelo("1").value,
         kind=CommandNodeKind.GROUP,
         help_key=_key("cli.app.live.borrador.modelo_100_help"),
         short_help_key=None,

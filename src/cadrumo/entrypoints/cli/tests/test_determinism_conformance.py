@@ -36,6 +36,7 @@ import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.ledger.actions_manual import create_manual_transaction, ledger_transaction_payload
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.models import ManualLedgerTransactionCommand
@@ -48,7 +49,6 @@ from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._ledger_payloads import LedgerAddResult
 from ..command_schema import command_schema_types
 from ..ledger_business_payloads import EvidenceAddResult

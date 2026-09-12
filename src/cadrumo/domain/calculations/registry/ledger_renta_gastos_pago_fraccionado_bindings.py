@@ -68,7 +68,7 @@ class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
     )
 
-    modelo: Literal[Modelo.M130] = Modelo.M130
+    modelo: Literal[Modelo("130")] = Modelo("130")
     target_casilla_id: CasillaId
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
 

@@ -30,10 +30,10 @@ from ._confirmation_profile_fixture import profile
 
 __all__ = ["profile"]
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..confirmation_gate import ConfirmationBlocker, FindingResolution
 from ..confirmation_record import (
     ConfirmationRecordDocument,

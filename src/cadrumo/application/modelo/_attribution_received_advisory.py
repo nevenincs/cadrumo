@@ -54,8 +54,7 @@ from .semantic_role_resolution import casilla_id_for_unique_revision_semantic_ro
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
-    from ...domain.calculations.registry.ids import LegalRefId
-    from ...domain.calculations.registry.ids import SourceRefId
+    from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.work_unit import WorkUnit
 
@@ -87,13 +86,13 @@ def _attribution_received_omission_advisory_findings(
         empty when the handoff is coherent (both halves present, or both
         absent), one finding when exactly one half is present.
     """
-    if str(getattr(work_unit.modelo, "value", work_unit.modelo)) != Modelo.M100.value:
+    if str(getattr(work_unit.modelo, "value", work_unit.modelo)) != Modelo("100").value:
         return ()
 
     casilla_id = casilla_id_for_unique_revision_semantic_role(
         snapshot.revision,
         _ATRIBUCION_ACT_ECO_ROLE,
-        modelo_id=Modelo.M100.value,
+        modelo_id=Modelo("100").value,
     )
     if casilla_id is None:
         return ()

@@ -30,6 +30,7 @@ import pytest
 
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -38,7 +39,6 @@ from ....domain.calculations.registry.iva_compensation_annual_partition_bindings
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository, ObservationEnvelopePayload, observation_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

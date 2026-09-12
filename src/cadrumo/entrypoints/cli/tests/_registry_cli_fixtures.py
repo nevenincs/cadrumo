@@ -25,8 +25,8 @@ import pytest
 from ....adapters.persistence.storage.master_key.active_session import activate_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
+from ....core.config import override_settings
 from ....tests.user_profile import register_minimal_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
 

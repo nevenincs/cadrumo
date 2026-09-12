@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....core.config import override_settings
 from ....core.i18n.render import output_language
 from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..login_session import login_profile
 from ..registration import register_profile_with_credentials

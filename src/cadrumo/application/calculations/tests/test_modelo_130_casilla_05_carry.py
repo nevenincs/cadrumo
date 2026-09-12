@@ -42,6 +42,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
@@ -50,7 +51,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..cross_period_clean_state import evaluate_cross_period_clean_state
 from ..observations_repository import CalculationObservationRepository
 

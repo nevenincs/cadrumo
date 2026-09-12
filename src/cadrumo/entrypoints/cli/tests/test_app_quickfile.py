@@ -31,6 +31,9 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -53,7 +56,6 @@ from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ....tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 from .cli_runner import invoke_cached_cli
 

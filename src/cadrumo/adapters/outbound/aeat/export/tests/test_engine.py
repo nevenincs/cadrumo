@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 
 from ......adapters.persistence.profile.submission import SubmissionRepository
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......domain.submission.engine import SubmissionEngine
 from ......domain.submission.errors import SubmissionError
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

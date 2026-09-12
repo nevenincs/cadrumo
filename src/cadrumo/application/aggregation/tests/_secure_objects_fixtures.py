@@ -34,7 +34,7 @@ def secure_profile_backend(tmp_path: Path, bucket_id: str) -> Iterator[None]:
     """Real encrypted profile storage scoped to this test's bucket.
 
     The bucket id comes from the shared ``bucket_id`` override scaffold
-    (:mod:`cadrumo.tests._bucket_id_fixture`) — each consumer's own profile-id
+    (:mod:`cadrumo.tests.bucket_id_fixture`) — each consumer's own profile-id
     constant identifies its test's bucket, so the value cannot be fixed here.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):

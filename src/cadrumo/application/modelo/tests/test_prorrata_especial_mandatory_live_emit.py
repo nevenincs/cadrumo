@@ -41,6 +41,7 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.modelo import Modelo
 from ....core.prorrata_register import (
@@ -55,7 +56,6 @@ from ....domain.prorrata_register.register import ProrrataRegisterEntry, SectorD
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...prorrata_register.service import ProrrataRegisterService

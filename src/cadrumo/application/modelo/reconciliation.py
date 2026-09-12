@@ -108,7 +108,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 
 _DECLARATION_CASILLA_RECONCILE_MODELOS: frozenset[Modelo] = frozenset(
-    {Modelo.M100, Modelo.M111, Modelo.M130, Modelo.M190, Modelo.M303, Modelo.M390}
+    {Modelo("100"), Modelo("111"), Modelo("130"), Modelo("190"), Modelo("303"), Modelo("390")}
 )
 """Modelos enrolled in casilla-level filed-declaration reconciliation.
 

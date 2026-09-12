@@ -41,6 +41,7 @@ import pytest
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
@@ -52,7 +53,6 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.iva.prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
 from ..iva_ledger import aggregate_iva_ledger_observations_from_repositories, resolve_iva_ledger_binding_values
 

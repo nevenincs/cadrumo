@@ -16,6 +16,7 @@ import pytest
 import typer
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationRepository,
     persist_percepcion_observations,
@@ -26,7 +27,6 @@ from ....core.period import Period
 from ....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._modelo_aggregate_cli import _parse_typed_cli_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

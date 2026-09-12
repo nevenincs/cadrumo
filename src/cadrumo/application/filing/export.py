@@ -635,7 +635,7 @@ def render_filing_layout(
     product_software_identity: AeatProductSoftwareIdentity | None,
 ) -> bytes:
     if (
-        draft.modelo == Modelo.M303.value
+        draft.modelo == Modelo("303").value
         and producer_snapshot.elections.prior_domiciliation is not prior_domiciliation_election
     ):
         raise FilingExportValidationError(
@@ -776,19 +776,19 @@ def _projection_plan_for_layout(
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
 ) -> FilingProjectionPlan:
-    if draft.modelo == Modelo.M303.value:
+    if draft.modelo == Modelo("303").value:
         return build_m303_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
         )
-    if draft.modelo == Modelo.M200.value:
+    if draft.modelo == Modelo("200").value:
         return build_m200_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,
             producer_snapshot=producer_snapshot,
         )
-    if draft.modelo == Modelo.M296.value:
+    if draft.modelo == Modelo("296").value:
         return build_m296_filing_projection_plan(
             registry_snapshot=registry_snapshot,
             layout=layout,

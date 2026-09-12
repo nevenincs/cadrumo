@@ -255,12 +255,12 @@ _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 
 def _registry_snapshot_ref_for_m303_period(period: Period) -> RegistrySnapshotRef:
     inspection = bundled_authority().inspect_revision(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=period.filing_year,
         period=period.registry_token,
     )
     return RegistrySnapshotRef(
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         revision_id=inspection.revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
@@ -487,7 +487,7 @@ def iva_compensation_annual_summary_from_filed_observation(
     final-period annual carry id. The summary is evidence for cross-checking the
     Modelo 303 carry-forward projection; it is not stored as a period state.
     """
-    if observation.modelo != Modelo.M390.value:
+    if observation.modelo != Modelo("390").value:
         raise IvaCompensationModeloError(
             translated_message="application.calculations.iva_compensation.errors.modelo_390_only",
             context={"modelo": observation.modelo},

@@ -146,14 +146,14 @@ def render_xml_dictionary_layout(
     )
     _append_declaration_aux(root, layout)
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo.M100 else None
+    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
     unfiled_paths: frozenset[str] = (
         _modelo_100_unfiled_comunidad_paths(
             entries,
             casilla_values,
             declarations=modelo_100_declarations,
         )
-        if draft.modelo == Modelo.M100
+        if draft.modelo == Modelo("100")
         else frozenset[str]()
     )
     for entry in entries:
@@ -170,7 +170,7 @@ def render_xml_dictionary_layout(
         if rendered is None or rendered == "":
             continue
         _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
-    if draft.modelo == Modelo.M100:
+    if draft.modelo == Modelo("100"):
         _stamp_toma_datos_nif(root, draft)
     rendered = ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
     if not isinstance(rendered, bytes):
@@ -486,7 +486,7 @@ def _xml_dictionary_rendered_value(
         raw = _xml_dictionary_non_casilla_value(entry, headers=headers, dictionary_values=dictionary_values)
     if raw is None:
         return None
-    if draft.modelo == Modelo.M100:
+    if draft.modelo == Modelo("100"):
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
         raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)

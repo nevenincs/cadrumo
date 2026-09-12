@@ -919,7 +919,7 @@ def _operator_input_required_by_binding(
 ) -> dict[BindingId, bool]:
     """Return missing-input visibility for relation slots with period-scoped defaults."""
     required = {binding.id: True for binding in revision.bindings}
-    if modelo != Modelo.M202.value or period is None:
+    if modelo != Modelo("2").value or period is None:
         return required
     for binding in revision.bindings:
         if _relation_prefill_is_period_default(binding, modelo=modelo, period=period):

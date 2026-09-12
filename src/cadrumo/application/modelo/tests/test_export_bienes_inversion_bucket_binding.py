@@ -8,12 +8,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.bienes_inversion.register import BienInversionIvaRecord, BienInversionKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ...aggregation.iva_ledger import IvaLedgerAggregation
 from ..export import _resolve_m303_export_arrivals
 

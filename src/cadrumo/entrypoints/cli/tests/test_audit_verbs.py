@@ -17,11 +17,11 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.evidence.service import EvidenceBundleService
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 

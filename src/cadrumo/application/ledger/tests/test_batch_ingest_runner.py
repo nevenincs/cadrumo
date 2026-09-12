@@ -22,6 +22,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.provisioning import (
     AcceleratorDevice,
@@ -37,7 +38,6 @@ from ....core.hardware import AcceleratorKind
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.iva.classification import InvoiceKind
 from ....tests.pdf_fixtures import text_pdf_bytes
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..batch_ingest import BatchRunResult, run_evidence_batch
 from ..evidence import PurchaseInvoiceEvidenceService
 from ..extraction_draft_store import load_extraction_drafts

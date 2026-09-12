@@ -10,13 +10,13 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.storage.bucket.directory_layout import bucket_paths
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.filing.retention import try_record_filing_retention_snapshot
 from ....core.config import override_settings
 from ....core.period import Period
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue, derive_filing_record_id
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._bootstrap_exempt import is_bootstrap_exempt
 from .cli_runner import invoke_cached_cli

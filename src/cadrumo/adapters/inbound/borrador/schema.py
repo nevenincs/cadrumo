@@ -133,7 +133,7 @@ class InboundBorradorObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: Literal[Modelo.M100] = Modelo.M100
+    modelo: Literal[Modelo("100")] = Modelo("100")
     ejercicio: str = Field(min_length=4, max_length=4)
     tax_id: str = Field(min_length=4, max_length=32)
     artefact_kind: ArtefactKind

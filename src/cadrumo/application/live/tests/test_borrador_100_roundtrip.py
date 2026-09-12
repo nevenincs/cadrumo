@@ -22,10 +22,13 @@ import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,

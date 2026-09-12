@@ -18,14 +18,22 @@ from threading import RLock
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.hashing import content_hash_hex
 from ....core.identity.digest import ContentDigest
+from ....core.modelo import Modelo
 from ....core.resources.bundled_data import bundled_path as _bundled_path
+from ....core.tax_domain import TaxDomain
 from .authority_artifact import (
     AuthorityArtifact,
     AuthorityEvidenceProjection,
     read_shared_authority_artifact,
 )
 from .errors import RegistrySnapshotError, RegistryValidationError
-from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
+from .facts.resolution import (
+    GovernedFactQuery,
+    MappingFactQuery,
+    ResolvedGovernedFact,
+    ResolvedMappingFact,
+    resolve_governed_fact,
+)
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .provenance import NormativeCorpusProvenance
 from .schema import (
@@ -34,6 +42,7 @@ from .schema import (
     RegistryCatalogues,
     RegistrySnapshot,
 )
+from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
 from .schema_references import SourceReference
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
@@ -177,16 +186,42 @@ class ValidatedRegistryAuthority:
         """Bind a fresh artifact graph to this process without a mutable root slot."""
         self._capture_comparison_domain = _artifact_coordinate_domain(self._identity_digest)
 
-    def modelo(self, modelo_id: str) -> ModeloDefinition:
+    def modelo(self, modelo_id: str | Modelo) -> ModeloDefinition:
         """Return a modelo definition by id.
 
         Returns:
             The :class:`ModeloDefinition` for ``modelo_id``.
         """
+        normalized = Modelo(modelo_id)
         try:
-            return self._modelos_by_id[modelo_id]
+            return self._modelos_by_id[normalized.value]
         except KeyError as exc:
-            raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
+            raise RegistrySnapshotError(
+                f"modelo {normalized.value!r} is not present in the calculation registry"
+            ) from exc
+
+    def tax_domain(
+        self,
+        tax_domain: str | TaxDomain,
+        *,
+        effective_date: date | None = None,
+    ) -> TaxDomain:
+        """Return a syntax-valid tax domain only when this authority declares it."""
+        normalized = TaxDomain(tax_domain)
+        resolved = self.resolve_governed_fact(
+            MappingFactQuery(
+                fact_id="tax-domain-catalogue",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date or date.today(),
+            )
+        )
+        if not isinstance(resolved, ResolvedMappingFact):
+            raise RegistrySnapshotError("tax-domain catalogue did not resolve as a mapping")
+        declarations = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+        declared = {code.strip() for code in declarations.get("catalogue.codes", "").split(",") if code.strip()}
+        if normalized.value not in declared:
+            raise RegistrySnapshotError(f"tax domain {normalized.value!r} is not present in the calculation registry")
+        return normalized
 
     def legal_evidence_text(self, legal_ref_id: LegalRefId) -> str:
         """Return the published anchor text for one runtime legal citation.
@@ -418,11 +453,12 @@ class ValidatedRegistryAuthority:
         :meth:`snapshot`, while native capture copies this same entry under the
         owner lock.
         """
-        key = (modelo_id, filing_year, period, on, revision_id, grade)
+        normalized_modelo_id = Modelo(modelo_id).value
+        key = (normalized_modelo_id, filing_year, period, on, revision_id, grade)
         cached = self._snapshots.get(key)
         if cached is not None:
             return cached
-        modelo = self.validate_modelo(modelo_id)
+        modelo = self.validate_modelo(normalized_modelo_id)
         snapshot = build_validated_snapshot(
             modelo,
             self.catalogues,

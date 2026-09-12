@@ -10,6 +10,7 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ......adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
@@ -17,7 +18,6 @@ from ......core.config import Settings
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
-from ......adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ..errors import SedeValidationError
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue

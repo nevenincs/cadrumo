@@ -8,9 +8,9 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import TransactionCatalogue
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..preflight import preflight_ledger_tax_readiness
 from ._preflight_test_support import (
     _BUCKET_ID,

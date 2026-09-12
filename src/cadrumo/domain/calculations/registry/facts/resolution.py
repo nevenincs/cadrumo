@@ -10,22 +10,25 @@ from pydantic import Field, TypeAdapter, model_validator
 from .....core.filing_year import FilingYear
 from .....core.period import RegistrySelectorPeriodCode
 from ..errors import RegistryValidationError
-from ..ids import LegalRefId, RevisionId, SourceRefId
+from ..ids import LegalRefId, RegistryRevisionNodeId, SourceRefId
 from ..period_selector_match import selector_period_matches_request
-from ..schema_references import PeriodSelector, RegistryValidityWindow
 from ..schema_base import (
+    DateAxis,
     DateAxisField,
     RegistryModel,
     RevisionReviewStatusField,
     SourceCitation,
 )
+from ..schema_references import PeriodSelector, RegistryValidityWindow
 from .schema import (
     BracketFactPayload,
     EntitySetFactPayload,
     EventFactPayload,
     FactId,
+    FactOwnership,
     FactOwnershipField,
     FactProjectionDirection,
+    FactProviderId,
     FactSelector,
     FactVariantId,
     GovernedFact,
@@ -76,6 +79,8 @@ class _FactQuery(RegistryModel):
             raise RegistryValidationError("governed fact query selector names must be unique")
         if (self.filing_year is None) != (self.period is None):
             raise RegistryValidationError("governed fact query filing_year and period must be declared together")
+        if self.filing_year is not None and self.date_axis is not DateAxis.FILING_PERIOD:
+            raise RegistryValidationError("governed fact filing_year/period coordinates require the filing_period axis")
         return self
 
 
@@ -151,9 +156,10 @@ class _ResolvedFact(RegistryModel):
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     authority_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
-    source_variant_id: FactVariantId | None = None
-    source_revision_id: RevisionId | FactVariantId | None = None
-    source_provider_id: str | None = None
+    source_variant_id: FactVariantId
+    source_revision_id: RegistryRevisionNodeId | None = None
+    source_revision_ids: tuple[RegistryRevisionNodeId, ...] = Field(min_length=1)
+    source_provider_id: FactProviderId | None = None
     projection_direction: FactProjectionDirection = FactProjectionDirection.AUTHORED
     projected_from_date: date | None = None
 
@@ -172,8 +178,13 @@ class _ResolvedFact(RegistryModel):
                 raise RegistryValidationError("backward fact projection must originate after the query coordinate")
         elif self.projected_from_date is None or self.projected_from_date >= self.effective_date:
             raise RegistryValidationError("forward fact projection must originate before the query coordinate")
-        if (self.source_variant_id is None) != (self.source_revision_id is None):
-            raise RegistryValidationError("resolved governed fact source identities must be declared together")
+        if len(set(self.source_revision_ids)) != len(self.source_revision_ids):
+            raise RegistryValidationError("resolved governed fact source revision ids must be unique")
+        expected_singular = self.source_revision_ids[0] if len(self.source_revision_ids) == 1 else None
+        if self.source_revision_id != expected_singular:
+            raise RegistryValidationError(
+                "resolved governed fact singular source revision must name its sole source and be absent for many"
+            )
         names = [selector.name for selector in self.matched_selectors]
         if len(set(names)) != len(names):
             raise RegistryValidationError("resolved governed fact selector names must be unique")
@@ -267,8 +278,9 @@ def resolve_governed_fact(
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query falls outside its hard support boundaries"
         )
+    windows = fact.materialized_windows()
     track = tuple(
-        (variant, fact.validity_window(variant))
+        (variant, windows[variant.variant_id])
         for variant in fact.variants
         if variant.date_axis is query.date_axis
         and _selector_identity(variant.selectors) == query_selectors
@@ -298,20 +310,17 @@ def resolve_governed_fact(
             f"{sorted(candidate.variant_id for candidate, _window in candidates)!r}",
         )
     winner, winner_window = winners[0]
+    source_revision_ids: tuple[RegistryRevisionNodeId, ...] = (
+        tuple(winner.effective_source_revision_ids)
+        if winner.ownership is FactOwnership.GENERATED
+        else (winner.variant_id,)
+    )
     projected_coordinate = (
         fact.support.projection_coordinate(query.effective_date) if fact.support is not None else query.effective_date
     )
     if projected_coordinate is not None and projected_coordinate != query.effective_date:
         projection_direction = FactProjectionDirection.FORWARD
         projected_from_date = projected_coordinate
-    elif (
-        projection_direction is FactProjectionDirection.AUTHORED
-        and fact.support is not None
-        and winner.valid_from is None
-        and query.effective_date < fact.support.horizon
-    ):
-        projection_direction = FactProjectionDirection.BACKWARD
-        projected_from_date = fact.support.horizon
     return _RESOLVED_FACT_ADAPTER.validate_python(
         {
             "family": fact.family,
@@ -332,7 +341,8 @@ def resolve_governed_fact(
             "ownership": winner.ownership,
             "authority_digest": authority_digest,
             "source_variant_id": winner.variant_id,
-            "source_revision_id": winner.source_revision_id or winner.variant_id,
+            "source_revision_id": source_revision_ids[0] if len(source_revision_ids) == 1 else None,
+            "source_revision_ids": source_revision_ids,
             "source_provider_id": fact.provider_id,
             "projection_direction": projection_direction,
             "projected_from_date": projected_from_date,
@@ -349,8 +359,13 @@ def _period_matches(period_selector: PeriodSelector | None, query: _FactQuery) -
         return query.period is None
     if query.period is None:
         return False
-    return query.filing_year is not None and period_selector.includes_year(query.filing_year) and any(
-        selector_period_matches_request(selector_period, query.period) for selector_period in period_selector.periods
+    return (
+        query.filing_year is not None
+        and period_selector.includes_year(query.filing_year)
+        and any(
+            selector_period_matches_request(selector_period, query.period)
+            for selector_period in period_selector.periods
+        )
     )
 
 

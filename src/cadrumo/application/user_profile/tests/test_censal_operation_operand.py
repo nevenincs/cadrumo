@@ -15,9 +15,9 @@ from ....adapters.persistence.operations.secure_references import (
 )
 from ....adapters.persistence.storage.errors import RepositoryError
 from ....adapters.persistence.storage.secure_object_namespaces import OPERATION_SECURE_REFERENCE_NAMESPACE
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from ...operations.models import OperationRequest
 from ..censal_observation import (
     CensalObservation,

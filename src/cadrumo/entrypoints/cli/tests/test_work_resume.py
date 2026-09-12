@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.workflow_gate import workflow_period_for_work_unit
 from ....application.operator_actions.models import (
@@ -39,7 +40,6 @@ from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import open_test_profile_session, seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .cli_runner import invoke_cached_cli
 

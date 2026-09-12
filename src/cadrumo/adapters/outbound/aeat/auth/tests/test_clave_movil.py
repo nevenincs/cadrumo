@@ -9,13 +9,13 @@ from pathlib import Path
 import pytest
 from pydantic import AnyUrl, SecretStr
 
+from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n.render import tr
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.profile_capsule import open_test_profile_session
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......tests.user_profile import register_minimal_profile
 from ...operator_progress import operator_progress_sink
 from ..clave_movil import ClaveMovilAuthProvider

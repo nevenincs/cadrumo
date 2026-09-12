@@ -33,9 +33,9 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from ....core.bucket_pointer import pointer_path
 from ....tests.cli_envelope import require_error_document
-from ....adapters.persistence.storage.tests.secure_sql import isolated_sessionless_storage_root
 from .cli_runner import invoke_cached_cli
 from .sessionless_root_fixtures import _sessionless_root
 

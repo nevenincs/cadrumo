@@ -7,8 +7,8 @@ import inspect
 
 import pytest
 
-from ....domain.user_profile.errors import ProfileNotFoundError
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....domain.user_profile.errors import ProfileNotFoundError
 from ..login_interaction import (
     ProfileLoginAttempt,
     ProfileLoginChoice,

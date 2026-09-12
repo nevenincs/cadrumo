@@ -44,7 +44,7 @@ def _require_rectificativa_baseline_link(
     The marker asks AEAT to act on a PRIOR return, so the request is only
     coherent from a Modelo 303 rectificativa that says which return it amends.
     """
-    if work_unit.modelo != Modelo.M303.value:
+    if work_unit.modelo != Modelo("303").value:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification is supported only for Modelo 303",
             context={"modelo": str(work_unit.modelo)},

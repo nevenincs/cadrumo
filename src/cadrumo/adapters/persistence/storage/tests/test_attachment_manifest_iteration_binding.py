@@ -37,11 +37,11 @@ from sqlalchemy import select
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.models import Attachment
-from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import AttachmentStore
 from ..secure_object_namespaces import ATTACHMENT_MANIFEST_NAMESPACE
 from ..sql.engine import get_engine
 from ..sql.orm import SecureObjectRow
+from .secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

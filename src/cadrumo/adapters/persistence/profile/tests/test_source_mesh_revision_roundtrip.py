@@ -35,6 +35,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
+from .....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
@@ -53,7 +54,6 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.work_unit import derive_work_unit_id
 from .....tests.secure_objects_fixture import secure_objects
-from .....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository

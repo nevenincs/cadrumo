@@ -21,7 +21,7 @@ def m303_filing_instance_evidence_from_cli(
     evidence_file: Path | None,
 ) -> FilingInstanceEvidence | None:
     """Load one complete typed evidence document before revision creation."""
-    if modelo != Modelo.M303.value:
+    if modelo != Modelo("3").value:
         if evidence_file is not None:
             raise typer.BadParameter(tr("cli.app.quickfile.errors.m303_evidence_forbidden"))
         return None

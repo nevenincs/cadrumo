@@ -216,7 +216,7 @@ def _sealed_modelo_303_blocker_for_period(
         work_unit = work_units.work_units.get(revision.work_unit_id)
         if work_unit is None or work_unit.bucket_id != bucket_id:
             continue
-        if work_unit.modelo != Modelo.M303.value:
+        if work_unit.modelo != Modelo("303").value:
             continue
         consuming_key = (work_unit.period.filing_year, iva_compensation_period_sort_key(work_unit.period))
         if consuming_key < seeded_key:
@@ -471,7 +471,7 @@ def record_iva_compensation_override_for_bucket(
     from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 
     snapshot = bundled_authority().snapshot(
-        Modelo.M303.value,
+        Modelo("303").value,
         filing_year=period.filing_year,
         period=period.registry_token,
     )

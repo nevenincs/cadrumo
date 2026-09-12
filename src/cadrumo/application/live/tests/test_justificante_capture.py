@@ -23,9 +23,12 @@ import pytest
 from ....adapters.persistence.storage.secure_object_namespaces import (
     LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
 )
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..errors import LiveApplicationInputError
 from ..justificante import (
     JustificanteCaptureSnapshot,

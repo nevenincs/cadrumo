@@ -364,7 +364,7 @@ def _gather_single_key_observation(
             Period.from_year_and_code(requirement_filing_year, requirement_period),
         ),
     )
-    if requirement_modelo == Modelo.M303.value and iva_history_repository is not None:
+    if requirement_modelo == Modelo("303").value and iva_history_repository is not None:
         state = iva_history_repository.load_period(
             Period.from_year_and_code(requirement_filing_year, requirement_period),
         )
@@ -442,7 +442,7 @@ def _observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
     revision = select_revision(
         modelo,
         filing_year=state.filing_year,
@@ -468,7 +468,7 @@ def _observation_from_iva_compensation_history(
             operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
             operand_values = (state.pending_for_later_amount, state.generated_amount)
         return _iva_compensation_history_observation(
-            modelo_id=Modelo.M303.value,
+            modelo_id=Modelo("303").value,
             revision_id=revision.id,
             casillas=casillas,
             formulas=formulas,
@@ -479,7 +479,7 @@ def _observation_from_iva_compensation_history(
         )
 
     return RegistryModeloObservation(
-        modelo=Modelo.M303.value,
+        modelo=Modelo("303").value,
         filing_year=state.filing_year,
         period=state.period.registry_token,
         observations=(
@@ -934,7 +934,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     ``None`` when no compensation binding is present) and the underlying
     :class:`BindingPrefillReport`.
     """
-    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
+    if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo("303").value:
         from ..modelo.action_errors import ModeloApplicabilityFilterError
 
         raise ModeloApplicabilityFilterError(

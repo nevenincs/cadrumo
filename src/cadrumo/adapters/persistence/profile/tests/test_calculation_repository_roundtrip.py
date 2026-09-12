@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
@@ -53,7 +54,6 @@ from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .....tests.filing_evidence import regimen_simplificado_filing_evidence
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository

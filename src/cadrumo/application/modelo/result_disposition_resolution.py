@@ -209,7 +209,7 @@ def _apply_payment_election(
             translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
-    if work_unit.modelo != Modelo.M303.value:
+    if work_unit.modelo != Modelo("303").value:
         raise ModeloPaymentElectionCapabilityRefusedError(
             translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
@@ -340,7 +340,7 @@ def _apply_modelo_303_refund_election(
     A non-REDEME taxpayer who does not elect ``DEVOLVER`` keeps the carry-forward
     ``C``; every disposition other than a Modelo 303 ``COMPENSACION`` is untouched.
     """
-    if work_unit.modelo != Modelo.M303.value or declaration_type is not ResultDisposition.COMPENSACION:
+    if work_unit.modelo != Modelo("303").value or declaration_type is not ResultDisposition.COMPENSACION:
         return declaration_type
 
     iva_profile = workflow_profile.iva
@@ -348,7 +348,7 @@ def _apply_modelo_303_refund_election(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_missing",
             context={
-                "modelo": Modelo.M303.value,
+                "modelo": Modelo("303").value,
                 "period": period.registry_token,
                 "iva_profile_present": False,
             },
@@ -369,7 +369,7 @@ def _apply_modelo_303_refund_election(
         raise ModeloRefundElectionNotEligibleError(
             translated_message="application.modelo.errors.refund_election_not_eligible",
             context={
-                "modelo": Modelo.M303.value,
+                "modelo": Modelo("303").value,
                 "filing_year": str(period.filing_year),
                 "period": period.registry_token,
             },

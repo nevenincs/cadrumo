@@ -22,10 +22,10 @@ import pytest
 from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
+from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.period import Period
 from .....domain.justificante.schema import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.sql.orm import SecureObjectRow
 from ....persistence.storage.sql.session import session_scope
 from ...storage.secure_object_namespaces import JUSTIFICANTE_METADATA_NAMESPACE

@@ -59,7 +59,7 @@ def _art109_registry_declarations(
     authority = bundled_authority()
     query_service = RegistryQueryService(authority)
     context = query_service._resolve_revision_for_scope(
-        str(Modelo.M130),
+        str(Modelo("130")),
         filing_year=filing_year,
         period=period.registry_token,
     )
@@ -153,7 +153,7 @@ def derive_art109_activity_income_coverage_for_work_unit(
     movements fail closed because they cannot prove whether the receipt was
     subject to withholding.
     """
-    if str(work_unit.modelo) != Modelo.M130.value:
+    if str(work_unit.modelo) != Modelo("130").value:
         return _insufficient("not_modelo_130")
     period = work_unit.period
     if not period.has_date_span():

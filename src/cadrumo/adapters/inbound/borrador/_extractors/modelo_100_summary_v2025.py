@@ -109,7 +109,7 @@ class Modelo100ObservedV2025Extractor:
 
         source_pdf_sha256 = sha256_file(pdf_path)
         return InboundBorradorObservation(
-            modelo=Modelo.M100,
+            modelo=Modelo("100"),
             ejercicio=ejercicio,
             tax_id=tax_id.upper(),
             artefact_kind=artefact_kind,

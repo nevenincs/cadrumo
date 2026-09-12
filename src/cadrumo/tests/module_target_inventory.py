@@ -25,26 +25,20 @@ class MetadataTargetSetError(ValueError):
     """Raised when a declared finite target-set artifact is malformed."""
 
 
-def load_target_set(
-    metadata_path: str | Path, target_set: str, *, repository: Path = REPO_ROOT
-) -> tuple[str, ...]:
+def load_target_set(metadata_path: str | Path, target_set: str, *, repository: Path = REPO_ROOT) -> tuple[str, ...]:
     """Return the named, declared finite target set from *metadata_path*."""
     document = _read_document(_resolve_metadata_path(metadata_path, repository=repository))
     return _target_set(document, target_set)["targets"]
 
 
-def load_all_target_sets(
-    metadata_path: str | Path, *, repository: Path = REPO_ROOT
-) -> tuple[str, ...]:
+def load_all_target_sets(metadata_path: str | Path, *, repository: Path = REPO_ROOT) -> tuple[str, ...]:
     """Return the sorted union of every target set in one authority artifact."""
     document = _read_document(_resolve_metadata_path(metadata_path, repository=repository))
     targets = {target for item in document["target_sets"].values() for target in item["targets"]}
     return tuple(sorted(targets))
 
 
-def assert_target_set_current(
-    metadata_path: str | Path, target_set: str, *, repository: Path = REPO_ROOT
-) -> None:
+def assert_target_set_current(metadata_path: str | Path, target_set: str, *, repository: Path = REPO_ROOT) -> None:
     """Refuse an inventory whose named target set has drifted from its source tree."""
     path = _resolve_metadata_path(metadata_path, repository=repository)
     document = _read_document(path)
@@ -57,9 +51,7 @@ def assert_target_set_current(
         )
 
 
-def assert_all_target_sets_current(
-    metadata_path: str | Path, *, repository: Path = REPO_ROOT
-) -> None:
+def assert_all_target_sets_current(metadata_path: str | Path, *, repository: Path = REPO_ROOT) -> None:
     """Refuse any stale target set in one multi-root authority artifact."""
     path = _resolve_metadata_path(metadata_path, repository=repository)
     document = _read_document(path)
@@ -67,8 +59,7 @@ def assert_all_target_sets_current(
         actual = _enumerate_modules(target["source"], repository=repository)
         if target["targets"] != actual:
             raise AssertionError(
-                f"metadata target set {name!r} is stale; "
-                f"regenerate {path.relative_to(repository.resolve()).as_posix()}"
+                f"metadata target set {name!r} is stale; regenerate {path.relative_to(repository.resolve()).as_posix()}"
             )
 
 
@@ -167,7 +158,9 @@ def _read_document(path: Path) -> dict[str, object]:
 
 def _validated_document(document: Mapping[str, object]) -> dict[str, Any]:
     if document.get("schema_version") != SCHEMA_VERSION:
-        raise MetadataTargetSetError(f"unsupported metadata target inventory schema: {document.get('schema_version')!r}")
+        raise MetadataTargetSetError(
+            f"unsupported metadata target inventory schema: {document.get('schema_version')!r}"
+        )
     raw_sets = document.get("target_sets")
     if not isinstance(raw_sets, dict) or not raw_sets:
         raise MetadataTargetSetError("metadata target inventory has no target_sets")

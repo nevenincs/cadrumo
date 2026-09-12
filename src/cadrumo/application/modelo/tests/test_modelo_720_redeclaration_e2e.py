@@ -54,6 +54,7 @@ __all__ = ["register_wizard_catalogue"]
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
@@ -73,7 +74,6 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision, resolve_bucket_source_mesh

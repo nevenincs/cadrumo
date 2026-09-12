@@ -32,7 +32,7 @@ def project_m303_exonerado_390_value_arrival(
         raise FilingExportError(
             translated_message="application.filing.m303_exonerado_390.errors.record_design_source_not_snapshot_owned",
             context={
-                "modelo": Modelo.M303.value,
+                "modelo": Modelo("303").value,
                 "record_design_id": record_design.id,
                 "source_present": snapshot_source is not None,
                 "source_kind": snapshot_source.kind if snapshot_source is not None else None,
@@ -42,7 +42,7 @@ def project_m303_exonerado_390_value_arrival(
         raise FilingExportError(
             translated_message="application.filing.m303_exonerado_390.errors.record_design_snapshot_mismatch",
             context={
-                "modelo": Modelo.M303.value,
+                "modelo": Modelo("303").value,
                 "record_design_id": record_design.id,
                 "snapshot_source_id": snapshot_source.id,
             },

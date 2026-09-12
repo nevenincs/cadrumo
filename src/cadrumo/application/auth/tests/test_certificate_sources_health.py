@@ -15,9 +15,9 @@ from pydantic import SecretStr, ValidationError
 
 from ....adapters.persistence.storage.blob_store.materialisation import get_secret_store
 from ....adapters.persistence.storage.secret_store.store import SecretStore
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from ....tests.profile_capsule import open_test_profile_session
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ..certificate_source_operations import (
     check_operator_certificate_sources,

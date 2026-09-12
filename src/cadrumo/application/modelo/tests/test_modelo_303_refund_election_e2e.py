@@ -43,6 +43,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.auth_provider import AuthProviderKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
@@ -61,7 +62,6 @@ from ....domain.deadlines.models import (
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository

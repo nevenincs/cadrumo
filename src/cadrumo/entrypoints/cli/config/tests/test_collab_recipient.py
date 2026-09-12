@@ -37,8 +37,8 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from pydantic import ValidationError
 
-from .....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from .....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .....tests.user_profile import register_cli_profile
 from ...main import app as root_app
 from ...tests.cli_runner import invoke_typer_app

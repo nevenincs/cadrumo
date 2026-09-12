@@ -13,6 +13,7 @@ import typer
 from pydantic import TypeAdapter
 
 from ....adapters.outbound.llm.models import LLMRequest, PromptDefinition
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.auth.acquisition_lock import acquire_auth_acquisition_lock
 from ....application.modelo.action_errors import ModeloWorkflowGateError
 from ....application.operator_actions.models import (
@@ -34,7 +35,6 @@ from ....core.operator_action_enums import (
     ActionEvidenceProvenance,
 )
 from ....core.optional_extras import MissingOptionalExtraError, OptionalExtra
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
 from ..errors import CliRefusedBoundaryError, command_error_boundary
 from ._english_locale_fixture import english_locale_fixture

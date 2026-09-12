@@ -278,7 +278,7 @@ def aggregate_retenciones_111(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M111.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("111").value, period=period)
 
 
 def aggregate_retenciones_115(
@@ -293,7 +293,7 @@ def aggregate_retenciones_115(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M115.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("115").value, period=period)
 
 
 def aggregate_retenciones_123(
@@ -306,7 +306,7 @@ def aggregate_retenciones_123(
     Covers rendimientos del capital mobiliario: intereses, dividendos, y otros.
     In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M123.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period)
 
 
 def aggregate_retenciones_180(
@@ -324,7 +324,7 @@ def aggregate_retenciones_180(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M180.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("180").value, period=period)
 
 
 def aggregate_retenciones_190(
@@ -340,7 +340,7 @@ def aggregate_retenciones_190(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M190.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("190").value, period=period)
 
 
 def aggregate_retenciones_193(
@@ -353,7 +353,7 @@ def aggregate_retenciones_193(
     Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
-    return _aggregate_for_modelo(observations, modelo=Modelo.M193.value, period=period)
+    return _aggregate_for_modelo(observations, modelo=Modelo("193").value, period=period)
 
 
 class RetencionesTotalsParity(BaseModel):

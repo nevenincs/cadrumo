@@ -166,7 +166,7 @@ def _modelo_100_obligation_advisory_output(unit: WorkUnit) -> tuple[list[Notice]
     guidance the text surface already showed; the text lines are
     rebuilt from the same advisory messages so the two cannot drift.
     """
-    if unit.modelo != Modelo.M100:
+    if unit.modelo != Modelo("1"):
         return ([], [])
     from ...application.overview.status_report import build_filing_obligation_advisories
     from ...application.user_profile.profile_record_repository import ProfileRecordRepository

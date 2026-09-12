@@ -105,7 +105,7 @@ def normalize_m303_carry_observation_envelope(
     projection, and the normalized available/generated pair are checked before
     a later reader can treat the observation as carry evidence.
     """
-    if str(envelope.observation.modelo) != Modelo.M303.value:
+    if str(envelope.observation.modelo) != Modelo("303").value:
         return envelope
 
     disposition_projection = _resolve_result_disposition(envelope)
@@ -136,7 +136,7 @@ def validate_normalized_m303_carry_observation_envelope(
     Every supported Modelo 303 writer produces this canonical shape; an
     unnormalized payload is invalid persisted state, not a compatibility form.
     """
-    if str(envelope.observation.modelo) != Modelo.M303.value:
+    if str(envelope.observation.modelo) != Modelo("303").value:
         raise M303CarryIngressError(
             translated_message="application.calculations.m303_carry.errors.non_m303_envelope",
             context={"modelo": envelope.observation.modelo},
@@ -337,7 +337,7 @@ def _normalize_carry_observation(
         available_was_calculated=available_was_calculated,
     )
 
-    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo.M303.value)
+    modelo = next(candidate for candidate in bundled_authority().modelos if candidate.id == Modelo("303").value)
     revision = select_revision(
         modelo,
         filing_year=observation.filing_year,

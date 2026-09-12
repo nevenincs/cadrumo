@@ -33,8 +33,9 @@ from ..workbench import (
     WorkbenchSearchStatus,
 )
 
-#: The defining module itself, for the attribute scoping below. Named through
-#: `import_module` rather than an absolute self-import, which the gate forbids.
+#: The defining module itself, for the attribute scoping below. ``import_module``
+#: keeps the test's lookup explicit without making either canonical spelling a
+#: dependency-direction requirement.
 workbench_module = import_module("..workbench", package=__package__)
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

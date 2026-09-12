@@ -15,6 +15,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
@@ -29,7 +30,6 @@ from ....domain.modelos.calculation_revision import derive_calculation_revision_
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...aggregation.source_mesh import CalculationSourceContext
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotRepository
 from ...live.snapshot_base import SnapshotLifecycleState

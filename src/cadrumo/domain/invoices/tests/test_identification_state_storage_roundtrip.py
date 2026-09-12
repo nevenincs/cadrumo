@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....core.classification.policies import SensitivityClass
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....core.classification.policies import SensitivityClass
 from ...iva.classification import InvoiceKind
 from ...iva.schema import EUMemberState, IvaCategory
 from ..enums import IvaRate, PaymentStatus

@@ -1369,7 +1369,7 @@ def _m369_unresolved_oss_source_finding(
     provenance trace. This preserves a real zero-valued invoice line while
     refusing both a silent claimed-zero catalogue and a line outside the form.
     """
-    if str(work_unit.modelo) != Modelo.M369.value:
+    if str(work_unit.modelo) != Modelo("369").value:
         return None
     oss_bindings = _m369_oss_bindings(snapshot)
     if not oss_bindings:
@@ -1785,7 +1785,7 @@ def _detail_row_template_casilla_is_satisfied(
     target: CalculationRevision,
     casilla: CasillaDefinition,
 ) -> bool:
-    if str(work_unit.modelo) != Modelo.M349.value or not casilla.section:
+    if str(work_unit.modelo) != Modelo("349").value or not casilla.section:
         return False
     section = str(casilla.section[0])
     if section == "operador":

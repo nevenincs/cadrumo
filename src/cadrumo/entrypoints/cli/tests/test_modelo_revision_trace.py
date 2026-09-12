@@ -22,9 +22,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
+)
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_profile, _invoke
 

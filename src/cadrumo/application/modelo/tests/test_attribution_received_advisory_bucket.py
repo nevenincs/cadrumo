@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -22,7 +23,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .._attribution_received_advisory import _attribution_received_omission_advisory_findings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....application.calculations.observations_repository import IvaWalletDecisionRepository
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -18,7 +19,6 @@ from ....domain.iva_compensation.reconciliation import IvaCompensationReconcilia
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.profile_capsule import seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 

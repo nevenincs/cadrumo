@@ -17,6 +17,7 @@ import pytest
 from textual.widgets import Button, Input
 from textual.worker import WorkerCancelled
 
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.profile_repository import CommittedProfileRepository
 from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
 from ....core.credentials import assess_profile_password
@@ -31,7 +32,6 @@ from ....entrypoints.tui.secret.registration import (
     RegistrationRefusal,
     RegistrationScreen,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [
     pytest.mark.integration,

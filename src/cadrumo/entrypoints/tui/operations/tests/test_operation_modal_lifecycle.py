@@ -28,6 +28,7 @@ from .....adapters.persistence.operations.journal import OperationJournalReposit
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from .....adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -77,7 +78,6 @@ from .....core.operations import (
 from .....core.time.clock import now
 from .....domain.user_profile.values import UserProfileFact
 from .....tests.aeat_literal_fixtures import aeat_url
-from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ..controller import OperationController
 from ..modal import OperationModal, OperationModalDetachedOutcomeV1, OperationModalOutcomeV1
 

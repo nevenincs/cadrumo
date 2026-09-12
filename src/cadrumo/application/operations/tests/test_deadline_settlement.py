@@ -31,6 +31,7 @@ from ....adapters.persistence.operations.secure_references import (
     operation_secure_reference_repository,
 )
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import (
     OperationCancellation,
@@ -41,7 +42,6 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,

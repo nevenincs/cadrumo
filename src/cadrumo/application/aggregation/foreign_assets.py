@@ -234,7 +234,7 @@ def declarable_asset_classes_720(
     Returns a frozenset of :class:`ForeignAssetClass` members.
     """
     resolved_thresholds = thresholds or foreign_asset_declaration_thresholds(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         filing_year=aggregation.period.filing_year,
     )
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
@@ -302,7 +302,7 @@ def aggregate_foreign_assets_720(
             ),
         )
     return ForeignAssetsAggregation(
-        modelo=Modelo.M720.value,
+        modelo=Modelo("720").value,
         period=period,
         rollups=tuple(rollups),
         total_assets=sum(row.assets_count for row in rollups),

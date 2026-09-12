@@ -20,11 +20,11 @@ from typing import TYPE_CHECKING, TypedDict, Unpack
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...review.filter import LedgerReviewFilterSpec
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
 

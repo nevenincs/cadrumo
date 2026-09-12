@@ -20,6 +20,10 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql.orm import SecureObjectRow
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ....adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+)
 from ....application.modelo.work_review import ModeloWorkReview, build_modelo_work_review
 from ....core.aggregation import BindingSourceKind
 from ....core.json_contract import (
@@ -49,7 +53,6 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.modelos.verification_repository import upsert_verification_report
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from .._modelo_rendering import verification_report_notices
 from .._modelo_work_review_cli import _review_lines

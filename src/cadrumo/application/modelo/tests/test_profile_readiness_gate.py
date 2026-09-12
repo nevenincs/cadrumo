@@ -10,6 +10,7 @@ import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....core.modelo import Modelo
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
@@ -28,7 +29,6 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record, seed_test_profile_record
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import IvaWalletDecisionRepository
 from ...user_profile.projections import record_to_path_values
 from ..action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
