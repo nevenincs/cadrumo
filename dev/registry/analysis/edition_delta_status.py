@@ -272,6 +272,21 @@ _FAMILY_DEFAULT_KEYS: Final[Mapping[str, str]] = {
 }
 #: The migration tool's own wording for a root it declared for want of lineage.
 _ROOT_PENDING_LINEAGE_MARK: Final = "predecessor row without lineage"
+#: The causes that make a root TERMINAL. The tool writes one sentence with a
+#: varying parenthetical cause, and which cause it names is the whole question:
+#: a parallel scheme variant, a successor declaring a lower grade, and two
+#: editions overlapping in period are all facts about the forms, and no work of
+#: ours moves them. Every other cause is work. Reading only the lineage mark and
+#: calling the rest law filed two recoverable edges as terminal -- an unretired
+#: withdrawal, which a `retired` continuity evolution discharges, and a row
+#: order, which is the one cause this screen cannot decide from the raw tree
+#: because it needs the compiler's merge order.
+#: Matched case-insensitively, and as stems rather than whole phrases: the
+#: corpus writes "parallel scheme variants" while a hand-authored root writes
+#: "parallel scheme variant", and a classifier that read only one of those
+#: spellings would file a terminal root as work. The stem is the shortest form
+#: that cannot match a different cause.
+_ROOT_CAUSES_BY_LAW: Final = ("parallel scheme variant", "lower grade", "overlapping predecessor")
 #: Families whose members are per-edition claims rather than inheritable
 #: declarations: evidence pins to a specific official workbook, and generated
 #: export layouts owned by the generator. They are never counted as restated.
@@ -553,6 +568,16 @@ class Edge:
         return self.state == "dispositioned" and self.root_kind == "root_pending_lineage"
 
     @property
+    def rooted_recoverable(self) -> bool:
+        """Whether this edge roots away for a cause that is work rather than law."""
+        return self.state == "dispositioned" and self.root_kind == "root_recoverable"
+
+    @property
+    def root_is_open(self) -> bool:
+        """Whether this root is recoverable at all, by either route."""
+        return self.rooted_pending_lineage or self.rooted_recoverable
+
+    @property
     def chain_reach(self) -> float:
         """The share of the predecessor's rows a chain already reaches, 0.0 to 1.0.
 
@@ -565,7 +590,21 @@ class Edge:
 
 
 def _root_kind(reason: str) -> str:
-    return "root_pending_lineage" if _ROOT_PENDING_LINEAGE_MARK in reason else "root_by_law"
+    """Classify an explicit no-predecessor root by the cause the tool named.
+
+    An unrecognised cause falls to ``root_recoverable`` rather than to law. A
+    root is a declaration that this edition states itself in full, and the only
+    reasons that make it permanent are facts about the forms; a wording this
+    screen has not seen is far more likely to be a new cause the tool learned to
+    report than a new way for the law to forbid inheritance. Defaulting the
+    other way is what hid the last two.
+    """
+    spelled = reason.casefold()
+    if _ROOT_PENDING_LINEAGE_MARK in spelled:
+        return "root_pending_lineage"
+    if any(cause in spelled for cause in _ROOT_CAUSES_BY_LAW):
+        return "root_by_law"
+    return "root_recoverable"
 
 
 def _comparable(member: Mapping[str, Any]) -> dict[str, Any]:
@@ -788,7 +827,7 @@ def edges(statuses: tuple[EditionStatus, ...]) -> tuple[Edge, ...]:
                 # the disposition hides nothing. A root the LAW gives -- a
                 # parallel scheme variant, a successor withholding by design --
                 # is left alone, because no cause of ours is what stops it.
-                if root_kind == "root_pending_lineage":
+                if root_kind in {"root_pending_lineage", "root_recoverable"}:
                     blockers = _blockers(predecessor, successor, predecessor_keys)
             else:
                 blockers = _blockers(predecessor, successor, predecessor_keys)
@@ -1356,6 +1395,7 @@ class ModeloSignal:
     edges_rooted_pending_lineage: int = 0
     restated_members: int = 0
     lineage_gap_on_edge: int = 0
+    edges_rooted_recoverable: int = 0
 
     @property
     def outstanding(self) -> int:
@@ -1377,6 +1417,7 @@ class ModeloSignal:
             + self.edges_rooted_pending_lineage
             + self.restated_members
             + self.lineage_gap_on_edge
+            + self.edges_rooted_recoverable
         )
 
 
@@ -1433,6 +1474,7 @@ def modelo_signals(report: Report) -> tuple[ModeloSignal, ...]:
         counts = Counter(finding.kind for edition in editions for finding in edition.findings)
         unlifted = counts["edition_default_undeclared"] + counts["family_default_undeclared"]
         rooted_pending = sum(1 for edge in edges_by_modelo[modelo] if edge.rooted_pending_lineage)
+        rooted_recoverable = sum(1 for edge in edges_by_modelo[modelo] if edge.rooted_recoverable)
         restated_members = counts["member_restated"]
         signals.append(
             ModeloSignal(
@@ -1462,6 +1504,7 @@ def modelo_signals(report: Report) -> tuple[ModeloSignal, ...]:
                 coverage_gaps_undisposed=undisposed_by_modelo[modelo],
                 edges_rooted_pending_lineage=rooted_pending,
                 restated_members=restated_members,
+                edges_rooted_recoverable=rooted_recoverable,
             )
         )
     return tuple(signals)
@@ -1590,6 +1633,7 @@ def _payload(report: Report) -> dict[str, Any]:
                 "coverage_gaps": signal.coverage_gaps,
                 "coverage_gaps_undisposed": signal.coverage_gaps_undisposed,
                 "edges_rooted_pending_lineage": signal.edges_rooted_pending_lineage,
+                "edges_rooted_recoverable": signal.edges_rooted_recoverable,
                 "restated_members": signal.restated_members,
                 "outstanding": signal.outstanding,
             }
@@ -1701,7 +1745,7 @@ def _signal_lines(report: Report) -> list[str]:
     blockers = Counter(
         blocker.split("=")[0]
         for edge in found_edges
-        if edge.state == "blocked" or edge.rooted_pending_lineage
+        if edge.state == "blocked" or edge.root_is_open
         for blocker in edge.blockers
     )
     lines = [
@@ -1730,6 +1774,9 @@ def _signal_lines(report: Report) -> list[str]:
                 *(f"{state}={edge_states.get(state, 0)}" for state in _EDGE_STATES),
                 f"rooted_pending_lineage={sum(1 for edge in found_edges if edge.rooted_pending_lineage)}",
                 f"total={len(found_edges)}",
+                # Appended: roots the tool gave a recoverable cause for, which
+                # `root_by_law` absorbed until it learned to read the cause.
+                f"rooted_recoverable={sum(1 for edge in found_edges if edge.rooted_recoverable)}",
             ]
         ),
         # The worklist, in the campaign's own ordering: restatement lifting is
@@ -1762,7 +1809,8 @@ def _signal_lines(report: Report) -> list[str]:
         # Appended, never inserted: every field above holds the position it
         # held before these two existed.
         f"lineage_on_edge={signal.lineage_gap_on_edge} "
-        f"undisposed={signal.coverage_gaps_undisposed}"
+        f"undisposed={signal.coverage_gaps_undisposed} "
+        f"rooted_recoverable={signal.edges_rooted_recoverable}"
         for signal in signals
     ]
     lines += [
@@ -1791,8 +1839,18 @@ def _signal_lines(report: Report) -> list[str]:
         f"rooted {edge.modelo} {edge.predecessor} -> {edge.successor} "
         f"predecessor_rows={edge.predecessor_rows} unchained={edge.predecessor_rows_without_lineage} "
         f"shared_chains={edge.chained_both_sides} causes={','.join(edge.blockers) or 'none'}"
+        f" kind={edge.root_kind}"
         for edge in found_edges
         if edge.rooted_pending_lineage
+    ]
+    # Recoverable roots get their own record rather than joining `rooted`, whose
+    # population is pinned to the lineage kind by consumers already.
+    lines += [
+        f"rooted_recoverable {edge.modelo} {edge.predecessor} -> {edge.successor} "
+        f"predecessor_rows={edge.predecessor_rows} unchained={edge.predecessor_rows_without_lineage} "
+        f"shared_chains={edge.chained_both_sides} causes={','.join(edge.blockers) or 'none'}"
+        for edge in found_edges
+        if edge.rooted_recoverable
     ]
     return lines
 
@@ -1844,7 +1902,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     blockers = Counter(
         blocker.split("=")[0]
         for edge in found_edges
-        if edge.state == "blocked" or edge.rooted_pending_lineage
+        if edge.state == "blocked" or edge.root_is_open
         for blocker in edge.blockers
     )
     excluded = {*COVERAGE_CONDITIONS, "row_missing_lineage"}
@@ -1865,7 +1923,8 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
         "EDGES",
         f"  migrated {edge_states.get('migrated', 0)}   ready {edge_states.get('ready', 0)}   "
         f"blocked {edge_states.get('blocked', 0)}   dispositioned {edge_states.get('dispositioned', 0)} "
-        f"(rooted pending lineage {rooted_pending})   total {len(found_edges)}",
+        f"(rooted pending lineage {rooted_pending}, rooted recoverable "
+        f"{sum(1 for edge in found_edges if edge.rooted_recoverable)})   total {len(found_edges)}",
         "",
         "ACTIONS",
         f"  lift restatement      {_fmt(unlifted_total):>8}   editions x families",
@@ -1996,7 +2055,7 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     )
     out.append("")
 
-    worklist = [edge for edge in found_edges if edge.state in {"ready", "blocked"} or edge.rooted_pending_lineage]
+    worklist = [edge for edge in found_edges if edge.state in {"ready", "blocked"} or edge.root_is_open]
     out.append("WORKLIST  (edges that are not yet unioned)")
     if worklist:
         out += _table(
@@ -2006,7 +2065,9 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
                     edge.modelo,
                     edge.predecessor,
                     edge.successor,
-                    "rooted" if edge.rooted_pending_lineage else edge.state,
+                    "rooted"
+                    if edge.rooted_pending_lineage
+                    else ("recoverable" if edge.rooted_recoverable else edge.state),
                     _fmt(edge.predecessor_rows),
                     _fmt(edge.predecessor_rows_without_lineage),
                     f"{edge.chain_reach:.0%}",

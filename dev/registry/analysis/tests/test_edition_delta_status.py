@@ -22,6 +22,7 @@ from ..edition_delta_status import (
     COVERAGE_CONDITIONS,
     LINEAGE_SCOPES,
     MEASUREMENTS,
+    Edge,
     _artifacts_dir,
     _signal_lines,
     _write_detail,
@@ -811,6 +812,7 @@ class TestSignal:
             "ready",
             "blocked",
             "rooted",
+            "rooted_recoverable",
             "family",
             "limitation",
         }
@@ -1418,3 +1420,74 @@ class TestDispositionClassification:
                 _write_dispositions(tmp_path / f"{classification}.toml", self._entry(classification))
             )
             assert loaded[("303", 2026, "*")].classification == classification
+
+
+class TestRootKindReadsTheCause:
+    """A root is terminal only for the causes that are facts about the forms.
+
+    `_root_kind` split on one string and filed everything else as law, so an
+    unretired withdrawal and a row order -- both work -- were counted terminal.
+    Two instruments found it: the tool's own reason text, and 355 of 357
+    root-crossing continuity chains sitting on exactly those two edges.
+    """
+
+    def _rooted(self, root: Path, cause: str) -> Edge:
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        reason = f"Stated in full: this edition cannot be materialised exactly from the edition before it ({cause})."
+        _write_edition(
+            root,
+            "999",
+            "2025",
+            manifest=(
+                'valid_from = 2025-01-01\nauthority_grade = "filing"\n'
+                f'predecessor = {{ none = {{ reason = "{reason}" }} }}'
+            ),
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        (edge,) = edges(scan_registry(root))
+        return edge
+
+    @pytest.mark.parametrize(
+        "cause", ["parallel scheme variants", "Parallel Scheme Variant", "lower grade", "overlapping predecessor"]
+    )
+    def test_a_cause_that_is_a_fact_about_the_forms_is_terminal(self, tmp_path: Path, cause: str) -> None:
+        edge = self._rooted(tmp_path, cause)
+        assert edge.root_kind == "root_by_law"
+        assert not edge.root_is_open
+        assert edge.blockers == (), "no cause of ours stops a root the law gives"
+
+    @pytest.mark.parametrize("cause", ["unretired withdrawal", "row order"])
+    def test_a_cause_that_is_work_is_recoverable(self, tmp_path: Path, cause: str) -> None:
+        edge = self._rooted(tmp_path, cause)
+        assert edge.root_kind == "root_recoverable"
+        assert edge.rooted_recoverable
+        assert edge.root_is_open
+
+    def test_an_unrecognised_cause_falls_to_recoverable(self, tmp_path: Path) -> None:
+        """A wording the screen has not seen is a new tool cause far more often than a new law."""
+        assert self._rooted(tmp_path, "some cause nobody has written yet").root_kind == "root_recoverable"
+
+    def test_the_lineage_mark_still_wins(self, tmp_path: Path) -> None:
+        edge = self._rooted(tmp_path, "predecessor row without lineage")
+        assert edge.root_kind == "root_pending_lineage"
+        assert edge.rooted_pending_lineage
+        assert not edge.rooted_recoverable
+
+    def test_a_recoverable_root_is_outstanding_work(self, tmp_path: Path) -> None:
+        self._rooted(tmp_path, "row order")
+        (signal,) = modelo_signals(build_report(tmp_path))
+        assert signal.edges_rooted_recoverable == 1
+        assert signal.outstanding >= 1
+
+    def test_a_recoverable_root_has_its_own_record(self, tmp_path: Path) -> None:
+        """`rooted` keeps its pinned population; the new kind gets a record of its own."""
+        self._rooted(tmp_path, "row order")
+        lines = _signal_lines(build_report(tmp_path))
+        assert [line for line in lines if line.startswith("rooted_recoverable ")]
+        assert not [line for line in lines if line.startswith("rooted 999 ")]

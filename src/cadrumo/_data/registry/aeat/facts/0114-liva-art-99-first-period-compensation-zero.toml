@@ -1,0 +1,17 @@
+[fact]
+fact_id = "liva-art-99:first-period-compensation-zero"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "liva-art-99:first-period-compensation-zero:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-99"]
+source_refs = ["boe-liva-art-99-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "scalar"
+value = 0
+unit = "eur"
