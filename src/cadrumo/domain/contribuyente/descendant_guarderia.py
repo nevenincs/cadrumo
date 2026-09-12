@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
 from .descendant_maternity import DescendantMaternityMixin
-from .descendant_maternity import registry_maternity_relaciones
 from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
     MinimoDescendientesThresholds,
@@ -59,7 +59,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         past the period they turn three
         (:meth:`guarderia_qualifying_meses`).
         """
-        if self.relacion not in registry_maternity_relaciones(context):
+        if self.relacion not in ART_81_1_MATERNIDAD_RELACIONES:
             return 0
         if not self.is_eligible_ordinary(
             filing_year,

@@ -109,10 +109,11 @@ class DescendantMadridMixin(DescendantRecordBase):
         When the child cohabits with both parents and they file individually the
         Madrid manual splits the amount equally between the two declarations
         (the ``lirpf-art-61-shared-custody-proration-factor`` governed fact);
-        otherwise the full amount accrues to this filer (``Decimal("1")``).
+        otherwise the full amount accrues to this filer through the governed
+        full-proration share fact.
         ``custodia_compartida`` is the profile signal for the shared-cohabitation
         case that triggers the ÷2 prorrateo.
         """
         if self.custodia_compartida:
             return context.decimal("lirpf-art-61-shared-custody-proration-factor")
-        return Decimal("1")
+        return context.decimal("madrid-nacimiento-adopcion-full-proration-share")

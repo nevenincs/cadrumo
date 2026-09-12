@@ -19,6 +19,7 @@ _FAMILY_FACT_DATE_AXES: dict[str, DateAxis] = {
     "lirpf-art-81-contribution-ceiling-retired-effective-year": DateAxis.FILING_PERIOD,
     "lirpf-art-81-maternity-post-birth-enrollment-effective-year": DateAxis.FILING_PERIOD,
     "madrid-birth-adoption-following-periods": DateAxis.FILING_PERIOD,
+    "madrid-nacimiento-adopcion-full-proration-share": DateAxis.FILING_PERIOD,
 }
 
 

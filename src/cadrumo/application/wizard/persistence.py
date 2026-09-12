@@ -13,6 +13,7 @@ writer those commands consume.
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypedDict
@@ -20,8 +21,6 @@ from typing import TYPE_CHECKING, Literal, TypedDict
 from pydantic import BaseModel
 
 if TYPE_CHECKING:
-    from datetime import date
-
     from ...domain.contribuyente.descendant import DescendantInfo
     from ...domain.contribuyente.family_types import GuarderiaMonthSpend
     from ...domain.user_profile.values import UserProfileRecord
@@ -33,6 +32,10 @@ from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.user_profile.values import UserProfileRecord
 from ..workflow.errors import WorkflowInputMismatchError
 from .descendant_group import (
@@ -193,17 +196,40 @@ def _instance_count(raw: str) -> int:
         return 0
 
 
-def _discapacidad_grade(raw: str) -> Literal[0, 33, 65] | None:
-    """Narrow a discapacidad answer token to the closed grade set."""
-    match raw:
-        case "0":
-            return 0
-        case "33":
-            return 33
-        case "65":
-            return 65
-        case _:
-            return None
+_DISABILITY_BAND_FACT_ID = "lirpf-descendant-disability-band-catalogue"
+
+
+def _accepted_disability_grades() -> frozenset[int]:
+    """Read the accepted disability-grade tokens from the governed catalogue."""
+    resolved = bundled_authority().resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_DISABILITY_BAND_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date.today(),
+        ),
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError("descendant disability catalogue must resolve as a mapping fact")
+    entries = {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
+    try:
+        encoded = entries["accepted_grades"]
+    except KeyError as exc:
+        raise RegistryValidationError("descendant disability catalogue is missing accepted_grades") from exc
+    try:
+        return frozenset(int(token.strip()) for token in encoded.split(",") if token.strip())
+    except ValueError as exc:
+        raise RegistryValidationError("descendant disability catalogue has invalid accepted_grades") from exc
+
+
+def _discapacidad_grade(raw: str) -> int | None:
+    """Narrow a discapacidad answer token through the governed grade catalogue."""
+    if not raw:
+        return None
+    try:
+        grade = int(raw)
+    except ValueError:
+        return None
+    return grade if grade in _accepted_disability_grades() else None
 
 
 def _safe_entry_date(birth_raw: str, entry_raw: str | None) -> date | None:

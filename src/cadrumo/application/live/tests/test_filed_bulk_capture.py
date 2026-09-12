@@ -23,6 +23,7 @@ from ..remote_state_models import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
 )
+from .filed_observation_test_support import in_memory_filed_observation_test_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,6 +113,7 @@ def test_bulk_capture_reports_registry_unsupported_modelos_as_local_boundaries(t
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
+            ports=in_memory_filed_observation_test_bundle().ports,
             modelos=("151", "721"),
         ),
     )
@@ -148,6 +150,7 @@ def test_bulk_capture_report_exposes_its_evidence_notices_channel(tmp_path: Path
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
+            ports=in_memory_filed_observation_test_bundle().ports,
             modelos=("151",),
         ),
     )
@@ -161,6 +164,7 @@ def test_bulk_capture_accepts_limit_for_locally_bounded_unsupported_modelos(tmp_
             year_from=2024,
             year_to=2024,
             output_root=tmp_path,
+            ports=in_memory_filed_observation_test_bundle().ports,
             modelos=("151",),
             limit=10,
         ),
