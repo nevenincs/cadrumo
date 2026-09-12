@@ -144,12 +144,16 @@ M303_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
 #: The annual period each Modelo 390 edition is rendered for; 390 files only ``0A``.
 M390_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
     "2022": Period.from_year_and_code(2022, "0A"),
+    "2023": Period.from_year_and_code(2023, "0A"),
     "2024": Period.from_year_and_code(2024, "0A"),
     "2025": Period.from_year_and_code(2025, "0A"),
 }
 #: The quarter each Modelo 131 edition is rendered for.
 M131_SCENARIO_PERIODS: Final[Mapping[str, Period]] = {
+    "2019-2023": Period.from_year_and_code(2023, "1T"),
+    "2024": Period.from_year_and_code(2024, "1T"),
     "2025": Period.from_year_and_code(2025, "1T"),
+    "2026": Period.from_year_and_code(2026, "1T"),
 }
 
 

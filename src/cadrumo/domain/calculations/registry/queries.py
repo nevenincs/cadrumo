@@ -581,7 +581,7 @@ class RegistryQueryService:
         definition = self._authority.validate_modelo(modelo.strip())
         requested_period = period.strip()
         declared_by_revision = tuple(
-            token for revision in definition.revisions.values() for token in revision.period_selector.periods
+            token for revision in definition.revisions.values() for token in revision.period_selector.declared_periods
         )
         registry_period = (
             registry_period_for_request(declared_by_revision, requested_period) or requested_period.upper()
@@ -624,7 +624,8 @@ class RegistryQueryService:
             on=as_of,
             support=self._authority.catalogues.supported_filing_years,
         )
-        if not revision.period_selector.periods:
+        year_periods = revision.period_selector.periods_for_year(filing_year)
+        if not year_periods:
             raise RegistryValidationError(
                 f"modelo {definition.id} revision {revision.id!r} has no period token for filing year {filing_year}",
             )
@@ -632,7 +633,7 @@ class RegistryQueryService:
             definition=definition,
             revision=revision,
             filing_year=filing_year,
-            registry_period=revision.period_selector.periods[0],
+            registry_period=year_periods[0],
         )
 
 
@@ -662,7 +663,11 @@ def _build_modelo_describe_report(context: ResolvedRegistryQueryContext) -> Mode
         period=registry_period,
         valid_from=revision.valid_from,
         valid_to=revision.valid_to,
-        periods=tuple(revision.period_selector.periods),
+        periods=(
+            revision.period_selector.declared_periods
+            if filing_year is None
+            else revision.period_selector.periods_for_year(filing_year)
+        ),
         casilla_count=len(revision.casillas),
         manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
         bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),

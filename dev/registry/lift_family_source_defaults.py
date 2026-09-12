@@ -142,6 +142,10 @@ class EditionLift:
     refusal: str = ""
     members: int = 0
     fragments: tuple[Path, ...] = ()
+    #: Whether the manifest already declares this default, so only the members
+    #: are rewritten. The declaration is the higher authority either way: an
+    #: equal one is not rewritten, it is simply already true.
+    manifest_declared: bool = False
 
     @property
     def liftable(self) -> bool:
@@ -228,6 +232,24 @@ def _header_id(header: re.Match[str]) -> str:
     return str(header.group("dq") or header.group("sq") or header.group("bare") or "")
 
 
+def _rewritable_members(members: Sequence[Mapping[str, Any]], default: tuple[str, ...]) -> int:
+    """Count the members whose own ``source_refs`` the member-side rule would rewrite.
+
+    A member states the default exactly, or opens with it and carries a tail;
+    either is work. A member stating anything else is irreducible and is kept
+    whole, so an edition holding only those has nothing left to lift and is
+    reported as done rather than as a lift that rewrites nothing.
+    """
+    rewritable = 0
+    for member in members:
+        stated = member.get("source_refs")
+        if not isinstance(stated, list):
+            continue
+        refs = tuple(str(item) for item in stated)
+        rewritable += refs[: len(default)] == default
+    return rewritable
+
+
 def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | None:
     """Decide one edition/family: the default to declare, a refusal, or nothing to do."""
     members, fragments = _members(edition_dir, family)
@@ -238,7 +260,7 @@ def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | N
     declared = _revision_table(edition_dir).get(key)
     derived, withheld = edition_source_default(members)
 
-    def lift(*, default: tuple[str, ...] = (), refusal: str = "") -> EditionLift:
+    def lift(*, default: tuple[str, ...] = (), refusal: str = "", manifest_declared: bool = False) -> EditionLift:
         return EditionLift(
             modelo=modelo,
             edition=edition,
@@ -247,23 +269,37 @@ def plan_edition(modelo: str, edition_dir: Path, family: str) -> EditionLift | N
             refusal=refusal,
             members=len(members),
             fragments=fragments,
+            manifest_declared=manifest_declared,
+        )
+
+    def unrewritable(default: tuple[str, ...]) -> EditionLift | None:
+        if family not in _MEMBER_REWRITE_FAMILIES:
+            return None
+        unreproducible = _unreproducible_statements(fragments, edition, family)
+        if not unreproducible:
+            return None
+        return lift(
+            default=default,
+            refusal=f"{len(unreproducible)} source_refs statement(s) not textually rewritable: "
+            + "; ".join(unreproducible),
         )
 
     if isinstance(declared, list):
         already = tuple(str(item) for item in declared)
         if derived is not None and already != derived:
             return lift(refusal=f"{key} already declares {list(already)}; the rule derives {list(derived)}")
-        return None
+        # A declaration equal to the derived default is already true, so the
+        # manifest is left alone -- but the members it speaks for may still
+        # restate it. Declaring the default and lifting it out of the members
+        # are two halves of one lift, and an edition that took only the first
+        # half is not finished: the restatement stands, and the member-side
+        # rule applies to it unchanged.
+        if family not in _MEMBER_REWRITE_FAMILIES or derived is None or not _rewritable_members(members, already):
+            return None
+        return unrewritable(already) or lift(default=already, manifest_declared=True)
     if derived is None:
         return lift(refusal=str(withheld))
-    if family in _MEMBER_REWRITE_FAMILIES:
-        unreproducible = _unreproducible_statements(fragments, edition, family)
-        if unreproducible:
-            return lift(
-                refusal=f"{len(unreproducible)} source_refs statement(s) not textually rewritable: "
-                + "; ".join(unreproducible)
-            )
-    return lift(default=derived)
+    return unrewritable(derived) or lift(default=derived)
 
 
 def plan_modelo(modelo_dir: Path, families: Sequence[str] = FAMILIES) -> ModeloPlan:
@@ -390,6 +426,8 @@ def apply_plan(plan: ModeloPlan, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                     if rewritten != text:
                         _write(fragment, rewritten)
                         touched.append(fragment)
+            if lift.manifest_declared:
+                continue
             manifest = edition_dir / _MANIFEST
             declared = _manifest_with_default(
                 remember(manifest), lift.edition, FAMILY_DEFAULT_KEY[lift.family], lift.default
