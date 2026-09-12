@@ -49,7 +49,8 @@ from ....core.atomic_write import atomic_write_bytes
 from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from .facts.schema import TAGGED_FACT_ATOM_CONTEXT, FactAtomField, OptionalFactAtomField, tagged_fact_atom_json
 from .provenance import NormativeCorpusProvenance
-from .schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor, RegistryCatalogues
+from .revision_contracts import DeclaredPredecessor, NoPredecessor
+from .schema import ModeloDefinition, RegistryCatalogues
 
 __all__ = [
     "AUTHORITY_ARTIFACT_SCHEMA_VERSION",
@@ -304,6 +305,7 @@ def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
 
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
     """Return the canonical digest-checked JSON frame for ``artifact``."""
+    artifact.catalogues.runtime.require_complete()
     document = {
         "schema_version": AUTHORITY_ARTIFACT_SCHEMA_VERSION,
         "payload": _artifact_document(artifact),
@@ -398,12 +400,14 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
             )
             for item in _required_sequence(evidence_document, "sources")
         )
-        return AuthorityArtifact(
+        artifact = AuthorityArtifact(
             modelos=modelos,
             catalogues=catalogues,
             identity_digest=identity_digest,
             evidence=AuthorityEvidenceProjection(legal=legal_evidence, sources=source_evidence),
         )
+        artifact.catalogues.runtime.require_complete()
+        return artifact
     except (ValidationError, TypeError, ValueError) as exc:
         raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
 
@@ -454,6 +458,12 @@ def _json_value(value: object) -> object:
 
 def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:
     """Return whether the schema explicitly permits this field to be omitted."""
+    if field_name == "kind":
+        # Registry discriminated unions use ``kind`` as their wire tag.  A
+        # member commonly gives that Literal field a default so direct Python
+        # construction stays ergonomic, but the parent union still requires
+        # the tag when it rehydrates canonical JSON.
+        return False
     field = type(model).model_fields[field_name]
     if field.is_required():
         return False

@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0391"
+continuidad_id = "irpf-ganancias-ejercicios-anteriores-imputacion-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:684 y aeat-dr-100-2024-dictionary:699: campo G2D_AT, tipo TIT; mismo titular de ganancias de transmisiones anteriores imputables al ejercicio, descrito por el grupo oficial de ambas ediciones."
 number = "0391"
 section = ["toma_datos_ampliada"]
 data_type = "text"

@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0538"
+# Grounding: aeat-dr-100-2020-dictionary:753, CIEST2; escala estatal sobre el mínimo personal y familiar aplicable a la base del ahorro.
+continuidad_id = "irpf-escala-sobre-minimo-ahorro-estatal"
 number = "0538"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_minimo_ahorro_estatal"

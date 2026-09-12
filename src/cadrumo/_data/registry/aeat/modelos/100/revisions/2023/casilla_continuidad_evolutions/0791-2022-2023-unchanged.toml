@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1364 y aeat-dr-100-2023-dictionary:1375; Barcelona Equestrian Challenge (4ª Edición), columna Aplicado, M21BECA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0791-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-barcelona-equestrian-challenge-4a-edicion-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

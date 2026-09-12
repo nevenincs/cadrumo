@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0558"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:772 y aeat-dr-100-2021-dictionary:787: campo DED6E; parte estatal de la deducción por rendimientos de bienes corporales producidos en Canarias en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0558"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_bienes_corporales_canarias_estatal"

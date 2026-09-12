@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00009"
+continuidad_id = "is-entidad-dominante-de-grupo-fiscal"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 75/75, filas 80/80: Entidad dominante de grupo fiscal [00009]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00009"
 section = ["entidad_dominante_de_grupo_fiscal"]
 data_type = "decimal"

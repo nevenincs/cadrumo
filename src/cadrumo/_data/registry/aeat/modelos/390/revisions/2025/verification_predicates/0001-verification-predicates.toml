@@ -4,18 +4,21 @@
 # Modelo 303 totals before VERIFICADO_COMPLETO is granted.
 
 [[revisions."2025".verification_predicates]]
+id = "equals:cuota-devengada-total-equals-reconciliacion-303"
 predicate_id = "modelo-390-cuota-devengada-total-equals-reconciliacion-303"
 expression = 'equals(["iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 
 [[revisions."2025".verification_predicates]]
+id = "equals:cuota-deducible-total-equals-reconciliacion-303"
 predicate_id = "modelo-390-cuota-deducible-total-equals-reconciliacion-303"
 expression = 'equals(["iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-17", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 
 [[revisions."2025".verification_predicates]]
+id = "equals:resultado-regimen-general-equals-reconciliacion-303"
 predicate_id = "modelo-390-resultado-regimen-general-equals-reconciliacion-303"
 expression = 'equals(["iva.anual.resultado-regimen-general", "iva.anual.reconciliacion.resultado-303"])'
 finding_kind = "BLOCKING_RULE"

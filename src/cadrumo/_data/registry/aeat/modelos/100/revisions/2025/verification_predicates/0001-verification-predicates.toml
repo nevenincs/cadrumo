@@ -8,6 +8,7 @@
 # bound from the prior filing's 1391). You cannot compensate more negative base
 # than you hold.
 [[revisions."2025".verification_predicates]]
+id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-stock"
 predicate_id = "modelo-100-2025-compensacion-base-neg-general-no-excede-stock"
 expression = 'cap_le_when_positive(["1389", "1388"])'
 finding_kind = "BLOCKING_RULE"
@@ -18,6 +19,7 @@ legal_refs = ["ley-35-2006:art-50"]
 # = min(1388 stock, max(0, 0435 − 0461 − 0468))). When the ceiling is positive, an
 # applied amount above it is an over-compensation the verify gate refuses;
 [[revisions."2025".verification_predicates]]
+id = "cap-le-when-positive:compensacion-base-neg-general-no-excede-limite"
 predicate_id = "modelo-100-2025-compensacion-base-neg-general-no-excede-limite"
 expression = 'cap_le_when_positive(["1389", "base-liq-neg-general-2024-aplicada-maxima"])'
 finding_kind = "BLOCKING_RULE"
@@ -44,6 +46,7 @@ legal_refs = ["ley-35-2006:art-50"]
 # antecedent <= 0, so loss / zero-general-base / savings-only filers never fire.
 # Mirrors the M200 base-determination and M131 pago-fraccionado advisories.
 [[revisions."2025".verification_predicates]]
+id = "implies-nonzero:cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
 predicate_id = "modelo-100-2025-cuota-resultante-determinada-cuando-base-liquidable-general-positiva"
 expression = 'implies_nonzero(["0500", "0595"])'
 finding_kind = "ADVISORY"
@@ -66,6 +69,7 @@ legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63", "ley-35-2006:art-79"]
 # ADVISORY (a legitimately-eligible pre-2013 acquirer / construction case remains
 # permissible, so this alerts rather than refuses). Grounded in LIRPF DT 18ª.
 [[revisions."2025".verification_predicates]]
+id = "deduccion-requires-adquisicion-before:deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
 predicate_id = "modelo-100-2025-deduccion-vivienda-habitual-requiere-adquisicion-anterior-2013"
 expression = 'deduccion_requires_adquisicion_before(["0547", "0708", "0690", "2013-01-01"])'
 finding_kind = "ADVISORY"
@@ -110,42 +114,49 @@ legal_refs = ["ley-35-2006:dt-18"]
 # check.
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
 predicate_id = "modelo-100-2025-eo-agraria-indice-medios-ajenos-personal-asalariado-incompatibles"
 expression = 'at_most_one_positive(["1540", "1541"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-medios-ajenos"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-medios-ajenos"
 expression = 'at_most_one_positive(["1547", "1540"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-personal-asalariado"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-personal-asalariado"
 expression = 'at_most_one_positive(["1547", "1541"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-tierras-arrendadas"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-tierras-arrendadas"
 expression = 'at_most_one_positive(["1547", "1542"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-agricultura-ecologica"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-agricultura-ecologica"
 expression = 'at_most_one_positive(["1547", "1544"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-regadio-electrico"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-regadio-electrico"
 expression = 'at_most_one_positive(["1547", "1545"])'
 finding_kind = "ADVISORY"
 legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 
 [[revisions."2025".verification_predicates]]
+id = "at-most-one-positive:eo-agraria-indice-forestal-excluye-pequena-empresa"
 predicate_id = "modelo-100-2025-eo-agraria-indice-forestal-excluye-pequena-empresa"
 expression = 'at_most_one_positive(["1547", "1546"])'
 finding_kind = "ADVISORY"
@@ -179,6 +190,7 @@ legal_refs = ["orden-hac-1347-2024:anexo-i-instruccion-2-3"]
 # The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
 # never filed Modelo 111 and it cannot arrive from AEAT on this taxpayer's behalf.
 [[revisions."2025".verification_predicates]]
+id = "implies-nonzero:retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
 predicate_id = "modelo-100-2025-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
 expression = 'implies_nonzero(["0012", "0596"])'
 finding_kind = "ADVISORY"
@@ -224,6 +236,7 @@ legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]
 # taxpayer never filed Modelo 123 (the payer files it) and it cannot arrive
 # from AEAT on this taxpayer's behalf.
 [[revisions."2025".verification_predicates]]
+id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
 predicate_id = "modelo-100-2025-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
 expression = 'implies_nonzero(["0036", "0597"])'
 finding_kind = "ADVISORY"

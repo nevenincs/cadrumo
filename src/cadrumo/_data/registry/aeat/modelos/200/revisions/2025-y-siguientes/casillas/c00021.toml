@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00021"
+continuidad_id = "is-establecimiento-permanente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 41/41, filas 46/46: Establecimiento permanente [00021]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00021"
 section = ["establecimiento_permanente"]
 data_type = "decimal"

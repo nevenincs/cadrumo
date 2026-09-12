@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00074"
+continuidad_id = "is-contribuyente-que-financia-producciones-con-derecho-a-la-deduccion-del-art-36-1-y-36-3-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 99/99, filas 104/104: Contribuyente que financia producciones con derecho a la deducción del art. 36.1 y 36.3 LIS [00074]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00074"
 section = ["contribuyente_que_financia_producciones_con_derech"]
 data_type = "decimal"

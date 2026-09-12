@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00028"
+continuidad_id = "is-tributacion-conjunta-estado-diput-cdad-forales"
 number = "00028"
 section = ["tributacion_conjunta_estado_diput_cdad_forales"]
 data_type = "decimal"

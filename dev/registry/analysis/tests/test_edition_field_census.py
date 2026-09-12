@@ -132,3 +132,34 @@ class TestSignal:
         assert any(line.startswith("field bindings provider[kind=manual] ") for line in first)
         declared = {"#", "corpus", "fields", "field", "unused", "divergent", "limitation"}
         assert {line.split(" ", 1)[0] for line in first} <= declared
+
+
+class TestChainFamilies:
+    """A discriminated-union chain family is measured against the union of its variants' keys."""
+
+    def _identifier_evolution(self, root: Path, extra: str = "") -> None:
+        _edition(
+            root,
+            "180",
+            "2025",
+            manifest="valid_from = 2025-01-01",
+            sections={
+                "identifier_evolutions": (
+                    '[[revisions."2025".identifier_evolutions]]\n'
+                    'family = "bindings"\nidentifier = "old-id"\nkind = "replaced"\nreplaced_by = "new-id"\n'
+                    'to_revision = "2025"\nlegal_refs = ["ley-37-1992:art-1"]\n'
+                    'source_refs = ["aeat-dr-180-2025"]\n' + extra
+                )
+            },
+        )
+
+    def test_the_replaced_variant_keys_are_typed(self, tmp_path: Path) -> None:
+        self._identifier_evolution(tmp_path)
+        family = _family(build_report(tmp_path), "identifier_evolutions")
+        assert {item.path for item in family.fields if item.klass == "unknown"} == set()
+        assert next(item for item in family.fields if item.path == "replaced_by").klass == "typed"
+
+    def test_an_unknown_key_on_a_chain_family_still_bites(self, tmp_path: Path) -> None:
+        self._identifier_evolution(tmp_path, extra="invented = 1\n")
+        family = _family(build_report(tmp_path), "identifier_evolutions")
+        assert {item.path for item in family.fields if item.klass == "unknown"} == {"invented"}

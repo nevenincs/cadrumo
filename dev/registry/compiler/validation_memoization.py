@@ -13,27 +13,34 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.runtime_catalogues import RuntimeRegistryCatalogues
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from .source_evidence_fingerprint import SourceEvidenceFingerprint
 
-_CatalogueCacheKey = tuple[int, int, int, str | None, SourceEvidenceFingerprint]
+_CatalogueCacheKey = tuple[int, int, int, int, str | None, SourceEvidenceFingerprint]
 _CatalogueCacheValue = tuple[
-    Mapping[str, LegalReference], Mapping[str, SourceReference], GovernedFactCatalogue, tuple[str, ...]
+    Mapping[str, LegalReference],
+    Mapping[str, SourceReference],
+    GovernedFactCatalogue,
+    RuntimeRegistryCatalogues,
+    tuple[str, ...],
 ]
 _ModeloValidationCacheKey = tuple[
-    int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
+    int, int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
 ]
 _ModeloValidationCacheValue = tuple[
     ModeloDefinition,
     Mapping[str, LegalReference],
     Mapping[str, SourceReference],
     GovernedFactCatalogue,
+    RuntimeRegistryCatalogues,
     tuple[str, ...],
 ]
 _RegistryValidationCacheKey = tuple[
     tuple[int, ...],
+    int,
     int,
     int,
     int,
@@ -47,6 +54,7 @@ _RegistryValidationCacheValue = tuple[
     Mapping[str, LegalReference],
     Mapping[str, SourceReference],
     GovernedFactCatalogue,
+    RuntimeRegistryCatalogues,
     tuple[str, ...],
 ]
 

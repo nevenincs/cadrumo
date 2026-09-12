@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1193, M21CVMA; V Centenario de la expedición de la primera vuelta al mundo de Fernando de Magallanes y Juan Sebastián Elcano deja de figurar como programa aplicado en aeat-dr-100-2023-dictionary.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0776-2022-2023-retired"
+continuidad_id = "irpf-aeip-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-elcano-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

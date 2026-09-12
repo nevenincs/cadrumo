@@ -80,11 +80,11 @@ _InvoiceRowField = Literal[
     "rectified_base_previous",
 ]
 
-# Canonical invoice-shaped binding source kinds. Re-exported from
+# Canonical invoice-shaped binding source kinds, imported from
 # :data:`core.aggregation.INVOICE_BINDING_SOURCE_KINDS`, which derives the
 # set from :class:`~core.BindingSourceKind` (the single source-kind
-# taxonomy) rather than hand-listing strings. Every consumer that needs "is
-# this binding an invoice binding?" routes through this name.
+# taxonomy) rather than hand-listing strings. Cross-domain consumers import the
+# taxonomy from its defining core module.
 __all__ = [
     "InvoiceObservation",
     "is_m347_declarante_summary_invoice_binding",

@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1699"
+continuidad_id = "irpf-aeip-centenario-del-rugby-en-espana-y-de-la-unio-esportiva-santboiana-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1192 y aeat-dr-100-2022-dictionary:1250: campo M21CREA; columna Aplicado en esta declaración del programa Centenario del Rugby en España y de la Unió Esportiva Santboiana en Anexo A. Misma designación y función fiscal."
 number = "1699"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

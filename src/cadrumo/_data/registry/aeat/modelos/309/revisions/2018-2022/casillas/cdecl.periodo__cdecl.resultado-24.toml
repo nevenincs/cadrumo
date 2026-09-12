@@ -16,6 +16,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.tipo-declaracion"
+continuidad_id = "declaracion-tipo-309"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the declaration type, with note 1 defining I as ingreso. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "13"
 section = ["declarante", "liquidacion"]
 data_type = "text"
@@ -27,6 +30,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.nombre"
+continuidad_id = "declarante-nombre-309"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the declarant's given name, separate from surnames or corporate name. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "83-102"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -51,6 +57,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-apellidos"
+continuidad_id = "transmitente-apellidos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's surnames or corporate name, separate from the given-name field. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "118-177"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -62,6 +71,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-nombre"
+continuidad_id = "transmitente-nombre"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's given name, separate from the surnames or corporate-name field. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "178-197"
 section = ["declarante", "liquidacion"]
 data_type = "name"
@@ -73,6 +85,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.transmitente-pais"
+continuidad_id = "transmitente-pais"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the transferor's two-character country field. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "198-199"
 section = ["declarante", "liquidacion"]
 data_type = "country_code"
@@ -84,6 +99,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.situacion-tributaria"
+continuidad_id = "situacion-tributaria"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the taxpayer-status selection: agriculture, equivalence surcharge, no deduction, non-business legal person, non-business individual, or other. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "200"
 section = ["declarante", "liquidacion"]
 data_type = "text"
@@ -95,6 +113,9 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2018-2022".casillas]]
 id = "decl.hecho-imponible"
+continuidad_id = "hecho-imponible"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 explicitly preserve the taxable-event selection: intra-EU goods, new means of transport, reverse charge, immovable investment goods, administrative/judicial proceedings, or other. The M30901 description and qualification establish the same legal role independently of the field's record position."
 number = "201"
 section = ["declarante", "liquidacion"]
 data_type = "text"

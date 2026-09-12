@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1183 y aeat-dr-100-2022-dictionary:1238; Año Santo Guadalupense 2021, columna Aplicado, M21ASGA.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-1695-2021-2022-unchanged"
+continuidad_id = "irpf-aeip-ano-santo-guadalupense-2021-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

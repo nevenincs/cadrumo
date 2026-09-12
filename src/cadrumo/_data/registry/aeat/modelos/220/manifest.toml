@@ -16,3 +16,9 @@ source_refs = [
     "aeat-modelo-200-manual-2025",
     "boe-modelo-200-2025-form",
 ]
+
+[[modelo.pending_ejercicio_ordenes]]
+filing_year = 2026
+approval_cadence = "per_ejercicio_orden"
+rests_on = "orden-hac-529-2026:art-3"
+expected_publication_year = 2027

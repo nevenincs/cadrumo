@@ -1,0 +1,9 @@
+# Grounding: C_IMPMJEAACC, mejoras de años anteriores en el inmueble accesorio a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0143-2023-2025-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-mejoras-previas"
+from_revision = "2023"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23","orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2023-dictionary","aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]

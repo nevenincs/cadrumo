@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00101"
+continuidad_id = "is-balance-activo-no-corriente-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 6/6, filas 11/11: Balance: Activo (I) - Activo - ACTIVO NO CORRIENTE [00101]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00101"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00102"
+continuidad_id = "is-balance-activo-no-corriente-inmovilizado-intangible"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 7/7, filas 12/12: Balance: Activo (I) - Activo - Inmovilizado intangible  [00102]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00102"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00103"
+continuidad_id = "is-balance-activo-no-corriente-desarrollo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 8/8, filas 13/13: Balance: Activo (I) - Activo - Desarrollo  [00103]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00103"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -27,6 +36,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00104"
+continuidad_id = "is-balance-activo-no-corriente-concesiones"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 9/9, filas 14/14: Balance: Activo (I) - Activo - Concesiones  [00104]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00104"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -36,6 +48,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00105"
+continuidad_id = "is-balance-activo-no-corriente-patentes-licencias-marcas-y-similares"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 10/10, filas 15/15: Balance: Activo (I) - Activo - Patentes, licencias, marcas y similares  [00105]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00105"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -45,6 +60,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00106"
+continuidad_id = "is-balance-activo-no-corriente-fondo-de-comercio"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 11/11, filas 16/16: Balance: Activo (I) - Activo - Fondo de comercio  [00106]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00106"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -54,6 +72,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00107"
+continuidad_id = "is-balance-activo-no-corriente-aplicaciones-informaticas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 12/12, filas 17/17: Balance: Activo (I) - Activo - Aplicaciones informáticas  [00107]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00107"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -63,6 +84,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00108"
+continuidad_id = "is-balance-activo-no-corriente-investigacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 13/13, filas 18/18: Balance: Activo (I) - Activo - Investigación  [00108]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00108"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -72,6 +96,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00109"
+continuidad_id = "is-balance-activo-no-corriente-otro-inmovilizado-intangible"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 15/15, filas 20/20: Balance: Activo (I) - Activo - Otro inmovilizado intangible  [00109]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00109"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -90,6 +117,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00111"
+continuidad_id = "is-balance-activo-no-corriente-inmovilizado-material"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 17/17, filas 22/22: Balance: Activo (I) - Activo - Inmovilizado material  [00111]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00111"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -99,6 +129,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00112"
+continuidad_id = "is-balance-activo-no-corriente-terrenos-y-construcciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 18/18, filas 23/23: Balance: Activo (I) - Activo - Terrenos y construcciones  [00112]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00112"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -108,6 +141,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00113"
+continuidad_id = "is-balance-activo-no-corriente-instalaciones-tecnicas-y-otro-inmovilizado-material"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 19/19, filas 24/24: Balance: Activo (I) - Activo - Instalaciones técnicas y otro inmovilizado material  [00113]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00113"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -117,6 +153,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00114"
+continuidad_id = "is-balance-activo-no-corriente-inmovilizado-en-curso-y-anticipos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 20/20, filas 25/25: Balance: Activo (I) - Activo - Inmovilizado en curso y anticipos [00114]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00114"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -126,6 +165,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00115"
+continuidad_id = "is-balance-activo-no-corriente-inversiones-inmobiliarias"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 21/21, filas 26/26: Balance: Activo (I) - Activo - Inversiones inmobiliarias [00115]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00115"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -135,6 +177,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00116"
+continuidad_id = "is-balance-inversiones-inmobiliarias-terrenos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 22/22, filas 27/27: Balance: Activo (I) - Activo - Terrenos [00116]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00116"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -144,6 +189,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00117"
+continuidad_id = "is-balance-inversiones-inmobiliarias-construcciones"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 23/23, filas 28/28: Balance: Activo (I) - Activo - Construcciones [00117]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00117"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -153,6 +201,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00118"
+continuidad_id = "is-balance-activo-no-corriente-inversiones-en-empresas-del-grupo-y-asociadas-a-largo-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 24/24, filas 29/29: Balance: Activo (I) - Activo - Inversiones en empresas del grupo y asociadas a largo plazo  [00118]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00118"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -171,6 +222,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00120"
+continuidad_id = "is-balance-inversiones-grupo-asociadas-largo-plazo-creditos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 26/26, filas 31/31: Balance: Activo (I) - Activo - Créditos a empresas [00120]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00120"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -225,6 +279,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00126"
+continuidad_id = "is-balance-activo-no-corriente-inversiones-financieras-a-largo-plazo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 32/32, filas 37/37: Balance: Activo (I) - Activo - Inversiones financieras a largo plazo [00126]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00126"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -243,6 +300,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00128"
+continuidad_id = "is-balance-inversiones-financieras-largo-plazo-creditos-terceros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 34/34, filas 39/39: Balance: Activo (I) - Activo - Créditos a terceros [00128]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00128"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -297,6 +357,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00134"
+continuidad_id = "is-balance-activo-no-corriente-activos-por-impuesto-diferido"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 40/40, filas 45/45: Balance: Activo (I) - Activo - Activos por impuesto diferido [00134]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00134"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -306,6 +369,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00135"
+continuidad_id = "is-balance-activo-no-corriente-deudores-comerciales-no-corrientes"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 41/41, filas 46/46: Balance: Activo (I) - Activo - Deudores comerciales no corrientes [00135]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00135"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -315,6 +381,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00136"
+continuidad_id = "is-balance-activo-corriente-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 42/42, filas 47/47: Balance: Activo (I) - Activo - ACTIVO CORRIENTE [00136]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00136"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -324,6 +393,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00137"
+continuidad_id = "is-balance-activo-corriente-activos-no-corrientes-mantenidos-para-la-venta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 43/43, filas 48/48: Balance: Activo (I) - Activo - Activos no corrientes mantenidos para la venta [00137]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00137"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -333,6 +405,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00138"
+continuidad_id = "is-balance-activo-corriente-existencias"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 44/44, filas 49/49: Balance: Activo (I) - Activo - Existencias [00138]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00138"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -342,6 +417,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00139"
+continuidad_id = "is-balance-activo-corriente-existencias-comerciales"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 45/45, filas 50/50: Balance: Activo (I) - Activo - Comerciales  [00139]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00139"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -351,6 +429,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00140"
+continuidad_id = "is-balance-activo-corriente-materias-primas-y-otros-aprovisionamientos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 46/46, filas 51/51: Balance: Activo (I) - Activo - Materias primas y otros aprovisionamientos [00140]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00140"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -360,6 +441,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00141"
+continuidad_id = "is-balance-activo-corriente-productos-en-curso"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 47/47, filas 52/52: Balance: Activo (I) - Activo - Productos en curso [00141]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00141"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -369,6 +453,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00142"
+continuidad_id = "is-balance-activo-corriente-productos-en-curso-de-ciclo-largo-de-produccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 48/48, filas 53/53: Balance: Activo (I) - Activo - Productos en curso - De ciclo largo de producción  [00142]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00142"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -378,6 +465,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00143"
+continuidad_id = "is-balance-activo-corriente-productos-en-curso-de-ciclo-corto-de-produccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 49/49, filas 54/54: Balance: Activo (I) - Activo - Productos en curso - De ciclo corto de producción  [00143]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00143"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -387,6 +477,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00144"
+continuidad_id = "is-balance-activo-corriente-productos-terminados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 50/50, filas 55/55: Balance: Activo (I) - Activo - Productos terminados [00144]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00144"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -396,6 +489,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00145"
+continuidad_id = "is-balance-activo-corriente-productos-terminados-de-ciclo-largo-de-produccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 51/51, filas 56/56: Balance: Activo (I) - Activo - Productos terminados - De ciclo largo de producción  [00145]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00145"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -405,6 +501,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00146"
+continuidad_id = "is-balance-activo-corriente-productos-terminados-de-ciclo-corto-de-produccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 52/52, filas 57/57: Balance: Activo (I) - Activo - Productos terminados - De ciclo corto de producción  [00146]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00146"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -414,6 +513,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00147"
+continuidad_id = "is-balance-activo-corriente-subproductos-residuos-y-materiales-recuperados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 53/53, filas 58/58: Balance: Activo (I) - Activo - Subproductos, residuos y materiales recuperados [00147]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00147"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -423,6 +525,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00148"
+continuidad_id = "is-balance-activo-corriente-anticipos-a-proveedores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200003/DP200003, campos 54/54, filas 59/59: Balance: Activo (I) - Activo - Anticipos a proveedores [00148]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de activo corriente/no corriente segun manuales Sociedades 2024/2025, cap. 4, regimen general."
 number = "00148"
 section = ["balance_activo_i", "activo"]
 data_type = "money"

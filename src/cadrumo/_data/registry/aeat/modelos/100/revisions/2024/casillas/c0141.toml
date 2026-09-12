@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0141"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-importe-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:234 y aeat-dr-100-2024-dictionary:247: C_COSTEADACC, importe de adquisición del inmueble accesorio a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0141"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_importe_adquisicion"

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1099 y aeat-dr-100-2022-dictionary:1193; V Centenario de la expedición de la primera vuelta al mundo de Fernando de Magallanes y Juan Sebastián Elcano, columna Aplicado, M21CVMA.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-0776-2021-2022-unchanged"
+continuidad_id = "irpf-aeip-v-centenario-de-la-expedicion-de-la-primera-vuelta-al-mundo-de-fernando-de-magallanes-y-juan-sebastian-elcano-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

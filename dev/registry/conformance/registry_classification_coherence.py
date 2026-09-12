@@ -68,7 +68,7 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from cadrumo.core.modelo import NON_REGISTRY_MODELOS, Modelo
+from cadrumo.core.modelo import NON_REGISTRY_MODELOS
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.prose_elision import PROSE_ELISION_MARKER, elide_to_cap
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -325,7 +325,7 @@ def audit_bundled_classification_coherence() -> RegistryClassificationAudit:
     return build_classification_coherence_audit(
         modelos,
         non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
-        known_modelo_codes=frozenset(item.value for item in Modelo),
+        known_modelo_codes=frozenset(str(modelo.id) for modelo in modelos),
         registry_validated=False,
     )
 

@@ -10,6 +10,7 @@
 
 [[revisions."2021".casillas]]
 id = "490-01-indicador-pagina-complementaria-12"
+continuidad_id = "pagina-complementaria-liquidacion"
 number = "490-01-indicador-pagina-complementaria"
 section = ["490_01"]
 data_type = "text"
@@ -19,6 +20,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-tipo-declaracion-13"
+continuidad_id = "tipo-de-declaracion"
 number = "490-01-tipo-declaracion"
 section = ["490_01"]
 data_type = "text"
@@ -28,6 +30,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-identificacion-email-154"
+continuidad_id = "declarante-correo-electronico"
 number = "490-01-identificacion-email"
 section = ["490_01"]
 data_type = "text"
@@ -37,6 +40,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-identificacion-nif-representante-254"
+continuidad_id = "representante-nif"
 number = "490-01-identificacion-nif-representante"
 section = ["490_01"]
 data_type = "text"
@@ -46,6 +50,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-identificacion-nombre-representante-263"
+continuidad_id = "representante-nombre-razon-social"
 number = "490-01-identificacion-nombre-representante"
 section = ["490_01"]
 data_type = "text"
@@ -55,6 +60,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-grupo-denominacion-388"
+continuidad_id = "grupo-denominacion"
 number = "490-01-grupo-denominacion"
 section = ["490_01"]
 data_type = "text"
@@ -64,6 +70,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-grupo-pais-dominante-513"
+continuidad_id = "grupo-dominante-pais-residencia"
 number = "490-01-grupo-pais-dominante"
 section = ["490_01"]
 data_type = "text"
@@ -73,6 +80,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-grupo-dominante-515"
+continuidad_id = "grupo-entidad-dominante"
 number = "490-01-grupo-dominante"
 section = ["490_01"]
 data_type = "text"
@@ -82,6 +90,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-indicador-regularizacion-A"
+continuidad_id = "regularizacion-base-imponible-indicador"
 number = "A"
 section = ["490_01"]
 data_type = "text"
@@ -91,6 +100,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-publi-ing-01"
+continuidad_id = "publicidad-en-linea-ingresos-totales"
 number = "01"
 section = ["490_01"]
 data_type = "money"
@@ -100,6 +110,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-publi-base-02"
+continuidad_id = "publicidad-en-linea-base-imponible"
 number = "02"
 section = ["490_01"]
 data_type = "money"
@@ -109,6 +120,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-publi-reg-base-03"
+continuidad_id = "publicidad-en-linea-regularizacion-base-imponible"
 number = "03"
 section = ["490_01"]
 data_type = "money"
@@ -118,6 +130,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-a-ing-04"
+continuidad_id = "intermediacion-subyacente-ingresos-totales"
 number = "04"
 section = ["490_01"]
 data_type = "money"
@@ -127,6 +140,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-a-base-05"
+continuidad_id = "intermediacion-subyacente-base-imponible"
 number = "05"
 section = ["490_01"]
 data_type = "money"
@@ -136,6 +150,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-a-reg-base-06"
+continuidad_id = "intermediacion-subyacente-regularizacion-base-imponible"
 number = "06"
 section = ["490_01"]
 data_type = "money"
@@ -145,6 +160,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-b-ing-07"
+continuidad_id = "demas-intermediacion-ingresos-totales"
 number = "07"
 section = ["490_01"]
 data_type = "money"
@@ -154,6 +170,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-b-base-08"
+continuidad_id = "demas-intermediacion-base-imponible"
 number = "08"
 section = ["490_01"]
 data_type = "money"
@@ -163,6 +180,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-interm-b-reg-base-09"
+continuidad_id = "demas-intermediacion-regularizacion-base-imponible"
 number = "09"
 section = ["490_01"]
 data_type = "money"
@@ -172,6 +190,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-datos-ing-10"
+continuidad_id = "transmision-datos-ingresos-totales"
 number = "10"
 section = ["490_01"]
 data_type = "money"
@@ -181,6 +200,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-datos-base-11"
+continuidad_id = "transmision-datos-base-imponible"
 number = "11"
 section = ["490_01"]
 data_type = "money"
@@ -190,6 +210,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-datos-reg-base-12"
+continuidad_id = "transmision-datos-regularizacion-base-imponible"
 number = "12"
 section = ["490_01"]
 data_type = "money"
@@ -199,6 +220,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-base-imponible-total-13"
+continuidad_id = "base-imponible-total-periodo"
 number = "13"
 section = ["490_01"]
 data_type = "money"
@@ -208,6 +230,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-reg-periodos-anteriores-14"
+continuidad_id = "regularizacion-base-imponible-periodos-anteriores"
 number = "14"
 section = ["490_01"]
 data_type = "money"
@@ -217,6 +240,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-tipo-15"
+continuidad_id = "tipo-impositivo"
 number = "15"
 section = ["490_01"]
 data_type = "ratio"
@@ -226,6 +250,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "liq-cuota-integra-16"
+continuidad_id = "cuota-integra"
 number = "16"
 section = ["490_01"]
 data_type = "money"
@@ -262,6 +287,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-ingreso-bic-swift-950"
+continuidad_id = "ingreso-devolucion-bic-swift"
 number = "490-01-ingreso-bic-swift"
 section = ["490_01"]
 data_type = "text"
@@ -271,6 +297,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-ingreso-iban-961"
+continuidad_id = "ingreso-devolucion-iban"
 number = "490-01-ingreso-iban"
 section = ["490_01"]
 data_type = "text"
@@ -280,6 +307,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-declaracion-complementaria-995"
+continuidad_id = "declaracion-complementaria"
 number = "490-01-declaracion-complementaria"
 section = ["490_01"]
 data_type = "text"
@@ -289,6 +317,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-justificante-anterior-996"
+continuidad_id = "justificante-declaracion-anterior"
 number = "490-01-justificante-anterior"
 section = ["490_01"]
 data_type = "text"
@@ -298,6 +327,7 @@ legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-20
 
 [[revisions."2021".casillas]]
 id = "490-01-declaracion-negativa-1009"
+continuidad_id = "declaracion-negativa"
 number = "490-01-declaracion-negativa"
 section = ["490_01"]
 data_type = "text"

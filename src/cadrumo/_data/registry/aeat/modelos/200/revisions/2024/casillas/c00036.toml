@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00036"
+continuidad_id = "is-sociedad-de-garantia-reciproca-o-de-reafianzamiento"
 number = "00036"
 section = ["sociedad_de_garantia_reciproca_o_de_reafianzamient"]
 data_type = "decimal"

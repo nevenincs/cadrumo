@@ -1,0 +1,9 @@
+# Grounding: DED5E, parte estatal de la deducción por dotaciones a la Reserva para Inversiones en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0556-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-ric-canarias-estatal"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62","ley-35-2006:art-66","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77","orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary","aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]

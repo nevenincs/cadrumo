@@ -40,9 +40,14 @@ def _modelo_members(node: ast.AST) -> tuple[str, ...]:
     return tuple(
         sorted(
             {
-                child.attr
+                f"M{child.args[0].value}"
                 for child in ast.walk(node)
-                if isinstance(child, ast.Attribute) and isinstance(child.value, ast.Name) and child.value.id == "Modelo"
+                if isinstance(child, ast.Call)
+                and isinstance(child.func, ast.Name)
+                and child.func.id == "Modelo"
+                and len(child.args) == 1
+                and isinstance(child.args[0], ast.Constant)
+                and isinstance(child.args[0].value, str)
             }
         )
     )

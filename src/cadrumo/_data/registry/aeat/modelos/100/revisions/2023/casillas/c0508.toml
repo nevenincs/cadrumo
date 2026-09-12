@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "0508"
+# Grounding: aeat-dr-100-2023-dictionary:873, DED12E; parte estatal de la deducción por rendimientos de bienes corporales producidos en las Illes Balears.
+continuidad_id = "irpf-deduccion-bienes-corporales-illes-balears-estatal"
 number = "0508"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_bienes_corporales_illes_balears_estatal"

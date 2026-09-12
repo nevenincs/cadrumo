@@ -346,7 +346,7 @@ def _render_header_field(
         payload = render_envelope_prefix_field(
             prefix_role,
             length=parser_field.length,
-            modelo=Modelo.M390,
+            modelo=Modelo("390"),
             period=filing_period,
             product_software_identity=product_software_identity,
         )

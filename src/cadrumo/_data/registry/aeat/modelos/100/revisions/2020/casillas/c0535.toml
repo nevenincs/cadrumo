@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0535"
+# Grounding: aeat-dr-100-2020-dictionary:750, TMA; tipo medio autonómico de gravamen de la base liquidable general.
+continuidad_id = "irpf-tipo-medio-gravamen-general-autonomico"
 number = "0535"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "ratio"

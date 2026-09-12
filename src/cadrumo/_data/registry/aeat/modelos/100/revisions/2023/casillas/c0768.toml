@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0768"
+continuidad_id = "irpf-aeip-100-anos-del-fallecimiento-de-joaquin-sorolla-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1331 y aeat-dr-100-2023-dictionary:1342: campo M21FJSA; columna Aplicado en esta declaración del programa 100 años del fallecimiento de Joaquín Sorolla en Anexo A. Misma designación y función fiscal."
 number = "0768"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

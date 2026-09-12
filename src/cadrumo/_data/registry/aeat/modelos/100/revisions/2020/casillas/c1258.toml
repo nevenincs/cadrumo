@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1258"
+# aeat-dr-100-2020-dictionary:1605: C2PPAPT, titular de saldos negativos de ganancias y perdidas del ahorro.
+continuidad_id = "irpf-compensacion-saldos-ganancias-perdidas-ahorro-contribuyente-titular"
 number = "1258"
 section = ["resultados", "anexo_c_res", "saldos_neg_gy_p_ahorro_res"]
 data_type = "text"

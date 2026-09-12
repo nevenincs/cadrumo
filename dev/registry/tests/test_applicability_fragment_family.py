@@ -137,7 +137,7 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
         legal_refs=(REFERENCE_LEGAL_ID,),
     )
 
-    hydrated = hydrate_applicability_rule(Modelo.M100, fragment)
+    hydrated = hydrate_applicability_rule(Modelo("100"), fragment)
 
     from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFact
     from cadrumo.domain.contribuyente.entity_type import EntityType
@@ -149,7 +149,7 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
     )
 
     assert hydrated == ModeloApplicabilityRule(
-        modelo=Modelo.M100,
+        modelo=Modelo("100"),
         applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
         required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         required_estimation_regimes=frozenset({IrpfEstimationRegime.DIRECTA_NORMAL}),
@@ -174,7 +174,7 @@ def test_hydrate_applicability_rule_names_the_unknown_token() -> None:
     )
 
     with pytest.raises(RegistryValidationError, match="not_a_real_entity_type"):
-        hydrate_applicability_rule(Modelo.M100, fragment)
+        hydrate_applicability_rule(Modelo("100"), fragment)
 
 
 def test_validate_applicability_section_accumulates_without_raising() -> None:
@@ -203,7 +203,7 @@ def test_validate_applicability_section_accumulates_without_raising() -> None:
 
     failures = validate_applicability_section(
         prefix="modelo 100 revision 2025",
-        modelo=Modelo.M100.value,
+        modelo="100",
         revision=revision,
         legal_refs=legal_refs,
     )

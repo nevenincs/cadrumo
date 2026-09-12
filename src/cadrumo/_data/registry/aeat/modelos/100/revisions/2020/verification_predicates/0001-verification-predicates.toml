@@ -26,6 +26,7 @@
 # The remedy is an income-certificate value, NOT a filing to capture: the taxpayer
 # never filed Modelo 111 and it cannot arrive from AEAT on this taxpayer's behalf.
 [[revisions."2020".verification_predicates]]
+id = "implies-nonzero:retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
 predicate_id = "modelo-100-2020-retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
 expression = 'implies_nonzero(["0012", "0596"])'
 finding_kind = "ADVISORY"
@@ -71,6 +72,7 @@ legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]
 # taxpayer never filed Modelo 123 (the payer files it) and it cannot arrive
 # from AEAT on this taxpayer's behalf.
 [[revisions."2020".verification_predicates]]
+id = "implies-nonzero:retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
 predicate_id = "modelo-100-2020-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
 expression = 'implies_nonzero(["0036", "0597"])'
 finding_kind = "ADVISORY"

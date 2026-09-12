@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1689"
+# Grounding: aeat-dr-100-2021-dictionary:1153, M21ALIA; importe aplicado del programa Alicante 2021. Salida Vuelta al Mundo a Vela (Anexo A).
+continuidad_id = "irpf-aeip-alicante-2021-salida-vuelta-al-mundo-a-vela-aplicado"
 number = "1689"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

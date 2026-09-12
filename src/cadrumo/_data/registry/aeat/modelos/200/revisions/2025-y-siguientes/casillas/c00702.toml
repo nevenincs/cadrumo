@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00702"
+continuidad_id = "is-balance-patrimonio-neto-reserva-de-revalorizacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200005/DP200005, campos 17/17, filas 22/22: Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Reserva de revalorización [00702]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00702"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

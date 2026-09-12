@@ -5,8 +5,6 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from cadrumo.core.modelo import Modelo
-
 __all__ = [
     "semantic_roles_are_axis_siblings",
     "semantic_roles_are_modelo_prefix_siblings",
@@ -16,7 +14,6 @@ __all__ = [
 ]
 
 _MODELO_PREFIXED_ROLE_RE: Final = re.compile(r"^m(\d{3})_(.+)$")
-_MODELO_VALUES: Final[frozenset[str]] = frozenset(member.value for member in Modelo)
 
 #: Month names AEAT uses to enumerate the per-period rows of a single concept.
 #: A closed calendar axis, so two roles differing only in this trailing token
@@ -80,7 +77,7 @@ def _differ_only_in_trailing_token(left: str, right: str, axis_tokens: frozenset
     )
 
 
-def semantic_roles_are_modelo_prefix_siblings(left: str, right: str) -> bool:
+def semantic_roles_are_modelo_prefix_siblings(left: str, right: str, *, known_modelo_codes: frozenset[str]) -> bool:
     """Return whether two roles are the same concept scoped to different modelos.
 
     The ``mNNN_`` prefix is a namespace axis exactly like the tax-domain and
@@ -91,19 +88,19 @@ def semantic_roles_are_modelo_prefix_siblings(left: str, right: str) -> bool:
     ``m156_``/``m165_`` refuses on a digit transposition -- which is a property
     of the numbering, not of the data.
 
-    Modelo numbers are a closed set, so the prefix is the one machine-verifiable
-    part of these strings. Both prefixes must name a real :class:`Modelo`; a
-    genuinely mistyped prefix names none and stays a typo. The stems must match
-    exactly, so a misspelt stem under one prefix is still caught.
+    The registry owns Modelo membership, while :class:`Modelo` owns the stable
+    three-digit syntax available at this compiler layer. Both prefixes must be
+    syntactically valid Modelo identifiers. The stems must match exactly, so a
+    misspelt stem under one prefix is still caught.
     """
-    left_modelo, left_stem = _split_modelo_prefix(left)
-    right_modelo, right_stem = _split_modelo_prefix(right)
+    left_modelo, left_stem = _split_modelo_prefix(left, known_modelo_codes=known_modelo_codes)
+    right_modelo, right_stem = _split_modelo_prefix(right, known_modelo_codes=known_modelo_codes)
     if left_stem is None or right_stem is None:
         return False
     return left_stem == right_stem and left_modelo != right_modelo
 
 
-def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
+def _split_modelo_prefix(role: str, *, known_modelo_codes: frozenset[str]) -> tuple[str | None, str | None]:
     match = _MODELO_PREFIXED_ROLE_RE.match(role)
     if match is None:
         return None, None
@@ -114,7 +111,7 @@ def _split_modelo_prefix(role: str) -> tuple[str | None, str | None]:
     stem = match.group(2)
     if not isinstance(modelo, str) or not isinstance(stem, str):
         return None, None
-    if modelo not in _MODELO_VALUES:
+    if modelo not in known_modelo_codes:
         return None, None
     return modelo, stem
 

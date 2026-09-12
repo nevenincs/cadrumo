@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0793"
+# Grounding: aeat-dr-100-2022-dictionary:1367, M21APCA; importe aplicado del programa 200 ANIVERSARIO DEL PASSEIG DE GRÁCIA (Anexo A).
+continuidad_id = "irpf-aeip-200-aniversario-del-passeig-de-gracia-aplicado"
 number = "0793"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

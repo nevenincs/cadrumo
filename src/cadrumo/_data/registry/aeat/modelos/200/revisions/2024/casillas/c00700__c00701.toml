@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00700"
+continuidad_id = "is-balance-activo-no-corriente-propiedad-intelectual"
 number = "00700"
 section = ["balance_activo_i", "activo"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00701"
+continuidad_id = "is-balance-activo-corriente-derechos-de-emision-de-gases-de-efecto-invernadero"
 number = "00701"
 section = ["balance_activo_i", "activo"]
 data_type = "money"

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00063"
+continuidad_id = "is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis"
 number = "00063"
 section = ["tipo_de_gravamen_reducido_para_entidades_de_nueva"]
 data_type = "decimal"

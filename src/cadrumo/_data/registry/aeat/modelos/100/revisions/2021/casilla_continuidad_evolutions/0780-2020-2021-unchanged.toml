@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2020-dictionary:1029 y aeat-dr-100-2021-dictionary:1102; Plan Decenio Milliarium Montserrat 1025-2025, columna Aplicado, M21PDMA.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0780-2020-2021-unchanged"
+continuidad_id = "irpf-aeip-plan-decenio-milliarium-montserrat-1025-2025-aplicado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]

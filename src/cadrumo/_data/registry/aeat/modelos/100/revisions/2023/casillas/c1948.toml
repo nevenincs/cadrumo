@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "1948"
+# Grounding: aeat-dr-100-2023-dictionary:1411, M21BIENA; importe aplicado del programa Programa EN PLAN BIEN (Anexo A).
+continuidad_id = "irpf-aeip-programa-en-plan-bien-aplicado"
 number = "1948"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

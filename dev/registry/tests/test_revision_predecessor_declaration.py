@@ -21,7 +21,11 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, DeclaredPredecessorField, NoPredecessor
+from cadrumo.domain.calculations.registry.revision_contracts import (
+    DeclaredPredecessor,
+    DeclaredPredecessorField,
+    NoPredecessor,
+)
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory

@@ -1,5 +1,8 @@
 [[revisions."2018-2022".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-309-2016 and aeat-dr-309-2018 identify the declaration's tax year in its header, separately from the aircraft manufacture year. Ejercicio / Ejercicio devengo continues to identify the same non-periodic IVA return's tax year under Orden HAC/3625/2003 apartado 1."
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"

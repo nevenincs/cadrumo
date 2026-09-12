@@ -671,6 +671,7 @@ def test_dangling_verification_expectation_computed_casillas() -> None:
 def test_verification_predicate_refs_must_resolve_in_registry_validation() -> None:
     """Verification predicate legal_refs are catalogue-checked at registry validation."""
     predicate = VerificationPredicateDefinition(
+        id="any-nonzero:test.predicate",
         predicate_id="test.predicate",
         legal_refs=(_MISSING_LEGAL_ID,),
         expression='any_nonzero(["01"])',
@@ -688,6 +689,7 @@ def test_verification_predicate_refs_must_resolve_in_registry_validation() -> No
 def test_snapshot_carries_verification_predicate_legal_refs() -> None:
     """Slice snapshots retain verification-predicate legal evidence."""
     predicate = VerificationPredicateDefinition(
+        id="any-nonzero:test.predicate",
         predicate_id="test.predicate",
         legal_refs=(_EXTRA_LEGAL_ID,),
         expression='any_nonzero(["01"])',
@@ -711,6 +713,7 @@ def test_snapshot_carries_verification_predicate_legal_refs() -> None:
 def test_snapshot_integrity_checks_verification_predicate_legal_refs() -> None:
     """Snapshot integrity rejects verification-predicate legal refs missing from the slice catalogue."""
     predicate = VerificationPredicateDefinition(
+        id="any-nonzero:test.predicate",
         predicate_id="test.predicate",
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         expression='any_nonzero(["01"])',

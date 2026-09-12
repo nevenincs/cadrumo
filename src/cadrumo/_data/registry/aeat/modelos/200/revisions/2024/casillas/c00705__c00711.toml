@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00705"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding"
 number = "00705"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00706"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-de-participaciones-en-instrumentos-patrimonio"
 number = "00706"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00707"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-de-valores-negociables-y-otros-instrumentos-financieros"
 number = "00707"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00708"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-resto"
 number = "00708"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00709"
+continuidad_id = "is-pyg-continuadas-gastos-por-emision-de-gases-de-efecto-invernadero"
 number = "00709"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -45,6 +50,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00710"
+continuidad_id = "is-pyg-continuadas-deterioro-y-resultados-por-enajenaciones-del-inmovilizado-de-las-sociedades-holding"
 number = "00710"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -54,6 +60,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00711"
+continuidad_id = "is-pyg-continuadas-ingresos-de-caracter-financiero-de-las-entidades-concesionarias-de-infraestructuras-publicas"
 number = "00711"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"

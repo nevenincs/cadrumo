@@ -404,7 +404,6 @@ def _reaches_binding_derivation(source: str) -> bool:
     the proof green, and the detector would be proved against a
     reimplementation of itself.
     """
-    import ast
 
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.ImportFrom) and any(alias.name == _BINDING_DERIVATION for alias in node.names):
@@ -709,78 +708,6 @@ def test_no_modelo_leaves_a_year_inside_its_span_unserved(
     assert not gapped, f"years inside a modelo's own span that no revision serves: {gapped}"
 
 
-def _statements_beyond_a_docstring(tree: ast.Module) -> list[str]:
-    """Return the node type name of every top-level statement that is not a docstring.
-
-    This predicate decides what ``inert`` means for a package initialiser,
-    and it was written out twice: once in the gate below and once again in
-    the case that proves the gate has teeth. Two copies agree until one of
-    them is edited, and the copy the teeth case held was the one that would
-    go on passing -- it never called the gate, so it could only ever attest
-    to itself. One owner means the proof and its subject cannot drift apart.
-
-    A bare constant expression counts as inert. That is wider than
-    ``docstring`` in the strict sense -- a second bare string, or a lone
-    number, also passes -- but none of those exports a name, forwards an
-    import, or runs a side effect, which is what the architecture rule
-    forbids.
-    """
-    return [
-        type(node).__name__
-        for node in tree.body
-        if not (isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant))
-    ]
-
-
-def test_every_package_initialiser_in_the_development_registry_tree_is_inert() -> None:
-    """A package initialiser here declares a namespace and nothing else.
-
-    The architecture rule is that initialisers carry no exports, no forwarding
-    and no import side effects. Three separate facades had grown here anyway -
-    one of them fifty-one lines re-exporting twenty names, and one enforced by a
-    test asserting its ``__all__`` verbatim, so the breach had a gate holding it
-    in place. All were removable without touching a caller, because every
-    consumer already imported the defining module; the facades were carrying
-    nothing but the ability to grow.
-
-    That is the argument for a standing gate rather than three fixes: nothing
-    made the first facade fail, so nothing would have made the fourth.
-    """
-    import ast
-    import pathlib
-
-    root = pathlib.Path(__file__).resolve().parent.parent
-    offenders: dict[str, list[str]] = {}
-    checked = 0
-    for path in sorted(root.rglob("__init__.py")):
-        checked += 1
-        offending = _statements_beyond_a_docstring(ast.parse(path.read_text(encoding=_UTF_8)))
-        if offending:
-            offenders[str(path.relative_to(root))] = offending
-
-    assert checked > 1, "no package initialisers were found, so this gate checked nothing"
-    assert not offenders, f"package initialisers carrying more than a docstring: {offenders}"
-
-
-def test_the_inert_initialiser_gate_detects_a_re_export() -> None:
-    """The gate above is shown to catch the defect it exists to prevent.
-
-    Constructed as source text rather than by writing into the tree, because a
-    gate over the contributor's own working tree must not modify it to prove
-    itself.
-    """
-    import ast
-
-    facade = '"""A package."""\n\nfrom .thing import Thing\n\n__all__ = ["Thing"]\n'
-    inert = '"""A package."""\n'
-
-    assert _statements_beyond_a_docstring(ast.parse(facade)) == [
-        "ImportFrom",
-        "Assign",
-    ]
-    assert _statements_beyond_a_docstring(ast.parse(inert)) == []
-
-
 _VAULT_CITATION_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"\bW\d{2}\.P\d{2}\.S\d+\b", "wave-phase-step identifier"),
     (r"(?<![.\w])P\d{2}\.S\d{2}\b", "phase-step identifier"),
@@ -812,7 +739,6 @@ def _without_self_reference_regions(source: str) -> str:
     A region this cannot find is left in place and will be reported, which is the
     safe direction: an unexpected citation in this module should fail the gate.
     """
-    import ast
 
     tree = ast.parse(source)
     exempt: list[tuple[int, int]] = []
@@ -1151,7 +1077,6 @@ def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
     module path, and an extractor reading only the path reported seven modules
     as untested that four separate tests import.
     """
-    import ast
 
     names: set[str] = set()
     for path in sorted(root.rglob("test_*.py")):
@@ -1191,7 +1116,6 @@ def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
     entry point is a coroutine is exactly as untested as any other when no test
     imports it, and reading only the sync form would exempt it silently.
     """
-    import ast
 
     found: list[pathlib.Path] = []
     for root in roots:

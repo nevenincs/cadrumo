@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "1966"
+# aeat-dr-100-2023-dictionary:1947: C1REME, perceptor de retribuciones en especie pendientes de imputacion del articulo 14.2.m.
+continuidad_id = "irpf-retribucion-especie-empresas-emergentes-imputacion-diferida-contribuyente"
 number = "1966"
 section = ["toma_datos_ampliada", "rdto_trabajo", "retrib_especie_anexo_c"]
 data_type = "text"

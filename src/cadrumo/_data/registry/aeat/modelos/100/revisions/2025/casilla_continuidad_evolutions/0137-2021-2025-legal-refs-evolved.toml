@@ -1,0 +1,9 @@
+# Grounding: C_DIASACC, días arrendados del inmueble accesorio para el cálculo de su amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0137-2021-2025-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-dias-arrendado"
+from_revision = "2021"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23","orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2021-dictionary","aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]

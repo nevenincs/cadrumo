@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1704"
+continuidad_id = "irpf-aeip-cincuenta-aniversario-de-la-universidad-nacional-de-educacion-a-distancia-uned-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1207 y aeat-dr-100-2022-dictionary:1265: campo M21UNEA; columna Aplicado en esta declaración del programa Cincuenta aniversario de la Universidad Nacional de Educación a Distancia (UNED) en Anexo A. Misma designación y función fiscal."
 number = "1704"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

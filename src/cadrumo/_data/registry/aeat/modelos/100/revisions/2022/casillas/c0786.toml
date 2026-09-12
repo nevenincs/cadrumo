@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0786"
+# Grounding: aeat-dr-100-2022-dictionary:1355, M21CTEA; importe aplicado del programa 7ª Conferencia Mundial sobre Turismo Enológico de la OMT 2023 (Anexo A).
+continuidad_id = "irpf-aeip-7a-conferencia-mundial-sobre-turismo-enologico-de-la-omt-2023-aplicado"
 number = "0786"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

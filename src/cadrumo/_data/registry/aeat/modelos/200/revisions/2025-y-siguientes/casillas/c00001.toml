@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00001"
+continuidad_id = "is-entidad-sin-animo-de-lucro-acogida-regimen-fiscal-titulo-ii-ley-49-2002"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 27/27, filas 32/32: Entidad sin ánimo de lucro acogida régimen fiscal Título II Ley 49/2002 [00001]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00001"
 section = ["entidad_sin_animo_de_lucro_acogida_regimen_fiscal"]
 data_type = "decimal"

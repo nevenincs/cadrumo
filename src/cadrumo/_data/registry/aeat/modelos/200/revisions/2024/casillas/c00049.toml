@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00049"
+continuidad_id = "is-regimenes-especiales-de-normativa-foral"
 number = "00049"
 section = ["regimenes_especiales_de_normativa_foral"]
 data_type = "decimal"

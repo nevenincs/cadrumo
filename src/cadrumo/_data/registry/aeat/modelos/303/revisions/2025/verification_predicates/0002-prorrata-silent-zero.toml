@@ -28,6 +28,7 @@
 # default stays untouched because fully-taxable filings leave the annual
 # prorrata volume antecedent absent/zero.
 [[revisions.2025.verification_predicates]]
+id = "implies-nonzero:prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
 predicate_id = "modelo-303-prorrata-regularizacion-determinada-cuando-volumen-anual-declarado"
 expression = 'implies_nonzero(["iva.prorrata-volumen-total", "44"])'
 finding_kind = "ADVISORY"

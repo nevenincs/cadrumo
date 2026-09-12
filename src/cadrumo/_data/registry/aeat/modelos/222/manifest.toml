@@ -13,3 +13,8 @@ source_refs = [
     "aeat-modelo-202-instructions",
     "boe-modelo-202-base-order",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2025
+reason = "Approved without year bound by Orden HFP/227/2017; filing years 2022-2024 existed in law and are not yet authored."
+legal_refs = ["orden-hfp-227-2017:art-2"]

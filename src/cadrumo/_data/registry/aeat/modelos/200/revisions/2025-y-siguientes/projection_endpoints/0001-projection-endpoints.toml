@@ -5,6 +5,7 @@
 # transcribed from AEAT's own printed numbering.
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -13,6 +14,7 @@ slot = 1
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-forma-juridica.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -21,6 +23,7 @@ slot = 1
 field = "forma_juridica"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-representante.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -29,6 +32,7 @@ slot = 1
 field = "representante"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-apellidos-nombre-razon-social.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -37,6 +41,7 @@ slot = 1
 field = "apellidos_nombre_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-domicilio-fiscal.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -45,6 +50,7 @@ slot = 1
 field = "domicilio_fiscal"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-codigo-provincia.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -53,6 +59,7 @@ slot = 1
 field = "codigo_provincia"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -61,6 +68,7 @@ slot = 2
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-forma-juridica.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -69,6 +77,7 @@ slot = 2
 field = "forma_juridica"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-representante.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -77,6 +86,7 @@ slot = 2
 field = "representante"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-apellidos-nombre-razon-social.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -85,6 +95,7 @@ slot = 2
 field = "apellidos_nombre_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-domicilio-fiscal.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -93,6 +104,7 @@ slot = 2
 field = "domicilio_fiscal"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-codigo-provincia.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -101,6 +113,7 @@ slot = 2
 field = "codigo_provincia"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-nif.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -109,6 +122,7 @@ slot = 3
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-forma-juridica.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -117,6 +131,7 @@ slot = 3
 field = "forma_juridica"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-representante.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -125,6 +140,7 @@ slot = 3
 field = "representante"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-apellidos-nombre-razon-social.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -133,6 +149,7 @@ slot = 3
 field = "apellidos_nombre_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-domicilio-fiscal.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -141,6 +158,7 @@ slot = 3
 field = "domicilio_fiscal"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-codigo-provincia.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -149,6 +167,7 @@ slot = 3
 field = "codigo_provincia"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-nif.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -157,6 +176,7 @@ slot = 4
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-forma-juridica.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -165,6 +185,7 @@ slot = 4
 field = "forma_juridica"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-representante.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -173,6 +194,7 @@ slot = 4
 field = "representante"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-apellidos-nombre-razon-social.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -181,6 +203,7 @@ slot = 4
 field = "apellidos_nombre_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-domicilio-fiscal.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -189,6 +212,7 @@ slot = 4
 field = "domicilio_fiscal"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-codigo-provincia.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -197,6 +221,7 @@ slot = 4
 field = "codigo_provincia"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-nif.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -205,6 +230,7 @@ slot = 5
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-forma-juridica.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -213,6 +239,7 @@ slot = 5
 field = "forma_juridica"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-representante.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -221,6 +248,7 @@ slot = 5
 field = "representante"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-apellidos-nombre-razon-social.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -229,6 +257,7 @@ slot = 5
 field = "apellidos_nombre_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-domicilio-fiscal.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -237,6 +266,7 @@ slot = 5
 field = "domicilio_fiscal"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-administrador:field-codigo-provincia.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -245,6 +275,7 @@ slot = 5
 field = "codigo_provincia"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -253,6 +284,7 @@ slot = 1
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -261,6 +293,7 @@ slot = 1
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -269,6 +302,7 @@ slot = 2
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -277,6 +311,7 @@ slot = 2
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -285,6 +320,7 @@ slot = 3
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -293,6 +329,7 @@ slot = 3
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -301,6 +338,7 @@ slot = 4
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -309,6 +347,7 @@ slot = 4
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -317,6 +356,7 @@ slot = 5
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -325,6 +365,7 @@ slot = 5
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-6"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -333,6 +374,7 @@ slot = 6
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-6"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -341,6 +383,7 @@ slot = 6
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-7"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -349,6 +392,7 @@ slot = 7
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-7"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -357,6 +401,7 @@ slot = 7
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-8"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -365,6 +410,7 @@ slot = 8
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-8"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -373,6 +419,7 @@ slot = 8
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-9"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -381,6 +428,7 @@ slot = 9
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-9"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -389,6 +437,7 @@ slot = 9
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nif.slot-10"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -397,6 +446,7 @@ slot = 10
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-menor-dependiente:field-nombre-o-razon-social.slot-10"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -405,6 +455,7 @@ slot = 10
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -413,6 +464,7 @@ slot = 1
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-nombre-o-razon-social.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -421,6 +473,7 @@ slot = 1
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-codigo-provincia-pais.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -429,6 +482,7 @@ slot = 1
 field = "codigo_provincia_pais"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-agrupacion-interes-economico-espanola.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -437,6 +491,7 @@ slot = 1
 field = "tipo_agrupacion_interes_economico_espanola"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-agrupacion-europea-interes-economico.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -445,6 +500,7 @@ slot = 1
 field = "tipo_agrupacion_europea_interes_economico"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-union-temporal-empresas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -453,6 +509,7 @@ slot = 1
 field = "tipo_union_temporal_empresas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-colaboracion-extranjera-analoga.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -461,6 +518,7 @@ slot = 1
 field = "tipo_colaboracion_extranjera_analoga"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-criterio-imputacion-fin-periodo.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -469,6 +527,7 @@ slot = 1
 field = "criterio_imputacion_fin_periodo"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-criterio-imputacion-siguiente-periodo.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -477,6 +536,7 @@ slot = 1
 field = "criterio_imputacion_siguiente_periodo"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-valoracion-participacion-inicio.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -485,6 +545,7 @@ slot = 1
 field = "valoracion_participacion_inicio"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-valoracion-participacion-final.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -493,6 +554,7 @@ slot = 1
 field = "valoracion_participacion_final"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-ingresos-financieros-participacion.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -501,6 +563,7 @@ slot = 1
 field = "ingresos_financieros_participacion"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-resultado-contable-imputado.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -509,6 +572,7 @@ slot = 1
 field = "resultado_contable_imputado"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-gastos-financieros-netos-imputados.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -517,6 +581,7 @@ slot = 1
 field = "gastos_financieros_netos_imputados"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-reserva-capitalizacion-no-aplicada-imputada.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -525,6 +590,7 @@ slot = 1
 field = "reserva_capitalizacion_no_aplicada_imputada"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-base-imponible-imputada.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -533,6 +599,7 @@ slot = 1
 field = "base_imponible_imputada"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-doble-imposicion-bases-imputadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -541,6 +608,7 @@ slot = 1
 field = "deduccion_doble_imposicion_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-bonificacion-bases-imputadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -549,6 +617,7 @@ slot = 1
 field = "bonificacion_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-activos-fijos-canarias.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -557,6 +626,7 @@ slot = 1
 field = "deduccion_activos_fijos_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-idi-canarias.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -565,6 +635,7 @@ slot = 1
 field = "deduccion_idi_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-produccion-espectaculos-canarias.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -573,6 +644,7 @@ slot = 1
 field = "deduccion_produccion_espectaculos_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-resto-inversion-canarias.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -581,6 +653,7 @@ slot = 1
 field = "deduccion_resto_inversion_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-idi-bases-imputadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -589,6 +662,7 @@ slot = 1
 field = "deduccion_idi_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-produccion-espectaculos-bases-imputadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -597,6 +671,7 @@ slot = 1
 field = "deduccion_produccion_espectaculos_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-resto-incentivar-actividades.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -605,6 +680,7 @@ slot = 1
 field = "deduccion_resto_incentivar_actividades"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-resto-no-mencionadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -613,6 +689,7 @@ slot = 1
 field = "deduccion_resto_no_mencionadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-retenciones-ingresos-a-cuenta-imputados.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -621,6 +698,7 @@ slot = 1
 field = "retenciones_ingresos_a_cuenta_imputados"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-dividendos-ejercicios-anteriores.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -629,6 +707,7 @@ slot = 1
 field = "dividendos_ejercicios_anteriores"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-dividendos-ejercicios-posteriores.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -637,6 +716,7 @@ slot = 1
 field = "dividendos_ejercicios_posteriores"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -645,6 +725,7 @@ slot = 2
 field = "nif"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-nombre-o-razon-social.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -653,6 +734,7 @@ slot = 2
 field = "nombre_o_razon_social"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-codigo-provincia-pais.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -661,6 +743,7 @@ slot = 2
 field = "codigo_provincia_pais"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-agrupacion-interes-economico-espanola.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -669,6 +752,7 @@ slot = 2
 field = "tipo_agrupacion_interes_economico_espanola"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-agrupacion-europea-interes-economico.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -677,6 +761,7 @@ slot = 2
 field = "tipo_agrupacion_europea_interes_economico"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-union-temporal-empresas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -685,6 +770,7 @@ slot = 2
 field = "tipo_union_temporal_empresas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-tipo-colaboracion-extranjera-analoga.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -693,6 +779,7 @@ slot = 2
 field = "tipo_colaboracion_extranjera_analoga"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-criterio-imputacion-fin-periodo.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -701,6 +788,7 @@ slot = 2
 field = "criterio_imputacion_fin_periodo"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-criterio-imputacion-siguiente-periodo.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -709,6 +797,7 @@ slot = 2
 field = "criterio_imputacion_siguiente_periodo"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-valoracion-participacion-inicio.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -717,6 +806,7 @@ slot = 2
 field = "valoracion_participacion_inicio"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-valoracion-participacion-final.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -725,6 +815,7 @@ slot = 2
 field = "valoracion_participacion_final"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-ingresos-financieros-participacion.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -733,6 +824,7 @@ slot = 2
 field = "ingresos_financieros_participacion"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-resultado-contable-imputado.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -741,6 +833,7 @@ slot = 2
 field = "resultado_contable_imputado"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-gastos-financieros-netos-imputados.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -749,6 +842,7 @@ slot = 2
 field = "gastos_financieros_netos_imputados"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-reserva-capitalizacion-no-aplicada-imputada.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -757,6 +851,7 @@ slot = 2
 field = "reserva_capitalizacion_no_aplicada_imputada"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-base-imponible-imputada.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -765,6 +860,7 @@ slot = 2
 field = "base_imponible_imputada"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-doble-imposicion-bases-imputadas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -773,6 +869,7 @@ slot = 2
 field = "deduccion_doble_imposicion_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-bonificacion-bases-imputadas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -781,6 +878,7 @@ slot = 2
 field = "bonificacion_bases_imputadas"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-activos-fijos-canarias.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -789,6 +887,7 @@ slot = 2
 field = "deduccion_activos_fijos_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-idi-canarias.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]
@@ -797,6 +896,7 @@ slot = 2
 field = "deduccion_idi_canarias"
 
 [[revisions."2025-y-siguientes".projection_endpoints]]
+id = "m200-entidad-participada:field-deduccion-produccion-espectaculos-canarias.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2025"]
 [revisions."2025-y-siguientes".projection_endpoints.projection_ref]

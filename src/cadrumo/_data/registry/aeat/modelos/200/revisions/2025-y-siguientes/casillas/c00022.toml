@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00022"
+continuidad_id = "is-regimen-entidades-navieras-en-funcion-del-tonelaje"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 57/57, filas 62/62: Régimen entidades navieras en función del tonelaje [00022]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00022"
 section = ["regimen_entidades_navieras_en_funcion_del_tonelaje"]
 data_type = "decimal"

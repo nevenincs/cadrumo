@@ -149,6 +149,7 @@ class RegistryRevisionDeclaration(RegistryRevisionNode, PeriodScopedValidityWind
     valid_to: Annotated[date | None, MANIFEST_ONLY] = None
 
     def revision_identity(self) -> str:
+        """Return the stable Modelo revision identity."""
         return self.id
 
 

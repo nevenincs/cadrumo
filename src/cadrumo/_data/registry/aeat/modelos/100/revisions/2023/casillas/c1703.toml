@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1703"
+continuidad_id = "irpf-aeip-valencia-capital-mundial-del-diseno-2022-valencia-world-design-capital-2022-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1262 y aeat-dr-100-2023-dictionary:1285: campo M21VCMA; columna Aplicado en esta declaración del programa Valencia, Capital Mundial del Diseño 2022 / Valencia World Design Capital 2022 en Anexo A. Misma designación y función fiscal."
 number = "1703"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

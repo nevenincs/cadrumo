@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0133"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-adquisicion-onerosa"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:226 y aeat-dr-100-2024-dictionary:239: C_ONERACC, adquisición onerosa del inmueble accesorio a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0133"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "boolean"

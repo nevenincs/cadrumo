@@ -1,9 +1,9 @@
 """Lineage totality: every successor-edition casilla row says how it stands.
 
 A successor-edition row is a casilla of an edition that has a predecessor
-edition. An edition naming a :class:`~.schema.DeclaredPredecessor` has the
+edition. An edition naming a :class:`~.revision_contracts.DeclaredPredecessor` has the
 edition it names, wherever that sits in validity order. An edition declaring
-:class:`~.schema.NoPredecessor` has none. An edition omitting the key has the
+:class:`~.revision_contracts.NoPredecessor` has none. An edition omitting the key has the
 adjacent earlier edition in validity order, and the first edition has none.
 Such a row is RESOLVED when it either
 
@@ -56,8 +56,9 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 
+from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .revision_order import ordered_revisions
-from .schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision, NoPredecessor
+from .schema import ModeloDefinition, ModeloRevision
 
 __all__ = (
     "CasillaRowKey",

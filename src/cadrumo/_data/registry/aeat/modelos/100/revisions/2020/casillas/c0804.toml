@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0804"
+# Grounding: aeat-dr-100-2020-dictionary:1080, M21PADA; importe aplicado del programa Plan 2020 de Apoyo al Deporte de Base II (Anexo A).
+continuidad_id = "irpf-aeip-plan-2020-de-apoyo-al-deporte-de-base-ii-aplicado"
 number = "0804"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

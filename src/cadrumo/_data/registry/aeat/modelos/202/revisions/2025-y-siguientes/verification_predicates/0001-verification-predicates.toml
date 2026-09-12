@@ -13,6 +13,7 @@
 # it. ADVISORY (non-blocking): a legitimately zero or negative base previa
 # (losses, large negative correcciones) must not refuse the draft.
 [[revisions.2025-y-siguientes.verification_predicates]]
+id = "implies-nonzero:base-imponible-previa-determinada-cuando-resultado-positivo"
 predicate_id = "modelo-202-base-imponible-previa-determinada-cuando-resultado-positivo"
 expression = 'implies_nonzero(["04", "13"])'
 finding_kind = "ADVISORY"
@@ -24,6 +25,7 @@ legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-40"]
 # filings, but verification must refuse the overstatement case where both
 # alternative lanes are positive.
 [[revisions.2025-y-siguientes.verification_predicates]]
+id = "at-most-one-positive:b1-b2-resultado-previo-at-most-one-positive"
 predicate_id = "modelo-202-b1-b2-resultado-previo-at-most-one-positive"
 expression = 'at_most_one_positive(["18", "26"])'
 finding_kind = "BLOCKING_RULE"
@@ -46,6 +48,7 @@ legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-40"]
 # addressed by this predicate, which only guards the intra-tramo base-to-importe
 # relationship.
 [[revisions.2025-y-siguientes.verification_predicates]]
+id = "implies-nonzero:b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
 predicate_id = "modelo-202-2025-b2-base-tipo-3-implica-importe-pago-fraccionado-tipo-3"
 expression = 'implies_nonzero(["61", "63"])'
 finding_kind = "ADVISORY"
@@ -58,6 +61,7 @@ legal_refs = ["ley-27-2014:art-40-3", "ley-27-2014:art-29"]
 # (formulas/0012-modelo-202-importe-pago-fraccionado-b2-tipo-4.toml). ADVISORY
 # (non-blocking), same defence-in-depth rationale.
 [[revisions.2025-y-siguientes.verification_predicates]]
+id = "implies-nonzero:b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4"
 predicate_id = "modelo-202-2025-b2-base-tipo-4-implica-importe-pago-fraccionado-tipo-4"
 expression = 'implies_nonzero(["64", "66"])'
 finding_kind = "ADVISORY"

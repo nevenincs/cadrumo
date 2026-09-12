@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1815"
+continuidad_id = "irpf-inmuebles-transmision-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:614 y aeat-dr-100-2024-dictionary:629: campo G2DINMT, tipo TIT; mismo titular de los inmuebles o derechos reales transmitidos, descrito por el grupo oficial de ambas ediciones."
 number = "1815"
 section = ["toma_datos_ampliada"]
 data_type = "text"

@@ -1,6 +1,8 @@
 [revisions."2025"]
 predecessor = "2024"
 casilla_source_refs = ["aeat-renta-2025-manual-parte1"]
+binding_source_refs = ["aeat-dr-131-2025"]
+formula_source_refs = ["aeat-modelo-131-instructions"]
 reviewed_against = "2024"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

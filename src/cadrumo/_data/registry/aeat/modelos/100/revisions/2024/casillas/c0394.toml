@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0394"
+continuidad_id = "irpf-perdidas-ejercicios-anteriores-imputacion-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:686 y aeat-dr-100-2024-dictionary:701: campo G2D_BT, tipo TIT; mismo titular de perdidas de transmisiones anteriores imputables al ejercicio, descrito por el grupo oficial de ambas ediciones."
 number = "0394"
 section = ["toma_datos_ampliada"]
 data_type = "text"

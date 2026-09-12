@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00328"
+continuidad_id = "is-pyg-interrumpidas-resultado-del-ejercicio-procedente-de-operaciones-interrumpidas-neto-de-impuestos"
 number = "00328"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
 data_type = "money"

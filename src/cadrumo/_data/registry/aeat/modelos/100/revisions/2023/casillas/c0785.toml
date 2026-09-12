@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0785"
+continuidad_id = "irpf-aeip-mundo-voluntario-2030-35o-aniversario-plataforma-del-voluntariado-de-espana-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1352 y aeat-dr-100-2023-dictionary:1363: campo M21PVEA; columna Aplicado en esta declaración del programa Mundo Voluntario 2030/35º Aniversario Plataforma del Voluntariado de España en Anexo A. Misma designación y función fiscal."
 number = "0785"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

@@ -1,6 +1,8 @@
 [revisions."2025"]
 predecessor = "2024"
 casilla_source_refs = ["aeat-dr-390-2025"]
+binding_source_refs = ["aeat-dr-390-2025"]
+formula_source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 reviewed_against = "2024"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and

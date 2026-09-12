@@ -121,14 +121,33 @@ def _schema_families() -> dict[str, frozenset[str]]:
         if element is None or typing.get_origin(info.annotation) is not tuple:
             manifest_keys.add(name)
             continue
-        candidates = [element] if hasattr(element, "model_fields") else list(typing.get_args(element))
-        keys = {key for candidate in candidates for key in getattr(candidate, "model_fields", {})}
+        keys = {key for candidate in _element_models(element) for key in candidate.model_fields}
         if keys:
             families[name] = frozenset(keys)
         else:
             manifest_keys.add(name)
     families[_MANIFEST_FAMILY] = frozenset(manifest_keys)
     return families
+
+
+def _element_models(annotation: object) -> list[type]:
+    """Unwrap ``Annotated`` and union element types down to the pydantic models they name.
+
+    A chain family such as ``identifier_evolutions`` is a discriminated union
+    wrapped in ``Annotated``; reading ``model_fields`` off the wrapper finds
+    nothing and every authored key would be classified unknown.
+    """
+    import types
+    import typing
+
+    if hasattr(annotation, "model_fields"):
+        return [annotation]  # type: ignore[list-item]
+    origin = typing.get_origin(annotation)
+    if origin is typing.Annotated:
+        return _element_models(typing.get_args(annotation)[0])
+    if origin is typing.Union or origin is types.UnionType:
+        return [model for arg in typing.get_args(annotation) for model in _element_models(arg)]
+    return []
 
 
 def _bundled_registry_root() -> Path:

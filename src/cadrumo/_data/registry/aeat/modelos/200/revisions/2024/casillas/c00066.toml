@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00066"
+continuidad_id = "is-entidad-patrimonial"
 number = "00066"
 section = ["entidad_patrimonial"]
 data_type = "decimal"

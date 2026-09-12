@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00764"
+continuidad_id = "is-balance-patrimonio-neto-capital-cooperativo-suscrito-cooperativas"
 number = "00764"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00765"
+continuidad_id = "is-balance-patrimonio-neto-capital-cooperativo-no-exigido-cooperativas"
 number = "00765"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00766"
+continuidad_id = "is-balance-patrimonio-neto-fondo-de-reembolso-o-actualizacion-cooperativas"
 number = "00766"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00767"
+continuidad_id = "is-balance-patrimonio-neto-fondo-de-reserva-voluntario-cooperativas"
 number = "00767"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00768"
+continuidad_id = "is-balance-patrimonio-neto-retorno-cooperativo-y-remuneracion-discrecional-a-cuenta-entregado-en-el-ejercicio-cooperativas"
 number = "00768"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"
@@ -45,6 +50,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2024".casillas]]
 id = "00769"
+continuidad_id = "is-balance-patrimonio-neto-fondos-capitalizados-cooperativas"
 number = "00769"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

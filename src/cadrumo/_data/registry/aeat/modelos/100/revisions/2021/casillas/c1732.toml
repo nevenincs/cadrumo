@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1732"
+# Grounding: aeat-dr-100-2021-dictionary:1301, NIF1CAN; NIF del primer productor financiado en Canarias.
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-1-nif"
 number = "1732"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "nif"

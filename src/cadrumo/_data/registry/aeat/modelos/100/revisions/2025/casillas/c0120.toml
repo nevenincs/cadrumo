@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0120"
+continuidad_id = "irpf-inmueble-amortizacion-fecha-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:226 y aeat-dr-100-2025-dictionary:228: C_FADQ, fecha de adquisición del inmueble principal a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0120"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

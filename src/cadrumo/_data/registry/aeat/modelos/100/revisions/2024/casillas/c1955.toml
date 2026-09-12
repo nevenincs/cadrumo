@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1955"
+continuidad_id = "irpf-aeip-festival-internacional-sonar-de-musica-creativitat-i-tecnologia-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1432 y aeat-dr-100-2024-dictionary:1353: campo M21SONA; columna Aplicado en esta declaración del programa Festival Internacional Sónar de Música, Creativitat i Tecnologia en Anexo A. Misma designación y función fiscal."
 number = "1955"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

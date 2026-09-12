@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1717"
+continuidad_id = "irpf-aeip-programa-deporte-lnclusivo-ii-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1321 y aeat-dr-100-2024-dictionary:1260: campo M21PDIA; columna Aplicado en esta declaración del programa Programa Deporte lnclusivo II en Anexo A. Misma designación y función fiscal."
 number = "1717"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

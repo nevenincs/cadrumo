@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00702"
+continuidad_id = "is-balance-patrimonio-neto-reserva-de-revalorizacion"
 number = "00702"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

@@ -1615,7 +1615,7 @@ corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#a3"
 document_id = "BOE-A-2026-11583"
 article = "3.2"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
-published_at = 2026-05-13
+published_at = 2026-05-29
 effective_from = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
@@ -1634,7 +1634,7 @@ corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#a6"
 document_id = "BOE-A-2026-11583"
 article = "6.3"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
-published_at = 2026-05-13
+published_at = 2026-05-29
 effective_from = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
@@ -1654,7 +1654,7 @@ corpus_ref = "corpus/normatives/html/orden-hac-529-2026.html#dfsegunda"
 document_id = "BOE-A-2026-11583"
 article = "disposicion-final-segunda"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"
-published_at = 2026-05-13
+published_at = 2026-05-29
 effective_from = 2026-07-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-08-22
@@ -1673,7 +1673,7 @@ corpus_path = "corpus/normatives/html/orden-hac-529-2026.html"
 sha256 = "c8b3eea25b45fc705bc3b3a1df6818c75490df58239ef1c816c43574d71649c5"
 bytes = 3227
 retrieved_at = 2026-08-22
-published_at = 2026-05-13
+published_at = 2026-05-29
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-11583"

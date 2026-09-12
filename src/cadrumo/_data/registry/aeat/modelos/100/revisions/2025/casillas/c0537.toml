@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0537"
+continuidad_id = "irpf-escala-general-resultado-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:869 y aeat-dr-100-2025-dictionary:895: campo CIEAUT1; escala autonómica aplicada a la base liquidable del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0537"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_general_resultado_autonomico"

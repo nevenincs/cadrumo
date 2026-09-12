@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00060"
+continuidad_id = "is-fondos-o-activos-de-titulizacion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 50/50, filas 55/55: Fondos o activos de titulización [00060]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00060"
 section = ["fondos_o_activos_de_titulizacion"]
 data_type = "decimal"

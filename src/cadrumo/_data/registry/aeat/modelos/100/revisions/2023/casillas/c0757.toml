@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0757"
+continuidad_id = "irpf-aeip-gran-premio-de-espana-de-formula-1-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1223 y aeat-dr-100-2023-dictionary:1249: campo M21GPFA; columna Aplicado en esta declaración del programa Gran Premio de España de Fórmula 1 en Anexo A. Misma designación y función fiscal."
 number = "0757"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

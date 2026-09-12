@@ -1,6 +1,7 @@
 
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -10,6 +11,7 @@ slot = 1
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -19,6 +21,7 @@ slot = 1
 fact = 'ingreso_cuenta'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -28,6 +31,7 @@ slot = 1
 fact = 'cuotas_soportadas_operaciones_corrientes'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -37,6 +41,7 @@ slot = 1
 fact = 'indice_corrector_actividades_temporada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -46,6 +51,7 @@ slot = 1
 fact = 'resultado_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -55,6 +61,7 @@ slot = 1
 fact = 'porcentaje_cuota_minima'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -64,6 +71,7 @@ slot = 1
 fact = 'devolucion_cuotas_soportadas_otros_paises'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -73,6 +81,7 @@ slot = 1
 fact = 'cuota_minima'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -82,6 +91,7 @@ slot = 1
 fact = 'cuota_anual_derivada_regimen_simplificado'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-iae-epigrafe.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -91,6 +101,7 @@ slot = 2
 field = 'iae_epigrafe'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-activity:cohort-no-agricola.field-auxiliary-activity-indicator.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -100,6 +111,7 @@ slot = 2
 field = 'auxiliary_activity_indicator'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -110,6 +122,7 @@ module_order = 1
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-1.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -120,6 +133,7 @@ module_order = 1
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -130,6 +144,7 @@ module_order = 2
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-2.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -140,6 +155,7 @@ module_order = 2
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -150,6 +166,7 @@ module_order = 3
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-3.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -160,6 +177,7 @@ module_order = 3
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -170,6 +188,7 @@ module_order = 4
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-4.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -180,6 +199,7 @@ module_order = 4
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -190,6 +210,7 @@ module_order = 5
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-5.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -200,6 +221,7 @@ module_order = 5
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -210,6 +232,7 @@ module_order = 6
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-6.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -220,6 +243,7 @@ module_order = 6
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-declared-quantity"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -230,6 +254,7 @@ module_order = 7
 value = 'declared_quantity'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-module:cohort-no-agricola.module-order-7.slot-2.value-cuota-devengada"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -240,6 +265,7 @@ module_order = 7
 value = 'cuota_devengada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-devengada-operaciones-corrientes.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -249,6 +275,7 @@ slot = 2
 fact = 'cuota_devengada_operaciones_corrientes'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-reducciones.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -258,6 +285,7 @@ slot = 2
 fact = 'reducciones'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividad-temporada.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -267,6 +295,7 @@ slot = 2
 fact = 'indice_corrector_actividad_temporada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -276,6 +305,7 @@ slot = 2
 fact = 'porcentaje_ingreso_cuenta'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-ingreso-cuenta.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -285,6 +315,7 @@ slot = 2
 fact = 'ingreso_cuenta'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-operaciones-corrientes.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -294,6 +325,7 @@ slot = 2
 fact = 'cuotas_soportadas_operaciones_corrientes'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-indice-corrector-actividades-temporada.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -303,6 +335,7 @@ slot = 2
 fact = 'indice_corrector_actividades_temporada'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-resultado-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -312,6 +345,7 @@ slot = 2
 fact = 'resultado_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-porcentaje-cuota-minima.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -321,6 +355,7 @@ slot = 2
 fact = 'porcentaje_cuota_minima'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-devolucion-cuotas-soportadas-otros-paises.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -330,6 +365,7 @@ slot = 2
 fact = 'devolucion_cuotas_soportadas_otros_paises'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-minima.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -339,6 +375,7 @@ slot = 2
 fact = 'cuota_minima'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuota-anual-derivada-regimen-simplificado.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -348,6 +385,7 @@ slot = 2
 fact = 'cuota_anual_derivada_regimen_simplificado'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-anio-anterior.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -357,6 +395,7 @@ slot = 1
 fact = 'actividad_temporada_dias_ejercicio_anio_anterior'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dias-ejercicio-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -366,6 +405,7 @@ slot = 1
 fact = 'dias_ejercicio_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -375,6 +415,7 @@ slot = 1
 fact = 'actividad_temporada_dias_ejercicio_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -384,6 +425,7 @@ slot = 1
 fact = 'cuotas_soportadas_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -393,6 +435,7 @@ slot = 1
 fact = 'compensaciones_reagp_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-mayores-19.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -402,6 +445,7 @@ slot = 1
 fact = 'personal_asalariado_horas_mayores_19'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-menores-19-o-formacion.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -411,6 +455,7 @@ slot = 1
 fact = 'personal_asalariado_horas_menores_19_o_formacion'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-discapacidad-33.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -420,6 +465,7 @@ slot = 1
 fact = 'personal_asalariado_horas_discapacidad_33'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-convenio-colectivo.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -429,6 +475,7 @@ slot = 1
 fact = 'personal_asalariado_horas_convenio_colectivo'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-titular.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -438,6 +485,7 @@ slot = 1
 fact = 'personal_no_asalariado_horas_titular'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-titular-discapacidad-33.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -447,6 +495,7 @@ slot = 1
 fact = 'personal_no_asalariado_titular_discapacidad_33'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-conyuge.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -456,6 +505,7 @@ slot = 1
 fact = 'personal_no_asalariado_horas_conyuge'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-hijos-menores-18.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -465,6 +515,7 @@ slot = 1
 fact = 'personal_no_asalariado_horas_hijos_menores_18'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -475,6 +526,7 @@ fact = 'mesas_capacidad'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -485,6 +537,7 @@ fact = 'mesas_numero'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -495,6 +548,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -505,6 +559,7 @@ fact = 'mesas_capacidad'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -515,6 +570,7 @@ fact = 'mesas_numero'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -525,6 +581,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -535,6 +592,7 @@ fact = 'mesas_capacidad'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -545,6 +603,7 @@ fact = 'mesas_numero'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -555,6 +614,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-1.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -565,6 +625,7 @@ fact = 'mesas_capacidad'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-1.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -575,6 +636,7 @@ fact = 'mesas_numero'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-1.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -585,6 +647,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-anio-anterior.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -594,6 +657,7 @@ slot = 2
 fact = 'actividad_temporada_dias_ejercicio_anio_anterior'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-dias-ejercicio-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -603,6 +667,7 @@ slot = 2
 fact = 'dias_ejercicio_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-actividad-temporada-dias-ejercicio-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -612,6 +677,7 @@ slot = 2
 fact = 'actividad_temporada_dias_ejercicio_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -621,6 +687,7 @@ slot = 2
 fact = 'cuotas_soportadas_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -630,6 +697,7 @@ slot = 2
 fact = 'compensaciones_reagp_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-mayores-19.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -639,6 +707,7 @@ slot = 2
 fact = 'personal_asalariado_horas_mayores_19'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-menores-19-o-formacion.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -648,6 +717,7 @@ slot = 2
 fact = 'personal_asalariado_horas_menores_19_o_formacion'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-discapacidad-33.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -657,6 +727,7 @@ slot = 2
 fact = 'personal_asalariado_horas_discapacidad_33'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-asalariado-horas-convenio-colectivo.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -666,6 +737,7 @@ slot = 2
 fact = 'personal_asalariado_horas_convenio_colectivo'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-titular.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -675,6 +747,7 @@ slot = 2
 fact = 'personal_no_asalariado_horas_titular'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-titular-discapacidad-33.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -684,6 +757,7 @@ slot = 2
 fact = 'personal_no_asalariado_titular_discapacidad_33'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-conyuge.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -693,6 +767,7 @@ slot = 2
 fact = 'personal_no_asalariado_horas_conyuge'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-personal-no-asalariado-horas-hijos-menores-18.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -702,6 +777,7 @@ slot = 2
 fact = 'personal_no_asalariado_horas_hijos_menores_18'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -712,6 +788,7 @@ fact = 'mesas_capacidad'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -722,6 +799,7 @@ fact = 'mesas_numero'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -732,6 +810,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -742,6 +821,7 @@ fact = 'mesas_capacidad'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -752,6 +832,7 @@ fact = 'mesas_numero'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -762,6 +843,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -772,6 +854,7 @@ fact = 'mesas_capacidad'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -782,6 +865,7 @@ fact = 'mesas_numero'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -792,6 +876,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-capacidad.slot-2.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -802,6 +887,7 @@ fact = 'mesas_capacidad'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-numero.slot-2.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -812,6 +898,7 @@ fact = 'mesas_numero'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-mesas-dias-cuarto-trimestre.slot-2.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -822,6 +909,7 @@ fact = 'mesas_dias_cuarto_trimestre'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -831,6 +919,7 @@ slot = 1
 fact = 'cuotas_soportadas_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -840,6 +929,7 @@ slot = 1
 fact = 'compensaciones_reagp_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-cuotas-soportadas-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -849,6 +939,7 @@ slot = 2
 fact = 'cuotas_soportadas_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-agricola.fact-compensaciones-reagp-cuarto-trimestre.slot-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -858,6 +949,7 @@ slot = 2
 fact = 'compensaciones_reagp_cuarto_trimestre'
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-1.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -868,6 +960,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -878,6 +971,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-1.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -888,6 +982,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -898,6 +993,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-1.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -908,6 +1004,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -918,6 +1015,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-1.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -928,6 +1026,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-1.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -938,6 +1037,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-2.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -948,6 +1048,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2.sub-index-1"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -958,6 +1059,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 1
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-2.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -968,6 +1070,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2.sub-index-2"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -978,6 +1081,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 2
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-2.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -988,6 +1092,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2.sub-index-3"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -998,6 +1103,7 @@ fact = 'superficie_horno_dias_cuarto_trimestre'
 sub_index = 3
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-cuarto-trimestre.slot-2.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]
@@ -1008,6 +1114,7 @@ fact = 'superficie_horno_cuarto_trimestre'
 sub_index = 4
 
 [[revisions."2026-y-siguientes".projection_endpoints]]
+id = "m303-regimen-simplificado-fact:cohort-no-agricola.fact-superficie-horno-dias-cuarto-trimestre.slot-2.sub-index-4"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 source_refs = ["aeat-dr-303-2026", "boe-orden-hac-1425-2025-iva-authority"]
 [revisions."2026-y-siguientes".projection_endpoints.projection_ref]

@@ -1,5 +1,6 @@
 [[revisions.2019-2022.casillas]]
 id = "decl.complementaria-sustitutiva"
+continuidad_id = "declaracion-complementaria-sustitutiva"
 number = "121-122"
 section = ["declarante", "identificacion"]
 data_type = "text"

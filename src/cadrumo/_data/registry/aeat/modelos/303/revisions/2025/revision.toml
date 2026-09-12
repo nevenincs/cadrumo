@@ -24,9 +24,10 @@ year_from = 2025
 year_to = 2025
 # Quarterly periods for standard autoliquidacion; monthly periods for
 # monthly IVA-liquidation taxpayers (REDEME or large-company status).
-# Annual settlement precedence is declared in this ordered period surface:
-# quarterly 4T precedes annual-only 0A.
-periods = ["1T", "2T", "3T", "4T", "0A", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+# RD 1624/1992 art. 71.3 gives this modelo a trimestral or mensual periodo only,
+# and the PP field of the design admits 1T-4T and 01-12. The annual settlement is
+# modelo 390, which carries the 0A period; 303 never files at 0A itself.
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 [revisions."2025".family_dispositions.applicability]
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."

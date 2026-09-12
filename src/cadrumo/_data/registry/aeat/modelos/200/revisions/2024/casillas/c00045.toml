@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00045"
+continuidad_id = "is-inversiones-anticipadas-reserva-inversiones-en-canarias-art-27-11-ley-19-1994"
 number = "00045"
 section = ["inversiones_anticipadas", "reserva_inversiones_en_canarias_art_27_11_ley_19_1"]
 data_type = "decimal"

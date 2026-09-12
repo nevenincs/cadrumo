@@ -8,3 +8,19 @@ closes_on = 2026-03-31
 legal_refs = ["orden-eha-3481-2008:art-5"]
 source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order"]
 
+# Filing year 2026, the second year this open-ended era answers for. Both dates
+# are the NOMINAL statutory ones from orden-eha-3481-2008 art. 5, "se realizara
+# en el plazo comprendido entre el dia 1 y el 31 del mes de marzo de cada ano" --
+# a recurring plazo that needs no fresh orden per ejercicio. 2027-03-31 is a
+# Wednesday, so nominal and operational coincide; it is still stored nominal, and
+# shift_deadline stays the one place an operational date is derived.
+[[revisions."2025".deadline_windows]]
+id = "modelo-189-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-03-01
+closes_on = 2027-03-31
+legal_refs = ["orden-eha-3481-2008:art-5"]
+source_refs = ["aeat-modelo-189-procedure", "boe-modelo-189-base-order"]
+

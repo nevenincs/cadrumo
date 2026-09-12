@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1435 y aeat-dr-100-2025-dictionary:1312; XXXVII Copa América Barcelona, columna Aplicado, M21CABA.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-1956-2023-2025-legal_refs_evolved"
+continuidad_id = "irpf-aeip-xxxvii-copa-america-barcelona-aplicado"
+from_revision = "2023"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-68.2", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]

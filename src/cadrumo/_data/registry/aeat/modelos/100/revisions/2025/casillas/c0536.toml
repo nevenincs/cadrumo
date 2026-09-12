@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0536"
+continuidad_id = "irpf-escala-sobre-base-ahorro-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:868 y aeat-dr-100-2025-dictionary:894: campo CIEST1; escala estatal aplicada a la base liquidable del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0536"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_escala_sobre_base_ahorro_estatal"

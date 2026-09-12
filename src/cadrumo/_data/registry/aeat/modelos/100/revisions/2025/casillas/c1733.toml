@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1733"
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-2-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:1411 y aeat-dr-100-2025-dictionary:1445: campo NIF2CAN; NIF del segundo productor financiado en Canarias en ambas ediciones del Anexo A, sin cambio de función ni de régimen."
 number = "1733"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "nif"

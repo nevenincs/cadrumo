@@ -3,6 +3,7 @@
 
 [[revisions."2004-2015".casillas]]
 id = "decl.ejercicio"
+continuidad_id = "filing-year"
 number = "ejercicio"
 section = ["declarante"]
 data_type = "year"
@@ -23,6 +24,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
 id = "wire.letras-etiqueta"
+continuidad_id = "letras-etiqueta-persona-fisica"
 number = "5"
 section = ["presentacion","identificacion"]
 data_type = "text"
@@ -340,6 +342,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
 id = "wire.observaciones"
+continuidad_id = "observaciones-presentacion"
 number = "64"
 section = ["presentacion"]
 data_type = "text"

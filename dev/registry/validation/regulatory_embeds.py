@@ -132,15 +132,6 @@ class ModeloModuleRecord:
     evidence: tuple[EmbedEvidence, ...]
 
 
-def modelo_codes() -> frozenset[str]:
-    """Return every AEAT modelo code the core enum declares."""
-    if str(SOURCE_ROOT.parent) not in sys.path:
-        sys.path.insert(0, str(SOURCE_ROOT.parent))
-    from cadrumo.core.modelo import Modelo
-
-    return frozenset(member.value for member in Modelo)
-
-
 def _tokens(text: str, codes: frozenset[str]) -> set[str]:
     return {match.group(1) for match in _MODELO_TOKEN.finditer(text) if match.group(1) in codes}
 
@@ -167,13 +158,15 @@ def _defined_names(tree: ast.Module) -> Iterator[str]:
 def _modelo_member_codes(tree: ast.Module, codes: frozenset[str]) -> set[str]:
     found: set[str] = set()
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Attribute):
+        if not isinstance(node, ast.Call):
             continue
-        if not isinstance(node.value, ast.Name) or node.value.id != "Modelo":
+        if not isinstance(node.func, ast.Name) or node.func.id != "Modelo":
             continue
-        attribute = node.attr
-        if attribute.startswith("M") and attribute[1:] in codes:
-            found.add(attribute[1:])
+        if len(node.args) != 1 or not isinstance(node.args[0], ast.Constant):
+            continue
+        argument = node.args[0].value
+        if isinstance(argument, str) and argument in codes:
+            found.add(argument)
     return found
 
 
@@ -320,9 +313,11 @@ def _collect_evidence(tree: ast.Module, relative: str) -> tuple[EmbedEvidence, .
     return tuple(sorted(found))
 
 
-def census(package_root: Path = REGISTRY_PACKAGE_ROOT) -> tuple[ModeloModuleRecord, ...]:
+def census(
+    package_root: Path = REGISTRY_PACKAGE_ROOT, *, known_modelo_codes: frozenset[str]
+) -> tuple[ModeloModuleRecord, ...]:
     """Derive every modelo-specific module under ``package_root``, with evidence."""
-    codes = modelo_codes()
+    codes = known_modelo_codes
     records: list[ModeloModuleRecord] = []
     unread: list[str] = []
     for path in _iter_package_modules(package_root):
@@ -376,10 +371,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Print every current embed and exit non-zero until the set is empty."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--package-root", type=Path, default=REGISTRY_PACKAGE_ROOT)
+    parser.add_argument("--registry-root", type=Path, default=SOURCE_ROOT / "cadrumo" / "_data" / "registry" / "aeat")
     parser.add_argument("--json", action="store_true", help="emit the derived census as JSON")
     args = parser.parse_args(argv)
 
-    records = census(args.package_root)
+    if str(SOURCE_ROOT.parent) not in sys.path:
+        sys.path.insert(0, str(SOURCE_ROOT.parent))
+    from dev.registry.compiler.loader import load_registry_tree
+
+    modelos, _catalogues = load_registry_tree(args.registry_root)
+    records = census(args.package_root, known_modelo_codes=frozenset(str(modelo.id) for modelo in modelos))
     if args.json:
         payload = [
             {

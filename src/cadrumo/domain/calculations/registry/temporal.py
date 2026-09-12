@@ -9,7 +9,11 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date
 
-from .errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
+from .errors import (
+    AmbiguousRevisionSelectionError,
+    EjercicioOrdenNotYetPublishedError,
+    NoRevisionForPeriodError,
+)
 from .ids import RevisionId
 from .period_selector_match import selector_token_for_request
 from .schema import ModeloDefinition, ModeloRevision, SupportedFilingYearsCatalogue
@@ -133,6 +137,42 @@ def _year_revision_candidates(
     return _effective_candidates(matching, on=on, filing_year=filing_year, period=None)
 
 
+def _absence_refusal(
+    modelo: ModeloDefinition,
+    *,
+    filing_year: int,
+    period: str,
+    revision_id: RevisionId | None,
+) -> NoRevisionForPeriodError:
+    """Build the refusal for a year no revision covers, as specific as the corpus allows.
+
+    A modelo that has declared the year awaits its approving Orden gets to say
+    so: the request failed for a reason nobody can act on yet, which is a
+    different fact from an unattended gap and leads an operator somewhere else.
+    Absent a declaration the plain absence refusal stands, so a modelo that has
+    simply not been authored cannot borrow the excuse.
+    """
+    available = tuple(str(declared) for declared in modelo.revisions)
+    pending = modelo.pending_orden_for(filing_year)
+    if pending is not None:
+        return EjercicioOrdenNotYetPublishedError(
+            modelo_id=modelo.id,
+            filing_year=filing_year,
+            period=period,
+            revision_id=revision_id,
+            available_revision_ids=available,
+            rests_on=str(pending.rests_on),
+            expected_publication_year=pending.expected_publication_year,
+        )
+    return NoRevisionForPeriodError(
+        modelo_id=modelo.id,
+        filing_year=filing_year,
+        period=period,
+        revision_id=revision_id,
+        available_revision_ids=available,
+    )
+
+
 def _select_single_year_revision(
     modelo: ModeloDefinition,
     candidates: list[ModeloRevision],
@@ -141,13 +181,7 @@ def _select_single_year_revision(
 ) -> ModeloRevision:
     """Resolve year candidates, refusing both absence and mid-year ambiguity."""
     if not candidates:
-        raise NoRevisionForPeriodError(
-            modelo_id=modelo.id,
-            filing_year=filing_year,
-            period="year",
-            revision_id=None,
-            available_revision_ids=tuple(str(declared) for declared in modelo.revisions),
-        )
+        raise _absence_refusal(modelo, filing_year=filing_year, period="year", revision_id=None)
     if len(candidates) > 1:
         # A year-only answer for a year covered by more than one revision is wrong
         # in whichever direction it is given, so this refuses rather than picking.
@@ -305,13 +339,7 @@ def _select_single_revision(
     revision_id: RevisionId | None,
 ) -> ModeloRevision:
     if not candidates:
-        raise NoRevisionForPeriodError(
-            modelo_id=modelo.id,
-            filing_year=filing_year,
-            period=period,
-            revision_id=revision_id,
-            available_revision_ids=tuple(str(declared) for declared in modelo.revisions),
-        )
+        raise _absence_refusal(modelo, filing_year=filing_year, period=period, revision_id=revision_id)
     if len(candidates) > 1:
         raise AmbiguousRevisionSelectionError(
             modelo_id=modelo.id,

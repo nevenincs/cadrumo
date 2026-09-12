@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1271 y aeat-dr-100-2023-dictionary:1291; 50 aniversario del fallecimiento de Clara Campoamor. 90 años del inicio de una democracia plena, columna Aplicado, M21FCCA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1706-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-50-aniversario-del-fallecimiento-de-clara-campoamor-90-anos-del-inicio-de-una-democracia-plena-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00083"
+continuidad_id = "is-tipo-gravamen-reducido-para-empresa-emergente"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 89/89, filas 94/94: Tipo gravamen reducido para empresa emergente [00083]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00083"
 section = ["tipo_gravamen_reducido_para_empresa_emergente"]
 data_type = "decimal"

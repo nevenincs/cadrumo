@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00073"
+continuidad_id = "is-opcion-del-0-7-de-la-cuota-integra-para-fines-sociales"
 number = "00073"
 section = ["opcion_del_0_7_de_la_cuota_integra_para_fines_soci"]
 data_type = "decimal"

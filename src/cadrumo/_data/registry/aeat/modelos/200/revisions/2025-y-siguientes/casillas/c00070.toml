@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00070"
+continuidad_id = "is-compensacion-bases-imponibles-negativas-para-entidades-de-nueva-creacion-art-26-3-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 90/90, filas 95/95: Compensación bases imponibles negativas para entidades de nueva creación (art. 26.3 LIS) [00070]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00070"
 section = ["compensacion_bases_imponibles_negativas_para_entid"]
 data_type = "decimal"

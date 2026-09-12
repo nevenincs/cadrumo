@@ -15,6 +15,7 @@
 # is at or below zero, so a retenedor with no rentas in the period never fires
 # it -- modelo 123 is filed quarterly even for a quarter with no activity.
 [[revisions."2019-2023".verification_predicates]]
+id = "implies-nonzero:base-declarada-cuando-rentas-positivas"
 predicate_id = "modelo-123-2019-2023-base-declarada-cuando-rentas-positivas"
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"

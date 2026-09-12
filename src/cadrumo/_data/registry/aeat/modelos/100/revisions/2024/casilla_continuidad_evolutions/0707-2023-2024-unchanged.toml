@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2023-dictionary:1327 y aeat-dr-100-2024-dictionary:1263; Bicentenario de la Policia Nacional, columna Aplicado, M21BPNA.
+[[revisions."2024".casilla_continuidad_evolutions]]
+id = "m100-0707-2023-2024-unchanged"
+continuidad_id = "irpf-aeip-bicentenario-de-la-policia-nacional-aplicado"
+from_revision = "2023"
+to_revision = "2024"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2024-dictionary"]

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1123, M21LNCA; Logroño 2021, nuestro V Centenario deja de figurar como programa aplicado en aeat-dr-100-2022-dictionary.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-0796-2021-2022-retired"
+continuidad_id = "irpf-aeip-logrono-2021-nuestro-v-centenario-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

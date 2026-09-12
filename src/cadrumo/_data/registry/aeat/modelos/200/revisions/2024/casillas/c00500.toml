@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00500"
+continuidad_id = "is-pyg-resultado-cuenta-perdidas-ganancias"
 number = "00500"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
 data_type = "money"

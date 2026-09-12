@@ -6,3 +6,9 @@ jurisdiction = "ES-AEAT"
 output_sensitivity = "financial"
 legal_refs = ["orden-eha-3290-2008:art-6", "orden-eha-3290-2008:art-6", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-296-procedure", "boe-modelo-296-form-layout"]
+
+[modelo.inception.unauthored]
+earliest_authored = 2024
+reason = "Approved by Orden EHA/3290/2008 art. 6; the same consolidated text shows Modelo 296 filed under the Orden of 21 December 2000, so 2022-2023 existed in law and are not yet authored. The two years are not the same case. 2023 has a registered design, aeat-dr-296-2023, differing from the 2024 edition by the two Anexos al registro tipo 2 ('Valores negociables') that AEAT introduced for the first time for ejercicio 2024, so a 2023 edition carries three record types where 2024 carries five. 2022 has no registered design at all, making it acquisition debt before it can become authoring debt. Both back-year editions precede 2024-y-siguientes and inherit nothing from it."
+legal_refs = ["orden-eha-3290-2008:art-6"]
+source_refs = ["aeat-dr-296-2023"]

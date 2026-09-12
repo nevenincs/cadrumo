@@ -253,6 +253,35 @@ def test_a_parsable_reference_scan_tree_announces_nothing(
     assert capsys.readouterr().err == ""
 
 
+def test_reference_map_records_direct_defining_module_imports(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Canonical module imports remain observable reference evidence.
+
+    The map measures the module named by a direct ``import`` statement, so the
+    consumer is observable without any secondary ownership inference.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "direct_consumer.py").write_text(
+        "import cadrumo.domain.calculations.registry.module_a" + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+
+    reference_map = load_census.build_reference_map()
+
+    assert reference_map.production == {
+        "cadrumo.domain.calculations.registry.module_a": frozenset({"cadrumo.direct_consumer"})
+    }
+    assert reference_map.consumers("cadrumo.domain.calculations.registry.module_a") == frozenset(
+        {"cadrumo.direct_consumer"}
+    )
+
+
 def test_an_unparsable_dynamic_import_file_is_announced_not_dropped(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: pathlib.Path,

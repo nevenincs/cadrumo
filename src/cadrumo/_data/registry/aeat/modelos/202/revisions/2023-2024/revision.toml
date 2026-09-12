@@ -1,6 +1,8 @@
 [revisions."2023-2024"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-dr-202-2023"] } }
+formula_source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
+predecessor = "2019-2022"
 casilla_source_refs = ["aeat-dr-202-2023"]
+reviewed_against = "2019-2022"
 authority_grade = "filing"
 valid_from = 2023-01-01
 valid_to = 2024-12-31
@@ -40,3 +42,8 @@ An extraction profile matches printed labels in a filed artefact, and every labe
 a real 202 declaracion prints. Bundling a filed or AEAT-published 202 specimen is the change that makes this family authorable."""
 legal_refs = ["ley-27-2014:art-40", "orden-hfp-227-2017:art-1"]
 source_refs = ["aeat-dr-202-2023"]
+
+[revisions."2023-2024".source_default_dispositions.bindings]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

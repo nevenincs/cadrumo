@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2024-dictionary:1278, M21APSA; 20 Aniversario de Primavera Sound deja de figurar como programa aplicado en aeat-dr-100-2025-dictionary.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0773-2024-2025-retired"
+continuidad_id = "irpf-aeip-20-aniversario-de-primavera-sound-aplicado"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2025-dictionary"]

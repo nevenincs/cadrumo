@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "1719"
+continuidad_id = "irpf-aeip-enfermedades-neurodegenerativas-ano-lnternacional-de-la-lnvestigacion-e-lnnovacion-periodo-2021-2022-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:1252 y aeat-dr-100-2022-dictionary:1307: campo M21ENEA; columna Aplicado en esta declaración del programa Enfermedades Neurodegenerativas. Año lnternacional de la lnvestigación e lnnovación. Período 2021-2022 en Anexo A. Misma designación y función fiscal."
 number = "1719"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

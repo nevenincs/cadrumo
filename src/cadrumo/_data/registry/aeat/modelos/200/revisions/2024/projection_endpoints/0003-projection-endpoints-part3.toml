@@ -1,6 +1,7 @@
 
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-11"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -9,6 +10,7 @@ slot = 11
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-11"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -17,6 +19,7 @@ slot = 11
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-11"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -25,6 +28,7 @@ slot = 11
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -33,6 +37,7 @@ slot = 12
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -41,6 +46,7 @@ slot = 12
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -49,6 +55,7 @@ slot = 12
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -57,6 +64,7 @@ slot = 12
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -65,6 +73,7 @@ slot = 12
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -73,6 +82,7 @@ slot = 12
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -81,6 +91,7 @@ slot = 13
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -89,6 +100,7 @@ slot = 13
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -97,6 +109,7 @@ slot = 13
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -105,6 +118,7 @@ slot = 13
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -113,6 +127,7 @@ slot = 13
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-13"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -121,6 +136,7 @@ slot = 13
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -129,6 +145,7 @@ slot = 14
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -137,6 +154,7 @@ slot = 14
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -145,6 +163,7 @@ slot = 14
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -153,6 +172,7 @@ slot = 14
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -161,6 +181,7 @@ slot = 14
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-14"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -169,6 +190,7 @@ slot = 14
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -177,6 +199,7 @@ slot = 15
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -185,6 +208,7 @@ slot = 15
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -193,6 +217,7 @@ slot = 15
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -201,6 +226,7 @@ slot = 15
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -209,6 +235,7 @@ slot = 15
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-15"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -217,6 +244,7 @@ slot = 15
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -225,6 +253,7 @@ slot = 16
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -233,6 +262,7 @@ slot = 16
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -241,6 +271,7 @@ slot = 16
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -249,6 +280,7 @@ slot = 16
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -257,6 +289,7 @@ slot = 16
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-16"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -265,6 +298,7 @@ slot = 16
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -273,6 +307,7 @@ slot = 17
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -281,6 +316,7 @@ slot = 17
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -289,6 +325,7 @@ slot = 17
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -297,6 +334,7 @@ slot = 17
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -305,6 +343,7 @@ slot = 17
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-17"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -313,6 +352,7 @@ slot = 17
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-identificacion.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -321,6 +361,7 @@ slot = 18
 field = "identificacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-pais-residencia-fiscal.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -329,6 +370,7 @@ slot = 18
 field = "pais_residencia_fiscal"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-volumen-operaciones.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -337,6 +379,7 @@ slot = 18
 field = "volumen_operaciones"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-beneficio-o-perdida.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -345,6 +388,7 @@ slot = 18
 field = "beneficio_o_perdida"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-ajustes-resultado-contable.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -353,6 +397,7 @@ slot = 18
 field = "suma_ajustes_resultado_contable"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-establecimiento-permanente:field-suma-deducciones-di-internacional-anteriores.slot-18"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -361,6 +406,7 @@ slot = 18
 field = "suma_deducciones_di_internacional_anteriores"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-establecimiento-permanente:slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -368,6 +414,7 @@ projection_kind = "m200_incn_establecimiento_permanente"
 slot = 1
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-establecimiento-permanente:slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -375,6 +422,7 @@ projection_kind = "m200_incn_establecimiento_permanente"
 slot = 2
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-establecimiento-permanente:slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -382,6 +430,7 @@ projection_kind = "m200_incn_establecimiento_permanente"
 slot = 3
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-establecimiento-permanente:slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -389,6 +438,7 @@ projection_kind = "m200_incn_establecimiento_permanente"
 slot = 4
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-establecimiento-permanente:slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -396,6 +446,7 @@ projection_kind = "m200_incn_establecimiento_permanente"
 slot = 5
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -404,6 +455,7 @@ slot = 1
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -412,6 +464,7 @@ slot = 1
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -420,6 +473,7 @@ slot = 2
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -428,6 +482,7 @@ slot = 2
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -436,6 +491,7 @@ slot = 3
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -444,6 +500,7 @@ slot = 3
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -452,6 +509,7 @@ slot = 4
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-4"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -460,6 +518,7 @@ slot = 4
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -468,6 +527,7 @@ slot = 5
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-5"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -476,6 +536,7 @@ slot = 5
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-6"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -484,6 +545,7 @@ slot = 6
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-6"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -492,6 +554,7 @@ slot = 6
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-7"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -500,6 +563,7 @@ slot = 7
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-7"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -508,6 +572,7 @@ slot = 7
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-8"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -516,6 +581,7 @@ slot = 8
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-8"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -524,6 +590,7 @@ slot = 8
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-9"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -532,6 +599,7 @@ slot = 9
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-9"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -540,6 +608,7 @@ slot = 9
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-10"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -548,6 +617,7 @@ slot = 10
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-10"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -556,6 +626,7 @@ slot = 10
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-11"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -564,6 +635,7 @@ slot = 11
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-11"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -572,6 +644,7 @@ slot = 11
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-nif-entidad-grupo.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -580,6 +653,7 @@ slot = 12
 field = "nif_entidad_grupo"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-incn-grupo-sociedad:field-codigo-pais.slot-12"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -588,6 +662,7 @@ slot = 12
 field = "codigo_pais"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -596,6 +671,7 @@ slot = 1
 field = "tipo_operacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -604,6 +680,7 @@ slot = 1
 field = "transmitente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -612,6 +689,7 @@ slot = 1
 field = "transmitente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -620,6 +698,7 @@ slot = 1
 field = "adquirente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -628,6 +707,7 @@ slot = 1
 field = "adquirente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -636,6 +716,7 @@ slot = 1
 field = "fecha_inscripcion_registro_mercantil"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -644,6 +725,7 @@ slot = 1
 field = "fecha_comunicacion_operacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -652,6 +734,7 @@ slot = 1
 field = "valor_acciones_entregadas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -660,6 +743,7 @@ slot = 1
 field = "valor_acciones_recibidas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-1"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -668,6 +752,7 @@ slot = 1
 field = "importe_rentas_no_integradas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -676,6 +761,7 @@ slot = 2
 field = "tipo_operacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -684,6 +770,7 @@ slot = 2
 field = "transmitente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -692,6 +779,7 @@ slot = 2
 field = "transmitente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -700,6 +788,7 @@ slot = 2
 field = "adquirente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -708,6 +797,7 @@ slot = 2
 field = "adquirente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -716,6 +806,7 @@ slot = 2
 field = "fecha_inscripcion_registro_mercantil"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-fecha-comunicacion-operacion.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -724,6 +815,7 @@ slot = 2
 field = "fecha_comunicacion_operacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-valor-acciones-entregadas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -732,6 +824,7 @@ slot = 2
 field = "valor_acciones_entregadas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-valor-acciones-recibidas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -740,6 +833,7 @@ slot = 2
 field = "valor_acciones_recibidas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-importe-rentas-no-integradas.slot-2"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -748,6 +842,7 @@ slot = 2
 field = "importe_rentas_no_integradas"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-tipo-operacion.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -756,6 +851,7 @@ slot = 3
 field = "tipo_operacion"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-nif.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -764,6 +860,7 @@ slot = 3
 field = "transmitente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-transmitente-denominacion-social.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -772,6 +869,7 @@ slot = 3
 field = "transmitente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-nif.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -780,6 +878,7 @@ slot = 3
 field = "adquirente_nif"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-adquirente-denominacion-social.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]
@@ -788,6 +887,7 @@ slot = 3
 field = "adquirente_denominacion_social"
 
 [[revisions."2024".projection_endpoints]]
+id = "m200-operacion-reestructuracion:field-fecha-inscripcion-registro-mercantil.slot-3"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-100", "rd-634-2015:art-3"]
 source_refs = ["aeat-dr-200-2024"]
 [revisions."2024".projection_endpoints.projection_ref]

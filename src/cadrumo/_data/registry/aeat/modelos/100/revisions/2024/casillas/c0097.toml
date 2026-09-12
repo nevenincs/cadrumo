@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0097"
+continuidad_id = "irpf-inmueble-arrendatario-3-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:178 y aeat-dr-100-2024-dictionary:191: CNIF3RNR, identificación fiscal del tercer arrendatario de vivienda habitual. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0097"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"

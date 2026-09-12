@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00033"
+continuidad_id = "is-regimen-especial-mineria"
 number = "00033"
 section = ["regimen_especial_mineria"]
 data_type = "decimal"

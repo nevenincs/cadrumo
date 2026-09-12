@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1624"
+# aeat-dr-100-2020-dictionary:579: G2DT, titular de otros elementos patrimoniales transmitidos.
+continuidad_id = "irpf-otros-elementos-transmision-contribuyente-titular"
 number = "1624"
 section = ["toma_datos_ampliada"]
 data_type = "text"

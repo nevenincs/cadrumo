@@ -1,5 +1,7 @@
 [revisions."2019-2023"]
 casilla_source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+binding_source_refs = ["aeat-dr-131-2019-2023-v101"]
+formula_source_refs = ["aeat-modelo-131-instructions"]
 authority_grade = "filing"
 id = "2019-2023"
 valid_from = 2019-01-01

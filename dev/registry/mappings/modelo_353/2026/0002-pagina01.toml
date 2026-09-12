@@ -202,7 +202,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f016"
 kind = "binding"
-binding = "modelo-353.page_01.122-130.entidad-dominante-entidad-dominante-n-i-f"
+binding = "modelo-353.page_01.entidad-dominante-entidad-dominante-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -215,7 +215,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f017"
 kind = "binding"
-binding = "modelo-353.page_01.131-147.entidad-dominante-entidad-dominante-resultado"
+binding = "modelo-353.page_01.entidad-dominante-entidad-dominante-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -240,7 +240,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f019"
 kind = "binding"
-binding = "modelo-353.page_01.153-165.entidad-dominante-entidad-dominante-numero-de-justificante"
+binding = "modelo-353.page_01.entidad-dominante-entidad-dominante-numero-de-justificante"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -265,7 +265,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f021"
 kind = "binding"
-binding = "modelo-353.page_01.169-177.entidad-1-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-1-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -278,7 +278,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f022"
 kind = "binding"
-binding = "modelo-353.page_01.178-194.entidad-1-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-1-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -291,7 +291,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f023"
 kind = "binding"
-binding = "modelo-353.page_01.195-199.entidad-1-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-1-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -304,7 +304,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f024"
 kind = "binding"
-binding = "modelo-353.page_01.200-212.entidad-1-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-1-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -329,7 +329,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f026"
 kind = "binding"
-binding = "modelo-353.page_01.216-224.entidad-2-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-2-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -342,7 +342,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f027"
 kind = "binding"
-binding = "modelo-353.page_01.225-241.entidad-2-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-2-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -355,7 +355,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f028"
 kind = "binding"
-binding = "modelo-353.page_01.242-246.entidad-2-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-2-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -368,7 +368,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f029"
 kind = "binding"
-binding = "modelo-353.page_01.247-259.entidad-2-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-2-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -393,7 +393,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f031"
 kind = "binding"
-binding = "modelo-353.page_01.263-271.entidad-3-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-3-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -406,7 +406,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f032"
 kind = "binding"
-binding = "modelo-353.page_01.272-288.entidad-3-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-3-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -419,7 +419,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f033"
 kind = "binding"
-binding = "modelo-353.page_01.289-293.entidad-3-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-3-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -432,7 +432,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f034"
 kind = "binding"
-binding = "modelo-353.page_01.294-306.entidad-3-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-3-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -457,7 +457,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f036"
 kind = "binding"
-binding = "modelo-353.page_01.310-318.entidad-4-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-4-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -470,7 +470,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f037"
 kind = "binding"
-binding = "modelo-353.page_01.319-335.entidad-4-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-4-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -483,7 +483,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f038"
 kind = "binding"
-binding = "modelo-353.page_01.336-340.entidad-4-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-4-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -496,7 +496,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f039"
 kind = "binding"
-binding = "modelo-353.page_01.341-353.entidad-4-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-4-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -521,7 +521,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f041"
 kind = "binding"
-binding = "modelo-353.page_01.357-365.entidad-5-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-5-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -534,7 +534,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f042"
 kind = "binding"
-binding = "modelo-353.page_01.366-382.entidad-5-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-5-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -547,7 +547,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f043"
 kind = "binding"
-binding = "modelo-353.page_01.383-387.entidad-5-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-5-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -560,7 +560,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f044"
 kind = "binding"
-binding = "modelo-353.page_01.388-400.entidad-5-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-5-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -585,7 +585,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f046"
 kind = "binding"
-binding = "modelo-353.page_01.404-412.entidad-6-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-6-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -598,7 +598,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f047"
 kind = "binding"
-binding = "modelo-353.page_01.413-429.entidad-6-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-6-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -611,7 +611,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f048"
 kind = "binding"
-binding = "modelo-353.page_01.430-434.entidad-6-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-6-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -624,7 +624,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f049"
 kind = "binding"
-binding = "modelo-353.page_01.435-447.entidad-6-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-6-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -649,7 +649,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f051"
 kind = "binding"
-binding = "modelo-353.page_01.451-459.entidad-7-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-7-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -662,7 +662,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f052"
 kind = "binding"
-binding = "modelo-353.page_01.460-476.entidad-7-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-7-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -675,7 +675,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f053"
 kind = "binding"
-binding = "modelo-353.page_01.477-481.entidad-7-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-7-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -688,7 +688,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f054"
 kind = "binding"
-binding = "modelo-353.page_01.482-494.entidad-7-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-7-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -713,7 +713,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f056"
 kind = "binding"
-binding = "modelo-353.page_01.498-506.entidad-8-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-8-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -726,7 +726,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f057"
 kind = "binding"
-binding = "modelo-353.page_01.507-523.entidad-8-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-8-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -739,7 +739,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f058"
 kind = "binding"
-binding = "modelo-353.page_01.524-528.entidad-8-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-8-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -752,7 +752,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f059"
 kind = "binding"
-binding = "modelo-353.page_01.529-541.entidad-8-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-8-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -777,7 +777,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f061"
 kind = "binding"
-binding = "modelo-353.page_01.545-553.entidad-9-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-9-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -790,7 +790,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f062"
 kind = "binding"
-binding = "modelo-353.page_01.554-570.entidad-9-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-9-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -803,7 +803,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f063"
 kind = "binding"
-binding = "modelo-353.page_01.571-575.entidad-9-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-9-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -816,7 +816,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f064"
 kind = "binding"
-binding = "modelo-353.page_01.576-588.entidad-9-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-9-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -841,7 +841,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f066"
 kind = "binding"
-binding = "modelo-353.page_01.592-600.entidad-10-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-10-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -854,7 +854,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f067"
 kind = "binding"
-binding = "modelo-353.page_01.601-617.entidad-10-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-10-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -867,7 +867,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f068"
 kind = "binding"
-binding = "modelo-353.page_01.618-622.entidad-10-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-10-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -880,7 +880,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f069"
 kind = "binding"
-binding = "modelo-353.page_01.623-635.entidad-10-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-10-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -905,7 +905,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f071"
 kind = "binding"
-binding = "modelo-353.page_01.639-647.entidad-11-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-11-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -918,7 +918,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f072"
 kind = "binding"
-binding = "modelo-353.page_01.648-664.entidad-11-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-11-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -931,7 +931,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f073"
 kind = "binding"
-binding = "modelo-353.page_01.665-669.entidad-11-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-11-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -944,7 +944,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f074"
 kind = "binding"
-binding = "modelo-353.page_01.670-682.entidad-11-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-11-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -969,7 +969,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f076"
 kind = "binding"
-binding = "modelo-353.page_01.686-694.entidad-12-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-12-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -982,7 +982,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f077"
 kind = "binding"
-binding = "modelo-353.page_01.695-711.entidad-12-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-12-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -995,7 +995,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f078"
 kind = "binding"
-binding = "modelo-353.page_01.712-716.entidad-12-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-12-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1008,7 +1008,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f079"
 kind = "binding"
-binding = "modelo-353.page_01.717-729.entidad-12-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-12-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1033,7 +1033,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f081"
 kind = "binding"
-binding = "modelo-353.page_01.733-741.entidad-13-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-13-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1046,7 +1046,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f082"
 kind = "binding"
-binding = "modelo-353.page_01.742-758.entidad-13-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-13-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1059,7 +1059,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f083"
 kind = "binding"
-binding = "modelo-353.page_01.759-763.entidad-13-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-13-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1072,7 +1072,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f084"
 kind = "binding"
-binding = "modelo-353.page_01.764-776.entidad-13-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-13-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1097,7 +1097,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f086"
 kind = "binding"
-binding = "modelo-353.page_01.780-788.entidad-14-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-14-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1110,7 +1110,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f087"
 kind = "binding"
-binding = "modelo-353.page_01.789-805.entidad-14-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-14-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1123,7 +1123,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f088"
 kind = "binding"
-binding = "modelo-353.page_01.806-810.entidad-14-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-14-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1136,7 +1136,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f089"
 kind = "binding"
-binding = "modelo-353.page_01.811-823.entidad-14-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-14-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1161,7 +1161,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f091"
 kind = "binding"
-binding = "modelo-353.page_01.827-835.entidad-15-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-15-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1174,7 +1174,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f092"
 kind = "binding"
-binding = "modelo-353.page_01.836-852.entidad-15-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-15-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1187,7 +1187,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f093"
 kind = "binding"
-binding = "modelo-353.page_01.853-857.entidad-15-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-15-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1200,7 +1200,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f094"
 kind = "binding"
-binding = "modelo-353.page_01.858-870.entidad-15-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-15-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1225,7 +1225,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f096"
 kind = "binding"
-binding = "modelo-353.page_01.874-882.entidad-16-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-16-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1238,7 +1238,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f097"
 kind = "binding"
-binding = "modelo-353.page_01.883-899.entidad-16-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-16-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1251,7 +1251,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f098"
 kind = "binding"
-binding = "modelo-353.page_01.900-904.entidad-16-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-16-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1264,7 +1264,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f099"
 kind = "binding"
-binding = "modelo-353.page_01.905-917.entidad-16-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-16-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1289,7 +1289,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f101"
 kind = "binding"
-binding = "modelo-353.page_01.921-929.entidad-17-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-17-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1302,7 +1302,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f102"
 kind = "binding"
-binding = "modelo-353.page_01.930-946.entidad-17-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-17-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1315,7 +1315,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f103"
 kind = "binding"
-binding = "modelo-353.page_01.947-951.entidad-17-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-17-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1328,7 +1328,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f104"
 kind = "binding"
-binding = "modelo-353.page_01.952-964.entidad-17-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-17-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1353,7 +1353,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f106"
 kind = "binding"
-binding = "modelo-353.page_01.968-976.entidad-18-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-18-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1366,7 +1366,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f107"
 kind = "binding"
-binding = "modelo-353.page_01.977-993.entidad-18-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-18-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1379,7 +1379,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f108"
 kind = "binding"
-binding = "modelo-353.page_01.994-998.entidad-18-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-18-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1392,7 +1392,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f109"
 kind = "binding"
-binding = "modelo-353.page_01.999-1011.entidad-18-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-18-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1417,7 +1417,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f111"
 kind = "binding"
-binding = "modelo-353.page_01.1015-1023.entidad-19-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-19-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1430,7 +1430,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f112"
 kind = "binding"
-binding = "modelo-353.page_01.1024-1040.entidad-19-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-19-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1443,7 +1443,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f113"
 kind = "binding"
-binding = "modelo-353.page_01.1041-1045.entidad-19-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-19-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1456,7 +1456,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f114"
 kind = "binding"
-binding = "modelo-353.page_01.1046-1058.entidad-19-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-19-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1481,7 +1481,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f116"
 kind = "binding"
-binding = "modelo-353.page_01.1062-1070.entidad-20-entidades-dependientes-n-i-f"
+binding = "modelo-353.page_01.entidad-20-entidades-dependientes-n-i-f"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1494,7 +1494,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f117"
 kind = "binding"
-binding = "modelo-353.page_01.1071-1087.entidad-20-entidades-dependientes-resultado"
+binding = "modelo-353.page_01.entidad-20-entidades-dependientes-resultado"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1507,7 +1507,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f118"
 kind = "binding"
-binding = "modelo-353.page_01.1088-1092.entidad-20-ent-depndtes-de-participac-al-final-del"
+binding = "modelo-353.page_01.entidad-20-ent-depndtes-de-participac-al-final-del"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]
@@ -1520,7 +1520,7 @@ record_identity = "35301"
 [[entries]]
 export_field_id = "m353-2026.pagina01.f119"
 kind = "binding"
-binding = "modelo-353.page_01.1093-1105.entidad-20-entidades-dependientes-numero-de-justifi"
+binding = "modelo-353.page_01.entidad-20-entidades-dependientes-numero-de-justifi"
 legal_refs = ["orden-eha-3434-2007:art-8"]
 source_refs = ["aeat-dr-353-2026"]
 [entries.anchor]

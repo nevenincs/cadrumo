@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0130"
+continuidad_id = "irpf-inmueble-amortizacion-base"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:220 y aeat-dr-100-2022-dictionary:219: C_BASEAMOR, base de amortización del inmueble principal. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0130"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_base_amortizacion"

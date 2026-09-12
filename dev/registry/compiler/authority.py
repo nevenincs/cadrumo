@@ -24,6 +24,7 @@ from .fact_providers import compile_registered_fact_providers, validate_fact_pro
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree
 from .loader_fingerprints import collect_registry_tree_fingerprints
+from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
 from .validator import RegistryValidator
@@ -110,6 +111,7 @@ def compile_registry_tree(
     validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
         facts = compile_registered_fact_providers(root, modelos=modelos)
+        runtime_catalogues = compile_runtime_catalogues(root)
     # Provider-free isolated candidates are supported by the fact-validation
     # contract. They cannot project a treaty override, but remain useful for
     # exercising compiler and publication mechanics without unrelated facts.
@@ -139,6 +141,7 @@ def compile_registry_tree(
             "facts": facts,
             "convenio": convenio,
             "supplementary_ordenes": supplementary_ordenes.authorities,
+            "runtime": runtime_catalogues,
         }
     )
     return modelos, catalogues

@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0815"
+# Grounding: aeat-dr-100-2020-dictionary:1110, M21PBEA; importe aplicado del programa Plan Berlanga (Anexo A).
+continuidad_id = "irpf-aeip-plan-berlanga-aplicado"
 number = "0815"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

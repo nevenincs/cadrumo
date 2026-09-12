@@ -9,6 +9,7 @@
 # (no-silent-under-declaration). ADVISORY (non-blocking): mirrors the M131
 # 01->02 and M200 00501->DP200014:00552 worked-pattern guards.
 [[revisions."2015-2022".verification_predicates]]
+id = "implies-nonzero:base-liquidable-implica-cuota-integra"
 predicate_id = "modelo-151-base-liquidable-implica-cuota-integra"
 expression = 'implies_nonzero(["impatriado.base-liquidable-general", "impatriado.cuota-integra-general"])'
 finding_kind = "ADVISORY"
@@ -35,6 +36,7 @@ legal_refs = ["ley-35-2006:art-93"]
 # be computed rather than merely checked is not grounded in this tree for the
 # 2015-2022 era, and inventing one would be worse than the advisory.
 [[revisions."2015-2022".verification_predicates]]
+id = "implies-nonzero:base-liquidable-ahorro-implica-cuota-del-ahorro"
 predicate_id = "modelo-151-base-liquidable-ahorro-implica-cuota-del-ahorro"
 expression = 'implies_nonzero(["p08.base-liquidable-del-ahorro-18", "p08.cuota-correspondiente-e-general-del-ahorro-20"])'
 finding_kind = "ADVISORY"

@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00034"
+continuidad_id = "is-regimen-especial-hidrocarburos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 66/66, filas 71/71: Régimen especial hidrocarburos [00034]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00034"
 section = ["regimen_especial_hidrocarburos"]
 data_type = "decimal"

@@ -1,0 +1,14 @@
+# The 2007 annex counts recipients. The replacement annex introduced by
+# Orden HAC/56/2024 art. 1 counts income payments, separately for dividends and
+# other income and in total. None of those three counts continues the old
+# recipient-count measure; the reused printed number 01 is not identity.
+
+[[revisions."2024-y-siguientes".casilla_continuidad_evolutions]]
+id = "retired-perceptor-count"
+continuidad_id = "perceptor-count"
+from_revision = "2019-2023"
+to_revision = "2024-y-siguientes"
+evolution_kind = "retired"
+legal_refs = ["orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-dr-123-2024-v20", "boe-modelo-123-2007-form-text", "boe-modelo-123-2024-form-text"]
+

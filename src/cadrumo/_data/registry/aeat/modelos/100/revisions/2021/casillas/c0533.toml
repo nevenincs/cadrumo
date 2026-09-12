@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0533"
+continuidad_id = "irpf-cuota-base-liquidable-general-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:748 y aeat-dr-100-2021-dictionary:763: campo CIGAUT; cuota autonómica correspondiente a la base liquidable general en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0533"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_general_autonomico"

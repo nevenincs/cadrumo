@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00086"
+continuidad_id = "is-regimen-especial-illes-balears"
 number = "00086"
 section = ["regimen_especial_illes_balears"]
 data_type = "decimal"

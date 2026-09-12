@@ -23,6 +23,7 @@
 # ADVISORY, not BLOCKING. implies_nonzero holds trivially when the antecedent is
 # at or below zero, so a retenedor with no perceptores never fires it.
 [[revisions."2024".verification_predicates]]
+id = "implies-nonzero:percepciones-anuales-cuando-perceptores-declarados"
 predicate_id = "modelo-190-percepciones-anuales-cuando-perceptores-declarados"
 expression = 'implies_nonzero(["decl.total-percepciones", "decl.percepciones-total"])'
 finding_kind = "ADVISORY"

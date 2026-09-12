@@ -1,0 +1,9 @@
+# Grounding: CEXGE2, escala estatal sobre el mínimo personal y familiar aplicable a la base general. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "m100-0530-2024-2025-legal-refs-evolved"
+continuidad_id = "irpf-escala-sobre-minimo-general-estatal"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-63","orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2024-dictionary","aeat-dr-100-2025-dictionary","boe-modelo-100-2025-form"]

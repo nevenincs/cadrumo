@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00084"
+continuidad_id = "is-regimen-especial-de-disolucion-y-liquidacion-de-sicav-dt-41a-lis"
 number = "00084"
 section = ["regimen_especial_de_disolucion_y_liquidacion_de_si"]
 data_type = "decimal"

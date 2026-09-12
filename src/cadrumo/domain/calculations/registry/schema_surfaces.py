@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -44,6 +45,7 @@ __all__ = [
     "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
+    "validate_family_identity_uniqueness",
 ]
 
 
@@ -690,3 +692,26 @@ class CalculationCompletenessManifest(RegistryModel):
 # silent-pass hazard at the predicate layer (a typo would silently pass
 # the gate that's missing the operator). A gate test asserts the
 # runtime evaluator recognises every name in this constant.
+
+
+def validate_family_identity_uniqueness(family: str, identities: Sequence[str]) -> None:
+    """Refuse a revision declaring two members of ``family`` under one identity.
+
+    A family inherits across editions by identity, so a revision holding the
+    same identity twice makes the merge unanswerable: neither member can be
+    said to supersede the predecessor's, and neither can be retired without
+    also withdrawing the other. The collision is refused rather than resolved
+    by renaming one of them, because a generated suffix would invent a
+    distinction the corpus does not state.
+
+    Args:
+        family: The declaration family the identities belong to.
+        identities: Each member's identity, in declaration order.
+
+    Raises:
+        RegistryValidationError: Two or more members share an identity.
+    """
+    duplicates = sorted({identity for identity in identities if identities.count(identity) > 1})
+    if duplicates:
+        rendered = ", ".join(repr(identity) for identity in duplicates)
+        raise RegistryValidationError(f"{family} declares duplicate ids: {rendered}")

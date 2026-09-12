@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0782"
+continuidad_id = "irpf-aeip-todos-contra-el-cancer-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1354 y aeat-dr-100-2024-dictionary:1287: campo M21TCCA; columna Aplicado en esta declaración del programa Todos contra el cáncer en Anexo A. Misma designación y función fiscal."
 number = "0782"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

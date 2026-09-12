@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0128"
+# Grounding: aeat-dr-100-2020-dictionary:211, C_IMPMJEA; mejoras de años anteriores en el inmueble principal a efectos de amortización.
+continuidad_id = "irpf-inmueble-amortizacion-mejoras-previas"
 number = "0128"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_mejoras_previas"

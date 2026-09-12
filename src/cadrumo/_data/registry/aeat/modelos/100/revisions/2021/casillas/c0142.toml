@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0142"
+continuidad_id = "irpf-inmueble-accesorio-amortizacion-gastos-tributos-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:225 y aeat-dr-100-2021-dictionary:232: C_TRIBUADACC, gastos y tributos inherentes a la adquisición del inmueble accesorio para su amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0142"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_tributos_adquisicion"

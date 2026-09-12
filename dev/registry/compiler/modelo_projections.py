@@ -122,7 +122,7 @@ def _target_variants(modelo: ModeloDefinition, target: _ProjectionTarget) -> tup
                             f"modelo {modelo.id} parameter {parameter.id!r} revisions contributing one "
                             "projected fact disagree on review status"
                         )
-                    source_revision_ids = existing.effective_source_revision_ids
+                    source_revision_ids = existing.source_revision_ids
                     if revision.id not in source_revision_ids:
                         variants[existing_index] = existing.model_copy(
                             update={"source_revision_ids": (*source_revision_ids, revision.id)},

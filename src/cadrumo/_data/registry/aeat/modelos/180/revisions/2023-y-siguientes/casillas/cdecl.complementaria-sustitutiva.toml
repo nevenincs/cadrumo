@@ -1,5 +1,8 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.complementaria-sustitutiva"
+continuidad_id = "declaracion-complementaria-sustitutiva"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, paginas 3-4, lineas 73-100 de sus extractos: C incorpora perceptores omitidos y S anula y sustituye una unica declaracion del mismo ejercicio; definiciones y condiciones identicas."
 number = "121-122"
 section = ["declarante", "identificacion"]
 data_type = "text"

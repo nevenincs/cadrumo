@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00056"
+continuidad_id = "is-entidad-en-regimen-de-atribucion-de-rentas-con-tributacion-por-el-impuesto-sobre-sociedades"
 number = "00056"
 section = ["entidad_en_regimen_de_atribucion_de_rentas_con_tri"]
 data_type = "decimal"

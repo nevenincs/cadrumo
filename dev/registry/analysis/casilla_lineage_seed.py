@@ -177,7 +177,7 @@ EXCLUDED_MODELOS: Mapping[str, ExcludedModelo] = {
 }
 
 _PLAIN_INTEGER = re.compile(r"^\d+$")
-_DESIGN_BOX = re.compile(r"\[\s*(\d{1,4})\s*\]")
+_DESIGN_BOX = re.compile(r"\[\s*(\d{1,5})\s*\]")
 _ALPHANUMERIC = re.compile(r"\w")
 _LIST_SEPARATOR = re.compile(r"^\s*(?:,|y|e|o|a)\s*$", re.IGNORECASE)
 _OPERATOR_GAP = re.compile(r"^\s*[-+x*/=]\s*$")

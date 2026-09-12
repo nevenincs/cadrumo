@@ -1,0 +1,9 @@
+# Grounding: DED6A, parte autonómica de la deducción por rendimientos de bienes corporales producidos en Canarias. Se actualizan las referencias normativas aplicables, sin cambiar la magnitud fiscal.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-0559-2021-2023-legal-refs-evolved"
+continuidad_id = "irpf-deduccion-bienes-corporales-canarias-autonomica"
+from_revision = "2021"
+to_revision = "2023"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-62","ley-35-2006:art-66-2023","ley-35-2006:art-67","ley-35-2006:art-73","ley-35-2006:art-77"]
+source_refs = ["aeat-dr-100-2021-dictionary","aeat-dr-100-2023-dictionary"]

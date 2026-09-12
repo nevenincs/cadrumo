@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1262 y aeat-dr-100-2023-dictionary:1285; Valencia, Capital Mundial del Diseño 2022 / Valencia World Design Capital 2022, columna Aplicado, M21VCMA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1703-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-valencia-capital-mundial-del-diseno-2022-valencia-world-design-capital-2022-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1731"
+continuidad_id = "irpf-incentivos-inversion-canarias-espectaculos-financiador-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "boe-modelo-100-2024-form p. 34445 y boe-modelo-100-2025-form p. 45930: deducción canaria del financiador de espectáculos (art. 36.3 LIS), importe aplicado; campo M22PAEFINA en ambos diccionarios. El rótulo productor del diccionario contradice los formularios BOE; no cambia la identidad."
 number = "1731"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado_flag"

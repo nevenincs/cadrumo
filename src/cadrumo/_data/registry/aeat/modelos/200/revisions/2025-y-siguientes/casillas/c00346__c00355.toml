@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00346"
+continuidad_id = "is-ecpn-transferencia-pyg-valoracion-instrumentos-financieros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 17/17, filas 22/22: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por valoración de instrumentos financieros [00346]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00346"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00347"
+continuidad_id = "is-ecpn-transferencia-pyg-valoracion-instrumentos-activos-valor-razonable"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 18/18, filas 23/23: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Activos financieros a valor razonable con cambios en el patrimonio neto [00347]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00347"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00348"
+continuidad_id = "is-ecpn-transferencia-pyg-valoracion-instrumentos-otros-ingresos-gastos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 19/19, filas 24/24: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Otros ingresos/gastos [00348]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00348"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -27,6 +36,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00349"
+continuidad_id = "is-ecpn-transferencia-pyg-coberturas-flujos-efectivo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 20/20, filas 25/25: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por coberturas de flujos de efectivo [00349]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00349"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -36,6 +48,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00350"
+continuidad_id = "is-ecpn-transferencia-pyg-subvenciones-donaciones-legados"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 21/21, filas 26/26: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Subvenciones, donaciones y legados recibidos [00350]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00350"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -45,6 +60,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00351"
+continuidad_id = "is-ecpn-transferencia-pyg-activos-no-corrientes-pasivos-vinculados-mantenidos-venta"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 22/22, filas 27/27: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Por activos no corrientes y pasivos vinculados , mantenidos para la venta [00351]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00351"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -54,6 +72,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00352"
+continuidad_id = "is-ecpn-transferencia-pyg-diferencias-conversion"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 23/23, filas 28/28: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Diferencias de conversión [00352]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00352"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -63,6 +84,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00353"
+continuidad_id = "is-ecpn-transferencia-pyg-efecto-impositivo"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 24/24, filas 29/29: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Efecto impositivo [00353]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00353"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -72,6 +96,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00354"
+continuidad_id = "is-ecpn-transferencia-pyg-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200009/DP200009, campos 25/25, filas 30/30: Estado de cambios patrimonio neto (I) - Transferencias a la cta. pérdidas y ganancias - Total transferencia a la cuenta de pérdidas y ganancias [00354]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida PGC del ECPN (manuales Sociedades 2024 pp.141-142 / 2025 pp.144-145)."
 number = "00354"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"
@@ -81,6 +108,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00355"
+continuidad_id = "is-ecpn-total-ingresos-gastos-reconocidos"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024/2025, hojas DP200009/DP200009, campos 26/26, filas 31/31: total de ingresos y gastos reconocidos. Manuales Sociedades 2024 p.142 y 2025 p.145: total ECPN = 00500 + 00345 + 00354; no solo transferencias a PyG. Coinciden descripcion, tipo, validacion, contenido y funcion contable."
 number = "00355"
 section = ["estado_de_cambios_patrimonio_neto_i", "transferencias_a_la_cta_perdidas_y_ganancias"]
 data_type = "money"

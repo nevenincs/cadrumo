@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0042"
+continuidad_id = "irpf-capital-mobiliario-dt4-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:124 y aeat-dr-100-2022-dictionary:125: campo TITDT4, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular de los seguros sujetos a la disposicion transitoria cuarta en ambas ediciones."
 number = "0042"
 section = ["toma_datos_ampliada"]
 data_type = "text"

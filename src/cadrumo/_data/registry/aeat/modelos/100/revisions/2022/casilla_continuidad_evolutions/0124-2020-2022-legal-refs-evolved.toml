@@ -1,0 +1,9 @@
+# Grounding: C_VCC, valor catastral de la construcción del inmueble principal a efectos de amortización. Cambia el conjunto de referencias normativas, no el dato ni la instancia fiscal identificada.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-0124-2020-2022-legal-refs-evolved"
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
+from_revision = "2020"
+to_revision = "2022"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["ley-35-2006:art-23-2021"]
+source_refs = ["aeat-dr-100-2020-dictionary","aeat-dr-100-2022-dictionary"]

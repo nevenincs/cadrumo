@@ -24,7 +24,7 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..analysis.delta_minimality import MinimalityVerdict, judge_definition
 from ..compiler.authority import compiled_bundled_authority

@@ -18,7 +18,7 @@ from typing import Final, Literal
 import rtoml
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.loader import load_modelo_directory

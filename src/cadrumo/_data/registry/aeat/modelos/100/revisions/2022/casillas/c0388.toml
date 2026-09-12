@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0388"
+continuidad_id = "irpf-ganancias-intereses-indemnizatorios-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:624 y aeat-dr-100-2022-dictionary:670: campo TITG6, tipo TIT; mismo titular de otras ganancias del ahorro por intereses indemnizatorios, descrito por el grupo oficial de ambas ediciones."
 number = "0388"
 section = ["toma_datos_ampliada"]
 data_type = "text"

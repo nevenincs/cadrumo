@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2021-dictionary:1093, M21DJTA; Programa de preparación de los deportistas españoles de los Juegos de Tokio 2020 deja de figurar como programa aplicado en aeat-dr-100-2022-dictionary.
+[[revisions."2022".casilla_continuidad_evolutions]]
+id = "m100-0766-2021-2022-retired"
+continuidad_id = "irpf-aeip-programa-de-preparacion-de-los-deportistas-espanoles-de-los-juegos-de-tokio-2020-aplicado"
+from_revision = "2021"
+to_revision = "2022"
+evolution_kind = "retired"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2022-dictionary"]

@@ -46,11 +46,11 @@ class SupplementaryOrdenCompiler(Protocol):
 
 
 _ORDEN_COMPILERS: Mapping[Modelo, SupplementaryOrdenCompiler] = {
-    Modelo.M303: load_m303_annual_orden_authority,
+    Modelo("303"): load_m303_annual_orden_authority,
 }
 
 _ORDEN_FINGERPRINT_COLLECTORS: Mapping[Modelo, Callable[[Path], tuple[tuple[str, int, int, str], ...]]] = {
-    Modelo.M303: collect_m303_annual_orden_fingerprints,
+    Modelo("303"): collect_m303_annual_orden_fingerprints,
 }
 
 

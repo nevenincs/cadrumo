@@ -1,5 +1,8 @@
 [[revisions.2023-y-siguientes.casillas]]
 id = "decl.numero-identificativo-anterior"
+continuidad_id = "numero-identificativo-declaracion-anterior"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-180-2014 y aeat-dr-180-2023, registro tipo 1, pagina 4, lineas 101-109 de sus extractos: identificador de la declaracion sustituida o complementada cuando se marca C o S, y ceros en otro caso; identidad y condicion conservadas."
 number = "123-135"
 section = ["declarante", "identificacion"]
 data_type = "text"

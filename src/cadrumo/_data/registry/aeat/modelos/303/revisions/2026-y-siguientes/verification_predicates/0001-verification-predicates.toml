@@ -38,18 +38,21 @@
 
 # ── Devengado régimen-general cuota boxes (LIVA art. 88) ───────────────────
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-09-equals-iva-repercutido-general"
 predicate_id = "modelo-303-dr303-09-equals-iva-repercutido-general"
 expression = 'equals(["09", "iva.repercutido.general"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-06-equals-iva-repercutido-reducido"
 predicate_id = "modelo-303-dr303-06-equals-iva-repercutido-reducido"
 expression = 'equals(["06", "iva.repercutido.reducido"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-03-equals-iva-repercutido-super-reducido"
 predicate_id = "modelo-303-dr303-03-equals-iva-repercutido-super-reducido"
 expression = 'equals(["03", "iva.repercutido.super-reducido"])'
 finding_kind = "BLOCKING_RULE"
@@ -57,12 +60,14 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 
 # ── Devengado inversión del sujeto pasivo cuota boxes (LIVA art. 88) ────────
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
 predicate_id = "modelo-303-dr303-11-equals-iva-autorepercutido-intracomunitaria-devengado"
 expression = 'equals(["11", "iva.autorepercutido.intracomunitaria.devengado"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-13-equals-iva-autorepercutido-interior-devengado"
 predicate_id = "modelo-303-dr303-13-equals-iva-autorepercutido-interior-devengado"
 expression = 'equals(["13", "iva.autorepercutido.interior.devengado"])'
 finding_kind = "BLOCKING_RULE"
@@ -70,6 +75,7 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 
 # ── Devengado total (LIVA art. 88) ─────────────────────────────────────────
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-27-equals-iva-cuota-devengada-total"
 predicate_id = "modelo-303-dr303-27-equals-iva-cuota-devengada-total"
 expression = 'equals(["27", "iva.cuota-devengada-total"])'
 finding_kind = "BLOCKING_RULE"
@@ -77,18 +83,21 @@ legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 
 # ── Deducible cuota boxes (LIVA art. 92) ───────────────────────────────────
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-29-equals-iva-soportado-interiores"
 predicate_id = "modelo-303-dr303-29-equals-iva-soportado-interiores"
 expression = 'equals(["29", "iva.soportado.interiores"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-33-equals-iva-soportado-importaciones"
 predicate_id = "modelo-303-dr303-33-equals-iva-soportado-importaciones"
 expression = 'equals(["33", "iva.soportado.importaciones"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
 predicate_id = "modelo-303-dr303-37-equals-iva-autorepercutido-intracomunitaria-deducible"
 expression = 'equals(["37", "iva.autorepercutido.intracomunitaria.deducible"])'
 finding_kind = "BLOCKING_RULE"
@@ -96,6 +105,7 @@ legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 
 # ── Deducible total (LIVA art. 92) ─────────────────────────────────────────
 [[revisions.2026-y-siguientes.verification_predicates]]
+id = "equals:dr303-45-equals-iva-cuota-deducible-total"
 predicate_id = "modelo-303-dr303-45-equals-iva-cuota-deducible-total"
 expression = 'equals(["45", "iva.cuota-deducible-total"])'
 finding_kind = "BLOCKING_RULE"

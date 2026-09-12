@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0124"
+continuidad_id = "irpf-inmueble-amortizacion-valor-catastral-construccion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:214 y aeat-dr-100-2022-dictionary:213: C_VCC, valor catastral de la construcción del inmueble principal a efectos de amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0124"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_valor_catastral_construccion"

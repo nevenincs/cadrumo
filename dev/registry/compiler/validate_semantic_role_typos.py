@@ -29,6 +29,8 @@ class _RoleObservationLike(Protocol):
 
 def grouped_semantic_role_typo_twin_failures(
     grouped: Mapping[str, Sequence[_RoleObservationLike]],
+    *,
+    known_modelo_codes: frozenset[str],
 ) -> tuple[str, ...]:
     """Return failures for singleton ``semantic_role`` values that look like typos."""
     typo_index = _build_semantic_role_typo_index(grouped.keys())
@@ -39,7 +41,7 @@ def grouped_semantic_role_typo_twin_failures(
         obs = observations[0]
         if obs.semantic_role_cardinality == "intentional_singleton":
             continue
-        if not _semantic_role_looks_like_typo(role, typo_index):
+        if not _semantic_role_looks_like_typo(role, typo_index, known_modelo_codes=known_modelo_codes):
             continue
         failures.append(_format_semantic_role_typo_twin_failure(role, obs))
     return tuple(failures)
@@ -103,7 +105,9 @@ def _get_ratio(role1: str, role2: str) -> float:
     return matcher.ratio()
 
 
-def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> bool:
+def _semantic_role_looks_like_typo(
+    role: str, index: _SemanticRoleTypoIndex, *, known_modelo_codes: frozenset[str]
+) -> bool:
     if "-" in role:
         return True
     normalised = role.replace("-", "_")
@@ -112,10 +116,12 @@ def _semantic_role_looks_like_typo(role: str, index: _SemanticRoleTypoIndex) -> 
             continue
         return True
 
-    return _scan_length_buckets_for_typo_twin(role, index)
+    return _scan_length_buckets_for_typo_twin(role, index, known_modelo_codes=known_modelo_codes)
 
 
-def _scan_length_buckets_for_typo_twin(role: str, index: _SemanticRoleTypoIndex) -> bool:
+def _scan_length_buckets_for_typo_twin(
+    role: str, index: _SemanticRoleTypoIndex, *, known_modelo_codes: frozenset[str]
+) -> bool:
     """Scan the length-bucketed known roles for a near-duplicate non-sibling twin."""
     role_length = len(role)
     role_set = set(role)
@@ -124,7 +130,16 @@ def _scan_length_buckets_for_typo_twin(role: str, index: _SemanticRoleTypoIndex)
             continue
         max_diff = int(0.08 * (role_length + known_length))
         for known in index.by_length[known_length]:
-            if _candidate_is_typo_twin(role, role_set, role_length, known, known_length, max_diff, index):
+            if _candidate_is_typo_twin(
+                role,
+                role_set,
+                role_length,
+                known,
+                known_length,
+                max_diff,
+                index,
+                known_modelo_codes=known_modelo_codes,
+            ):
                 return True
     return False
 
@@ -137,6 +152,8 @@ def _candidate_is_typo_twin(
     known_length: int,
     max_diff: int,
     index: _SemanticRoleTypoIndex,
+    *,
+    known_modelo_codes: frozenset[str],
 ) -> bool:
     """Return whether ``known`` is a near-duplicate typo twin of ``role``.
 
@@ -163,7 +180,7 @@ def _candidate_is_typo_twin(
     # Only run sibling checks on potential typo matches!
     if semantic_roles_are_tax_domain_siblings(role, known):
         return False
-    if semantic_roles_are_modelo_prefix_siblings(role, known):
+    if semantic_roles_are_modelo_prefix_siblings(role, known, known_modelo_codes=known_modelo_codes):
         return False
     if semantic_roles_are_month_axis_siblings(role, known):
         return False

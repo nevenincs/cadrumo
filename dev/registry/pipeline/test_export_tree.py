@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactSource,
 )
 
+from ..author_family_identities import derive_projection_endpoint_id
 from ..compiler.loader import load_modelo_directory
 from . import _export_tree
 from ._export_tree import ExportTreeTransportProfile, render_complete_export_tree
@@ -668,6 +669,9 @@ def test_renderer_carries_semantic_projection_occurrence_authority_into_generate
     assert projection_entry.projection_ref is not None
     projection_endpoints = (
         ProjectionEndpointDeclaration(
+            id=derive_projection_endpoint_id(
+                {"projection_ref": projection_entry.projection_ref.model_dump(mode="json")}
+            ),
             projection_ref=projection_entry.projection_ref,
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-dr-130-2019-v12",),

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00005"
+continuidad_id = "is-comunidades-titulares-de-montes-vecinales-en-mano-comun"
 number = "00005"
 section = ["comunidades_titulares_de_montes_vecinales_en_mano"]
 data_type = "decimal"

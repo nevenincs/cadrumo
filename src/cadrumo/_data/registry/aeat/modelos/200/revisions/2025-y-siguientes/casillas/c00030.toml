@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00030"
+continuidad_id = "is-transmision-elementos-patrimoniales-arts-27-2-d-y-77-1-l-i-s"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 81/81, filas 86/86: Transmisión elementos patrimoniales arts. 27.2.d) y 77.1 L.I.S. [00030]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00030"
 section = ["transmision_elementos_patrimoniales_arts_27_2_d_y"]
 data_type = "decimal"

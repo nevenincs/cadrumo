@@ -19,7 +19,7 @@ from ..schema_base import (
     RevisionReviewStatusField,
     SourceCitation,
 )
-from ..schema_references import PeriodSelector, RegistryValidityWindow
+from ..schema_references import PeriodSelector, RegistryValidityWindow, TemporalProjectionDirection
 from .schema import (
     BracketFactPayload,
     EntitySetFactPayload,
@@ -27,7 +27,6 @@ from .schema import (
     FactId,
     FactOwnership,
     FactOwnershipField,
-    FactProjectionDirection,
     FactProviderId,
     FactSelector,
     FactVariantId,
@@ -157,10 +156,9 @@ class _ResolvedFact(RegistryModel):
     ownership: FactOwnershipField
     authority_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
     source_variant_id: FactVariantId
-    source_revision_id: RegistryRevisionNodeId | None = None
     source_revision_ids: tuple[RegistryRevisionNodeId, ...] = Field(min_length=1)
     source_provider_id: FactProviderId | None = None
-    projection_direction: FactProjectionDirection = FactProjectionDirection.AUTHORED
+    projection_direction: TemporalProjectionDirection = TemporalProjectionDirection.AUTHORED
     projected_from_date: date | None = None
 
     @model_validator(mode="after")
@@ -170,21 +168,16 @@ class _ResolvedFact(RegistryModel):
         inside_window = self.effective_date >= self.valid_from and (
             self.valid_to is None or self.effective_date <= self.valid_to
         )
-        if self.projection_direction is FactProjectionDirection.AUTHORED:
+        if self.projection_direction is TemporalProjectionDirection.AUTHORED:
             if not inside_window or self.projected_from_date is not None:
                 raise RegistryValidationError("authored governed fact resolution must fall within its validity window")
-        elif self.projection_direction is FactProjectionDirection.BACKWARD:
+        elif self.projection_direction is TemporalProjectionDirection.BACKWARD:
             if self.projected_from_date is None or self.projected_from_date <= self.effective_date:
                 raise RegistryValidationError("backward fact projection must originate after the query coordinate")
         elif self.projected_from_date is None or self.projected_from_date >= self.effective_date:
             raise RegistryValidationError("forward fact projection must originate before the query coordinate")
         if len(set(self.source_revision_ids)) != len(self.source_revision_ids):
             raise RegistryValidationError("resolved governed fact source revision ids must be unique")
-        expected_singular = self.source_revision_ids[0] if len(self.source_revision_ids) == 1 else None
-        if self.source_revision_id != expected_singular:
-            raise RegistryValidationError(
-                "resolved governed fact singular source revision must name its sole source and be absent for many"
-            )
         names = [selector.name for selector in self.matched_selectors]
         if len(set(names)) != len(names):
             raise RegistryValidationError("resolved governed fact selector names must be unique")
@@ -287,7 +280,7 @@ def resolve_governed_fact(
         and _period_matches(variant.period_selector, query)
     )
     candidates = tuple((variant, window) for variant, window in track if window.contains_date(query.effective_date))
-    projection_direction = FactProjectionDirection.AUTHORED
+    projection_direction = TemporalProjectionDirection.AUTHORED
     projected_from_date: date | None = None
     if not candidates:
         candidates, projection_direction, projected_from_date = _projection_candidates(
@@ -311,15 +304,13 @@ def resolve_governed_fact(
         )
     winner, winner_window = winners[0]
     source_revision_ids: tuple[RegistryRevisionNodeId, ...] = (
-        tuple(winner.effective_source_revision_ids)
-        if winner.ownership is FactOwnership.GENERATED
-        else (winner.variant_id,)
+        tuple(winner.source_revision_ids) if winner.ownership is FactOwnership.GENERATED else (winner.variant_id,)
     )
     projected_coordinate = (
         fact.support.projection_coordinate(query.effective_date) if fact.support is not None else query.effective_date
     )
     if projected_coordinate is not None and projected_coordinate != query.effective_date:
-        projection_direction = FactProjectionDirection.FORWARD
+        projection_direction = TemporalProjectionDirection.FORWARD
         projected_from_date = projected_coordinate
     return _RESOLVED_FACT_ADAPTER.validate_python(
         {
@@ -341,7 +332,6 @@ def resolve_governed_fact(
             "ownership": winner.ownership,
             "authority_digest": authority_digest,
             "source_variant_id": winner.variant_id,
-            "source_revision_id": source_revision_ids[0] if len(source_revision_ids) == 1 else None,
             "source_revision_ids": source_revision_ids,
             "source_provider_id": fact.provider_id,
             "projection_direction": projection_direction,
@@ -376,33 +366,33 @@ def _projection_candidates(
     effective_date: date,
 ) -> tuple[
     tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
-    FactProjectionDirection,
+    TemporalProjectionDirection,
     date | None,
 ]:
     support = fact.support
     if support is None or not support.admits_coordinate(effective_date) or not track:
-        return (), FactProjectionDirection.AUTHORED, None
+        return (), TemporalProjectionDirection.AUTHORED, None
     before = tuple(item for item in track if item[1].valid_to is not None and item[1].valid_to < effective_date)
     after = tuple(item for item in track if item[1].valid_from > effective_date)
     # A hole between two authored windows is missing authority, not permission
     # to interpolate from either side.
     if before and after:
-        return (), FactProjectionDirection.AUTHORED, None
+        return (), TemporalProjectionDirection.AUTHORED, None
     if before:
         boundary = max(item[1].valid_to for item in before)
         return (
             tuple(item for item in before if item[1].valid_to == boundary),
-            FactProjectionDirection.FORWARD,
+            TemporalProjectionDirection.FORWARD,
             boundary,
         )
     if after:
         boundary = min(item[1].valid_from for item in after)
         return (
             tuple(item for item in after if item[1].valid_from == boundary),
-            FactProjectionDirection.BACKWARD,
+            TemporalProjectionDirection.BACKWARD,
             boundary,
         )
-    return (), FactProjectionDirection.AUTHORED, None
+    return (), TemporalProjectionDirection.AUTHORED, None
 
 
 def _transitive_precedence(variant_id: FactVariantId, fact: GovernedFact) -> frozenset[FactVariantId]:

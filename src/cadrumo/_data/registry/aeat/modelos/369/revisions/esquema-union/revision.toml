@@ -98,3 +98,8 @@ A verification predicate asserts an implication between two figures that can ind
 pairing. There is no activity, count or base casilla here that could disagree with a cuota: the scheme total IS the declaration. The under-declaration risk is real but lives where the cuotas are determined, in the OSS sales records the bindings read, not in a relation between two casillas of this revision."""
 legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-unvicies", "ley-37-1992:art-163-duovicies"]
 source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-procedure"]
+
+[revisions."esquema-union".source_default_dispositions.formulas]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's formulas family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

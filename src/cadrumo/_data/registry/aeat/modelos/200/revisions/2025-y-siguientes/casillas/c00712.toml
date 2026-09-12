@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00712"
+continuidad_id = "is-balance-patrimonio-neto-fondo-de-reserva-obligatorio-de-cooperativas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200005/DP200005, campos 20/20, filas 25/25: Balance: Patrimonio neto y pasivo (I) - Patrimonio neto y pasivo - Fondo de reserva obligatorio de cooperativas [00712]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de patrimonio neto/pasivo corriente o no corriente (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00712"
 section = ["balance_patrimonio_neto_y_pasivo_i", "patrimonio_neto_y_pasivo"]
 data_type = "money"

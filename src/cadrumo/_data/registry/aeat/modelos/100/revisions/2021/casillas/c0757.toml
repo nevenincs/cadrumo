@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "0757"
+# Grounding: aeat-dr-100-2021-dictionary:1165, M21GPFA; importe aplicado del programa Gran Premio de España de Fórmula 1 (Anexo A).
+continuidad_id = "irpf-aeip-gran-premio-de-espana-de-formula-1-aplicado"
 number = "0757"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

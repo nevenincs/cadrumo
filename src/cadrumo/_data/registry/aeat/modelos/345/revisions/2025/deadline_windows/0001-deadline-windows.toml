@@ -29,3 +29,22 @@ source_refs = [
     "aeat-modelo-345-deadlines",
     "boe-modelo-345-base-order",
 ]
+
+# Filing year 2026, the second year this open-ended era answers for. Same nominal
+# statutory plazo from orden-hfp-823-2022 art. 4, "entre el 1 y el 31 de enero de
+# cada ano" -- recurring, so it needs no fresh orden per ejercicio. 2027-01-31 is
+# a Sunday and is stored UNSHIFTED for the reason recorded above the 2025 window:
+# shift_deadline derives the operational date with its reason, and a pre-shifted
+# store would report that no shift occurred.
+[[revisions."2025".deadline_windows]]
+id = "modelo-345-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-hfp-823-2022:art-4"]
+source_refs = [
+    "aeat-modelo-345-deadlines",
+    "boe-modelo-345-base-order",
+]

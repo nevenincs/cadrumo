@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "0503"
+# Grounding: aeat-dr-100-2023-dictionary:870, DED11A; parte autonómica de la deducción por dotaciones a la Reserva para Inversiones en las Illes Balears.
+continuidad_id = "irpf-deduccion-rib-illes-balears-autonomica"
 number = "0503"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_rib_illes_balears_autonomica"

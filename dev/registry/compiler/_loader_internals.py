@@ -40,7 +40,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     modelo_locale_key,
 )
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
-from cadrumo.domain.calculations.registry.revision_predecessor_forest import validate_predecessor_forest
+from cadrumo.domain.calculations.registry.revision_contracts import validate_predecessor_forest
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
 )

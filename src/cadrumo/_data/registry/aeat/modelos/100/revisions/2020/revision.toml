@@ -1,4 +1,6 @@
 [revisions."2020"]
+binding_source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+formula_source_refs = ["lirpf-cuota-chain-authority"]
 casilla_source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd"]
 # Prepared and reviewed by an agent against the bundled AEAT diseño de registros
 # dictionary and the ordenes this revision cites; NO human operator has

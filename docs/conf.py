@@ -89,6 +89,19 @@ _DOCS_SCOPE = os.environ.get("CADRUMO_DOCS_SCOPE", "full")
 if _DOCS_SCOPE not in {"full", "user"}:
     raise ValueError(f"CADRUMO_DOCS_SCOPE must be 'full' or 'user'; got {_DOCS_SCOPE!r}")
 _USER_SCOPE = _DOCS_SCOPE == "user"
+_I18N_MODE = os.environ.get("CADRUMO_DOCS_I18N_MODE") == "1"
+
+
+def _skip_generated_output_for_i18n(generator: str) -> bool:
+    """Report and skip one generated output outside authored gettext scope."""
+    if not _I18N_MODE:
+        return False
+    print(
+        f"DOCS_I18N_GENERATOR generator={generator} status=skipped "
+        "reason=excluded_from_authored_gettext_scope",
+        flush=True,
+    )
+    return True
 
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
@@ -1414,7 +1427,7 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
-        if not _should_generate_cli_reference():
+        if _skip_generated_output_for_i18n("cli_reference") or not _should_generate_cli_reference():
             return
         from dev.docs.cli_reference import generate_cli_reference
 
@@ -1434,6 +1447,8 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
+        if _skip_generated_output_for_i18n("glossary_reference"):
+            return
         from dev.docs.glossary_reference import generate_glossary_reference
 
         generate_glossary_reference(Path(__file__).resolve().parent)
@@ -1453,6 +1468,8 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
+        if _skip_generated_output_for_i18n("casilla_reference"):
+            return
         from dev.docs.casilla_reference import generate_casilla_reference
 
         generate_casilla_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
@@ -1469,6 +1486,8 @@ def setup(app):
         Args:
             app: The Sphinx application instance (unused).
         """
+        if _skip_generated_output_for_i18n("legal_reference"):
+            return
         from dev.docs.legal_reference import generate_legal_reference
 
         generate_legal_reference(Path(__file__).resolve().parent, repo_root=_PROJECT_ROOT)
@@ -1486,6 +1505,8 @@ def setup(app):
         Args:
             app: The Sphinx application instance.
         """
+        if _skip_generated_output_for_i18n("cli_tree"):
+            return
         from dev.docs.sequence_build_gate import emit_cli_tree
 
         emit_cli_tree(app, specific_sources=_specific_build_sources())

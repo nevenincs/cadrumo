@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0761"
+# Grounding: aeat-dr-100-2022-dictionary:1322, M21ADBA; importe aplicado del programa Plan 2030 de Apoyo al Deporte de Base (Anexo A).
+continuidad_id = "irpf-aeip-plan-2030-de-apoyo-al-deporte-de-base-aplicado"
 number = "0761"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

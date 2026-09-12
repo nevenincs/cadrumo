@@ -298,7 +298,7 @@ def _minimal_modelo(revision: ModeloRevision) -> ModeloDefinition:
         id="130",
         title_localization_key="test.schema.modelo.130.title",
         official_name_localization_key="test.schema.modelo.130.official_name",
-        tax_domain=TaxDomain.IVA,
+        tax_domain=TaxDomain("iva"),
         cadence="annual",
         jurisdiction="ES-AEAT",
         output_sensitivity=SensitivityClass.FINANCIAL,

@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0760"
+# Grounding: aeat-dr-100-2022-dictionary:1319, M21FAFA; importe aplicado del programa Centenario Federación Aragonesa de Fútbol (Anexo A).
+continuidad_id = "irpf-aeip-centenario-federacion-aragonesa-de-futbol-aplicado"
 number = "0760"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

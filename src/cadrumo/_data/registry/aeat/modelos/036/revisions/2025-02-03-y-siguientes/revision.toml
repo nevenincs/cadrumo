@@ -104,3 +104,8 @@ legal_refs = [
 source_refs = [
     "aeat-dr-036-2025",
 ]
+
+[revisions."2025-02-03-y-siguientes".source_default_dispositions.bindings]
+kind = "underivable"
+reason = """
+No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""

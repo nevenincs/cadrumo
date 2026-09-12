@@ -13,7 +13,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.corpus import bundled_modelo_ids

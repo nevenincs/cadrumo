@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "1691"
+continuidad_id = "irpf-aeip-150-aniversario-de-creacion-de-la-academia-de-espana-en-roma-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1229 y aeat-dr-100-2023-dictionary:1255: campo M21AERA; columna Aplicado en esta declaración del programa 150 Aniversario de creación de la Academia de España en Roma en Anexo A. Misma designación y función fiscal."
 number = "1691"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

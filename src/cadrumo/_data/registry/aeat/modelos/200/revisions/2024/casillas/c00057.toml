@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00057"
+continuidad_id = "is-regimen-fiscal-salida-socimi"
 number = "00057"
 section = ["regimen_fiscal_salida_socimi"]
 data_type = "decimal"

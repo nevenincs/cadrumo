@@ -1652,7 +1652,7 @@ class TestLedgerScope:
             "999",
             "2024",
             manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
-            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
         )
         _write_edition(
             tmp_path,
@@ -1692,3 +1692,171 @@ class TestLedgerScope:
         (status,) = scan_registry(tmp_path)
         assert status.declares_no_predecessor, "a nested none table is still an explicit root"
         assert not status.declares_predecessor
+
+
+class TestAddressIdentifiers:
+    """A ``NNN-NNN`` segment is an address only when the provider says so."""
+
+    def _bindings(self, root: Path, member: str) -> None:
+        edition_dir = root / "modelos" / "714" / "revisions" / "2024"
+        (edition_dir / "bindings").mkdir(parents=True)
+        (edition_dir / "revision.toml").write_text('[revisions."2024"]\nvalid_from = 2024-01-01\n', encoding="utf-8")
+        (edition_dir / "bindings" / "0001-bindings.toml").write_text(
+            f'[[revisions."2024".bindings]]\n{member}\n', encoding="utf-8"
+        )
+
+    def test_a_record_code_segment_is_data_not_an_address(self, tmp_path: Path) -> None:
+        self._bindings(
+            tmp_path,
+            'id = "modelo-714.714-02.vivienda-clave"\n'
+            'provider = { kind = "manual_input", record = "714-02", field = "vc", offset = 14, length = 1 }',
+        )
+        assert "identifier_is_address" not in _kinds(tmp_path)
+
+    def test_a_segment_equal_to_the_provider_span_is_an_address(self, tmp_path: Path) -> None:
+        self._bindings(
+            tmp_path,
+            'id = "modelo-714.14-14.vivienda-clave"\n'
+            'provider = { kind = "manual_input", record = "714-02", field = "vc", offset = 14, length = 1 }',
+        )
+        assert "identifier_is_address" in _kinds(tmp_path)
+
+    def test_a_bare_trailing_offset_equal_to_the_provider_offset_is_an_address(self, tmp_path: Path) -> None:
+        self._bindings(
+            tmp_path,
+            'id = "modelo-714.714-05.importe-290"\n'
+            'provider = { kind = "manual_input", record = "714-05", field = "importe", offset = 290, length = 13 }',
+        )
+        assert "identifier_is_address" in _kinds(tmp_path)
+
+    def test_a_trailing_number_that_is_not_the_offset_is_data(self, tmp_path: Path) -> None:
+        self._bindings(
+            tmp_path,
+            'id = "modelo-714.714-05.clave-1"\n'
+            'provider = { kind = "manual_input", record = "714-05", field = "clave-1", offset = 290, length = 1 }',
+        )
+        assert "identifier_is_address" not in _kinds(tmp_path)
+
+    def test_without_a_provider_the_segment_keeps_its_address_reading(self, tmp_path: Path) -> None:
+        self._bindings(tmp_path, 'id = "modelo-714.10-12.vivienda-clave"')
+        assert "identifier_is_address" in _kinds(tmp_path)
+
+    def _first_edition_only(self, root: Path, modelo: str) -> None:
+        """One modelo with a single edition whose row carries no chain.
+
+        A single edition is never anyone's successor, so its rows are
+        unclaimed predecessors by construction -- which is the population the
+        exclusion split is about.
+        """
+        _write_promise(root, (2024, 2025))
+        _write_edition(
+            root,
+            modelo,
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\n',
+        )
+        _write_edition(
+            root,
+            modelo,
+            "2025",
+            manifest='valid_from = 2025-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+
+    def test_an_excluded_modelo_is_a_ledgered_wait_not_backlog(self, tmp_path: Path) -> None:
+        """A modelo the seeder stands off is a wait with a stated reason.
+
+        Hand-seeding those rows fails the totality gate per row, so presenting
+        them as open work offers work that cannot be taken.
+        """
+        self._first_edition_only(tmp_path, "999")
+        ledger = tmp_path / "ledger.toml"
+        ledger.write_text(
+            '[[excluded]]\nmodelo = "999"\nreason = "no in-registry oracle"\n',
+            encoding="utf-8",
+        )
+        statuses = scan_registry(tmp_path)
+        scope = ledger_scope(statuses, edges(statuses), ledger)
+        assert scope is not None
+        assert scope.unclaimed_predecessor_excluded == 1
+        assert scope.unclaimed_predecessor_seedable == 0
+
+    def test_a_modelo_the_ledger_does_not_exclude_is_seedable(self, tmp_path: Path) -> None:
+        self._first_edition_only(tmp_path, "999")
+        ledger = tmp_path / "ledger.toml"
+        ledger.write_text('[[excluded]]\nmodelo = "888"\nreason = "a different modelo"\n', encoding="utf-8")
+        statuses = scan_registry(tmp_path)
+        scope = ledger_scope(statuses, edges(statuses), ledger)
+        assert scope is not None
+        assert scope.unclaimed_predecessor_excluded == 0
+        assert scope.unclaimed_predecessor_seedable == 1
+
+    def test_the_two_buckets_account_for_every_unclaimed_predecessor(self, tmp_path: Path) -> None:
+        """The split must partition, not sample: a row in neither bucket is a row nobody owns."""
+        self._first_edition_only(tmp_path, "999")
+        self._first_edition_only(tmp_path, "888")
+        ledger = tmp_path / "ledger.toml"
+        ledger.write_text('[[excluded]]\nmodelo = "999"\nreason = "no in-registry oracle"\n', encoding="utf-8")
+        statuses = scan_registry(tmp_path)
+        scope = ledger_scope(statuses, edges(statuses), ledger)
+        assert scope is not None
+        assert (
+            scope.unclaimed_predecessor_excluded + scope.unclaimed_predecessor_seedable == scope.unclaimed_predecessor
+        )
+        assert scope.unclaimed_predecessor == 2
+
+
+class TestManifestlessDirectory:
+    """A directory with no revision.toml is not an edition and must not screen as one.
+
+    Without a manifest it has no valid_from to order it, no authority grade and
+    no predecessor declaration, so it sorted first, screened as `ready` with no
+    cause, and sat at the top of the worklist while the migration tool refused
+    it outright — a half-authored directory presented as the next job.
+    """
+
+    def _tree(self, root: Path) -> None:
+        _write_promise(root, (2024, 2025))
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        # A directory holding only casillas/, as an edition looks mid-authoring.
+        naked = root / "modelos" / "999" / "revisions" / "2025" / "casillas"
+        naked.mkdir(parents=True)
+        (naked / "0001-casillas.toml").write_text(
+            '[[revisions."2025".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+            encoding="utf-8",
+        )
+
+    def test_a_directory_without_a_manifest_is_named(self, tmp_path: Path) -> None:
+        self._tree(tmp_path)
+        assert "edition_without_manifest" in _kinds_of(build_report(tmp_path))
+
+    def test_it_takes_part_in_no_edge(self, tmp_path: Path) -> None:
+        """It has no valid_from to order it and nothing to inherit from or to."""
+        self._tree(tmp_path)
+        assert edges(scan_registry(tmp_path)) == ()
+
+    def test_it_does_not_screen_as_ready_work(self, tmp_path: Path) -> None:
+        """The failure it caused: topping the worklist as a job nobody could take."""
+        self._tree(tmp_path)
+        lines = _signal_lines(build_report(tmp_path))
+        (edge_line,) = [line for line in lines if line.startswith("edge ")]
+        assert "ready=0" in edge_line
+        assert not [line for line in lines if line.startswith("ready ")]
+
+    def test_an_edition_with_a_manifest_is_unaffected(self, tmp_path: Path) -> None:
+        _write_promise(tmp_path, (2024, 2025))
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        assert "edition_without_manifest" not in _kinds_of(build_report(tmp_path))

@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
@@ -174,7 +173,7 @@ def test_missing_secure_replay_cannot_turn_a_declared_layout_into_emitted_byte_e
 def test_modelo_353_revisions_keep_distinct_law_coordinates_and_each_require_production_emission_proof() -> None:
     """A later M353 revision cannot mask its predecessor's proof outcome."""
     authority, proof_authority = _canonical_filing_authority()
-    modelo = authority.modelo(Modelo.M353.value)
+    modelo = authority.modelo("353")
     revision_limbs = tuple(
         (
             revision,

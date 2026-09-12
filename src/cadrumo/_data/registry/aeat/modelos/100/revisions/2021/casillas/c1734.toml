@@ -1,5 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1734"
+# Grounding: aeat-dr-100-2021-dictionary:1303, NIF3CAN; NIF del tercer productor financiado en Canarias.
+continuidad_id = "irpf-incentivos-inversion-canarias-productor-3-nif"
 number = "1734"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "nif"

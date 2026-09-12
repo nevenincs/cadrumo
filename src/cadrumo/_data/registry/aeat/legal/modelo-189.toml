@@ -13,7 +13,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden EHA/3481/2008 articulo 1: aprueba el Modelo 189, declaracion informativa anual acerca de valores, seguros y rentas, y sus disenos fisicos y logicos."
 required_text = [
-    "Articulo 1. Aprobacion del modelo 189",
+    "Artículo 1. Aprobación del modelo 189",
     "Se aprueba el modelo 189",
     "valores, seguros y rentas",
 ]
@@ -33,8 +33,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2008-19523 consolidated HTML from BOE on 2026-07-01"
 notes = "Orden EHA/3481/2008 articulo 5: fija el plazo anual del Modelo 189 entre el dia 1 y el 31 de marzo de cada ano."
 required_text = [
-    "Articulo 5. Plazo de presentacion del modelo 189",
-    "entre el dia 1 y el 31 del mes de marzo",
+    "Artículo 5. Plazo de presentación del modelo 189",
+    "entre el día 1 y el 31 del mes de marzo",
 ]
 
 [legal."orden-hfp-1180-2023:art-primero"]
@@ -52,7 +52,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-22221 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1180/2023 articulo primero: modifica los disenos de registro del Modelo 189 para campos de declarado como clave de valor y valoracion."
 required_text = [
-    "Articulo primero. Modificacion de la Orden EHA/3481/2008",
+    "Artículo primero. Modificación de la Orden EHA/3481/2008",
     "modelo 189",
     "declaración informativa anual acerca de valores, seguros y rentas",
     "Se modifica su artículo 3",
@@ -73,9 +73,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2023-24412 HTML from BOE on 2026-07-01"
 notes = "Orden HFP/1284/2023 articulo 11: modifica los campos codigo pais, numero de valores y nominal unitario de los valores en el registro de declarado del Modelo 189."
 required_text = [
-    "Articulo 11. Modificacion de la Orden EHA/3481/2008",
-    "CODIGO PAIS",
-    "NUMERO DE VALORES",
+    "Artículo 11. Modificación de la Orden EHA/3481/2008",
+    "CÓDIGO PAÍS",
+    "NÚMERO DE VALORES",
     "NOMINAL UNITARIO DE LOS VALORES",
 ]
 
@@ -94,9 +94,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2026-4521 HTML from BOE on 2026-07-01"
 notes = "Orden HAC/132/2026 articulo unico: aprueba las relaciones de valores negociados del cuarto trimestre de 2025 usadas para el Impuesto sobre Patrimonio 2025 y el Modelo 189."
 required_text = [
-    "Articulo unico. Aprobacion de las relaciones de valores negociados",
+    "Artículo único. Aprobación de las relaciones de valores negociados",
     "cuarto trimestre de 2025",
-    "declaracion informativa anual acerca de valores, seguros y rentas",
+    "declaración informativa anual acerca de valores, seguros y rentas",
 ]
 
 [sources."aeat-modelo-189-procedure"]

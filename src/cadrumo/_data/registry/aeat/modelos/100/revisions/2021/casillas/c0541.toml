@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0541"
+continuidad_id = "irpf-cuota-base-liquidable-ahorro-autonomico"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:756 y aeat-dr-100-2021-dictionary:771: campo CIEAUT; cuota autonómica correspondiente a la base liquidable del ahorro en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0541"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_ahorro_autonomico"

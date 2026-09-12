@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "0504"
+continuidad_id = "irpf-incremento-cuota-autonomica-perdida-nacimiento"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:923 y aeat-dr-100-2025-dictionary:949: campo DEDAUTIB22; incremento de cuota autonómica por reintegro del abono anticipado de la deducción por nacimiento de las Illes Balears en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0504"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_incremento_cuota_autonomica_perdida_nacimiento"

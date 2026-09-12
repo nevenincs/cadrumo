@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00015"
+continuidad_id = "is-entidad-zec-sin-consolidacion-fiscal"
 number = "00015"
 section = ["entidad_zec_sin_consolidacion_fiscal"]
 data_type = "decimal"

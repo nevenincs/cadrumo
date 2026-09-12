@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0532"
+continuidad_id = "irpf-cuota-base-liquidable-general-estatal"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:844 y aeat-dr-100-2024-dictionary:864: campo CIGEST; cuota estatal correspondiente a la base liquidable general en el bloque de cálculo del impuesto. Misma magnitud y función fiscal en ambas ediciones."
 number = "0532"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_general_estatal"

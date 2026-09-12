@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00089"
+continuidad_id = "is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 100/100, filas 105/105: Partícipe de agrupación de interés económico o de unión temporal de empresas [00089]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00089"
 section = ["participe_de_agrupacion_de_interes_economico_o_de"]
 data_type = "decimal"

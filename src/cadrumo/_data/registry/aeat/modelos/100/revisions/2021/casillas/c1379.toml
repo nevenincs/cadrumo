@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "1379"
+continuidad_id = "irpf-compensacion-bases-liquidables-negativas-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:1726 y aeat-dr-100-2021-dictionary:1941: campo C3BLT, tipo TIT; mismo titular de bases liquidables generales negativas pendientes, descrito por el grupo oficial de ambas ediciones."
 number = "1379"
 section = ["resultados", "anexo_c_res", "base_liq_neg_res"]
 data_type = "text"

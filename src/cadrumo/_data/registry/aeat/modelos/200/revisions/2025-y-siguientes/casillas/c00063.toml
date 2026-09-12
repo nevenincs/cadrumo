@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00063"
+continuidad_id = "is-tipo-de-gravamen-reducido-para-entidades-de-nueva-creacion-dt-22a-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 86/86, filas 91/91: Tipo de gravamen reducido para entidades de nueva creación  (DT 22ª LIS) [00063]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00063"
 section = ["tipo_de_gravamen_reducido_para_entidades_de_nueva"]
 data_type = "decimal"

@@ -1,6 +1,9 @@
 [revisions."2023"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (row order).", legal_refs = ["rd-1624-1992:art-71"], source_refs = ["aeat-dr-390-2023"] } }
+predecessor = "2022"
 casilla_source_refs = ["aeat-dr-390-2023"]
+formula_source_refs = ["aeat-dr-390-2023", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
+binding_source_refs = ["aeat-dr-390-2023"]
+reviewed_against = "2022"
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

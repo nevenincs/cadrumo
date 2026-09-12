@@ -20,8 +20,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.revision_predecessor_forest import validate_predecessor_forest
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, NoPredecessor
+from cadrumo.domain.calculations.registry.revision_contracts import (
+    DeclaredPredecessor,
+    NoPredecessor,
+    validate_predecessor_forest,
+)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ..compiler.loader import load_modelo_directory

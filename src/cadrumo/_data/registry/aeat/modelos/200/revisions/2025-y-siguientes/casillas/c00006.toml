@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00006"
+continuidad_id = "is-incentivos-entidad-de-reducida-dimension-cap-xi-tit-vii-lis"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 54/54, filas 59/59: Incentivos entidad de reducida dimensión ( cap XI, tít. VII LIS ) [00006]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00006"
 section = ["incentivos_entidad_de_reducida_dimension_cap_xi_ti"]
 data_type = "decimal"

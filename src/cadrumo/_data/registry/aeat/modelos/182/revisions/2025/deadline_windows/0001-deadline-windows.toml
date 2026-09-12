@@ -7,3 +7,19 @@ opens_on = 2026-01-01
 closes_on = 2026-01-31
 legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-182-procedure"]
+
+# Filing year 2026, the second year this open-ended era answers for. Both dates
+# are the NOMINAL statutory ones from orden-eha-3021-2007 art. 5, "se realizara
+# en el mes de enero de cada ano" -- a recurring plazo that needs no fresh orden
+# per ejercicio. 2027-01-31 is a Sunday and is stored UNSHIFTED: shift_deadline
+# derives the operational date with its reason, and pre-shifting here would
+# destroy the statutory date and report no shift occurred.
+[[revisions."2025".deadline_windows]]
+id = "modelo-182-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+legal_refs = ["orden-eha-3021-2007:art-5", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-182-procedure"]

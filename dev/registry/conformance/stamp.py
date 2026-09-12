@@ -208,12 +208,8 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.core.toml import to_str_keyed_dict
 from cadrumo.core.type_guards import is_object_mapping
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    DeclaredPredecessor,
-    ModeloRevision,
-    NoPredecessor,
-)
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
+from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
 from ..compiler.loader import load_modelo_directory
@@ -372,6 +368,7 @@ class StampResult:
         written: dict[str, str],
         removed: tuple[str, ...],
     ) -> None:
+        """Capture the identity and governance fields changed by one stamp."""
         self.manifest = manifest
         self.modelo = modelo
         self.revision = revision

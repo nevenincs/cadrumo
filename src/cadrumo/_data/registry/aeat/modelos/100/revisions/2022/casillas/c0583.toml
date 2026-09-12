@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0583"
+# Grounding: aeat-dr-100-2022-dictionary:874, INT33A; intereses de demora autonómicos por pérdida del incentivo fiscal del art. 33.3.c LIRPF.
+continuidad_id = "irpf-intereses-demora-regularizacion-autonomico"
 number = "0583"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_regularizacion_autonomico"

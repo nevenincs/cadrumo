@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00085"
+continuidad_id = "is-union-temporal-de-empresas"
 number = "00085"
 section = ["union_temporal_de_empresas"]
 data_type = "decimal"

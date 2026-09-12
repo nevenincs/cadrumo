@@ -115,6 +115,9 @@ additional_source_refs = ["aeat-modelo-151-procedure"]
 # AEAT campo: Cuota cero
 [[revisions."2025-y-siguientes".casillas]]
 id = "did.cuota-cero"
+continuidad_id = "cuota-cero"
+continuidad_origin = "grounded"
+continuidad_evidence = "Both aeat-dr-151-2015 and aeat-dr-151-2023 identify Cuota cero as a distinct indicator in M151DID00, separate from requesting or waiving a refund. Reordering the payment/refund record and adding foreign-bank details does not change this zero-quota declaration marker."
 number = "198-198"
 segmento = "M151DID00"
 section = ["did", "cuota_cero"]

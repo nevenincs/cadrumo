@@ -1,5 +1,8 @@
 [[revisions."2021".casillas]]
 id = "0402"
+continuidad_id = "irpf-ganancias-cambio-residencia-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2020-dictionary:626 y aeat-dr-100-2021-dictionary:637: campo G4T, tipo TIT; mismo titular de valores con ganancias por cambio de residencia, descrito por el grupo oficial de ambas ediciones."
 number = "0402"
 section = ["toma_datos_ampliada"]
 data_type = "text"

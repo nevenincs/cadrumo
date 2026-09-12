@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00014"
+continuidad_id = "is-agrupacion-europea-de-interes-economico"
 number = "00014"
 section = ["agrupacion_europea_de_interes_economico"]
 data_type = "decimal"

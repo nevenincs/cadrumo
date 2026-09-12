@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1271"
+# aeat-dr-100-2020-dictionary:1618: C2RCPT, titular de rendimientos negativos del capital mobiliario pendientes.
+continuidad_id = "irpf-compensacion-saldos-capital-mobiliario-contribuyente-titular"
 number = "1271"
 section = ["resultados", "anexo_c_res", "rdtos_cm_negativos_res"]
 data_type = "text"

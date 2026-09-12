@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0062"
+continuidad_id = "irpf-inmuebles-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:145 y aeat-dr-100-2024-dictionary:158: campo TIT_C, tipo TIT; mismo titular del inmueble, descrito por el grupo oficial de ambas ediciones."
 number = "0062"
 section = ["toma_datos_ampliada"]
 data_type = "text"

@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0001"
+continuidad_id = "irpf-rendimientos-trabajo-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:84 y aeat-dr-100-2023-dictionary:87: campo TITA, tipo TIT, atributo titular de TomaDatosAmpliada; el mismo titular de los rendimientos del trabajo en ambas ediciones."
 number = "0001"
 section = ["toma_datos_ampliada"]
 data_type = "text"

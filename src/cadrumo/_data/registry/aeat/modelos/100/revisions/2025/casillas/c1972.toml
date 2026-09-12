@@ -1,5 +1,8 @@
 [[revisions."2025".casillas]]
 id = "1972"
+continuidad_id = "irpf-reestructuracion-empresarial-feac-contribuyente-titular"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2024-dictionary:2144 y aeat-dr-100-2025-dictionary:2286: campo C2TITFEAC, tipo TIT; mismo titular del elemento en operaciones de fusion escision aportacion o canje, descrito por el grupo oficial de ambas ediciones."
 number = "1972"
 section = ["toma_datos_ampliada"]
 data_type = "text"

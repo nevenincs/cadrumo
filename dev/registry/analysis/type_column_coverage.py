@@ -34,7 +34,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ..compiler.authority import compiled_bundled_authority
 

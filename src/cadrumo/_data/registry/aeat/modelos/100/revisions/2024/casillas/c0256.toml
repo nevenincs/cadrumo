@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0256"
+continuidad_id = "irpf-agrupacion-interes-economico-imputacion-contribuyente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:497 y aeat-dr-100-2024-dictionary:512: campo F2ET, tipo TIT; mismo contribuyente al que se imputan las rentas de la agrupacion de interes economico, descrito por el grupo oficial de ambas ediciones."
 number = "0256"
 section = ["toma_datos_ampliada"]
 data_type = "text"

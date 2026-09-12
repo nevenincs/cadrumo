@@ -47,7 +47,7 @@ def _m151_entry() -> FilingExportLiveProofEntry:
     identity are fixed here.
     """
     return FilingExportLiveProofEntry(
-        modelo=Modelo.M151,
+        modelo=Modelo("151"),
         revision="2025-y-siguientes",
         design_epoch="2023",
         filing_year=2025,

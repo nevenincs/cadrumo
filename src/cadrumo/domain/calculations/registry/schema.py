@@ -126,11 +126,9 @@ __all__ = [
     "CasillaProducerInventory",
     "CasillaProducerProvenance",
     "DecimalValue",
-    "DeclaredPredecessor",
     "FormulaDefinition",
     "ModeloDefinition",
     "ModeloRevision",
-    "NoPredecessor",
     "RegistryCatalogues",
     "RegistrySnapshot",
     "SociedadesAnnualManualCoverageCatalogue",
@@ -143,13 +141,15 @@ from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
+from .modelo_inception import DeclaredInception, ModeloInceptionField, UnauthoredBefore
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
+from .modelo_pending_orden import PendingEjercicioOrden, PendingEjercicioOrdenes
 from .revision_contracts import (
     DeclaredPredecessor,
-    NoPredecessor,
     RegistryRevisionDeclaration,
     validate_revision_predecessors,
 )
+from .runtime_catalogues import RuntimeRegistryCatalogues
 from .schema_base import (
     CHAIN_FAMILY,
     GOVERNANCE_STAMP,
@@ -195,7 +195,9 @@ from .schema_surfaces import (
     CalculationCompletenessManifest,
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
+    validate_family_identity_uniqueness,
 )
+from .source_default_dispositions import SourceDefaultDisposition
 
 # Scalar and annotated value types live in ``_schema_scalars``; retaining these
 # assignments keeps the historical ``_schema`` import surface authoritative.
@@ -560,6 +562,13 @@ def _casilla_producer(
     )
 
 
+#: The casilla family's key in ``source_default_dispositions``. It carries an
+#: edition source default like the families in ``FAMILY_SOURCE_DEFAULT_FIELDS``
+#: but is absent from that pairing, which enumerates the SECTION families whose
+#: members lift; casillas are lifted by the loader's own casilla pass.
+_CASILLA_SOURCE_DEFAULT_FAMILY: Final = "casillas"
+
+
 class SchemaFamilyDispositionDeclaration(RegistryModel):
     """A revision's declared reason that one of its schema families does not apply.
 
@@ -636,14 +645,14 @@ class ModeloRevision(RegistryRevisionDeclaration):
     out, so a revision without the key is a full-copy revision stating every row
     itself. Absent reads as ``None`` and is excluded from serialisation, so a
     revision that does not declare the key dumps exactly as it did before the
-    key existed. A :class:`NoPredecessor` is the grounded statement that the
+    key existed. A :class:`~.revision_contracts.NoPredecessor` is the grounded statement that the
     revision chains to no sibling at all, which absence cannot say. Either
     declaration is a claim about the whole revision, so it is manifest-only: a
     section fragment declaring it is refused. The modelo validates the declared
     edges together as a forest through
-    :func:`~.revision_predecessor_forest.validate_predecessor_forest`, and
+    :func:`~.revision_contracts.validate_predecessor_forest`, and
     each edge against the editions' validity dates through
-    :func:`~.revision_predecessor_date_agreement.validate_predecessor_date_agreement`.
+    :func:`~.revision_contracts.validate_predecessor_date_agreement`.
 
     ``casilla_source_refs`` is the edition's default source grounding for its
     casilla rows, declared once rather than restated on every row. It is a
@@ -684,6 +693,15 @@ class ModeloRevision(RegistryRevisionDeclaration):
     the third differs. Each is independent: declaring one says nothing about
     the others, and an edition declaring none is exactly as it was before these
     keys existed.
+
+    ``source_default_dispositions`` is what an edition says when one of those
+    three defaults cannot be derived at all: its rows share no leading run of
+    ``source_refs``, so each row keeps its own and there is nothing to lift.
+    Keyed by family -- ``casillas``, ``bindings``, ``formulas`` -- and carrying
+    a :class:`~.source_default_dispositions.SourceDefaultDisposition` reason,
+    it separates an edition that has nothing to lift from one nobody has lifted
+    yet, which a missing key alone cannot distinguish. A disposition for a
+    family that also declares its default is refused as the contradiction it is.
     """
 
     localization_key: str = Field(min_length=1, exclude=True, repr=False)
@@ -729,6 +747,11 @@ class ModeloRevision(RegistryRevisionDeclaration):
     family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
     )
+    source_default_dispositions: Annotated[
+        Mapping[str, SourceDefaultDisposition],
+        MANIFEST_ONLY,
+        FROZEN_MAPPING,
+    ] = Field(default_factory=dict, validate_default=True)
     engineered_by: Annotated[str | None, GOVERNANCE_STAMP] = None
     review_status: Annotated[RevisionReviewStatusField, GOVERNANCE_STAMP] = RevisionReviewStatus.PENDING_REVIEW
     reviewed_by: Annotated[str | None, GOVERNANCE_STAMP] = None
@@ -875,6 +898,60 @@ class ModeloRevision(RegistryRevisionDeclaration):
         return self
 
     @model_validator(mode="after")
+    def _validate_source_default_dispositions(self) -> ModeloRevision:
+        """Refuse an underivability claim about a family that has no default, or has one.
+
+        The claim is only readable against the family whose default field it
+        explains, so a key naming no such family explains nothing while reading
+        as though it did. And a family that DECLARES its default has plainly
+        derived one, which the same edition cannot also call underivable: the
+        screen would then have an authored disposition and a declared default
+        saying opposite things about the same key.
+        """
+        # Imported at call time: reference_sections reaches this module's model
+        # through the reference checker, so a module-level import would close a
+        # cycle through a half-initialised schema.
+        from .reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
+
+        default_field_by_family = {
+            _CASILLA_SOURCE_DEFAULT_FAMILY: "casilla_source_refs",
+            **dict(FAMILY_SOURCE_DEFAULT_FIELDS),
+        }
+        for family in self.source_default_dispositions:
+            default_field = default_field_by_family.get(family)
+            if default_field is None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} declares a source-default disposition for {family!r}, which declares no "
+                    f"edition source default; families carrying one are {sorted(default_field_by_family)!r}",
+                )
+            if getattr(self, default_field) is not None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} calls the {family!r} source default underivable but also declares "
+                    f"{default_field!r}; drop the disposition or drop the default",
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_identity_keyed_families(self) -> ModeloRevision:
+        """Refuse a revision declaring two members of one keyed family under one id.
+
+        The identity is what names the same member across editions, so a
+        revision holding it twice leaves the inheritance merge with no answer
+        about which member a successor supersedes or a retirement withdraws.
+        Refused here, at the revision boundary that owns both families, rather
+        than resolved downstream by picking one.
+        """
+        validate_family_identity_uniqueness(
+            "projection_endpoints",
+            [declaration.id for declaration in self.projection_endpoints],
+        )
+        validate_family_identity_uniqueness(
+            "verification_predicates",
+            [predicate.id for predicate in self.verification_predicates],
+        )
+        return self
+
+    @model_validator(mode="after")
     def _validate_governance_stamp(self) -> ModeloRevision:
         """Bind the reviewer identity to the claim that a review happened."""
         validate_governance_stamp_coherence(
@@ -953,7 +1030,43 @@ class ModeloDefinition(RegistryModel):
     capabilities: Annotated[frozenset[ModeloFilingCapability], BeforeValidator(frozenset)] = frozenset()
     legal_refs: LegalRefs
     source_refs: SourceRefs
+    inception: Annotated[ModeloInceptionField | None, MANIFEST_ONLY] = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
+    pending_ejercicio_ordenes: PendingEjercicioOrdenes = ()
+
+    def pending_orden_for(self, filing_year: int) -> PendingEjercicioOrden | None:
+        """Return the declaration excusing a filing year, if the modelo made one.
+
+        A year with no revision and no declaration here is an open gap. A year
+        with one is legally-not-yet: the Orden approving it has not been
+        published, so nobody can author it and nothing is owed until it is.
+        """
+        return next(
+            (entry for entry in self.pending_ejercicio_ordenes if entry.filing_year == filing_year),
+            None,
+        )
+
     revisions: Annotated[Mapping[RevisionId, ModeloRevision], FROZEN_MAPPING]
+
+    @property
+    def first_answerable_filing_year(self) -> int | None:
+        """Return the earliest filing year this modelo answers for, if declared.
+
+        Absence is not zero and not the earliest authored revision: an
+        undeclared inception means the modelo has made no claim about how far
+        back it reaches, which is a different state from reaching back to its
+        first edition. Callers that need the distinction must ask for
+        :attr:`inception` itself.
+        """
+        match self.inception:
+            case DeclaredInception(filing_year=filing_year):
+                return filing_year
+            case UnauthoredBefore(earliest_authored=earliest):
+                return earliest
+            case _:
+                return None
 
     def get_title(self, locale: str) -> str:
         """Resolve the Modelo title from the shared catalogue."""
@@ -1122,6 +1235,7 @@ class RegistryCatalogues(RegistryModel):
     )
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
     sociedades_annual_manual_coverage: SociedadesAnnualManualCoverageCatalogue | None = None
+    runtime: RuntimeRegistryCatalogues = Field(default_factory=RuntimeRegistryCatalogues)
 
 
 class RegistrySnapshot(RegistryModel):

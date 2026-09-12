@@ -397,3 +397,220 @@ classification = "unauthored"
 reason = "Hash-verified AEAT record design for this exact ejercicio. No founding orden is established in the legal catalogue, so the anchor is the official design rather than the norm."
 authority = "aeat-dr-220-2023"
 
+
+# ---------------------------------------------------------------------------
+# Coordinate-level cells, grounded against the periodo de liquidacion rules in
+# the norm that governs each modelo and the hash-verified AEAT record designs.
+#
+# Two opposite outcomes sit below and the grounds differ by classification. The
+# 'unauthored' cells name a period the governing norm demonstrably admits in
+# that year, so a positive source settles them: the design AEAT published for
+# that exact coordinate, or the orden fixing the first period a replacement
+# design applies to, which proves the period before it was filed under the
+# design it replaced. The 'inception' cells assert a negative -- that the
+# coordinate never legally existed -- so only a norm is cited: RD 1624/1992
+# art. 71 apartado 3 defines modelo 303's periodo de liquidacion exhaustively
+# as the trimestre natural, or the mes natural for the taxpayers it lists, and
+# Orden EHA/3786/2008 art. 7 sets a plazo for those two regimes and no other.
+# Modelo 303 therefore has no annual periodo de liquidacion in any year; the
+# annual instrument of art. 71 apartado 7 is the declaracion-resumen anual,
+# which is modelo 390 and a different modelo entirely.
+# ---------------------------------------------------------------------------
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "01"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "02"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "03"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "04"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "05"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "06"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "07"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "08"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "09"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "10"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "11"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "12"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Monthly periodo de liquidacion existed for modelo 303 in 2022 under RD 1624/1992 art. 71 apartado 3, and the hash-verified AEAT design for this ejercicio admits it: its Periodo (PP) field takes 01 through 12 or 1T through 4T, and its Nota 4 states the design must be used for the presentations of every periodo of 2022. The revision declares only the quarterly tokens, so the monthly cell is authoring debt, not a legal absence."
+authority = "aeat-dr-303-2022 (sha256 6648f6b3..., Periodo (PP) field and Nota 4); rd-1624-1992:art-71; orden-eha-3786-2008:art-7"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2022
+period = "0A"
+kind = "promised_coordinate_unserved"
+classification = "inception"
+reason = "Modelo 303 has no annual periodo de liquidacion. RD 1624/1992 art. 71 apartado 3 defines it exhaustively as the trimestre natural, or the mes natural for the taxpayers it lists, and Orden EHA/3786/2008 art. 7 fixes a plazo for those two regimes only. The annual instrument of art. 71 apartado 7 is the declaracion-resumen anual, a separate modelo. The AEAT record designs agree: the Periodo (PP) field admits 01 through 12 or 1T through 4T in the 2022, 2025 and 2026 designs alike, and the last periodo is named throughout as 12 y 4T. The 0A token is real AEAT vocabulary for annual modelos, but it is not a modelo 303 periodo in any year; it reaches this denominator only because the 2025 revision period_selector states it, unbacked by any filing_schedule, deadline window or casilla of that same revision."
+authority = "rd-1624-1992:art-71 (apartado 3); orden-eha-3786-2008:art-7 (BOE-A-2008-20953)"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2023
+period = "0A"
+kind = "promised_coordinate_unserved"
+classification = "inception"
+reason = "Modelo 303 has no annual periodo de liquidacion. RD 1624/1992 art. 71 apartado 3 defines it exhaustively as the trimestre natural, or the mes natural for the taxpayers it lists, and Orden EHA/3786/2008 art. 7 fixes a plazo for those two regimes only. The annual instrument of art. 71 apartado 7 is the declaracion-resumen anual, a separate modelo. The AEAT record designs agree: the Periodo (PP) field admits 01 through 12 or 1T through 4T in the 2022, 2025 and 2026 designs alike, and the last periodo is named throughout as 12 y 4T. The 0A token is real AEAT vocabulary for annual modelos, but it is not a modelo 303 periodo in any year; it reaches this denominator only because the 2025 revision period_selector states it, unbacked by any filing_schedule, deadline window or casilla of that same revision."
+authority = "rd-1624-1992:art-71 (apartado 3); orden-eha-3786-2008:art-7 (BOE-A-2008-20953)"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2024
+period = "0A"
+kind = "promised_coordinate_unserved"
+classification = "inception"
+reason = "Modelo 303 has no annual periodo de liquidacion. RD 1624/1992 art. 71 apartado 3 defines it exhaustively as the trimestre natural, or the mes natural for the taxpayers it lists, and Orden EHA/3786/2008 art. 7 fixes a plazo for those two regimes only. The annual instrument of art. 71 apartado 7 is the declaracion-resumen anual, a separate modelo. The AEAT record designs agree: the Periodo (PP) field admits 01 through 12 or 1T through 4T in the 2022, 2025 and 2026 designs alike, and the last periodo is named throughout as 12 y 4T. The 0A token is real AEAT vocabulary for annual modelos, but it is not a modelo 303 periodo in any year; it reaches this denominator only because the 2025 revision period_selector states it, unbacked by any filing_schedule, deadline window or casilla of that same revision."
+authority = "rd-1624-1992:art-71 (apartado 3); orden-eha-3786-2008:art-7 (BOE-A-2008-20953)"
+
+[[disposition]]
+modelo = "303"
+filing_year = 2026
+period = "0A"
+kind = "promised_coordinate_unserved"
+classification = "inception"
+reason = "Modelo 303 has no annual periodo de liquidacion. RD 1624/1992 art. 71 apartado 3 defines it exhaustively as the trimestre natural, or the mes natural for the taxpayers it lists, and Orden EHA/3786/2008 art. 7 fixes a plazo for those two regimes only. The annual instrument of art. 71 apartado 7 is the declaracion-resumen anual, a separate modelo. The AEAT record designs agree: the Periodo (PP) field admits 01 through 12 or 1T through 4T in the 2022, 2025 and 2026 designs alike, and the last periodo is named throughout as 12 y 4T. The 0A token is real AEAT vocabulary for annual modelos, but it is not a modelo 303 periodo in any year; it reaches this denominator only because the 2025 revision period_selector states it, unbacked by any filing_schedule, deadline window or casilla of that same revision."
+authority = "rd-1624-1992:art-71 (apartado 3); orden-eha-3786-2008:art-7 (BOE-A-2008-20953)"
+
+[[disposition]]
+modelo = "038"
+filing_year = 2024
+period = "01"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 038 has been a monthly informative declaration since 2002: Orden HAC/66/2002 art. 6 requires it during each mes natural for the inscripciones authorised in the immediately preceding month, and supplies no exception for the early months of a year. The reason the corpus opens at periodo 06 of 2024 is Orden HAC/646/2024, whose disposicion final unica applies the new design for the first time to the declaration for June 2024, filed in July 2024. That proves January to May 2024 were filed under the design it replaced, which the corpus deliberately holds as an inspection receipt rather than selectable authority. The coordinate exists and no revision was authored for it."
+authority = "orden-hac-66-2002:art-6 (BOE-A-2002-1041); orden-hac-646-2024:df-unica (BOE-A-2024-13049)"
+
+[[disposition]]
+modelo = "038"
+filing_year = 2024
+period = "02"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 038 has been a monthly informative declaration since 2002: Orden HAC/66/2002 art. 6 requires it during each mes natural for the inscripciones authorised in the immediately preceding month, and supplies no exception for the early months of a year. The reason the corpus opens at periodo 06 of 2024 is Orden HAC/646/2024, whose disposicion final unica applies the new design for the first time to the declaration for June 2024, filed in July 2024. That proves January to May 2024 were filed under the design it replaced, which the corpus deliberately holds as an inspection receipt rather than selectable authority. The coordinate exists and no revision was authored for it."
+authority = "orden-hac-66-2002:art-6 (BOE-A-2002-1041); orden-hac-646-2024:df-unica (BOE-A-2024-13049)"
+
+[[disposition]]
+modelo = "038"
+filing_year = 2024
+period = "03"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 038 has been a monthly informative declaration since 2002: Orden HAC/66/2002 art. 6 requires it during each mes natural for the inscripciones authorised in the immediately preceding month, and supplies no exception for the early months of a year. The reason the corpus opens at periodo 06 of 2024 is Orden HAC/646/2024, whose disposicion final unica applies the new design for the first time to the declaration for June 2024, filed in July 2024. That proves January to May 2024 were filed under the design it replaced, which the corpus deliberately holds as an inspection receipt rather than selectable authority. The coordinate exists and no revision was authored for it."
+authority = "orden-hac-66-2002:art-6 (BOE-A-2002-1041); orden-hac-646-2024:df-unica (BOE-A-2024-13049)"
+
+[[disposition]]
+modelo = "038"
+filing_year = 2024
+period = "04"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 038 has been a monthly informative declaration since 2002: Orden HAC/66/2002 art. 6 requires it during each mes natural for the inscripciones authorised in the immediately preceding month, and supplies no exception for the early months of a year. The reason the corpus opens at periodo 06 of 2024 is Orden HAC/646/2024, whose disposicion final unica applies the new design for the first time to the declaration for June 2024, filed in July 2024. That proves January to May 2024 were filed under the design it replaced, which the corpus deliberately holds as an inspection receipt rather than selectable authority. The coordinate exists and no revision was authored for it."
+authority = "orden-hac-66-2002:art-6 (BOE-A-2002-1041); orden-hac-646-2024:df-unica (BOE-A-2024-13049)"
+
+[[disposition]]
+modelo = "038"
+filing_year = 2024
+period = "05"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 038 has been a monthly informative declaration since 2002: Orden HAC/66/2002 art. 6 requires it during each mes natural for the inscripciones authorised in the immediately preceding month, and supplies no exception for the early months of a year. The reason the corpus opens at periodo 06 of 2024 is Orden HAC/646/2024, whose disposicion final unica applies the new design for the first time to the declaration for June 2024, filed in July 2024. That proves January to May 2024 were filed under the design it replaced, which the corpus deliberately holds as an inspection receipt rather than selectable authority. The coordinate exists and no revision was authored for it."
+authority = "orden-hac-66-2002:art-6 (BOE-A-2002-1041); orden-hac-646-2024:df-unica (BOE-A-2024-13049)"
+
+[[disposition]]
+modelo = "353"
+filing_year = 2026
+period = "01"
+kind = "promised_coordinate_unserved"
+classification = "unauthored"
+reason = "Modelo 353 is a monthly autoliquidacion, and Orden EHA/3434/2007 art. 8 names the January period expressly, giving it until the last day of February to be filed. Orden HAC/27/2026 disposicion final unica applies the replacement anexo II for the first time to the autoliquidaciones correspondientes al segundo trimestre o al mes de febrero de 2026, so it does not reach January; January 2026 was filed under the anexo II it replaced. The corpus closes that predecessor design at 2025-12-31, leaving the periodo authored by neither edition. The coordinate exists in law and is authoring debt."
+authority = "orden-hac-27-2026:disposicion-final-unica (BOE-A-2026-1761); orden-eha-3434-2007:art-8 (BOE-A-2007-20484)"

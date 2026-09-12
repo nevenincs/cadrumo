@@ -1,6 +1,6 @@
 
 [[revisions."2023".bindings]]
-id = "modelo-714.714-10.169-172.liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm"
+id = "modelo-714.714-10.liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm"
 provider = { kind = "manual_input", record = "714-10", field = "liquidacion-deduccion-impuestos-extranjero-tipo-medio-efectivo-de-gravamen-tm", offset = 169, length = 4, data_type = "integer", signed = false }
 value = { data_type = "integer", channel = "integer" }
 legal_refs = ["orden-hac-265-2024:art-4"]

@@ -1,0 +1,21 @@
+# Both declaration-control indicators retain their official roles and text.
+# The form-approval citation changes from Orden HAP/2783/2015 to its replacement.
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "tipo-de-declaracion-legal-refs-evolved"
+continuidad_id = "tipo-de-declaracion"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+
+[[revisions."2025-y-siguientes".casilla_continuidad_evolutions]]
+id = "cuota-cero-legal-refs-evolved"
+continuidad_id = "cuota-cero"
+from_revision = "2015-2022"
+to_revision = "2025-y-siguientes"
+evolution_kind = "legal_refs_evolved"
+legal_refs = ["orden-hap-2783-2015:art-1", "orden-hfp-1338-2023:art-1"]
+source_refs = ["aeat-dr-151-2015", "aeat-dr-151-2023"]
+

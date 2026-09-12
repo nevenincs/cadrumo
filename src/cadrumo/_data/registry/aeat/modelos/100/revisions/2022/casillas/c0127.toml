@@ -1,5 +1,8 @@
 [[revisions."2022".casillas]]
 id = "0127"
+continuidad_id = "irpf-inmueble-amortizacion-gastos-tributos-adquisicion"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2021-dictionary:217 y aeat-dr-100-2022-dictionary:216: C_TRIBUAD, gastos y tributos inherentes a la adquisición del inmueble principal para su amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0127"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 semantic_role = "irpf_inmueble_gastos_tributos_adquisicion"

@@ -121,7 +121,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     resolve_modelo_localization,
 )
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
-from cadrumo.domain.calculations.registry.schema import DeclaredPredecessor, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.submission.models import ModeloDraftStatus
 

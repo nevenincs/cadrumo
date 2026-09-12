@@ -82,6 +82,8 @@ def _resolved_scalar_data() -> dict[str, object]:
         "review_status": "pending_review",
         "ownership": "authored",
         "authority_digest": "a" * 64,
+        "source_variant_id": "iva.general.rate.2025",
+        "source_revision_ids": ("iva.general.rate.2025",),
     }
 
 
@@ -91,6 +93,8 @@ def test_resolved_union_preserves_payload_identity_context_and_provenance() -> N
     assert resolved.payload == ScalarFactPayload(value=Decimal("0.21"), unit="ratio")
     assert resolved.ownership is FactOwnership.AUTHORED
     assert resolved.authority_digest == "a" * 64
+    assert resolved.source_variant_id == "iva.general.rate.2025"
+    assert resolved.source_revision_ids == ("iva.general.rate.2025",)
     assert resolved.source_citations[0].source_ref == "aeat-iva-rates"
 
 
@@ -180,3 +184,97 @@ def test_authority_resolver_refuses_an_unregistered_fact() -> None:
 
     with pytest.raises(ValueError, match="is not registered"):
         resolve_governed_fact(GovernedFactCatalogue(), query, authority_digest="b" * 64)
+
+
+def _temporally_supported_scalar_fact(
+    *,
+    valid_from: date | None = date(2022, 1, 1),
+    valid_to: date | None = date(2025, 12, 31),
+) -> GovernedFact:
+    return GovernedFact.model_validate(
+        {
+            "fact_id": "iva.temporal.rate",
+            "family": "scalar",
+            "support": {
+                "floor": date(2020, 1, 1),
+                "horizon": date(2025, 12, 31),
+                "hard_ceiling": date(2026, 12, 31),
+            },
+            "variants": (
+                {
+                    "variant_id": "iva.temporal.rate.2022",
+                    "date_axis": "transaction_date",
+                    "valid_from": valid_from,
+                    "valid_to": valid_to,
+                    "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
+                    "legal_refs": ("ley-37-1992-art-90",),
+                    "review_status": "pending_review",
+                    "ownership": "authored",
+                },
+            ),
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("effective_date", "direction", "projected_from"),
+    [
+        (date(2021, 6, 1), "backward", date(2022, 1, 1)),
+        (date(2023, 6, 1), "authored", None),
+        (date(2026, 6, 1), "forward", date(2025, 12, 31)),
+    ],
+)
+def test_fact_support_projects_only_between_its_hard_floor_and_ceiling(
+    effective_date: date,
+    direction: str,
+    projected_from: date | None,
+) -> None:
+    fact = _temporally_supported_scalar_fact()
+    query = TypeAdapter(GovernedFactQuery).validate_python(
+        {
+            "family": "scalar",
+            "fact_id": fact.fact_id,
+            "date_axis": "transaction_date",
+            "effective_date": effective_date,
+        }
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        query,
+        authority_digest="c" * 64,
+    )
+
+    assert resolved.projection_direction == direction
+    assert resolved.projected_from_date == projected_from
+    assert resolved.source_variant_id == "iva.temporal.rate.2022"
+    assert resolved.source_revision_ids == ("iva.temporal.rate.2022",)
+
+
+@pytest.mark.parametrize("effective_date", [date(2019, 12, 31), date(2027, 1, 1)])
+def test_fact_support_refuses_queries_outside_its_hard_boundaries(effective_date: date) -> None:
+    fact = _temporally_supported_scalar_fact()
+    query = TypeAdapter(GovernedFactQuery).validate_python(
+        {
+            "family": "scalar",
+            "fact_id": fact.fact_id,
+            "date_axis": "transaction_date",
+            "effective_date": effective_date,
+        }
+    )
+
+    with pytest.raises(ValueError, match="outside its hard support boundaries"):
+        resolve_governed_fact(
+            GovernedFactCatalogue(facts={fact.fact_id: fact}),
+            query,
+            authority_digest="c" * 64,
+        )
+
+
+def test_omitted_fact_bounds_materialize_to_the_support_floor_and_ceiling() -> None:
+    fact = _temporally_supported_scalar_fact(valid_from=None, valid_to=None)
+
+    window = fact.validity_window(fact.variants[0])
+
+    assert window.valid_from == date(2020, 1, 1)
+    assert window.valid_to == date(2026, 12, 31)

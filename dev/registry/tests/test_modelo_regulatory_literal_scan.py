@@ -25,7 +25,7 @@ def test_detector_bites_when_a_modelo_branch_pins_a_year(tmp_path: Path) -> None
     package.mkdir(parents=True)
     (package / "route.py").write_text(
         "def choose(modelo, filing_year):\n"
-        "    if modelo == Modelo.M100 and filing_year == 2025:\n"
+        "    if modelo == Modelo('100') and filing_year == 2025:\n"
         "        return True\n",
         encoding="utf-8",
     )

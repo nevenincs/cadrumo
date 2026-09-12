@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00500"
+continuidad_id = "is-pyg-resultado-cuenta-perdidas-ganancias"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 44/44, filas 49/49. Manuales Sociedades 2024/2025, cap. 4: el resultado total de perdidas y ganancias suma operaciones continuadas e interrumpidas (00327 + 00328); su ubicacion tras las operaciones interrumpidas en el diseno no limita el concepto."
 number = "00500"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_interrumpidas"]
 data_type = "money"

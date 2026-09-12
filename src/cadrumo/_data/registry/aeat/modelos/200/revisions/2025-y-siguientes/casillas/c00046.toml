@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00046"
+continuidad_id = "is-entidad-en-reg-atribuc-de-rentas-constituida-en-el-extranjero-con-presencia-en-territorio-espanol"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200001/DP200001, campos 68/68, filas 73/73: Entidad en rég. Atribuc. de rentas constituida en el extranjero con presencia en territorio español [00046]. Descripcion legal, tipo, validacion y contenido coinciden; mismo caracter de declaracion (manuales Sociedades 2024/2025, cap. 2)."
 number = "00046"
 section = ["entidad_en_reg_atribuc_de_rentas_constituida_en_el"]
 data_type = "decimal"

@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2020-dictionary:1119 y aeat-dr-100-2021-dictionary:1162; 175 Aniversario de la construcción del Gran Teatre del Liceu, columna Aplicado, M21CTLA.
+[[revisions."2021".casilla_continuidad_evolutions]]
+id = "m100-0765-2020-2021-unchanged"
+continuidad_id = "irpf-aeip-175-aniversario-de-la-construccion-del-gran-teatre-del-liceu-aplicado"
+from_revision = "2020"
+to_revision = "2021"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2021-dictionary"]

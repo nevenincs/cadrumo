@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "0101"
+continuidad_id = "irpf-inmueble-arrendamiento-dias"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:194 y aeat-dr-100-2024-dictionary:207: C_DIASARR, días arrendados en los datos generales del arrendamiento, distintos del cómputo para amortización. Mismo dato y función en el bloque oficial; se preserva la instancia de inmueble o anexo."
 number = "0101"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "integer"

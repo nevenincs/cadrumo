@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "1614"
+# aeat-dr-100-2020-dictionary:472: F1ETI, socio comunero o participe identificado para el inmueble de la entidad en atribucion de rentas.
+continuidad_id = "irpf-atribucion-rentas-inmueble-contribuyente-titular"
 number = "1614"
 section = ["toma_datos_ampliada"]
 data_type = "text"

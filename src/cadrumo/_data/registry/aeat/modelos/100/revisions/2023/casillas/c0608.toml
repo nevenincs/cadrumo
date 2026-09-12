@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "0608"
+# Grounding: aeat-dr-100-2023-dictionary:883, DED14E; deducción estatal por instalación de puntos de recarga.
+continuidad_id = "irpf-deduccion-puntos-recarga"
 number = "0608"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_deduccion_puntos_recarga"

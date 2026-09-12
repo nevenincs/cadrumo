@@ -1,5 +1,8 @@
 [[revisions."2023".casillas]]
 id = "0793"
+continuidad_id = "irpf-aeip-200-aniversario-del-passeig-de-gracia-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:1367 y aeat-dr-100-2023-dictionary:1378: campo M21APCA; columna Aplicado en esta declaración del programa 200 ANIVERSARIO DEL PASSEIG DE GRÁCIA en Anexo A. Misma designación y función fiscal."
 number = "0793"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

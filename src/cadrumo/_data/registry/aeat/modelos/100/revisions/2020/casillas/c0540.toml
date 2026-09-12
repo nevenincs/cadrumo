@@ -1,5 +1,7 @@
 [[revisions."2020".casillas]]
 id = "0540"
+# Grounding: aeat-dr-100-2020-dictionary:755, CIEEST; cuota estatal correspondiente a la base liquidable del ahorro.
+continuidad_id = "irpf-cuota-base-liquidable-ahorro-estatal"
 number = "0540"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_base_liquidable_ahorro_estatal"

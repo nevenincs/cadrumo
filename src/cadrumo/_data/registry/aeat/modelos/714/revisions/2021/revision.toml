@@ -1,5 +1,7 @@
 [revisions."2021"]
 casilla_source_refs = ["aeat-dr-714-2021"]
+binding_source_refs = ["aeat-dr-714-2021"]
+formula_source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 # Prepared and reviewed by an agent against the bundled diseño de registros and
 # the ordenes this revision cites; NO human operator has countersigned it, and
 # 'agent_reviewed' plus this reviewer token record that state honestly rather

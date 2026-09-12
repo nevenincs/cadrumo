@@ -1,0 +1,9 @@
+# Grounding: aeat-dr-100-2022-dictionary:1376 y aeat-dr-100-2023-dictionary:1387; HOSTELCO 2022, columna Aplicado, M21HOSA.
+[[revisions."2023".casilla_continuidad_evolutions]]
+id = "m100-1623-2022-2023-unchanged"
+continuidad_id = "irpf-aeip-hostelco-2022-aplicado"
+from_revision = "2022"
+to_revision = "2023"
+evolution_kind = "unchanged"
+legal_refs = ["ley-35-2006:art-68.2"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2023-dictionary"]

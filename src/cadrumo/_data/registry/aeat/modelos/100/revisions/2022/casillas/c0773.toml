@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0773"
+# Grounding: aeat-dr-100-2022-dictionary:1334, M21APSA; importe aplicado del programa 20 Aniversario de Primavera Sound (Anexo A).
+continuidad_id = "irpf-aeip-20-aniversario-de-primavera-sound-aplicado"
 number = "0773"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

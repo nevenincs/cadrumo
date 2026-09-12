@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00705"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 10/10, filas 15/15: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -  Ingresos carácter financiero sociedades holding [00705]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00705"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00706"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-de-participaciones-en-instrumentos-patrimonio"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 11/11, filas 16/16: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -  Ingresos carácter financiero sociedades holding  - De participaciones en instrumentos patrimonio [00706]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00706"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00707"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-de-valores-negociables-y-otros-instrumentos-financieros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 12/12, filas 17/17: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -  Ingresos carácter financiero sociedades holding  - De valores negociables y otros instrumentos financieros [00707]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00707"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -27,6 +36,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00708"
+continuidad_id = "is-pyg-continuadas-ingresos-caracter-financiero-sociedades-holding-resto"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 13/13, filas 18/18: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas -  Ingresos carácter financiero sociedades holding  - Resto [00708]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00708"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -36,6 +48,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00709"
+continuidad_id = "is-pyg-continuadas-gastos-por-emision-de-gases-de-efecto-invernadero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 49/49, filas 54/54: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Gastos por emisión de gases de efecto invernadero [00709]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00709"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -45,6 +60,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00710"
+continuidad_id = "is-pyg-continuadas-deterioro-y-resultados-por-enajenaciones-del-inmovilizado-de-las-sociedades-holding"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 60/60, filas 65/65: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Deterioro y resultados por enajenaciones del inmovilizado de las sociedades holding [00710]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00710"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"
@@ -54,6 +72,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00711"
+continuidad_id = "is-pyg-continuadas-ingresos-de-caracter-financiero-de-las-entidades-concesionarias-de-infraestructuras-publicas"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200007/DP200007, campos 9/9, filas 14/14: Cuenta de pérdidas y ganancias (I) - Operaciones continuadas - Ingresos de carácter financiero de las entidades concesionarias de infraestructuras públicas [00711]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00711"
 section = ["cuenta_de_perdidas_y_ganancias_i", "operaciones_continuadas"]
 data_type = "money"

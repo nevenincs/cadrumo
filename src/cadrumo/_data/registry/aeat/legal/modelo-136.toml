@@ -14,12 +14,12 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE consolidated LIRPF corpus audit on 2026-07-01"
 notes = "Current consolidated LIRPF DA 33: special levy on lottery and betting prizes, 40,000 euro exemption, 20 percent rate, and autoliquidation duty when no withholding or payment on account applies."
 required_text = [
-    "Gravamen especial sobre los premios de determinadas loterias y apuestas",
-    "premios cuyo importe integro sea igual o inferior a 40.000 euros",
-    "La base imponible del gravamen especial estara formada por el importe del premio que exceda de la cuantia exenta",
-    "La cuota integra del gravamen especial sera la resultante de aplicar a la base imponible",
+    "Gravamen especial sobre los premios de determinadas loterías y apuestas",
+    "premios cuyo importe íntegro sea igual o inferior a 40.000 euros",
+    "La base imponible del gravamen especial estará formada por el importe del premio que exceda de la cuantía exenta",
+    "La cuota íntegra del gravamen especial será la resultante de aplicar a la base imponible",
     "tipo del 20 por ciento",
-    "obligados a presentar una autoliquidacion por este gravamen especial",
+    "obligados a presentar una autoliquidación por este gravamen especial",
 ]
 
 [legal."orden-hap-70-2013:art-5"]
@@ -37,9 +37,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 5 approves Modelo 136 and identifies the form title."
 required_text = [
-    "Articulo 5. Aprobacion del modelo 136",
+    "Artículo 5. Aprobación del modelo 136",
     "Se aprueba el modelo 136",
-    "Gravamen Especial sobre los Premios de determinadas Loterias y Apuestas",
+    "Gravamen Especial sobre los Premios de determinadas Loterías y Apuestas",
 ]
 
 [legal."orden-hap-70-2013:art-6"]
@@ -57,9 +57,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 6 defines the taxpayers obliged to file Modelo 136."
 required_text = [
-    "Articulo 6. Obligados a presentar el modelo 136",
+    "Artículo 6. Obligados a presentar el modelo 136",
     "obligados a presentar el modelo 136 procediendo por tanto a autoliquidar e ingresar",
-    "cuando tales premios no hubieran sido objeto de la retencion o ingreso a cuenta",
+    "cuando tales premios no hubieran sido objeto de la retención o ingreso a cuenta",
 ]
 
 [legal."orden-hap-70-2013:art-7"]
@@ -77,8 +77,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 7 sets quarterly Modelo 136 filing and payment windows."
 required_text = [
-    "Articulo 7. Plazos de presentacion del modelo 136",
-    "veinte primeros dias naturales de los meses de abril, julio, octubre y enero",
+    "Artículo 7. Plazos de presentación del modelo 136",
+    "veinte primeros días naturales de los meses de abril, julio, octubre y enero",
     "premios cobrados en el trimestre natural inmediato anterior",
 ]
 
@@ -97,8 +97,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 10 defines general electronic filing conditions for Modelos 230 and 136."
 required_text = [
-    "Articulo 10. Condiciones generales para la presentacion telematica de los modelos 230 y 136",
-    "presentacion telematica estara sujeta a las siguientes condiciones",
+    "Artículo 10. Condiciones generales para la presentación telemática de los modelos 230 y 136",
+    "presentación telemática estará sujeta a las siguientes condiciones",
     "cumplimentar y transmitir los datos del formulario",
 ]
 
@@ -117,9 +117,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 11 defines the internet filing procedure, the quarterly period codes, and the positive amount-to-enter condition for Modelo 136."
 required_text = [
-    "Articulo 11. Procedimiento para la presentacion telematica por Internet de los modelos 230 y 136",
-    "Periodo del Modelo 136: 2 caracteres. Trimestrales (1T, 2T, 3T, 4T)",
-    "Tipo de autoliquidacion",
+    "Artículo 11. Procedimiento para la presentación telemática por Internet de los modelos 230 y 136",
+    "Período del Modelo 136: 2 caracteres. Trimestrales (1T, 2T, 3T, 4T)",
+    "Tipo de autoliquidación",
     "Importe a ingresar",
 ]
 
@@ -138,9 +138,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2013-952 HTML downloaded from BOE on 2026-07-01"
 notes = "Articulo 12 grounds the banking and domiciliation payment fields used by Modelo 136."
 required_text = [
-    "Articulo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliacion bancaria",
-    "presenten el modelo 136 por via telematica por Internet",
-    "domiciliacion bancaria del modelo 136 podra realizarse desde el dia 1 hasta el dia 15",
+    "Artículo 12. Pago de las deudas tributarias resultantes de las autoliquidaciones de los modelos 230 o 136 mediante domiciliación bancaria",
+    "presenten el modelo 136 por vía telemática por Internet",
+    "domiciliación bancaria del modelo 136 podrá realizarse desde el día 1 hasta el día 15",
 ]
 
 [legal."orden-hac-763-2018:art-tercero"]
@@ -158,8 +158,8 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Articulo tercero replaces the Modelo 136 annex in Orden HAP/70/2013 with the current form in Anexo III."
 required_text = [
-    "Articulo tercero. Modificacion de la Orden HAP/70/2013",
-    "Se sustituye el anexo II a que se refiere el articulo 5",
+    "Artículo tercero. Modificación de la Orden HAP/70/2013",
+    "Se sustituye el anexo II a que se refiere el artículo 5",
     "figura como anexo III de la presente orden",
 ]
 
@@ -178,9 +178,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "official BOE-A-2018-10064 HTML/PDF downloaded from BOE on 2026-07-01"
 notes = "Final provision: the new Modelo 136 applies to 2018 Q3 and later autoliquidations."
 required_text = [
-    "Disposicion final unica. Entrada en vigor",
+    "Disposición final única. Entrada en vigor",
     "El nuevo modelo 136",
-    "tercer trimestre del ano 2018 y siguientes",
+    "tercer trimestre del año 2018 y siguientes",
 ]
 
 [sources."aeat-modelo-136-procedure"]

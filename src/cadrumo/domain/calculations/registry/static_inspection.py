@@ -249,9 +249,9 @@ class RegistryRevisionInspection(RegistryModel):
     ) -> RegistryRevisionInspection:
         """Project one loaded revision without creating a filing snapshot."""
         # Keep this projection on the exact same nested legal/source union as
-        # ``RegistrySnapshot``.  The import is local because the public
-        # registry facade imports this module before the snapshot module; the
-        # call itself only occurs after the authority has completed loading.
+        # ``RegistrySnapshot``. The import is local because ``snapshot`` also
+        # depends on this inspection module; the call itself only occurs after
+        # the authority has completed loading.
         # It is a literal statement rather than a computed module name so the
         # target is legible to a reader and to static analysis alike: the
         # deferral is what breaks the cycle, and naming the module through an

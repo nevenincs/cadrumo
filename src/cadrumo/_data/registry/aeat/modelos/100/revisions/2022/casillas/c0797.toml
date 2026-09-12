@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "0797"
+# Grounding: aeat-dr-100-2022-dictionary:1373, M21ALMA; importe aplicado del programa ALIMENTARIA 2022 (Anexo A).
+continuidad_id = "irpf-aeip-alimentaria-2022-aplicado"
 number = "0797"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

@@ -1513,6 +1513,67 @@ required_text = [
     "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
 ]
 
+[legal."orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-3-b-1"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.3.b.1) Índice corrector para empresas de pequeña dimensión"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
+notes = """Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-1): same 27-line b.1 block, same 0,70/0,75/0,80/0,90 indices and the same four concurrent circumstances."""
+required_text = [
+    "b.1) Índice corrector para empresas de pequeña dimensión:",
+    "Titular persona física.",
+    "Sin personal asalariado.",
+]
+
+[legal."orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-3-b-2"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.3.b.2) Índice corrector de temporada"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice 1,50 (hasta 60 dias), 1,35 (de 61 a 120 dias) o 1,25 (de 121 a 180 dias). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the 2025 instruccion (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-2): same 27-line b.2 block and the same 1,50/1,35/1,25 tabla."
+required_text = [
+    "b.2) Índice corrector de temporada:",
+    "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
+]
+
+[legal."orden-hac-1425-2025:anexo-ii-instruccion-2-3-b-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#anexo-ii-instruccion-2-3-b-4"
+document_id = "BOE-A-2025-25272"
+section = "Anexo II, instrucción 2.3.b.4) Índice corrector por inicio de nuevas actividades"
+permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
+published_at = 2025-12-11
+effective_from = 2026-01-01
+effective_to = 2026-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-12
+reviewed_by = "agent-authored from bundled orden-hac-1425-2025.html; operator to re-stamp"
+notes = """Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2025, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked against the 2025 instruccion (orden-hac-1347-2024:anexo-ii-instruccion-2-3-b-4): the b.4 block differs only in its rolling start date (1 de enero de 2025 en lugar de 1 de enero de 2024); the four circumstances and the 0,80/0,90 and 0,60/0,70 indices are identical."""
+required_text = [
+    "b.4) Índice corrector por inicio de nuevas actividades.",
+    "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2025.",
+]
+
 [legal."orden-hac-1425-2025:anexo-ii-instruccion-2-3-incompatibilidades"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1532,13 +1593,16 @@ Fase 3a: incompatibilidades entre los indices correctores. El indice corrector p
 pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices \
 correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 \
 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el \
-indice b.1 tampoco se aplica el indice corrector de exceso (b.3). El motor de modulos M131 \
-(0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml) modela unicamente el indice de \
-exceso (b.3) en este primer slice para 2026, sin cruzar la incompatibilidad con los indices \
-especiales a.2/a.4 de las actividades tabuladas que los llevan asignados (721.2 transporte por \
-autotaxis, 722 transporte de mercancias por carretera); esta entrada fundamenta el advisory no \
-bloqueante que senala esa brecha al operador, per orden-hac-1425-2025-Anexo-II-instruccion-2-3 y \
-no-silent-under-declaration. Cross-checked byte-identical against the 2025 instruccion \
+indice b.1 tampoco se aplica el indice corrector de exceso (b.3), y cuando resulte aplicable el \
+indice corrector de temporada (b.2) no se aplica el de inicio de nuevas actividades (b.4). El motor \
+de modulos M131 (0003-modulos-engine.toml) aplica para 2026 la cascada completa b.1 -> b.2 -> b.3 \
+-> b.4 mediante el op m131_resolve_modulos_indices_generales, que modela estructuralmente ambas \
+incompatibilidades: el indice b.1 se ignora para los epigrafes tabulados que llevan indice especial \
+(721.2 transporte por autotaxis, letra a.2; 722 transporte de mercancias por carretera, letra a.4), \
+y el indice de temporada desplaza al de inicio de nuevas actividades. Esta entrada fundamenta los \
+advisories no bloqueantes que senalan al operador la declaracion ignorada, per \
+orden-hac-1425-2025-Anexo-II-instruccion-2-3 y no-silent-under-declaration. Cross-checked \
+byte-identical against the 2025 instruccion \
 (orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades)."""
 required_text = [
     "Incompatibilidades entre los índices correctores:",

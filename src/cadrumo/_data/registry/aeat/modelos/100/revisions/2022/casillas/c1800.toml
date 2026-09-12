@@ -1,5 +1,7 @@
 [[revisions."2022".casillas]]
 id = "1800"
+# aeat-dr-100-2022-dictionary:593: G2DCRIT, titular de las monedas virtuales transmitidas.
+continuidad_id = "irpf-monedas-virtuales-transmision-contribuyente-titular"
 number = "1800"
 section = ["toma_datos_ampliada"]
 data_type = "text"

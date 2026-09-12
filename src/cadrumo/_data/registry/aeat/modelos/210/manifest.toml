@@ -21,3 +21,9 @@ source_refs = [
     "boe-modelo-210-2026-deadline-update",
     "boe-modelo-210-2026-form-layout",
 ]
+
+[modelo.inception.unauthored]
+earliest_authored = 2025
+reason = "Governed by Orden EHA/3316/2010, whose repeal clause shows Modelo 210 already approved by Orden HAC/3626/2003; filing years 2022-2024 existed in law and are not yet authored. Measured: 2023 and 2024 fall wholly inside the registered design aeat-dr-210-2022 (devengos 2022-06-01 to 2025-12-31), the same design the authored 2025 edition renders, so their debt is authoring. 2022 is split -- devengos from 2022-01-01 to 2022-05-31 belong to the AEAT edition 'Devengos entre 01-01-2022 y 01-06-2022', which this registry does not hold, so that part is acquisition debt first. Each back-year edition precedes 2025 and inherits nothing, so it must state its own deadline_windows, which are keyed per filing_year, and its own parameter values, which carry valid_from."
+legal_refs = ["orden-eha-3316-2010:art-1"]
+source_refs = ["aeat-dr-210-2022"]

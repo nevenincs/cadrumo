@@ -1,5 +1,8 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00329"
+continuidad_id = "is-pyg-continuadas-otros-ingresos-y-gastos-de-caracter-financiero"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 35/35, filas 40/40: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Otros ingresos y gastos de carácter financiero [00329]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00329"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
@@ -9,6 +12,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00330"
+continuidad_id = "is-pyg-continuadas-incorporacion-al-activo-de-gastos-financieros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 36/36, filas 41/41: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Incorporación al activo de gastos financieros [00330]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00330"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
@@ -18,6 +24,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00331"
+continuidad_id = "is-pyg-continuadas-ingresos-financieros-derivados-de-convenios-de-acreedores"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 37/37, filas 42/42: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Ingresos financieros derivados de convenios de acreedores [00331]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00331"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"
@@ -27,6 +36,9 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00332"
+continuidad_id = "is-pyg-continuadas-resto-ingresos-gastos-financieros"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 y aeat-dr-200-2025, hojas DP200008/DP200008, campos 38/38, filas 43/43: Cuenta de pérdidas y ganancias (II) - Operaciones continuadas - Resto de ingresos y gastos [00332]. Descripcion legal, tipo, validacion y contenido coinciden; misma partida de perdidas y ganancias (manuales Sociedades 2024/2025, cap. 4, regimen general)."
 number = "00332"
 section = ["cuenta_de_perdidas_y_ganancias_ii", "operaciones_continuadas"]
 data_type = "money"

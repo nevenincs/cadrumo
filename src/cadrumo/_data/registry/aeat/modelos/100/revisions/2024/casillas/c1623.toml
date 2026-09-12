@@ -1,5 +1,8 @@
 [[revisions."2024".casillas]]
 id = "1623"
+continuidad_id = "irpf-aeip-hostelco-2022-aplicado"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2023-dictionary:1387 y aeat-dr-100-2024-dictionary:1317: campo M21HOSA; columna Aplicado en esta declaración del programa HOSTELCO 2022 en Anexo A. Misma designación y función fiscal."
 number = "1623"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 semantic_role = "irpf_anexo_a_aeip_aplicado"

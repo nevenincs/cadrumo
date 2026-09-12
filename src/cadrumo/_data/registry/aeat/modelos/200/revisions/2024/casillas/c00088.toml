@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00088"
+continuidad_id = "is-tipo-gravamen-reducido-para-entidades-con-incn-periodo-anterior-inferior-a-1-millon-euros-art-29-1-lis"
 number = "00088"
 section = ["tipo_gravamen_reducido_para_entidades_con_incn_per"]
 data_type = "decimal"
