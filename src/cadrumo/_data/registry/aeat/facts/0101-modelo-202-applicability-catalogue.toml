@@ -1,0 +1,26 @@
+[fact]
+fact_id = "modelo-202-applicability-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-202-applicability-catalogue:2015-01-01"
+date_axis = "filing_period"
+valid_from = 2015-01-01
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-40-3"]
+source_refs = ["boe-lis-art-40-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "threshold.fact_id", value = "lis-art-40-3-incn-threshold" },
+  { key = "reason.not_applicable", value = 'Modalidad del Modelo 202 no aplicable: el perfil declarado no es un contribuyente del Impuesto sobre Sociedades. La modalidad solo se deriva para entidades jurídicas obligadas al pago fraccionado del IS.' },
+  { key = "reason.incomplete", value = 'No se puede determinar la modalidad del Modelo 202: el importe neto de la cifra de negocios de los doce meses anteriores no está declarado. Sin este dato el motor no infiere modalidad — un pago fraccionado equivocado es peor que una respuesta incompleta.' },
+  { key = "reason.art_40_3_mandatory", value = 'Modelo 202 modalidad obligatoria: el artículo 40.3 de la LIS impone el método de la base imponible (3 / 9 / 11 primeros meses) cuando el importe neto de la cifra de negocios de los doce meses anteriores ha superado los 6.000.000 €. La modalidad del artículo 40.2 (cuota) no está disponible.' },
+  { key = "reason.art_40_2_optional", value = 'Modelo 202 modalidad por defecto: el artículo 40.2 de la LIS permite el método de la cuota (18 %) cuando el importe neto de la cifra de negocios de los doce meses anteriores no ha superado los 6.000.000 €. La modalidad del artículo 40.3 sigue siendo opcional.' },
+  { key = "legal_refs.not_applicable", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
+  { key = "legal_refs.incomplete", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
+  { key = "legal_refs.art_40_3_mandatory", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
+  { key = "legal_refs.art_40_2_optional", value = "ley-27-2014:art-40|ley-27-2014:art-40-3" },
+]

@@ -1,0 +1,37 @@
+[fact]
+fact_id = "modelo-rendering-tax-notice-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "modelo-rendering-tax-notice-catalogue:2025-01-01"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+legal_refs = [
+    "ley-58-2003:art-27.2",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+]
+source_refs = [
+    "aeat-modelo-184-procedure",
+    "boe-modelo-184-2015-form",
+]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-184-procedure"
+required_text = ["Modelo"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-184-2015-form"
+required_text = ["Modelo"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "extemporaneous_recargo.legal_ref", value = "ley-58-2003:art-27.2" },
+    { key = "m184.socio_handoff.code", value = "modelo.work.m184_socio_handoff" },
+    { key = "m184.socio_handoff.target_casilla", value = "1577" },
+    { key = "m184.socio_handoff.legal_refs", value = "ley-35-2006:art-86,ley-35-2006:art-87,ley-35-2006:art-88,ley-35-2006:art-89" },
+]

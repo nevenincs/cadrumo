@@ -17,7 +17,7 @@ from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.profile_capsule import open_test_profile_session
-from cadrumo.tests.secure_sql import isolated_profile_storage
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
 from cadrumo.tests.user_profile import register_cli_profile, register_minimal_profile
 
 from ..maintenance_support import load_modelo_path

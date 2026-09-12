@@ -18,8 +18,11 @@ from datetime import date
 from functools import lru_cache
 
 from .errors import RegistryValidationError
+from .schema_references import LegalReferenceKind
 
-_SETUP_FACT_ID = "ley-49-2002-profile-binding-catalogue"
+_SETUP_FACT_ID = "-".join(
+    (LegalReferenceKind.LEY.value, "49", "2002", "profile", "binding", "catalogue"),
+)
 
 
 @lru_cache(maxsize=None)

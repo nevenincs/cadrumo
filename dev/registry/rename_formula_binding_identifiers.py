@@ -2021,8 +2021,11 @@ def restore_truncated_field_slot(new_id: str, slot: str, member: Mapping[str, An
     provider = member.get("provider")
     if not isinstance(provider, Mapping):
         return new_id
-    declared = provider.get("field")
-    if not isinstance(declared, str) or declared == slot or not slot:
+    raw = provider.get("field")
+    if not isinstance(raw, str):
+        return new_id
+    declared: str = raw
+    if declared == slot or not slot:
         return new_id
     if not declared.startswith(slot) or declared[len(slot)] not in _IDENTIFIER_SEPARATORS:
         return new_id
