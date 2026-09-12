@@ -7,7 +7,7 @@ ABSOLUTE: the scaffolding may know about ``src/``, and no file under ``src/``
 -- shipped module, test module, or shipped data -- may know about the
 scaffolding, in code, in prose, or as a path literal.
 
-Why a second scan module beside :mod:`.import_hygiene_scan`
+Why a second scan module beside :mod:`.source_import_analysis`
 -----------------------------------------------------------
 That module's tooling-tree families (5, 6 and 10) already close their half of
 the boundary for PYTHON modules, and they are proven. This module closes the
@@ -24,7 +24,7 @@ two gaps that remain, and it is scoped to exactly those:
 
 The AST walk itself is NOT re-implemented here. The docstring-identification,
 comment-tokenisation and prose-string helpers are imported from
-:mod:`.import_hygiene_scan`, because a second copy of a shape rule is the
+:mod:`.source_import_analysis`, because a second copy of a shape rule is the
 failure ``modelo-export-mirrors-official-structure`` documents: the two copies
 drift and then disagree about what the rule was.
 
@@ -54,7 +54,7 @@ from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
 
-from .import_hygiene_scan import (
+from .source_import_analysis import (
     DEV_TOOLING_ROOT,
     SRC_ROOT,
     _comment_lines,
@@ -102,7 +102,7 @@ _GOVERNANCE_TOKEN_RE: Final[re.Pattern[str]] = re.compile(
 
 #: A relative tooling-tree path opening a token, for the free-text data scan.
 #:
-#: Python modules are covered far more precisely by ``import_hygiene_scan``'s
+#: Python modules are covered far more precisely by ``source_import_analysis``'s
 #: AST families; this pattern exists for TOML, JSON, YAML and Markdown, where
 #: there is no syntax tree to consult. The lookbehind refuses any preceding
 #: path or word character, so the POSIX device nodes ``/dev/null`` and
@@ -123,7 +123,7 @@ def names_governance_directory(value: str) -> str | None:
     """Return the governance root ``value`` names as a path, else ``None``.
 
     Segment-aware, never a substring test. A segment must EQUAL a governance
-    root; unlike the tooling-root rule in :mod:`.import_hygiene_scan` no
+    root; unlike the tooling-root rule in :mod:`.source_import_analysis` no
     position restriction is applied, because a dot-prefixed ``.vault`` segment
     cannot arise from ordinary vocabulary the way the bare tooling word does --
     there is no device node, no Spanish stem, and no third-party host name
@@ -424,7 +424,7 @@ def find_scaffolding_data_references(
     All three trees are checked here -- ``.vault``, ``.vaultspec`` and the
     development tooling root -- because this is the only family that reads
     these files at all. The Python-module families in
-    :mod:`.import_hygiene_scan` cover the tooling root for modules and would
+    :mod:`.source_import_analysis` cover the tooling root for modules and would
     report nothing about a TOML row.
 
     At most one reference is reported per line: a line already condemned for

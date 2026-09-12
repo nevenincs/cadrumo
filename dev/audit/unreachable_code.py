@@ -87,7 +87,7 @@ from pathlib import Path
 from typing import Final, cast
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.quality.import_hygiene_scan import (
+from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,
     resolve_relative_import,

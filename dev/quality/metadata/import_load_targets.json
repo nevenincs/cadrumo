@@ -2364,7 +2364,7 @@
         "dev.quality.import_checker",
         "dev.quality.import_gate",
         "dev.quality.import_health",
-        "dev.quality.import_hygiene_scan",
+        "dev.quality.source_import_analysis",
         "dev.quality.import_load_probe",
         "dev.quality.quiet",
         "dev.quality.repository_sources",

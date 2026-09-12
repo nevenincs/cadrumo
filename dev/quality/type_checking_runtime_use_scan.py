@@ -4,7 +4,7 @@ A name bound only inside ``if TYPE_CHECKING:`` exists for the type checker and
 never at runtime. Using it anywhere the interpreter actually evaluates raises
 ``NameError`` the first time that line runs -- and no static tool reports it,
 because under the guard the name IS bound as far as a type checker is
-concerned. Ruff, mypy and the import-hygiene families all read such a module as
+concerned. Ruff, mypy, and source-import analysis all read such a module as
 correct.
 
 That makes the defect invisible until execution, so it survives exactly as long
@@ -18,7 +18,7 @@ Built on :func:`type_checking_guarded_nodes` rather than a second guard walker,
 so the definition of "under the guard" has one home.
 
 See Also:
-    :mod:`dev.quality.import_hygiene_scan`
+    :mod:`dev.quality.source_import_analysis`
         The canonical guard-detection helper this reuses.
 """
 
@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from .import_hygiene_scan import type_checking_guarded_nodes
+from .source_import_analysis import type_checking_guarded_nodes
 
 __all__ = ["TypeOnlyRuntimeUse", "scan_paths_for_type_only_runtime_uses", "scan_type_only_runtime_uses"]
 
