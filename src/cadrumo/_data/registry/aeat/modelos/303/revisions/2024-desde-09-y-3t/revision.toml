@@ -1,4 +1,6 @@
 [revisions.2024-desde-09-y-3t]
+binding_source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+formula_source_refs = ["aeat-dr-303-2024-late"]
 predecessor = "2024-hasta-08-y-2t"
 casilla_source_refs = ["aeat-dr-303-2024-late"]
 reviewed_against = "2024-hasta-08-y-2t"

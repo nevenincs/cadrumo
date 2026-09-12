@@ -1,4 +1,6 @@
 [revisions.2026-y-siguientes]
+binding_source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+formula_source_refs = ["aeat-dr-303-2026"]
 predecessor = "2025"
 casilla_source_refs = ["aeat-dr-303-2026"]
 reviewed_against = "2025"
@@ -51,4 +53,3 @@ periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026"]
-

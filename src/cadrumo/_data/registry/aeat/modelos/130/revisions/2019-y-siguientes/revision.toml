@@ -1,4 +1,6 @@
 [revisions."2019-y-siguientes"]
+binding_source_refs = ["aeat-modelo-130-instructions"]
+formula_source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 casilla_source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 authority_grade = "filing"
 valid_from = 2019-01-01
