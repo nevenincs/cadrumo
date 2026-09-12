@@ -34,6 +34,7 @@ from ._app_quickfile_payloads import QuickfileResultPayload
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import advisory_notice, verification_report_notices
+from .state_projection_support import state_projection_read_ports
 from .common import (
     activate_subcommand_output_language,
     emit_envelope,
@@ -133,6 +134,7 @@ def quickfile(
             prior_domiciliation_election=prior_domiciliation_election,
             filing_instance_evidence=filing_instance_evidence,
         ),
+        read_ports=state_projection_read_ports(ctx),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,
     )
