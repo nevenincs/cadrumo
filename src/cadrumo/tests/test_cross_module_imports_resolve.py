@@ -1,14 +1,14 @@
 """Cross-module import resolution gate.
 
-Importing a package cleanly proves only that its own module body runs.
-This gate proves the other direction: every
-``from cadrumo.X import {name}`` statement under ``src/cadrumo/`` resolves
-to an attribute that actually exists on ``cadrumo.X``.
+Importing a module cleanly proves only that its own body runs.  This check
+proves the other direction: every concrete ``ImportFrom`` statement under
+``src/cadrumo/`` names a runtime-resolvable target.  Architectural ownership
+and whether that import surface is permitted remain the responsibility of
+``just check-import-boundaries``.
 
 Closes the foreign-WIP failure pattern that surfaced three times in
 the linkage integrity regression where a sibling change added an import
-to a caller without adding the matching name to the target package's
-``__init__.py`` imports / ``__all__``. The consumer module then
+to a caller without adding the matching name to the target module. The consumer module then
 raises ``ImportError`` the next time any test collection walks it,
 breaking the whole suite at collection time even though the target
 package itself imports cleanly.
@@ -123,12 +123,12 @@ def cadrumo_import_triples(source_tree_ast: Mapping[Path, ast.AST]) -> list[tupl
 def _check_triple(triple: tuple[Path, str, str]) -> str | None:
     """Return None when the triple resolves, or a one-line failure description otherwise.
 
-    Two resolution paths: (a) ``name`` is bound as an attribute on the
-    target package (the canonical ``__init__.py`` re-export pattern),
-    or (b) ``name`` is a submodule importable as ``{module}.{name}``
+    Two Python resolution paths are modeled: (a) ``name`` is bound as an
+    attribute on the target module, or (b) ``name`` is a submodule importable
+    as ``{module}.{name}``
     (the ``from pkg import mod`` shape Python resolves lazily). The
-    gate must accept both — only a triple that fails both paths is a
-    true broken-import finding.
+    This check accepts both solely to detect broken runtime imports; it does
+    not authorize package forwarding or re-export ownership.
     """
     source, module, name = triple
     target_path = _module_source_path(module)
