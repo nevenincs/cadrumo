@@ -15,16 +15,27 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.state_projection_ports import StateProjectionReadPorts
 
-__all__ = ["profile_adapter_composition"]
+
+@dataclass(frozen=True, slots=True)
+class ProfileAdapterComposition:
+    """Concrete capabilities composed for one executable profile session."""
+
+    state_projection_read_ports: StateProjectionReadPorts
+    certificate_secret_backend_factory: CertificateSecretBackendFactory
+
+
+__all__ = ["ProfileAdapterComposition", "profile_adapter_composition"]
 
 
 @contextmanager
-def profile_adapter_composition() -> Generator[StateProjectionReadPorts]:
+def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     """Bind every adapter port a frontend session resolves, and unbind after.
 
     The imports are function-local because entering this scope is what pulls the
@@ -52,6 +63,7 @@ def profile_adapter_composition() -> Generator[StateProjectionReadPorts]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
+    from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
     from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
     from ..adapters.persistence.workflow import build_workflow_persistence_port
@@ -118,4 +130,7 @@ def profile_adapter_composition() -> Generator[StateProjectionReadPorts]:
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
         register_language_resolver()
-        yield projection_ports
+        yield ProfileAdapterComposition(
+            state_projection_read_ports=projection_ports,
+            certificate_secret_backend_factory=build_certificate_secret_backend,
+        )

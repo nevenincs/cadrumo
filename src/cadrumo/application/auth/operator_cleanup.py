@@ -15,7 +15,7 @@ from .acquisition_lock import (
     inspect_auth_acquisition_lock,
 )
 from .catalogue import get_auth_provider
-from .certificate_secret_backend import SecureStorageCertificateSecretBackend
+from .certificate_secret_backend import CertificateSecretBackendFactory
 from .models import (
     AuthCleanupCertificateSource,
     AuthCleanupIntent,
@@ -112,9 +112,15 @@ def clear_operator_auth_acquisition_locks(
     return affected
 
 
-def delete_certificate_source_secrets(bucket_id: str, names: tuple[str, ...]) -> int:
+def delete_certificate_source_secrets(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    settings: Settings,
+    bucket_id: str,
+    names: tuple[str, ...],
+) -> int:
     """Delete the named certificate secrets from one bucket's secure backend."""
-    backend = SecureStorageCertificateSecretBackend(bucket_id=bucket_id)
+    backend = certificate_secret_backend_factory(bucket_id=bucket_id, settings=settings)
     return sum(backend.remove(name) for name in names)
 
 
@@ -222,16 +228,25 @@ def _lock_scoped_provider_ids(
 
 
 def _secret_scoped_source_names(
+    settings: Settings,
     bucket_id: str,
     certificate_sources: tuple[AuthCleanupCertificateSource, ...],
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     certificate_targeted: bool,
 ) -> tuple[str, ...]:
     """Return the witnessed certificate sources whose secret exists (targeted only)."""
     if not certificate_targeted:
         return ()
     return tuple(
-        source.name for source in certificate_sources if _certificate_source_secret_exists(bucket_id, source.name)
+        source.name
+        for source in certificate_sources
+        if _certificate_source_secret_exists(
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
+            settings=settings,
+            bucket_id=bucket_id,
+            name=source.name,
+        )
     )
 
 
@@ -294,6 +309,7 @@ def _cleanup_operation_id(
 
 def build_auth_cleanup_intent(
     *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
     settings: Settings,
     bucket_id: str,
     auth: AuthState,
@@ -341,8 +357,10 @@ def build_auth_cleanup_intent(
             destructive_reset=destructive_reset,
         ),
         secret_source_names=_secret_scoped_source_names(
+            settings,
             bucket_id,
             certificate_sources,
+            certificate_secret_backend_factory=certificate_secret_backend_factory,
             certificate_targeted=certificate_targeted,
         ),
     )
@@ -515,8 +533,14 @@ def auth_cleanup_bucket_events(
     return tuple(events)
 
 
-def _certificate_source_secret_exists(bucket_id: str, name: str) -> bool:
-    return SecureStorageCertificateSecretBackend(bucket_id=bucket_id).get(name) is not None
+def _certificate_source_secret_exists(
+    *,
+    certificate_secret_backend_factory: CertificateSecretBackendFactory,
+    settings: Settings,
+    bucket_id: str,
+    name: str,
+) -> bool:
+    return certificate_secret_backend_factory(bucket_id=bucket_id, settings=settings).get(name) is not None
 
 
 __all__ = [

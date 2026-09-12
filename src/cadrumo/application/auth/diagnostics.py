@@ -3,8 +3,8 @@
 Diagnostic records are support evidence for failed Cl@ve/browser auth flows.
 They may include raw HTML, screenshot bytes, route metadata, and identity
 alignment hints, so they are stored only as encrypted objects through a
-:class:`adapters.persistence.storage.SecureObjectRepository` scoped to
-the active profile bucket.
+the explicitly composed auth-diagnostic persistence capability scoped to the
+active profile bucket.
 
 Public functions return redacted summaries, bounded body placeholders, and
 hash fingerprints instead of raw page bodies or taxpayer identifiers.
@@ -23,9 +23,6 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ...adapters.persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
-from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -35,11 +32,8 @@ from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ..operator_actions.models import PreconditionVerdict
 from ..operator_actions.preconditions import no_action_precondition_verdict
+from .diagnostics_ports import AuthDiagnosticPersistencePort
 from .errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
-
-_DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
-_DIAGNOSTIC_SENSITIVITY = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity
-_DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version
 
 #: Registered locale key for every structural rejection of a persisted diagnostic
 #: payload. The refusals differ by the ``validation_rule`` fact on the error
@@ -181,7 +175,7 @@ class _DiagnosticPhoneStateProjection:
     reported_at: datetime | None
 
 
-def list_auth_diagnostics() -> AuthDiagnosticListReport:
+def list_auth_diagnostics(*, persistence: AuthDiagnosticPersistencePort) -> AuthDiagnosticListReport:
     """List readable encrypted Cl@ve auth diagnostics without exposing page bodies.
 
     Returns an :class:`AuthDiagnosticListReport` sorted by capture time,
@@ -189,7 +183,10 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
     """
     rows = tuple(
         sorted(
-            (_summary_from_payload(diagnostic_payload(record.payload)) for record in _diagnostic_records()),
+            (
+                _summary_from_payload(diagnostic_payload(record.payload))
+                for record in _diagnostic_records(persistence)
+            ),
             key=lambda row: row.captured_at,
             reverse=True,
         ),
@@ -197,19 +194,18 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
     return AuthDiagnosticListReport(row_count=len(rows), rows=rows)
 
 
-def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
+def load_auth_diagnostic(
+    diagnostic_id: str,
+    *,
+    persistence: AuthDiagnosticPersistencePort,
+) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id.
 
     Returns an :class:`AuthDiagnosticDetail` with redacted body placeholders
     and hashed identity/configuration fingerprints. Raw HTML and screenshot
     bytes remain encrypted in storage and are not returned by this facade.
     """
-    record = _secure_objects().load(
-        _DIAGNOSTIC_NAMESPACE,
-        diagnostic_id,
-        expected_class=_DIAGNOSTIC_SENSITIVITY,
-        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
-    )
+    record = persistence.load_record(diagnostic_id)
     if record is None:
         return None
     payload = diagnostic_payload(record.payload)
@@ -240,6 +236,8 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
 def record_auth_diagnostic_phone_state(
     diagnostic_id: str,
     phone_state: str,
+    *,
+    persistence: AuthDiagnosticPersistencePort,
 ) -> AuthDiagnosticReportResult | None:
     """Attach the operator-observed Cl@ve app state to an encrypted diagnostic.
 
@@ -256,13 +254,7 @@ def record_auth_diagnostic_phone_state(
             translated_message="errors.refused.refused_auth_diagnostic_phone_state",
             context={"phone_state": phone_state},
         ) from exc
-    objects = _secure_objects()
-    record = objects.load(
-        _DIAGNOSTIC_NAMESPACE,
-        diagnostic_id,
-        expected_class=_DIAGNOSTIC_SENSITIVITY,
-        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
-    )
+    record = persistence.load_record(diagnostic_id)
     if record is None:
         return None
     payload = diagnostic_payload(record.payload)
@@ -275,13 +267,10 @@ def record_auth_diagnostic_phone_state(
             },
         },
     )
-    objects.save(
-        namespace=_DIAGNOSTIC_NAMESPACE,
-        object_key=diagnostic_id,
-        classification=_DIAGNOSTIC_SENSITIVITY,
-        schema_version=_DIAGNOSTIC_SCHEMA_VERSION,
+    persistence.save_record(
+        diagnostic_id,
+        canonical_json_bytes(updated.model_dump(mode="json")),
         written_at=reported_at,
-        payload=canonical_json_bytes(updated.model_dump(mode="json")),
     )
     return AuthDiagnosticReportResult(
         diagnostic_id=diagnostic_id,
@@ -290,16 +279,8 @@ def record_auth_diagnostic_phone_state(
     )
 
 
-def _diagnostic_records():
-    return _secure_objects().list_records(
-        _DIAGNOSTIC_NAMESPACE,
-        expected_class=_DIAGNOSTIC_SENSITIVITY,
-        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
-    )
-
-
-def _secure_objects() -> SecureObjectRepository:
-    return secure_object_repository_for_active_bucket()
+def _diagnostic_records(persistence: AuthDiagnosticPersistencePort):
+    return persistence.list_records()
 
 
 def diagnostic_payload(raw: bytes) -> _DiagnosticPayload:

@@ -17,10 +17,11 @@ def auth_diagnostics_list(
 ) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
     from ....application.auth.diagnostics import list_auth_diagnostics
     from ..config_payloads import AuthDiagnosticsListResult
 
-    report = list_auth_diagnostics()
+    report = list_auth_diagnostics(persistence=build_auth_diagnostic_persistence())
     lines = [f"row_count\t{report.row_count}"]
     for row in report.rows:
         lines.append(
@@ -51,9 +52,10 @@ def auth_diagnostics_view(
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
     from ....application.auth.diagnostics import load_auth_diagnostic
 
-    detail = load_auth_diagnostic(diagnostic_id)
+    detail = load_auth_diagnostic(diagnostic_id, persistence=build_auth_diagnostic_persistence())
     if detail is None:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.diagnostics.not_found",
@@ -119,10 +121,15 @@ def auth_diagnostics_report(
 ) -> None:
     """Record the human-observed Cl@ve app state for a captured diagnostic."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ....adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
     from ....application.auth.diagnostics import AUTH_DIAGNOSTIC_PHONE_STATES, record_auth_diagnostic_phone_state
 
     try:
-        result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)
+        result = record_auth_diagnostic_phone_state(
+            diagnostic_id,
+            phone_state,
+            persistence=build_auth_diagnostic_persistence(),
+        )
     except ValueError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.diagnostics.invalid_phone_state",

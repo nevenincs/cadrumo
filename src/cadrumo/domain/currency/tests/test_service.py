@@ -3,8 +3,6 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.outbound.fx.ecb_provider import ECB_RATE_SOURCE_ID, EcbReferenceRateProvider
-from ....tests.ecb_stub import ecb_csv_fetch
 from ..models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
@@ -18,10 +16,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _ECB_2025_03_14_USD_QUOTE = Decimal("1.0889")
 _ECB_2025_03_14_USD_RATE = Decimal("1") / _ECB_2025_03_14_USD_QUOTE
 _RATE_DATE = date(2025, 3, 14)
+_RATE_SOURCE_ID = "test_reference"
 
 
-def _provider() -> EcbReferenceRateProvider:
-    return EcbReferenceRateProvider(fetch=ecb_csv_fetch({"USD": {_RATE_DATE: _ECB_2025_03_14_USD_QUOTE}}))
+class _StaticRateProvider:
+    """Domain-protocol fake; ECB transport behaviour belongs to adapter tests."""
+
+    rate_source_id = _RATE_SOURCE_ID
+
+    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+        if currency == "USD" and rate_date == _RATE_DATE:
+            return _ECB_2025_03_14_USD_RATE
+        return None
+
+
+def _provider() -> _StaticRateProvider:
+    return _StaticRateProvider()
 
 
 def test_currency_normalization_native_eur() -> None:
@@ -68,7 +78,7 @@ def test_currency_normalization_success() -> None:
     # The rate authority by name, not the bare fact that a provider answered:
     # "provider" duplicated the NORMALIZED status and named nothing an auditor
     # could re-fetch the observation from.
-    assert result.rate_source == ECB_RATE_SOURCE_ID
+    assert result.rate_source == _RATE_SOURCE_ID
     assert result.original == amount
 
 

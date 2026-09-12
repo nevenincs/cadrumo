@@ -14,18 +14,18 @@ from decimal import Decimal
 
 import pytest
 
-from ....adapters.persistence.profile.usage_ratios import (
+from .....domain.categories.spending_category import SpendingCategory
+from .....domain.usage_ratios.errors import CensoRatioMismatchError
+from .....domain.usage_ratios.model import UsageRatioProfile
+from ...tests.runtime_profile_fixture import (
+    bucket_scoped_runtime_profile_fixture,
+)
+from ..usage_ratios import (
     load_usage_ratios_with_censo_guard,
     save_usage_ratios,
 )
-from ....adapters.persistence.tests.runtime_profile_fixture import (
-    bucket_scoped_runtime_profile_fixture,
-)
-from ...categories.spending_category import SpendingCategory
-from ..errors import CensoRatioMismatchError
-from ..model import UsageRatioProfile
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "73737373-7373-4373-8373-737373737311"
 

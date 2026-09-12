@@ -10,7 +10,7 @@ per-source passphrase slice: instead of one global, env-only
 ``CADRUMO_CERTIFICATE_PASSWORD_SECRET`` shared by whichever source happens
 to be active, ``certificate secret set`` binds a passphrase to one
 named source through the sole
-:class:`~application.auth.SecureStorageCertificateSecretBackend`.
+:class:`~application.auth.certificate_secret_backend.CertificateSecretBackend`.
 
 See Also:
     :func:`~application.auth.register_operator_certificate_source`
@@ -19,7 +19,7 @@ See Also:
         Application service behind ``certificate list``.
     :func:`~application.auth.select_operator_certificate_source`
         Application service behind ``certificate select``.
-    :class:`~application.auth.SecureStorageCertificateSecretBackend`
+    :class:`~application.auth.certificate_secret_backend.CertificateSecretBackend`
         Per-source encrypted passphrase owner used by ``certificate secret`` verbs.
     :mod:`~entrypoints.cli.config_payloads`
         Typed JSON payload schemas shared by config auth command results.
@@ -208,8 +208,11 @@ def certificate_check(
     from ....application.auth.certificate_source_operations import check_operator_certificate_sources
     from ....application.auth.probes import PROBE_RESULTS_NEEDING_ATTENTION
     from ..config_payloads import CertificateSourceCheckEntryPayload, CertificateSourceCheckPayload
+    from ..state_projection_support import certificate_secret_backend_factory
 
-    report = check_operator_certificate_sources()
+    report = check_operator_certificate_sources(
+        certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+    )
     payload = CertificateSourceCheckPayload(
         entries=[
             CertificateSourceCheckEntryPayload(
@@ -294,11 +297,13 @@ def certificate_secret_set(
 
     from ....application.auth.certificate_source_operations import set_operator_certificate_source_secret
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import certificate_secret_backend_factory
 
     try:
         result = set_operator_certificate_source_secret(
             name=name,
             secret=SecretStr(secret),
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
@@ -332,9 +337,13 @@ def certificate_secret_remove(
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.certificate_source_operations import remove_operator_certificate_source_secret
     from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
+    from ..state_projection_support import certificate_secret_backend_factory
 
     try:
-        result = remove_operator_certificate_source_secret(name=name)
+        result = remove_operator_certificate_source_secret(
+            name=name,
+            certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
+        )
     except AuthConfigureNoActiveBucketError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
