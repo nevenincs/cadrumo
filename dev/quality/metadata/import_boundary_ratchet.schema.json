@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "entries": {
+      "items": {
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {"properties": {"status": {"const": "retired"}}},
+            "then": {"required": ["retirement"]}
+          }
+        ],
+        "properties": {
+          "capability": {"minLength": 1, "type": "string"},
+          "contract": {"minLength": 1, "type": "string"},
+          "created_on": {"format": "date", "type": "string"},
+          "expires_on": {"format": "date", "type": "string"},
+          "fingerprint": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+          "import_form": {"enum": ["static", "local", "type_checking", "dynamic"]},
+          "imported_symbols": {"items": {"type": "string"}, "type": "array"},
+          "lexical_scope": {"minLength": 1, "type": "string"},
+          "multiplicity": {"minimum": 1, "type": "integer"},
+          "owner": {"minLength": 1, "type": "string"},
+          "reason": {"minLength": 1, "type": "string"},
+          "retirement": {
+            "additionalProperties": false,
+            "properties": {
+              "capability_matrix": {
+                "additionalProperties": {"enum": ["required", "optional", "unsupported"]},
+                "minProperties": 1,
+                "type": "object"
+              },
+              "composition_proof": {"minLength": 1, "type": "string"},
+              "evidence_digest": {"pattern": "^[0-9a-f]{64}$", "type": "string"},
+              "verified_at": {"format": "date-time", "type": "string"}
+            },
+            "required": ["capability_matrix", "composition_proof", "evidence_digest", "verified_at"],
+            "type": "object"
+          },
+          "source_module": {"minLength": 1, "type": "string"},
+          "status": {"enum": ["active", "retired"]},
+          "target_module": {"minLength": 1, "type": "string"}
+        },
+        "required": [
+          "capability",
+          "contract",
+          "created_on",
+          "expires_on",
+          "fingerprint",
+          "import_form",
+          "imported_symbols",
+          "lexical_scope",
+          "multiplicity",
+          "owner",
+          "reason",
+          "source_module",
+          "status",
+          "target_module"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": {"const": 1}
+  },
+  "required": ["entries", "schema_version"],
+  "title": "Import boundary occurrence ratchet",
+  "type": "object"
+}

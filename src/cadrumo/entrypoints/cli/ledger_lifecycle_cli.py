@@ -48,9 +48,9 @@ from ..ledger_action_composition import compose_ledger_action_ports
 from .common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 
 if TYPE_CHECKING:
+    from ...application.ledger.action_ports import LedgerActionPorts
     from ...application.ledger.llm_classification_ports import LLMSplitSuggestion
     from ...application.ledger.models import ManualLedgerTransactionResult, SplitTransactionResult
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
@@ -668,13 +668,13 @@ def _validate_manual_split_options(
 
 def _run_manual_split(
     *,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
     bucket_id: str,
     resolved_id: str,
     child_amount: tuple[str, ...],
     child_description: tuple[str, ...],
     reason: str,
     actor: str | None,
+    ports: LedgerActionPorts,
 ) -> SplitTransactionResult:
     """Parse manual children and invoke the single-writer split mutation."""
     try:
@@ -692,10 +692,7 @@ def _run_manual_split(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger split",
             reason=reason,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=compose_ledger_action_ports(bucket_id=bucket_id).bucket_event_repository,
-            work_unit_repository=compose_ledger_action_ports(bucket_id=bucket_id).work_unit_repository,
-            calculation_repository=compose_ledger_action_ports(bucket_id=bucket_id).calculation_repository,
+            ports=ports,
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
@@ -773,13 +770,13 @@ def ledger_split(
     ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     result = _run_manual_split(
-        transaction_repository=transaction_repository,
         bucket_id=transaction_repository.bucket_id,
         resolved_id=resolved_id,
         child_amount=child_amount,
         child_description=child_description,
         reason=reason,
         actor=actor,
+        ports=ports,
     )
     _emit_manual_split_result(ctx, result)
 
@@ -1055,10 +1052,7 @@ def ledger_merge(
         actor=actor or resolve_active_bucket_id() or "operator",
         source_command="aeat app ledger merge",
         reason=reason,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=ports.bucket_event_repository,
-        work_unit_repository=ports.work_unit_repository,
-        calculation_repository=ports.calculation_repository,
+        ports=ports,
     )
     from ._ledger_payloads import LedgerMergeResult
 

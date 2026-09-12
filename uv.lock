@@ -323,6 +323,7 @@ dev = [
     { name = "sphinx-notfound-page" },
     { name = "sphinxcontrib-mermaid" },
     { name = "sphinxext-opengraph" },
+    { name = "spylls" },
     { name = "torch", version = "2.13.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "ty" },
@@ -445,6 +446,7 @@ dev = [
     { name = "sphinx-notfound-page", specifier = ">=1.1" },
     { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
     { name = "sphinxext-opengraph", specifier = ">=0.9" },
+    { name = "spylls", specifier = "==0.1.7" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.4" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cu130" },
     { name = "ty", specifier = ">=0.0.1a1" },
@@ -4000,6 +4002,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f6/c0/eb6838e3bae624ce6c8b90b245d17e84252863150e95efdb88f92c8aa3fb/sphinxext_opengraph-0.13.0.tar.gz", hash = "sha256:103335d08567ad8468faf1425f575e3b698e9621f9323949a6c8b96d9793e80b", size = 1026875, upload-time = "2025-08-29T12:20:31.066Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bf/a4/66c1fd4f8fab88faf71cee04a945f9806ba0fef753f2cfc8be6353f64508/sphinxext_opengraph-0.13.0-py3-none-any.whl", hash = "sha256:936c07828edc9ad9a7b07908b29596dc84ed0b3ceaa77acdf51282d232d4d80e", size = 1004152, upload-time = "2025-08-29T12:20:29.072Z" },
+]
+
+[[package]]
+name = "spylls"
+version = "0.1.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/c2/19f34deb2dc1475dfeadafbd5666246041ee7578bb933e82de794f0a9283/spylls-0.1.7.tar.gz", hash = "sha256:7045892dcbd324d3685f69c5a760063e78fb839913724ce18077cf0a0c93f220", size = 1499693, upload-time = "2022-01-23T13:26:54.032Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/19/ce6fcb4b86e188983bcfc1f84e4ac6f3038ca8d68b6d70a678cdc566f66c/spylls-0.1.7-py2.py3-none-any.whl", hash = "sha256:0c7fa4b66615f390bd12fd37939b85934c012309fd3cce8584844c54270b7776", size = 1509482, upload-time = "2022-01-23T13:26:40.203Z" },
 ]
 
 [[package]]

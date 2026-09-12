@@ -1,66 +1,38 @@
-"""Closed tax-domain identifier values shared by registry boundaries.
-
-The :class:`TaxDomain` enum is deliberately dependency-free: it carries stable
-identifier values used by core and registry schemas. Authority-backed
-membership and metadata resolution belong to the validated AEAT registry,
-outside this core value module.
-"""
+"""Generic tax-domain identifier mechanics backed by registry facts."""
 
 from __future__ import annotations
 
 from enum import StrEnum
-
-
-class TaxDomain(StrEnum):
-    """Spanish-tax taxonomic domains accepted by registry manifests.
-
-    Members use Spanish stems for tax-system concepts (``iva``, ``irpf``,
-    ``is``) and classify :class:`~domain.calculations.registry.ModeloDefinition`
-    records at the broad family level. A domain groups a modelo in the
-    registry; it does not decide whether a taxpayer must file that modelo.
-    """
-
-    CENSO = "censo"
-    """Censo / structural registrations (modelo 036, 037)."""
-
-    IRPF = "irpf"
-    """Impuesto sobre la Renta de las Personas Físicas."""
-
-    IAE = "iae"
-    """Impuesto sobre Actividades Económicas."""
-
-    INFORMATIVE = "informative"
-    """Informative-only filings (no own liquidación)."""
-
-    IVA = "iva"
-    """Impuesto sobre el Valor Añadido."""
-
-    IS = "is"
-    """Impuesto sobre Sociedades."""
-
-    IRNR = "irnr"
-    """Impuesto sobre la Renta de no Residentes."""
-
-    PATRIMONIO = "patrimonio"
-    """Impuesto sobre el Patrimonio (modelo 714)."""
-
-    CROSS_TAX = "cross_tax"
-    """Retenciones / pagos a cuenta that feed both IRPF and IS."""
-
-    IDSD = "idsd"
-    """Impuesto sobre Determinados Servicios Digitales (modelo 490)."""
-
-    ITF = "itf"
-    """Impuesto sobre las Transacciones Financieras (modelo 604)."""
-
-    JUEGO = "juego"
-    """Impuesto sobre actividades de juego (modelo 763)."""
-
-    PLASTICO = "plastico"
-    """Impuesto especial sobre envases de plástico no reutilizables (modelo 592)."""
-
-    IEDMT = "iedmt"
-    """Impuesto Especial sobre Determinados Medios de Transporte (modelo 576)."""
-
+from pathlib import Path
+import tomllib
 
 __all__ = ["TaxDomain"]
+
+
+_FACT_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "_data"
+    / "registry"
+    / "aeat"
+    / "facts"
+    / "0093-tax-domain-catalogue.toml"
+)
+
+
+def _catalogue_codes() -> tuple[str, ...]:
+    with _FACT_PATH.open("rb") as stream:
+        document = tomllib.load(stream)
+    entries = document["fact"]["variants"][0]["payload"]["entries"]
+    declarations = {str(entry["key"]): str(entry["value"]) for entry in entries}
+    codes = tuple(token.strip() for token in declarations["catalogue.codes"].split(",") if token.strip())
+    if not codes or len(codes) != len(set(codes)):
+        raise ValueError("tax-domain catalogue codes must be unique and non-empty")
+    return codes
+
+
+TaxDomain = StrEnum(
+    "TaxDomain",
+    {code.upper(): code for code in _catalogue_codes()},
+    module=__name__,
+)
+"""String-compatible tax-domain identifier type hydrated from canonical facts."""

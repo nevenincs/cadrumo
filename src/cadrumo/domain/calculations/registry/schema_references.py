@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
-from enum import StrEnum
+from enum import StrEnum, auto
 from typing import Annotated, Final, Literal
 
 from pydantic import AfterValidator, BeforeValidator, Field, field_validator, model_validator
@@ -115,16 +115,16 @@ class LegalReferenceKind(StrEnum):
     to those sources and are not paraphrased here.
     """
 
-    LEY = "ley"
-    REAL_DECRETO = "real_decreto"
-    REAL_DECRETO_LEGISLATIVO = "real_decreto_legislativo"
-    REAL_DECRETO_LEY = "real_decreto_ley"
-    ORDEN = "orden"
-    REGLAMENTO = "reglamento"
-    ACUERDO_INTERNACIONAL = "acuerdo_internacional"
-    DIRECTIVA = "directiva"
-    MANUAL = "manual"
-    INSTRUCTION = "instruction"
+    LEY = auto()
+    REAL_DECRETO = auto()
+    REAL_DECRETO_LEGISLATIVO = auto()
+    REAL_DECRETO_LEY = auto()
+    ORDEN = auto()
+    REGLAMENTO = auto()
+    ACUERDO_INTERNACIONAL = auto()
+    DIRECTIVA = auto()
+    MANUAL = auto()
+    INSTRUCTION = auto()
 
 
 LegalReferenceKindField = Annotated[LegalReferenceKind, BeforeValidator(coerce_enum_member(LegalReferenceKind))]

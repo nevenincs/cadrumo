@@ -164,7 +164,7 @@ def test_import_boundaries_signal_deduces_contract_and_diagnostic_hotspots(
     )
 
     assert status == 1
-    envelope = json.loads(capsys.readouterr().out)
+    envelope = json.loads(capsys.readouterr().out.splitlines()[-1])
     deductions = envelope["deductions"]
     assert deductions["schema_version"] == 1
     assert deductions["contract_paths"] == {
@@ -238,7 +238,7 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
     )
 
     status = run(
-        (sys.executable, "-c", f"print({transcript!r}); raise SystemExit(1)"),
+        (sys.executable, "-c", f"print({transcript!r})"),
         repository=tmp_path,
         family="test-runs",
         label="test-registry",
@@ -246,14 +246,15 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
         expected_lanes=("calculations-parallel", "registry-conformance"),
     )
 
-    assert status == 1
+    assert status == 7
     output = capsys.readouterr().out
     envelopes = [json.loads(line) for line in output.splitlines()]
     assert len(envelopes) == 6
-    assert "test_probe.py" not in output
+    assert "FAILED tests/test_probe.py" not in output
     finished = envelopes[-1]
     assert finished["classification"] == "blocking_findings"
     assert finished["summary"] == {
+        "collected": 0,
         "deselected": 3,
         "error": 2,
         "failed": 1,
@@ -261,6 +262,7 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
         "lanes_completed": 2,
         "lanes_expected": 2,
         "lanes_failed": 2,
+        "lanes_blocked": 0,
         "lanes_not_run": 0,
         "lanes_tool_failed": 1,
         "passed": 16,
@@ -294,3 +296,127 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
     ]
     run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
     assert "collection detail" in (run_dir / "run.log").read_text(encoding="utf-8")
+
+
+def test_pytest_summary_fails_closed_when_expected_lanes_never_emit_events(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    status = run(
+        (sys.executable, "-c", "print('child exited without lane events')"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load"),
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "incomplete"
+    assert finished["result"] == "failed"
+    assert finished["summary"]["complete"] is False
+    assert finished["summary"]["lanes_not_run"] == 2
+    assert [lane["result"] for lane in finished["lanes"]] == ["not_run", "not_run"]
+
+
+def test_pytest_summary_classifies_summaryless_nonzero_lane_as_tool_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "================ 1 passed in 0.25s ================",
+            '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
+            '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
+            "ImportError: registry import failed before pytest started",
+            '{"event":"lane_finished","exit_status":2,"kind":"load","lane":"load","role":"preflight","seconds":1}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r}); raise SystemExit(2)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load"),
+    )
+
+    assert status == 2
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "tool_failure"
+    assert finished["summary"]["lanes_tool_failed"] == 1
+    assert finished["lanes"][1]["classification"] == "tool_failure"
+    assert finished["lanes"][1]["kind"] == "load"
+    assert finished["lanes"][1]["root_causes"][0]["phase"] == "tool"
+
+
+def test_pytest_summary_classifies_summaryless_collection_preflight_as_collection_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "SyntaxError: invalid syntax in registry test module",
+            '{"event":"lane_finished","exit_status":2,"kind":"collection","lane":"collect","role":"preflight","seconds":1}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r}); raise SystemExit(2)"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect",),
+    )
+
+    assert status == 2
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "collection_failure"
+    assert finished["summary"]["lanes_tool_failed"] == 0
+    assert finished["lanes"][0]["classification"] == "collection_failure"
+    assert finished["lanes"][0]["kind"] == "collection"
+    assert finished["lanes"][0]["root_causes"][0]["phase"] == "collection"
+
+
+def test_pytest_summary_reports_collection_preflight_and_blocked_lanes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    transcript = "\n".join(
+        (
+            '{"event":"lane_started","kind":"collection","lane":"collect","role":"preflight"}',
+            "================ 314 tests collected in 1.25s ================",
+            '{"event":"lane_finished","exit_status":0,"kind":"collection","lane":"collect","role":"preflight","seconds":2}',
+            '{"event":"lane_started","kind":"load","lane":"load","role":"preflight"}',
+            "registry-runtime-load status=failed loadable=false",
+            '{"event":"lane_finished","exit_status":1,"kind":"load","lane":"load","role":"preflight","seconds":1}',
+            '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"parallel","reason":"preflight_failed","role":"execution"}',
+            '{"blocked_by":["load"],"event":"lane_skipped","kind":"command","lane":"serial","reason":"preflight_failed","role":"execution"}',
+        )
+    )
+
+    status = run(
+        (sys.executable, "-c", f"print({transcript!r})"),
+        repository=tmp_path,
+        family="test-runs",
+        label="test-registry",
+        signal="pytest-summary",
+        expected_lanes=("collect", "load", "parallel", "serial"),
+    )
+
+    assert status == 7
+    finished = json.loads(capsys.readouterr().out.splitlines()[-1])
+    assert finished["classification"] == "preflight_failure"
+    assert finished["summary"]["complete"] is True
+    assert finished["summary"]["collected"] == 314
+    assert finished["summary"]["lanes_completed"] == 2
+    assert finished["summary"]["lanes_blocked"] == 2
+    assert finished["summary"]["lanes_not_run"] == 0
+    assert finished["lanes"][1]["classification"] == "tool_failure"
+    assert [lane["kind"] for lane in finished["lanes"]] == ["collection", "load", "command", "command"]
+    assert [lane["result"] for lane in finished["lanes"][2:]] == ["blocked", "blocked"]

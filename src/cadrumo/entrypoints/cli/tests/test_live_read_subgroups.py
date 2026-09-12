@@ -16,6 +16,7 @@ from typing import cast
 
 import pytest
 
+from ....adapters.persistence.profile.verify_observations import VerifyObservationRepository
 from ....application.auth.operator_results import LiveAuthPreflightReport
 from ....application.live.borrador_100 import Borrador100SnapshotService
 from ....application.live.errors import (
@@ -210,7 +211,7 @@ class TestVerifySubgroup:
         # Seed an observation via the service surface so the CLI has
         # something to render.
         bucket_id = _ACTIVE_TEST_BUCKET_ID
-        VerifyService().record(
+        VerifyService(persistence=VerifyObservationRepository(bucket_id=bucket_id)).record(
             bucket_id=bucket_id,
             surface=VerifySurface.NIF_IVA,
             nif="ESB12345678",

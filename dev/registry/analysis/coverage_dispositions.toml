@@ -1,15 +1,30 @@
 # Signed dispositions for promised filing coordinates the corpus does not serve exactly once.
 #
 # Read by coverage_dispositions.py; projected by edition_delta_status.py against the
-# registry's supported_filing_years promise. A coordinate listed here is classified and
-# leaves the outstanding coverage count; a coordinate not listed stays outstanding,
-# whatever the reason for it.
+# registry's supported_filing_years promise. A coordinate listed here is CLASSIFIED;
+# whether it also LEAVES the outstanding count depends on its classification below. A
+# coordinate not listed stays outstanding and unclassified, whatever the reason for it.
 #
 # One entry per (modelo, filing_year, period). `period` is "*" for a whole unserved year,
 # and otherwise the exact period token the screen reports. `kind` must be the condition
 # being disposed of. `authority` names the official source that settles the question --
-# the orden that did not approve a design for that year, the resolution that withdrew the
-# form -- not a note about the repository.
+# the orden that created the modelo, the one that did not approve a design for that year --
+# not a note about the repository.
+#
+# `classification` says what the gap IS, and the two values are not interchangeable:
+#
+#   inception    The modelo did not legally exist in that filing year. Permanent: no
+#                authoring will ever serve it. The coordinate is CLOSED and leaves the
+#                outstanding count. Cite the creating Orden/BOE.
+#   unauthored   The modelo existed and nobody authored its revision for that year. Real
+#                debt. The coordinate is CLASSIFIED but STAYS OUTSTANDING, because saying
+#                what a gap is does not close it.
+#
+# These two refuse identically in the corpus and mean opposite things; collapsing them
+# into one "not applicable" destroys the only signal saying which cells are debt.
+#
+# When the research comes back uncertain, write NO entry. An unclassified gap honestly
+# says nobody knows yet, which beats a confident guess with a citation attached.
 #
 # There is no wildcard, no prefix and no modelo-wide exemption on purpose. One entry
 # covering gaps nobody read is the silent under-declaration this file exists to prevent.
@@ -18,11 +33,12 @@
 #
 #   [[disposition]]
 #   modelo = "NNN"
-#   filing_year = 2026
+#   filing_year = 2022
 #   period = "*"
 #   kind = "promised_year_unserved"
-#   reason = "AEAT approved no record design for this modelo in this ejercicio."
-#   authority = "orden-xxx-nnnn-yyyy:art-N"
+#   classification = "inception"
+#   reason = "The modelo was created in 2024 and did not exist in this ejercicio."
+#   authority = "orden-xxx-nnnn-2024:art-N"
 #
 # Nothing has been adjudicated yet. Every promised coordinate the screen reports is
 # therefore outstanding, which is the honest reading of a corpus whose coverage no

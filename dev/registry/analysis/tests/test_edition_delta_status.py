@@ -15,8 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from ..coverage_dispositions import CoverageDisposition, load_coverage_dispositions
+from ..coverage_dispositions import CLASSIFICATIONS, CoverageDisposition, load_coverage_dispositions
 from ..edition_delta_status import (
+    _LIMITATIONS,
     CONDITIONS,
     COVERAGE_CONDITIONS,
     LINEAGE_SCOPES,
@@ -809,6 +810,7 @@ class TestSignal:
             "uncovered",
             "ready",
             "blocked",
+            "rooted",
             "family",
             "limitation",
         }
@@ -1175,7 +1177,8 @@ class TestCoverageDispositionLoader:
         path = _write_dispositions(
             tmp_path / "d.toml",
             '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
-            'kind = "promised_year_unserved"\nreason = "no design published"\nauthority = "orden-x:art-1"\n',
+            'kind = "promised_year_unserved"\nclassification = "inception"\n'
+            'reason = "no design published"\nauthority = "orden-x:art-1"\n',
         )
         loaded = load_coverage_dispositions(path)
         assert set(loaded) == {("303", 2026, "*")}
@@ -1186,17 +1189,18 @@ class TestCoverageDispositionLoader:
         [
             pytest.param(
                 '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
-                'kind = "promised_year_unserved"\nreason = "r"\n',
+                'kind = "promised_year_unserved"\nclassification = "inception"\nreason = "r"\n',
                 id="no authority",
             ),
             pytest.param(
                 '[[disposition]]\nmodelo = "303"\nperiod = "*"\n'
-                'kind = "promised_year_unserved"\nreason = "r"\nauthority = "a"\n',
+                'kind = "promised_year_unserved"\nclassification = "inception"\n'
+                'reason = "r"\nauthority = "a"\n',
                 id="no filing year",
             ),
             pytest.param(
                 '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
-                'kind = "looks_fine_to_me"\nreason = "r"\nauthority = "a"\n',
+                'kind = "looks_fine_to_me"\nclassification = "inception"\nreason = "r"\nauthority = "a"\n',
                 id="unknown kind",
             ),
         ],
@@ -1209,7 +1213,8 @@ class TestCoverageDispositionLoader:
         """Two entries for one coordinate is how a later, weaker reason silently wins."""
         entry = (
             '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
-            'kind = "promised_year_unserved"\nreason = "r"\nauthority = "a"\n'
+            'kind = "promised_year_unserved"\nclassification = "inception"\n'
+            'reason = "r"\nauthority = "a"\n'
         )
         with pytest.raises(ValueError, match="a second time"):
             load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", entry * 2))
@@ -1244,6 +1249,7 @@ class TestCoverageDispositions:
             ("999", 2025, "*"): CoverageDisposition(
                 coordinate=("999", 2025, "*"),
                 kind="promised_year_unserved",
+                classification="inception",
                 reason="AEAT approved no design for this ejercicio",
                 authority="orden-x:art-1",
             )
@@ -1259,6 +1265,7 @@ class TestCoverageDispositions:
             ("999", 2025, "*"): CoverageDisposition(
                 coordinate=("999", 2025, "*"),
                 kind="coordinate_served_twice",
+                classification="inception",
                 reason="two editions overlap here",
                 authority="orden-x:art-1",
             )
@@ -1272,6 +1279,7 @@ class TestCoverageDispositions:
             ("999", 2026, "*"): CoverageDisposition(
                 coordinate=("999", 2026, "*"),
                 kind="promised_year_unserved",
+                classification="inception",
                 reason="a different year entirely",
                 authority="orden-x:art-1",
             )
@@ -1285,3 +1293,128 @@ class TestCoverageDispositions:
         (signal,) = modelo_signals(build_report(tmp_path))
         assert signal.coverage_gaps_undisposed == 1
         assert signal.outstanding == 0
+
+
+class TestUnreadablePromise:
+    """A promise the screen cannot read must not render as a promise of nothing.
+
+    With no promised years `coverage_gaps` returns early and every coverage
+    condition prints zero -- a clean bill of health emitted precisely when the
+    screen went blind. The promise file changed shape once already this week;
+    the next change must announce itself rather than closing 71 gaps silently.
+    """
+
+    def _blind(self, root: Path, body: str) -> list[str]:
+        legal = root / "legal"
+        legal.mkdir(parents=True, exist_ok=True)
+        (legal / "supported-filing-years.toml").write_text(body, encoding="utf-8")
+        _write_edition(
+            root,
+            "999",
+            "2024",
+            manifest=(
+                'valid_from = 2024-01-01\nauthority_grade = "filing"\n'
+                'period_selector = { year_from = 2024, year_to = 2024, periods = ["0A"] }'
+            ),
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        _LIMITATIONS.clear()
+        try:
+            return _signal_lines(build_report(root))
+        finally:
+            _LIMITATIONS.clear()
+
+    @pytest.mark.parametrize(
+        ("body", "reason"),
+        [
+            pytest.param(
+                "[supported_filing_years]\nyears = [2024, 2025]\n",
+                "promise_bounds_unparsable",
+                id="the retired list shape",
+            ),
+            pytest.param(
+                '[supported_filing_years]\nfloor = "2022"\nhorizon = 2026\n',
+                "promise_bounds_unparsable",
+                id="a bound that is not an integer",
+            ),
+            pytest.param(
+                "[supported_filing_years]\nfloor = 2026\nhorizon = 2022\n",
+                "promise_bounds_inverted",
+                id="horizon before floor",
+            ),
+        ],
+    )
+    def test_an_unreadable_promise_says_so(self, tmp_path: Path, body: str, reason: str) -> None:
+        lines = self._blind(tmp_path, body)
+        assert any(line.startswith(f"limitation {reason}") for line in lines), f"expected a {reason} limitation record"
+
+    def test_an_absent_promise_says_so(self, tmp_path: Path) -> None:
+        _write_edition(
+            tmp_path,
+            "999",
+            "2024",
+            manifest='valid_from = 2024-01-01\nauthority_grade = "filing"',
+            casillas='[[revisions."2024".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+        )
+        _LIMITATIONS.clear()
+        try:
+            lines = _signal_lines(build_report(tmp_path))
+        finally:
+            _LIMITATIONS.clear()
+        assert any(line.startswith("limitation promise_absent") for line in lines)
+
+    def test_a_zero_coverage_line_never_stands_alone_when_the_promise_failed(self, tmp_path: Path) -> None:
+        """The coverage line still reads zero -- what must not happen is it reading zero UNANNOUNCED."""
+        lines = self._blind(tmp_path, "[supported_filing_years]\nyears = [2024, 2025]\n")
+        (coverage,) = [line for line in lines if line.startswith("coverage ")]
+        assert "promised_year_unserved=0" in coverage
+        assert [line for line in lines if line.startswith("limitation ")], (
+            "a zero coverage line with no limitation beside it is the silent collapse"
+        )
+
+    def test_a_readable_promise_emits_no_limitation(self, tmp_path: Path) -> None:
+        lines = self._blind(tmp_path, "[supported_filing_years]\nfloor = 2024\nhorizon = 2025\n")
+        assert not [line for line in lines if line.startswith("limitation promise_")]
+        (coverage,) = [line for line in lines if line.startswith("coverage ")]
+        assert "promised_year_unserved=1" in coverage
+
+
+class TestDispositionClassification:
+    """`did not exist` and `not yet authored` refuse identically and mean opposite things."""
+
+    def _entry(self, classification: str) -> str:
+        return (
+            '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+            f'kind = "promised_year_unserved"\nclassification = "{classification}"\n'
+            'reason = "r"\nauthority = "orden-x:art-1"\n'
+        )
+
+    def test_an_entry_without_a_classification_is_refused(self, tmp_path: Path) -> None:
+        body = (
+            '[[disposition]]\nmodelo = "303"\nfiling_year = 2026\nperiod = "*"\n'
+            'kind = "promised_year_unserved"\nreason = "r"\nauthority = "a"\n'
+        )
+        with pytest.raises(ValueError, match="classification"):
+            load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", body))
+
+    def test_an_unknown_classification_is_refused(self, tmp_path: Path) -> None:
+        """There is deliberately no value for `unsure`: that case writes no entry at all."""
+        with pytest.raises(ValueError, match="unknown classification"):
+            load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", self._entry("uncertain")))
+
+    def test_inception_closes_the_coordinate(self, tmp_path: Path) -> None:
+        """A modelo that did not exist has a gap no authoring will ever serve."""
+        loaded = load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", self._entry("inception")))
+        assert loaded[("303", 2026, "*")].closes
+
+    def test_unauthored_names_the_gap_without_closing_it(self, tmp_path: Path) -> None:
+        """Saying what a gap is does not serve the year; the debt is still owed."""
+        loaded = load_coverage_dispositions(_write_dispositions(tmp_path / "d.toml", self._entry("unauthored")))
+        assert not loaded[("303", 2026, "*")].closes
+
+    def test_every_declared_classification_loads(self, tmp_path: Path) -> None:
+        for classification in CLASSIFICATIONS:
+            loaded = load_coverage_dispositions(
+                _write_dispositions(tmp_path / f"{classification}.toml", self._entry(classification))
+            )
+            assert loaded[("303", 2026, "*")].classification == classification

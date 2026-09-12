@@ -1170,11 +1170,21 @@ def supported_filing_years(registry_root: Path) -> tuple[int, ...]:
     because a corpus can only ever agree with itself.
     """
     path = registry_root.joinpath(*_SUPPORTED_YEARS_FILE)
+    # An unreadable promise must never render as a promise of nothing. With no
+    # promised years `coverage_gaps` returns early and every coverage condition
+    # prints zero -- a clean bill of health emitted precisely when the screen
+    # could not read what it measures against. Each path says so instead, so
+    # `missing` and `proven zero` stay distinguishable on the coverage line.
     if not path.is_file():
+        _note_limitation("promise_absent: no supported-filing-years declaration; coverage is unmeasured")
         return ()
     table = tomllib.loads(path.read_text(encoding="utf-8")).get(_SUPPORTED_YEARS_KEY, {})
     floor, horizon = table.get("floor"), table.get("horizon")
-    if not isinstance(floor, int) or not isinstance(horizon, int) or horizon < floor:
+    if not isinstance(floor, int) or not isinstance(horizon, int):
+        _note_limitation("promise_bounds_unparsable: floor and horizon are not both integers; coverage is unmeasured")
+        return ()
+    if horizon < floor:
+        _note_limitation(f"promise_bounds_inverted: horizon {horizon} precedes floor {floor}; coverage is unmeasured")
         return ()
     return tuple(range(floor, horizon + 1))
 
@@ -1196,6 +1206,10 @@ def _admits_year(status: EditionStatus, year: int) -> bool:
     return year >= status.selector_year_from and (status.selector_year_to is None or year <= status.selector_year_to)
 
 
+#: The classifications that CLOSE a coordinate rather than describing it,
+#: mirrored from the declaration's own vocabulary so the two cannot disagree.
+_CLOSING_CLASSIFICATIONS: Final = frozenset({"inception"})
+
 #: An empty signed declaration, typed once so a caller passing none does not
 #: widen the mapping's value type and take every reason read from it with it.
 _NO_DISPOSITIONS: Final[Mapping[CoverageCoordinate, CoverageDisposition]] = dict[
@@ -1213,18 +1227,26 @@ class CoverageGap:
     period: str
     editions: tuple[str, ...]
     disposition: str = ""
+    classification: str = ""
+
+    @property
+    def classified(self) -> bool:
+        """Whether a signed declaration says what this gap IS."""
+        return bool(self.classification)
 
     @property
     def disposed(self) -> bool:
-        """Whether a signed declaration classifies this gap as legitimate.
+        """Whether a signed declaration CLOSES this gap, rather than merely naming it.
 
-        A gap CAN be legitimate -- the product may promise a filing year that
-        AEAT published no design for -- and no migration work will ever close
-        one. What a screen must not do is decide which gaps those are, so the
-        classification is read from a declaration a reviewer signs and every
-        unclassified gap stays outstanding.
+        A gap can be legitimate -- a modelo that did not legally exist in a
+        promised filing year has a gap no authoring will ever serve -- and only
+        that kind closes. A gap classified ``unauthored`` is the opposite: the
+        modelo existed and nobody wrote the revision, so naming it is progress
+        and closing it would report the corpus's own debt as resolved. The two
+        refuse identically in the corpus, which is exactly why the screen must
+        not pool them.
         """
-        return bool(self.disposition)
+        return self.classification in _CLOSING_CLASSIFICATIONS
 
 
 def coverage_gaps(
@@ -1252,15 +1274,15 @@ def coverage_gaps(
     for status in statuses:
         by_modelo[status.modelo].append(status)
 
-    def _disposition(modelo: str, kind: str, year: int, period: str) -> str:
-        """The signed reason for this coordinate, when one classifies this KIND.
+    def _disposition(modelo: str, kind: str, year: int, period: str) -> tuple[str, str]:
+        """The signed reason and classification for this coordinate, when one classifies this KIND.
 
         The kind is checked as well as the coordinate: an entry written for an
         unserved year must not silently absorb the opposite failure should the
         corpus later serve that cell twice.
         """
         entry = signed.get((modelo, year, period))
-        return entry.reason if entry is not None and entry.kind == kind else ""
+        return (entry.reason, entry.classification) if entry is not None and entry.kind == kind else ("", "")
 
     gaps: list[CoverageGap] = []
     for modelo, editions in sorted(by_modelo.items()):
@@ -1271,17 +1293,17 @@ def coverage_gaps(
             admitting = [edition for edition in editions if _admits_year(edition, year)]
             if not admitting:
                 kind = "promised_year_unserved"
-                gaps.append(CoverageGap(modelo, kind, year, "*", (), _disposition(modelo, kind, year, "*")))
+                gaps.append(CoverageGap(modelo, kind, year, "*", (), *_disposition(modelo, kind, year, "*")))
                 continue
             for period in periods:
                 serving = tuple(edition.edition for edition in admitting if period in edition.periods)
                 if not serving:
                     kind = "promised_coordinate_unserved"
-                    gaps.append(CoverageGap(modelo, kind, year, period, (), _disposition(modelo, kind, year, period)))
+                    gaps.append(CoverageGap(modelo, kind, year, period, (), *_disposition(modelo, kind, year, period)))
                 elif len(serving) > 1:
                     kind = "coordinate_served_twice"
                     gaps.append(
-                        CoverageGap(modelo, kind, year, period, serving, _disposition(modelo, kind, year, period))
+                        CoverageGap(modelo, kind, year, period, serving, *_disposition(modelo, kind, year, period))
                     )
     return tuple(gaps)
 
@@ -1695,9 +1717,11 @@ def _signal_lines(report: Report) -> list[str]:
             [
                 "coverage",
                 *(f"{kind}={census[kind]}" for kind in COVERAGE_CONDITIONS),
+                f"modelos_uncovered={len({gap.modelo for gap in report.gaps})}",
+                # Appended after the fields that were here first. A reader
+                # pinned to a position must keep it across a field being added.
                 f"disposed={sum(1 for gap in report.gaps if gap.disposed)}",
                 f"undisposed={sum(1 for gap in report.gaps if not gap.disposed)}",
-                f"modelos_uncovered={len({gap.modelo for gap in report.gaps})}",
             ]
         ),
         " ".join(
@@ -1732,16 +1756,22 @@ def _signal_lines(report: Report) -> list[str]:
         f"modelo {signal.modelo} state={signal.state} editions={signal.editions} rows={signal.rows} "
         f"ready={signal.edges_ready} blocked={signal.edges_blocked} migrated={signal.edges_migrated} "
         f"unlifted={signal.unlifted_editions} lineage_gap={signal.lineage_gap} "
-        f"lineage_on_edge={signal.lineage_gap_on_edge} "
         f"restated={signal.restated_refs} liftable={signal.liftable_refs} "
         f"rooted={signal.edges_rooted_pending_lineage} restated_members={signal.restated_members} "
-        f"uncovered={signal.coverage_gaps} undisposed={signal.coverage_gaps_undisposed} "
-        f"outstanding={signal.outstanding}"
+        f"uncovered={signal.coverage_gaps} outstanding={signal.outstanding} "
+        # Appended, never inserted: every field above holds the position it
+        # held before these two existed.
+        f"lineage_on_edge={signal.lineage_gap_on_edge} "
+        f"undisposed={signal.coverage_gaps_undisposed}"
         for signal in signals
     ]
     lines += [
-        f"uncovered {gap.modelo} {gap.filing_year} {gap.period} {gap.kind} "
-        f"disposed={'yes' if gap.disposed else 'no'}" + (f" editions={','.join(gap.editions)}" if gap.editions else "")
+        f"uncovered {gap.modelo} {gap.filing_year} {gap.period} {gap.kind}"
+        + (f" editions={','.join(gap.editions)}" if gap.editions else "")
+        # Last, so it follows the optional `editions=` suffix rather than
+        # displacing it on the gaps that carry one.
+        + f" disposed={'yes' if gap.disposed else 'no'}"
+        + f" classification={gap.classification or 'none'}"
         for gap in report.gaps
     ]
     lines += [
@@ -1875,8 +1905,13 @@ def render_report(report: Report, *, totals_only: bool = False) -> str:
     out.append("COVERAGE (its own campaign; never folded into the shape verdict)")
     out += [f"  {kind:<32} {_fmt(census[kind]):>8}" for kind in COVERAGE_CONDITIONS]
     out.append(f"  {'modelos uncovered':<32} {_fmt(len({gap.modelo for gap in report.gaps})):>8}")
-    out.append(f"  {'disposed (signed)':<32} {_fmt(sum(1 for gap in report.gaps if gap.disposed)):>8}")
-    out.append(f"  {'undisposed (outstanding)':<32} {_fmt(sum(1 for gap in report.gaps if not gap.disposed)):>8}")
+    out.append(f"  {'closed (inception)':<32} {_fmt(sum(1 for gap in report.gaps if gap.disposed)):>8}")
+    out.append(
+        f"  {'classified debt (unauthored)':<32} "
+        f"{_fmt(sum(1 for gap in report.gaps if gap.classified and not gap.disposed)):>8}"
+    )
+    out.append(f"  {'unclassified':<32} {_fmt(sum(1 for gap in report.gaps if not gap.classified)):>8}")
+    out.append(f"  {'undisposed (still owed)':<32} {_fmt(sum(1 for gap in report.gaps if not gap.disposed)):>8}")
     out.append("")
 
     out.append("FAMILIES  (union position per declaration family)")

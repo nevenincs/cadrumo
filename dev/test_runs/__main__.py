@@ -33,9 +33,36 @@ def main(argv: list[str] | None = None) -> int:
     lanes = sub.add_parser("lanes", help="run the named lanes in order")
     lanes.add_argument("--json-events", action="store_true", help="emit machine-readable lane boundaries")
     lanes.add_argument("--no-evidence", action="store_true", help="leave evidence persistence to the caller")
+    lanes.add_argument(
+        "--preflight-count",
+        type=int,
+        default=0,
+        help="run this many leading lanes as prerequisites and block the remaining lanes if one fails",
+    )
+    lanes.add_argument(
+        "--lane-kind",
+        action="append",
+        default=[],
+        metavar="LANE=KIND",
+        help="declare a lane's machine-readable purpose (collection, load, or command)",
+    )
     lanes.add_argument("lane", nargs="+", help="just recipe names")
     args = parser.parse_args(argv)
-    return run_lanes(args.lane, json_events=args.json_events, persist_evidence=not args.no_evidence)
+    lane_kinds: dict[str, str] = {}
+    for declaration in args.lane_kind:
+        lane, separator, kind = declaration.partition("=")
+        if not separator or not lane or not kind:
+            parser.error(f"invalid --lane-kind {declaration!r}; expected LANE=KIND")
+        if lane in lane_kinds:
+            parser.error(f"lane kind declared more than once for {lane!r}")
+        lane_kinds[lane] = kind
+    return run_lanes(
+        args.lane,
+        json_events=args.json_events,
+        persist_evidence=not args.no_evidence,
+        preflight_count=args.preflight_count,
+        lane_kinds=lane_kinds,
+    )
 
 
 if __name__ == "__main__":

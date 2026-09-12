@@ -51,8 +51,6 @@ PAGE_FORMAT_HINTS: Mapping[str, str] = {
     "taxpayer-birth-date": FORMAT_DATE_LOCALE_KEY,
     "taxpayer-death-date": FORMAT_DATE_LOCALE_KEY,
     "spouse-birth-date": FORMAT_DATE_LOCALE_KEY,
-    "ley-49-2002-option-date": FORMAT_DATE_LOCALE_KEY,
-    "ley-49-2002-renunciation-date": FORMAT_DATE_LOCALE_KEY,
     "irpf-special-regime-start-date": FORMAT_DATE_LOCALE_KEY,
     "incn-prior-12-months": FORMAT_AMOUNT_LOCALE_KEY,
     "address-postcode": _FORMAT_POSTCODE_LOCALE_KEY,
@@ -78,8 +76,6 @@ PAGE_WIDGET_KINDS: Mapping[str, FlowWidgetKind] = {
     "taxpayer-birth-date": FlowWidgetKind.DATE,
     "taxpayer-death-date": FlowWidgetKind.DATE,
     "spouse-birth-date": FlowWidgetKind.DATE,
-    "ley-49-2002-option-date": FlowWidgetKind.DATE,
-    "ley-49-2002-renunciation-date": FlowWidgetKind.DATE,
     "irpf-special-regime-start-date": FlowWidgetKind.DATE,
     "incn-prior-12-months": FlowWidgetKind.DECIMAL,
     "objective-estimation-modulos-module-1-units": FlowWidgetKind.DECIMAL,
@@ -102,9 +98,12 @@ def attach_format_hints(definition: FlowDefinition) -> FlowDefinition:
     receives both updates in a single ``model_copy``; every other page
     passes through untouched.
     """
+    from ...domain.calculations.registry.setup_profile_bindings import wizard_page_declarations
+
+    registry_pages = wizard_page_declarations()
     sections: list[FlowSection] = []
     for section in definition.sections:
-        updates = [_page_overrides(item) for item in section.items]
+        updates = [_page_overrides(item, registry_pages) for item in section.items]
         if not any(updates):
             sections.append(section)
             continue
@@ -116,7 +115,7 @@ def attach_format_hints(definition: FlowDefinition) -> FlowDefinition:
     return definition.model_copy(update={"sections": tuple(sections)})
 
 
-def _page_overrides(item: object) -> dict[str, object]:
+def _page_overrides(item: object, registry_pages: Mapping[str, Mapping[str, str]]) -> dict[str, object]:
     """Return the field updates one item needs, empty when it passes through.
 
     A declared hint yields a CopyRef only when the page carries none, so a
@@ -126,10 +125,12 @@ def _page_overrides(item: object) -> dict[str, object]:
     if not isinstance(item, FlowPage):
         return {}
     update: dict[str, object] = {}
-    hint_key = PAGE_FORMAT_HINTS.get(item.id)
+    registry_page = registry_pages.get(item.id, {})
+    hint_key = registry_page.get("format_hint") or PAGE_FORMAT_HINTS.get(item.id)
     if hint_key is not None and item.format_hint is None:
         update["format_hint"] = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref=hint_key)
-    widget_kind = PAGE_WIDGET_KINDS.get(item.id)
+    widget_token = registry_page.get("widget_kind")
+    widget_kind = FlowWidgetKind(widget_token) if widget_token is not None else PAGE_WIDGET_KINDS.get(item.id)
     if widget_kind is not None and item.widget is not widget_kind:
         update["widget"] = widget_kind
     return update

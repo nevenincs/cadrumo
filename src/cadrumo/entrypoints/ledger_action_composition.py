@@ -18,10 +18,9 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
     from ..core.config import load_settings
     from ..application.ledger.evidence import PurchaseInvoiceEvidenceRepository
 
-    objects = secure_object_repository_for_bucket(bucket_id)
-    evidence_document = PurchaseInvoiceEvidenceRepository(
-        objects=secure_object_repository_for_bucket(bucket_id, load_settings())
-    ).load(bucket_id)
+    settings = load_settings()
+    objects = secure_object_repository_for_bucket(bucket_id, settings)
+    evidence_document = PurchaseInvoiceEvidenceRepository(objects=objects).load(bucket_id)
 
     return LedgerActionPorts(
         transaction_repository=TransactionCatalogueRepository(bucket_id=bucket_id),
@@ -29,8 +28,8 @@ def compose_ledger_action_ports(*, bucket_id: str) -> LedgerActionPorts:
         invoice_repository=InvoiceCatalogueRepository(bucket_id=bucket_id),
         attachment_store=resolve_attachment_store(None),
         usage_ratio_profile=load_usage_ratios(bucket_id=bucket_id),
-        work_unit_repository=WorkUnitCatalogueRepository(),
-        calculation_repository=CalculationRevisionCatalogueRepository(),
+        work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+        calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id),
         purchase_invoice_evidence_records=() if evidence_document is None else evidence_document.records,
     )
 

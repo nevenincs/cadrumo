@@ -12,10 +12,16 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
+from cadrumo.tests.module_target_inventory import (
+    assert_all_target_sets_current,
+    compile_inventory,
+    load_all_target_sets,
+)
 
 from .import_checker import Authority, RootPackage, read_authority
 
 _SCHEMA_VERSION: Final[int] = 1
+_TARGET_METADATA: Final[str] = "dev/quality/metadata/import_load_targets.json"
 
 
 def governed_load_targets(authority: Authority) -> tuple[str, ...]:
@@ -32,8 +38,11 @@ def governed_load_targets(authority: Authority) -> tuple[str, ...]:
 
 def probe_loadability(authority: Authority) -> dict[str, object]:
     """Load all governed targets and retain every failure without short-circuiting."""
-    targets = governed_load_targets(authority)
-    failures: list[dict[str, str]] = []
+    assert_all_target_sets_current(_TARGET_METADATA, repository=authority.repository)
+    targets = load_all_target_sets(_TARGET_METADATA, repository=authority.repository)
+    if targets != governed_load_targets(authority):
+        raise RuntimeError("import load-target metadata does not cover the complete governed non-test census")
+    failures: list[dict[str, object]] = []
     for target in targets:
         try:
             importlib.import_module(target)
@@ -120,13 +129,45 @@ def _is_test_module(name: str, path: Path) -> bool:
     )
 
 
+def compile_load_target_inventory(authority: Authority) -> dict[str, object]:
+    """Compile metadata for every configured first-party root from path-only facts."""
+    target_sets: dict[str, object] = {}
+    for root in authority.roots:
+        source_root = root.path.relative_to(authority.repository).as_posix()
+        document = compile_inventory(
+            package=root.name,
+            source_root=source_root,
+            subpackages=(),
+            target_set=root.name,
+        )
+        target_sets.update(document["target_sets"])
+    return {"schema_version": 1, "target_sets": dict(sorted(target_sets.items()))}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=REPO_ROOT)
     parser.add_argument("--config", type=Path, default=None)
-    parser.add_argument("--report", type=Path, required=True)
+    parser.add_argument("--report", type=Path, default=None)
+    parser.add_argument(
+        "--compile-targets",
+        action="store_true",
+        help="write the checked finite load-target metadata and exit",
+    )
     args = parser.parse_args(argv)
     read = read_authority(args.root, args.config)
+    if read.authority is not None and not read.findings and args.compile_targets:
+        output = args.root.resolve() / _TARGET_METADATA
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(
+            json.dumps(compile_load_target_inventory(read.authority), indent=2, sort_keys=True) + "\n",
+            encoding=UTF_8,
+            newline="\n",
+        )
+        print(f"compiled import load targets: {output}")
+        return 0
+    if args.report is None:
+        parser.error("--report is required unless --compile-targets is used")
     if read.authority is None or read.findings:
         payload = {
             "attempted": 0,
@@ -166,7 +207,10 @@ def main(argv: list[str] | None = None) -> int:
         encoding=UTF_8,
         newline="\n",
     )
-    summary = {key: payload.get(key) for key in ("attempted", "failed", "loaded", "scope", "target_digest")}
+    summary = {
+        key: payload.get(key)
+        for key in ("attempted", "failed", "loaded", "root_cause_count", "scope", "target_digest")
+    }
     print(json.dumps(summary, sort_keys=True, separators=(",", ":")))
     return status
 
@@ -175,4 +219,4 @@ if __name__ == "__main__":
     sys.exit(main())
 
 
-__all__ = ["governed_load_targets", "main", "probe_loadability"]
+__all__ = ["compile_load_target_inventory", "governed_load_targets", "main", "probe_loadability"]

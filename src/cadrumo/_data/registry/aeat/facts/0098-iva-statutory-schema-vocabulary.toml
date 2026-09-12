@@ -1,0 +1,47 @@
+[fact]
+fact_id = "iva-statutory-schema-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-statutory-schema-vocabulary:1993-01-01"
+date_axis = "filing_period"
+valid_from = 1993-01-01
+legal_refs = [
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-22",
+    "ley-37-1992:art-69",
+    "ley-37-1992:art-75",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-163-decies",
+    "ley-37-1992:art-163-undecies",
+    "ley-37-1992:art-163-duodecies",
+    "ley-37-1992:art-163-terdecies",
+]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["Modelo 303"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "category.intra_community_service_supply.value", value = "intra_community_service_supply" },
+    { key = "category.intra_community_service_supply.legal_refs", value = "ley-37-1992:art-69" },
+    { key = "category.intra_community_service_acquisition_reverse_charge.value", value = "intra_community_service_acquisition_reverse_charge" },
+    { key = "category.intra_community_service_acquisition_reverse_charge.legal_refs", value = "ley-37-1992:art-69,ley-37-1992:art-84" },
+    { key = "category.export_third_country_zero_rated.value", value = "export_third_country_zero_rated" },
+    { key = "category.export_third_country_zero_rated.legal_refs", value = "ley-37-1992:art-21" },
+    { key = "category.export_assimilated_zero_rated.value", value = "export_assimilated_zero_rated" },
+    { key = "category.export_assimilated_zero_rated.legal_refs", value = "ley-37-1992:art-22" },
+    { key = "cash_accounting.none.value", value = "none" },
+    { key = "cash_accounting.taxpayer_regime.value", value = "taxpayer_regime" },
+    { key = "cash_accounting.taxpayer_regime.legal_refs", value = "ley-37-1992:art-163-decies,ley-37-1992:art-163-undecies,ley-37-1992:art-163-duodecies,ley-37-1992:art-163-terdecies" },
+    { key = "cash_accounting.supplier_regime.value", value = "supplier_regime" },
+    { key = "schema_legal_reference_basis", value = "ley-37-1992" },
+]

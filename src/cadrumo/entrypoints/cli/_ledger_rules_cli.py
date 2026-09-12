@@ -6,6 +6,8 @@ Rule commands apply, list, and mutate classification rules through
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 
 from ...application.ledger.models import ApplyRulesResult
@@ -14,6 +16,9 @@ from ...domain.transactions.enums import BusinessClassification
 from ._ledger_support import validate_category_id
 from .common import active_bucket_id_or_refuse as _rule_bucket_id
 from .common import bad, emit_envelope
+
+if TYPE_CHECKING:
+    from ...application.ledger.action_ports import LedgerActionPorts
 
 
 def _short_display_id(value: str) -> str:
@@ -80,11 +85,12 @@ def _rule_apply_dry_run_matches(
     *,
     bucket_id: str,
     reaffirm: bool,
+    ports: LedgerActionPorts,
 ) -> list[dict[str, object]]:
     """Preview through the same engine the apply uses, never a second copy."""
     from ...application.ledger.actions_classification import plan_classification_rules
 
-    plan = plan_classification_rules(bucket_id=bucket_id, reaffirm=reaffirm)
+    plan = plan_classification_rules(bucket_id=bucket_id, reaffirm=reaffirm, ports=ports)
     return [
         {
             "transaction_id": row.transaction_id,
@@ -110,10 +116,16 @@ def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]
     return lines
 
 
-def _emit_rule_apply_dry_run(ctx: typer.Context, *, bucket_id: str, reaffirm: bool) -> None:
+def _emit_rule_apply_dry_run(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    reaffirm: bool,
+    ports: LedgerActionPorts,
+) -> None:
     from ._ledger_rule_payloads import RuleApplyResult
 
-    would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm)
+    would_match = _rule_apply_dry_run_matches(bucket_id=bucket_id, reaffirm=reaffirm, ports=ports)
     emit_envelope(
         ctx,
         command="ledger.rule.apply",
@@ -173,9 +185,12 @@ def rule_apply(
 
     bucket_id = _rule_bucket_id()
     resolved_actor = actor or resolve_active_bucket_id() or "operator"
+    from ..ledger_action_composition import compose_ledger_action_ports
+
+    ports = compose_ledger_action_ports(bucket_id=bucket_id)
 
     if dry_run:
-        _emit_rule_apply_dry_run(ctx, bucket_id=bucket_id, reaffirm=reaffirm)
+        _emit_rule_apply_dry_run(ctx, bucket_id=bucket_id, reaffirm=reaffirm, ports=ports)
         return
 
     result = apply_classification_rules(
@@ -183,6 +198,7 @@ def rule_apply(
         reaffirm=reaffirm,
         actor=resolved_actor,
         source_command="aeat app ledger rule apply",
+        ports=ports,
     )
     _emit_rule_apply_result(ctx, result)
 

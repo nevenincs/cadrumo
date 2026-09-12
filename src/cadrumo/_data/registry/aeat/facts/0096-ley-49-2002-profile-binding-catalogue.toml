@@ -1,0 +1,121 @@
+[fact]
+fact_id = "ley-49-2002-profile-binding-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "ley-49-2002-profile-binding-catalogue:2003-01-01"
+date_axis = "filing_period"
+valid_from = 2003-01-01
+legal_refs = ["ley-49-2002:art-14"]
+source_refs = ["aeat-modelo-036-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-036-procedure"
+required_text = ["número de identificación fiscal"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "setup.field.activity", value = "activities.description|str|" },
+  { key = "setup.field.activity_start_date", value = "censo.activity_start_date|str|" },
+  { key = "setup.field.address_postcode", value = "contact.postcode|str|" },
+  { key = "setup.field.art109_activity_income_withholding_ge_70pct", value = "irpf.art109_activity_income_withholding_ge_70pct|bool|false" },
+  { key = "setup.field.bienes_extranjero_above_threshold", value = "obligations.bienes_extranjero_above_threshold|bool|false" },
+  { key = "setup.field.country_of_fiscal_residence", value = "taxpayer_type.country_of_fiscal_residence|str|" },
+  { key = "setup.field.declaration_roles", value = "taxpayer_type.declaration_roles|str|" },
+  { key = "setup.field.does_intracomunitario", value = "iva.does_intracomunitario|bool|false" },
+  { key = "setup.field.enrollment_large_company", value = "censo.large_company|bool|false" },
+  { key = "setup.field.enrollment_public_administration_budget_gt_6000000", value = "censo.public_administration_budget_gt_6000000|bool|false" },
+  { key = "setup.field.entity_type", value = "taxpayer_type.entity_type|str|" },
+  { key = "setup.field.family_descendants_eu_eea_deduction", value = "renta_family.descendants_eu_eea_deduction|bool|false" },
+  { key = "setup.field.family_minor_children_in_unit", value = "renta_family.minor_children_in_unit|bool|false" },
+  { key = "setup.field.fiscal_residency", value = "taxpayer_type.fiscal_residency|str|resident_irpf" },
+  { key = "setup.field.google_export", value = "capabilities.google_export|bool|true" },
+  { key = "setup.field.has_employees", value = "withholding.has_employees|bool|false" },
+  { key = "setup.field.colegio_concertado", value = "withholding.colegio_concertado|bool|" },
+  { key = "setup.field.incn_prior_12_months", value = "taxpayer_type.incn_prior_12_months|str|" },
+  { key = "setup.field.irpf_estimation_regime", value = "irpf.estimation_regime|str|" },
+  { key = "setup.field.irpf_activity_kind", value = "irpf.activity_kind|str|" },
+  { key = "setup.field.irpf_income_categories", value = "taxpayer_type.irpf_income_categories|str|" },
+  { key = "setup.field.irpf_special_regime", value = "irpf.special_regime|str|" },
+  { key = "setup.field.irpf_special_regime_start_date", value = "irpf.special_regime_start_date|str|" },
+  { key = "setup.field.iva_group_dominant_entity_enrolled", value = "iva.group_dominant_entity_enrolled|bool|" },
+  { key = "setup.field.iva_group_member_enrolled", value = "iva.group_member_enrolled|bool|" },
+  { key = "setup.field.iva_intracommunity_operations_exceed_50000_eur", value = "iva.intracommunity_operations_exceed_50000_eur|bool|" },
+  { key = "setup.field.iva_oss_enrolled", value = "iva.oss_enrolled|bool|" },
+  { key = "setup.field.iva_redeme_enrolled", value = "iva.redeme_enrolled|bool|" },
+  { key = "setup.field.iva_regime", value = "iva.regime|str|" },
+  { key = "setup.field.iva_roi_enrolled", value = "iva.roi_enrolled|bool|" },
+  { key = "setup.field.iva_sii_enrolled", value = "iva.sii_enrolled|bool|" },
+  { key = "setup.field.iva_m303_regime_composition", value = "iva.m303_regime_composition|str|" },
+  { key = "setup.field.iva_cash_accounting_regime_enrolled", value = "iva.cash_accounting_regime_enrolled|bool|" },
+  { key = "setup.field.iva_voluntary_sii_enrolled", value = "iva.voluntary_sii_enrolled|bool|" },
+  { key = "setup.field.iva_hydrocarbon_deposit_advance_payment_deduction_entitled", value = "iva.hydrocarbon_deposit_advance_payment_deduction_entitled|bool|" },
+  { key = "setup.field.legal_entity_form", value = "taxpayer_type.legal_entity_form|str|" },
+  { key = "setup.field.legal_name", value = "identity.legal_name|str|" },
+  { key = "setup.field.ley_49_2002_option_date", value = "taxpayer_type.ley_49_2002_special_regime_option_date|str|" },
+  { key = "setup.field.ley_49_2002_option_declared", value = "taxpayer_type.ley_49_2002_special_regime_option_declared|bool|" },
+  { key = "setup.field.ley_49_2002_renunciation_date", value = "taxpayer_type.ley_49_2002_special_regime_renunciation_date|str|" },
+  { key = "setup.field.ley_49_2002_renunciation_declared", value = "taxpayer_type.ley_49_2002_special_regime_renunciation_declared|bool|" },
+  { key = "setup.field.llm_vision", value = "capabilities.llm_vision|bool|true" },
+  { key = "setup.field.modelo_111_no_retenciones_periods", value = "withholding.modelo_111_no_retenciones_periods|str|" },
+  { key = "setup.field.monedas_virtuales_extranjero_above_threshold", value = "obligations.monedas_virtuales_extranjero_above_threshold|bool|false" },
+  { key = "setup.field.name", value = "identity.name|str|" },
+  { key = "setup.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods|bool|" },
+  { key = "setup.field.notes", value = "identity.notes|str|" },
+  { key = "setup.field.objective_estimation_modulos_iae_epigraph", value = "irpf.objective_estimation_modulos_iae_epigraph|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_1_units", value = "irpf.objective_estimation_modulos_module_1_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_2_units", value = "irpf.objective_estimation_modulos_module_2_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_3_units", value = "irpf.objective_estimation_modulos_module_3_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_4_units", value = "irpf.objective_estimation_modulos_module_4_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_5_units", value = "irpf.objective_estimation_modulos_module_5_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_6_units", value = "irpf.objective_estimation_modulos_module_6_units|str|" },
+  { key = "setup.field.objective_estimation_modulos_module_7_units", value = "irpf.objective_estimation_modulos_module_7_units|str|" },
+  { key = "setup.field.output_language", value = "preferences.output_language|str|es" },
+  { key = "setup.field.pays_capital_income_with_retencion", value = "withholding.pays_capital_income_with_retencion|bool|false" },
+  { key = "setup.field.pays_professionals_with_retencion", value = "withholding.pays_professionals_with_retencion|bool|false" },
+  { key = "setup.field.pays_rent_with_retencion", value = "withholding.pays_rent_with_retencion|bool|false" },
+  { key = "setup.field.professional_income_withholding_ge_70pct", value = "irpf.professional_income_withholding_ge_70pct|bool|false" },
+  { key = "setup.field.representante_fiscal_nif", value = "taxpayer_type.representante_fiscal_nif|str|" },
+  { key = "setup.field.representante_fiscal_nombre", value = "taxpayer_type.representante_fiscal_nombre|str|" },
+  { key = "setup.field.situacion_familiar", value = "renta_family.situacion_familiar|str|" },
+  { key = "setup.field.spouse_birth_date", value = "renta_spouse.birth_date|str|" },
+  { key = "setup.field.spouse_disability_grade", value = "renta_spouse.disability_grade|str|" },
+  { key = "setup.field.spouse_eu_eea_country", value = "renta_spouse.eu_eea_country|str|" },
+  { key = "setup.field.spouse_eu_eea_resident", value = "renta_spouse.eu_eea_resident|bool|false" },
+  { key = "setup.field.spouse_name", value = "renta_spouse.name|str|" },
+  { key = "setup.field.spouse_non_resident_irpf", value = "renta_spouse.non_resident_irpf|bool|false" },
+  { key = "setup.field.spouse_sex", value = "renta_spouse.sex|str|" },
+  { key = "setup.field.spouse_surnames", value = "renta_spouse.surnames|str|" },
+  { key = "setup.field.spouse_tax_id", value = "renta_spouse.tax_id|str|" },
+  { key = "setup.field.surnames", value = "identity.surnames|str|" },
+  { key = "setup.field.tax_id", value = "identity.tax_id|str|" },
+  { key = "setup.field.tax_residence_ccaa", value = "tax_residence.ccaa|str|madrid" },
+  { key = "setup.field.tax_residence_jurisdiction_scope", value = "tax_residence.jurisdiction_scope|str|" },
+  { key = "setup.field.taxation_type", value = "renta_filing.declaration_type|str|" },
+  { key = "setup.field.taxpayer_birth_date", value = "renta_taxpayer.birth_date|str|" },
+  { key = "setup.field.taxpayer_death_date", value = "renta_taxpayer.death_date|str|" },
+  { key = "setup.field.taxpayer_disability_grade", value = "renta_taxpayer.disability_grade|str|" },
+  { key = "setup.field.taxpayer_marital_status", value = "renta_taxpayer.marital_status|str|" },
+  { key = "setup.field.taxpayer_marriage_date", value = "renta_taxpayer.marriage_date|str|" },
+  { key = "setup.field.taxpayer_sex", value = "renta_taxpayer.sex|str|" },
+  { key = "setup.field.third_party_transactions_above_347_threshold", value = "obligations.third_party_transactions_above_347_threshold|bool|false" },
+
+  { key = "profile.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods" },
+  { key = "profile.field.ley_49_2002_special_regime_option_declared", value = "taxpayer_type.ley_49_2002_special_regime_option_declared" },
+  { key = "profile.field.ley_49_2002_special_regime_option_date", value = "taxpayer_type.ley_49_2002_special_regime_option_date" },
+  { key = "profile.field.ley_49_2002_special_regime_renunciation_declared", value = "taxpayer_type.ley_49_2002_special_regime_renunciation_declared" },
+  { key = "profile.field.ley_49_2002_special_regime_renunciation_date", value = "taxpayer_type.ley_49_2002_special_regime_renunciation_date" },
+
+  { key = "wizard.page.ley-49-2002-option-date.format_hint", value = "wizard.setup.format.date-iso" },
+  { key = "wizard.page.ley-49-2002-option-date.widget_kind", value = "date" },
+  { key = "wizard.page.ley-49-2002-renunciation-date.format_hint", value = "wizard.setup.format.date-iso" },
+  { key = "wizard.page.ley-49-2002-renunciation-date.widget_kind", value = "date" },
+
+  { key = "wizard.option.ley-49-2002-option-declared", value = "--ley-49-2002-option-declared/--no-ley-49-2002-option-declared|confirm|wizard.setup.flags.ley-49-2002-option-declared.help" },
+  { key = "wizard.option.ley-49-2002-option-date", value = "--ley-49-2002-option-date|text|wizard.setup.flags.ley-49-2002-option-date.help" },
+  { key = "wizard.option.ley-49-2002-renunciation-declared", value = "--ley-49-2002-renunciation-declared/--no-ley-49-2002-renunciation-declared|confirm|wizard.setup.flags.ley-49-2002-renunciation-declared.help" },
+  { key = "wizard.option.ley-49-2002-renunciation-date", value = "--ley-49-2002-renunciation-date|text|wizard.setup.flags.ley-49-2002-renunciation-date.help" },
+]

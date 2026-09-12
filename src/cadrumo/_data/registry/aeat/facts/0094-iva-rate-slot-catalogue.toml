@@ -1,0 +1,71 @@
+[fact]
+fact_id = "iva-rate-slot-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "iva-rate-slot-catalogue:1993-01-01"
+date_axis = "devengo_date"
+valid_from = 1993-01-01
+legal_refs = [
+    "ley-37-1992:art-3.dos",
+    "ley-37-1992:art-18",
+    "ley-37-1992:art-20",
+    "ley-37-1992:art-21",
+    "ley-37-1992:art-22",
+    "ley-37-1992:art-25",
+    "ley-37-1992:art-69",
+    "ley-37-1992:art-84",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
+]
+source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["Modelo 303"]
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["Modelo 303"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+    { key = "slot.RATE_0.category", value = "domestic_zero" },
+    { key = "slot.RATE_0.substrate_kind", value = "zero" },
+    { key = "slot.RATE_0.numeric", value = "true" },
+    { key = "slot.RATE_0.rate_role", value = "ordinary" },
+    { key = "slot.RATE_2.category", value = "domestic_super_reduced" },
+    { key = "slot.RATE_2.substrate_kind", value = "super_reduced" },
+    { key = "slot.RATE_2.numeric", value = "true" },
+    { key = "slot.RATE_2.rate_role", value = "coexisting-2" },
+    { key = "slot.RATE_4.category", value = "domestic_super_reduced" },
+    { key = "slot.RATE_4.substrate_kind", value = "super_reduced" },
+    { key = "slot.RATE_4.numeric", value = "true" },
+    { key = "slot.RATE_4.rate_role", value = "ordinary" },
+    { key = "slot.RATE_5.category", value = "domestic_reduced" },
+    { key = "slot.RATE_5.substrate_kind", value = "reduced" },
+    { key = "slot.RATE_5.numeric", value = "true" },
+    { key = "slot.RATE_5.rate_role", value = "coexisting-5" },
+    { key = "slot.RATE_7.5.category", value = "domestic_reduced" },
+    { key = "slot.RATE_7.5.substrate_kind", value = "reduced" },
+    { key = "slot.RATE_7.5.numeric", value = "true" },
+    { key = "slot.RATE_7.5.rate_role", value = "coexisting-7.5" },
+    { key = "slot.RATE_10.category", value = "domestic_reduced" },
+    { key = "slot.RATE_10.substrate_kind", value = "reduced" },
+    { key = "slot.RATE_10.numeric", value = "true" },
+    { key = "slot.RATE_10.rate_role", value = "ordinary" },
+    { key = "slot.RATE_21.category", value = "domestic_general" },
+    { key = "slot.RATE_21.substrate_kind", value = "general" },
+    { key = "slot.RATE_21.numeric", value = "true" },
+    { key = "slot.RATE_21.rate_role", value = "ordinary" },
+    { key = "slot.EXEMPT.category", value = "domestic_exempt" },
+    { key = "slot.EXEMPT.substrate_kind", value = "exempt" },
+    { key = "slot.EXEMPT.numeric", value = "false" },
+    { key = "slot.EXEMPT.rate_role", value = "none" },
+    { key = "slot.NOT_SUBJECT.category", value = "domestic_not_subject" },
+    { key = "slot.NOT_SUBJECT.substrate_kind", value = "none" },
+    { key = "slot.NOT_SUBJECT.numeric", value = "false" },
+    { key = "slot.NOT_SUBJECT.rate_role", value = "none" },
+]
