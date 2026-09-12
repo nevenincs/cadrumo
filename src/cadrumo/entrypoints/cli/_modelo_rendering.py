@@ -108,17 +108,18 @@ def m184_socio_handoff_notices(revision: CalculationRevision) -> list[Notice]:
     M184 with no socios), so the handoff stays silent unless there is a real
     per-socio value to relay.
     """
-    handoff_code: str | None = None
-    target_casilla: str | None = None
-    legal_refs: str | None = None
+    handoff_declarations: tuple[str, str, str] | None = None
     notices: list[Notice] = []
     for row in revision.detail_rows:
         if not isinstance(row, Modelo184MemberRow):
             continue
-        if handoff_code is None:
-            handoff_code = _modelo_rendering_value("m184.socio_handoff.code")
-            target_casilla = _modelo_rendering_value("m184.socio_handoff.target_casilla")
-            legal_refs = _modelo_rendering_value("m184.socio_handoff.legal_refs")
+        if handoff_declarations is None:
+            handoff_declarations = (
+                _modelo_rendering_value("m184.socio_handoff.code"),
+                _modelo_rendering_value("m184.socio_handoff.target_casilla"),
+                _modelo_rendering_value("m184.socio_handoff.legal_refs"),
+            )
+        handoff_code, target_casilla, legal_refs = handoff_declarations
         notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
