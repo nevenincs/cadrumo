@@ -2840,7 +2840,10 @@ def _validate_placement(candidate_id: str, closure: dict[str, Any]) -> None:
                         raise ManifestError(f"{relation_label}.{field} is required")
                 if not isinstance(relation["legacy_path"], str) or not relation["legacy_path"].strip():
                     raise ManifestError(f"{relation_label}.legacy_path is required")
-                if not isinstance(relation["legacy_declaration_id"], str) or not relation["legacy_declaration_id"].strip():
+                if (
+                    not isinstance(relation["legacy_declaration_id"], str)
+                    or not relation["legacy_declaration_id"].strip()
+                ):
                     raise ManifestError(f"{relation_label}.legacy_declaration_id is required")
                 canonical_id = relation["canonical_declaration_id"]
                 if canonical_id not in ids:

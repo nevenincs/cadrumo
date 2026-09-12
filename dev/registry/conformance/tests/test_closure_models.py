@@ -205,4 +205,3 @@ def test_evidence_and_models_are_strict_and_immutable() -> None:
             outcome="satisfied",
             evidence=(evidence, evidence),
         )
-

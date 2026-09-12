@@ -541,4 +541,3 @@ def test_non_impatriado_profile_does_not_route_to_modelo_151() -> None:
         assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE, special_regime
         assert result.applicable is False, special_regime
         assert "Art. 93" in result.reason
-

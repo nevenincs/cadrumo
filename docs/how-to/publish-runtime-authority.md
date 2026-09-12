@@ -9,6 +9,8 @@ not an `aeat` command for taxpayers.
 The artifact is generated output. It records a digest of its own content and
 the identity of the registry and evidence it
 was compiled from, so the registry gate can tell when it is out of date.
+It is also the sole shipped runtime source: installed code does not open the
+authored registry tree or maintain a parallel cache of tables parsed from it.
 
 For the artifact format, runtime checks, error classes, and Python application
 programming interface (API), see [Registry, legal sources, and Python API](../reference/registry-legal-api.md).
@@ -23,7 +25,8 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    uv run --no-sync python -m dev.registry.pipeline publish-authority
    ```
 
-   The command validates the bundled registry and its source evidence, then
+   The command materializes authoring deltas into complete typed revisions,
+   validates the bundled registry and its source evidence, then
    atomically replaces `src/cadrumo/_data/registry/authority/authority.json`.
    It prints the artifact path and the identity digest it recorded.
    `--registry-root`, `--source-root`, and `--artifact` select other trees or
@@ -34,6 +37,14 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
 If validation is refused, or the registry changes while it is being
 validated, publication fails and leaves the previous artifact byte-for-byte in
 place. Don't edit the artifact by hand. Correct the registry, then publish again.
+
+Publication also projects the shared `floor`, `horizon`, and optional
+`hard_ceiling` support envelope and the typed runtime catalogues for IVA rules,
+place of supply, countries and territories, recargo bands, and apoderamiento
+scopes. Every required catalogue must be populated. Modelo and tax-domain
+identifiers accept their stable syntax in code, but membership belongs to this
+validated authority; an identifier absent from its published vocabulary is not
+silently admitted.
 
 ## Check that the artifact is current
 
@@ -58,7 +69,8 @@ round-trip test covers the compiler itself.
 
 When an installed workflow refuses an unavailable, malformed, altered, or
 unsupported-version artifact, stop the workflow. The `bundled_authority()`
-load doesn't compile authoring sources or repair an artifact as a fallback.
+load doesn't compile authoring sources, parse raw TOML, repair an artifact, or
+fall back to a separately cached runtime table.
 
 1. Preserve the failed artifact when it is present, plus the package version,
    artifact digest, error class, and redacted logs.

@@ -404,7 +404,6 @@ def _reaches_binding_derivation(source: str) -> bool:
     the proof green, and the detector would be proved against a
     reimplementation of itself.
     """
-    import ast
 
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.ImportFrom) and any(alias.name == _BINDING_DERIVATION for alias in node.names):
@@ -740,7 +739,6 @@ def _without_self_reference_regions(source: str) -> str:
     A region this cannot find is left in place and will be reported, which is the
     safe direction: an unexpected citation in this module should fail the gate.
     """
-    import ast
 
     tree = ast.parse(source)
     exempt: list[tuple[int, int]] = []
@@ -1079,7 +1077,6 @@ def _names_imported_by_tests(root: pathlib.Path) -> set[str]:
     module path, and an extractor reading only the path reported seven modules
     as untested that four separate tests import.
     """
-    import ast
 
     names: set[str] = set()
     for path in sorted(root.rglob("test_*.py")):
@@ -1119,7 +1116,6 @@ def _public_modules(roots: tuple[pathlib.Path, ...]) -> list[pathlib.Path]:
     entry point is a coroutine is exactly as untested as any other when no test
     imports it, and reading only the sync form would exempt it silently.
     """
-    import ast
 
     found: list[pathlib.Path] = []
     for root in roots:

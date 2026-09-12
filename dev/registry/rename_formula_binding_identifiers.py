@@ -2187,7 +2187,7 @@ def plan_span_strip(modelo: str, modelos_root: Path = REGISTRY_MODELOS_ROOT) -> 
                 candidates = tuple(identifier[start:end] for start, end, _low, _high in runs)
                 rendered = "no offset/length" if address is None else f"{address[0]}-{address[1]}"
                 plan.refusals.append(str(SpanProviderMismatchError(modelo, edition, identifier, candidates, rendered)))
-            if len(matching) > 1:
+            if address is not None and len(matching) > 1:
                 plan.refusals.append(
                     f"{modelo} {edition} bindings {identifier}: spells its provider address "
                     f"{address[0]}-{address[1]} more than once; refusing to choose which run to remove"

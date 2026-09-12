@@ -46,8 +46,12 @@ files are digested with CRLF line endings read as LF. Source evidence is
 digested byte for byte. Absolute paths, sizes, and timestamps never contribute,
 so an identical checkout anywhere derives the same identity.
 
-The current format is `cadrumo-authority-artifact-v3`. Its payload records
-every schema field of the authority. Decimals and dates are JSON strings where
+The current format is `cadrumo-authority-artifact-v4`. Its payload is a compact
+projection of the complete typed authority. Required fields are always written;
+a field is omitted only when its typed value equals the default declared by its
+schema. Strict rehydration restores those defaults. Discriminators and authored
+union spellings remain on the wire, so compaction never guesses which typed
+variant to construct. Decimals and dates are JSON strings where
 the schema types a field as a decimal or a date. A governed-fact value can be
 text, an integer, a decimal, a boolean, or a date, and JSON cannot tell those
 apart by value alone. Every non-text fact value is therefore written as an
@@ -64,14 +68,28 @@ object with one tag that names its type:
 Runtime decodes the payload under the same strict schema the development
 compiler uses. It refuses an unknown tag, a malformed or non-canonical tagged
 value, and an untagged non-text fact value; it never infers a type from the
-shape of a string. It refuses a `cadrumo-authority-artifact-v1` or
-`cadrumo-authority-artifact-v2` artifact and names the format to republish in.
+shape of a string. It refuses every superseded v1, v2, or v3 artifact and names
+the v4 format to republish in.
 
-The `bundled_authority()` artifact-loading path has no source-compilation,
-validation, repair, or cache fallback. A missing artifact raises an unavailable
-error. A malformed frame, an unexpected frame member, or an invalid payload
-raises a format error. A digest mismatch raises an integrity error. These
-failures occur before authority-dependent calculation or filing proceeds.
+The compiler, not the product runtime, expands authoring deltas into complete
+canonical revisions. The artifact also carries typed runtime catalogues for IVA
+regulations, place-of-supply rules, country aliases, Spanish postal territories,
+territorial carve-outs, recargo bands, and apoderamiento scopes. These are
+frozen schema records, not embedded TOML bytes or an untyped JSON bag. A v4
+write or read refuses an authority when any required runtime catalogue is empty.
+
+Modelo and tax-domain types validate stable identifier syntax without loading
+the authored tree. The compiled authority owns membership and validates those
+identifiers against its published vocabularies. The same authority projects the
+shared temporal support envelope—`floor`, `horizon`, and optional
+`hard_ceiling`—used to admit supported coordinates.
+
+The `bundled_authority()` artifact-loading path has no source compilation, raw
+authored-tree loader, repair path, or parallel runtime-table cache. A missing
+artifact raises an unavailable error. A malformed frame, unexpected member,
+incomplete typed catalogue, or invalid payload raises a format error. A digest
+mismatch raises an integrity error. These failures occur before
+authority-dependent calculation or filing proceeds.
 
 Development tooling publishes with
 `uv run --no-sync python -m dev.registry.pipeline publish-authority`, or

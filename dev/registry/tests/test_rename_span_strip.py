@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from ..rename_formula_binding_identifiers import (
-    DirtyFragmentDirectoryError,
     ChainedRenameMapError,
+    DirtyFragmentDirectoryError,
     apply_span_strip,
     plan_span_strip,
     remove_emptied_fragment_directories,
@@ -207,7 +207,7 @@ def _addressed_binding(edition: str, identifier: str, *, offset: int, length: in
     return (
         f'[[revisions."{edition}".bindings]]\n'
         f'id = "{identifier}"\n'
-        f"provider = {{ kind = \"manual_input\", record = \"r1\", field = \"{field}\", "
+        f'provider = {{ kind = "manual_input", record = "r1", field = "{field}", '
         f"offset = {offset}, length = {length} }}\n\n"
     )
 

@@ -21,7 +21,12 @@ Three defects produce that, and they are not equally dangerous:
                 re-quoted. This screen never folds accents -- doing so would
                 accept a quote that does not exist.
 
-``absent``     The text is nowhere in the cited excerpt under either folding.
+``case``       The quote differs from the source only in letter case, usually a
+                heading the citation wrote in lowercase. The gate casefolds, so
+                these pass; they are listed because a citation that is not the
+                source's own casing is not verbatim.
+
+``absent``     The text is nowhere in the cited excerpt under any folding.
                 Either the citation names the wrong article, or the claim is
                 not grounded by the document it points at. Needs a person.
 
@@ -44,7 +49,7 @@ from typing import Final
 _DATA: Final = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data"
 _LEGAL: Final = _DATA / "registry" / "aeat" / "legal"
 
-CITATION_CLASSES: Final[tuple[str, ...]] = ("whitespace", "diacritic", "absent")
+CITATION_CLASSES: Final[tuple[str, ...]] = ("whitespace", "diacritic", "case", "absent")
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +104,8 @@ def scan() -> Iterator[Finding]:
                     yield Finding(catalogue.name, legal_id, "whitespace", quote)
                 elif _fold_accents(_fold_space(quote)) in folded:
                     yield Finding(catalogue.name, legal_id, "diacritic", quote)
+                elif _fold_accents(_fold_space(quote)).casefold() in folded.casefold():
+                    yield Finding(catalogue.name, legal_id, "case", quote)
                 else:
                     yield Finding(catalogue.name, legal_id, "absent", quote)
 

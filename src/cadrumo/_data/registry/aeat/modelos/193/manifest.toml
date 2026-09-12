@@ -22,6 +22,6 @@ source_refs = [
 ]
 
 [modelo.inception.unauthored]
-earliest_authored = 2024
-reason = "Approved by Orden EHA/3377/2011; filing years 2022-2023 existed in law and are not yet authored."
+earliest_authored = 2022
+reason = "Approved by an unbounded founding Orden; filing years below 2022 existed in law and are not yet authored. Editions 2022 and 2023 were authored 2026-09-12 at applicability grade: the record geometry is grounded verbatim in the registered diseños de registro, while the calculation layer is not, because no instrucciones source in the catalogue opens before 2024."
 legal_refs = ["orden-eha-3377-2011:art-1"]

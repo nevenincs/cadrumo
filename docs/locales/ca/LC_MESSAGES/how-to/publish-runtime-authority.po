@@ -1,0 +1,160 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.5.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-12 13:59+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/publish-runtime-authority.md:1
+msgid "How to publish a validated runtime authority"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:3
+msgid ""
+"Use this guide when you change Cadrumo's tax-rule registry or its legal "
+"evidence. Publication turns validated Agencia Estatal de Administración "
+"Tributaria (AEAT) modelo rules into the artifact the runtime reads for "
+"calculations and filing exports. It is a development and release "
+"operation, not an `aeat` command for taxpayers."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:9
+msgid ""
+"The artifact is generated output. It records a digest of its own content "
+"and the identity of the registry and evidence it was compiled from, so "
+"the registry gate can tell when it is out of date. It is also the sole "
+"shipped runtime source: installed code does not open the authored "
+"registry tree or maintain a parallel cache of tables parsed from it."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:15
+msgid ""
+"For the artifact format, runtime checks, error classes, and Python "
+"application programming interface (API), see [Registry, legal sources, "
+"and Python API](../reference/registry-legal-api.md). For an ordinary "
+"installed-command failure, use [Diagnose and repair](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:19
+msgid "Publish"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:21
+msgid "Start from a registry that passes the registry validation suite."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:22
+msgid "From the repository root, run:"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:28
+msgid ""
+"The command materializes authoring deltas into complete typed revisions, "
+"validates the bundled registry and its source evidence, then atomically "
+"replaces `src/cadrumo/_data/registry/authority/authority.json`. It prints"
+" the artifact path and the identity digest it recorded. `--registry-"
+"root`, `--source-root`, and `--artifact` select other trees or another "
+"destination."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:34
+msgid ""
+"Commit the regenerated `authority.json` together with the registry change"
+" that required it."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:37
+msgid ""
+"If validation is refused, or the registry changes while it is being "
+"validated, publication fails and leaves the previous artifact byte-for-"
+"byte in place. Don't edit the artifact by hand. Correct the registry, "
+"then publish again."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:41
+msgid ""
+"Publication also projects the shared `floor`, `horizon`, and optional "
+"`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
+"rules, place of supply, countries and territories, recargo bands, and "
+"apoderamiento scopes. Every required catalogue must be populated. Modelo "
+"and tax-domain identifiers accept their stable syntax in code, but "
+"membership belongs to this validated authority; an identifier absent from"
+" its published vocabulary is not silently admitted."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:49
+msgid "Check that the artifact is current"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:51
+msgid "Run the registry gate:"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:57
+msgid ""
+"Its first step, `python -m dev.registry.conformance integrity`, exits 1 "
+"with a refusal on standard error when the artifact is stale, unreadable, "
+"or in an earlier format. The refusal names the recorded and the expected "
+"identity digests and the command that republishes the artifact."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:62
+msgid ""
+"The identity depends only on file content and on paths relative to the "
+"registry and source roots. A fresh clone on any platform therefore agrees"
+" with the publisher. A change to the compiler's code that doesn't touch "
+"the registry or its evidence doesn't make the artifact stale. The full-"
+"registry publication round-trip test covers the compiler itself."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:68
+msgid "Recover from an invalid authority"
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:70
+msgid ""
+"When an installed workflow refuses an unavailable, malformed, altered, or"
+" unsupported-version artifact, stop the workflow. The "
+"`bundled_authority()` load doesn't compile authoring sources, parse raw "
+"TOML, repair an artifact, or fall back to a separately cached runtime "
+"table."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:75
+msgid ""
+"Preserve the failed artifact when it is present, plus the package "
+"version, artifact digest, error class, and redacted logs."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:77
+msgid ""
+"Republish from a validated registry, and confirm that `just check-"
+"registry` passes."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:79
+msgid "Rebuild the package so it contains the replacement artifact."
+msgstr ""
+
+#: ../../how-to/publish-runtime-authority.md:81
+msgid ""
+"Escalate through the [project issue "
+"tracker](https://github.com/nevenincs/cadrumo/issues) with the release "
+"version, artifact digest, error class, and redacted log context. Never "
+"include taxpayer data."
+msgstr ""
+

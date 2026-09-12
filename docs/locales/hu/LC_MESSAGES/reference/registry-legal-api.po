@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-09-12 13:59+0200\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -24,11 +24,12 @@ msgstr "Registry, jogforrások és Python API"
 
 #: ../../reference/registry-legal-api.md:3
 msgid ""
-"The Agencia Estatal de Administración Tributaria (AEAT) owns the official modelo structure. API means application "
-"programming interface."
+"The Agencia Estatal de Administración Tributaria (AEAT) owns the official"
+" modelo structure. API means application programming interface."
 msgstr ""
-"Az Agencia Estatal de Administración Tributaria (AEAT) tulajdonolja a hivatalos modelo-struktúrát. Az API az "
-"alkalmazásprogramozási felületet jelenti."
+"Az Agencia Estatal de Administración Tributaria (AEAT) tulajdonolja a "
+"hivatalos modelo-struktúrát. Az API az alkalmazásprogramozási felületet "
+"jelenti."
 
 #: ../../reference/registry-legal-api.md:6
 msgid "Registry and legal-source lookup"
@@ -36,13 +37,17 @@ msgstr "Registry- és jogforrás-kikeresés"
 
 #: ../../reference/registry-legal-api.md:8
 msgid ""
-"Cadrumo's calculation registry preserves the AEAT structure it represents: modelo identifiers, periods, sections, "
-"casillas, formulas, bindings, classifications, and source references remain authority-named. A resolved calculation "
-"revision records the registry revision it used so later review can identify the exact rule set."
+"Cadrumo's calculation registry preserves the AEAT structure it "
+"represents: modelo identifiers, periods, sections, casillas, formulas, "
+"bindings, classifications, and source references remain authority-named. "
+"A resolved calculation revision records the registry revision it used so "
+"later review can identify the exact rule set."
 msgstr ""
-"A Cadrumo számítási registryje megőrzi az általa képviselt AEAT-struktúrát: a modelo-azonosítók, időszakok, "
-"szakaszok, casillák, formulák, bindingok, osztályozások és forráshivatkozások hivatali nevűek maradnak. Egy feloldott"
-" számítási revízió rögzíti az általa használt registry-revíziót, hogy egy későbbi áttekintés azonosíthassa a pontos "
+"A Cadrumo számítási registryje megőrzi az általa képviselt AEAT-"
+"struktúrát: a modelo-azonosítók, időszakok, szakaszok, casillák, "
+"formulák, bindingok, osztályozások és forráshivatkozások hivatali nevűek "
+"maradnak. Egy feloldott számítási revízió rögzíti az általa használt "
+"registry-revíziót, hogy egy későbbi áttekintés azonosíthassa a pontos "
 "szabálykészletet."
 
 #: ../../reference/registry-legal-api.md
@@ -90,23 +95,237 @@ msgid "Evidence provenance"
 msgstr "Bizonyíték-provenancia"
 
 #: ../../reference/registry-legal-api.md
-msgid "Local record, document, observation, or prior filed revision that supplied a value"
-msgstr "Helyi nyilvántartás, dokumentum, megfigyelés vagy korábbi benyújtott revízió, amely egy értéket szolgáltatott"
+msgid ""
+"Local record, document, observation, or prior filed revision that "
+"supplied a value"
+msgstr ""
+"Helyi nyilvántartás, dokumentum, megfigyelés vagy korábbi benyújtott "
+"revízió, amely egy értéket szolgáltatott"
 
 #: ../../reference/registry-legal-api.md:22
-msgid "Filing-input contract shapes"
-msgstr "A bevallási bemeneti szerződés alakzatai"
+msgid "Runtime authority artifact"
+msgstr ""
 
 #: ../../reference/registry-legal-api.md:24
 msgid ""
-"The validated registry snapshot is the read-model authority for one modelo, filing year, and period. It defines the "
-"casillas, formulas, bindings, repeating fields, grounding, and export layout required by that filing revision. Source"
-" business records remain owned by their encrypted domain repositories."
+"The runtime authority artifact is the versioned, digest-checked "
+"publication of the validated AEAT registry intended for installed "
+"calculations and filing exports. It is generated output. "
+"`bundled_authority()` reads the packaged "
+"`registry/authority/authority.json` and checks its schema version and "
+"content digest before reconstructing typed authority data."
 msgstr ""
-"A hitelesített nyilvántartási pillanatkép egy modell, bevallási év és időszak olvasási modelljének forrása. "
-"Meghatározza a bevallás adott felülvizsgálatához szükséges casillákat, képleteket, kötéseket, ismétlődő mezőket, "
-"megalapozást és exportelrendezést. A forrás üzleti rekordjai továbbra is a titkosított doméntárolók tulajdonában "
-"maradnak."
+
+#: ../../reference/registry-legal-api.md
+msgid "Term"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Validated candidate"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"The registry and source-evidence inputs accepted by the development "
+"compiler."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Validation receipt"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"The digests captured for those inputs; a change before publication "
+"refuses the candidate."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Identity digest"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"The content-addressed identity of the candidate, recorded in the artifact"
+" so a stale artifact can be detected."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Authority artifact"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "The atomically written JSON publication containing the resolved authority."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Schema version"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "The artifact format identifier. Runtime refuses an unsupported version."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:38
+msgid ""
+"The artifact is one canonical JSON object with exactly three members: "
+"`schema_version`, `payload`, and `payload_sha256`. `payload_sha256` is "
+"the SHA-256 digest of the canonical JSON of `schema_version` and "
+"`payload` together. The digest detects a truncated, corrupted, or hand-"
+"edited file."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:43
+msgid ""
+"The identity digest folds, for every registry file and every source-"
+"evidence file, its path relative to its root and the SHA-256 of its "
+"content. Registry files are digested with CRLF line endings read as LF. "
+"Source evidence is digested byte for byte. Absolute paths, sizes, and "
+"timestamps never contribute, so an identical checkout anywhere derives "
+"the same identity."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:49
+msgid ""
+"The current format is `cadrumo-authority-artifact-v4`. Its payload is a "
+"compact projection of the complete typed authority. Required fields are "
+"always written; a field is omitted only when its typed value equals the "
+"default declared by its schema. Strict rehydration restores those "
+"defaults. Discriminators and authored union spellings remain on the wire,"
+" so compaction never guesses which typed variant to construct. Decimals "
+"and dates are JSON strings where the schema types a field as a decimal or"
+" a date. A governed-fact value can be text, an integer, a decimal, a "
+"boolean, or a date, and JSON cannot tell those apart by value alone. "
+"Every non-text fact value is therefore written as an object with one tag "
+"that names its type:"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Fact value"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Written as"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Decimal"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, python-brace-format
+msgid "`{\"$decimal\": \"0.40\"}`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Date"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, python-brace-format
+msgid "`{\"$date\": \"2025-01-01\"}`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Integer"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, python-brace-format
+msgid "`{\"$int\": 5}`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Boolean"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+#, python-brace-format
+msgid "`{\"$bool\": true}`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Text"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "The bare JSON string, for example `\"0.40\"`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:68
+msgid ""
+"Runtime decodes the payload under the same strict schema the development "
+"compiler uses. It refuses an unknown tag, a malformed or non-canonical "
+"tagged value, and an untagged non-text fact value; it never infers a type"
+" from the shape of a string. It refuses every superseded v1, v2, or v3 "
+"artifact and names the v4 format to republish in."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:74
+msgid ""
+"The compiler, not the product runtime, expands authoring deltas into "
+"complete canonical revisions. The artifact also carries typed runtime "
+"catalogues for IVA regulations, place-of-supply rules, country aliases, "
+"Spanish postal territories, territorial carve-outs, recargo bands, and "
+"apoderamiento scopes. These are frozen schema records, not embedded TOML "
+"bytes or an untyped JSON bag. A v4 write or read refuses an authority "
+"when any required runtime catalogue is empty."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:81
+msgid ""
+"Modelo and tax-domain types validate stable identifier syntax without "
+"loading the authored tree. The compiled authority owns membership and "
+"validates those identifiers against its published vocabularies. The same "
+"authority projects the shared temporal support envelope—`floor`, "
+"`horizon`, and optional `hard_ceiling`—used to admit supported "
+"coordinates."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:87
+msgid ""
+"The `bundled_authority()` artifact-loading path has no source "
+"compilation, raw authored-tree loader, repair path, or parallel runtime-"
+"table cache. A missing artifact raises an unavailable error. A malformed "
+"frame, unexpected member, incomplete typed catalogue, or invalid payload "
+"raises a format error. A digest mismatch raises an integrity error. These"
+" failures occur before authority-dependent calculation or filing "
+"proceeds."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:94
+msgid ""
+"Development tooling publishes with `uv run --no-sync python -m "
+"dev.registry.pipeline publish-authority`, or programmatically through the"
+" development-only "
+"`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:107
+msgid ""
+"`python -m dev.registry.conformance integrity` refuses an artifact whose "
+"recorded identity digest differs from the identity of the live registry "
+"and source evidence. See [Publish a validated runtime authority](../how-"
+"to/publish-runtime-authority.md) for the workflow and recovery path."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:112
+msgid "Filing-input contract shapes"
+msgstr "A bevallási bemeneti szerződés alakzatai"
+
+#: ../../reference/registry-legal-api.md:114
+msgid ""
+"The validated registry snapshot is the read-model authority for one "
+"modelo, filing year, and period. It defines the casillas, formulas, "
+"bindings, repeating fields, grounding, and export layout required by that"
+" filing revision. Source business records remain owned by their encrypted"
+" domain repositories."
+msgstr ""
+"A hitelesített nyilvántartási pillanatkép egy modell, bevallási év és "
+"időszak olvasási modelljének forrása. Meghatározza a bevallás adott "
+"felülvizsgálatához szükséges casillákat, képleteket, kötéseket, ismétlődő"
+" mezőket, megalapozást és exportelrendezést. A forrás üzleti rekordjai "
+"továbbra is a titkosított doméntárolók tulajdonában maradnak."
 
 #: ../../reference/registry-legal-api.md
 msgid "Shape"
@@ -130,7 +349,9 @@ msgstr "Tipizált forrástípus, szelektor és aggregáció"
 
 #: ../../reference/registry-legal-api.md
 msgid "One numeric, enumerated, text, or date value for a binding id"
-msgstr "Egy kötésazonosítóhoz tartozó numerikus, felsorolt, szöveges vagy dátumérték"
+msgstr ""
+"Egy kötésazonosítóhoz tartozó numerikus, felsorolt, szöveges vagy "
+"dátumérték"
 
 #: ../../reference/registry-legal-api.md
 msgid "Repeating row binding"
@@ -141,8 +362,12 @@ msgid "Typed source kind plus grouping, row field, and aggregation"
 msgstr "Tipizált forrástípus csoportosítással, sormezővel és aggregációval"
 
 #: ../../reference/registry-legal-api.md
-msgid "Values keyed by binding id and one-based row index, with validated detail rows"
-msgstr "Kötésazonosító és egytől induló sorindex szerint kulcsolt értékek, érvényesített részletsorokkal"
+msgid ""
+"Values keyed by binding id and one-based row index, with validated detail"
+" rows"
+msgstr ""
+"Kötésazonosító és egytől induló sorindex szerint kulcsolt értékek, "
+"érvényesített részletsorokkal"
 
 #: ../../reference/registry-legal-api.md
 msgid "Formula"
@@ -150,54 +375,68 @@ msgstr "Képlet"
 
 #: ../../reference/registry-legal-api.md
 msgid "Typed operands and operation grounded by registry references"
-msgstr "Tipizált operandusok és nyilvántartási hivatkozásokkal megalapozott művelet"
+msgstr ""
+"Tipizált operandusok és nyilvántartási hivatkozásokkal megalapozott "
+"művelet"
 
 #: ../../reference/registry-legal-api.md
 msgid "A calculated casilla observation"
 msgstr "Egy kiszámított casilla-megfigyelés"
 
-#: ../../reference/registry-legal-api.md:35
+#: ../../reference/registry-legal-api.md:125
 msgid ""
-"A binding is not an attachable data blob. It is the contract by which an enrolled source resolver projects an owned "
-"source record into one of these filing-input shapes. Modelo 720 foreign assets use an enrolled repeating-row "
-"projection. The binding-source taxonomy currently has no inventory member. No calculation resolver is enrolled for "
-"the encrypted `InventoryLedger`, so it remains a standalone business register."
+"A binding is not an attachable data blob. It is the contract by which an "
+"enrolled source resolver projects an owned source record into one of "
+"these filing-input shapes. Modelo 720 foreign assets use an enrolled "
+"repeating-row projection. The binding-source taxonomy currently has no "
+"inventory member. No calculation resolver is enrolled for the encrypted "
+"`InventoryLedger`, so it remains a standalone business register."
 msgstr ""
-"A kötés nem csatolható adatblokk. Az a szerződés, amelynek segítségével egy bejegyzett forrásfeloldó a saját "
-"forrásrekordot e bevallási bemeneti alakzatok egyikébe vetíti. A Modelo 720 külföldi eszközei bejegyzett, ismétlődő "
-"sorkivetítést használnak. A kötési forrástaxonómiában jelenleg nincs készlettag. A titkosított `InventoryLedger` "
-"számára nincs bejegyzett számítási feloldó, ezért önálló üzleti nyilvántartás marad."
+"A kötés nem csatolható adatblokk. Az a szerződés, amelynek segítségével "
+"egy bejegyzett forrásfeloldó a saját forrásrekordot e bevallási bemeneti "
+"alakzatok egyikébe vetíti. A Modelo 720 külföldi eszközei bejegyzett, "
+"ismétlődő sorkivetítést használnak. A kötési forrástaxonómiában jelenleg "
+"nincs készlettag. A titkosított `InventoryLedger` számára nincs "
+"bejegyzett számítási feloldó, ezért önálló üzleti nyilvántartás marad."
 
-#: ../../reference/registry-legal-api.md:42
-#, python-brace-format
+#: ../../reference/registry-legal-api.md:132
+#, fuzzy, python-brace-format
 msgid ""
-"Use the generated [application command reference](../cli/app.rst) to look up registry inspection, modelo description,"
-" formula, verification-report, and audit surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-facing"
-" definitions."
+"Use the generated [application command reference](../cli/app.rst) to look"
+" up modelo calculation, description, verification-report, and audit "
+"surfaces. Use the {doc}`glossary </_generated/glossary>` for taxpayer-"
+"facing definitions."
 msgstr ""
-"Használja a generált [alkalmazásparancs-referenciát](../cli/app.rst) a registry-vizsgálat, a modelo-leírás, a "
-"formula, a verifikációs jelentés és az auditfelületek kikeresésére. Használja a {doc}`szójegyzéket "
+"Használja a generált [alkalmazásparancs-referenciát](../cli/app.rst) a "
+"registry-vizsgálat, a modelo-leírás, a formula, a verifikációs jelentés "
+"és az auditfelületek kikeresésére. Használja a {doc}`szójegyzéket "
 "</_generated/glossary>` az adózónak szóló definíciókhoz."
 
-#: ../../reference/registry-legal-api.md:47
+#: ../../reference/registry-legal-api.md:136
 msgid "Python public API lookup"
 msgstr "Python nyilvános API kikeresése"
 
-#: ../../reference/registry-legal-api.md:49
+#: ../../reference/registry-legal-api.md:138
 msgid ""
-"The generated [Cadrumo package API](../api/cadrumo.rst) is the entry point for Python lookup. Public consumers import"
-" from `cadrumo` and its documented public facades. The generated package tree lists the supported adapters, "
-"application, core, domain, entrypoint, and locale surfaces."
+"The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
+"point for Python lookup. Public consumers import from `cadrumo` and its "
+"documented public facades. The generated package tree lists the supported"
+" adapters, application, core, domain, entrypoint, and locale surfaces."
 msgstr ""
-"A generált [Cadrumo csomag API](../api/cadrumo.rst) a Python-kikeresés belépési pontja. A nyilvános fogyasztók a "
-"`cadrumo`-ból és annak dokumentált nyilvános homlokzataiból importálnak. A generált csomagfa felsorolja a támogatott "
-"adapter-, alkalmazás-, core-, domain-, entrypoint- és locale-felületeket."
+"A generált [Cadrumo csomag API](../api/cadrumo.rst) a Python-kikeresés "
+"belépési pontja. A nyilvános fogyasztók a `cadrumo`-ból és annak "
+"dokumentált nyilvános homlokzataiból importálnak. A generált csomagfa "
+"felsorolja a támogatott adapter-, alkalmazás-, core-, domain-, "
+"entrypoint- és locale-felületeket."
 
-#: ../../reference/registry-legal-api.md:54
+#: ../../reference/registry-legal-api.md:143
 msgid ""
-"There is no `aeat` Python import compatibility package. Names containing `aeat` inside the `cadrumo` package identify"
-" the external authority adapter or authority-owned vocabulary, not a second product API."
+"There is no `aeat` Python import compatibility package. Names containing "
+"`aeat` inside the `cadrumo` package identify the external authority "
+"adapter or authority-owned vocabulary, not a second product API."
 msgstr ""
-"Nincs `aeat` Python-import kompatibilitási csomag. A `cadrumo` csomagon belüli, `aeat`-et tartalmazó nevek a külső "
-"hatósági adaptert vagy a hatóság tulajdonában lévő szókincset azonosítják, nem egy második termék-API-t."
+"Nincs `aeat` Python-import kompatibilitási csomag. A `cadrumo` csomagon "
+"belüli, `aeat`-et tartalmazó nevek a külső hatósági adaptert vagy a "
+"hatóság tulajdonában lévő szókincset azonosítják, nem egy második termék-"
+"API-t."
 

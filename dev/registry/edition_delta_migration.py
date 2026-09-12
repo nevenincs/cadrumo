@@ -1624,10 +1624,18 @@ class FamilyDrop:
     kept_new: tuple[str, ...]
     kept_differs: tuple[str, ...]
     kept_pinned: tuple[str, ...]
+    kept_no_identity: int = 0
 
     @property
     def stated(self) -> int:
-        return len(self.dropped) + len(self.kept_new) + len(self.kept_differs) + len(self.kept_pinned)
+        """How many members the edition states in this family."""
+        return (
+            len(self.dropped)
+            + len(self.kept_new)
+            + len(self.kept_differs)
+            + len(self.kept_pinned)
+            + self.kept_no_identity
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1641,6 +1649,7 @@ class EditionDrop:
 
     @property
     def dropped(self) -> int:
+        """How many members this edition would stop stating."""
         return sum(len(family.dropped) for family in self.families)
 
 
@@ -1653,6 +1662,7 @@ class DropPlan:
 
     @property
     def dropped(self) -> int:
+        """How many members the whole modelo would stop stating."""
         return sum(edition.dropped for edition in self.editions)
 
 
@@ -1721,11 +1731,20 @@ def _plan_family_drop(
     kept_new: list[str] = []
     kept_differs: list[str] = []
     kept_pinned: list[str] = []
+    kept_no_identity = 0
     seen: set[str] = set()
     for block in stated:
         member = block.row
         identity = _identity_of(member, family)
         if identity is None:
+            # A casilla row without a lineage is ordinary and widespread, and
+            # the casilla merge does not refuse it; it simply cannot be matched
+            # to an inherited row, so it is kept and counted. A keyed-family
+            # member without its identity is the case the loader itself
+            # refuses, and refusing here keeps the two answers the same.
+            if family.section == _CASILLAS:
+                kept_no_identity += 1
+                continue
             raise MigrationRefusedError(
                 f"edition {revision_id!r}: states a {family.section} member carrying no {family.identity!r}, so it "
                 "cannot be matched to an inherited member",
@@ -1759,6 +1778,7 @@ def _plan_family_drop(
         kept_new=tuple(kept_new),
         kept_differs=tuple(kept_differs),
         kept_pinned=tuple(kept_pinned),
+        kept_no_identity=kept_no_identity,
     )
 
 
@@ -1782,7 +1802,9 @@ def _plan_edition_drop(
     inherited_table = _read_edition(modelo_dir, predecessor).table
     drops: list[FamilyDrop] = []
     for family in families:
-        stated = [block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks]
+        stated = [
+            block for fragment in _read_family_fragments(edition_dir, family.section) for block in fragment.blocks
+        ]
         if not stated:
             continue
         drop = _plan_family_drop(
@@ -1819,7 +1841,21 @@ def _rewrite_family_fragment(fragment: _MemberFragment, family: _DroppableFamily
         return
     if kept:
         text = fragment.preamble + "".join(block.text for block in kept)
-        fragment.path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
+        path = fragment.path
+        if family.section == _CASILLAS:
+            # Casilla fragments are named for the rows they hold, so dropping a
+            # row from one renames it. Leaving the authored name would state a
+            # span the fragment no longer covers, which is the same drift the
+            # migration's own writer avoids by deriving the name from content.
+            renamed = fragment.path.with_name(_fragment_name([_row_id(block.row) for block in kept]))
+            if renamed != path and renamed.exists():
+                raise MigrationRefusedError(
+                    f"{fragment.path}: dropping rows would rename it to {renamed.name!r}, which already exists",
+                )
+            path = renamed
+        path.write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
+        if path != fragment.path:
+            fragment.path.unlink()
         return
     if fragment.preamble.strip() and not all(
         not line.strip() or line.lstrip().startswith("#") for line in fragment.preamble.splitlines()
@@ -1967,7 +2003,8 @@ def render_drop_outcome(outcome: DropOutcome) -> str:
                 f"edition modelo={outcome.plan.modelo_id} revision={edition.revision_id} "
                 f"predecessor={edition.predecessor} family={family.section} stated={family.stated} "
                 f"dropped={len(family.dropped)} kept_new={len(family.kept_new)} "
-                f"kept_differs={len(family.kept_differs)} kept_pinned={len(family.kept_pinned)}"
+                f"kept_differs={len(family.kept_differs)} kept_pinned={len(family.kept_pinned)} "
+                f"kept_no_identity={family.kept_no_identity}"
             )
     for finding in outcome.report.findings if outcome.report is not None else ():
         lines.append(f"finding kind={finding.kind} {finding}")
@@ -1976,7 +2013,7 @@ def render_drop_outcome(outcome: DropOutcome) -> str:
         f"changed={outcome.changed} applied={outcome.applied} "
         f"findings={len(outcome.report.findings) if outcome.report is not None else 0}"
     )
-    return "\n".join(lines)
+    return "\n".join(lines) + "\n"
 
 
 # ── the migration ───────────────────────────────────────────────────────────

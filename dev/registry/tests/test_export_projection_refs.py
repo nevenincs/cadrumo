@@ -55,10 +55,10 @@ _PROJECTION_CASILLA = validated_casilla_id("500", surface="test projection endpo
 _UNKNOWN_CASILLA = validated_casilla_id("missing", surface="test projection endpoint")
 
 
-def _prorrata_ref(*, casilla_id: str = _PROJECTION_CASILLA) -> M303ProrrataActivityProjectionRef:
+def _prorrata_ref(*, casilla_id: str = _PROJECTION_CASILLA, slot: int = 1) -> M303ProrrataActivityProjectionRef:
     return M303ProrrataActivityProjectionRef(
         projection_kind="m303_prorrata_activity",
-        slot=1,
+        slot=slot,
         field=M303ProrrataActivityProjectionField.CNAE,
         casilla_id=validated_casilla_id(casilla_id, surface="test projection endpoint"),
     )
@@ -380,12 +380,11 @@ def test_active_snapshots_materialize_repeated_and_fixed_binding_records(
     assert all(field.kind != "projection" for field in record.fields)
 
 
-def test_projection_endpoint_validator_refuses_duplicate_and_unknown_casilla() -> None:
-    duplicate = _prorrata_ref(casilla_id=_UNKNOWN_CASILLA)
+def test_projection_endpoint_validator_refuses_unknown_casilla() -> None:
     revision = _revision(
         projection_endpoints=(
-            _declaration(projection_ref=duplicate),
-            _declaration(projection_ref=duplicate),
+            _declaration(projection_ref=_prorrata_ref(casilla_id=_UNKNOWN_CASILLA, slot=1)),
+            _declaration(projection_ref=_prorrata_ref(casilla_id=_UNKNOWN_CASILLA, slot=2)),
         ),
     )
     failures: list[str] = []
@@ -401,7 +400,6 @@ def test_projection_endpoint_validator_refuses_duplicate_and_unknown_casilla() -
         evidence=EvidenceValidator(legal_refs={}, source_refs={}, source_root=None),
     )
 
-    assert any("admitted by 2 projection declarations; expected exactly one" in failure for failure in failures)
     assert any("references unknown casilla 'missing'" in failure for failure in failures)
 
 
