@@ -48,6 +48,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BASE = Decimal("5000.00")
 _DEVENGO = date(2024, 3, 15)
 

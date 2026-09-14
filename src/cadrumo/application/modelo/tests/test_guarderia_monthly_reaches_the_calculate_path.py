@@ -21,8 +21,8 @@ what "did this spend arrive" means.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 import re
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -51,6 +51,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one generation for each guardería resolver path."""
     with bundled_indexed_authority().operation() as operation:
         yield operation
+
 
 _BUCKET = "0de41ce4-0000-4000-8000-000000000613"
 _T0 = datetime(2026, 8, 5, 10, 0, tzinfo=UTC)

@@ -56,7 +56,6 @@ from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     _make_svc,
     invoice_confirmation_kwargs,
-    invoice_authority,
     isolated_settings,
     secure_objects,
 )

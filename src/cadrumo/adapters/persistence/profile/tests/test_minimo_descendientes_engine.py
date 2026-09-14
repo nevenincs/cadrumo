@@ -42,6 +42,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _ENGINE_FILING_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
 _BUCKET = "00000000-0000-4000-8000-000000000516"
 _PROFILE_LABEL = "M100 minimo descendientes engine profile"

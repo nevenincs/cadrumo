@@ -86,6 +86,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -117,7 +118,7 @@ def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(work_uni
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "transaction_repository", "invoice_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
@@ -134,7 +135,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
         "bucket_event_repository",
     ):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision(
             calculation_revision_id,
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
@@ -145,7 +146,7 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
 
 
 def _export_modelo_revision(command: Any, **kwargs: Any) -> Any:
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return export_modelo_revision(command, operation=operation, **kwargs)
 
 

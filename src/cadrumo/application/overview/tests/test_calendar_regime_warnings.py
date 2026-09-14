@@ -13,7 +13,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..calendar import build_overview_calendar
 from ..calendar_models import OverviewCalendarRange
-from .calendar_test_support import calendar_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

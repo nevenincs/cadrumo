@@ -149,46 +149,45 @@ def _filed_ports(
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with _secure_backend(tmp_path):
-            repository = CalculationObservationRepository()
-            calculation_key = persist_filed_calculation_observation(
-                _prior_303_observation(pending_compensation=Decimal("1200.00")),
-                ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        calculation_key = persist_filed_calculation_observation(
+            _prior_303_observation(pending_compensation=Decimal("1200.00")),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
+        )
 
-            target_snapshot = _registry_snapshot("303", 2026, "2T")
-            prefill = resolve_bindings_from_local_store(
-                target_snapshot,
-                repository=repository,
-                captured_at=_CAPTURED_AT,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-                operation=_authority_operation_for_test,
-            )
-            recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
-                target_snapshot,
-                repository=repository,
-                captured_at=_CAPTURED_AT,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-                operation=_authority_operation_for_test,
-            )
+        target_snapshot = _registry_snapshot("303", 2026, "2T")
+        prefill = resolve_bindings_from_local_store(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=_authority_operation_for_test,
+        )
+        recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=_authority_operation_for_test,
+        )
 
-            assert calculation_key == "303:2026:1T"
-            assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is not None
-            loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
-            assert loaded is not None
-            assert loaded.source_metadata == {
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
-                "authenticated_identity": _SYNTHETIC_PROFILE_ID,
-            }
-            assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
-            assert prefill.prefilled[0].source_modelo == "303"
-            assert prefill.prefilled[0].source_periods == ("1T",)
-            assert recurrence is not None
-            assert recurrence.amount == Decimal("1200.00")
-            assert recurrence.source_periods == (Period.from_year_and_code(2026, "1T"),)
-            assert recurrence_prefill.binding_values == prefill.binding_values
+        assert calculation_key == "303:2026:1T"
+        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is not None
+        loaded = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
+        assert loaded is not None
+        assert loaded.source_metadata == {
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": _SYNTHETIC_EXPEDIENTE_ID,
+            "authenticated_identity": _SYNTHETIC_PROFILE_ID,
+        }
+        assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
+        assert prefill.prefilled[0].source_modelo == "303"
+        assert prefill.prefilled[0].source_periods == ("1T",)
+        assert recurrence is not None
+        assert recurrence.amount == Decimal("1200.00")
+        assert recurrence.source_periods == (Period.from_year_and_code(2026, "1T"),)
+        assert recurrence_prefill.binding_values == prefill.binding_values
 
 
 def test_filed_observation_capture_records_single_justificante_csv_metadata(tmp_path: Path) -> None:
@@ -363,75 +362,73 @@ def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tm
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with _secure_backend(tmp_path):
-            repository = CalculationObservationRepository()
-            calculation_key = persist_filed_calculation_observation(
-                _prior_303_observation(
-                    year=2025,
-                    period="4T",
-                    pending_compensation=Decimal("450.00"),
-                    expediente_id="200030300000001Z",
-                ),
-                ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        calculation_key = persist_filed_calculation_observation(
+            _prior_303_observation(
+                year=2025,
+                period="4T",
+                pending_compensation=Decimal("450.00"),
+                expediente_id="200030300000001Z",
+            ),
+            ports=_filed_ports(bucket_id=_SESSION_BUCKET_ID, root=tmp_path, calculation_repository=repository),
+        )
 
-            target_snapshot = _registry_snapshot("303", 2026, "1T")
-            prefill = resolve_bindings_from_local_store(
-                target_snapshot,
-                repository=repository,
-                captured_at=_CAPTURED_AT,
-                iva_history_repository=IvaCompensationHistoryRepository(),
-                operation=_authority_operation_for_test,
-            )
+        target_snapshot = _registry_snapshot("303", 2026, "1T")
+        prefill = resolve_bindings_from_local_store(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+            operation=_authority_operation_for_test,
+        )
 
-            assert calculation_key == "303:2025:4T"
-            assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
-            assert prefill.prefilled[0].source_filing_year == 2025
-            assert prefill.prefilled[0].source_periods == ("4T",)
+        assert calculation_key == "303:2025:4T"
+        assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("450.00")}
+        assert prefill.prefilled[0].source_filing_year == 2025
+        assert prefill.prefilled[0].source_periods == ("4T",)
 
 
 def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with _secure_backend(tmp_path):
-            repository = CalculationObservationRepository()
-            history_repository = IvaCompensationHistoryRepository()
-            history_repository.save_period(
-                IvaCompensationPeriodState(
-                    provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-                    taxpayer_nif=_SYNTHETIC_PROFILE_ID,
-                    filing_year=2026,
-                    period=Period.from_year_and_code(2026, "1T"),
-                    registry_snapshot_ref=_registry_snapshot("303", 2026, "1T").snapshot_ref,
-                    expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
-                    status="ALTA",
-                    presented_at=_CAPTURED_AT,
-                    prior_pending_amount=Decimal("2.34"),
-                    applied_amount=Decimal("1.23"),
-                    pending_for_later_amount=Decimal("8.90"),
-                    period_result_amount=Decimal("-4.32"),
-                    final_result_amount=Decimal("-4.32"),
-                    generated_amount=Decimal("4.32"),
-                    available_end_amount=Decimal("13.22"),
-                    source_observation_key=f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}",
-                    source_artefact_sha256=hashlib.sha256(b"synthetic-submitted-file").hexdigest(),
-                ),
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        history_repository = IvaCompensationHistoryRepository()
+        history_repository.save_period(
+            IvaCompensationPeriodState(
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+                taxpayer_nif=_SYNTHETIC_PROFILE_ID,
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                registry_snapshot_ref=_registry_snapshot("303", 2026, "1T").snapshot_ref,
+                expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
+                status="ALTA",
+                presented_at=_CAPTURED_AT,
+                prior_pending_amount=Decimal("2.34"),
+                applied_amount=Decimal("1.23"),
+                pending_for_later_amount=Decimal("8.90"),
+                period_result_amount=Decimal("-4.32"),
+                final_result_amount=Decimal("-4.32"),
+                generated_amount=Decimal("4.32"),
+                available_end_amount=Decimal("13.22"),
+                source_observation_key=f"303:2026:1T:{_SYNTHETIC_EXPEDIENTE_ID}",
+                source_artefact_sha256=hashlib.sha256(b"synthetic-submitted-file").hexdigest(),
+            ),
+        )
 
-            target_snapshot = _registry_snapshot("303", 2026, "2T")
-            prefill = resolve_bindings_from_local_store(
-                target_snapshot,
-                repository=repository,
-                iva_history_repository=history_repository,
-                captured_at=_CAPTURED_AT,
-                operation=_authority_operation_for_test,
-            )
+        target_snapshot = _registry_snapshot("303", 2026, "2T")
+        prefill = resolve_bindings_from_local_store(
+            target_snapshot,
+            repository=repository,
+            iva_history_repository=history_repository,
+            captured_at=_CAPTURED_AT,
+            operation=_authority_operation_for_test,
+        )
 
-            assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is None
-            assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("13.22")}
-            assert prefill.prefilled[0].source_modelo == "303"
-            assert prefill.prefilled[0].source_filing_year == 2026
-            assert prefill.prefilled[0].source_periods == ("1T",)
+        assert repository.load_observation("303", Period.from_year_and_code(2026, "1T")) is None
+        assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("13.22")}
+        assert prefill.prefilled[0].source_modelo == "303"
+        assert prefill.prefilled[0].source_filing_year == 2026
+        assert prefill.prefilled[0].source_periods == ("1T",)
 
 
 def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_path: Path) -> None:
@@ -1647,11 +1644,24 @@ def test_fixture_csv_constants_still_match_the_receipts() -> None:
 
 
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        with _secure_backend(tmp_path):
-            repository = CalculationObservationRepository()
-            repository.save(
-                repository.prepare_observation_envelope(
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, _secure_backend(tmp_path):
+        repository = CalculationObservationRepository()
+        repository.save(
+            repository.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                    ),
+                ),
+                source_kind="aeat_sede_justificante",
+                captured_at=_CAPTURED_AT,
+                stamped_revision_id=revision_id_for_observation(
                     RegistryModeloObservation(
                         modelo="303",
                         filing_year=2026,
@@ -1662,35 +1672,21 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
                             period="1T",
                             casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
                         ),
-                    ),
-                    source_kind="aeat_sede_justificante",
-                    captured_at=_CAPTURED_AT,
-                    stamped_revision_id=revision_id_for_observation(
-                        RegistryModeloObservation(
-                            modelo="303",
-                            filing_year=2026,
-                            period="1T",
-                            observations=registry_grounded_observations(
-                                modelo="303",
-                                filing_year=2026,
-                                period="1T",
-                                casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
-                            ),
-                        )
-                    ),
-                )
+                    )
+                ),
             )
+        )
 
-            target_snapshot = _registry_snapshot("303", 2026, "2T")
+        target_snapshot = _registry_snapshot("303", 2026, "2T")
 
-            with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
-                resolve_bindings_from_local_store(
-                    target_snapshot,
-                    repository=repository,
-                    captured_at=_CAPTURED_AT,
-                    iva_history_repository=IvaCompensationHistoryRepository(),
-                    operation=_authority_operation_for_test,
-                )
+        with pytest.raises(RegistryValidationError, match=r"iva\.compensacion-disponible-fin-periodo"):
+            resolve_bindings_from_local_store(
+                target_snapshot,
+                repository=repository,
+                captured_at=_CAPTURED_AT,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=_authority_operation_for_test,
+            )
 
 
 def _filed_130_observation(

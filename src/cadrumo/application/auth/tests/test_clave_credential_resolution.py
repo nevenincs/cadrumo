@@ -20,13 +20,13 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    _profile_authority_contexts as _profile_contexts_for_test,
-)
 from dev.registry.compiler.fact_providers import compile_authored_fact_catalogue
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import SecretStr
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -34,6 +33,7 @@ from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
@@ -45,7 +45,7 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     repository = kwargs.pop("work_unit_repository", None)
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return calculate_modelo_revision(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
@@ -55,12 +55,12 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
 
 def _reconcile_modelo_303_iva_compensation(snapshot: Any, **kwargs: Any) -> Any:
     kwargs.setdefault("decision_repository", IvaWalletDecisionRepository())
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return reconcile_modelo_303_iva_compensation(snapshot, operation=operation, **kwargs)
 
 
 def _extract_modelo_303_local_iva_compensation_recurrence(snapshot: Any, **kwargs: Any) -> Any:
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return extract_modelo_303_local_iva_compensation_recurrence(snapshot, operation=operation, **kwargs)
 
 

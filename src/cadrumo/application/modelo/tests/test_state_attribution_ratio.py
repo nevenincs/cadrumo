@@ -44,6 +44,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _RATIO_KEY = "tax_residence.state_attribution_ratio"
 _SCOPE_KEY = "tax_residence.jurisdiction_scope"
 _BINDING_ID = "modelo-303-profile-state-attribution-ratio"

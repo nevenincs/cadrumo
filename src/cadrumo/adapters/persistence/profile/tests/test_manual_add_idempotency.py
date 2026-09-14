@@ -121,7 +121,9 @@ def test_retried_keyed_add_is_guarded_noop(secure_objects: SecureObjectRepositor
     assert first_tx is not None
     first_created_at = first_tx.created_at
 
-    second = _add(secure_objects, repo, events, idempotency_key="k-001", occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC))
+    second = _add(
+        secure_objects, repo, events, idempotency_key="k-001", occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC)
+    )
 
     catalogue = repo.load()
     assert tuple(catalogue.transactions) == (first.ref.transaction_id,)
@@ -177,7 +179,14 @@ def test_same_key_different_content_raises_conflict(secure_objects: SecureObject
     """Reusing a key for a different movement is a conflict refusal, never a silent overwrite."""
     repo, events, _ = _create_manual_row(secure_objects, description="cash sale", idempotency_key="k-004")
     with pytest.raises(TransactionValidationError):
-        _add(secure_objects, repo, events, idempotency_key="k-004", amount=Decimal("99.00"), description="different movement")
+        _add(
+            secure_objects,
+            repo,
+            events,
+            idempotency_key="k-004",
+            amount=Decimal("99.00"),
+            description="different movement",
+        )
     # The original row is untouched and no second row appeared.
     assert len(repo.load().transactions) == 1
     assert _created_event_count(events) == 1
@@ -205,13 +214,12 @@ def test_same_key_differing_only_in_recargo_raises_conflict(secure_objects: Secu
             ports=ports,
             occurred_at=_DEFAULT_OCCURRED_AT,
         )
-    with pytest.raises(TransactionValidationError):
-        with _ledger_ports(secure_objects, repo, events) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("2.60")),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
-            )
+    with pytest.raises(TransactionValidationError), _ledger_ports(secure_objects, repo, events) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(**base, recargo_amount=Decimal("2.60")),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
     assert len(repo.load().transactions) == 1
     assert _created_event_count(events) == 1
 
@@ -235,13 +243,12 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
             ports=ports,
             occurred_at=_DEFAULT_OCCURRED_AT,
         )
-    with pytest.raises(TransactionValidationError):
-        with _ledger_ports(secure_objects, repo, events) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(**base, source_jurisdiction="PT"),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
-            )
+    with pytest.raises(TransactionValidationError), _ledger_ports(secure_objects, repo, events) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(**base, source_jurisdiction="PT"),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
     assert len(repo.load().transactions) == 1
     assert _created_event_count(events) == 1
 
@@ -280,17 +287,16 @@ def test_same_key_differing_only_in_classified_by_override_raises_conflict(
     assert stored is not None
     assert stored.classified_by == "rule:office-supplies"
 
-    with pytest.raises(TransactionValidationError):
-        with _ledger_ports(secure_objects, repo, events) as ports:
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    **base,
-                    business_classification=BusinessClassification.BUSINESS,
-                    classified_by_override="rule:travel",
-                ),
-                ports=ports,
-                occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
-            )
+    with pytest.raises(TransactionValidationError), _ledger_ports(secure_objects, repo, events) as ports:
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                **base,
+                business_classification=BusinessClassification.BUSINESS,
+                classified_by_override="rule:travel",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
 
     # The refusal is loud, and the stored provenance is neither overwritten nor lost.
     assert len(repo.load().transactions) == 1

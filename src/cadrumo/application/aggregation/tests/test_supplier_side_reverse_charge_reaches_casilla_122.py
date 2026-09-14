@@ -31,8 +31,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
 
@@ -54,6 +54,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one generation for supplier/recipient binding projections."""
     with bundled_indexed_authority().operation() as operation:
         yield operation
+
 
 _BASE = Decimal("1000.00")
 _DEVENGO = date(2024, 3, 15)

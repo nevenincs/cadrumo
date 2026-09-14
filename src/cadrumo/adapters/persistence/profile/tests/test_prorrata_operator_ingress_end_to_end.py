@@ -71,6 +71,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BUCKET_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _EJERCICIO = 2026

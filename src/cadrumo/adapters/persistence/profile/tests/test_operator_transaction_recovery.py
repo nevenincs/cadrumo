@@ -321,6 +321,7 @@ def test_certificate_secret_set_event_failure_resumes_original_set_once(
                 resolved_after_failure = resolve_certificate_source_secret(
                     name="personal",
                     bucket_id=_BUCKET_ID,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 assert pending is not None
                 assert pending.event_kind is CertificateSecretMutationEventKind.SET
@@ -354,6 +355,7 @@ def test_certificate_secret_set_event_failure_resumes_original_set_once(
                 unchanged = resolve_certificate_source_secret(
                     name="personal",
                     bucket_id=_BUCKET_ID,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 assert unchanged is not None
                 assert unchanged.get_secret_value() == "first-private-passphrase"
@@ -425,7 +427,11 @@ def test_certificate_secret_rotation_event_failure_resumes_original_rotation_onc
                     operation=_certificate_authority_operation_for_test,
                     certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
-                resolved = resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID)
+                resolved = resolve_certificate_source_secret(
+                    name="personal",
+                    bucket_id=_BUCKET_ID,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
+                )
                 events = _events(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED)
 
             assert resumed.rotated is True
@@ -472,7 +478,14 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
                 assert pending.event_kind is CertificateSecretMutationEventKind.REMOVED
                 assert pending.prior_present is True
                 assert pending.completion_witness == f"secret-absent:{pending.operation_id}"
-                assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+                assert (
+                    resolve_certificate_source_secret(
+                        name="personal",
+                        bucket_id=_BUCKET_ID,
+                        certificate_secret_backend_factory=build_certificate_secret_backend,
+                    )
+                    is None
+                )
                 assert _event_count(BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED) == 0
 
                 resumed = remove_operator_certificate_source_secret(
@@ -589,7 +602,14 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
                 interrupted = workflow_state_repository().load()
                 assert interrupted.auth.cleanup_intent is not None
                 assert session_store.exists(session_path) is False
-                assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+                assert (
+                    resolve_certificate_source_secret(
+                        name="personal",
+                        bucket_id=_BUCKET_ID,
+                        certificate_secret_backend_factory=build_certificate_secret_backend,
+                    )
+                    is None
+                )
                 assert _event_count(BucketEventType.AUTH_PROVIDER_CLEARED) == 0
 
                 resumed = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
@@ -667,7 +687,11 @@ def test_pending_cleanup_refuses_new_auth_configuration_source_and_secret_writes
                     )
 
                 blocked = workflow_state_repository().load()
-                old_secret = resolve_certificate_source_secret(name="old", bucket_id=_BUCKET_ID)
+                old_secret = resolve_certificate_source_secret(
+                    name="old",
+                    bucket_id=_BUCKET_ID,
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
+                )
                 result = reset_operator_auth(provider="certificate", operator_scope_ports=_OPERATOR_SCOPE_PORTS)
                 final = workflow_state_repository().load()
 

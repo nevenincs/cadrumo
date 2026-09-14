@@ -90,8 +90,8 @@ from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
+from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.loopback_llm import (
@@ -446,8 +446,8 @@ __all__ = [
     "READING_RUNTIME_MODEL",
     "_BUCKET_ID",
     "_EVIDENCE_CORPUS",
-    "_make_svc",
     "InvoiceAuthorityFixture",
+    "_make_svc",
     "invoice_authority",
     "invoice_confirmation_kwargs",
     "invoice_confirmation_kwargs_with_catalogue",

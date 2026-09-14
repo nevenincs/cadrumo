@@ -53,7 +53,6 @@ from ._invoice_confirmation_test_support import (
     _BUCKET_ID,
     InvoiceAuthorityFixture,
     _make_svc,
-    invoice_authority,
     invoice_confirmation_kwargs,
     isolated_settings,
     secure_objects,

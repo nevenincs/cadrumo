@@ -6,7 +6,6 @@ from decimal import Decimal
 from typing import Any, override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
@@ -39,6 +38,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.entrypoints.adapter_composition import (
@@ -72,7 +72,7 @@ def _import_external_filing_evidence(**kwargs: Any) -> Any:
 def _get_calculation_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     """Read calculations through the current calculation capability contract."""
     kwargs.pop("calculation_repository", None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return get_calculation_revision(
             calculation_revision_id,
             ports=build_calculation_action_ports(bucket_id=_PROFILE_ID, operation=operation),
@@ -84,7 +84,7 @@ def _amend_modelo_revision(**kwargs: Any) -> Any:
     """Compose amendment capabilities through the current application contract."""
     for key in ("work_unit_repository", "calculation_repository", "filing_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         return amend_modelo_revision(
             ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
             operation=operation,

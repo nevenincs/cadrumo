@@ -31,6 +31,7 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
@@ -92,7 +93,7 @@ def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
 @contextmanager
 def _calculation_ports():
     """Lease the canonical registry operation and calculation port bundle."""
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation)
 
 

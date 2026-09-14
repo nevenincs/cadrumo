@@ -69,6 +69,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 # The invoice, stated once. Derived from the two cited rates and the canonical
 # identity, not from engine output.
 _BASE = Decimal("1000.00")

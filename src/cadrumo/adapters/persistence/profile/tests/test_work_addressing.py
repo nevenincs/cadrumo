@@ -43,6 +43,7 @@ from cadrumo.application.modelo.work_selection import (
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -55,6 +56,7 @@ from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,7 +114,7 @@ def addressing_repos(
 
 
 def _seed_work_unit(
-    repository: WorkUnitCatalogueRepository,
+    _repository: WorkUnitCatalogueRepository,
     *,
     bucket_id: str,
     clock: datetime = _T0,
@@ -123,7 +125,7 @@ def _seed_work_unit(
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=repository,
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=clock,
     )
 
@@ -385,18 +387,20 @@ def test_exact_work_unit_id_in_calculation_revision_slot_has_only_the_canonical_
     work_unit = _seed_work_unit(work_repository, bucket_id=bucket_id)
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        resolve_modelo_revision_for_operator_target(
-            calculation_revision_id=work_unit.work_unit_id,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision_id=None,
-            selector=ModeloCalculationRevisionSelector.CURRENT,
-            default_for=default_for,
-            catalogue=work_repository.load(),
-            resolved_bucket_id=bucket_id,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            resolve_modelo_revision_for_operator_target(
+                calculation_revision_id=work_unit.work_unit_id,
+                work_unit_id=None,
+                modelo=None,
+                year=None,
+                period=None,
+                registry_revision_id=None,
+                selector=ModeloCalculationRevisionSelector.CURRENT,
+                default_for=default_for,
+                catalogue=work_repository.load(),
+                resolved_bucket_id=bucket_id,
+                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            )
 
     failure = raised.value.precondition_failure
     assert failure is not None
@@ -445,18 +449,20 @@ def test_positional_work_unit_id_resolves_its_current_revision_after_calculation
         ),
     )
 
-    resolved = resolve_modelo_revision_for_operator_target(
-        calculation_revision_id=work_unit.work_unit_id,
-        work_unit_id=None,
-        modelo=None,
-        year=None,
-        period=None,
-        registry_revision_id=None,
-        selector=ModeloCalculationRevisionSelector.CURRENT,
-        default_for=default_for,
-        catalogue=work_repository.load(),
-        resolved_bucket_id=bucket_id,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        resolved = resolve_modelo_revision_for_operator_target(
+            calculation_revision_id=work_unit.work_unit_id,
+            work_unit_id=None,
+            modelo=None,
+            year=None,
+            period=None,
+            registry_revision_id=None,
+            selector=ModeloCalculationRevisionSelector.CURRENT,
+            default_for=default_for,
+            catalogue=work_repository.load(),
+            resolved_bucket_id=bucket_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+        )
 
     assert resolved == revision
     assert resolved.work_unit_id == work_unit.work_unit_id
@@ -478,23 +484,25 @@ def test_discarded_work_unit_id_in_calculation_revision_slot_is_a_terminal_appli
         work_unit.work_unit_id,
         actor="operator",
         reason="test terminal selector state",
-        repository=work_repository,
+        ports=build_work_lifecycle_ports(bucket_id=bucket_id),
         clock=_T0 + timedelta(minutes=1),
     )
 
     with pytest.raises(CalculationRevisionNotFoundError) as raised:
-        resolve_modelo_revision_for_operator_target(
-            calculation_revision_id=work_unit.work_unit_id,
-            work_unit_id=None,
-            modelo=None,
-            year=None,
-            period=None,
-            registry_revision_id=None,
-            selector=ModeloCalculationRevisionSelector.CURRENT,
-            default_for=default_for,
-            catalogue=work_repository.load(),
-            resolved_bucket_id=bucket_id,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            resolve_modelo_revision_for_operator_target(
+                calculation_revision_id=work_unit.work_unit_id,
+                work_unit_id=None,
+                modelo=None,
+                year=None,
+                period=None,
+                registry_revision_id=None,
+                selector=ModeloCalculationRevisionSelector.CURRENT,
+                default_for=default_for,
+                catalogue=work_repository.load(),
+                resolved_bucket_id=bucket_id,
+                ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            )
 
     failure = raised.value.precondition_failure
     assert failure is not None

@@ -68,7 +68,6 @@ from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     _make_svc,
     evidence_text_layer_ports_for_test,
-    invoice_authority,
     invoice_confirmation_kwargs,
     invoice_draft_extraction_kwargs,
     isolated_settings,

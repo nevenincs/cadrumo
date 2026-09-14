@@ -55,7 +55,7 @@ from cadrumo.application.user_profile.tests.profile_values import complete_profi
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

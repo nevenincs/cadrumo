@@ -102,22 +102,21 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
     work_unit_repository = WorkUnitCatalogueRepository(objects=secure_objects)
     calculation_repository = CalculationRevisionCatalogueRepository(objects=secure_objects)
 
-    with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="finalized modelo"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    ) as ports:
+        restore_manual_transaction(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-        ) as ports:
-            restore_manual_transaction(
-                bucket_id=_BUCKET_ID,
-                transaction_id=restore_row.ref.transaction_id,
-                actor="operator-A",
-                ports=ports,
-                occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
-            )
+            transaction_id=restore_row.ref.transaction_id,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 6, 10, 0, tzinfo=UTC),
+        )
     dry_run_removal = remove_manual_transaction(
         bucket_id=_BUCKET_ID,
         transaction_id=remove_row.ref.transaction_id,
@@ -139,22 +138,21 @@ def test_finalized_modelo_reference_blocks_lifecycle_removal_prior_id_and_reset(
             work_unit_repository=work_unit_repository,
             calculation_repository=calculation_repository,
         )
-    with pytest.raises(TransactionValidationError, match="finalized modelo"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="finalized modelo"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    ) as ports:
+        archive_manual_transaction(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            work_unit_repository=work_unit_repository,
-            calculation_repository=calculation_repository,
-        ) as ports:
-            archive_manual_transaction(
-                bucket_id=_BUCKET_ID,
-                transaction_id=lifecycle_row.ref.transaction_id,
-                actor="operator-A",
-                ports=ports,
-                occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
-            )
+            transaction_id=lifecycle_row.ref.transaction_id,
+            actor="operator-A",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
+        )
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
             bucket_id=_BUCKET_ID,

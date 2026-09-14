@@ -61,19 +61,18 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
             ports=ports,
         )
 
-    with pytest.raises(TransactionValidationError, match="cohort is incomplete"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="cohort is incomplete"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        merge_transactions(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ) as ports:
-            merge_transactions(
-                bucket_id=_BUCKET_ID,
-                child_transaction_ids=split.child_transaction_ids[:2],
-                actor="operator-A",
-                ports=ports,
-            )
+            child_transaction_ids=split.child_transaction_ids[:2],
+            actor="operator-A",
+            ports=ports,
+        )
 
 
 def test_merge_refuses_duplicate_child_ids(secure_objects: SecureObjectRepository) -> None:
@@ -81,19 +80,18 @@ def test_merge_refuses_duplicate_child_ids(secure_objects: SecureObjectRepositor
     _parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
     duplicate = (split.child_transaction_ids[0], split.child_transaction_ids[0])
 
-    with pytest.raises(TransactionValidationError, match="must be unique"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="must be unique"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        merge_transactions(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ) as ports:
-            merge_transactions(
-                bucket_id=_BUCKET_ID,
-                child_transaction_ids=duplicate,
-                actor="operator-A",
-                ports=ports,
-            )
+            child_transaction_ids=duplicate,
+            actor="operator-A",
+            ports=ports,
+        )
 
 
 def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> None:
@@ -134,34 +132,32 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
             actor="operator-A",
             ports=ports,
         )
-    with pytest.raises(TransactionValidationError, match="one split_group_id"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="one split_group_id"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        merge_transactions(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ) as ports:
-            merge_transactions(
-                bucket_id=_BUCKET_ID,
-                child_transaction_ids=(split_a.child_transaction_ids[0], split_b.child_transaction_ids[0]),
-                actor="operator-A",
-                ports=ports,
-            )
+            child_transaction_ids=(split_a.child_transaction_ids[0], split_b.child_transaction_ids[0]),
+            actor="operator-A",
+            ports=ports,
+        )
 
 
 def test_merge_refuses_single_child(secure_objects: SecureObjectRepository) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     _parent_result, split = _split_setup(secure_objects, transaction_repository, event_repository)
-    with pytest.raises(TransactionValidationError, match="at least two child"):
-        with ledger_ports_for_test(
+    with pytest.raises(TransactionValidationError, match="at least two child"), ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        merge_transactions(
             bucket_id=_BUCKET_ID,
-            objects=secure_objects,
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-        ) as ports:
-            merge_transactions(
-                bucket_id=_BUCKET_ID,
-                child_transaction_ids=(split.child_transaction_ids[0],),
-                actor="operator-A",
-                ports=ports,
-            )
+            child_transaction_ids=(split.child_transaction_ids[0],),
+            actor="operator-A",
+            ports=ports,
+        )

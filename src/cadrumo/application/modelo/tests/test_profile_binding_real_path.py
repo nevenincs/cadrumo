@@ -65,6 +65,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _PROFILE_ID = "10000000-0000-4000-8000-000000000477"
 _BUCKET_ID = _PROFILE_ID
 _YEAR = 2025

@@ -9,7 +9,8 @@ import re
 from collections import Counter, defaultdict
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Final
+from collections.abc import Iterable
+from typing import Final, TypedDict
 
 from dev._paths import UTF_8
 
@@ -20,6 +21,102 @@ _SIGNAL_SCHEMA_VERSION: Final[int] = 2
 _RATCHET_RELATIVE_PATH: Final[Path] = Path("dev/quality/metadata/import_boundary_ratchet.json")
 _ANALYZED_RE: Final[re.Pattern[str]] = re.compile(r"^Analyzed (\d+) files, (\d+) dependencies\.$")
 _CONTRACT_RE: Final[re.Pattern[str]] = re.compile(r"^(.+?) (KEPT|BROKEN)$")
+
+
+class _GraphSummary(TypedDict):
+    """Parsed Import Linter graph facts used by the health verdict."""
+
+    contracts_broken: int
+    contracts_kept: int
+    contracts_total: int
+    broken_contract_names: list[str]
+    contract_status: dict[str, str]
+    dependencies: int
+    files: int
+
+
+class _EvidenceRow(TypedDict):
+    line: int
+    path: str
+
+
+class _OccurrenceRow(TypedDict):
+    contract: str
+    evidence: list[_EvidenceRow]
+    fingerprint: str
+    import_form: str
+    imported_symbols: list[str]
+    lexical_scope: str
+    multiplicity: int
+    source_module: str
+    target_module: str
+    test_scoped: bool
+
+
+class _OccurrenceSummary(TypedDict):
+    contract_occurrences: int
+    by_contract: dict[str, int]
+    by_import_form: dict[str, int]
+    non_test_scoped_occurrences: int
+    test_scoped_occurrences: int
+    inventory_digest: str
+    unique_contract_occurrences: int
+    unique_import_occurrences: int
+
+
+class _CandidateSummary(_OccurrenceSummary):
+    advisory_by_contract: dict[str, int]
+    advisory_by_lane_pair: dict[str, int]
+    advisory_non_test_scoped_occurrences: int
+    advisory_occurrences: int
+    advisory_test_scoped_occurrences: int
+    advisory_unique_occurrences: int
+
+
+class _CandidateInventory(TypedDict):
+    advisory_occurrences: list[_OccurrenceRow]
+    generated_at: str
+    occurrences: list[_OccurrenceRow]
+    schema_version: int
+    summary: _CandidateSummary
+
+
+class _RatchetCounts(TypedDict):
+    approved_active: int
+    new_unapproved: int
+    expanded_existing: int
+    expired: int
+    malformed: int
+    regressed_retired: int
+    retirement_candidates: int
+    retirement_ready: int
+    retired_verified: int
+
+
+class _RatchetEntry(TypedDict):
+    fingerprint: str
+    source_module: str
+    target_module: str
+    import_form: str
+    imported_symbols: list[str]
+    lexical_scope: str
+    contract: str
+    owner: str
+    reason: str
+    capability: str
+    multiplicity: int
+    created_on: str
+    expires_on: str
+    status: str
+
+
+class _RatchetReport(TypedDict):
+    baseline_status: str
+    counts: _RatchetCounts
+    detail_counts: dict[str, int]
+    details: dict[str, list[str]]
+    path: str
+    schema_version: int
 
 
 def build_import_health(
@@ -61,9 +158,7 @@ def build_import_health(
     if source_snapshot_before != source_snapshot_after:
         operational_reasons.append("governed source tree changed while the gate was running")
     candidate_by_contract = candidate["summary"]["by_contract"]
-    assert isinstance(candidate_by_contract, dict)
     contract_status = graph["contract_status"]
-    assert isinstance(contract_status, dict)
     supplemental_occurrences = {
         contract.key: int(candidate_by_contract.get(contract.key, 0))
         for contract in authority.forbidden_contracts
@@ -88,13 +183,13 @@ def build_import_health(
         ("regressed_retired", "retired occurrence regression(s)"),
         ("retirement_candidates", "disappeared occurrence(s) without verified composition evidence"),
     ):
-        count = int(ratchet["counts"][key])
+        count = ratchet["counts"][key]
         if count:
             failed_reasons.append(f"{count} {label}")
     if graph["contracts_broken"] and not candidate["summary"]["contract_occurrences"]:
         failed_reasons.append("broken graph contracts have no attributable direct occurrence")
 
-    debt_total = int(ratchet["counts"]["approved_active"]) + int(ratchet["counts"]["retirement_ready"])
+    debt_total = ratchet["counts"]["approved_active"] + ratchet["counts"]["retirement_ready"]
     if operational_reasons:
         verdict = "failed"
         classification = "tool_failure"
@@ -114,28 +209,27 @@ def build_import_health(
 
     headline = _headline(verdict, graph, checker, ratchet, operational_reasons, failed_reasons)
     convergence = {
-        "active_debt_occurrences": int(ratchet["counts"]["approved_active"]),
+        "active_debt_occurrences": ratchet["counts"]["approved_active"],
         "blocking_findings": len(blocking_findings),
         "load_failures": load_failures,
         "load_root_causes": load_root_causes,
-        "expanded_occurrences": int(ratchet["counts"]["expanded_existing"]),
-        "expired_occurrences": int(ratchet["counts"]["expired"]),
-        "new_unapproved_occurrences": int(ratchet["counts"]["new_unapproved"]),
+        "expanded_occurrences": ratchet["counts"]["expanded_existing"],
+        "expired_occurrences": ratchet["counts"]["expired"],
+        "new_unapproved_occurrences": ratchet["counts"]["new_unapproved"],
         "operational_failures": len(operational_reasons),
-        "pending_retirement_occurrences": int(ratchet["counts"]["retirement_candidates"])
-        + int(ratchet["counts"]["retirement_ready"]),
-        "regressed_retired_occurrences": int(ratchet["counts"]["regressed_retired"]),
+        "pending_retirement_occurrences": ratchet["counts"]["retirement_candidates"]
+        + ratchet["counts"]["retirement_ready"],
+        "regressed_retired_occurrences": ratchet["counts"]["regressed_retired"],
         "zero": verdict == "clean",
         "zero_definition": (
             "authoritative stable graph, every governed non-test module loads, zero hard findings, "
             "zero current or approved architectural debt, and zero pending retirement"
         ),
     }
-    candidate_advisory_by_contract = candidate["summary"].get("advisory_by_contract", {})
-    assert isinstance(candidate_advisory_by_contract, dict)
+    candidate_advisory_by_contract = candidate["summary"]["advisory_by_contract"]
     advisory_by_code = Counter(finding.category for finding in advisory_findings)
     advisory_by_code.update({str(key): int(value) for key, value in candidate_advisory_by_contract.items()})
-    advisory_total = len(advisory_findings) + int(candidate["summary"].get("advisory_occurrences", 0))
+    advisory_total = len(advisory_findings) + candidate["summary"]["advisory_occurrences"]
     payload: dict[str, object] = {
         "advisories": {
             "by_code": dict(sorted(advisory_by_code.items())),
@@ -148,9 +242,9 @@ def build_import_health(
         "classification": classification,
         "component_durations_seconds": {key: round(value, 3) for key, value in sorted(component_durations.items())},
         "composition_evidence": {
-            "missing": int(ratchet["counts"]["retirement_candidates"]),
-            "ready_for_ratchet_retirement": int(ratchet["counts"]["retirement_ready"]),
-            "retired_verified": int(ratchet["counts"]["retired_verified"]),
+            "missing": ratchet["counts"]["retirement_candidates"],
+            "ready_for_ratchet_retirement": ratchet["counts"]["retirement_ready"],
+            "retired_verified": ratchet["counts"]["retired_verified"],
         },
         "convergence": convergence,
         "failed_reasons": failed_reasons,

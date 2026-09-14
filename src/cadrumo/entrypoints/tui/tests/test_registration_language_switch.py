@@ -24,6 +24,8 @@ from textual.widgets._select import SelectOverlay
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
+)
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     load_test_profile_record,
 )
 

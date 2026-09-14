@@ -227,6 +227,7 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
                 confirmed=False,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 bucket_storage=default_profile_bucket_storage(),
+                certificate_secret_backend_factory=build_certificate_secret_backend,
             )
         with pytest.raises(ConfigResetConfirmationRequiredError):
             resume_config_reset(
@@ -234,6 +235,7 @@ def test_start_and_resume_require_explicit_confirmation(tmp_path: Path) -> None:
                 confirmed=False,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 bucket_storage=default_profile_bucket_storage(),
+                certificate_secret_backend_factory=build_certificate_secret_backend,
             )
 
 
@@ -328,6 +330,7 @@ def test_start_discovers_live_and_dangling_targets_then_completes(
                     confirmed=True,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                     bucket_storage=default_profile_bucket_storage(),
+                    certificate_secret_backend_factory=build_certificate_secret_backend,
                 )
                 assert lock_path.exists() is False
 
@@ -428,6 +431,7 @@ def test_a_locked_dangling_target_has_its_key_free_lock_cleared_and_says_what_it
                 confirmed=True,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 bucket_storage=default_profile_bucket_storage(),
+                certificate_secret_backend_factory=build_certificate_secret_backend,
             )
 
         assert operation.status is ConfigResetOperationStatus.COMPLETE
@@ -509,6 +513,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
         assert operation.status is ConfigResetOperationStatus.PAUSED
@@ -531,6 +536,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
                 confirmed=True,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 bucket_storage=default_profile_bucket_storage(),
+                certificate_secret_backend_factory=build_certificate_secret_backend,
             )
         assert raised.value.context == {"operation_id": operation.operation_id}
 
@@ -541,6 +547,7 @@ def test_retention_preflight_pauses_before_auth_pointer_or_bucket_mutation(
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert completed.summary is not None
@@ -567,6 +574,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert paused.status is ConfigResetOperationStatus.PAUSED
         assert paused.pause_reason is ConfigResetPauseReason.RETENTION_UNRESOLVED
@@ -578,6 +586,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert changed.status is ConfigResetOperationStatus.PAUSED
         assert changed.pause_reason is ConfigResetPauseReason.TARGET_STATE_CHANGED
@@ -591,6 +600,7 @@ def test_resume_converges_after_a_target_is_removed_out_of_band(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert completed.summary is not None
@@ -614,6 +624,7 @@ def test_status_is_a_read_only_journal_view(tmp_path: Path) -> None:
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         repository = ConfigResetJournalRepository()
         journal_path = repository.path_for(operation.operation_id)
@@ -637,6 +648,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         original_fingerprint = operation.targets[0].fingerprint
         assert original_fingerprint is not None
@@ -653,6 +665,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
         assert changed.status is ConfigResetOperationStatus.PAUSED
@@ -668,6 +681,7 @@ def test_resume_pauses_once_when_target_content_changed_then_accepts_new_snapsho
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
 
@@ -686,6 +700,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
         _create_profile(_PROFILE_C_ID, label="Gamma operator", tax_id="00000002W")
@@ -696,6 +711,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
 
         assert changed.status is ConfigResetOperationStatus.PAUSED
@@ -715,6 +731,7 @@ def test_resume_adds_changed_pointer_target_under_the_same_operation(
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert completed.status is ConfigResetOperationStatus.COMPLETE
         assert tuple(target.bucket_id for target in completed.targets) == (
@@ -736,6 +753,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             confirmed=True,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         before = operation.pointer_snapshot.record
         assert before.bucket_id == _PROFILE_A_ID
@@ -755,6 +773,7 @@ def test_resume_detects_an_a_to_b_to_a_pointer_coordinate_change(tmp_path: Path)
             retention_override_reason=_OVERRIDE_REASON,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             bucket_storage=default_profile_bucket_storage(),
+            certificate_secret_backend_factory=build_certificate_secret_backend,
         )
         assert resumed.pause_reason is ConfigResetPauseReason.POINTER_CHANGED
         assert resumed.pointer_snapshot.record == returned

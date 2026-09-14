@@ -18,7 +18,6 @@ from ..calendar import build_overview_calendar, calendar_events_from_expedientes
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
-from .calendar_test_support import calendar_operation
 from .calendar_test_support import profile as _profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

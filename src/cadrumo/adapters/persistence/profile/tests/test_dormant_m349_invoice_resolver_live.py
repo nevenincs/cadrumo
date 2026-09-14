@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -31,6 +30,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -163,7 +163,7 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
         ),
         clock=_T0,
     )
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_M349_BUCKET, operation=operation),

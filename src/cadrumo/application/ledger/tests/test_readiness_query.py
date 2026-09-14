@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -47,7 +48,7 @@ _PERIOD = Period.from_year_and_code(2026, "0A")
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Pin the compiled authority used by the readiness workflow."""
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         yield operation
 
 

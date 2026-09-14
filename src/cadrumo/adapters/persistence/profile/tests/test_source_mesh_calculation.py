@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
@@ -27,6 +26,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -186,7 +186,7 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
     )
 
     with pytest.raises(ModeloAggregationBindingError) as excinfo:
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -214,7 +214,7 @@ def test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows(
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -253,7 +253,7 @@ def test_modelo_349_monthly_refuses_midmonth_intracom_ledger_rows_without_operat
     tx_repo.save(TransactionCatalogue.from_transactions((intracom_sale,)))
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -297,7 +297,7 @@ def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
     )
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        with compiled_bundled_authority().operation() as operation:
+        with bundled_indexed_authority().operation() as operation:
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),

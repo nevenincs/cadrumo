@@ -55,6 +55,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -271,7 +272,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
         ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+            work_unit_repository=wu_repo, bucket_event_repository=event_repo
         ),
         clock=_T0,
     )
@@ -285,10 +286,13 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         },
         iva_compensation_decision=decision,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+        ),
         clock=_FILE_AT,
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period, reference="test:m303-recargo-cross-period"

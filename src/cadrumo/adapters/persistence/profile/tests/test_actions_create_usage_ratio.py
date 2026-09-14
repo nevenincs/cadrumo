@@ -8,11 +8,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_manual import create_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -31,7 +31,7 @@ __all__ = ["secure_objects"]
 
 @contextmanager
 def _ledger_ports(transaction_repository, event_repository, profile):
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         base = compose_ledger_action_ports(bucket_id=_BUCKET_ID, operation=operation)
         yield replace(
             base,

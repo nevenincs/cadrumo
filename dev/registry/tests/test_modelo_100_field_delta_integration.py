@@ -90,8 +90,5 @@ def test_partial_family_enrolment_continues_instead_of_skipping_revision(
 
     report = convert(source, candidate)
 
-    assert any(
-        row["revision"] == "2021" and row["family"] == "applicability"
-        for row in report["by_revision_family"]
-    )
+    assert any(row["revision"] == "2021" and row["family"] == "applicability" for row in report["by_revision_family"])
     assert not (candidate / "revisions/2021/applicability").exists()

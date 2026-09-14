@@ -6,7 +6,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -16,6 +15,7 @@ from cadrumo.application.ledger.ratios import (
     unset_usage_ratio,
     validate_ratios_for_bucket,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
@@ -28,7 +28,7 @@ class TestRuntimeFacade:
     def test_bucket_wrappers_round_trip_through_active_runtime_bucket(self, tmp_path: Path) -> None:
         with (
             isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
-            compiled_bundled_authority().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             prior = set_usage_ratio(
                 bucket_id=profile.bucket_id,
@@ -58,7 +58,7 @@ class TestRuntimeFacade:
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
         with (
             isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
-            compiled_bundled_authority().operation() as operation,
+            bundled_indexed_authority().operation() as operation,
         ):
             with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
                 set_usage_ratio(

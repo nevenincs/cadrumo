@@ -60,6 +60,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BUCKET_ID = "78787878-7878-4878-8878-787878787878"
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"

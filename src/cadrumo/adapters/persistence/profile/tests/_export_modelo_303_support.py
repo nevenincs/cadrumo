@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._export_test_support import _seed_profile, _synthetic_valid_nif
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
@@ -33,6 +34,7 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -476,9 +478,12 @@ def _build_verified_modelo_303_revision(
             reference="test:export-modelo-303-support",
         ),
         filing_period_date=date(2026, 6, 30),
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ),
         clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
     )
     _seed_modelo_303_1t_clean_state(
@@ -488,16 +493,18 @@ def _build_verified_modelo_303_revision(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     )
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor="operator",
-        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
-        settings=ready_clave_settings(taxpayer_nif),
-        clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator",
+            workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
+            settings=ready_clave_settings(taxpayer_nif),
+            clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     assert report.granted_verificado_completo is True
     verified = calc_repo.load().revisions[revision.calculation_revision_id]
     return taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo

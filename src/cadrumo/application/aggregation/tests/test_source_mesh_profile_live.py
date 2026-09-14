@@ -41,6 +41,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 _PROFILE_ID = "10010010-0100-4100-8100-100100100100"
 _EXTERNAL = Settings.external_constants()
