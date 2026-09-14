@@ -53,8 +53,8 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.bucket_deletion_contracts
-   cadrumo.application._config_reset_repository
-   cadrumo.application._foreign_asset_thresholds
+   cadrumo.application.config_reset_repository
+   cadrumo.application.foreign_asset_thresholds
    cadrumo.application._provisioning_contracts
    cadrumo.application._provisioning_runtime
    cadrumo.application.state_projection_auth

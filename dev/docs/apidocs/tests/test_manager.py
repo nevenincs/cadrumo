@@ -182,7 +182,7 @@ def test_imported_journal_repository_base_is_excluded_only_at_consumers(tmp_path
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
     manager.scaffold()
 
-    config_reset = (tmp_path / "api" / "cadrumo.application._config_reset_repository.rst").read_text(
+    config_reset = (tmp_path / "api" / "cadrumo.application.config_reset_repository.rst").read_text(
         encoding="utf-8",
     )
     bundle_export = (tmp_path / "api" / "cadrumo.application.user_profile.bundle_export_operation.rst").read_text(

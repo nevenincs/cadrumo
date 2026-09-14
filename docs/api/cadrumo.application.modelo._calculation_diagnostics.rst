@@ -1,7 +1,7 @@
-cadrumo.application.modelo._calculation_diagnostics module
+cadrumo.application.modelo.calculation_diagnostics module
 ==========================================================
 
-.. automodule:: cadrumo.application.modelo._calculation_diagnostics
+.. automodule:: cadrumo.application.modelo.calculation_diagnostics
    :members:
    :show-inheritance:
    :ignore-module-all:

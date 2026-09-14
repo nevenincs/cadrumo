@@ -9,8 +9,8 @@ identity :data:`SANDBOX_PROFILE_ID` published through the canonical capsule
 writer
 (:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.publish_test_profile_capsule`,
 with facts merged by
-:func:`~cadrumo.tests.profile_capsule.upsert_test_profile_facts` inside
-:func:`~cadrumo.tests.profile_capsule.open_test_profile_session` — never a
+:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.upsert_test_profile_facts` inside
+:func:`~cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime.open_test_profile_session` — never a
 parallel write path), English output pinned via the central settings surface,
 and the live-AEAT gate off. Frames are invoked in-process through the cached
 Click tree (:func:`~cadrumo.entrypoints.cli.tests.cli_runner.invoke_cached_cli`). Sequences never
@@ -81,12 +81,12 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from cadrumo.tests.profile_capsule import (
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
     open_test_profile_session,
     upsert_test_profile_facts,
 )
-from cadrumo.tests.profile_persistence import composed_profile_persistence_ports
+from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError

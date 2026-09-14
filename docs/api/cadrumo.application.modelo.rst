@@ -21,7 +21,7 @@ Submodules
    cadrumo.application.modelo._autonomic_deduccion_advisory
    cadrumo.application.modelo._bienes_inversion_advisory
    cadrumo.application.modelo._calculation_aggregation_context
-   cadrumo.application.modelo._calculation_diagnostics
+   cadrumo.application.modelo.calculation_diagnostics
    cadrumo.application.modelo._calculation_helpers
    cadrumo.application.modelo._calculation_modelo_adjustments
    cadrumo.application.modelo._calculation_preparation
@@ -47,13 +47,13 @@ Submodules
    cadrumo.application.modelo._official_box_advisory
    cadrumo.application.modelo._operator_override_advisory
    cadrumo.application.modelo._ports
-   cadrumo.application.modelo._prior_domiciliation
-   cadrumo.application.modelo._prior_payment_advisory
+   cadrumo.application.modelo.prior_domiciliation
+   cadrumo.application.modelo.prior_payment_advisory
    cadrumo.application.modelo._profile_export_binding
-   cadrumo.application.modelo._prorrata_regularizacion_advisory
-   cadrumo.application.modelo._pulled_filing_reconcile
+   cadrumo.application.modelo.prorrata_regularizacion_advisory
+   cadrumo.application.modelo.pulled_filing_reconcile
    cadrumo.application.modelo._rate_box_advisory
-   cadrumo.application.modelo._reconcile_casilla
+   cadrumo.application.modelo.reconcile_casilla
    cadrumo.application.modelo._reconcile_population
    cadrumo.application.modelo._registry_helpers
    cadrumo.application.modelo._registry_resources

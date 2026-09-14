@@ -1,7 +1,7 @@
-cadrumo.application.modelo._pulled_filing_reconcile module
+cadrumo.application.modelo.pulled_filing_reconcile module
 ==========================================================
 
-.. automodule:: cadrumo.application.modelo._pulled_filing_reconcile
+.. automodule:: cadrumo.application.modelo.pulled_filing_reconcile
    :members:
    :show-inheritance:
    :ignore-module-all:
