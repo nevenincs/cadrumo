@@ -48,6 +48,7 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -352,6 +353,7 @@ def _calculate(
 ) -> BucketAggregationCalculationResult:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
+    bucket_event_repo = BucketEventHistoryRepository(objects=objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET,
@@ -359,19 +361,22 @@ def _calculate(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=_REVISION,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=objects)
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs=dict(_MANUAL_INPUTS),
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bucket_event_repo,
         transaction_repository=tx_repo,
-        clock=_T1,
-    )
+    ) as _calculation_ports_372:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            casilla_inputs=dict(_MANUAL_INPUTS),
+            ports=_calculation_ports_372,
+            clock=_T1,
+        )
 
 
 def _prior_payment_advisories(result: BucketAggregationCalculationResult) -> tuple[CalculationSourceDiagnostic, ...]:

@@ -32,6 +32,7 @@ from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
@@ -367,22 +368,27 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
         )
         snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
-        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
-            snapshot,
-            repository=repository,
-            captured_at=_NOW,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-        )
+        decision_repository = IvaWalletDecisionRepository()
+        with bundled_indexed_authority().operation() as operation:
+            local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+                snapshot,
+                repository=repository,
+                captured_at=_NOW,
+                iva_history_repository=IvaCompensationHistoryRepository(),
+                operation=operation,
+            )
 
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_REF,
-            wallet=None,
-            repository=repository,
-            decided_at=_NOW,
-            local_recurrence=local_recurrence,
-            prefill_report=prefill_report,
-        )
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_REF,
+                wallet=None,
+                repository=repository,
+                decision_repository=decision_repository,
+                decided_at=_NOW,
+                local_recurrence=local_recurrence,
+                prefill_report=prefill_report,
+                operation=operation,
+            )
 
     assert report.decision.selected_authority == "filed_history"
     assert report.decision.selected_amount == Decimal("0")
@@ -435,15 +441,18 @@ def test_disabled_generic_recurrence_producer_contributes_nothing_to_the_returne
         snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="3T")
         repository = CalculationObservationRepository()
 
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_REF,
-            wallet=None,
-            repository=repository,
-            decided_at=_NOW,
-            local_recurrence=None,
-            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_REF,
+                wallet=None,
+                repository=repository,
+                decision_repository=IvaWalletDecisionRepository(),
+                decided_at=_NOW,
+                local_recurrence=None,
+                prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+                operation=operation,
+            )
 
     assert dict(report.prefill_report.binding_values) == {}, (
         "the generic recurrence producer was switched off and still published binding values on the "
@@ -463,16 +472,18 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
         with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
-            reconcile_modelo_303_iva_compensation(
-                snapshot,
-                taxpayer_nif=_TAXPAYER_REF,
-                wallet=_wallet(Decimal("1200")),
-                repository=observation_repository,
-                decision_repository=foreign_decision_repository,
-                decided_at=_NOW,
-                local_recurrence=None,
-                prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
-            )
+            with bundled_indexed_authority().operation() as operation:
+                reconcile_modelo_303_iva_compensation(
+                    snapshot,
+                    taxpayer_nif=_TAXPAYER_REF,
+                    wallet=_wallet(Decimal("1200")),
+                    repository=observation_repository,
+                    decision_repository=foreign_decision_repository,
+                    decided_at=_NOW,
+                    local_recurrence=None,
+                    prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+                    operation=operation,
+                )
 
         assert str(excinfo.value) == "application.calculations.iva_wallet.errors.decision_repository_backend_split"
 
@@ -502,16 +513,18 @@ def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_reposi
         decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
         snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
 
-        report = reconcile_modelo_303_iva_compensation(
-            snapshot,
-            taxpayer_nif=_TAXPAYER_REF,
-            wallet=_wallet(Decimal("1200")),
-            repository=observation_repository,
-            decision_repository=decision_repository,
-            decided_at=_NOW,
-            local_recurrence=None,
-            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_REF,
+                wallet=_wallet(Decimal("1200")),
+                repository=observation_repository,
+                decision_repository=decision_repository,
+                decided_at=_NOW,
+                local_recurrence=None,
+                prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
+                operation=operation,
+            )
 
         assert (
             decision_repository.load_decision(

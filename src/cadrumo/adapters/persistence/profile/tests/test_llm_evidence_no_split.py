@@ -93,7 +93,7 @@ def test_single_child_suggestion_does_not_recommend_split(
 def test_apply_evidence_split_refuses_a_no_split_verdict(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, events, _objects = repositories
+    repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
     with bundled_indexed_authority().operation() as operation:
         suggestion = suggest_evidence_split(
@@ -106,16 +106,17 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    with pytest.raises(TransactionValidationError, match="no-split verdict"):
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET,
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports, pytest.raises(TransactionValidationError, match="no-split verdict"):
         apply_evidence_split(
             suggestion,
             bucket_id=_BUCKET,
             source_command="aeat app ledger split --llm --apply",
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET,
-                transaction_repository=repository,
-                bucket_event_repository=events,
-            ),
+            ports=ports,
             occurred_at=_NOW,
         )
 
@@ -123,7 +124,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
 def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, events, _objects = repositories
+    repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
     with bundled_indexed_authority().operation() as operation:
         suggestion = suggest_evidence_split(
@@ -137,17 +138,19 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
             ports=_LLM_PORTS,
         )
 
-    result = apply_evidence_classification(
-        suggestion,
+    with ledger_ports_for_test(
         bucket_id=_BUCKET,
-        source_command="aeat app ledger classify --read-evidence --auto-split --apply",
-        ports=ledger_ports_for_test(
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports:
+        result = apply_evidence_classification(
+            suggestion,
             bucket_id=_BUCKET,
-            transaction_repository=repository,
-            bucket_event_repository=events,
-        ),
-        occurred_at=_NOW,
-    )
+            source_command="aeat app ledger classify --read-evidence --auto-split --apply",
+            ports=ports,
+            occurred_at=_NOW,
+        )
 
     catalogue = repository.load()
     parent = catalogue.get(tx_id)
@@ -165,7 +168,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
 def test_apply_evidence_classification_refuses_a_multi_child_split(
     repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
 ) -> None:
-    repository, events, _objects = repositories
+    repository, events, objects = repositories
     tx_id = _seed_parent(repository, amount=Decimal("121.00"))
     with bundled_indexed_authority().operation() as operation:
         suggestion = suggest_evidence_split(
@@ -178,14 +181,15 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
             settings=load_settings(),
             ports=_LLM_PORTS,
         )
-    with pytest.raises(TransactionValidationError, match="recommends a split"):
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET,
+        objects=objects,
+        transaction_repository=repository,
+        bucket_event_repository=events,
+    ) as ports, pytest.raises(TransactionValidationError, match="recommends a split"):
         apply_evidence_classification(
             suggestion,
             bucket_id=_BUCKET,
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
-            ports=ledger_ports_for_test(
-                bucket_id=_BUCKET,
-                transaction_repository=repository,
-                bucket_event_repository=events,
-            ),
+            ports=ports,
         )

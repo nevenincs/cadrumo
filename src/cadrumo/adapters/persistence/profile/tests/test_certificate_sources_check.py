@@ -17,6 +17,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.adapters.outbound.aeat.auth import session_store
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
@@ -1017,7 +1018,6 @@ def test_preloaded_state_never_combines_its_certificate_path_with_another_bucket
         with open_test_profile_session(_BUCKET_B):
             projected_credentials = project_active_certificate_credentials(
                 retained_state_a,
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
                 settings=load_settings(),
             )
             projection = build_operator_state_projection(
@@ -1560,6 +1560,7 @@ def test_login_refuses_selected_missing_file_before_unrelated_valid_global_certi
                 login_operator_auth(
                     AuthProviderKind.CERTIFICATE.value,
                     certificate_secret_backend_factory=certificate_secret_backend_factory,
+                    browser_session_factory=default_browser_session_factory,
                     operator_probe_ports=_OPERATOR_PROBE_PORTS,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ),

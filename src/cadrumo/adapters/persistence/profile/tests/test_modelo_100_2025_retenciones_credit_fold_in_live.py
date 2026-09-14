@@ -377,17 +377,19 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values=_non_relation_zero_bindings(),
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_383:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values=_non_relation_zero_bindings(),
+            ports=_calculation_ports_383,
+            clock=_T1,
+        )
 
 
 def test_m100_2025_retenciones_credits_fold_in_periodic_filings_on_live_calculate(
@@ -513,16 +515,18 @@ def _calculate_m111_administrador_quarter(
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_518:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_518,
+            clock=_T1,
+        )
     values = result.revision.casilla_values
     # The administrador retención lands in the trabajo block, not the actividades block.
     assert Decimal(values["03"]) == retencion_amount, (

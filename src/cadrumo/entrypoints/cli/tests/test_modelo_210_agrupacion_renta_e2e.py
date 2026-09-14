@@ -120,7 +120,15 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             clock=_CLOCK,
         )
 
-        with pytest.raises(ModeloError):
+        with (
+            pytest.raises(ModeloError),
+            calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calculation_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_131,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -128,30 +136,25 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
                 text_casilla_inputs={"tipo_renta": "general"},
                 m210_official_tipo_renta_code="35",
                 detail_rows=rows,
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calculation_repo,
-                    bucket_event_repository=event_repo,
-                ),
+                ports=_calculation_ports_131,
                 clock=_CLOCK,
             )
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={"rendimientos_integros": Decimal("900.00")},
-            text_casilla_inputs={"tipo_renta": "general"},
-            m210_official_tipo_renta_code="01",
-            detail_rows=rows,
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calculation_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=_CLOCK,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_147:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={"rendimientos_integros": Decimal("900.00")},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                detail_rows=rows,
+                ports=_calculation_ports_147,
+                clock=_CLOCK,
+            )
         plazo_resolution = calculated_m210_plazo_resolution(
             work_unit=work_unit,
             revision=revision,

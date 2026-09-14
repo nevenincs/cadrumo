@@ -243,17 +243,19 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs=_M130_MANUAL_INPUTS,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_249:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            casilla_inputs=_M130_MANUAL_INPUTS,
+            ports=_calculation_ports_249,
+            clock=_T1,
+        )
 
     assert isinstance(result, BucketAggregationCalculationResult)
     folded = Decimal(result.revision.casilla_values[_M130_INGRESOS_CASILLA])
@@ -353,17 +355,19 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
         for casilla_id, value in _M130_MANUAL_INPUTS.items()
         if casilla_id != _M130_RETENCIONES_CASILLA
     }
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs=manual_inputs_without_c06,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_359:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            casilla_inputs=manual_inputs_without_c06,
+            ports=_calculation_ports_359,
+            clock=_T1,
+        )
 
     assert Decimal(result.revision.casilla_values[_M130_INGRESOS_CASILLA]) == Decimal("2000.00")
     assert Decimal(result.revision.casilla_values[_M130_RETENCIONES_CASILLA]) == Decimal("300.00")

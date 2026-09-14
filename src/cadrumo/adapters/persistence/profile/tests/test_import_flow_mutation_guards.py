@@ -162,29 +162,30 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={
-            _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-            _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-            _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-            _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-            _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-            _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-            _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-            _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-            _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-            _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
-        },
-        ports=calculation_ports_for_test(
-            bucket_id=_PROFILE_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_PROFILE_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_180:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={
+                _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
+                _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
+                _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
+                _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
+                _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
+                _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
+                _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
+                _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
+                _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
+                _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
+            },
+            ports=_calculation_ports_180,
+            clock=_T1,
+        )
     verified_revision = revision.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -277,7 +278,15 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
         foreign = _guard_work_unit(_GUARD_BUCKET_B)
         wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
 
-        with pytest.raises(WorkUnitNotFoundError):
+        with (
+            pytest.raises(WorkUnitNotFoundError),
+            calculation_ports_for_test(
+                bucket_id=_GUARD_BUCKET_B,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                bucket_event_repository=bv_repo,
+            ) as _calculation_ports_295,
+        ):
             calculate_modelo_revision(
                 foreign.work_unit_id,
                 actor="operator-A",
@@ -292,12 +301,7 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
                     _GUARD_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
                 },
                 binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("0")},
-                ports=calculation_ports_for_test(
-                    bucket_id=_GUARD_BUCKET_B,
-                    work_unit_repository=wu_repo,
-                    calculation_repository=cr_repo,
-                    bucket_event_repository=bv_repo,
-                ),
+                ports=_calculation_ports_295,
                 clock=_GUARD_CLOCK,
             )
 

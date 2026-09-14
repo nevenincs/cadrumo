@@ -10,8 +10,8 @@ import pytest
 from PIL import Image
 
 from .....application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....entrypoints.adapter_composition import build_ledger_evidence_ports
+from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 

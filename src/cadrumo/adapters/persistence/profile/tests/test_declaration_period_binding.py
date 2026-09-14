@@ -164,21 +164,25 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
         # compensation that AEAT did not record.
         decision = _iva_compensation_zero_decision(filing_year=filing_year, period=period)
         IvaWalletDecisionRepository().save_decision(decision)
-        return calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_modelo_303_engine_inputs(),
-            iva_compensation_decision=decision,
-            filing_period_date=period_date,
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-            ),
-            clock=_CLOCK,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-declaration-period-binding"
-            ),
-        )
+        with calculation_ports_for_test(
+            bucket_id=work_repo.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_174:
+            return calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=decision,
+                filing_period_date=period_date,
+                ports=_calculation_ports_174,
+                clock=_CLOCK,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:m303-declaration-period-binding"
+                ),
+            )
 
 
 def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(tmp_path: Path) -> None:

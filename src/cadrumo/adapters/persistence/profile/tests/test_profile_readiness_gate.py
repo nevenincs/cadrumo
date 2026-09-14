@@ -452,13 +452,15 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
         repository = WorkUnitCatalogueRepository()
         work_unit = _store_work_unit(repository, bucket_id=_OPERATOR_PROFILE_ID)
 
-        with pytest.raises(ModeloProfileReadinessError):
+        with pytest.raises(ModeloProfileReadinessError), calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id, work_unit_repository=repository
+        ) as _calculation_ports_461:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("100.00")},
-                ports=calculation_ports_for_test(work_unit_repository=repository),
+                ports=_calculation_ports_461,
                 clock=_NOW,
             )
 
@@ -487,13 +489,15 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
             revision_id=_M100_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with pytest.raises(ModeloProfileReadinessError) as excinfo, calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id, work_unit_repository=repository
+        ) as _calculation_ports_496:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                ports=calculation_ports_for_test(work_unit_repository=repository),
+                ports=_calculation_ports_496,
                 clock=_NOW,
             )
 
@@ -550,15 +554,20 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
             revision_id=_M200_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id,
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+            ) as _calculation_ports_559,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repository, calculation_repository=calculation_repository
-                ),
+                ports=_calculation_ports_559,
                 clock=_NOW,
             )
 
@@ -590,15 +599,20 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
             revision_id=_M100_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id,
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+            ) as _calculation_ports_599,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repository, calculation_repository=calculation_repository
-                ),
+                ports=_calculation_ports_599,
                 clock=_NOW,
             )
 
@@ -750,15 +764,19 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
             revision_id=_M303_2026_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id,
+                calculation_repository=calculation_repository,
+                iva_compensation_decision_repository=wallet_repository,
+                work_unit_repository=work_repository,
+            ) as _calculation_ports_757,
+        ):
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
-                ports=calculation_ports_for_test(
-                    calculation_repository=calculation_repository,
-                    iva_compensation_decision_repository=wallet_repository,
-                    work_unit_repository=work_repository,
-                ),
+                ports=_calculation_ports_757,
                 clock=_NOW,
             )
 
@@ -782,15 +800,20 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
         )
         _store_draft_revision(calculation_repository, work_unit=work_unit)
 
-        with pytest.raises(ModeloProfileReadinessError) as calculate_exc:
+        with (
+            pytest.raises(ModeloProfileReadinessError) as calculate_exc,
+            calculation_ports_for_test(
+                bucket_id=work_unit.bucket_id,
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+            ) as _calculation_ports_791,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repository, calculation_repository=calculation_repository
-                ),
+                ports=_calculation_ports_791,
                 clock=_NOW,
             )
 
@@ -818,20 +841,22 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
             ),
             clock=_NOW,
         )
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            actor="operator",
-            ports=calculation_ports_for_test(
-                calculation_repository=calculation_repository,
-                iva_compensation_decision_repository=wallet_repository,
-                work_unit_repository=work_repository,
-            ),
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period,
-                reference="test:profile-readiness:first-active-m303",
-            ),
-            clock=_NOW,
-        )
+        with calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id,
+            calculation_repository=calculation_repository,
+            iva_compensation_decision_repository=wallet_repository,
+            work_unit_repository=work_repository,
+        ) as _calculation_ports_824:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                actor="operator",
+                ports=_calculation_ports_824,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period,
+                    reference="test:profile-readiness:first-active-m303",
+                ),
+                clock=_NOW,
+            )
 
         assert result.revision.work_unit_id == work_unit.work_unit_id
         assert tuple(calculation_repository.load().values()) == (result.revision,)
@@ -946,13 +971,15 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
         record = load_test_profile_record(_OPERATOR_PROFILE_ID)
         replace_test_profile_record(record.model_copy(update={"setup_state": ProfileSetupState.INCOMPLETE}))
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with pytest.raises(ModeloProfileReadinessError) as excinfo, calculation_ports_for_test(
+            bucket_id=work_unit.bucket_id, work_unit_repository=repository
+        ) as _calculation_ports_955:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={},
-                ports=calculation_ports_for_test(work_unit_repository=repository),
+                ports=_calculation_ports_955,
                 clock=_NOW,
             )
 

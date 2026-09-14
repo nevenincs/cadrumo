@@ -187,20 +187,20 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
-
-        resolution = resolve_bucket_source_mesh(
-            snapshot,
-            work_unit,
-            ports=calculation_ports_for_test(bucket_id=work_unit.bucket_id),
-            foreign_asset_observations=(),
-            foreign_asset_row_observations=(),
-            casilla_inputs={
-                _SOPORTADO_INTERIORES_ID: _FIRST_THREE_QUARTERS_INPUT_IVA,
-                _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
-                _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
-            },
-            filing_period_date=snapshot.filing_period.end_date,
-        )
+        with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_194:
+            resolution = resolve_bucket_source_mesh(
+                snapshot,
+                work_unit,
+                ports=_calculation_ports_194,
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+                casilla_inputs={
+                    _SOPORTADO_INTERIORES_ID: _FIRST_THREE_QUARTERS_INPUT_IVA,
+                    _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
+                    _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
+                },
+                filing_period_date=snapshot.filing_period.end_date,
+            )
 
     prorrata_diagnostics = tuple(
         diagnostic
@@ -229,15 +229,15 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())
         _save_current_year_source_observations(CalculationObservationRepository(objects=profile.repository))
-
-        resolution = resolve_bucket_source_mesh(
-            snapshot,
-            work_unit,
-            ports=calculation_ports_for_test(bucket_id=work_unit.bucket_id),
-            foreign_asset_observations=(),
-            foreign_asset_row_observations=(),
-            filing_period_date=snapshot.filing_period.end_date,
-        )
+        with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as _calculation_ports_236:
+            resolution = resolve_bucket_source_mesh(
+                snapshot,
+                work_unit,
+                ports=_calculation_ports_236,
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+                filing_period_date=snapshot.filing_period.end_date,
+            )
 
     prorrata_diagnostics = tuple(
         diagnostic

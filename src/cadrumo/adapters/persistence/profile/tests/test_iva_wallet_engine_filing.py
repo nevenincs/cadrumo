@@ -83,28 +83,29 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
         filing_repo = ModeloRecordCatalogueRepository()
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={
-                "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
-                "iva.prorrata-volumen-total": Decimal("100.00"),
-            },
-            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_modelo_303_engine_inputs(),
-            iva_compensation_decision=report.decision,
-            filing_period_date=date(2026, 6, 30),
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=_DECIDED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-filing"
-            ),
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_97:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={
+                    "iva.prorrata-volumen-con-derecho": Decimal("100.00"),
+                    "iva.prorrata-volumen-total": Decimal("100.00"),
+                },
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=report.decision,
+                filing_period_date=date(2026, 6, 30),
+                ports=_calculation_ports_97,
+                clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-filing"
+                ),
+            )
         seed_clean_cross_period_sources(
             work_unit,
             work_unit_repository=work_repo,
@@ -199,25 +200,26 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             work_unit_repository=work_repo,
             clock=decided_1t_at,
         )
-        revision_1t = calculate_modelo_revision(
-            work_unit_1t.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_negative_modelo_303_engine_inputs(),
-            iva_compensation_decision=report_1t.decision,
-            filing_period_date=date(2026, 3, 31),
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=decided_1t_at,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit_1t.period, reference="test:iva-wallet-engine-filing"
-            ),
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_210:
+            revision_1t = calculate_modelo_revision(
+                work_unit_1t.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                backend_binding_values=_negative_modelo_303_engine_inputs(),
+                iva_compensation_decision=report_1t.decision,
+                filing_period_date=date(2026, 3, 31),
+                ports=_calculation_ports_210,
+                clock=decided_1t_at,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit_1t.period, reference="test:iva-wallet-engine-filing"
+                ),
+            )
         assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
         generated_carry = revision_1t.casilla_values[_M303_DISPONIBLE_CASILLA]
         assert generated_carry > Decimal("0")
@@ -268,7 +270,15 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
 
         snapshot_2t = _snapshot_303()
         work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo)
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        with (
+            pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
+            calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_279,
+        ):
             calculate_modelo_revision(
                 work_unit_2t.work_unit_id,
                 actor="operator",
@@ -276,12 +286,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ),
+                ports=_calculation_ports_279,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit_2t.period, reference="test:iva-wallet-engine-filing"

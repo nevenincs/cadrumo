@@ -135,20 +135,21 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_non_ccaa_decimal_binding_values(snapshot),
-            relation_values=_zero_relation_values(snapshot),
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=_CLOCK,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_144:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_non_ccaa_decimal_binding_values(snapshot),
+                relation_values=_zero_relation_values(snapshot),
+                ports=_calculation_ports_144,
+                clock=_CLOCK,
+            )
         assert "0512" in revision.casilla_values
         assert revision.binding_overrides[_CCAA_BINDING] == "madrid"
 
@@ -171,19 +172,22 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
             clock=_CLOCK,
         )
         decimal_bindings = {binding.id: Decimal("0") for binding in snapshot.revision.bindings}
-        with pytest.raises(ModeloError):
+        with (
+            pytest.raises(ModeloError),
+            calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_181,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values=decimal_bindings,
                 relation_values=_zero_relation_values(snapshot),
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ),
+                ports=_calculation_ports_181,
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}
@@ -206,20 +210,21 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values=_non_ccaa_decimal_binding_values(snapshot),
-            relation_values=_zero_relation_values(snapshot),
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_repo,
-                calculation_repository=calc_repo,
-                bucket_event_repository=event_repo,
-            ),
-            clock=_CLOCK,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_215:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values=_non_ccaa_decimal_binding_values(snapshot),
+                relation_values=_zero_relation_values(snapshot),
+                ports=_calculation_ports_215,
+                clock=_CLOCK,
+            )
         assert Decimal(revision.binding_overrides[_ESTIMACION_BINDING]) == Decimal("0")
 
 
@@ -240,7 +245,15 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
             ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
-        with pytest.raises(ModeloError):
+        with (
+            pytest.raises(ModeloError),
+            calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_251,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -248,12 +261,7 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
                 binding_values=_non_ccaa_decimal_binding_values(snapshot),
                 enum_binding_values={_ESTIMACION_BINDING: "normal"},
                 relation_values=_zero_relation_values(snapshot),
-                ports=calculation_ports_for_test(
-                    bucket_id=_BUCKET_ID,
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ),
+                ports=_calculation_ports_251,
                 clock=_CLOCK,
             )
         assert calc_repo.load().revisions == {}

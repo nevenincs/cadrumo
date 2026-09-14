@@ -87,16 +87,20 @@ def _seed_nongranting_revision(repos: Repos):
     # MISSING_REQUIRED_CASILLA finding and does not grant.
     supplied = {cid: Decimal("1") for cid in required[1:]}
     work_unit = seed_modelo_180_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=supplied,
-        binding_values=DEFAULT_180_BINDING_VALUES,
-        relation_values=DEFAULT_180_RELATION_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_95:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=supplied,
+            binding_values=DEFAULT_180_BINDING_VALUES,
+            relation_values=DEFAULT_180_RELATION_VALUES,
+            ports=_calculation_ports_95,
+            clock=T1,
+        )
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,

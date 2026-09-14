@@ -56,6 +56,7 @@ from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -127,11 +128,13 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
         draft = _ready_draft(schema_provider)
 
         with open_test_profile_session(bucket_id):
+            ports = build_draft_review_ports(bucket_id=bucket_id)
             approved = approve_draft(
                 draft,
                 bucket_id=bucket_id,
                 approved_by="operator",
                 schema_provider=schema_provider,
+                ports=ports,
                 operation=_authority_operation_for_test,
             )
         assert approved.status is ModeloDraftStatus.APROBADO
@@ -145,8 +148,13 @@ def test_approval_goes_stale_when_profile_activity_changes(_profile_storage: Non
         _edit_profile_activity("comercio")
 
         with open_test_profile_session(bucket_id):
+            ports = build_draft_review_ports(bucket_id=bucket_id)
             reasons = approval_stale_reasons(
-                approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+                approved,
+                bucket_id=bucket_id,
+                schema_provider=schema_provider,
+                ports=ports,
+                operation=_authority_operation_for_test,
             )
 
         # Only the taxpayer profile changed: draft, transactions, invoices, prior
@@ -170,16 +178,22 @@ def test_approval_not_stale_when_profile_unchanged(_profile_storage: None) -> No
         draft = _ready_draft(schema_provider)
 
         with open_test_profile_session(bucket_id):
+            ports = build_draft_review_ports(bucket_id=bucket_id)
             approved = approve_draft(
                 draft,
                 bucket_id=bucket_id,
                 approved_by="operator",
                 schema_provider=schema_provider,
+                ports=ports,
                 operation=_authority_operation_for_test,
             )
             # No mutation to any source between approval and the staleness check.
             reasons = approval_stale_reasons(
-                approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+                approved,
+                bucket_id=bucket_id,
+                schema_provider=schema_provider,
+                ports=ports,
+                operation=_authority_operation_for_test,
             )
 
         assert approved.approval_basis is not None

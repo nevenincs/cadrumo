@@ -235,24 +235,25 @@ def _calculate_and_verify(
         }
         if declare_cuentas:
             casilla_inputs[_CUENTAS_VALORACION] = _CUENTAS_N1
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs=casilla_inputs,
-            row_binding_values={
-                ("modelo-720-asset-row-class", 1): _ACCOUNT_CLAVE,
-                ("modelo-720-asset-row-valuation", 1): _CUENTAS_N1,
-                ("modelo-720-asset-row-class", 2): _SECURITY_CLAVE,
-                ("modelo-720-asset-row-valuation", 2): _VALORES_N1,
-            },
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                bucket_event_repository=event_repository,
-            ),
-            clock=_CLOCK_N_PLUS_1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            work_unit_repository=work_repository,
+            calculation_repository=calculation_repository,
+            bucket_event_repository=event_repository,
+        ) as _calculation_ports_249:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs=casilla_inputs,
+                row_binding_values={
+                    ("modelo-720-asset-row-class", 1): _ACCOUNT_CLAVE,
+                    ("modelo-720-asset-row-valuation", 1): _CUENTAS_N1,
+                    ("modelo-720-asset-row-class", 2): _SECURITY_CLAVE,
+                    ("modelo-720-asset-row-valuation", 2): _VALORES_N1,
+                },
+                ports=_calculation_ports_249,
+                clock=_CLOCK_N_PLUS_1,
+            )
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision(
                 revision.calculation_revision_id,
@@ -346,26 +347,26 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
             ),
             clock=_CLOCK_N_PLUS_1,
         )
-        resolution_n1 = resolve_bucket_source_mesh(
-            snapshot_n1,
-            work_unit_n1,
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_unit_repository,
-            ),
-            foreign_asset_observations=(),
-            foreign_asset_row_observations=(),
-        )
-        resolution_n2 = resolve_bucket_source_mesh(
-            snapshot_n2,
-            work_unit_n2,
-            ports=calculation_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                work_unit_repository=work_unit_repository,
-            ),
-            foreign_asset_observations=(),
-            foreign_asset_row_observations=(),
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID, work_unit_repository=work_unit_repository
+        ) as _calculation_ports_352:
+            resolution_n1 = resolve_bucket_source_mesh(
+                snapshot_n1,
+                work_unit_n1,
+                ports=_calculation_ports_352,
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+            )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID, work_unit_repository=work_unit_repository
+        ) as _calculation_ports_362:
+            resolution_n2 = resolve_bucket_source_mesh(
+                snapshot_n2,
+                work_unit_n2,
+                ports=_calculation_ports_362,
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+            )
 
     assert work_unit_n1.work_unit_id != work_unit_n2.work_unit_id
     assert work_unit_n1.bucket_id == work_unit_n2.bucket_id

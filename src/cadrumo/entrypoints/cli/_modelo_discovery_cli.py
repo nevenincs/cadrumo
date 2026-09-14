@@ -34,6 +34,7 @@ from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.i18n.render import tr
 from ...core.period import Period
 from ...core.tax_domain import TaxDomain
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.query_reports import (
     ModeloBindingsReport,
@@ -141,21 +142,27 @@ def _resolve_discovery_year_period(
 
 
 def _bindings_report_for_target(
-    target: str, *, year: int | None, period: str | None, as_of: date | None, deps: _DiscoveryDeps
+    target: str,
+    *,
+    year: int | None,
+    period: str | None,
+    as_of: date | None,
+    deps: _DiscoveryDeps,
+    operation: PinnedAuthorityOperation,
 ):
     if year is not None and period is not None:
         typed_period = deps.resolve_year_period(year, period, modelo=target)
         return _run_query(
-            lambda: registry_bindings_for_scope(target, period=typed_period, as_of=as_of),
+            lambda: registry_bindings_for_scope(target, period=typed_period, as_of=as_of, operation=operation),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
     if year is not None:
         return _run_query(
-            lambda: registry_bindings_for_year(target, filing_year=year, as_of=as_of),
+            lambda: registry_bindings_for_year(target, filing_year=year, as_of=as_of, operation=operation),
             bad_parameter_from_error=deps.bad_parameter_from_error,
         )
     return _run_query(
-        lambda: registry_bindings(target, period=period, as_of=as_of),
+        lambda: registry_bindings(target, period=period, as_of=as_of, operation=operation),
         bad_parameter_from_error=deps.bad_parameter_from_error,
     )
 
@@ -256,6 +263,7 @@ def _casillas_report(
     input_kind: InputKind | None,
     required: bool,
     form_number: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloCasillasReport:
     def _query() -> ModeloCasillasReport:
         resolved_scope = _resolve_discovery_year_period(modelo=modelo, year=year, period=period, deps=deps)
@@ -268,6 +276,7 @@ def _casillas_report(
                 input_kind=input_kind,
                 required=True if required else None,
                 form_number=form_number,
+                operation=operation,
             )
         return registry_casillas(
             modelo,
@@ -276,6 +285,7 @@ def _casillas_report(
             input_kind=input_kind,
             required=True if required else None,
             form_number=form_number,
+            operation=operation,
         )
 
     return _run_query(_query, bad_parameter_from_error=deps.bad_parameter_from_error)
@@ -302,6 +312,7 @@ def casillas(
         input_kind=input_kind,
         required=required,
         form_number=form_number,
+        operation=authority_operation(ctx),
     )
     number_filter = casilla_number.strip() if casilla_number is not None else None
     if number_filter:
@@ -484,12 +495,20 @@ def _binding_reports_for_list(
     year: int | None,
     period: str | None,
     as_of: date | None,
+    operation: PinnedAuthorityOperation,
 ) -> list[ModeloBindingsReport]:
     targets = known_codes if modelo is None else (modelo,)
     reports: list[ModeloBindingsReport] = []
     for target in targets:
         try:
-            report = _bindings_report_for_target(target, year=year, period=period, as_of=as_of, deps=deps)
+            report = _bindings_report_for_target(
+                target,
+                year=year,
+                period=period,
+                as_of=as_of,
+                deps=deps,
+                operation=operation,
+            )
         except Exception:
             if modelo is not None:
                 raise
@@ -508,7 +527,8 @@ def bindings_list(
 ) -> None:
     """List bindings across modelos. All filters are optional refinements."""
     resolved_as_of = _as_of(as_of)
-    known_codes = registry_modelo_codes(operation=authority_operation(ctx))
+    operation = authority_operation(ctx)
+    known_codes = registry_modelo_codes(operation=operation)
     if modelo is not None and modelo not in known_codes:
         # The accepted set is registry-derived, so it cannot be a static Choice on
         # the option. A late refusal is allowed for exactly that reason, but it
@@ -523,12 +543,13 @@ def bindings_list(
         year=year,
         period=period,
         as_of=resolved_as_of,
+        operation=operation,
     )
     merged_rows, text_rows = discovery_rendering.binding_rows_for_reports(
         per_modelo_reports,
         missing=missing,
         as_of=resolved_as_of,
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     result = ModeloBindingsListResult(
         modelo_filter=modelo,

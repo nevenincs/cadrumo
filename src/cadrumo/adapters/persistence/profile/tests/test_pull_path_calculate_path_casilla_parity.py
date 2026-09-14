@@ -460,17 +460,18 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         ),
         clock=_T0,
     )
-
-    live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        ports=calculation_ports_for_test(
-            calculation_repository=cr_repo,
-            invoice_repository=invoice_repo,
-            transaction_repository=tx_repo,
-            work_unit_repository=wu_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        calculation_repository=cr_repo,
+        invoice_repository=invoice_repo,
+        transaction_repository=tx_repo,
+        work_unit_repository=wu_repo,
+    ) as _calculation_ports_466:
+        live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=_calculation_ports_466,
+            clock=_T1,
+        )
     live_casilla_values = live_result.revision.casilla_values
 
     # ── PATH B: standalone relay path ─────────────────────────────────────────
@@ -596,27 +597,29 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
     )
 
     work_unit = _seed_m303_prorrata_work_unit(work_unit_repository)
-    live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        binding_values={
-            _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
-            _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
-        },
-        iva_compensation_decision=wallet_decision,
-        ports=calculation_ports_for_test(
-            bucket_event_repository=bucket_event_repository,
-            calculation_repository=calculation_repository,
-            invoice_repository=invoice_repository,
-            transaction_repository=transaction_repository,
-            work_unit_repository=work_unit_repository,
-        ),
-        filing_instance_evidence=general_m303_filing_evidence(
-            _PRORRATA_PERIOD,
-            reference="test:pull-calculate-parity:exonerado-not-applicable",
-        ),
-        clock=_PRORRATA_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        bucket_event_repository=bucket_event_repository,
+        calculation_repository=calculation_repository,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+        work_unit_repository=work_unit_repository,
+    ) as _calculation_ports_607:
+        live_result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            binding_values={
+                _M303_COMPENSACION_PENDIENTE_ANTERIORES_BINDING: Decimal("0.00"),
+                _M303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0.00"),
+            },
+            iva_compensation_decision=wallet_decision,
+            ports=_calculation_ports_607,
+            filing_instance_evidence=general_m303_filing_evidence(
+                _PRORRATA_PERIOD,
+                reference="test:pull-calculate-parity:exonerado-not-applicable",
+            ),
+            clock=_PRORRATA_T1,
+        )
 
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,

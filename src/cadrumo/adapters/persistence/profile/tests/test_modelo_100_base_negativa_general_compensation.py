@@ -189,20 +189,21 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
         ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_CLOCK,
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor=_BUCKET_ID,
-        casilla_inputs=casilla_inputs,
-        binding_values=binding_values,
-        relation_values=relation_values,
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=work_repo,
-            calculation_repository=calc_repo,
-            bucket_event_repository=event_repo,
-        ),
-        clock=_CLOCK,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=work_repo,
+        calculation_repository=calc_repo,
+        bucket_event_repository=event_repo,
+    ) as _calculation_ports_198:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor=_BUCKET_ID,
+            casilla_inputs=casilla_inputs,
+            binding_values=binding_values,
+            relation_values=relation_values,
+            ports=_calculation_ports_198,
+            clock=_CLOCK,
+        )
     return revision
 
 

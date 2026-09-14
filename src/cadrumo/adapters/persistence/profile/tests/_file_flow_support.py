@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
+from contextlib import contextmanager
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -14,11 +15,31 @@ from dev.registry.tests.profile_schema_support import (
 )
 from sqlalchemy.engine import Engine
 
+from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+)
+from cadrumo.adapters.persistence.profile.calculation_revision_override_migration import (
+    migrate_stored_relation_overrides_to_binding_ids,
+)
+from cadrumo.adapters.persistence.profile.catalogue_reads import (
+    InvoiceCatalogueReadAdapter,
+    TransactionCatalogueReadAdapter,
+)
+from cadrumo.adapters.persistence.profile.inventory import InventoryLedgerRepository
+from cadrumo.adapters.persistence.profile.invoice_source_resolver import InvoiceCatalogueSourceResolverAdapter
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
@@ -27,9 +48,18 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
+from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+from cadrumo.application.live.borrador_100 import Borrador100SnapshotRepository
+from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.filing_actions import (
     file_modelo_revision,
 )
@@ -39,6 +69,8 @@ from cadrumo.application.modelo.work_lifecycle import (
 )
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
+from cadrumo.application.user_profile.profile_read_ports import ProfileReadPorts
+from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.workflow.engine import WorkflowEngine
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
@@ -51,63 +83,146 @@ from cadrumo.domain.calculations.registry.tests.cross_period_seeding import reso
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecord
+from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition import (
+    build_borrador_100_snapshot_repository,
+    build_filing_action_ports,
+)
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-_CALCULATION_OPERATION_LEASES: list[object] = []
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+class _RelationOverrideMigration:
+    """Adapt the persisted relation-override migration to its application port."""
+
+    def migrate(
+        self,
+        repository: CalculationRevisionCatalogueRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
+
+
+@contextmanager
 def calculation_ports_for_test(
     *,
-    bucket_id: str | None = None,
-    work_unit_repository: object | None = None,
-    calculation_repository: object | None = None,
-    bucket_event_repository: object | None = None,
-    transaction_repository: object | None = None,
-    invoice_repository: object | None = None,
-    borrador_snapshot_repository: object | None = None,
-    **port_updates: object,
-):
-    """Compose canonical calculation ports while retaining test repositories."""
-    from dataclasses import replace
+    bucket_id: str,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    filing_repository: ModeloRecordCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
+    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+) -> Iterator[CalculationActionPorts]:
+    """Yield calculation ports for one bucket while retaining test repositories.
 
-    from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-    from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+    The authority operation owns every capability in the yielded bundle.  The
+    repository overrides are resolved before dependent lifecycle and invoice
+    read/source ports are composed, so a test's injected repository remains the
+    implementation used by every coupled path.
+    """
+    normalized_bucket_id = bucket_id.strip()
+    with bundled_indexed_authority().operation() as operation:
+        objects = secure_object_repository_for_bucket(normalized_bucket_id)
 
-    work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
-    calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
-    bucket_event_repository = bucket_event_repository or BucketEventHistoryRepository()
-    lease = bundled_indexed_authority().operation()
-    _CALCULATION_OPERATION_LEASES.append(lease)
-    operation = lease.__enter__()
-    resolved_bucket_id = bucket_id or getattr(work_unit_repository, "bucket_id", None) or "test-bucket"
-    ports = build_calculation_action_ports(bucket_id=resolved_bucket_id, operation=operation)
-    updates = {
-        "work_unit_repository": work_unit_repository,
-        "calculation_repository": calculation_repository,
-        "bucket_event_repository": bucket_event_repository,
-        "work_lifecycle_ports": replace(
-            ports.work_lifecycle_ports,
-            work_unit_repository=work_unit_repository,
-            bucket_event_repository=bucket_event_repository,
-        ),
-    }
-    if transaction_repository is not None:
-        updates["transaction_repository"] = transaction_repository
-    if invoice_repository is not None:
-        updates["invoice_repository"] = invoice_repository
-    if borrador_snapshot_repository is not None:
-        updates["borrador_snapshot_repository"] = borrador_snapshot_repository
-    updates.update(port_updates)
-    return replace(ports, **updates)
+        def usage_ratio_profile_loader(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
+            return load_usage_ratios(bucket_id=bucket_id, operation=operation, objects=objects)
+
+        resolved_work_unit_repository = (
+            work_unit_repository
+            if work_unit_repository is not None
+            else WorkUnitCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+        )
+        resolved_calculation_repository = (
+            calculation_repository
+            if calculation_repository is not None
+            else CalculationRevisionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+        )
+        resolved_filing_repository = (
+            filing_repository
+            if filing_repository is not None
+            else ModeloRecordCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+        )
+        resolved_bucket_event_repository = (
+            bucket_event_repository
+            if bucket_event_repository is not None
+            else BucketEventHistoryRepository(objects=objects)
+        )
+        resolved_transaction_repository = (
+            transaction_repository
+            if transaction_repository is not None
+            else TransactionCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+        )
+        resolved_invoice_repository = (
+            invoice_repository
+            if invoice_repository is not None
+            else InvoiceCatalogueRepository(bucket_id=normalized_bucket_id, objects=objects)
+        )
+        resolved_iva_compensation_decision_repository = (
+            iva_compensation_decision_repository
+            if iva_compensation_decision_repository is not None
+            else IvaWalletDecisionRepository(objects=objects)
+        )
+        profile_repository = ProfileRecordRepository.for_current_session(
+            normalized_bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        profile_path_values = ProfilePathValuesPersistenceAdapter(repository=profile_repository)
+        yield CalculationActionPorts(
+            operation=operation,
+            work_unit_repository=resolved_work_unit_repository,
+            work_lifecycle_ports=WorkLifecyclePorts(
+                work_unit_repository=resolved_work_unit_repository,
+                bucket_event_repository=resolved_bucket_event_repository,
+            ),
+            calculation_repository=resolved_calculation_repository,
+            bucket_event_repository=resolved_bucket_event_repository,
+            transaction_repository=resolved_transaction_repository,
+            usage_ratio_profile_loader=usage_ratio_profile_loader,
+            profile_read_ports=ProfileReadPorts(path_values=profile_path_values),
+            invoice_repository=resolved_invoice_repository,
+            invoice_catalogue_read_ports=InvoiceCatalogueReadPorts(
+                invoice_reader=InvoiceCatalogueReadAdapter(repository=resolved_invoice_repository),
+                transaction_reader=TransactionCatalogueReadAdapter(repository=resolved_transaction_repository),
+            ),
+            filing_repository=resolved_filing_repository,
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=normalized_bucket_id,
+                objects=objects,
+            ),
+            bienes_inversion_repository=BienesInversionIvaRegisterRepository(
+                bucket_id=normalized_bucket_id,
+                objects=objects,
+            ),
+            inventory_repository=InventoryLedgerRepository(objects=objects),
+            observation_repository=CalculationObservationRepository(objects=objects),
+            invoice_source_ports=InvoiceSourceResolverPorts(
+                catalogue_reader=InvoiceCatalogueSourceResolverAdapter(repository=resolved_invoice_repository),
+            ),
+            percepciones_observation_ports=PercepcionObservationPorts(
+                repository=PercepcionObservationRepositoryAdapter(objects=objects),
+            ),
+            iva_compensation_history_repository=IvaCompensationHistoryRepository(objects=objects),
+            iva_compensation_decision_repository=resolved_iva_compensation_decision_repository,
+            borrador_snapshot_repository=(
+                borrador_snapshot_repository
+                if borrador_snapshot_repository is not None
+                else build_borrador_100_snapshot_repository(bucket_id=normalized_bucket_id)
+            ),
+            retencion_observation_ports=RetencionObservationPorts(
+                repository=RetencionObservationRepositoryAdapter(objects=objects),
+            ),
+            relation_override_migration=_RelationOverrideMigration(),
+        )
 
 
 __all__ = [
@@ -400,7 +515,6 @@ def _canonical_work_unit_period(work_unit: WorkUnit) -> Period:
 class _WorkflowGate:
     engine: WorkflowEngine
     profile: TaxpayerProfile
-    operation: PinnedAuthorityOperation
 
 
 def _workflow_gate(
@@ -408,12 +522,10 @@ def _workflow_gate(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     clock: datetime,
+    operation: PinnedAuthorityOperation,
 ) -> _WorkflowGate:
     profile = workflow_profile()
     filing_ports = build_filing_action_ports(bucket_id=work_unit.bucket_id)
-    lease = bundled_indexed_authority().operation()
-    _CALCULATION_OPERATION_LEASES.append(lease)
-    operation = lease.__enter__()
     return _WorkflowGate(
         profile=profile,
         engine=build_revision_workflow_engine(
@@ -429,7 +541,6 @@ def _workflow_gate(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ),
-        operation=operation,
     )
 
 
@@ -453,23 +564,32 @@ def _file_revision(
         filing_repository=filing_repository,
         bucket_event_repository=bucket_event_repository,
     )
-    gate = _workflow_gate(
-        revision=revision,
-        work_unit=work_unit,
-        clock=clock,
-    )
-    return file_modelo_revision(
-        calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        ports=build_filing_action_ports(bucket_id=work_unit.bucket_id),
-        actor=actor,
-        workflow_profile=gate.profile,
-        notes=notes,
-        workflow_engine=gate.engine,
-        clock=clock,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        operation=gate.operation,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        gate = _workflow_gate(
+            revision=revision,
+            work_unit=work_unit,
+            clock=clock,
+            operation=operation,
+        )
+        filing_ports = replace(
+            build_filing_action_ports(bucket_id=work_unit.bucket_id),
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository,
+            bucket_event_repository=bucket_event_repository,
+        )
+        return file_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=filing_ports,
+            actor=actor,
+            workflow_profile=gate.profile,
+            notes=notes,
+            workflow_engine=gate.engine,
+            clock=clock,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
 
 def _verify_revision(
@@ -492,22 +612,32 @@ def _verify_revision(
         filing_repository=filing_repository or ModeloRecordCatalogueRepository(),
         bucket_event_repository=bucket_event_repository,
     )
-    gate = _workflow_gate(
-        revision=revision,
-        work_unit=work_unit,
-        clock=clock,
-    )
-    return verify_modelo_revision(
-        calculation_revision_id,
-        certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-        verification_repositories=build_test_verification_repository_bundle(),
-        actor=actor,
-        workflow_profile=gate.profile,
-        workflow_engine=gate.engine,
-        clock=clock,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        operation=gate.operation,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        gate = _workflow_gate(
+            revision=revision,
+            work_unit=work_unit,
+            clock=clock,
+            operation=operation,
+        )
+        verification_repositories = replace(
+            build_test_verification_repository_bundle(),
+            work_unit=work_unit_repository,
+            calculation=calculation_repository,
+            verification=verification_repository,
+            bucket_event=bucket_event_repository,
+            filing=filing_repository or ModeloRecordCatalogueRepository(),
+        )
+        return verify_modelo_revision(
+            calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=verification_repositories,
+            actor=actor,
+            workflow_profile=gate.profile,
+            workflow_engine=gate.engine,
+            clock=clock,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):

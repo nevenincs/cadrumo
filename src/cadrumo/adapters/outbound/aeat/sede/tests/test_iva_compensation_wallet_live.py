@@ -14,7 +14,10 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......application.auth.sessions import ensure_authenticated_aeat_session
 from ......core.auth_provider import AuthProviderKind
@@ -69,13 +72,17 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
     requires_live_enabled()
     settings = load_settings()
     try:
-        auth = await ensure_authenticated_aeat_session(
-            settings,
-            kind=AuthProviderKind.CLAVE_MOVIL,
-            operation="sede-iva-wallet-live-test",
-            target_url=PRE303_PRESENTATION_SERVICE_URL,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as authority_operation:
+            auth = await ensure_authenticated_aeat_session(
+                settings,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                browser_session_factory=default_browser_session_factory,
+                kind=AuthProviderKind.CLAVE_MOVIL,
+                operation="sede-iva-wallet-live-test",
+                target_url=PRE303_PRESENTATION_SERVICE_URL,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                profile_decode_context=authority_operation.profile_decode_context(),
+            )
     except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available: {exc}")
 

@@ -194,29 +194,28 @@ def _calculate_m202(
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, period_code),
         revision_id=snapshot.revision.id,
-        ports=WorkLifecyclePorts(
-            work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo
-        ),
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bucket_event_repo),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        casilla_inputs={_CASILLA_RESULTADO_DECLARACION_ANTERIOR: Decimal("0.00")},
-        binding_values={
-            _BINDING_INCN: _INCN_BELOW_THRESHOLD,
-            _BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: cuota_base_ejercicio_anterior,
-            _BINDING_PAGOS_FRACCIONADOS_ANTERIORES: Decimal("0"),
-        },
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bucket_event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bucket_event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_210:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            casilla_inputs={_CASILLA_RESULTADO_DECLARACION_ANTERIOR: Decimal("0.00")},
+            binding_values={
+                _BINDING_INCN: _INCN_BELOW_THRESHOLD,
+                _BINDING_CUOTA_BASE_EJERCICIO_ANTERIOR: cuota_base_ejercicio_anterior,
+                _BINDING_PAGOS_FRACCIONADOS_ANTERIORES: Decimal("0"),
+            },
+            ports=_calculation_ports_210,
+            clock=_T1,
+        )
 
 
 def test_m202_2025_primer_pago_manual_worked_example(secure_objects: SecureObjectRepository) -> None:

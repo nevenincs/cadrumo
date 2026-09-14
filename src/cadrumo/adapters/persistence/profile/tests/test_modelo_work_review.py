@@ -406,17 +406,18 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
             },
         ),
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
-        ports=calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=bucket_event_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    ) as _calculation_ports_413:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("9000")},
+            ports=_calculation_ports_413,
+        )
 
     with bundled_indexed_authority().operation() as operation:
         review = build_modelo_work_review(
@@ -445,18 +446,18 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
     carry_forward_formula = rows[M130_CARRY_FORWARD_CASILLA].concrete_formula
     assert carry_forward_formula is not None
     assert "modelo-130-resultados-negativos-anteriores" in carry_forward_formula.operand_refs
-
-    equal_value_revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("10000")},
-        ports=calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=bucket_event_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    ) as _calculation_ports_453:
+        equal_value_revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values={**DEFAULT_130_BINDING_VALUES, _M130_INCOME_BINDING: Decimal("10000")},
+            ports=_calculation_ports_453,
+        )
     with bundled_indexed_authority().operation() as operation:
         equal_value_review = build_modelo_work_review(
             work_unit.bucket_id,
@@ -504,17 +505,18 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
 def test_real_review_projects_only_fingerprint_for_persisted_row_identity(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, bucket_event_repo = repos
     work_unit = _persist_work_unit(repos)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            bucket_id=work_unit.bucket_id,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=bucket_event_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        bucket_event_repository=bucket_event_repo,
+    ) as _calculation_ports_511:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_511,
+        )
     raw_identity = "opaque-review-row-canary"
     fingerprint = "d" * 64
     amended = revision.model_copy(

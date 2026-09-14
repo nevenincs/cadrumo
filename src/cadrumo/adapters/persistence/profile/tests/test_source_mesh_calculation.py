@@ -33,7 +33,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -109,7 +109,7 @@ def _seed_work_unit(
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id=revision_id,
-        repository=work_unit_repository,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET),
         clock=_T0,
     )
 

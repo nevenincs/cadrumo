@@ -9,6 +9,7 @@ hand-authored calculation result is involved.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -53,9 +54,11 @@ from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
@@ -100,7 +103,7 @@ from cadrumo.domain.modelos.filing_record import (
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition import build_filing_action_ports, build_verification_repository_bundle
 
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
@@ -258,6 +261,23 @@ def workflow_profile() -> TaxpayerProfile:
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         activity_start_date=date(_YEAR, 1, 1),
+    )
+
+
+def _verification_repositories_for_test(
+    *,
+    work_units: WorkUnitCatalogueRepository,
+    calculations: CalculationRevisionCatalogueRepository,
+    filings: ModeloRecordCatalogueRepository,
+) -> VerificationRepositoryBundle:
+    """Overlay the exact active-session test catalogues on the canonical bundle."""
+    active_bucket_id = resolve_active_bucket_id()
+    assert active_bucket_id is not None
+    return replace(
+        build_verification_repository_bundle(active_bucket_id),
+        work_unit=work_units,
+        calculation=calculations,
+        filing=filings,
     )
 
 
@@ -471,18 +491,20 @@ def _calculate_m390_annual(
         ),
         clock=_T0,
     )
-    return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values={},
-        ports=calculation_ports_for_test(
-            calculation_repository=calculations,
-            filing_repository=filings,
-            invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            work_unit_repository=work_units,
-        ),
-        clock=_T2,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        calculation_repository=calculations,
+        filing_repository=filings,
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        work_unit_repository=work_units,
+    ) as _calculation_ports_497:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values={},
+            ports=_calculation_ports_497,
+            clock=_T2,
+        )
 
 
 def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_revision(
@@ -639,7 +661,11 @@ def test_m390_refuses_a_source_when_current_calculation_pointer_diverges_from_fi
                 actor="operator",
                 workflow_profile=workflow_profile(),
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+                verification_repositories=_verification_repositories_for_test(
+                    work_units=work_units,
+                    calculations=calculations,
+                    filings=filings,
+                ),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
             )
@@ -673,9 +699,12 @@ def test_m390_refuses_a_non_presentado_source_calculation_revision(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
-                work_unit_repository=work_units,
-                calculation_repository=calculations,
-                filing_repository=filings,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories_for_test(
+                    work_units=work_units,
+                    calculations=calculations,
+                    filings=filings,
+                ),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
             )
@@ -737,9 +766,12 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
                 target.calculation_revision_id,
                 actor="operator",
                 workflow_profile=workflow_profile(),
-                work_unit_repository=work_units,
-                calculation_repository=calculations,
-                filing_repository=filings,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                verification_repositories=_verification_repositories_for_test(
+                    work_units=work_units,
+                    calculations=calculations,
+                    filings=filings,
+                ),
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
             )
@@ -772,15 +804,22 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         source_evidence.m303.regimen_simplificado.calculation_result.digest
     )
 
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
+    ):
         verify_modelo_revision(
             target.calculation_revision_id,
             actor="operator",
             workflow_profile=workflow_profile(),
-            work_unit_repository=work_units,
-            calculation_repository=calculations,
-            filing_repository=filings,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_repositories_for_test(
+                work_units=work_units,
+                calculations=calculations,
+                filings=filings,
+            ),
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
         )
 
     verified_target = target.model_copy(
@@ -792,17 +831,19 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         },
     )
     calculations.save(upsert_calculation_revision(calculations.load(), verified_target))
-    with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
-        with bundled_indexed_authority().operation() as operation:
-            file_modelo_revision(
-                verified_target.calculation_revision_id,
-                actor="operator",
-                workflow_profile=workflow_profile(),
-                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                operation=operation,
-            )
+    with (
+        pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        file_modelo_revision(
+            verified_target.calculation_revision_id,
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            ports=build_filing_action_ports(bucket_id=_BUCKET_ID),
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     with pytest.raises(M303RegimenSimplificadoAnnualSummaryHandoffError, match="no longer matches"):
         export_modelo_revision(
             ModeloExportCommand(

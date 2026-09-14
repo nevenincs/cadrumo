@@ -45,7 +45,12 @@ from cadrumo.application.filing.tests.filing_support import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+from cadrumo.domain.calculations.registry.authority import (
+    PinnedAuthorityOperation,
+)
+from cadrumo.domain.calculations.registry.authority import (
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.submission.models import ModeloDraftStatus
@@ -92,10 +97,11 @@ _DIGEST_FIELDS = (
 )
 
 
-def _ready_draft() -> ModeloDraft:
+def _ready_draft(*, operation: PinnedAuthorityOperation) -> ModeloDraft:
     return build_registry_filing_draft_from_decimals(
         modelo="130",
         period=_Q1_2026,
+        operation=operation,
         casilla_decimals=_CASILLA_INPUTS,
         binding_decimals=_BINDING_INPUTS,
         status=ModeloDraftStatus.LISTO_PARA_PRESENTAR,
@@ -146,7 +152,7 @@ def _draft_review_ports(bucket_id: str) -> DraftReviewPorts:
     )
 
 
-def _approve(bucket_id: str) -> ModeloDraft:
+def _approve(bucket_id: str, *, operation: PinnedAuthorityOperation) -> ModeloDraft:
     """Approve a real registry-backed draft through the production path."""
     schema_provider = build_runtime_schema_provider(
         modelos=("130",),
@@ -154,13 +160,14 @@ def _approve(bucket_id: str) -> ModeloDraft:
         period=_Q1_2026,
     )
     return approve_draft(
-        _ready_draft(),
+        _ready_draft(operation=operation),
         bucket_id=bucket_id,
         approved_by="operator",
         schema_provider=schema_provider,
         ports=_draft_review_ports(bucket_id),
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
+        operation=operation,
     )
 
 
@@ -173,7 +180,8 @@ def test_real_approval_basis_has_the_shapes_this_module_pins(tmp_path: Path) -> 
     across all eight would refuse a value the approval path actually writes.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        approved = _approve(profile.bucket_id)
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 
     basis = approved.approval_basis
     assert basis is not None
@@ -207,7 +215,7 @@ def test_tampered_review_checksum_is_refused_on_refresh(tmp_path: Path) -> None:
                 filing_year=_Q1_2026.filing_year,
                 period=_Q1_2026,
             )
-            approved = _approve(profile.bucket_id)
+            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
             assert approved.status is ModeloDraftStatus.APROBADO
             assert approved.review_checksum is not None
 
@@ -246,7 +254,7 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
                 filing_year=_Q1_2026.filing_year,
                 period=_Q1_2026,
             )
-            approved = _approve(profile.bucket_id)
+            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
             repository = ModeloDraftRepository(bucket_id=profile.bucket_id)
             repository.save(approved)
 
@@ -271,7 +279,8 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
 def test_approved_at_is_utc(tmp_path: Path) -> None:
     """The approval instant a real approval stamps is UTC-aware."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        approved = _approve(profile.bucket_id)
+        with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+            approved = _approve(profile.bucket_id, operation=_authority_operation_for_test)
 
     assert approved.approved_at is not None
     assert approved.approved_at.tzinfo is not None

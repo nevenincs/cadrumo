@@ -145,17 +145,18 @@ def test_m111_professional_retencion_observation_calculates_activity_boxes(tmp_p
             ),
             clock=_T0,
         )
-
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-                invoice_repository=InvoiceCatalogueRepository(objects=objects),
-                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-                work_unit_repository=wu_repo,
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            work_unit_repository=wu_repo,
+        ) as _calculation_ports_151:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=_calculation_ports_151,
+                clock=_T1,
+            )
 
     values = result.revision.casilla_values
     assert values["07"] == Decimal("1")
@@ -197,17 +198,18 @@ def test_m111_administrador_retencion_observation_folds_into_trabajo_boxes(tmp_p
             ),
             clock=_T0,
         )
-
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-                invoice_repository=InvoiceCatalogueRepository(objects=objects),
-                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-                work_unit_repository=wu_repo,
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            work_unit_repository=wu_repo,
+        ) as _calculation_ports_203:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=_calculation_ports_203,
+                clock=_T1,
+            )
 
     values = result.revision.casilla_values
     assert values["01"] == Decimal("1")
@@ -251,17 +253,18 @@ def test_m111_administrador_wrong_rate_surfaces_calculate_advisory(tmp_path: Pat
             ),
             clock=_T0,
         )
-
-        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=calculation_ports_for_test(
-                calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
-                invoice_repository=InvoiceCatalogueRepository(objects=objects),
-                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
-                work_unit_repository=wu_repo,
-            ),
-            clock=_T1,
-        )
+        with calculation_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            invoice_repository=InvoiceCatalogueRepository(objects=objects),
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+            work_unit_repository=wu_repo,
+        ) as _calculation_ports_257:
+            result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                ports=_calculation_ports_257,
+                clock=_T1,
+            )
 
     values = result.revision.casilla_values
     assert values["02"] == Decimal("2000.00")

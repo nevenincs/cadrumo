@@ -217,21 +217,25 @@ def _calculate_and_verify_m210_inmobiliaria(
             ),
             clock=_CLOCK,
         )
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={
-                "valor_catastral": valor_catastral,
-                "coeficiente_imputacion_inmobiliaria": _VALID_IMPUTACION_COEFFICIENT,
-                "dias_imputacion": dias_imputacion,
-            },
-            text_casilla_inputs={_TIPO_RENTA_CASILLA: "inmobiliaria"},
-            filing_period_date=date(_FILING_YEAR, 12, 31),
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-            ),
-            clock=_CLOCK,
-        )
+        with calculation_ports_for_test(
+            bucket_id=work_repo.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_230:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={
+                    "valor_catastral": valor_catastral,
+                    "coeficiente_imputacion_inmobiliaria": _VALID_IMPUTACION_COEFFICIENT,
+                    "dias_imputacion": dias_imputacion,
+                },
+                text_casilla_inputs={_TIPO_RENTA_CASILLA: "inmobiliaria"},
+                filing_period_date=date(_FILING_YEAR, 12, 31),
+                ports=_calculation_ports_230,
+                clock=_CLOCK,
+            )
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
         observation_repository = CalculationObservationRepository()
         with bundled_indexed_authority().operation() as operation:

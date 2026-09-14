@@ -275,12 +275,15 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
             ports=_LLM_PORTS,
         )
 
-    with pytest.raises(TransactionValidationError), ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=_objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=_objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+    ):
         apply_evidence_split(
             suggestion,
             bucket_id=_BUCKET,
@@ -320,12 +323,15 @@ def test_split_child_classification_that_changes_raw_id_is_refused(
         ),
     )
 
-    with pytest.raises(TransactionValidationError, match="transaction id"), ledger_ports_for_test(
-        bucket_id=_BUCKET,
-        objects=_objects,
-        transaction_repository=repository,
-        bucket_event_repository=events,
-    ) as ports:
+    with (
+        pytest.raises(TransactionValidationError, match="transaction id"),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET,
+            objects=_objects,
+            transaction_repository=repository,
+            bucket_event_repository=events,
+        ) as ports,
+    ):
         split_transaction_with_classified_children(
             bucket_id=_BUCKET,
             transaction_id=tx_id,

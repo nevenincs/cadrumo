@@ -47,22 +47,26 @@ def _seed_transaction_and_invoice(
 ):
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    purchase_evidence = purchase_invoice()
-    invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            idempotency_key=idempotency_key,
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        purchase_evidence = purchase_invoice()
+        invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                idempotency_key=idempotency_key,
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
     return transaction_repository, event_repository, invoice_repository, purchase_evidence, created
 
 
@@ -77,18 +81,21 @@ def test_attach_manual_transaction_evidence_attaches_and_emits_event(
         created,
     ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="attach-emits")
 
-    attached = attach_manual_transaction_evidence(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        purchase_invoice_evidence_id=purchase_evidence.invoice_id,
-        actor="operator-B",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-            transaction_repository=transaction_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        attached = attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+            actor="operator-B",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
     assert attached.transaction.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     assert attached.transaction.evidence_provenance[-1].evidence_id == purchase_evidence.invoice_id
@@ -115,7 +122,16 @@ def test_update_manual_transaction_refuses_direct_evidence_change(
         created,
     ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="direct-evidence-refused")
 
-    with pytest.raises(TransactionValidationError) as exc_info:
+    with (
+        pytest.raises(TransactionValidationError) as exc_info,
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(
@@ -129,11 +145,7 @@ def test_update_manual_transaction_refuses_direct_evidence_change(
                 source_command="aeat app ledger update",
                 idempotency_key="direct-evidence-refused",
             ),
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository,
-                invoice_repository=invoice_repository,
-                transaction_repository=transaction_repository,
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -157,16 +169,22 @@ def test_update_manual_transaction_fields_refuses_evidence_patch(
         created,
     ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="patch-evidence-refused")
 
-    with pytest.raises(TransactionValidationError) as exc_info:
+    with (
+        pytest.raises(TransactionValidationError) as exc_info,
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         update_manual_transaction_fields(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             patch=ManualLedgerTransactionPatch(purchase_invoice_evidence_id=purchase_evidence.invoice_id),
             actor="operator-B",
             source_command="aeat app ledger update",
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository, transaction_repository=transaction_repository
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -188,30 +206,37 @@ def test_generic_field_edit_preserves_existing_evidence(
         purchase_evidence,
         created,
     ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="edit-preserves-evidence")
-    attach_manual_transaction_evidence(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        purchase_invoice_evidence_id=purchase_evidence.invoice_id,
-        actor="operator-B",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-            transaction_repository=transaction_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+            actor="operator-B",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
 
-    edited = update_manual_transaction_fields(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
-        actor="operator-B",
-        source_command="aeat app ledger classify",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository, transaction_repository=transaction_repository
-        ),
-        occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        edited = update_manual_transaction_fields(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            patch=ManualLedgerTransactionPatch(business_classification=BusinessClassification.BUSINESS),
+            actor="operator-B",
+            source_command="aeat app ledger classify",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 3, 10, 0, tzinfo=UTC),
+        )
 
     assert edited.transaction.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     persisted = transaction_repository.load().get(edited.ref.transaction_id)
@@ -243,31 +268,37 @@ def test_invoice_linkage_does_not_mutate_evidence(
         purchase_evidence,
         created,
     ) = _seed_transaction_and_invoice(secure_objects, idempotency_key="link-no-evidence-mutation")
-    attach_manual_transaction_evidence(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        purchase_invoice_evidence_id=purchase_evidence.invoice_id,
-        actor="operator-B",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-            transaction_repository=transaction_repository,
-        ),
-        occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        attach_manual_transaction_evidence(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            purchase_invoice_evidence_id=purchase_evidence.invoice_id,
+            actor="operator-B",
+            ports=ports,
+            occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
+        )
     events_before = [event.event_type for event in event_repository.load().for_bucket(_BUCKET_ID)]
 
-    linked = link_manual_transaction_invoice(
+    with ledger_ports_for_test(
         bucket_id=_BUCKET_ID,
-        transaction_id=created.ref.transaction_id,
-        invoice_id=purchase_evidence.invoice_id,
-        actor="operator-B",
-        ports=ledger_ports_for_test(
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
-            transaction_repository=transaction_repository,
-        ),
-    )
+        objects=secure_objects,
+        bucket_event_repository=event_repository,
+        invoice_repository=invoice_repository,
+        transaction_repository=transaction_repository,
+    ) as ports:
+        linked = link_manual_transaction_invoice(
+            bucket_id=_BUCKET_ID,
+            transaction_id=created.ref.transaction_id,
+            invoice_id=purchase_evidence.invoice_id,
+            actor="operator-B",
+            ports=ports,
+        )
 
     assert linked.invoice_id == purchase_evidence.invoice_id
     assert created.ref.transaction_id in linked.invoice.linked_transaction_ids
@@ -291,30 +322,40 @@ def test_failed_attach_leaves_transaction_and_history_unchanged(
     # transaction stays evidence-free, provenance stays empty, and no attach event
     # is appended.
     transaction_repository, event_repository = _repositories(secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            idempotency_key="failed-attach-unchanged",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                idempotency_key="failed-attach-unchanged",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
 
-    with pytest.raises(TransactionValidationError):
+    with (
+        pytest.raises(TransactionValidationError),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         attach_manual_transaction_evidence(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             purchase_invoice_evidence_id="deadbeefdeadbeef",
             actor="operator-B",
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository, transaction_repository=transaction_repository
-            ),
+            ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
         )
 
@@ -332,32 +373,41 @@ def test_failed_invoice_link_leaves_transaction_and_history_unchanged(
     # A link naming an unknown invoice must refuse BEFORE any catalogue write.
     transaction_repository, event_repository = _repositories(secure_objects)
     invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
-    created = create_manual_transaction(
-        ManualLedgerTransactionCommand(
-            bucket_id=_BUCKET_ID,
-            booked_date=date(2026, 5, 1),
-            amount=Decimal("121.00"),
-            direction=TransactionDirection.OUTGOING,
-            description="material oficina",
-            idempotency_key="failed-link-unchanged",
-        ),
-        ports=ledger_ports_for_test(
-            transaction_repository=transaction_repository, bucket_event_repository=event_repository
-        ),
-        occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
-    )
+    with ledger_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        objects=secure_objects,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=event_repository,
+    ) as ports:
+        created = create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                bucket_id=_BUCKET_ID,
+                booked_date=date(2026, 5, 1),
+                amount=Decimal("121.00"),
+                direction=TransactionDirection.OUTGOING,
+                description="material oficina",
+                idempotency_key="failed-link-unchanged",
+            ),
+            ports=ports,
+            occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
+        )
 
-    with pytest.raises(InvoiceLinkError):
+    with (
+        pytest.raises(InvoiceLinkError),
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+            bucket_event_repository=event_repository,
+            invoice_repository=invoice_repository,
+            transaction_repository=transaction_repository,
+        ) as ports,
+    ):
         link_manual_transaction_invoice(
             bucket_id=_BUCKET_ID,
             transaction_id=created.ref.transaction_id,
             invoice_id="unknown-invoice-id",
             actor="operator-B",
-            ports=ledger_ports_for_test(
-                bucket_event_repository=event_repository,
-                invoice_repository=invoice_repository,
-                transaction_repository=transaction_repository,
-            ),
+            ports=ports,
         )
 
     persisted = transaction_repository.load().get(created.ref.transaction_id)

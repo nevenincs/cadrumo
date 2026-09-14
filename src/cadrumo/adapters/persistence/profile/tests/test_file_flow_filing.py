@@ -63,17 +63,19 @@ def test_file_requires_verificado_completo_state(repos: Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_70:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_70,
+            clock=T1,
+        )
     with pytest.raises(CalculationRevisionStateError, match=r"state|verified|VERIFIED") as raised:
         with bundled_indexed_authority().operation() as operation:
             file_modelo_revision(
@@ -104,18 +106,19 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_112:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_112,
+            clock=T1,
+        )
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -146,15 +149,16 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
     assert filing.notes == "Q1 IVA"
     assert filing.filed_by == "operator-A"
     assert filing.calculation_revision_id == revision.calculation_revision_id
-
-    refreshed_revision = get_calculation_revision(
-        revision.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_152:
+        refreshed_revision = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=_calculation_ports_152,
+        )
     assert refreshed_revision.state is CalculationRevisionState.PRESENTADO
     assert refreshed_revision.filed_at == T3
     assert refreshed_revision.filed_by == "operator-A"
@@ -187,17 +191,19 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_194:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_194,
+            clock=T1,
+        )
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -225,14 +231,16 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
     assert filing.external_evidence is None
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_230:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=_calculation_ports_230,
+        )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
     assert get_work_unit(
         work_unit.work_unit_id,
@@ -268,20 +276,22 @@ def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing
 def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> None:
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2026, period="3T")
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values={
-            **DEFAULT_130_BINDING_VALUES,
-            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
-        },
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_278:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values={
+                **DEFAULT_130_BINDING_VALUES,
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            },
+            ports=_calculation_ports_278,
+            clock=T1,
+        )
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -315,14 +325,16 @@ def test_file_refuses_future_period_before_filing_window_opens(repos: Repos) -> 
     assert terminal_step.details.filing_window.value == "future"
     assert terminal_step.precondition_verdict is not None
     assert terminal_step.precondition_verdict.failed_condition_id == "workflow.deadline.filing_window_open"
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_320:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=_calculation_ports_320,
+        )
     assert refreshed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert (
         target_filing_records(
@@ -338,17 +350,19 @@ def test_file_records_overdue_modelo_130_2025_as_late_local_filing(repos: Repos)
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2025)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_345:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_345,
+            clock=T1,
+        )
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -376,14 +390,16 @@ def test_file_records_overdue_modelo_130_2025_as_late_local_filing(repos: Repos)
 
     assert filing.status is ModeloRecordStatus.VIGENTE
     assert filing.aeat_accepted is False
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_381:
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=_calculation_ports_381,
+        )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
     assert get_work_unit(
         work_unit.work_unit_id,
@@ -401,19 +417,20 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-
-    # First filing: revision-1, filed at T3.
-    revision_one = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_410:
+        # First filing: revision-1, filed at T3.
+        revision_one = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_410,
+            clock=T1,
+        )
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -437,23 +454,24 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
         clock=T3,
     )
-
-    # Second filing: revision-2 with corrected inputs, filed at T5.
-    revision_two = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={
-            **DEFAULT_130_BASELINE_INPUTS,
-            M130_INCOME_CASILLA: Decimal("1200"),
-            M130_EXPENSE_CASILLA: Decimal("100"),
-        },
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_450:
+        # Second filing: revision-2 with corrected inputs, filed at T5.
+        revision_two = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={
+                **DEFAULT_130_BASELINE_INPUTS,
+                M130_INCOME_CASILLA: Decimal("1200"),
+                M130_EXPENSE_CASILLA: Decimal("100"),
+            },
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_450,
+            clock=T4,
+        )
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,
@@ -481,14 +499,16 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
 
     # New filing is current.
     assert filing_two.status is ModeloRecordStatus.VIGENTE
-    refreshed_revision_two = get_calculation_revision(
-        revision_two.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_486:
+        refreshed_revision_two = get_calculation_revision(
+            revision_two.calculation_revision_id,
+            ports=_calculation_ports_486,
+        )
     assert refreshed_revision_two.state is CalculationRevisionState.PRESENTADO
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
@@ -499,15 +519,16 @@ def test_filing_record_supersession_preserves_audit_history(repos: Repos) -> Non
     assert refreshed_filing_one.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_filing_one.superseded_at == T5
     assert refreshed_filing_one.superseded_by_filing_record_id == filing_two.filing_record_id
-
-    refreshed_revision_one = get_calculation_revision(
-        revision_one.calculation_revision_id,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_505:
+        refreshed_revision_one = get_calculation_revision(
+            revision_one.calculation_revision_id,
+            ports=_calculation_ports_505,
+        )
     assert refreshed_revision_one.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
     assert refreshed_revision_one.superseded_at == T5
 
@@ -549,18 +570,19 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
 
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-
-    revision_one = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_557:
+        revision_one = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_557,
+            clock=T1,
+        )
     verify_revision(
         revision_one.calculation_revision_id,
         revision=revision_one,
@@ -584,18 +606,19 @@ def test_list_filing_records_excludes_superseded_by_default(repos: Repos) -> Non
         bucket_event_repository=bv_repo,
         clock=T3,
     )
-
-    revision_two = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1200")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-        ),
-        clock=T4,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_592:
+        revision_two = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1200")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_592,
+            clock=T4,
+        )
     verify_revision(
         revision_two.calculation_revision_id,
         revision=revision_two,

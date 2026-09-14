@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.bindings import CasillaObservation, Re
 from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -117,11 +118,13 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
                 stamped_revision_id=_stamped_revision_id(),
             )
         )
+        ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,
             approved_by="operator",
             schema_provider=schema_provider,
+            ports=ports,
             operation=_authority_operation_for_test,
         )
         assert approved.status is ModeloDraftStatus.APROBADO
@@ -139,7 +142,11 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
         )
 
         reasons = approval_stale_reasons(
-            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=_authority_operation_for_test,
         )
 
         # Only the prior-filing source changed: draft, transactions, invoices, category
@@ -171,17 +178,23 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
                 stamped_revision_id=_stamped_revision_id(),
             )
         )
+        ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,
             approved_by="operator",
             schema_provider=schema_provider,
+            ports=ports,
             operation=_authority_operation_for_test,
         )
 
         # No mutation to any source between approval and the staleness check.
         reasons = approval_stale_reasons(
-            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=_authority_operation_for_test,
         )
 
         assert ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED not in reasons

@@ -9,7 +9,7 @@ dependency on a frontend package.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Generator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -361,25 +361,24 @@ class AppIvaRemoteStatePort:
             operator_scope_ports=self._operator_scope_ports,
         )
 
-    def ensure_authenticated_session(
+    async def ensure_authenticated_session(
         self,
         settings: Settings,
         *,
         operation: str,
         target_url: str | None,
-    ) -> Awaitable[AuthenticatedAeatSessionResult]:
+    ) -> AuthenticatedAeatSessionResult:
         """Start the configured authentication flow."""
         with bundled_indexed_authority().operation() as authority_operation:
-            profile_decode_context = authority_operation.profile_decode_context()
-        return ensure_authenticated_aeat_session(
-            settings,
-            certificate_secret_backend_factory=self._certificate_secret_backend_factory,
-            browser_session_factory=self._browser_session_factory,
-            operation=operation,
-            target_url=target_url,
-            operator_scope_ports=self._operator_scope_ports,
-            profile_decode_context=profile_decode_context,
-        )
+            return await ensure_authenticated_aeat_session(
+                settings,
+                certificate_secret_backend_factory=self._certificate_secret_backend_factory,
+                browser_session_factory=self._browser_session_factory,
+                operation=operation,
+                target_url=target_url,
+                operator_scope_ports=self._operator_scope_ports,
+                profile_decode_context=authority_operation.profile_decode_context(),
+            )
 
     def list_history(self, *, as_of_year: int | None) -> IvaCompensationHistoryReport:
         """List persisted IVA history and authority decisions."""

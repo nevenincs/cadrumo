@@ -52,15 +52,19 @@ def _verified_revision(repos: Repos):
     """Seed a work unit, calculate, and verify so the revision is filing-eligible."""
     wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_59:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_59,
+            clock=T1,
+        )
     verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -126,12 +130,12 @@ def test_refile_of_presentado_revision_is_idempotent_noop(repos: Repos) -> None:
         event_types=(BucketEventType.MODELO_FILED,),
     )
     assert len(filed_after_second) == 1
-
-    # The revision stays PRESENTADO.
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        ports=calculation_ports_for_test(calculation_repository=cr_repo),
-    )
+    with calculation_ports_for_test(calculation_repository=cr_repo) as _calculation_ports_133:
+        # The revision stays PRESENTADO.
+        refreshed = get_calculation_revision(
+            revision.calculation_revision_id,
+            ports=_calculation_ports_133,
+        )
     assert refreshed.state is CalculationRevisionState.PRESENTADO
 
 
@@ -139,15 +143,19 @@ def test_file_of_unverified_revision_still_hard_refuses(repos: Repos) -> None:
     """A BORRADOR (not VERIFICADO_COMPLETO) revision still raises - the no-op is scoped to PRESENTADO."""
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        ports=calculation_ports_for_test(
-            work_unit_repository=wu_repo, calculation_repository=cr_repo, bucket_event_repository=bv_repo
-        ),
-        clock=T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=work_unit.bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+    ) as _calculation_ports_146:
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
+            binding_values=DEFAULT_130_BINDING_VALUES,
+            ports=_calculation_ports_146,
+            clock=T1,
+        )
     with pytest.raises(CalculationRevisionStateError, match=r"state|VERIFICADO_COMPLETO"):
         with bundled_indexed_authority().operation() as operation:
             file_modelo_revision(

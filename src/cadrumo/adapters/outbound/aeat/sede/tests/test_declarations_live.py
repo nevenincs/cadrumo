@@ -22,7 +22,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
+from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
@@ -52,12 +55,16 @@ async def _load_active_clave_session():
 
     settings = load_settings()
     try:
-        result = await ensure_authenticated_aeat_session(
-            settings,
-            kind=AuthProviderKind.CLAVE_MOVIL,
-            operation="sede-declarations-live-test",
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as authority_operation:
+            result = await ensure_authenticated_aeat_session(
+                settings,
+                certificate_secret_backend_factory=build_certificate_secret_backend,
+                browser_session_factory=default_browser_session_factory,
+                kind=AuthProviderKind.CLAVE_MOVIL,
+                operation="sede-declarations-live-test",
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                profile_decode_context=authority_operation.profile_decode_context(),
+            )
         return result.session
     except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available after live opt-in: {exc}")
@@ -130,8 +137,9 @@ async def test_register_session_capture_observation_returns_pdf_bytes() -> None:
         return artefact
 
     try:
-        async with open_declarations_register(session) as register:
-            observation = await register.capture_observation(declarations[0], artefact_sink=retain_body)
+        with bundled_indexed_authority().operation() as authority_operation:
+            async with open_declarations_register(session, operation=authority_operation) as register:
+                observation = await register.capture_observation(declarations[0], artefact_sink=retain_body)
     except SedeError as exc:
         pytest.fail(f"live capture failed after live opt-in: {exc}")
 

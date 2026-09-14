@@ -48,6 +48,7 @@ from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.submission.models import ModeloDraftStatus
+from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -109,11 +110,13 @@ def test_approval_goes_stale_when_invoice_source_data_changes(
                 [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
             ),
         )
+        ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,
             approved_by="operator",
             schema_provider=schema_provider,
+            ports=ports,
             operation=_authority_operation_for_test,
         )
         assert approved.status is ModeloDraftStatus.APROBADO
@@ -129,7 +132,11 @@ def test_approval_goes_stale_when_invoice_source_data_changes(
         )
 
         reasons = approval_stale_reasons(
-            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=_authority_operation_for_test,
         )
 
         # Only the invoice source changed: the draft, transactions, category profiles,
@@ -158,17 +165,23 @@ def test_approval_not_stale_when_invoice_source_unchanged(
                 [_invoice("2026-0001", taxable_base=Decimal("100.00"), bucket_id=bucket_id)]
             ),
         )
+        ports = build_draft_review_ports(bucket_id=bucket_id)
         approved = approve_draft(
             draft,
             bucket_id=bucket_id,
             approved_by="operator",
             schema_provider=schema_provider,
+            ports=ports,
             operation=_authority_operation_for_test,
         )
 
         # No mutation to any source between approval and the staleness check.
         reasons = approval_stale_reasons(
-            approved, bucket_id=bucket_id, schema_provider=schema_provider, operation=_authority_operation_for_test
+            approved,
+            bucket_id=bucket_id,
+            schema_provider=schema_provider,
+            ports=ports,
+            operation=_authority_operation_for_test,
         )
 
         assert ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED not in reasons

@@ -209,20 +209,21 @@ def _calculate_m200(
     invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     _seed_reviewed_business_ledger(tx_repo)
     work_unit = _create_m200_work_unit(wu_repo)
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        actor="operator-Beatriz",
-        casilla_inputs=casilla_inputs or {},
-        ports=calculation_ports_for_test(
-            bucket_id=_BUCKET_ID,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=_BUCKET_ID,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_216:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            actor="operator-Beatriz",
+            casilla_inputs=casilla_inputs or {},
+            ports=_calculation_ports_216,
+            clock=_T1,
+        )
     return result, cr_repo
 
 

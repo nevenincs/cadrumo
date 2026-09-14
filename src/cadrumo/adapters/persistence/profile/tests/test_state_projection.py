@@ -777,11 +777,14 @@ def test_projection_profile_read_refuses_explicit_database_route(
     profile_id = "00000000-0000-4000-8000-000000000001"
     _stage_profile_bucket(tmp_path, profile_id)
 
-    with override_settings(
-        cadrumo_local_storage_root=tmp_path,
-        cadrumo_active_profile=profile_id,
-        cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-    ), bundled_indexed_authority().operation() as operation:
+    with (
+        override_settings(
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_active_profile=profile_id,
+            cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+        ),
+        bundled_indexed_authority().operation() as operation,
+    ):
         projection = build_operator_state_projection(
             certificate_secret_backend_factory=certificate_secret_backend_factory,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,

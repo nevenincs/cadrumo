@@ -328,18 +328,19 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository, *, bucket_id:
         ),
         clock=_T0,
     )
-    result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        work_unit.work_unit_id,
-        binding_values=_non_relation_zero_bindings(),
-        ports=calculation_ports_for_test(
-            bucket_id=bucket_id,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-        ),
-        clock=_T1,
-    )
+    with calculation_ports_for_test(
+        bucket_id=bucket_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as _calculation_ports_334:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            binding_values=_non_relation_zero_bindings(),
+            ports=_calculation_ports_334,
+            clock=_T1,
+        )
     return result, str(work_unit.revision_id)
 
 

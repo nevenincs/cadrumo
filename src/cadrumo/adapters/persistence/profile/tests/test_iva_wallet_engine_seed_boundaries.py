@@ -49,7 +49,15 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
         _store_operator_profile()
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        with (
+            pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
+            calculation_ports_for_test(
+                bucket_id=work_repo.bucket_id,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_60,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -57,9 +65,7 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-                ),
+                ports=_calculation_ports_60,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
@@ -96,7 +102,15 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
             work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
 
             for supplied_decision in (None, report.decision):
-                with pytest.raises(ModeloIvaWalletReconciliationBlocked):
+                with (
+                    pytest.raises(ModeloIvaWalletReconciliationBlocked),
+                    calculation_ports_for_test(
+                        bucket_id=work_repo.bucket_id,
+                        work_unit_repository=work_repo,
+                        calculation_repository=calc_repo,
+                        bucket_event_repository=event_repo,
+                    ) as _calculation_ports_108,
+                ):
                     calculate_modelo_revision(
                         work_unit.work_unit_id,
                         actor="operator",
@@ -105,11 +119,7 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
                         backend_binding_values=_modelo_303_engine_inputs(),
                         iva_compensation_decision=supplied_decision,
                         filing_period_date=date(2026, 6, 30),
-                        ports=calculation_ports_for_test(
-                            work_unit_repository=work_repo,
-                            calculation_repository=calc_repo,
-                            bucket_event_repository=event_repo,
-                        ),
+                        ports=_calculation_ports_108,
                         clock=_DECIDED_AT,
                         filing_instance_evidence=general_m303_filing_evidence(
                             work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
@@ -125,21 +135,24 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             _store_operator_profile_with_tax_id(taxpayer_nif)
             snapshot = _snapshot_303(period="1T")
             work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-
-            first_revision = calculate_modelo_revision(
-                work_unit.work_unit_id,
-                actor="operator",
-                casilla_inputs={},
-                binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                backend_binding_values=_modelo_303_engine_inputs(),
-                iva_compensation_decision=None,
-                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
-                filing_period_date=date(2026, 3, 31),
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-                ),
-                clock=_DECIDED_AT,
-            )
+            with calculation_ports_for_test(
+                bucket_id=work_repo.bucket_id,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_138:
+                first_revision = calculate_modelo_revision(
+                    work_unit.work_unit_id,
+                    actor="operator",
+                    casilla_inputs={},
+                    binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                    backend_binding_values=_modelo_303_engine_inputs(),
+                    iva_compensation_decision=None,
+                    filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                    filing_period_date=date(2026, 3, 31),
+                    ports=_calculation_ports_138,
+                    clock=_DECIDED_AT,
+                )
             assert first_revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
             first_decision = IvaWalletDecisionRepository().load_decision(
                 taxpayer_nif,
@@ -163,22 +176,24 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             )
 
             with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
-                calculate_modelo_revision(
-                    work_unit.work_unit_id,
-                    actor="operator",
-                    casilla_inputs={},
-                    binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    backend_binding_values=_modelo_303_engine_inputs(),
-                    iva_compensation_decision=None,
-                    filing_instance_evidence=_filing_instance_evidence(work_unit.period),
-                    filing_period_date=date(2026, 3, 31),
-                    ports=calculation_ports_for_test(
-                        work_unit_repository=work_repo,
-                        calculation_repository=calc_repo,
-                        bucket_event_repository=event_repo,
-                    ),
-                    clock=_DECIDED_AT,
-                )
+                with calculation_ports_for_test(
+                    bucket_id=work_repo.bucket_id,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calc_repo,
+                    bucket_event_repository=event_repo,
+                ) as _calculation_ports_175:
+                    calculate_modelo_revision(
+                        work_unit.work_unit_id,
+                        actor="operator",
+                        casilla_inputs={},
+                        binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
+                        backend_binding_values=_modelo_303_engine_inputs(),
+                        iva_compensation_decision=None,
+                        filing_instance_evidence=_filing_instance_evidence(work_unit.period),
+                        filing_period_date=date(2026, 3, 31),
+                        ports=_calculation_ports_175,
+                        clock=_DECIDED_AT,
+                    )
 
             assert exc_info.value.context is not None
             assert exc_info.value.context["divergence"] == "filed_history_only"
@@ -207,25 +222,28 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
         )
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator",
-            casilla_inputs={},
-            binding_values={
-                **_modelo_303_engine_inputs(),
-                "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
-            },
-            iva_compensation_decision=None,
-            filing_period_date=date(2026, 6, 30),
-            ports=calculation_ports_for_test(
-                work_unit_repository=work_repo, calculation_repository=calc_repo, bucket_event_repository=event_repo
-            ),
-            clock=_DECIDED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
-            ),
-        )
+        with calculation_ports_for_test(
+            bucket_id=work_repo.bucket_id,
+            work_unit_repository=work_repo,
+            calculation_repository=calc_repo,
+            bucket_event_repository=event_repo,
+        ) as _calculation_ports_221:
+            revision = calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={
+                    **_modelo_303_engine_inputs(),
+                    "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
+                },
+                iva_compensation_decision=None,
+                filing_period_date=date(2026, 6, 30),
+                ports=_calculation_ports_221,
+                clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
+                ),
+            )
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
@@ -259,7 +277,15 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(tmp_path: Path)
         snapshot = _snapshot_303()
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
 
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        with (
+            pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info,
+            calculation_ports_for_test(
+                bucket_id=work_repo.bucket_id,
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+            ) as _calculation_ports_273,
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -270,11 +296,7 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(tmp_path: Path)
                 },
                 iva_compensation_decision=None,
                 filing_period_date=date(2026, 6, 30),
-                ports=calculation_ports_for_test(
-                    work_unit_repository=work_repo,
-                    calculation_repository=calc_repo,
-                    bucket_event_repository=event_repo,
-                ),
+                ports=_calculation_ports_273,
                 clock=_DECIDED_AT,
                 filing_instance_evidence=general_m303_filing_evidence(
                     work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
