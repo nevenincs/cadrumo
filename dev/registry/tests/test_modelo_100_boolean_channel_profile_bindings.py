@@ -30,6 +30,7 @@ from cadrumo.application.modelo.profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     resolve_profile_binding_value,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
@@ -77,25 +78,28 @@ def test_anualidades_injector_emits_a_real_bool_for_both_truth_values(year: int)
     the two encodings apart; identity can, which is why both branches assert
     ``is``.
     """
-    snapshot = _snapshot(year)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        snapshot = _snapshot(year)
 
-    eligible: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-05-01",
-        "renta_family.descendiente.0.custodia_compartida": "false",
-    }
-    shared: dict[str, object] = {
-        "renta_family.descendiente.0.birth_date": "2015-05-01",
-        "renta_family.descendiente.0.custodia_compartida": "true",
-    }
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
+        eligible: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.custodia_compartida": "false",
+        }
+        shared: dict[str, object] = {
+            "renta_family.descendiente.0.birth_date": "2015-05-01",
+            "renta_family.descendiente.0.custodia_compartida": "true",
+        }
+        key = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
 
-    eligible_narrowed: Any = eligible
-    shared_narrowed: Any = shared
-    inject_derived_anualidades_eligibility_facts(eligible_narrowed, snapshot)
-    inject_derived_anualidades_eligibility_facts(shared_narrowed, snapshot)
+        eligible_narrowed: Any = eligible
+        shared_narrowed: Any = shared
+        inject_derived_anualidades_eligibility_facts(
+            eligible_narrowed, snapshot, operation=_authority_operation_for_test
+        )
+        inject_derived_anualidades_eligibility_facts(shared_narrowed, snapshot, operation=_authority_operation_for_test)
 
-    assert eligible[key] is True
-    assert shared[key] is False
+        assert eligible[key] is True
+        assert shared[key] is False
 
 
 def test_economic_activity_binding_resolves_to_a_real_bool_for_both_truth_values() -> None:

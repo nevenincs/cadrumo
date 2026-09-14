@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
 
 from ....filing_evidence import FilingEvidenceReference
@@ -107,15 +108,24 @@ def _purchase(**overrides: object) -> MovementRecord:
 
 
 def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> None:
-    movement_date = date(2025, 2, 1)
-    movement = MovementRecord(
-        movement_id="opening-implicit-rate",
-        movement_date=movement_date,
-        kind=MovementKind.OPENING,
-        quantity=Decimal("1"),
-    )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        movement_date = date(2025, 2, 1)
+        movement = MovementRecord(
+            movement_id="opening-implicit-rate",
+            movement_date=movement_date,
+            kind=MovementKind.OPENING,
+            quantity=Decimal("1"),
+        )
 
-    assert movement.iva_rate == lookup_rate(require_eu_member_state("ES"), IvaRateKind("general"), movement_date).pct
+        assert (
+            movement.iva_rate
+            == lookup_rate(
+                require_eu_member_state("ES"),
+                IvaRateKind("general"),
+                movement_date,
+                operation=_authority_operation_for_test,
+            ).pct
+        )
 
 
 def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:

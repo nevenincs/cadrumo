@@ -38,7 +38,6 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from dev._paths import REPO_ROOT
 
 from ..analysis.delta_minimality import LINEAGE_CLAIM_FIELDS, definition_findings, restatement_differences
-from ..compiler.authority import compile_validated_authority
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
@@ -122,7 +121,7 @@ def _registry(destination: Path, modelo_id: str) -> Path:
 
 
 def _load(root: Path, modelo_id: str) -> ModeloDefinition:
-    return compile_validated_authority(root, bundled_path()).modelo(modelo_id)
+    return load_modelo_directory(root / "modelos" / modelo_id)
 
 
 def _edition_dir(root: Path, modelo_id: str, revision_id: str) -> Path:

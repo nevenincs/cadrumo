@@ -33,6 +33,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ...iva.errors import IvaRateNotFoundError
 from ...iva.lookup import rate_table_covers, rate_table_covers_any_positive_tier
 from ...iva.schema import EUMemberState, IvaRateKind
@@ -61,11 +63,14 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
     the refusal tests this module used to carry (deleted alongside the fixture
     that anchored them) should be restored against the date that reopens.
     """
-    for kind in _POSITIVE_TIERS:
-        assert rate_table_covers(EUMemberState._from_registry("es"), date(2012, 9, 1), kind), (
-            f"{kind.value} no longer covers 2012-09-01 -- a per-tier coverage gap may have "
-            "reopened; restore a refusal test pinned to the date that exposes it"
-        )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for kind in _POSITIVE_TIERS:
+            assert rate_table_covers(
+                EUMemberState._from_registry("es"), date(2012, 9, 1), kind, operation=_authority_operation_for_test
+            ), (
+                f"{kind.value} no longer covers 2012-09-01 -- a per-tier coverage gap may have "
+                "reopened; restore a refusal test pinned to the date that exposes it"
+            )
 
 
 @pytest.mark.parametrize("rate", (IvaRate._from_registry("RATE_21"), IvaRate._from_registry("RATE_10")))
@@ -78,10 +83,15 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
     those windows to a later start would resurrect exactly the false-legality
     refusal this module exists to prevent, and would otherwise do it silently.
     """
-    on_date = date(2023, 6, 1)
-    assert iva_rate_percentage(rate, on_date) is not None
-    assert rate_table_covers(EUMemberState._from_registry("es"), on_date, IvaRateKind("general"))
-    assert rate_table_covers(EUMemberState._from_registry("es"), on_date, IvaRateKind("reduced"))
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        on_date = date(2023, 6, 1)
+        assert iva_rate_percentage(rate, on_date) is not None
+        assert rate_table_covers(
+            EUMemberState._from_registry("es"), on_date, IvaRateKind("general"), operation=_authority_operation_for_test
+        )
+        assert rate_table_covers(
+            EUMemberState._from_registry("es"), on_date, IvaRateKind("reduced"), operation=_authority_operation_for_test
+        )
 
 
 def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> None:
@@ -128,15 +138,22 @@ def test_the_positive_tier_reading_is_exactly_the_three_positive_tiers() -> None
     see :func:`test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date`,
     which is the test that will tell us when one can.
     """
-    for year in (2011, 2012, 2013, 2023, 2024, 2025, 2026):
-        for month in (1, 6, 12):
-            probe = date(year, month, 1)
-            expected = any(
-                rate_table_covers(EUMemberState._from_registry("es"), probe, kind) for kind in _POSITIVE_TIERS
-            )
-            assert rate_table_covers_any_positive_tier(EUMemberState._from_registry("es"), probe) == expected, (
-                f"the positive-tier coverage answer is not the three positive tiers on {probe.isoformat()}"
-            )
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for year in (2011, 2012, 2013, 2023, 2024, 2025, 2026):
+            for month in (1, 6, 12):
+                probe = date(year, month, 1)
+                expected = any(
+                    rate_table_covers(
+                        EUMemberState._from_registry("es"), probe, kind, operation=_authority_operation_for_test
+                    )
+                    for kind in _POSITIVE_TIERS
+                )
+                assert (
+                    rate_table_covers_any_positive_tier(
+                        EUMemberState._from_registry("es"), probe, operation=_authority_operation_for_test
+                    )
+                    == expected
+                ), f"the positive-tier coverage answer is not the three positive tiers on {probe.isoformat()}"
 
 
 def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
@@ -153,18 +170,21 @@ def test_the_zero_tier_currently_hides_inside_the_positive_tiers() -> None:
     outside the positive ones, this reds and says so, and a behavioural probe
     becomes possible again and should be restored.
     """
-    day = date(2010, 1, 1)
-    separating: list[date] = []
-    while day < date(2027, 1, 1):
-        if rate_table_covers(EUMemberState._from_registry("es"), day) != rate_table_covers_any_positive_tier(
-            EUMemberState._from_registry("es"), day
-        ):
-            separating.append(day)
-        day += timedelta(days=1)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        day = date(2010, 1, 1)
+        separating: list[date] = []
+        while day < date(2027, 1, 1):
+            if rate_table_covers(
+                EUMemberState._from_registry("es"), day, operation=_authority_operation_for_test
+            ) != rate_table_covers_any_positive_tier(
+                EUMemberState._from_registry("es"), day, operation=_authority_operation_for_test
+            ):
+                separating.append(day)
+            day += timedelta(days=1)
 
-    assert separating == [], (
-        "a zero-tier record now reaches a date no positive tier does, starting "
-        f"{separating[0].isoformat() if separating else ''} -- the positive-tier scoping is "
-        "observable again, so replace this containment anchor with a probe asserting the two "
-        "readings differ on that date"
-    )
+        assert separating == [], (
+            "a zero-tier record now reaches a date no positive tier does, starting "
+            f"{separating[0].isoformat() if separating else ''} -- the positive-tier scoping is "
+            "observable again, so replace this containment anchor with a probe asserting the two "
+            "readings differ on that date"
+        )

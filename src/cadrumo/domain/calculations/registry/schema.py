@@ -654,7 +654,11 @@ class FamilyFieldOverride(RegistryModel):
     selector: FamilyStorageSelector
     fields: Annotated[Mapping[str, object], FROZEN_MAPPING] = Field(default_factory=dict)
     removed_fields: tuple[str, ...] = ()
+    sequence_additions: Annotated[Mapping[str, tuple[object, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
+    sequence_removals: Annotated[Mapping[str, tuple[int, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
+    sequence_order: Annotated[Mapping[str, tuple[int, ...]], FROZEN_MAPPING] = Field(default_factory=dict)
     restate_identity: bool = False
+    replacement_id: str | None = Field(default=None, min_length=1)
 
     @model_validator(mode="after")
     def _validate_patch(self) -> FamilyFieldOverride:
@@ -665,13 +669,27 @@ class FamilyFieldOverride(RegistryModel):
             raise RegistryValidationError(
                 f"family field override requires an inherited keyed family, got {self.family!r}"
             )
-        if not self.fields and not self.removed_fields and not self.restate_identity:
+        if (
+            not self.fields
+            and not self.removed_fields
+            and not self.sequence_additions
+            and not self.sequence_removals
+            and not self.sequence_order
+            and not self.restate_identity
+            and self.replacement_id is None
+        ):
             raise RegistryValidationError("family field override must set or remove at least one field")
         overlap = sorted(set(self.fields) & set(self.removed_fields))
         if overlap:
             raise RegistryValidationError(f"family field override both sets and removes fields {overlap!r}")
         if spec.identity in self.fields or spec.identity in self.removed_fields:
             raise RegistryValidationError(f"family identity {spec.identity!r} cannot be patched")
+        sequence_paths = set(self.sequence_additions) | set(self.sequence_removals) | set(self.sequence_order)
+        if "" in sequence_paths:
+            raise RegistryValidationError("family sequence paths must not be empty")
+        for path, indices in (*self.sequence_removals.items(), *self.sequence_order.items()):
+            if any(index < 0 for index in indices) or len(set(indices)) != len(indices):
+                raise RegistryValidationError(f"family sequence path {path!r} has invalid indices")
         return self
 
 
@@ -887,6 +905,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
         description="Immediate revision whose effective keyed families supply storage defaults.",
     )
     cleared_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
+    scoped_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
     family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
     )
@@ -1124,8 +1143,10 @@ class ModeloRevision(RegistryRevisionDeclaration):
         from .keyed_families import KEYED_FAMILY_SPECS
 
         keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
+        scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
         named = [
             *self.cleared_families,
+            *self.scoped_families,
             *(item.family for item in self.family_overrides),
             *(item.family for item in self.family_removals),
             *(item.family for item in self.family_positions),
@@ -1139,6 +1160,21 @@ class ModeloRevision(RegistryRevisionDeclaration):
             )
         if len(set(self.cleared_families)) != len(self.cleared_families):
             raise RegistryValidationError("cleared families must be unique")
+        if len(set(self.scoped_families)) != len(self.scoped_families):
+            raise RegistryValidationError("scoped families must be unique")
+        invalid_scopes = sorted(set(self.scoped_families) - scoped)
+        if invalid_scopes:
+            raise RegistryValidationError(f"family assertion scope names non-scoped families {invalid_scopes!r}")
+        operated = {
+            *(item.family for item in self.family_overrides),
+            *(item.family for item in self.family_removals),
+            *(item.family for item in self.family_positions),
+        }
+        missing_scopes = sorted((operated & scoped) - set(self.scoped_families))
+        if missing_scopes:
+            raise RegistryValidationError(
+                f"scoped family storage operations require an edition-local assertion scope {missing_scopes!r}"
+            )
         return self
 
     @model_validator(mode="after")

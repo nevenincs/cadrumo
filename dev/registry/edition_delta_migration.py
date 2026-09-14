@@ -139,16 +139,17 @@ import shutil
 import sys
 import tomllib
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from itertools import pairwise
 from pathlib import Path
 from typing import Final, cast
 
+import tomlkit
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.errors import RegistryError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.keyed_families import (
     CANONICAL_FAMILY_SPECS,
@@ -525,15 +526,99 @@ def _source_fingerprint(modelo_dir: Path) -> str:
     return f"sha256:{digest.hexdigest()}"
 
 
-def _declared_baseline(raw: Mapping[str, object]) -> str | None:
-    baseline = raw.get("casilla_storage_baseline")
-    if isinstance(baseline, str):
-        return baseline
-    predecessor = raw.get("predecessor")
-    return predecessor if isinstance(predecessor, str) else None
+def _remove_toml_leaf(value: object, path: Sequence[str]) -> bool:
+    """Remove one assessed redundant leaf, pruning empty nested tables."""
+    if not path or not isinstance(value, MutableMapping):
+        return False
+    key = path[0]
+    if len(path) == 1:
+        if key not in value:
+            return False
+        del value[key]
+        return True
+    child = value.get(key)
+    if not _remove_toml_leaf(child, path[1:]):
+        return False
+    if isinstance(child, Mapping) and not child:
+        del value[key]
+    return True
+
+
+def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
+    """Delete only override leaves the independent assessor proves inherited."""
+    assessment = assess_migration_state(modelo_dir)
+    redundant = [
+        item
+        for item in assessment.unresolved_duplication
+        if item.get("reason") == "authored override equals hydrated baseline"
+    ]
+    by_revision: dict[str, list[Mapping[str, object]]] = {}
+    for item in redundant:
+        revision = item.get("revision")
+        if isinstance(revision, str):
+            by_revision.setdefault(revision, []).append(item)
+    removed = 0
+    for revision_id, findings in by_revision.items():
+        manifest_path = modelo_dir / "revisions" / revision_id / _MANIFEST
+        document = tomlkit.parse(manifest_path.read_text(encoding="utf-8"))
+        revision = document["revisions"][revision_id]
+        for family, operation_name in ((CASILLAS_FAMILY, "casilla_overrides"), (None, "family_overrides")):
+            operations = revision.get(operation_name)
+            if not isinstance(operations, list):
+                continue
+            targets: dict[tuple[str, str], set[tuple[str, ...]]] = {}
+            for finding in findings:
+                finding_family = finding.get("family")
+                if (family is not None and finding_family != family) or (
+                    family is None and finding_family == CASILLAS_FAMILY
+                ):
+                    continue
+                member = finding.get("member")
+                fields = finding.get("fields")
+                if not isinstance(finding_family, str) or not isinstance(member, str) or not isinstance(fields, list):
+                    continue
+                targets.setdefault((finding_family, member), set()).update(
+                    tuple(field.split(".")) for field in fields if isinstance(field, str)
+                )
+            kept = []
+            for operation in operations:
+                selector = operation.get("selector") if isinstance(operation, Mapping) else None
+                member = selector.get("id") if isinstance(selector, Mapping) else None
+                operation_family = (
+                    CASILLAS_FAMILY
+                    if family is not None
+                    else operation.get("family")
+                    if isinstance(operation, Mapping)
+                    else None
+                )
+                paths = targets.get((str(operation_family), str(member)), ())
+                fields = operation.get("fields") if isinstance(operation, Mapping) else None
+                for path in paths:
+                    removed += int(_remove_toml_leaf(fields, path))
+                has_non_field_effect = any(
+                    operation.get(key)
+                    for key in (
+                        "removed_fields",
+                        "restate_provenance",
+                        "restate_identity",
+                        "replacement_id",
+                        "sequence_additions",
+                        "sequence_removals",
+                        "sequence_order",
+                    )
+                )
+                if fields or has_non_field_effect:
+                    kept.append(operation)
+            operations.clear()
+            operations.extend(kept)
+            if not operations:
+                del revision[operation_name]
+        manifest_path.write_text(tomlkit.dumps(document), encoding="utf-8", newline="\n")
+    return removed
 
 
 def _technical_root(raw: Mapping[str, object]) -> bool:
+    """Whether a no-predecessor declaration records a converter limitation."""
     declaration = raw.get("predecessor")
     if not isinstance(declaration, Mapping):
         return False
@@ -561,11 +646,97 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
     """Measure authored duplication independently of any converter deletion plan."""
     initial_fingerprints = _file_fingerprints(modelo_dir)
     initial_fingerprint = _source_fingerprint(modelo_dir)
-    declarations = load_modelo_declarations(modelo_dir)
-    definition = load_modelo_directory(modelo_dir)
+    try:
+        declarations = load_modelo_declarations(modelo_dir)
+    except RegistryLoadError as exc:
+        match = re.search(r"fragment field '([^']+)'", str(exc))
+        revision_match = re.search(r"[\\/]revisions[\\/]([^\\/]+)[\\/]", str(exc))
+        final_fingerprints = _file_fingerprints(modelo_dir)
+        inputs_stable = initial_fingerprints == final_fingerprints
+        finding: dict[str, object] = {
+            "revision": revision_match.group(1) if revision_match else "*",
+            "family": match.group(1) if match else "*",
+            "reason": "authored_shape_unsupported",
+            "detail": str(exc),
+        }
+        blocked: list[Mapping[str, object]] = [finding]
+        if not inputs_stable:
+            blocked.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
+        return MigrationAssessment(
+            fingerprint=initial_fingerprint,
+            input_fingerprints=initial_fingerprints,
+            inputs_stable=inputs_stable,
+            physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
+            authored_payload_fields=0,
+            inherited_payload_fields=0,
+            genuine_overrides=0,
+            redundant_overrides=0,
+            additions=0,
+            removals=0,
+            structural_overhead=0,
+            unresolved_duplication=(),
+            blocked_work=tuple(blocked),
+            by_revision_family=(),
+        )
     raw_revisions = declarations.get("revisions", {})
     if not isinstance(raw_revisions, Mapping):
         raise MigrationRefusedError(f"{modelo_dir}: revisions are not a mapping")
+    shape_findings: list[Mapping[str, object]] = []
+    family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
+    operation_sections = {
+        "casilla_overrides",
+        "casilla_removals",
+        "casilla_positions",
+        "family_overrides",
+        "family_removals",
+        "family_positions",
+        "cleared_families",
+        "scoped_families",
+    }
+    for raw_revision_id, raw_revision in raw_revisions.items():
+        if not isinstance(raw_revision, Mapping):
+            shape_findings.append(
+                {"revision": str(raw_revision_id), "family": "*", "reason": "revision_shape_unsupported"}
+            )
+            continue
+        for spec in CANONICAL_FAMILY_SPECS:
+            if _members(raw_revision, spec.section, singleton=spec.singleton) is None:
+                shape_findings.append(
+                    {"revision": str(raw_revision_id), "family": spec.section, "reason": "authored_shape_unsupported"}
+                )
+        for section in operation_sections:
+            value = raw_revision.get(section)
+            if value is not None and not isinstance(value, list | tuple):
+                shape_findings.append(
+                    {"revision": str(raw_revision_id), "family": section, "reason": "operation_shape_unsupported"}
+                )
+        for section in raw_revision:
+            if section not in family_sections | operation_sections and section not in ModeloRevision.model_fields:
+                shape_findings.append(
+                    {"revision": str(raw_revision_id), "family": str(section), "reason": "scope_field_unsupported"}
+                )
+    if shape_findings:
+        final_fingerprints = _file_fingerprints(modelo_dir)
+        inputs_stable = initial_fingerprints == final_fingerprints
+        if not inputs_stable:
+            shape_findings.append({"revision": "*", "family": "*", "reason": "inputs_changed_during_assessment"})
+        return MigrationAssessment(
+            fingerprint=initial_fingerprint,
+            input_fingerprints=initial_fingerprints,
+            inputs_stable=inputs_stable,
+            physical_bytes=sum(path.stat().st_size for path in modelo_dir.rglob("*") if path.is_file()),
+            authored_payload_fields=0,
+            inherited_payload_fields=0,
+            genuine_overrides=0,
+            redundant_overrides=0,
+            additions=0,
+            removals=0,
+            structural_overhead=0,
+            unresolved_duplication=(),
+            blocked_work=tuple(shape_findings),
+            by_revision_family=(),
+        )
+    definition = load_modelo_directory(modelo_dir)
     ordered = ordered_revisions(definition)
     previous: str | None = None
     totals = Counter[str]()
@@ -577,13 +748,23 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
         raw = raw_revisions.get(revision_id, {})
         if not isinstance(raw, Mapping):
             continue
-        baseline_id = _declared_baseline(raw)
-        casilla_only_baseline = isinstance(raw.get("casilla_storage_baseline"), str) and not isinstance(
-            raw.get("predecessor"), str
-        )
-        candidate_id = baseline_id or (previous if _technical_root(raw) else None)
         for spec in CANONICAL_FAMILY_SPECS:
-            authored = _members(raw, spec.section, singleton=spec.identity is None)
+            identity_path = spec.storage_identity if spec.section == CASILLAS_FAMILY else spec.identity
+            declared_predecessor = raw.get("predecessor")
+            storage_baseline = raw.get(
+                "casilla_storage_baseline" if spec.section == CASILLAS_FAMILY else "family_storage_baseline"
+            )
+            baseline_id = (
+                storage_baseline
+                if isinstance(storage_baseline, str)
+                else declared_predecessor
+                if isinstance(declared_predecessor, str)
+                else None
+            )
+            explicit_root = isinstance(declared_predecessor, Mapping)
+            candidate_id = baseline_id or (previous if not explicit_root or _technical_root(raw) else None)
+            storage_support_missing = previous is not None and baseline_id is None and spec.inherited
+            authored = _members(raw, spec.section, singleton=spec.singleton)
             row = Counter[str]()
             family_dir = modelo_dir / "revisions" / revision_id / spec.section
             row["physical_bytes"] = sum(path.stat().st_size for path in family_dir.rglob("*") if path.is_file())
@@ -640,7 +821,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                     predecessor_value = getattr(predecessor, spec.section, None)
                     predecessor_members = (
                         (() if predecessor_value is None else (predecessor_value,))
-                        if spec.identity is None
+                        if spec.singleton
                         else predecessor_value
                     )
                     if not isinstance(predecessor_members, list | tuple):
@@ -653,20 +834,24 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                         )
                         continue
                     inherited_by_id = {
-                        (
-                            family_identity_value(item, spec.storage_identity)
-                            if spec.identity is not None
-                            else "singleton"
-                        ): item
+                        family_identity_value(item, identity_path or spec.storage_identity): item
                         for item in predecessor_members
                     }
+                    current_value = getattr(revision, spec.section, None)
+                    current_members = (
+                        (() if current_value is None else (current_value,)) if spec.singleton else current_value
+                    )
+                    current_by_id = (
+                        {
+                            family_identity_value(item, identity_path or spec.storage_identity): item
+                            for item in current_members
+                        }
+                        if isinstance(current_members, list | tuple)
+                        else {}
+                    )
                     authored_ids: set[object] = set()
                     for member in authored:
-                        identity = (
-                            family_identity_value(member, spec.storage_identity)
-                            if spec.identity is not None
-                            else "singleton"
-                        )
+                        identity = family_identity_value(member, identity_path or spec.storage_identity)
                         authored_ids.add(identity)
                         inherited = inherited_by_id.get(identity)
                         if inherited is None:
@@ -696,15 +881,21 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                             if path and path[0] not in _STRUCTURAL_FIELDS
                         }
                         baseline_leaves = _leaf_values(right)
+                        typed_current = _model_value(current_by_id.get(identity))
+                        current_leaves = _leaf_values(typed_current) if isinstance(typed_current, Mapping) else {}
                         different = [
                             ".".join(path)
-                            for path, value in authored_leaves.items()
-                            if path not in baseline_leaves or not _typed_equal(value, baseline_leaves[path])
+                            for path in authored_leaves
+                            if path not in current_leaves
+                            or path not in baseline_leaves
+                            or not _typed_equal(current_leaves[path], baseline_leaves[path])
                         ]
                         equal = [
                             ".".join(path)
-                            for path, value in authored_leaves.items()
-                            if path in baseline_leaves and _typed_equal(value, baseline_leaves[path])
+                            for path in authored_leaves
+                            if path in current_leaves
+                            and path in baseline_leaves
+                            and _typed_equal(current_leaves[path], baseline_leaves[path])
                         ]
                         row["genuine_overrides"] += len(different)
                         row["redundant_overrides"] += len(equal)
@@ -721,7 +912,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                 )
                         elif equal:
                             reason = "authored value equals hydrated baseline"
-                            if casilla_only_baseline and spec.section != CASILLAS_FAMILY:
+                            if storage_support_missing:
                                 reason = "family delta support absent; casilla baseline does not compact this family"
                                 blocked.append(
                                     {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
@@ -735,16 +926,10 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     "reason": reason,
                                 }
                             )
-                    current_value = getattr(revision, spec.section, None)
-                    current_members = (
-                        (() if current_value is None else (current_value,)) if spec.identity is None else current_value
-                    )
                     if isinstance(current_members, list | tuple):
                         for current_member in current_members:
-                            current_identity = (
-                                family_identity_value(current_member, spec.storage_identity)
-                                if spec.identity is not None
-                                else "singleton"
+                            current_identity = family_identity_value(
+                                current_member, identity_path or spec.storage_identity
                             )
                             inherited_member = inherited_by_id.get(current_identity)
                             if current_identity in authored_ids or inherited_member is None:
@@ -762,6 +947,53 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                                     and path in inherited_leaves
                                     and _typed_equal(value, inherited_leaves[path])
                                 )
+                    family_overrides = raw.get("family_overrides", ())
+                    if isinstance(family_overrides, list | tuple):
+                        for override in family_overrides:
+                            if not isinstance(override, Mapping) or override.get("family") != spec.section:
+                                continue
+                            selector = override.get("selector")
+                            fields = override.get("fields", {})
+                            if not isinstance(selector, Mapping) or not isinstance(fields, Mapping):
+                                blocked.append(
+                                    {"revision": revision_id, "family": spec.section, "reason": "invalid_override"}
+                                )
+                                continue
+                            member_id = selector.get("id")
+                            current_id = override.get("replacement_id", member_id)
+                            inherited_dump = _model_value(inherited_by_id.get(member_id))
+                            current_dump = _model_value(current_by_id.get(current_id))
+                            if not isinstance(inherited_dump, Mapping) or not isinstance(current_dump, Mapping):
+                                blocked.append(
+                                    {
+                                        "revision": revision_id,
+                                        "family": spec.section,
+                                        "member": member_id,
+                                        "reason": "override_baseline_member_missing",
+                                    }
+                                )
+                                continue
+                            inherited_leaves = _leaf_values(inherited_dump)
+                            current_leaves = _leaf_values(current_dump)
+                            for path in _leaf_values(fields):
+                                location = ".".join(path)
+                                if (
+                                    path in inherited_leaves
+                                    and path in current_leaves
+                                    and _typed_equal(current_leaves[path], inherited_leaves[path])
+                                ):
+                                    row["redundant_overrides"] += 1
+                                    unresolved.append(
+                                        {
+                                            "revision": revision_id,
+                                            "family": spec.section,
+                                            "member": member_id,
+                                            "fields": [location],
+                                            "reason": "authored override equals hydrated baseline",
+                                        }
+                                    )
+                                else:
+                                    row["genuine_overrides"] += 1
                     if authored and not spec.inherited and spec.inheritance is not FamilyInheritanceMode.PER_EDITION:
                         blocked.append(
                             {"revision": revision_id, "family": spec.section, "reason": "delta_support_missing"}
@@ -825,7 +1057,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
             scalar_row["structural_overhead"] += overhead
         revision_dir = modelo_dir / "revisions" / revision_id
         family_bytes = sum(
-            row.get("physical_bytes", 0)
+            value if isinstance(value := row.get("physical_bytes", 0), int) else 0
             for row in rows
             if row.get("revision") == revision_id and row.get("family") != "$scalars"
         )
@@ -3121,6 +3353,19 @@ def migrate_modelo_100_field_deltas(
     modelo_id = "100"
     registry_root, work_dir = _resolve_work_directory(registry_root, work_dir)
     modelo_dir = registry_root / _MODELOS / modelo_id
+    dependency_paths = (
+        Path(__file__).resolve(),
+        (REPO_ROOT / "dev/registry/modelo_100_family_delta.py").resolve(),
+        (REPO_ROOT / "dev/registry/compiler/_loader_internals.py").resolve(),
+        (REPO_ROOT / "dev/registry/compiler/edition_materialisation.py").resolve(),
+        (REPO_ROOT / "src/cadrumo/domain/calculations/registry/keyed_families.py").resolve(),
+        (REPO_ROOT / "src/cadrumo/domain/calculations/registry/schema.py").resolve(),
+    )
+
+    def dependency_fingerprints() -> dict[str, str]:
+        return {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in dependency_paths}
+
+    dependency_receipt = dependency_fingerprints()
     before_files = fingerprint(modelo_dir)
     before = _load(registry_root, modelo_id)
     before_assessment = assess_migration_state(modelo_dir)
@@ -3135,25 +3380,87 @@ def migrate_modelo_100_field_deltas(
             raise MigrationRefusedError(
                 f"Modelo 100 has a partial casilla field-delta chain: {already_delta!r}; expected {expected!r}"
             )
-        complete = before_assessment.minimal
+        from .modelo_100_family_delta import convert as convert_families
+
+        original = work_dir / "original" / modelo_id
+        staged_modelo = work_dir / "staged" / modelo_id
+        original.parent.mkdir(parents=True)
+        staged_modelo.parent.mkdir(parents=True)
+        shutil.copytree(modelo_dir, original)
+        family_report = convert_families(modelo_dir, staged_modelo)
+        pruned_override_leaves = _prune_redundant_override_leaves(staged_modelo)
+        after = load_modelo_directory(staged_modelo)
+        differences: list[str] = []
+        representation_only = {
+            "inherited_from",
+            "casilla_overrides",
+            "casilla_removals",
+            "casilla_positions",
+            "family_storage_baseline",
+            "family_overrides",
+            "family_removals",
+            "family_positions",
+            "cleared_families",
+            "scoped_families",
+        }
+
+        def effective_dump(value: object) -> object:
+            if isinstance(value, Mapping):
+                return {
+                    key: effective_dump(child)
+                    for key, child in value.items()
+                    if key not in representation_only
+                }
+            if isinstance(value, list | tuple):
+                return [effective_dump(child) for child in value]
+            return value
+
+        for revision_id in before.revisions:
+            if effective_dump(before.revisions[revision_id].model_dump(mode="json")) != effective_dump(
+                after.revisions[revision_id].model_dump(mode="json")
+            ):
+                differences.append(revision_id)
+        if differences:
+            raise MigrationRefusedError(f"whole-model family delta hydration differs in revisions {differences!r}")
+        after_assessment = assess_migration_state(staged_modelo)
+        after_files = fingerprint(staged_modelo)
+        file_changes = sum(before_files.get(path) != digest for path, digest in after_files.items()) + sum(
+            path not in after_files for path in before_files
+        )
+        complete = not differences and after_assessment.minimal
         result: dict[str, object] = {
             "modelo": modelo_id,
             "before_fingerprint": before_assessment.fingerprint,
-            "after_fingerprint": before_assessment.fingerprint,
+            "after_fingerprint": after_assessment.fingerprint,
+            "baseline_root": str(original),
+            "before_physical_bytes": before_assessment.physical_bytes,
+            "after_physical_bytes": after_assessment.physical_bytes,
             "already_delta_authored": True,
-            "file_content_changes": 0,
-            "hydration_differences": [],
-            "equivalence": MigrationStatus.PASSED,
-            "compaction": MigrationStatus.UNCHANGED,
+            "dependency_fingerprints": dependency_receipt,
+            "file_content_changes": file_changes,
+            "hydration_differences": differences,
+            "pruned_redundant_override_leaves": pruned_override_leaves,
+            "family_conversion": family_report,
+            "equivalence": MigrationStatus.PASSED if not differences else MigrationStatus.FAILED,
+            "compaction": MigrationStatus.COMPLETE if file_changes else MigrationStatus.UNCHANGED,
             "minimality": MigrationStatus.PASSED if complete else MigrationStatus.FAILED,
-            "application": MigrationStatus.NOT_APPLIED,
+            "application": MigrationStatus.STAGED if file_changes else MigrationStatus.NOT_APPLIED,
             "complete": complete,
             "before": asdict(before_assessment),
-            "after": asdict(before_assessment),
+            "after": asdict(after_assessment),
             "authority_publication": PublicationExecutionStatus.NOT_PERFORMED,
             "applied": False,
         }
-        work_dir.mkdir(parents=True)
+        if apply and complete and file_changes:
+            if dependency_fingerprints() != dependency_receipt:
+                raise MigrationRefusedError("migration dependencies changed after candidate verification")
+            publish_staged_tree(modelo_dir, staged_modelo, original, before_files)
+            installed = assess_migration_state(modelo_dir)
+            if installed.fingerprint != after_assessment.fingerprint or not installed.minimal:
+                raise MigrationRefusedError("installed Modelo 100 does not match the accepted minimal candidate")
+            result["applied"] = True
+            result["application"] = MigrationStatus.APPLIED
+        work_dir.mkdir(parents=True, exist_ok=True)
         (work_dir / "field-delta-report.json").write_text(
             json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
         )

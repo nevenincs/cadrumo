@@ -197,6 +197,7 @@ def _inherit_keyed_family(
     revision_id: str,
     predecessor_id: str,
     predecessor: Mapping[str, object],
+    storage_only: bool,
     family: _KeyedFamily,
     inherited: tuple[object, ...],
     inherited_casillas: tuple[object, ...],
@@ -224,9 +225,15 @@ def _inherit_keyed_family(
         if successor.get(family.section):
             raise RegistryLoadError(f"{context}: cleared family {family.section!r} also states members")
         return ()
-    stated = as_toml_array(successor.get(family.section, ()))
+    raw_stated = successor.get(family.section)
+    if family.singleton:
+        stated_table = _as_toml_table(raw_stated)
+        stated = () if raw_stated is None else (stated_table,) if stated_table is not None else None
+    else:
+        stated = as_toml_array(raw_stated if raw_stated is not None else ())
     if stated is None:
-        raise RegistryLoadError(f"{context}: {family.section} must be an array")
+        expected = "a table" if family.singleton else "an array"
+        raise RegistryLoadError(f"{context}: {family.section} must be {expected}")
     inherited = tuple(_pin_family_source_default(member, predecessor, family) for member in inherited)
     inherited, removed, positions, patched = _apply_family_storage_delta(
         context, predecessor_id=predecessor_id, family=family, inherited=inherited, successor=successor
@@ -270,7 +277,7 @@ def _inherit_keyed_family(
             )
         if identity in retired:
             continue
-        if family.period_scoped and not _selector_covers(successor.get("period_selector"), member):
+        if family.period_scoped and not storage_only and not _selector_covers(successor.get("period_selector"), member):
             continue
         if identity in superseders:
             if identity not in patched:
@@ -324,7 +331,8 @@ def _pin_family_source_default(member: object, predecessor: Mapping[str, object]
     if not isinstance(default, list | tuple) or not default:
         return member
     pinned = dict(table)
-    additions = pinned.pop("additional_source_refs", ())
+    raw_additions = pinned.pop("additional_source_refs", ())
+    additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
     pinned["source_refs"] = tuple(dict.fromkeys((*default, *additions)))
     return pinned
 
@@ -351,6 +359,44 @@ def _patch_family_table(context: str, value: object, fields: Mapping[str, object
             target = copied
         if target.pop(segments[-1], None) is None:
             raise RegistryLoadError(f"{context}: removed field {path!r} does not exist")
+    return result
+
+
+def _patch_family_sequences(
+    context: str,
+    value: object,
+    additions: Mapping[str, tuple[object, ...]],
+    removals: Mapping[str, tuple[int, ...]],
+    orders: Mapping[str, tuple[int, ...]],
+) -> object:
+    table = _as_toml_table(value)
+    if table is None:
+        raise RegistryLoadError(f"{context}: selected family member is not a table")
+    result: dict[str, object] = dict(table)
+    for path in sorted(set(additions) | set(removals) | set(orders)):
+        target = result
+        segments = path.split(".")
+        for segment in segments[:-1]:
+            child = target.get(segment)
+            if not isinstance(child, Mapping):
+                raise RegistryLoadError(f"{context}: sequence field {path!r} does not exist")
+            copied = dict(child)
+            target[segment] = copied
+            target = copied
+        existing = target.get(segments[-1])
+        if not isinstance(existing, list | tuple):
+            raise RegistryLoadError(f"{context}: sequence field {path!r} is not a sequence")
+        removed = set(removals.get(path, ()))
+        if any(index >= len(existing) for index in removed):
+            raise RegistryLoadError(f"{context}: sequence removal for {path!r} is out of range")
+        patched = [item for index, item in enumerate(existing) if index not in removed]
+        patched.extend(additions.get(path, ()))
+        order = orders.get(path)
+        if order is not None:
+            if sorted(order) != list(range(len(patched))):
+                raise RegistryLoadError(f"{context}: sequence order for {path!r} is not a permutation")
+            patched = [patched[index] for index in order]
+        target[segments[-1]] = tuple(patched)
     return result
 
 
@@ -405,6 +451,18 @@ def _apply_family_storage_delta(
         seen.add(identity)
         index = by_identity[identity]
         result[index] = _patch_family_table(context, result[index], declaration.fields, declaration.removed_fields)
+        result[index] = _patch_family_sequences(
+            context,
+            result[index],
+            declaration.sequence_additions,
+            declaration.sequence_removals,
+            declaration.sequence_order,
+        )
+        if declaration.replacement_id is not None:
+            table = _as_toml_table(result[index])
+            if table is None or family.identity is None:
+                raise RegistryLoadError(f"{context}: family identity replacement selected a non-table member")
+            result[index] = {**table, family.identity: declaration.replacement_id}
         patched.add(identity)
     return (
         tuple(result),
@@ -420,7 +478,15 @@ def _raw_keyed_members(
     table: Mapping[str, object],
     family: _KeyedFamily,
 ) -> tuple[object, ...]:
-    members = as_toml_array(table.get(family.section, ()))
+    raw = table.get(family.section)
+    if family.singleton:
+        if raw is None:
+            return ()
+        member = _as_toml_table(raw)
+        if member is None:
+            raise RegistryLoadError(f"{source_path}: revision {revision_id!r} {family.section} must be a table")
+        return (member,)
+    members = as_toml_array(raw if raw is not None else ())
     if members is None:
         raise RegistryLoadError(f"{source_path}: revision {revision_id!r} {family.section} must be an array")
     return members
@@ -774,9 +840,11 @@ def _validate_lineage_sidecars(
             )
         }
         for family in _CANONICAL_INHERITED_FAMILY_SPECS:
+            value = getattr(revision, family.section)
+            members = (value,) if family.singleton and value is not None else () if family.singleton else value or ()
             identities = tuple(
                 str(identity)
-                for member in getattr(revision, family.section)
+                for member in members
                 if family.identity is not None
                 and (identity := _family_identity_value(member, family.identity)) is not None
             )
@@ -1027,16 +1095,24 @@ def _materialise_revision(
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
                     continue
-                merged[family.section] = _inherit_keyed_family(
+                if family.scoped and family.section not in (as_toml_array(table.get("scoped_families", ())) or ()):
+                    continue
+                family_members = _inherit_keyed_family(
                     f"{source_path}: revision {revision_id!r} inheriting from {semantic_predecessor_id!r}",
                     revision_id=revision_id,
                     predecessor_id=semantic_predecessor_id,
                     predecessor=predecessor.table,
+                    storage_only=family_baseline_id is not None,
                     family=family,
                     inherited=_raw_keyed_members(source_path, semantic_predecessor_id, predecessor.table, family),
                     inherited_casillas=_raw_casilla_rows(source_path, semantic_predecessor_id, predecessor.table),
                     successor_casillas=rows,
                     successor=table,
+                )
+                merged[family.section] = (
+                    family_members[0]
+                    if family.singleton and family_members
+                    else (None if family.singleton else family_members)
                 )
         result = _MaterialisedRevision(table=merged, label_origins=label_origins)
     resolved[revision_id] = result
@@ -1186,14 +1262,11 @@ def _apply_casilla_storage_delta(
         if table is None:
             raise RegistryLoadError(f"{context}: selected casilla {identity!r} is not a table")
         patched = {key: value for key, value in table.items() if key not in _ROW_LINEAGE_CLAIM_FIELDS}
-        for field in declaration.removed_fields:
-            if field not in patched:
-                raise RegistryLoadError(f"{context}: casilla {identity!r} cannot remove absent field {field!r}")
-            del patched[field]
         if _ROW_SOURCE_FIELD in declaration.fields:
             patched.pop(_ROW_SOURCE_ADDITIONS_FIELD, None)
-        patched.update(declaration.fields)
-        result[by_id[identity]] = patched
+        result[by_id[identity]] = _patch_family_table(
+            f"{context}: casilla {identity!r}", patched, declaration.fields, declaration.removed_fields
+        )
         if origins is not None:
             origins[by_id[identity]] = None
     kept_indexes = [index for index, row in enumerate(result) if (_row_id(row) or "") not in removed]

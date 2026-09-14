@@ -25,6 +25,8 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
+
 from ....core.directory_scan import scan_directory
 from ..errors import DeadlineValidationError
 from ..festivos import (
@@ -130,11 +132,11 @@ _SHIFT_DEADLINE_CASES = (
 
 def test_load_calendar_2025_returns_boe_anchored_year() -> None:
     """The 2025 governed calendar facts cite BOE-A-2024-22011 as their source."""
-
-    calendar = load_holiday_calendar(2025)
-    assert calendar.year == 2025
-    assert calendar.boe_ref == "boe-resolucion-festivos-2025"
-    assert calendar.boe_url is not None and "BOE-A-2024-22011" in calendar.boe_url
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        assert calendar.year == 2025
+        assert calendar.boe_ref == "boe-resolucion-festivos-2025"
+        assert calendar.boe_url is not None and "BOE-A-2024-22011" in calendar.boe_url
 
 
 def test_load_calendar_2025_contains_boe_anchored_national_holidays() -> None:
@@ -142,38 +144,38 @@ def test_load_calendar_2025_contains_boe_anchored_national_holidays() -> None:
     these fixed dates. The test asserts membership, not the total
     count, so future BOE corrections that add a single holiday do not
     fail the test for the wrong reason."""
-
-    calendar = load_holiday_calendar(2025)
-    national_dates = {h.holiday_date for h in calendar.national}
-    for holiday_date in _NATIONAL_HOLIDAY_DATES_2025:
-        assert holiday_date in national_dates
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        national_dates = {h.holiday_date for h in calendar.national}
+        for holiday_date in _NATIONAL_HOLIDAY_DATES_2025:
+            assert holiday_date in national_dates
 
 
 def test_load_calendar_2025_separates_national_from_ccaa() -> None:
     """The two holiday tuples never overlap by jurisdiction."""
-
-    calendar = load_holiday_calendar(2025)
-    assert all(h.jurisdiction is HolidayJurisdiction.NATIONAL for h in calendar.national)
-    assert all(h.jurisdiction is HolidayJurisdiction.CCAA for h in calendar.ccaa)
-    assert all(h.ccaa_code is None for h in calendar.national)
-    assert all(h.ccaa_code is not None for h in calendar.ccaa)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        assert all(h.jurisdiction is HolidayJurisdiction.NATIONAL for h in calendar.national)
+        assert all(h.jurisdiction is HolidayJurisdiction.CCAA for h in calendar.ccaa)
+        assert all(h.ccaa_code is None for h in calendar.national)
+        assert all(h.ccaa_code is not None for h in calendar.ccaa)
 
 
 def test_load_calendar_missing_year_raises_validation_error() -> None:
     """A year with no governed publication produces a recoverable error."""
-
-    with pytest.raises(DeadlineValidationError, match=r"1999|year|calendar|range"):
-        load_holiday_calendar(1999)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(DeadlineValidationError, match=r"1999|year|calendar|range"):
+            load_holiday_calendar(1999, operation=_authority_operation_for_test)
 
 
 def test_load_calendar_caches_repeat_calls() -> None:
     """The ``lru_cache`` wrapper returns identical instances for the
     same year, so callers may rely on identity for cache-hit
     detection."""
-
-    first = load_holiday_calendar(2025)
-    second = load_holiday_calendar(2025)
-    assert first is second
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        first = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        second = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        assert first is second
 
 
 # ---------------------------------------------------------------------------
@@ -183,11 +185,11 @@ def test_load_calendar_caches_repeat_calls() -> None:
 
 def test_business_day_predicate_cases() -> None:
     """Weekend, national, CCAA, weekday, and degraded-mode business-day cases."""
-
-    calendar = load_holiday_calendar(2025)
-    for case_id, probe, ccaa_code, expected_weekday, expected in _BUSINESS_DAY_CASES:
-        assert probe.weekday() == expected_weekday, case_id
-        assert is_business_day(probe, calendar=calendar, ccaa_code=ccaa_code) is expected, case_id
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        for case_id, probe, ccaa_code, expected_weekday, expected in _BUSINESS_DAY_CASES:
+            assert probe.weekday() == expected_weekday, case_id
+            assert is_business_day(probe, calendar=calendar, ccaa_code=ccaa_code) is expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -196,9 +198,10 @@ def test_business_day_predicate_cases() -> None:
 
 
 def test_next_business_day_cases() -> None:
-    calendar = load_holiday_calendar(2025)
-    for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
-        assert next_business_day(probe, calendar=calendar, ccaa_code=None) == expected, case_id
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
+            assert next_business_day(probe, calendar=calendar, ccaa_code=None) == expected, case_id
 
 
 # ---------------------------------------------------------------------------
@@ -259,17 +262,24 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
     """Passing an explicit calendar bypasses the registry lookup. This
     is the path the deadline engine uses when it has already loaded the
     calendar for the schedule's year."""
-
-    calendar = load_holiday_calendar(2025)
-    tuesday = date(2025, 3, 4)
-    result = shift_deadline(tuesday, modelo="303", ccaa_code=CalendarCCAA.MADRID, calendar=calendar)
-    assert result.shifted is False
-    assert result.adjusted_close_date == tuesday
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        calendar = load_holiday_calendar(2025, operation=_authority_operation_for_test)
+        tuesday = date(2025, 3, 4)
+        result = shift_deadline(
+            tuesday,
+            modelo="303",
+            ccaa_code=CalendarCCAA.MADRID,
+            calendar=calendar,
+            operation=_authority_operation_for_test,
+        )
+        assert result.shifted is False
+        assert result.adjusted_close_date == tuesday
 
 
 def test_shift_deadline_rejects_empty_modelo_string() -> None:
-    with pytest.raises(DeadlineValidationError, match=r"modelo|empty|blank"):
-        shift_deadline(date(2025, 3, 4), modelo="", ccaa_code=None)
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        with pytest.raises(DeadlineValidationError, match=r"modelo|empty|blank"):
+            shift_deadline(date(2025, 3, 4), modelo="", ccaa_code=None, operation=_authority_operation_for_test)
 
 
 def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:

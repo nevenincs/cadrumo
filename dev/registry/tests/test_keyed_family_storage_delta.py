@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
+from ..compiler._loader_internals import _inherit_keyed_family, _patch_family_sequences
 from ..compiler.loader import load_modelo_directory
 from .test_restated_family_merge import (
     _BASE_FORMULA,
@@ -73,3 +75,48 @@ def test_inherited_member_keeps_predecessor_source_default(tmp_path: Path) -> No
 
     inherited = next(item for item in revision.formulas if item.id == _CUOTA_FORMULA)
     assert tuple(str(item) for item in inherited.source_refs) == ("aeat-manual",)
+
+
+@pytest.mark.parametrize(
+    ("selector", "storage_only", "expected"),
+    [
+        ({"years": [2024], "periods": ["0A"]}, False, 1),
+        ({"year_from": 2023, "year_to": 2025, "periods": ["0A"]}, False, 1),
+        ({"years": [2025], "periods": ["0A"]}, False, 0),
+        ({"years": [2025], "periods": ["0A"]}, True, 1),
+    ],
+    ids=("matching", "overlapping", "nonmatching", "storage-reconstruction"),
+)
+def test_deadline_storage_reconstruction_is_separate_from_period_eligibility(
+    selector: dict[str, object], storage_only: bool, expected: int
+) -> None:
+    spec = family_spec("deadline_windows")
+    assert spec is not None
+    member = {"id": "deadline-2024", "filing_year": 2024, "period": "2024 0A"}
+
+    result = _inherit_keyed_family(
+        "deadline fixture",
+        revision_id="2025",
+        predecessor_id="2024",
+        predecessor={"deadline_windows": (member,)},
+        storage_only=storage_only,
+        family=spec,
+        inherited=(member,),
+        inherited_casillas=(),
+        successor_casillas=(),
+        successor={"period_selector": selector, "deadline_windows": ()},
+    )
+
+    assert len(result) == expected
+
+
+def test_sequence_delta_reuses_members_and_restores_exact_order() -> None:
+    result = _patch_family_sequences(
+        "sequence fixture",
+        {"claim": {"refs": ("a", "b", "c")}},
+        {"claim.refs": ("d",)},
+        {"claim.refs": (1,)},
+        {"claim.refs": (2, 0, 1)},
+    )
+
+    assert result == {"claim": {"refs": ("d", "a", "c")}}
