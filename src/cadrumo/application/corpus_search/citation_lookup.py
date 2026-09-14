@@ -9,10 +9,9 @@ this module reuses it and adds
 the one thing the product lacked at runtime: resolving a citation id to
 the verbatim authoritative text its ``corpus_ref`` points at.
 
-The verbatim text is read from the bundled ``*.extracted.json`` sidecar
-(the clean, structured extraction the corpus ships) rather than the raw
-HTML, and sliced to the unit the citation's anchor names when the source
-file carries multiple units.
+The verbatim text is read from the published authority artifact's signed
+evidence projection rather than the raw HTML, and sliced to the unit the
+citation's anchor names when the source file carries multiple units.
 
 See Also:
     :class:`~application.corpus_search.CitationResolution`
