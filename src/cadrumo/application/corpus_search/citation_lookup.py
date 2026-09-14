@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Collection, Mapping
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from ...domain.calculations.registry.authority_artifact import (
     AuthorityComponentCodecError,
@@ -153,7 +153,36 @@ class CitationLookup(ABC):
         hydrate a legal catalogue or accept a parallel metadata projection.
         """
         legal = {reference_id: operation.legal_reference(reference_id) for reference_id in reference_ids}
-        return cls.from_component_reader(legal, reader=operation, pin=operation.pin())
+        return _OperationCitationLookup(legal, operation=operation)
+
+
+class _OperationCitationLookup(CitationLookup):
+    """Citation lookup over the typed evidence methods of one live operation."""
+
+    def __init__(
+        self,
+        legal: Mapping[str, LegalReference],
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
+        self._legal = dict(legal)
+        self._operation = operation
+
+    @override
+    def _verbatim_text(self, reference: LegalReference) -> str:
+        try:
+            evidence = self._operation.legal_evidence(str(reference.id))
+        except (AuthorityComponentCodecError, LookupError) as exc:
+            raise CorpusSearchInputError(
+                reason="citation_extracted_text_absent",
+                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+            ) from exc
+        if evidence.legal_reference_id != str(reference.id):
+            raise CorpusSearchInputError(
+                reason="citation_extracted_text_absent",
+                context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
+            )
+        return evidence.anchored_text
 
 
 class _ComponentCitationLookup(CitationLookup):
@@ -170,6 +199,7 @@ class _ComponentCitationLookup(CitationLookup):
         self._reader = reader
         self._pin = pin
 
+    @override
     def _verbatim_text(self, reference: LegalReference) -> str:
         try:
             evidence = self._reader.load(
