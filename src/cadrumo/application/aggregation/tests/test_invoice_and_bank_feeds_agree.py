@@ -62,6 +62,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BASE = Decimal("5000.00")
 _DAY = date(2026, 4, 15)
 _PERIOD = Period.from_year_and_code(2026, "2T")

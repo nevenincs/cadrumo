@@ -52,6 +52,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     with bundled_indexed_authority().operation() as operation:
         yield operation
 
+
 _BUCKET = "0de41ce4-0000-4000-8000-000000000512"
 _T0 = datetime(2026, 8, 4, 10, 0, tzinfo=UTC)
 _ADVISORY_REASON = "unresolved_derived_binding"
@@ -117,10 +118,13 @@ def test_childless_profile_does_not_fire_the_advisory(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A genuinely childless filer resolves every derived path to a legal zero."""
-    assert _derived_advisories(
-        _record(UserProfileFact(path="tax_residence.ccaa", value="cataluna")),
-        operation=authority_operation,
-    ) == ()
+    assert (
+        _derived_advisories(
+            _record(UserProfileFact(path="tax_residence.ccaa", value="cataluna")),
+            operation=authority_operation,
+        )
+        == ()
+    )
 
 
 def test_empty_profile_does_not_fire_the_advisory(

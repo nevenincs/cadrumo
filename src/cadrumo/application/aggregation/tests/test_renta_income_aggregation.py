@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,
@@ -32,6 +33,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 
+def _is_activity_income(transaction: Transaction) -> bool:
+    """Use the registry-owned activity category predicate for this M130 fixture."""
+    return has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction)
+
+
+def _is_employment_income(transaction: Transaction) -> bool:
+    """Use the registry-owned employment category predicate for this M130 fixture."""
+    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
+
+
 # Pure-aggregator tests (no repository)
 # ---------------------------------------------------------------------------
 
@@ -44,7 +55,15 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     apr = _income_transaction("apr", value_date=date(2024, 4, 1), amount=Decimal("800.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, feb, mar, apr))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     observation_ids = {o.transaction_id for o in result.observations}
     # Transaction.transaction_id is a content hash; compare against the created objects.
@@ -65,7 +84,15 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
     jul = _income_transaction("jul", value_date=date(2024, 7, 1), amount=Decimal("3000.00"))
     catalogue = TransactionCatalogue.from_transactions((jan, may, jul))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q2_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q2_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
@@ -86,7 +113,15 @@ def test_mixed_classification_applies_business_pct() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert len(result.observations) == 1
     assert result.observations[0].gross_amount == Decimal("600.00")
@@ -101,7 +136,15 @@ def test_personal_transaction_excluded_with_reason() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -112,7 +155,15 @@ def test_non_eur_transaction_excluded_with_reason() -> None:
     tx = _income_transaction("usd", value_date=date(2024, 3, 1), currency="USD")
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert result.observations == ()
     assert len(result.issues) == 1
@@ -153,7 +204,15 @@ def test_outgoing_business_expense_is_skipped_silently_by_income_pipeline() -> N
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     # No income observation and — critically — no issue/advisory: the income
     # pipeline does not own deductible expenses.
@@ -183,7 +242,15 @@ def test_outgoing_personal_transaction_is_skipped_silently_by_income_pipeline() 
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -198,7 +265,15 @@ def test_inactive_transaction_skipped_silently() -> None:
     )
     catalogue = TransactionCatalogue.from_transactions((tx,))
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert result.observations == ()
     assert result.issues == ()
@@ -209,7 +284,15 @@ def test_non_quarterly_period_raises() -> None:
 
     catalogue = TransactionCatalogue.from_transactions(())
     with pytest.raises(AggregationPeriodError):
-        aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_ANNUAL_2024)
+        aggregate_renta_income_ledger(
+            catalogue,
+            bucket_id=SECURE_OBJECTS_BUCKET_ID,
+            period=_ANNUAL_2024,
+            modelo="130",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_is_activity_income,
+            employment_category_matcher=_is_employment_income,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +312,10 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     result_q1 = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -251,6 +338,10 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
     result_q2 = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q2_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -288,6 +379,10 @@ def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows
     result = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
@@ -322,12 +417,24 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
     partitioned = aggregate_renta_income_ledger_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
         ports=_catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
     )
-    full_scan = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    full_scan = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     # Declared-value invariance: observations and casilla aggregation identical
     # (as sets: full-scan iterates catalogue insertion order, partitioned
@@ -357,7 +464,15 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
     ]
     catalogue = TransactionCatalogue.from_transactions(transactions)
 
-    result = aggregate_renta_income_ledger(catalogue, bucket_id=SECURE_OBJECTS_BUCKET_ID, period=_Q1_2024)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert all(o.target_casilla_id == _M130_INGRESOS_CASILLA for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
@@ -371,6 +486,10 @@ def test_income_observation_rejects_legacy_target_casilla_key() -> None:
         TransactionCatalogue.from_transactions(transactions),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_Q1_2024,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
     payload = result.observations[0].model_dump()
     payload["target_casilla"] = payload.pop("target_casilla_id")

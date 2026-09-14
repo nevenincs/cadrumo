@@ -54,7 +54,6 @@ from ..coverage import (
     ObligationCoverageReport,
     build_obligation_coverage,
 )
-from .calendar_test_support import calendar_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -16,7 +16,6 @@ from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
 )
-from .calendar_test_support import calendar_operation
 from .calendar_test_support import (
     FILED_JUSTIFICANTE_STORAGE_REF as _FILED_JUSTIFICANTE_STORAGE_REF,
 )

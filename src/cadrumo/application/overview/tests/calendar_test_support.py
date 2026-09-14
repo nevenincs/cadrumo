@@ -20,8 +20,8 @@ from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCate
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.models import TaxpayerProfile

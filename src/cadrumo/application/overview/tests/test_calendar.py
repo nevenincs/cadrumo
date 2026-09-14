@@ -43,7 +43,6 @@ from ..status_report import build_filing_obligation_advisories
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
 )
-from .calendar_test_support import calendar_operation
 from .calendar_test_support import (
     PERIOD_2025_1T as _PERIOD_2025_1T,
 )

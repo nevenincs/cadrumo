@@ -24,8 +24,8 @@ from typing import Any
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (
     calculate_registry_snapshot,
@@ -53,6 +53,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Lease one generation for each profile-channel transport test."""
     with bundled_indexed_authority().operation() as operation:
         yield operation
+
 
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"
 _ECONOMIC_ACTIVITY_BINDING = "renta-profile-has-economic-activity"
