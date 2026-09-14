@@ -13,7 +13,7 @@ needs to know about secure-object records, envelopes, or hashed lookup keys.
 from __future__ import annotations
 
 from hmac import compare_digest
-from typing import TYPE_CHECKING, NoReturn
+from typing import TYPE_CHECKING, NoReturn, override
 
 from pydantic import ValidationError
 
@@ -206,6 +206,7 @@ class VerifyObservationRepository(VerifyObservationPersistencePort):
             )
         return envelope.payload
 
+    @override
     def load(self, *, bucket_id: str, observation_id: str) -> VerifyObservation | None:
         """Load one observation by its full content id, or return ``None``."""
         bucket = self._require_bound_bucket(bucket_id)
@@ -252,6 +253,7 @@ class VerifyObservationRepository(VerifyObservationPersistencePort):
         self._assert_addressed_by_its_own_key(record, observation, bucket=bucket)
         return observation
 
+    @override
     def list_observations(self, *, bucket_id: str) -> tuple[VerifyObservation, ...]:
         """List all observations in deterministic capture order."""
         bucket = self._require_bound_bucket(bucket_id)
@@ -310,6 +312,7 @@ class VerifyObservationRepository(VerifyObservationPersistencePort):
                 context={"observation_id": observation.observation_id},
             )
 
+    @override
     def save(self, observation: VerifyObservation) -> None:
         """Encrypt and persist one application-level verify observation."""
         if observation.bucket_id != self._bucket_id:

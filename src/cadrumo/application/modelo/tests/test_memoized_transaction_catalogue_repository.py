@@ -13,6 +13,7 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -39,20 +40,25 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
         self._catalogue = TransactionCatalogue()
 
     @property
+    @override
     def bucket_id(self) -> str:
         return _BUCKET_ID
 
+    @override
     def exists(self) -> bool:
         return bool(self._catalogue.transactions)
 
+    @override
     def load(self) -> TransactionCatalogue:
         return self._catalogue
 
+    @override
     def load_for_date_range(self, start: date, end: date) -> TransactionCatalogue:
         return TransactionCatalogue.from_transactions(
             transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end
         )
 
+    @override
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
         requested = tuple(sorted(set(transaction_ids)))
         return TransactionCatalogue.from_transactions(
@@ -61,6 +67,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
             if (transaction := self._catalogue.get(transaction_id)) is not None
         )
 
+    @override
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         in_window = tuple(transaction for transaction in self._catalogue if start <= transaction.raw.booked_date <= end)
         out_of_window = tuple(
@@ -77,6 +84,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
             index_complete=True,
         )
 
+    @override
     def save(self, catalogue: TransactionCatalogue) -> None:
         self._catalogue = catalogue
 

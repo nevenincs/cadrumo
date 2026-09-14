@@ -63,6 +63,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -76,6 +77,7 @@ def _supervisor(
     profile_objects: ProfileCustodySecureObjectRepositoryPort,
     owner_id: str,
     lease_token: str,
+    authority_operation: PinnedAuthorityOperation,
 ) -> tuple[OperationSupervisor, OperationSecureReferenceRepository]:
     """Build the real encrypted supervisor stack used by each family proof."""
     if not isinstance(profile_objects, SecureObjectRepository):
@@ -84,6 +86,7 @@ def _supervisor(
     journal = OperationJournalRepository(storage_root=root)
     return (
         OperationSupervisor(
+            authority_operation=authority_operation,
             registry=OperationRegistry(
                 definitions=USER_PROFILE_OPERATION_DEFINITIONS,
                 public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
@@ -103,13 +106,29 @@ def _supervisor(
 
 def _register_profile() -> UUID:
     """Create a real active profile whose encrypted store can host operands."""
-    outcome = register_profile_with_credentials(
-        label="S40 Profile Operation Subject",
-        passphrase=_PROFILE_PASSPHRASE,
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
-    )
-    login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PROFILE_PASSPHRASE)
+    with bundled_indexed_authority().operation() as authority_operation:
+        outcome = register_profile_with_credentials(
+            label="S40 Profile Operation Subject",
+            passphrase=_PROFILE_PASSPHRASE,
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=authority_operation.profile_create_context(),
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
+        login_profile(
+            name=outcome.profile_id,
+            passphrase_callback=lambda: _PROFILE_PASSPHRASE,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
     return UUID(outcome.profile_id)
+
+
+def _load_profile(profile_id: UUID):
+    """Load the active record through a real generation-pinned decode context."""
+    with bundled_indexed_authority().operation() as authority_operation:
+        return ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        ).load(profile_id)
 
 
 def _start_operation(
@@ -120,14 +139,16 @@ def _start_operation(
     operation_id: str,
 ) -> tuple[OperationPersistedSnapshot, OperationSecureReferenceRepository]:
     """Persist and execute one request through its real lease-owning supervisor."""
-    supervisor, operands = _supervisor(
-        root,
-        profile_objects=profile_objects,
-        owner_id="1" * 64,
-        lease_token="2" * 64,
-    )
-    created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
-    return asyncio.run(supervisor.start(created)), operands
+    with bundled_indexed_authority().operation() as authority_operation:
+        supervisor, operands = _supervisor(
+            root,
+            profile_objects=profile_objects,
+            owner_id="1" * 64,
+            lease_token="2" * 64,
+            authority_operation=authority_operation,
+        )
+        created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
+        return asyncio.run(supervisor.start(created)), operands
 
 
 def _start_secret_operation(
@@ -139,20 +160,22 @@ def _start_secret_operation(
     secret: bytes,
 ) -> tuple[OperationPersistedSnapshot, OperationSecureReferenceRepository]:
     """Submit one bound ephemeral secret, then run the real export executor."""
-    supervisor, operands = _supervisor(
-        root,
-        profile_objects=profile_objects,
-        owner_id="5" * 64,
-        lease_token="6" * 64,
-    )
-    created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
-    requirement = asyncio.run(supervisor.inspect(created)).secret_requirement
-    assert requirement is not None
-    assert requirement.secret_kind == "profile.bundle-export.passphrase"  # noqa: S105
-    submission = bytearray(secret)
-    asyncio.run(supervisor.submit_ephemeral_secret(requirement, submission))
-    assert submission == bytearray(len(secret))
-    return asyncio.run(supervisor.start(created)), operands
+    with bundled_indexed_authority().operation() as authority_operation:
+        supervisor, operands = _supervisor(
+            root,
+            profile_objects=profile_objects,
+            owner_id="5" * 64,
+            lease_token="6" * 64,
+            authority_operation=authority_operation,
+        )
+        created = asyncio.run(supervisor.submit(request, operation_id=operation_id))
+        requirement = asyncio.run(supervisor.inspect(created)).secret_requirement
+        assert requirement is not None
+        assert requirement.secret_kind == "profile.bundle-export.passphrase"  # noqa: S105
+        submission = bytearray(secret)
+        asyncio.run(supervisor.submit_ephemeral_secret(requirement, submission))
+        assert submission == bytearray(len(secret))
+        return asyncio.run(supervisor.start(created)), operands
 
 
 def _assert_not_durable(root: Path, secret: bytes) -> None:
@@ -224,7 +247,7 @@ def test_field_mutation_runs_through_the_supervisor_and_real_encrypted_profile_s
             assert terminal.terminal_receipt is not None
             assert terminal.terminal_receipt.result_ref is not None
             result = asyncio.run(operands.resolve(terminal.terminal_receipt.result_ref, ProfileMutationOperationResult))
-            stored = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+            stored = _load_profile(profile_id)
 
         assert result.profile_id == profile_id
         assert result.record_revision == stored.record_revision
@@ -258,7 +281,7 @@ def test_repeatable_row_mutation_allocates_and_persists_one_real_schema_row(tmp_
             result = asyncio.run(
                 operands.resolve(terminal.terminal_receipt.result_ref, ProfileRepeatableRowMutationOperationResult)
             )
-            stored = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+            stored = _load_profile(profile_id)
 
         assert result.profile_id == profile_id
         assert result.section_key == "activities"
@@ -311,18 +334,20 @@ def test_profile_logout_strong_closes_real_custody_after_secure_request_resoluti
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as profile_objects:
 
             async def _run_strong_close() -> OperationPersistedSnapshot:
-                supervisor, _operands = _supervisor(
-                    root,
-                    profile_objects=profile_objects,
-                    owner_id="7" * 64,
-                    lease_token="8" * 64,
-                )
-                created = await supervisor.submit(
-                    build_profile_logout_operation_request(profile_id),
-                    operation_id="d" * 64,
-                )
-                terminal = await supervisor.start(created)
-                return terminal
+                with bundled_indexed_authority().operation() as authority_operation:
+                    supervisor, _operands = _supervisor(
+                        root,
+                        profile_objects=profile_objects,
+                        owner_id="7" * 64,
+                        lease_token="8" * 64,
+                        authority_operation=authority_operation,
+                    )
+                    created = await supervisor.submit(
+                        build_profile_logout_operation_request(profile_id),
+                        operation_id="d" * 64,
+                    )
+                    terminal = await supervisor.start(created)
+                    return terminal
 
             terminal = asyncio.run(_run_strong_close())
 

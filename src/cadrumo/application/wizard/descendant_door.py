@@ -204,6 +204,7 @@ def persist_descendant_door_answers(
         changes=(*facts, *clearing),
         door=ProfileFactWriteDoor.DESCENDANTS,
         expected_record=baseline,
+        profile_decode_context=operation.profile_decode_context(),
     )
 
 

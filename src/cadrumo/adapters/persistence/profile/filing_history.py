@@ -46,6 +46,7 @@ class FilingHistoryRepositoryAdapter(
             context={"operation": operation, "adapter_error": type(error).__name__},
         )
 
+    @override
     def load(self, identifier: str) -> ModeloHistory | None:
         """Load one encrypted history and translate storage failures."""
         try:
@@ -53,6 +54,7 @@ class FilingHistoryRepositoryAdapter(
         except StorageError as error:
             raise self._translate("load", error) from error
 
+    @override
     def save(self, payload: ModeloHistory) -> None:
         """Save one encrypted history and translate storage failures."""
         try:
@@ -60,6 +62,7 @@ class FilingHistoryRepositoryAdapter(
         except StorageError as error:
             raise self._translate("save", error) from error
 
+    @override
     def delete(self, identifier: str) -> bool:
         """Delete one encrypted history and translate storage failures."""
         try:
@@ -67,6 +70,7 @@ class FilingHistoryRepositoryAdapter(
         except StorageError as error:
             raise self._translate("delete", error) from error
 
+    @override
     def iter_records(self) -> Iterator[ModeloHistory]:
         """Iterate encrypted histories and translate scan failures."""
         try:

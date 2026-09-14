@@ -24,6 +24,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
     STATUTORY_CITATION_SOURCES,
@@ -144,7 +145,9 @@ def test_every_annual_edition_source_is_held_to_the_invariant() -> None:
             )
 
 
-def test_the_shipped_corpus_satisfies_the_invariant_through_the_real_loader() -> None:
+def test_the_shipped_corpus_satisfies_the_invariant_through_the_real_loader(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """SUPPORTING: the shipped data loads, which it cannot do while violating it.
 
     The invariant is a model validator, so a violating citation refuses at load;
@@ -152,7 +155,7 @@ def test_the_shipped_corpus_satisfies_the_invariant_through_the_real_loader() ->
     """
     from ..registry import load_category_profiles
 
-    profiles = load_category_profiles()
+    profiles = load_category_profiles(operation=operation)
     edition_dated = [
         citation
         for profile in profiles.values()

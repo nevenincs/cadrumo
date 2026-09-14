@@ -94,6 +94,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.period import Period
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from ...domain.modelos.filing_record import ExternalEvidenceKind
@@ -849,8 +850,11 @@ def _runtime(
         )
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
+            authority_scope = bundled_indexed_authority().operation()
+            authority_operation = authority_scope.__enter__()
             services = compose_operation_services(
                 registry=registry,
+                authority_operation=authority_operation,
                 journal=journal,
                 reader=journal,
                 event_stream=journal,
@@ -870,6 +874,7 @@ def _runtime(
                 yield _ExecutionDriver(services=services), registry, profile_id
             finally:
                 asyncio.run(services.shutdown())
+                authority_scope.__exit__(None, None, None)
 
 
 @pytest.mark.parametrize("apply", [True, False], ids=["apply", "reject"])

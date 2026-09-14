@@ -17,6 +17,7 @@ from ..common import active_profile_label, emit_envelope
 
 if TYPE_CHECKING:
     from ....application.user_profile.login_session import ProfileLoginOutcome
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 from .secure_input import MachineSecretPayload, MachineSecretSelection
@@ -269,7 +270,7 @@ def config_login(
     )
 
 
-async def _run_logout_operation(profile_id: UUID) -> None:
+async def _run_logout_operation(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> None:
     """Strong-close through the supervised operation platform, then settle it.
 
     The composed graph owns the journal, the lease and the executor. Its start
@@ -280,7 +281,10 @@ async def _run_logout_operation(profile_id: UUID) -> None:
     from ....application.user_profile.operations import build_profile_logout_operation_request
     from ...operation_composition import compose_operation_dependencies
 
-    services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
+    services = compose_operation_dependencies(
+        authority_operation=operation,
+        operator_scope_ports=build_operator_scope_ports(),
+    )
     try:
         submission = await services.submission.submit(
             build_profile_logout_operation_request(profile_id),
@@ -307,7 +311,14 @@ def config_logout(
         # Supervision journals into profile-bound encrypted storage, which only
         # an open session can unlock. With a session there IS something to
         # strong-close and the journal records the operator's verb.
-        asyncio.run(_run_logout_operation(UUID(str(active_bucket_id))))
+        from ..state_projection_support import authority_operation
+
+        asyncio.run(
+            _run_logout_operation(
+                UUID(str(active_bucket_id)),
+                operation=authority_operation(ctx),
+            )
+        )
         signed_out = str(active_bucket_id)
     else:
         # No open session: nothing to strong-close, only a stale selection to

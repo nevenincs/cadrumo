@@ -38,6 +38,7 @@ from cadrumo.application.auth.operation_definitions import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import login_profile, logout_active_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -65,6 +66,7 @@ def _supervisor(
     journal = OperationJournalRepository(storage_root=root)
     operands = None if profile_objects is None else operation_secure_reference_repository(objects=profile_objects)
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=OperationRegistry(
             definitions=AUTH_OPERATION_DEFINITIONS,
             public_registrations=build_auth_operation_registrations(AUTH_OPERATION_DEFINITIONS),

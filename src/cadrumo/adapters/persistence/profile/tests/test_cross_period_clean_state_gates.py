@@ -38,6 +38,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.verification_cross_period import cross_period_clean_state_findings
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -227,8 +228,9 @@ def _seed_303_cross_period_sources(
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
             revision_id=source_snapshot.revision.id,
-            repository=work_unit_repository,
-            bucket_event_repository=bucket_event_repository,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+            ),
             clock=_CLOCK,
         )
         values = _source_values(period, tuple(sorted(source_casilla_ids)))

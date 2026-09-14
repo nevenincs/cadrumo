@@ -14,7 +14,7 @@ from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.aeat.sede.declarations import open_declarations_register, shared_playwright
@@ -117,6 +117,7 @@ _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).s
 class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
     """Translate Sede notification records into the application snapshot DTO."""
 
+    @override
     async def fetch(self, session: object, *, settings: object) -> NotificationsSnapshot:
         """Read the Sede query and translate adapter DTOs/errors at this boundary."""
         try:

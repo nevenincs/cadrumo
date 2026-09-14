@@ -28,8 +28,11 @@ from cadrumo.application.auth.certificate_source_operations import (
     select_operator_certificate_source,
 )
 from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
-from cadrumo.application.auth.operator import configure_operator_auth, inspect_operator_auth
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
+from cadrumo.application.auth.tests._operator_projection_support import (
+    configure_operator_auth,
+    inspect_operator_auth,
+)
 from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.workflow.persistence import workflow_state_repository

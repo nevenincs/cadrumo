@@ -18,7 +18,7 @@ from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
@@ -78,7 +78,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
         filing_repository: ModeloRecordCatalogueRepositoryProtocol,
         regimen_simplificado_applies: bool,
-        operation: PinnedAuthorityOperation | None = None,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """Initialize the resolver with the repositories and applicability flag it draws on."""
         self._registry_snapshot = registry_snapshot
@@ -220,10 +220,9 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
                 "M303 annual-summary persisted handoff no longer matches its exact filed source",
             )
 
-    @staticmethod
-    def _require_registry_coordinates_current(handoff: M303RegimenSimplificadoAnnualSummaryHandoff) -> None:
+    def _require_registry_coordinates_current(self, handoff: M303RegimenSimplificadoAnnualSummaryHandoff) -> None:
         for snapshot_ref in (handoff.source_registry_snapshot_ref, handoff.target_registry_snapshot_ref):
-            outcome = revision_carry_outcome(snapshot_ref)
+            outcome = revision_carry_outcome(snapshot_ref, operation=self._operation)
             if outcome.refused:
                 raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                     "M303 annual-summary registry coordinate cannot be re-confirmed: "
@@ -290,7 +289,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 f"M303 annual-summary handoff filed calculation revision {filed_id!r} is unavailable",
             )
-        outcome = revision_carry_outcome(revision.registry_snapshot_ref)
+        outcome = revision_carry_outcome(revision.registry_snapshot_ref, operation=self._operation)
         if outcome.refused:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary source calculation coordinate cannot be re-confirmed: "
@@ -332,17 +331,6 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         source: WorkUnit,
         source_revision: CalculationRevision,
     ) -> tuple[M303RegimenSimplificadoCalculationResult, tuple[FilingEvidenceReference, ...]]:
-        if self._operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                resolver = M303RegimenSimplificadoAnnualSummarySourceResolver(
-                    registry_snapshot=self._registry_snapshot,
-                    work_unit_repository=self._work_unit_repository,
-                    calculation_repository=self._calculation_repository,
-                    filing_repository=self._filing_repository,
-                    regimen_simplificado_applies=self._regimen_simplificado_applies,
-                    operation=indexed_operation,
-                )
-                return resolver._validated_source_evidence(source, source_revision)
         evidence = source_revision.filing_instance_evidence
         if evidence is None:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
@@ -476,7 +464,7 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     regimen_simplificado_applies: bool,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Fail closed when a persisted M390 handoff no longer re-resolves exactly."""
     # The calculation rung, not the filing rung. This precondition asks the
@@ -486,17 +474,6 @@ def validate_m303_regimen_simplificado_annual_summary_target_revision(
     # a calculation-grade modelo before the registry can answer "this
     # requirement does not apply to you" -- and the check still runs, still
     # reads the requirement, and still raises on a handoff present without one.
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return validate_m303_regimen_simplificado_annual_summary_target_revision(
-                target_work_unit=target_work_unit,
-                target_revision=target_revision,
-                work_unit_repository=work_unit_repository,
-                calculation_repository=calculation_repository,
-                filing_repository=filing_repository,
-                regimen_simplificado_applies=regimen_simplificado_applies,
-                operation=indexed_operation,
-            )
     snapshot = operation.snapshot(
         target_work_unit.modelo,
         filing_year=target_work_unit.filing_year,

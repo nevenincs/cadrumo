@@ -53,6 +53,7 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....core.time.clock import now
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ..components.host import ScreenHostApp
 from ..operations.controller import OperationController
 from ..operations.modal import OperationModal
@@ -112,11 +113,21 @@ def _assert_horizontally_contained(app: App[object], size: tuple[int, int], surf
 @contextmanager
 def _registered_profile(tmp_path: Path) -> Generator[Path]:
     """One real profile created through the real registration door."""
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as root,
+        bundled_indexed_authority().operation() as authority_operation,
+    ):
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_PASSWORD,
+            profile_create_context=authority_operation.profile_create_context(),
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
+        login_profile(
+            name=_LABEL,
+            passphrase_callback=lambda: _PASSWORD,
+            profile_decode_context=authority_operation.profile_decode_context(),
         )
         yield root
 
@@ -126,7 +137,6 @@ def _registered_profile(tmp_path: Path) -> Generator[Path]:
 async def test_the_profile_surface_fits_every_terminal_width(tmp_path: Path, size: tuple[int, int]) -> None:
     """The profile manager keeps its whole field table inside the terminal."""
     with _registered_profile(tmp_path):
-        login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
         record = load_test_profile_record(require_active_bucket_id())
         overview = build_profile_overview(record, label=_LABEL)
 
@@ -168,16 +178,25 @@ async def test_the_secret_surface_fits_every_terminal_width(tmp_path: Path, size
 @contextmanager
 def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
     """The production operation platform, composed exactly as the TUI composes it."""
-    with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path) as root,
+        bundled_indexed_authority().operation() as authority_operation,
+    ):
         enrolled = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=_LABEL,
             passphrase=_PASSWORD,
+            profile_create_context=authority_operation.profile_create_context(),
+            profile_decode_context=authority_operation.profile_decode_context(),
         )
         profile_id = UUID(enrolled.profile_id)
         # Custody resolves the session's real data key; registration closes
         # its own session, so the profile must be unlocked again first.
-        login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSWORD)
+        login_profile(
+            name=enrolled.profile_id,
+            passphrase_callback=lambda: _PASSWORD,
+            profile_decode_context=authority_operation.profile_decode_context(),
+        )
         verify_definition = build_modelo_work_verify_definition(operator_scope_ports=_OPERATOR_SCOPE_PORTS)
         registry = OperationRegistry(
             definitions=(verify_definition,),
@@ -186,6 +205,7 @@ def _operation_runtime(tmp_path: Path) -> Generator[tuple[OperationComposedServi
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
             services = compose_operation_services(
+                authority_operation=authority_operation,
                 registry=registry,
                 journal=journal,
                 reader=journal,

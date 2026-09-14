@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
-from typing import ClassVar, override
+from typing import ClassVar, TypedDict, override
 
 import httpx
 import pytest
@@ -53,6 +53,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from cadrumo.application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from cadrumo.application.ledger.document_transcription import DocumentTranscription
 from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -71,6 +72,7 @@ from cadrumo.application.ledger.evidence_reference import (
 )
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
+from cadrumo.application.ledger.invoice_confirmation_ports import InvoiceConfirmationPorts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
@@ -292,7 +294,17 @@ def pdf_file(tmp_path: Path) -> Path:
     return path
 
 
-def invoice_confirmation_kwargs(*, bucket_id: str) -> Mapping[str, object]:
+class InvoiceConfirmationKwargs(TypedDict):
+    """Exact keyword capabilities supplied by confirmation fixtures."""
+
+    catalogue_creation_ports: CatalogueCreationPorts
+    invoice_confirmation_ports: InvoiceConfirmationPorts
+    counterparty_establishment_repository: CounterpartyEstablishmentRepositoryProtocol
+    evidence_ports: LedgerEvidencePorts
+    extraction_ports: InvoiceDraftExtractionPorts
+
+
+def invoice_confirmation_kwargs(*, bucket_id: str) -> InvoiceConfirmationKwargs:
     """Compose every required port for a real confirmation invocation."""
     evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
     return {
@@ -308,7 +320,7 @@ def invoice_confirmation_kwargs_with_catalogue(
     *,
     bucket_id: str,
     catalogue_creation_ports: CatalogueCreationPorts,
-) -> Mapping[str, object]:
+) -> InvoiceConfirmationKwargs:
     """Compose confirmation ports while retaining a test-specific catalogue port."""
     evidence_ports = _ledger_evidence_ports(bucket_id=bucket_id)
     return {

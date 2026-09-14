@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.queries import PinnedRegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 
 
@@ -23,8 +24,8 @@ def iva_compensation_casilla_id(value: object) -> CasillaId:
 
 
 def iva_compensation_registry_declarations(
-    query_service: RegistryQueryService,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
@@ -37,6 +38,7 @@ def iva_compensation_registry_declarations(
     this calculation module. A missing or invalid declaration is reported by
     the authority-backed query service; this seam does not invent a fallback.
     """
+    query_service = PinnedRegistryQueryService(operation)
     return (
         query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
         query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),

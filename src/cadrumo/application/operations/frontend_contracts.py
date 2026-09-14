@@ -105,6 +105,7 @@ from .frontend_requests import (
 
 
 def validate_projection_contract(projection: _OperationPublicProjectionV1) -> None:
+    """Refuse a projection whose embedded public contract does not identify it."""
     contract = projection.definition_contract
     if contract.definition_id != projection.definition_id:
         raise ValueError("public projection definition does not match its contract")
@@ -115,6 +116,7 @@ def validate_projection_contract(projection: _OperationPublicProjectionV1) -> No
 
 
 def validate_projection_settlement(projection: _OperationPublicProjectionV1) -> None:
+    """Validate the mutually consistent terminal settlement references."""
     _validate_projection_settlement_references(projection)
     _validate_projection_failure(projection)
     _validate_projection_nonterminal_settlement(projection)
@@ -151,6 +153,7 @@ def _validate_projection_nonterminal_settlement(projection: _OperationPublicProj
 
 
 def validate_projection_cancellation_facts(projection: _OperationPublicProjectionV1) -> None:
+    """Validate cancellation facts against the projection lifecycle."""
     _validate_unsupported_cancellation_facts(projection)
     _validate_cancellation_request_fact(projection)
     _validate_cancellation_lifecycle(projection)

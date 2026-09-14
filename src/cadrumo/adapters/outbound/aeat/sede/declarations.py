@@ -82,6 +82,7 @@ from .schema import (
 
 if TYPE_CHECKING:
     from .....application.auth.session_types import AeatSession
+    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 log = get_logger(__name__)
@@ -172,7 +173,7 @@ async def shared_playwright(
                     playwright=pw,
                 )
                 async with open_declarations_register(
-                    session, playwright=pw,
+                    session, operation=operation, playwright=pw,
                 ) as register:
                     for declaration in rows:
                         observation = await register.capture_observation(declaration)
@@ -386,11 +387,19 @@ async def discover_filed_declaration_availability(
 class DeclaracionesRegisterSession:
     """Reusable read-only session for AEAT's filed-declarations register."""
 
-    def __init__(self, session: AeatSession, page: Page, context: BrowserContext) -> None:
+    def __init__(
+        self,
+        session: AeatSession,
+        page: Page,
+        context: BrowserContext,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """Bind the live session, page and browser context this reader drives."""
         self.session = session
         self._page = page
         self._context = context
+        self._operation = operation
 
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[Declaracion, ...]:
         """Return :class:`Declaracion` rows for one ``(modelo, ejercicio)`` query.
@@ -435,7 +444,10 @@ class DeclaracionesRegisterSession:
                 "AeatSession.identity_nif is empty; cannot bind live filing observation",
                 translated_message=tr("adapters.sede.errors.empty_identity_nif"),
             )
-        snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
+        snapshot = registry_snapshot or _registry_snapshot_for_declaration(
+            declaration,
+            operation=self._operation,
+        )
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
             self._page,
@@ -461,6 +473,7 @@ class DeclaracionesRegisterSession:
             page=self._page,
             context=self._context,
             registry_snapshot=snapshot,
+            operation=self._operation,
             artefact_sink=artefact_sink,
         )
 
@@ -469,6 +482,7 @@ class DeclaracionesRegisterSession:
 async def open_declarations_register(
     session: AeatSession,
     *,
+    operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     playwright: Playwright | None = None,
 ) -> AsyncGenerator[DeclaracionesRegisterSession]:
@@ -477,7 +491,7 @@ async def open_declarations_register(
         page,
         context,
     ):
-        yield DeclaracionesRegisterSession(session, page, context)
+        yield DeclaracionesRegisterSession(session, page, context, operation=operation)
 
 
 @asynccontextmanager

@@ -9,7 +9,7 @@ outside the application boundary.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, override
 
 from ....application.modelo.m145_communication_records import (
     M145CommunicationRecord,
@@ -80,6 +80,7 @@ class M145CommunicationRecordRepositoryAdapter(M145CommunicationRecordRepository
     def __init__(self, *, repository: SecureSnapshotRepository[M145CommunicationRecord]) -> None:
         self._repository = repository
 
+    @override
     def exists(self, communication_record_id: str) -> bool:
         """Report record presence without exposing storage failures."""
         return _translate_adapter_failure(
@@ -87,6 +88,7 @@ class M145CommunicationRecordRepositoryAdapter(M145CommunicationRecordRepository
             lambda: self._repository.exists(communication_record_id),
         )
 
+    @override
     def load(self, communication_record_id: str) -> M145CommunicationRecord:
         """Load one record by full id while preserving application lookup errors."""
         return _translate_adapter_failure(
@@ -94,6 +96,7 @@ class M145CommunicationRecordRepositoryAdapter(M145CommunicationRecordRepository
             lambda: self._repository.load(communication_record_id),
         )
 
+    @override
     def resolve(self, communication_record_id: str) -> M145CommunicationRecord:
         """Resolve one full id or unique prefix while hiding adapter errors."""
         return _translate_adapter_failure(
@@ -101,6 +104,7 @@ class M145CommunicationRecordRepositoryAdapter(M145CommunicationRecordRepository
             lambda: self._repository.resolve(communication_record_id),
         )
 
+    @override
     def save_with_secure_object_writes(
         self,
         record: M145CommunicationRecord,
@@ -119,10 +123,12 @@ class M145CommunicationEventRepositoryAdapter(BucketEventHistoryRepositoryProtoc
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
         self._repository = repository
 
+    @override
     def exists(self) -> bool:
         """Report event-history presence without exposing storage failures."""
         return _translate_adapter_failure("bucket_event_history_exists", self._repository.exists)
 
+    @override
     def load(self) -> BucketEventHistoryCatalogue:
         """Load event history through the application-facing port."""
         return _translate_adapter_failure("bucket_event_history_load", self._repository.load)
@@ -131,10 +137,12 @@ class M145CommunicationEventRepositoryAdapter(BucketEventHistoryRepositoryProtoc
         """Load event history together with its optimistic-concurrency revision."""
         return _translate_adapter_failure("bucket_event_history_load_revisioned", self._repository.load_revisioned)
 
+    @override
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist event history while translating storage failures."""
         _translate_adapter_failure("bucket_event_history_save", lambda: self._repository.save(catalogue))
 
+    @override
     def to_secure_object_write(
         self,
         catalogue: BucketEventHistoryCatalogue,

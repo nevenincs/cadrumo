@@ -35,6 +35,7 @@ from ...core.identity.bucket import BucketId, canonical_bucket_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.auth.apoderamientos.catalogue import ApoderamientosCatalogue, load_default_catalogue, parse_scope_tokens
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from .apoderado_repository import ApoderadoConfigurationRepository, ApoderadoConfigurationRepositoryFactory
 from .apoderado_text import ApoderadoNotes
 
@@ -127,6 +128,7 @@ class ApoderadoService:
         self,
         *,
         repository_factory: ApoderadoConfigurationRepositoryFactory,
+        operation: PinnedAuthorityOperation,
         settings: Settings | None = None,
         catalogue: ApoderamientosCatalogue | None = None,
     ) -> None:
@@ -136,7 +138,7 @@ class ApoderadoService:
         from ...core.config import load_settings as _load_settings
 
         self._settings = settings or _load_settings()
-        self._catalogue = catalogue or load_default_catalogue()
+        self._catalogue = catalogue or load_default_catalogue(operation=operation)
         self._repository_factory = repository_factory
         # Build repositories lazily per requested bucket so catalogue-only
         # verbs never touch storage and a long-lived service cannot route

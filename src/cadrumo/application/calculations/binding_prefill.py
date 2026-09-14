@@ -50,7 +50,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -107,7 +107,11 @@ _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_histo
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 
 
-def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
+def _revision_carry_outcome(
+    payload: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
     """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
@@ -117,7 +121,7 @@ def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """
-    return revision_carry_outcome(payload.registry_snapshot_ref).refused
+    return revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
 
 
 class _GatheredObservation(BaseModel):
@@ -301,6 +305,7 @@ def _gather_grouped_member_observations(
     repository: CalculationObservationRepositoryProtocol,
     needed: dict[tuple[str, int, str, int], _GatheredObservation],
     seen_member: dict[tuple[str, int, str], int],
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Fold every member's filing for ``req_key`` into ``needed``, member-distinct.
 
@@ -316,7 +321,7 @@ def _gather_grouped_member_observations(
         if (obs.modelo, obs.filing_year, obs.period) != req_key:
             continue
         # R2 carry gate: divergent or unreconfirmable stamp -> skip.
-        if _revision_carry_outcome(payload):
+        if _revision_carry_outcome(payload, operation=operation):
             continue
         member_idx = seen_member.get(req_key, 0)
         seen_member[req_key] = member_idx + 1
@@ -327,14 +332,18 @@ def _gather_grouped_member_observations(
         )
 
 
-def _gathered_from_payload(payload: ObservationEnvelopePayload | None) -> _GatheredObservation | None:
+def _gathered_from_payload(
+    payload: ObservationEnvelopePayload | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
     Divergent or unreconfirmable source revision stamps refuse the carry.
     """
     if payload is None:
         return None
-    if _revision_carry_outcome(payload):
+    if _revision_carry_outcome(payload, operation=operation):
         return None
     return _gathered_observation(
         payload.observation,
@@ -350,6 +359,7 @@ def _gather_single_key_observation(
     *,
     repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> _GatheredObservation | None:
     """Load one observation by key, folding in any secure Modelo 303 IVA history.
 
@@ -362,6 +372,7 @@ def _gather_single_key_observation(
             requirement_modelo,
             Period.from_year_and_code(requirement_filing_year, requirement_period),
         ),
+        operation=operation,
     )
     if requirement_modelo == Modelo("303").value:
         state = iva_history_repository.load_period(
@@ -369,7 +380,7 @@ def _gather_single_key_observation(
         )
         if state is not None:
             history_gathered = _gathered_observation(
-                observation_from_iva_compensation_history(state),
+                observation_from_iva_compensation_history(state, operation=operation),
                 registry_snapshot_ref=state.registry_snapshot_ref,
                 source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
             )
@@ -385,6 +396,7 @@ def _gather_observations(
     repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
     excluded_binding_ids: frozenset[BindingId] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[_GatheredObservation, ...]:
     """Walk every previous_filing binding in the revision and pull matching observations from the local store.
 
@@ -418,6 +430,7 @@ def _gather_observations(
                 repository=repository,
                 needed=needed,
                 seen_member=seen_member,
+                operation=operation,
             )
             continue
         gathered = _gather_single_key_observation(
@@ -426,6 +439,7 @@ def _gather_observations(
             requirement.periods[0],
             repository=repository,
             iva_history_repository=iva_history_repository,
+            operation=operation,
         )
         if gathered is None:
             continue
@@ -440,12 +454,9 @@ def _gather_observations(
 def observation_from_iva_compensation_history(
     state: IvaCompensationPeriodState,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryModeloObservation:
     """Project secure IVA compensation history into the registry resolver contract."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return observation_from_iva_compensation_history(state, operation=indexed_operation)
     revision = operation.revision_for_context(
         Modelo("303").value,
         filing_year=state.filing_year,
@@ -799,6 +810,7 @@ def _prefilled_bindings(
 def resolve_bindings_from_local_store(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
     captured_at: datetime | None = None,
@@ -817,6 +829,8 @@ def resolve_bindings_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose revision's ``previous_filing``
             bindings are resolved from the local calculation observation store.
+        operation: The caller-owned generation-pinned authority operation used
+            to re-confirm every carried observation coordinate.
         repository: The composed :class:`CalculationObservationRepositoryProtocol`.
         iva_history_repository: Required
             :class:`IvaCompensationHistoryRepositoryProtocol` used for IVA
@@ -857,6 +871,7 @@ def resolve_bindings_from_local_store(
         repository=repo,
         iva_history_repository=iva_history_repository,
         excluded_binding_ids=excluded_binding_ids,
+        operation=operation,
     )
 
     if not observations and activity_start_date is None:
@@ -901,6 +916,7 @@ def resolve_bindings_from_local_store(
 def extract_modelo_303_local_iva_compensation_recurrence(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
     captured_at: datetime | None = None,
@@ -915,6 +931,8 @@ def extract_modelo_303_local_iva_compensation_recurrence(
 
     Args:
         snapshot: The :class:`RegistrySnapshot` identifying the Modelo 303 target revision.
+        operation: The caller-owned generation-pinned authority operation used
+            for the recurrence's coordinate checks.
         repository: The composed :class:`CalculationObservationRepositoryProtocol`.
         iva_history_repository: Required
             :class:`IvaCompensationHistoryRepositoryProtocol` consulted for
@@ -946,6 +964,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     # dependency even when their revision has no Modelo 303 source.
     report = resolve_bindings_from_local_store(
         snapshot,
+        operation=operation,
         repository=repository,
         iva_history_repository=iva_history_repository,
         captured_at=captured_at,

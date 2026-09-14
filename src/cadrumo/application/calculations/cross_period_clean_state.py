@@ -26,10 +26,9 @@ from ...core.identity.tax_id import same_tax_identifier
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.relations import (
     RegistryFoldRequirement,
     relation_source_requirements,
@@ -170,7 +169,7 @@ def partition_cross_period_requirements_by_activity_start(
 
 
 def cross_period_dependency_inventory(
-    authority: ValidatedRegistryAuthority,
+    operation: PinnedAuthorityOperation,
     *,
     filing_year: int,
     modelos: Iterable[str] | None = None,
@@ -183,41 +182,45 @@ def cross_period_dependency_inventory(
     periods are in scope for the clean-state guard before they wire
     model-specific workflow tests or operator diagnostics.
 
-    The :class:`ValidatedRegistryAuthority`
+    The :class:`PinnedAuthorityOperation`
     supplies candidate modelos and resolves each target
     :class:`RegistrySnapshot` evaluated for
     dependency coverage.
     """
-    query_service = RegistryQueryService(authority)
-    selected_codes = None if modelos is None else tuple(modelos)
+    selected_codes = None if modelos is None else frozenset(modelos)
     items: list[CrossPeriodDependencyInventoryItem] = []
-    for modelo_id, revision in query_service.iter_modelo_revisions(modelo_codes=selected_codes):
-        if not revision.period_selector.includes_year(filing_year):
+    for modelo_id in operation.modelo_ids():
+        if selected_codes is not None and modelo_id not in selected_codes:
             continue
-        # Dependency inventory is a filing-readiness surface. Applicability-
-        # and calculation-grade revisions cannot lawfully produce the filing
-        # snapshot consumed below, and therefore cannot own filing blockers.
-        if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
-            continue
-        for period in revision.period_selector.periods_for_year(filing_year):
-            snapshot = authority.snapshot(
-                modelo_id,
-                filing_year=filing_year,
-                period=period,
-                revision_id=str(revision.id),
-            )
-            dependencies = cross_period_dependency_requirements(snapshot)
-            if not dependencies:
+        directory = operation.modelo_directory(modelo_id)
+        for revision in directory.revisions:
+            if not revision.period_selector.includes_year(filing_year):
                 continue
-            items.append(
-                CrossPeriodDependencyInventoryItem(
-                    target_modelo=str(snapshot.modelo.id),
-                    target_revision_id=str(snapshot.revision.id),
-                    target_filing_year=snapshot.filing_year,
-                    target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-                    dependencies=dependencies,
-                ),
-            )
+            # Dependency inventory is a filing-readiness surface. Applicability-
+            # and calculation-grade revisions cannot lawfully produce the filing
+            # snapshot consumed below, and therefore cannot own filing blockers.
+            revision_payload = operation.revision(modelo_id, str(revision.id))
+            if revision_payload.effective_authority_grade is not RegistryAuthorityGrade.FILING:
+                continue
+            for period in revision.period_selector.periods_for_year(filing_year):
+                snapshot = operation.snapshot(
+                    modelo_id,
+                    filing_year=filing_year,
+                    period=period,
+                    revision_id=str(revision.id),
+                )
+                dependencies = cross_period_dependency_requirements(snapshot)
+                if not dependencies:
+                    continue
+                items.append(
+                    CrossPeriodDependencyInventoryItem(
+                        target_modelo=str(snapshot.modelo.id),
+                        target_revision_id=str(snapshot.revision.id),
+                        target_filing_year=snapshot.filing_year,
+                        target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
+                        dependencies=dependencies,
+                    ),
+                )
     return CrossPeriodDependencyInventory(
         filing_year=filing_year,
         items=tuple(
@@ -415,6 +418,7 @@ def _not_applicable_dependencies(
 
 def _load_clean_state_repositories(
     *,
+    operation: PinnedAuthorityOperation,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
@@ -424,7 +428,10 @@ def _load_clean_state_repositories(
     return _CleanStateRepositories(
         filing_catalogue=filing_repository.load(),
         calculation_catalogue=calculation_repository.load(),
-        verification_catalogue=require_verification_report_coordinates_current(verification_repository.load()),
+        verification_catalogue=require_verification_report_coordinates_current(
+            verification_repository.load(),
+            operation=operation,
+        ),
         justificante_repository=justificante_repository,
     )
 
@@ -472,6 +479,8 @@ def _zero_value_previous_filing_requirements(
 def _m111_no_retenciones_requirements(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CrossPeriodDependencyRequirement, ...]:
     return tuple(
         requirement
@@ -481,6 +490,7 @@ def _m111_no_retenciones_requirements(
             filing_year=requirement.filing_year,
             period_token=requirement.period.registry_token,
             attested_periods=m111_no_retenciones_periods or frozenset(),
+            operation=operation,
         )
     )
 
@@ -488,6 +498,7 @@ def _m111_no_retenciones_requirements(
 def _clean_state_requirement_scope(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     activity_start_date: date | None,
     modelo_202_modality: Modelo202Modality | None,
     taxpayer_files_economic_activity: bool | None,
@@ -522,6 +533,7 @@ def _clean_state_requirement_scope(
         m111_no_retenciones=_m111_no_retenciones_requirements(
             partition.in_scope,
             m111_no_retenciones_periods,
+            operation=operation,
         ),
     )
 
@@ -529,6 +541,7 @@ def _clean_state_requirement_scope(
 def _evaluate_in_scope_dependencies(
     scope: _CleanStateRequirementScope,
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: str,
     observation_repository: CalculationObservationRepositoryProtocol,
     repositories: _CleanStateRepositories,
@@ -554,6 +567,7 @@ def _evaluate_in_scope_dependencies(
             continue
         evidence = _evaluate_requirement(
             requirement,
+            operation=operation,
             bucket_id=bucket_id,
             observation_repository=observation_repository,
             filing_catalogue=repositories.filing_catalogue,
@@ -623,6 +637,7 @@ def _clean_state_dependencies(
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: str,
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
@@ -688,6 +703,7 @@ def evaluate_cross_period_clean_state(
     exact M111 periods; nonzero and unknown periods remain fully evaluated.
     """
     repositories = _load_clean_state_repositories(
+        operation=operation,
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
@@ -696,6 +712,7 @@ def evaluate_cross_period_clean_state(
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
     scope = _clean_state_requirement_scope(
         snapshot,
+        operation=operation,
         activity_start_date=activity_start_date,
         modelo_202_modality=modelo_202_modality,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
@@ -712,6 +729,7 @@ def evaluate_cross_period_clean_state(
             scope,
             in_scope=_evaluate_in_scope_dependencies(
                 scope,
+                operation=operation,
                 bucket_id=bucket_id,
                 observation_repository=observation_repository,
                 repositories=repositories,
@@ -812,6 +830,8 @@ def _revision_carry_check(
     source_modelo: str,
     source_filing_year: int,
     source_period: Period,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> list[CrossPeriodCleanStateBlocker]:
     """Return blockers for a carry-read revision check.
 
@@ -829,7 +849,8 @@ def _revision_carry_check(
             revision_id=stamped_revision_id,
             modelo_year=source_filing_year,
             period=source_period.registry_token,
-        )
+        ),
+        operation=operation,
     ).refused
     if refused:
         return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE]
@@ -926,6 +947,8 @@ def _select_member_source_payloads(
 def _member_source_revision_blockers(
     requirement: CrossPeriodDependencyRequirement,
     value_member_payloads: tuple[ObservationPayload, ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CrossPeriodCleanStateBlocker, ...]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     for item in value_member_payloads:
@@ -936,6 +959,7 @@ def _member_source_revision_blockers(
                 requirement.source_modelo,
                 requirement.filing_year,
                 requirement.period,
+                operation=operation,
             ),
         )
     return tuple(blockers)
@@ -960,6 +984,8 @@ def _single_source_revision_blockers(
     requirement: CrossPeriodDependencyRequirement,
     payload: ObservationPayload | None,
     taxpayer_tax_id: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CrossPeriodCleanStateBlocker, ...]:
     if payload is None:
         return ()
@@ -970,6 +996,7 @@ def _single_source_revision_blockers(
             requirement.source_modelo,
             requirement.filing_year,
             requirement.period,
+            operation=operation,
         ),
     )
     return tuple(blockers)
@@ -980,6 +1007,8 @@ def _resolve_cross_period_source(
     observation_repository: CalculationObservationRepositoryProtocol,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
     taxpayer_tax_id: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> _CrossPeriodSource:
     if requirement.requires_member_fan_in:
         selection = _select_member_source_payloads(
@@ -992,6 +1021,7 @@ def _resolve_cross_period_source(
             *_member_source_revision_blockers(
                 requirement,
                 selection.value_member_payloads,
+                operation=operation,
             ),
         ]
         return _CrossPeriodSource(
@@ -1004,7 +1034,7 @@ def _resolve_cross_period_source(
             tuple(blockers),
         )
     payload = _single_source_payload(requirement, observation_repository)
-    blockers = _single_source_revision_blockers(requirement, payload, taxpayer_tax_id)
+    blockers = _single_source_revision_blockers(requirement, payload, taxpayer_tax_id, operation=operation)
     return _CrossPeriodSource(
         (),
         (),
@@ -1081,6 +1111,7 @@ def _aggregate_member_history(
     value_member_payloads: tuple[ObservationPayload, ...],
     expected_member_nifs: tuple[str, ...],
     observed_member_nifs: tuple[str, ...],
+    operation: PinnedAuthorityOperation,
 ) -> _MemberHistory:
     member_payload_by_nif = {str(item.member_nif): item for item in value_member_payloads}
     members_to_check = expected_member_nifs or observed_member_nifs
@@ -1096,6 +1127,7 @@ def _aggregate_member_history(
             justificante_repository=justificante_repository,
             taxpayer_tax_id=taxpayer_tax_id,
             observation_source_kind=observation_source_kind,
+            operation=operation,
         )
         for member_nif in members_to_check
     )
@@ -1105,6 +1137,7 @@ def _aggregate_member_history(
 def _evaluate_requirement(
     requirement: CrossPeriodDependencyRequirement,
     *,
+    operation: PinnedAuthorityOperation,
     bucket_id: str,
     observation_repository: CalculationObservationRepositoryProtocol,
     filing_catalogue: ModeloRecordCatalogue,
@@ -1119,6 +1152,7 @@ def _evaluate_requirement(
         observation_repository,
         expected_member_set,
         taxpayer_tax_id,
+        operation=operation,
     )
     observation_source_kind, observation_values, value_blockers = _resolve_observation_values(
         requirement,
@@ -1140,6 +1174,7 @@ def _evaluate_requirement(
             value_member_payloads=source.value_member_payloads,
             expected_member_nifs=source.expected_member_nifs,
             observed_member_nifs=source.observed_member_nifs,
+            operation=operation,
         )
         blockers.extend(history.blockers)
         return CrossPeriodDependencyEvidence(
@@ -1170,6 +1205,7 @@ def _evaluate_requirement(
         observation_source_metadata=source.payload.source_metadata if source.payload is not None else None,
         observation_values=observation_values,
         member_nif=None,
+        operation=operation,
     )
     blockers.extend(filing_result.blockers)
 
@@ -1195,6 +1231,8 @@ def _filing_revision_blockers(
     requirement: CrossPeriodDependencyRequirement,
     calculation_catalogue: CalculationRevisionCatalogue,
     observation_values: Mapping[CasillaId, object],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CalculationRevisionState | None, list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     revision = calculation_catalogue.get(filing.calculation_revision_id)
@@ -1202,7 +1240,7 @@ def _filing_revision_blockers(
     if revision is None:
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION)
     else:
-        if revision_carry_outcome(revision.registry_snapshot_ref).refused:
+        if revision_carry_outcome(revision.registry_snapshot_ref, operation=operation).refused:
             blockers.append(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE)
             return None, blockers
         revision_state = revision.state
@@ -1259,6 +1297,7 @@ def _evaluate_member_history(
     justificante_repository: JustificanteRepositoryProtocol,
     taxpayer_tax_id: str | None,
     observation_source_kind: ObservationSourceKind | None,
+    operation: PinnedAuthorityOperation,
 ) -> _FilingHistory:
     member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
     member_source_kind = member_payload.source_kind if member_payload is not None else observation_source_kind
@@ -1275,6 +1314,7 @@ def _evaluate_member_history(
         observation_source_metadata=member_source_metadata,
         observation_values=member_values,
         member_nif=member_nif,
+        operation=operation,
     )
 
 
@@ -1343,6 +1383,7 @@ def _evaluate_filing_history(
     observation_source_metadata: Mapping[str, str] | None,
     observation_values: Mapping[CasillaId, object],
     member_nif: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> _FilingHistory:
     blockers: list[CrossPeriodCleanStateBlocker] = []
     filing_history = filing_catalogue.history_for(
@@ -1377,6 +1418,7 @@ def _evaluate_filing_history(
         requirement,
         calculation_catalogue,
         observation_values,
+        operation=operation,
     )
     blockers.extend(revision_blockers)
     verification_status, verification_blockers = _filing_verification_blockers(filing, verification_catalogue)

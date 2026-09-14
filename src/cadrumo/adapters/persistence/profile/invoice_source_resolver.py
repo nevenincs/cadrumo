@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from ....application.invoices.source_resolver_ports import (
     InvoiceSourceCatalogueReader,
     InvoiceSourcePersistenceError,
@@ -18,6 +20,7 @@ class InvoiceCatalogueSourceResolverAdapter(InvoiceSourceCatalogueReader):
         """Bind an already-composed invoice repository."""
         self._repository = repository
 
+    @override
     def load(self) -> InvoiceCatalogue:
         """Load the catalogue while translating degradation failures."""
         try:

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, TypeGuard
 
 from ...core.citation_grounding import CitationGrounding
 from ...core.validity_window import years_covered_by_every_group
@@ -24,6 +24,11 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow one runtime component to an object-keyed mapping before validation."""
+    return isinstance(value, Mapping)
+
+
 def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogue:
     """Adapt one selected IVA runtime component into the operational catalogue.
 
@@ -33,9 +38,9 @@ def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogu
     from ..calculations.registry.runtime_catalogues import PublishedIvaRegulation
 
     loaded = operation.runtime_catalogue("iva_regulations")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         raise IvaCatalogueError("indexed authority IVA regulation component has an invalid shape")
-    loaded_values = tuple(cast(Mapping[object, object], loaded).values())
+    loaded_values = tuple(loaded.values())
     if not all(isinstance(value, PublishedIvaRegulation) for value in loaded_values):
         raise IvaCatalogueError("indexed authority IVA regulation component has an invalid shape")
     published_values = tuple(value for value in loaded_values if isinstance(value, PublishedIvaRegulation))
@@ -91,7 +96,7 @@ def resolve_catalogue(
     *,
     on: date,
     operation: PinnedAuthorityOperation,
-    projected_year: int | None = None,
+    projected_year: int,
 ) -> IvaCatalogue:
     """Return the IVA catalogue as grounded for the filing year of ``on``.
 
@@ -106,8 +111,6 @@ def resolve_catalogue(
         IvaCatalogueError: When the catalogue grounds no such year. There is no
             fallback to an adjacent year.
     """
-    if projected_year is None:
-        raise IvaCatalogueError("IVA catalogue resolution requires the caller's projected filing year")
     return _resolve_catalogue(
         projected_year,
         tuple(sorted(iva_catalogue_years(operation=operation))),

@@ -2,9 +2,8 @@
 
 The descendant group is a substrate-only construct (the one-shot wizard
 catalogue has no repeating-group primitive), so these tests drive the
-pure flow engine over the production
-:data:`~cadrumo.application.wizard.descendant_group.DESCENDANT_GROUP`
-and count page: the count answer gates the instance pages, the instance
+pure flow engine over the operation-scoped production descendant group and
+count page: the count answer gates the instance pages, the instance
 answers project through
 :func:`~cadrumo.application.wizard.persistence.descendant_facts_from_answers`, and the
 NIF page validates through the canonical identity authority. Expected
@@ -26,6 +25,7 @@ from ....core.flows import (
     FlowWidgetKind,
 )
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.contribuyente.entity_type import EntityType
 from ...flows.definition import CopyRef, FlowChoice, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import FlowState, answer, start_flow, visible_sequence
@@ -41,12 +41,14 @@ from ..descendant_group import (
     _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
     DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,
-    DESCENDANT_GROUP,
     DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID,
-    DESCENDANTS_COUNT_PAGE,
+    DESCENDANTS_COUNT_PAGE_ID,
+    DESCENDANTS_GROUP_ID,
     attach_descendant_group,
+    build_descendant_count_page,
+    build_descendant_group,
 )
-from ..persistence import descendant_facts_from_answers
+from ..persistence import descendant_facts_from_answers as _descendant_facts_from_answers
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,23 +86,42 @@ def _probe_definition() -> FlowDefinition:
     model validator runs — proving the count-source wiring and the count
     page's ``entity-type`` gate resolve to earlier pages.
     """
-    return FlowDefinition(
-        id="descendant-probe",
-        title=_ref("probe.title"),
-        description=_ref("probe.description"),
-        sections=(
-            FlowSection(
-                id="familia",
-                title=_ref("probe.familia.title"),
-                items=(_entity_type_page(), DESCENDANTS_COUNT_PAGE, DESCENDANT_GROUP),
+    with bundled_indexed_authority().operation() as operation:
+        return FlowDefinition(
+            id="descendant-probe",
+            title=_ref("probe.title"),
+            description=_ref("probe.description"),
+            sections=(
+                FlowSection(
+                    id="familia",
+                    title=_ref("probe.familia.title"),
+                    items=(
+                        _entity_type_page(),
+                        build_descendant_count_page(operation),
+                        build_descendant_group(operation),
+                    ),
+                ),
             ),
-        ),
-        answers_model=_ProbeAnswers,
-        checkpoint={
-            FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
-            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
-        },
-    )
+            answers_model=_ProbeAnswers,
+            checkpoint={
+                FlowMode.CREATE: CheckpointAvailability.AVAILABLE,
+                FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+            },
+        )
+
+
+def _descendant_facts(answers: dict[str, str]) -> list[tuple[str, str]]:
+    """Project answers under the same real authority seam as the production door."""
+
+    with bundled_indexed_authority().operation() as operation:
+        return _descendant_facts_from_answers(answers, operation=operation)
+
+
+def _attach(base: FlowDefinition) -> FlowDefinition:
+    """Attach the operation-scoped group for a test definition."""
+
+    with bundled_indexed_authority().operation() as operation:
+        return attach_descendant_group(base, operation=operation)
 
 
 def _visible_keys(definition: FlowDefinition, state: FlowState) -> set[str]:
@@ -154,7 +175,7 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
     for key in state.verdicts:
         assert not key.startswith("descendientes"), f"unexpected verdict on {key}: {state.verdicts[key]}"
 
-    projected = dict(descendant_facts_from_answers(state.answers))
+    projected = dict(_descendant_facts(state.answers))
 
     expected = {
         "renta_family.descendiente.0.birth_date": "2023-05-10",
@@ -285,11 +306,11 @@ def test_the_guarderia_spend_validator_is_named_on_the_attached_definition() -> 
         },
     )
 
-    attached = attach_descendant_group(base)
+    attached = _attach(base)
 
     assert DESCENDANT_GUARDERIA_SPEND_VALIDATOR_ID in attached.flow_validator_ids
     # Idempotent, like its sibling: re-applying must not duplicate either id.
-    assert attach_descendant_group(attached).flow_validator_ids == attached.flow_validator_ids
+    assert _attach(attached).flow_validator_ids == attached.flow_validator_ids
 
 
 def test_invalid_descendant_nif_refuses_and_valid_commits() -> None:
@@ -318,7 +339,7 @@ def test_count_zero_hides_the_group_entirely() -> None:
     visible = _visible_keys(definition, state)
     assert not any(key.startswith("descendientes#") for key in visible)
     # Zero descendants still emits the count aggregate, and nothing else.
-    assert dict(descendant_facts_from_answers(state.answers)) == {"renta_family.descendientes_count": "0"}
+    assert dict(_descendant_facts(state.answers)) == {"renta_family.descendientes_count": "0"}
 
 
 def test_count_page_hidden_for_a_legal_entity() -> None:
@@ -334,7 +355,7 @@ def test_count_page_hidden_for_a_legal_entity() -> None:
 def test_descendant_free_answer_map_writes_no_descendant_fact() -> None:
     # The group was never reached: no count answer present, so the
     # projection contributes nothing (not even a zero count).
-    assert descendant_facts_from_answers({"tax-id": _VALID_NIF}) == []
+    assert _descendant_facts({"tax-id": _VALID_NIF}) == []
 
 
 def test_attach_descendant_group_splices_count_then_group_into_familia() -> None:
@@ -349,10 +370,10 @@ def test_attach_descendant_group_splices_count_then_group_into_familia() -> None
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    attached = attach_descendant_group(base)
+    attached = _attach(base)
     familia = next(section for section in attached.sections if section.id == "familia")
-    assert familia.items[-2] is DESCENDANTS_COUNT_PAGE
-    assert familia.items[-1] is DESCENDANT_GROUP
+    assert familia.items[-2].id == DESCENDANTS_COUNT_PAGE_ID
+    assert familia.items[-1].id == DESCENDANTS_GROUP_ID
 
 
 def _one_descendant_state(definition: FlowDefinition):
@@ -490,13 +511,13 @@ def test_attach_descendant_group_names_the_adoption_flow_validator() -> None:
             FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
         },
     )
-    attached = attach_descendant_group(base)
+    attached = _attach(base)
     assert attached.flow_validator_ids.count(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID) == 1
 
     # Idempotent on the flow validator id: a definition already naming it is
     # not given a duplicate.
     pre_named = base.model_copy(update={"flow_validator_ids": (DESCENDANT_ENTRY_EVENT_VALIDATOR_ID,)})
-    assert attach_descendant_group(pre_named).flow_validator_ids.count(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID) == 1
+    assert _attach(pre_named).flow_validator_ids.count(DESCENDANT_ENTRY_EVENT_VALIDATOR_ID) == 1
 
 
 def test_attach_descendant_group_refuses_without_a_familia_section() -> None:
@@ -512,4 +533,4 @@ def test_attach_descendant_group_refuses_without_a_familia_section() -> None:
         },
     )
     with pytest.raises(ValueError, match="familia"):
-        attach_descendant_group(base)
+        _attach(base)

@@ -20,6 +20,7 @@ from cadrumo.application.wizard.descendant_door import (
     run_descendant_door,
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.serial]
 
@@ -37,7 +38,12 @@ def _run(keys: str) -> tuple[Any, Any, Any, str]:
     with create_pipe_input() as pipe:
         pipe.send_text(keys)
         pipe.close()
-        state, projection, persisted = run_descendant_door(input=pipe, output=PlainTextOutput(output))
+        with bundled_indexed_authority().operation() as operation:
+            state, projection, persisted = run_descendant_door(
+                input=pipe,
+                output=PlainTextOutput(output),
+                operation=operation,
+            )
     return state, projection, persisted, output.getvalue()
 
 
@@ -127,7 +133,8 @@ def test_abandoned_edit_refuses_before_the_atomic_write(isolated_profile: TestRu
         _run(_resume_missing_optional_answers() + "\x1b[B\r2\r\x03")
 
     assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
-    reloaded = load_active_descendant_record()
+    with bundled_indexed_authority().operation() as operation:
+        reloaded = load_active_descendant_record(operation=operation)
     assert _facts(reloaded) == before
     assert reloaded.record_revision == before_revision
 
@@ -136,12 +143,13 @@ def test_stale_prompt_baseline_refuses_without_overwriting_the_newer_record(
     isolated_profile: TestRuntimeProfile,
 ) -> None:
     _state, _projection, baseline, _output = _run(_one_descendant_keys())
-    _definition, resumed = build_descendant_door(baseline)
-    concurrent = persist_descendant_door_answers(resumed.answers, baseline=baseline)
+    with bundled_indexed_authority().operation() as operation:
+        _definition, resumed = build_descendant_door(baseline, operation=operation)
+        concurrent = persist_descendant_door_answers(resumed.answers, baseline=baseline, operation=operation)
 
-    with pytest.raises(CadrumoError, match="compare-and-swap") as excinfo:
-        persist_descendant_door_answers(resumed.answers, baseline=baseline)
-    assert type(excinfo.value).__name__ == "ProfileRecordConflictError"
+        with pytest.raises(CadrumoError, match="compare-and-swap") as excinfo:
+            persist_descendant_door_answers(resumed.answers, baseline=baseline, operation=operation)
+        assert type(excinfo.value).__name__ == "ProfileRecordConflictError"
 
-    reloaded = load_active_descendant_record()
+        reloaded = load_active_descendant_record(operation=operation)
     assert reloaded == concurrent

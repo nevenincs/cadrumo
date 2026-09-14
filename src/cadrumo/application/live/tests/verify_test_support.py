@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import override
 
 from ..verify import VerifyObservation
 from ..verify_ports import VerifyObservationPersistencePort
@@ -19,10 +20,12 @@ class InMemoryVerifyObservationPersistence(VerifyObservationPersistencePort):
 
     _observations: dict[tuple[str, str], VerifyObservation] = field(default_factory=dict)
 
+    @override
     def load(self, *, bucket_id: str, observation_id: str) -> VerifyObservation | None:
         """Return the observation addressed by its bucket and content id."""
         return self._observations.get((bucket_id, observation_id))
 
+    @override
     def list_observations(self, *, bucket_id: str) -> tuple[VerifyObservation, ...]:
         """Return bucket observations in deterministic capture order."""
         observations = [
@@ -32,6 +35,7 @@ class InMemoryVerifyObservationPersistence(VerifyObservationPersistencePort):
         ]
         return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
 
+    @override
     def save(self, observation: VerifyObservation) -> None:
         """Store one application observation under its bucket and content id."""
         self._observations[(observation.bucket_id, observation.observation_id)] = observation

@@ -34,6 +34,7 @@ from cadrumo.application.modelo.external_import_actions import (
     import_external_filing_source,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventType
@@ -68,8 +69,7 @@ def test_source_lexicals_refuse_dropped_casillas(repos: _Repos) -> None:
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
     with pytest.raises(ExternalModeloImportError):
@@ -99,8 +99,7 @@ def test_source_lexicals_refuse_value_shadowing(repos: _Repos) -> None:
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
     with pytest.raises(ExternalModeloImportError):
@@ -264,8 +263,7 @@ def test_observation_write_failure_rolls_back_entire_external_import_batch(repos
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
     import_external_filing_source(

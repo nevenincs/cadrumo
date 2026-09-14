@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.errors import RegistrySnapshotError
 from ..plazo import resolve_filing_closes_on
 from ..recargo import (
@@ -37,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 
 
-def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
+def test_after_12_months_overdue_yields_15_pct_plus_interest(operation: PinnedAuthorityOperation) -> None:
     """Plazo closed 2024-11-30; presented 2026-05-27 → 17 completed months.
 
     External authority: Ley 58/2003 Art. 27.2 (post-Ley 11/2021). Once 12
@@ -51,7 +52,7 @@ def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
     # not yet reached on May 27), well beyond the 12-month interest threshold.
     assert months == 17
 
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(months, bands)
 
     assert band.id == "after_12_months"
@@ -60,13 +61,14 @@ def test_after_12_months_overdue_yields_15_pct_plus_interest() -> None:
     assert "ley-58-2003" in band.legal_ref
 
 
-def test_after_12_months_recovery_payload() -> None:
+def test_after_12_months_recovery_payload(operation: PinnedAuthorityOperation) -> None:
     """build_recovery_for_overdue past 12 completed months → 15% + interest."""
     recovery = build_recovery_for_overdue(
         closes_on=date(2024, 11, 30),
         reference_today=date(2026, 5, 27),
         modelo="303",
         period=Period.from_year_and_code(2024, "4T"),
+        operation=operation,
     )
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "after_12_months"
@@ -75,29 +77,29 @@ def test_after_12_months_recovery_payload() -> None:
     assert "next_command" not in type(recovery).model_fields
 
 
-def test_zero_completed_months_no_interest() -> None:
+def test_zero_completed_months_no_interest(operation: PinnedAuthorityOperation) -> None:
     """Filed late but within the first incomplete month → 1% recargo, no interest.
 
     External authority: Ley 58/2003 Art. 27.2 post-Ley 11/2021 — the 1% base
     applies before any month is completed.
     """
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(0, bands)
     assert band.surcharge_pct == Decimal("1.00")
     assert band.interest_applies is False
 
 
-def test_four_completed_months_no_interest() -> None:
+def test_four_completed_months_no_interest(operation: PinnedAuthorityOperation) -> None:
     """4 completed months → 1% base + 4% = 5% recargo, no interest (Art. 27.2)."""
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(4, bands)
     assert band.surcharge_pct == Decimal("5.00")
     assert band.interest_applies is False
 
 
-def test_ten_completed_months_no_interest() -> None:
+def test_ten_completed_months_no_interest(operation: PinnedAuthorityOperation) -> None:
     """10 completed months → 1% base + 10% = 11% recargo, no interest (Art. 27.2)."""
-    bands = load_recargo_bands()
+    bands = load_recargo_bands(operation=operation)
     band = resolve_recargo_band(10, bands)
     assert band.surcharge_pct == Decimal("11.00")
     assert band.interest_applies is False

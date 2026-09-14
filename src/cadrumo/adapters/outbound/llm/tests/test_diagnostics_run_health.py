@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 from pydantic import ValidationError
@@ -77,6 +78,7 @@ def _seed(recorder: LLMRunTelemetryRecorder) -> None:
 class _FakeAuthProbe(DiagnosticAuthProbePort):
     """Return a fixed, redacted auth verdict for run-health projections."""
 
+    @override
     def probe(self) -> DiagnosticAuthProbeResult:
         return DiagnosticAuthProbeResult()
 

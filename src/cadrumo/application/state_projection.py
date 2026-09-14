@@ -761,6 +761,7 @@ def _build_modelo_profile_stage(
         period=period,
         revision=revision,
         resolve_revision_when_missing=snapshot is not None,
+        profile_decode_context=operation.profile_decode_context(),
         operation=operation,
     )
     return profile_report, _modelo_profile_refusal(
@@ -1040,6 +1041,7 @@ def _missing_calculation_bindings_for_readiness(
             modelo=modelo,
             filing_year=int(snapshot.filing_year),
             period=period.registry_token,
+            operation=operation,
         )
     }
     try:

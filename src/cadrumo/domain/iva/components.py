@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from pydantic import Field, ValidationInfo, model_validator
 
@@ -88,6 +88,7 @@ class IvaComponentPresence(_IvaRegistryToken):
     """Registry-projected component-presence token."""
 
     @classmethod
+    @override
     def _token_label(cls) -> str:
         return "IVA component-presence token"
 
@@ -96,6 +97,7 @@ class IvaRetencionExpectation(_IvaRegistryToken):
     """Registry-projected retención-expectation token."""
 
     @classmethod
+    @override
     def _token_label(cls) -> str:
         return "IVA retención-expectation token"
 
@@ -104,6 +106,7 @@ class IvaRetencionRole(_IvaRegistryToken):
     """Registry-projected retención-role token."""
 
     @classmethod
+    @override
     def _token_label(cls) -> str:
         return "IVA retención-role token"
 
@@ -112,6 +115,7 @@ class IvaKindApplicability(_IvaRegistryToken):
     """Registry-projected category/kind applicability token."""
 
     @classmethod
+    @override
     def _token_label(cls) -> str:
         return "IVA kind-applicability token"
 

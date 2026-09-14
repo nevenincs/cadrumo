@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Mapping
+from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, Protocol
 
 from pydantic import BeforeValidator, Field, model_validator
 
@@ -12,10 +14,21 @@ from cadrumo.core.identity.continuidad import ContinuidadId
 
 from .errors import RegistryValidationError
 from .ids import RevisionId
+from .period_selector_overlap import period_selectors_overlap
 from .schema_base import LegalRefs, RegistryModel, SourceRefs, coerce_enum_member
+from .schema_references import PeriodSelector, SourceReference
 
 if TYPE_CHECKING:
     from .schema import ModeloDefinition
+
+
+class EndpointSourceContext(Protocol):
+    """Minimum typed endpoint surface required by source-context validation."""
+
+    id: RevisionId
+    valid_from: date
+    valid_to: date | None
+    period_selector: PeriodSelector
 
 
 class CasillaStructuralKind(StrEnum):
@@ -60,6 +73,33 @@ class CasillaStructuralSuccession(RegistryModel):
                 "structural succession requires legal and official evidence for both endpoints"
             )
         return self
+
+
+def endpoint_source_context_failures(
+    prefix: str,
+    *,
+    endpoint: EndpointSourceContext,
+    enrolled_source_ids: tuple[str, ...],
+    source_ids: SourceRefs,
+    sources: Mapping[str, SourceReference],
+) -> tuple[str, ...]:
+    """Validate exact source membership and temporal scope for one endpoint."""
+    enrolled = set(enrolled_source_ids)
+    failures: list[str] = []
+    for source_id in source_ids:
+        source = sources.get(source_id)
+        if source is None:
+            continue
+        scope = f"{prefix} endpoint {endpoint.id!r} source {source_id!r}"
+        if source_id not in enrolled:
+            failures.append(f"{scope} is not enrolled for this modelo or endpoint edition")
+        if not source.applies_across(endpoint.valid_from, endpoint.valid_to):
+            failures.append(f"{scope} does not apply within the endpoint edition's validity window")
+        if source.period_selector is not None and not period_selectors_overlap(
+            source.period_selector, endpoint.period_selector
+        ):
+            failures.append(f"{scope} does not apply to the endpoint edition's filing periods")
+    return tuple(failures)
 
 
 def structural_succession_failures(modelo: ModeloDefinition) -> tuple[str, ...]:

@@ -912,6 +912,7 @@ class ModeloExportExecutor:
         result = export_modelo_revision(
             command,
             workflow_profile=workflow_profile,
+            operation=context.authority_operation,
             export_ports=self._export_ports_factory(
                 bucket_id=require_active_bucket_id(),
                 m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
@@ -1122,7 +1123,10 @@ class ModeloWorkAmendExecutor:
             detail_rows=(None if payload.detail_rows is None else tuple(row.to_row() for row in payload.detail_rows)),
             reason=payload.reason,
             actor=request.payload.actor,
-            ports=self._amendment_action_ports_factory(bucket_id=require_active_bucket_id()),
+            ports=self._amendment_action_ports_factory(
+                bucket_id=require_active_bucket_id(),
+                operation=context.authority_operation,
+            ),
         )
         await context.events.effect(OperationEffect.UPDATED)
         return str(record.filing_record_id)

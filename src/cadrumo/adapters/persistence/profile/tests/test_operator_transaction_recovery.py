@@ -35,11 +35,7 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
-from cadrumo.application.auth.operator import (
-    configure_operator_auth,
-    logout_operator_auth,
-    reset_operator_auth,
-)
+from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_cleanup import build_auth_cleanup_intent
 from cadrumo.application.auth.operator_results import (
     AuthCleanupInProgressError,
@@ -47,8 +43,8 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session, storage_state_paths
+from cadrumo.application.auth.tests._operator_projection_support import configure_operator_auth
 from cadrumo.application.user_profile.profile_keys import profile_keys
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.workflow.persistence import WorkflowStateRepository, workflow_state_repository
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.auth_provider import AuthProviderKind
@@ -70,7 +66,6 @@ _STARTED_AT = datetime(2026, 7, 16, 17, 0, tzinfo=UTC)
 
 
 def _create_profile(*, provider: str) -> None:
-    assert WIZARD_FLOWS
     assert profile_keys()
     with open_test_profile_session(_BUCKET_ID):
         register_minimal_profile(profile_id=_BUCKET_ID)

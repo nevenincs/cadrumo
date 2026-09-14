@@ -149,7 +149,11 @@ def prepare_calculation(
     )
     from .profile_readiness_gate import require_profile_ready_for_work_unit
 
-    require_profile_ready_for_work_unit(work_unit)
+    require_profile_ready_for_work_unit(
+        work_unit,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
+    )
     # Calculate needs the amount-computing rung, not the filing rung: this
     # prepares an in-memory calculation and renders no fichero or export layout.
     snapshot = _resolve_registry_snapshot_for_work_unit(
@@ -215,6 +219,8 @@ def prepare_calculation(
     required_profile_bindings = _resolved_required_profile_binding_values(
         work_unit=work_unit,
         registry_revision=snapshot.revision,
+        profile_decode_context=operation.profile_decode_context(),
+        operation=operation,
     )
     if required_profile_bindings:
         channels = _dataclass_replace(
@@ -264,13 +270,16 @@ def _resolved_binding_ids_for_required_binding_gate(
     return tuple(sorted(resolved.difference(unresolved_relation_targets).difference(unresolved_bindings)))
 
 
-def _iva_regime_for_bucket(bucket_id: str) -> IVARegime | None:
+def _iva_regime_for_bucket(bucket_id: str, *, operation: PinnedAuthorityOperation) -> IVARegime | None:
     from ...domain.user_profile.errors import ProfileNotFoundError
     from ..user_profile.profile_record_repository import ProfileRecordRepository
     from ..user_profile.projections import record_to_path_values
 
     try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        record = ProfileRecordRepository.for_current_session(
+            bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ).load(bucket_id)
     except ProfileNotFoundError:
         return None
     value = record_to_path_values(record).get("iva.regime")
@@ -318,7 +327,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     )
     if not ledger_preflight_sources:
         return
-    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
+    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id, operation=operation)
     if iva_regime is not None and iva_regime == iva_regime_simplificado_token():
         return
     from ..ledger.preflight import preflight_ledger_tax_readiness

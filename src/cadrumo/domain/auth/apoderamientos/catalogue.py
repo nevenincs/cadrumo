@@ -8,15 +8,16 @@ operator-supplied tokens with :func:`parse_scope_tokens`.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, TypeGuard
 
-from pydantic import BaseModel, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
     from ...calculations.registry.authority import PinnedAuthorityOperation
+    from ...calculations.registry.runtime_catalogues import ApoderamientoScopeRecord
 
 ALL_TOKEN = "ALL"
 
@@ -72,26 +73,30 @@ class ApoderamientosCatalogue(BaseModel):
         return None
 
 
+def _is_scope_mapping(value: object) -> TypeGuard[Mapping[str, ApoderamientoScopeRecord]]:
+    """Narrow one addressed authority component to typed scope records."""
+    from ...calculations.registry.runtime_catalogues import ApoderamientoScopeRecord
+
+    if not isinstance(value, Mapping):
+        return False
+    try:
+        TypeAdapter(dict[str, ApoderamientoScopeRecord]).validate_python(value)
+    except ValidationError:
+        return False
+    return True
+
+
 def load_default_catalogue(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ApoderamientosCatalogue:
     """Adapt the scope catalogue from the caller's pinned published authority.
 
     Returns:
         The validated :class:`ApoderamientosCatalogue` with all registered scopes.
     """
-    if operation is None:
-        raise UnknownScopeError(
-            translated_message="errors.refused.refused_apoderado_unknown_scope",
-            context={"validation_rule": "explicit_pinned_authority_operation_required"},
-        )
-    from ...calculations.registry.runtime_catalogues import ApoderamientoScopeRecord
-
     loaded = operation.runtime_catalogue("apoderamientos_scopes")
-    if not isinstance(loaded, Mapping) or not all(
-        isinstance(value, ApoderamientoScopeRecord) for value in loaded.values()
-    ):
+    if not _is_scope_mapping(loaded):
         raise UnknownScopeError(
             translated_message="errors.refused.refused_apoderado_unknown_scope",
             context={"validation_rule": "invalid_indexed_authority_component"},

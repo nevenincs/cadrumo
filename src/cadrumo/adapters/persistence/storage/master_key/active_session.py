@@ -35,7 +35,7 @@ import atexit as _atexit
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import TypeGuard
+from typing import TypeGuard, override
 
 from .....application.auth.operator_probe_ports import ActiveProfileSessionPresencePort
 from .....core.logging import get_logger
@@ -189,6 +189,7 @@ def has_active_bucket_session() -> bool:
 class ActiveProfileSessionPresenceAdapter(ActiveProfileSessionPresencePort):
     """Expose active-session presence through the application probe contract."""
 
+    @override
     def is_bound(self) -> bool:
         """Return the current active bucket-session presence."""
         return has_active_bucket_session()

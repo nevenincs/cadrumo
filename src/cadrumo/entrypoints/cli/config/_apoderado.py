@@ -23,6 +23,7 @@ def _service(ctx: typer.Context) -> ApoderadoService:
     """Construct the apoderado service from the root's explicit composition."""
     from ....application.auth.apoderado_service import ApoderadoService
     from ....core.config import load_settings
+    from ..state_projection_support import authority_operation
 
     state = cast("dict[str, object]", ctx.ensure_object(dict))
     try:
@@ -32,7 +33,11 @@ def _service(ctx: typer.Context) -> ApoderadoService:
         )
     except KeyError as error:
         raise InternalInvariantError("apoderado configuration persistence has not been composed") from error
-    return ApoderadoService(repository_factory=repository_factory, settings=load_settings())
+    return ApoderadoService(
+        repository_factory=repository_factory,
+        operation=authority_operation(ctx),
+        settings=load_settings(),
+    )
 
 
 def apoderado_scopes_list(

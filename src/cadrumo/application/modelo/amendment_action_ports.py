@@ -20,6 +20,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +38,7 @@ class AmendmentActionPorts:
 class AmendmentActionPortsFactory(Protocol):
     """Construct the amendment authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> AmendmentActionPorts:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> AmendmentActionPorts:
         """Return the complete amendment bundle for ``bucket_id``."""
         ...
 

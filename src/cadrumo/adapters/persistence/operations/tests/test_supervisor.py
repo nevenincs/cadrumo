@@ -80,6 +80,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.access_gate.errors import AeatLiveReadNotEnabledError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.errors.error_codes import get_registered_error_code
@@ -929,6 +930,7 @@ def _supervisor(
     cleanup_timeout: timedelta | None = timedelta(minutes=1),
 ) -> OperationSupervisor:
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=journal,
         event_stream=journal,

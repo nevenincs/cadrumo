@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_temporal import binding_applies_to_period
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.formula_initial_values import (
@@ -15,9 +14,6 @@ from ...domain.calculations.registry.formula_initial_values import (
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
 from ...domain.calculations.registry.schema import ModeloRevision
-
-if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 # fact-relocation: selected M202 relation and absent-by-design defaults are
@@ -28,7 +24,7 @@ def _registry_relation_prefill_binding_ids(
     modelo: str,
     filing_year: int,
     period: str,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[BindingId]:
     """Resolve period-default relation slots for one selected filing scope.
 
@@ -38,15 +34,6 @@ def _registry_relation_prefill_binding_ids(
     fallback relation slot.
     """
     try:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return _registry_relation_prefill_binding_ids(
-                    revision,
-                    modelo=modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    operation=indexed_operation,
-                )
         selected_revision = operation.revision_for_context(
             modelo,
             filing_year=filing_year,
@@ -73,6 +60,7 @@ def relation_prefill_period_zero_default_binding_ids(
     modelo: str,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> frozenset[BindingId]:
     """Resolve relation-prefill default binding identities from the registry."""
     return _registry_relation_prefill_binding_ids(
@@ -80,6 +68,7 @@ def relation_prefill_period_zero_default_binding_ids(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
+        operation=operation,
     )
 
 
@@ -89,6 +78,7 @@ def modelo_202_first_period_previous_payment_defaults(
     modelo: str,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> dict[BindingId, Decimal]:
     """Resolve relation-prefill default values from the selected registry revision."""
     default_binding_ids = relation_prefill_period_zero_default_binding_ids(
@@ -96,6 +86,7 @@ def modelo_202_first_period_previous_payment_defaults(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
+        operation=operation,
     )
     if not default_binding_ids:
         return {}

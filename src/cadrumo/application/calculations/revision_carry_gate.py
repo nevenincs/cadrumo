@@ -31,12 +31,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...core.errors.hierarchy import InternalInvariantError
-from ...domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    ValidatedRegistryAuthority,
-    bundled_indexed_authority,
-)
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
@@ -53,14 +48,13 @@ class RevisionCarryOutcome:
 def revision_carry_outcome(
     snapshot_ref: RegistrySnapshotRef,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RevisionCarryOutcome:
     """Return the single law-determined decision for a carried revision stamp.
 
-    Resolves through the supplied pinned operation or validated registry
-    authority. When neither is supplied, one indexed operation is opened at
-    this composition boundary; no eager authority graph is consulted.
+    Resolves through the caller-owned pinned operation. The operation must stay
+    leased for the complete workflow so the re-confirmation cannot cross an
+    authority-generation boundary.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
       observations must be re-confirmable against the law-determined revision;
@@ -72,36 +66,21 @@ def revision_carry_outcome(
     Args:
         snapshot_ref: Required complete registry coordinate persisted with the
             source value.
-        authority: Existing validated authority for callers evaluating an
-            explicit registry root.
-        operation: Existing generation-pinned indexed operation. It takes
-            precedence over ``authority`` when supplied.
+        operation: Existing generation-pinned indexed operation owned by the
+            enclosing workflow.
 
     Returns:
         A typed outcome containing the selected revision when resolution succeeds,
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
-    if operation is None and authority is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return revision_carry_outcome(snapshot_ref, operation=indexed_operation)
     try:
-        if operation is not None:
-            selected_revision_id = str(
-                operation.revision_for_context(
-                    str(snapshot_ref.modelo),
-                    filing_year=int(snapshot_ref.modelo_year),
-                    period=str(snapshot_ref.period),
-                ).id
-            )
-        elif authority is not None:
-            inspection = authority.inspect_revision(
+        selected_revision_id = str(
+            operation.revision_for_context(
                 str(snapshot_ref.modelo),
                 filing_year=int(snapshot_ref.modelo_year),
                 period=str(snapshot_ref.period),
-            )
-            selected_revision_id = inspection.revision_id
-        else:
-            raise InternalInvariantError("revision carry selection requires an authority operation")
+            ).id
+        )
     except Exception as exc:
         return RevisionCarryOutcome(
             refused=True,

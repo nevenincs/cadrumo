@@ -48,6 +48,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -381,6 +382,7 @@ class LLMRunTelemetryDiagnosticsAdapter(DiagnosticRunTelemetryPort):
     def __init__(self, recorder: LLMRunTelemetryRecorder) -> None:
         self._recorder = recorder
 
+    @override
     def load_records(
         self,
         *,

@@ -65,6 +65,7 @@ def apply_profile_fact_changes(
     changes: tuple[UserProfileFact, ...],
     door: ProfileFactWriteDoor,
     expected_record: UserProfileRecord | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> UserProfileRecord:
     """Publish an exact fact replacement through the active session.
 
@@ -97,7 +98,10 @@ def apply_profile_fact_changes(
     from .profile_record_repository import ProfileRecordRepository
     from .validation import reject_invalid_profile_facts
 
-    repository = ProfileRecordRepository.for_current_session(profile_id)
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
     current = expected_record if expected_record is not None else repository.load(profile_id)
     profile_context = repository.session.profile_decode_context
     changed_paths = {fact.path for fact in changes}
@@ -164,6 +168,7 @@ def apply_manager_profile_field_mutation(
         changes=(UserProfileFact(path=path, value=value.strip() or None),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
         expected_record=current,
+        profile_decode_context=profile_decode_context,
     )
 
 

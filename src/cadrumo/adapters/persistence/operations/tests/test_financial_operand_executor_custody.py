@@ -57,6 +57,7 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -181,6 +182,7 @@ def _supervisor(
 ) -> OperationSupervisor:
     """Construct the public supervisor over the real persistence adapters."""
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=_registry(executor),
         journal=journal,
         event_stream=journal,

@@ -13,6 +13,7 @@ from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
 from ....core.identity.bucket import canonical_bucket_id
 from ....domain.auth.apoderamientos.catalogue import UnknownScopeError
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...flows.definition import FlowPage
 from ...flows.errors import FlowRunAbandonedError
 from ...flows.scripted import run_scripted_flow
@@ -48,12 +49,18 @@ def repository_factory() -> InMemoryApoderadoConfigurationRepositoryFactory:
     return InMemoryApoderadoConfigurationRepositoryFactory()
 
 
-def _service(settings: Settings) -> ApoderadoService:
+def _service(
+    settings: Settings,
+    *,
+    repository_factory: InMemoryApoderadoConfigurationRepositoryFactory | None = None,
+) -> ApoderadoService:
     """Construct the application service with its required test capability."""
-    return ApoderadoService(
-        repository_factory=InMemoryApoderadoConfigurationRepositoryFactory(),
-        settings=settings,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return ApoderadoService(
+            repository_factory=repository_factory or InMemoryApoderadoConfigurationRepositoryFactory(),
+            operation=operation,
+            settings=settings,
+        )
 
 
 class TestStatus:
@@ -250,10 +257,10 @@ class TestBucketIsolation:
         isolated_settings: Settings,
         repository_factory: InMemoryApoderadoConfigurationRepositoryFactory,
     ) -> None:
-        primary_svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
+        primary_svc = _service(isolated_settings, repository_factory=repository_factory)
         primary_svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
 
-        secondary_svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
+        secondary_svc = _service(isolated_settings, repository_factory=repository_factory)
         secondary_svc.configure(
             bucket_id=_SECONDARY_PROFILE_BUCKET_ID,
             represented_nif="87654321X",
@@ -351,7 +358,7 @@ class TestSettingsRouting:
         repository_factory: InMemoryApoderadoConfigurationRepositoryFactory,
         tmp_path: Path,
     ) -> None:
-        svc = ApoderadoService(repository_factory=repository_factory, settings=isolated_settings)
+        svc = _service(isolated_settings, repository_factory=repository_factory)
         wrong_root = tmp_path / "wrong-storage-root"
 
         with override_settings(cadrumo_local_storage_root=wrong_root, cadrumo_active_profile=_PROFILE_BUCKET_ID):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from typing import override
 
 from ..operator_probe_ports import (
     ActiveProfileSessionPresencePort,
@@ -26,6 +27,7 @@ class FakeActiveProfileSessionPresence(ActiveProfileSessionPresencePort):
 
     bound: bool = True
 
+    @override
     def is_bound(self) -> bool:
         return self.bound
 
@@ -42,6 +44,7 @@ class FakeCertificateHealthProbe(CertificateHealthProbePort):
     )
     evaluator: Callable[[CertificateHealthProbeRequest], CertificateHealthProbeResult] | None = None
 
+    @override
     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
         if self.evaluator is not None:
             return self.evaluator(request)
@@ -55,6 +58,7 @@ class FakeClaveIdentityProbe(ClaveIdentityProbePort):
     result_by_raw: dict[str, ClaveIdentityProbeResult] = field(default_factory=dict)
     default_kind: str = "DNI"
 
+    @override
     def classify(self, raw: str) -> ClaveIdentityProbeResult:
         if raw in self.result_by_raw:
             return self.result_by_raw[raw]

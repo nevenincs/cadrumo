@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from typing import override
 
 from ....application.modelo.workflow_gate_ports import (
     WorkflowGateDraftRepositoryProtocol,
@@ -25,6 +26,7 @@ class WorkflowGateDraftRepositoryAdapter(WorkflowGateDraftRepositoryProtocol):
         """Bind an already-composed draft repository."""
         self._repository = repository
 
+    @override
     def save(self, payload: ModeloDraft, /) -> None:
         """Persist an approved draft and translate storage failures."""
         try:
@@ -40,6 +42,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         """Bind an already-composed submission repository."""
         self._repository = repository
 
+    @override
     def load(self, record_id: str, /) -> ModeloPresentado | None:
         """Load one historical submission and translate storage failures."""
         try:
@@ -47,6 +50,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         except (StorageError, OSError) as exc:
             raise WorkflowGatePersistenceError("submission_load") from exc
 
+    @override
     def iter_submissions(self) -> Iterator[ModeloPresentado]:
         """Yield historical submissions while translating iteration failures."""
         try:
@@ -54,6 +58,7 @@ class WorkflowGateSubmissionRepositoryAdapter(WorkflowGateSubmissionRepositoryPr
         except (StorageError, OSError) as exc:
             raise WorkflowGatePersistenceError("submission_iter") from exc
 
+    @override
     def list_submission_ids(self) -> tuple[str, ...]:
         """List historical submission ids and translate storage failures."""
         try:

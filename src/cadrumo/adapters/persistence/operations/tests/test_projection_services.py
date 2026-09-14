@@ -95,6 +95,7 @@ from cadrumo.application.operations.registry import (
     operation_public_schema_reference,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
     OperationCancellation,
@@ -731,6 +732,7 @@ def test_response_control_requires_separately_bound_runtime_bearer(tmp_path: Pat
         actor_ref="operator:reviewer",
     )
     supervisor = OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=repository,
         event_stream=repository,
@@ -778,6 +780,7 @@ def test_response_authority_is_unavailable_after_process_restart(tmp_path: Path)
     )
     authority = restarted_process.bind(request, pending, capability, clock=lambda: _NOW)
     supervisor = OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=repository,
         event_stream=repository,
@@ -835,6 +838,7 @@ def test_public_response_service_consumes_runtime_authority(tmp_path: Path, resp
         broker.bind(control, pending, capability, clock=lambda: _NOW), UnavailableOperationSecureResponseAuthority
     )
     supervisor = OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=repository,
         event_stream=repository,
@@ -877,6 +881,7 @@ def test_cancellation_and_detach_delegate_to_real_supervisor_ports(tmp_path: Pat
         leases = OperationLeaseFilesystemRepository(storage_root=root)
         _write(root, repository, _running_snapshot(registry))
         supervisor = OperationSupervisor(
+            authority_operation=unread_authority_operation(),
             registry=registry,
             journal=repository,
             event_stream=repository,

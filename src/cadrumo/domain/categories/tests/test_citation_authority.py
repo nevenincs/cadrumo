@@ -34,6 +34,7 @@ from ....tests.aeat_literal_fixtures import (
     CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY,
     CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
 )
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -57,7 +58,7 @@ def _citation(url: str) -> CategoryCitation:
     )
 
 
-def test_shipped_profiles_still_load_under_the_constraint() -> None:
+def test_shipped_profiles_still_load_under_the_constraint(operation: PinnedAuthorityOperation) -> None:
     """Every shipped citation satisfies the origin rule.
 
     SUPPORTING by construction -- it cannot fail while the shipped data is
@@ -65,7 +66,7 @@ def test_shipped_profiles_still_load_under_the_constraint() -> None:
     keep: it fails the moment a future citation cites a non-official origin,
     which is exactly when an author needs to be told.
     """
-    profiles = load_category_profiles()
+    profiles = load_category_profiles(operation=operation)
     citations = [c for p in profiles.values() for c in p.proportionality.citations]
 
     # Gated on the property, never on a tally. A citation count encodes the

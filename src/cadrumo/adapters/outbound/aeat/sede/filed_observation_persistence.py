@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, TypeVar, override
 
 from .....adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -67,6 +67,7 @@ from .observation_store import FiledDeclaracionObservationStore
 
 if TYPE_CHECKING:
     from .....core.secure_object_write import SecureObjectWrite
+    from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 _T = TypeVar("_T")
@@ -95,10 +96,12 @@ def _call_adapter(
 class FiledObservationParserAdapter(FiledObservationParserPort):
     """Adapt receipt parsing and Sede CSV extraction to application types."""
 
+    @override
     def parse_justificante(self, body: bytes) -> Justificante:
         """Parse receipt bytes without creating a plaintext temporary file."""
         return _call_adapter("parse_justificante", lambda: parse_justificante_bytes(body))
 
+    @override
     def csv_from_source_url(self, source_url: str) -> str:
         """Extract the independent AEAT CSV witness from a source URL."""
         return _call_adapter("csv_from_source_url", lambda: str(extract_csv_from_url(source_url)))
@@ -107,13 +110,19 @@ class FiledObservationParserAdapter(FiledObservationParserPort):
 class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
     """Adapt Sede observation projections to registry-grounded application ports."""
 
+    def __init__(self, *, operation: PinnedAuthorityOperation) -> None:
+        """Bind the generation-pinned operation used by every transformation."""
+        self._operation = operation
+
+    @override
     def registry_observation(self, observation: FiledObservationProtocol) -> RegistryModeloObservation:
         """Build the registry-grounded numeric projection."""
         return _call_adapter(
             "registry_observation",
-            lambda: registry_observation_from_filed_declaration(observation),
+            lambda: registry_observation_from_filed_declaration(observation, operation=self._operation),
         )
 
+    @override
     def non_numeric_casillas(
         self,
         observation: FiledObservationProtocol,
@@ -121,7 +130,7 @@ class FiledDeclarationTransformationAdapter(FiledDeclarationTransformationPort):
         """Return non-numeric observed casillas for the operator projection."""
         return _call_adapter(
             "non_numeric_casillas",
-            lambda: non_numeric_observed_casillas(observation),
+            lambda: non_numeric_observed_casillas(observation, operation=self._operation),
         )
 
 
@@ -132,10 +141,12 @@ class FiledObservationStoreAdapter(FiledObservationPersistencePort):
         """Bind one logical output root and one secure-object backend."""
         self._store = FiledDeclaracionObservationStore(Path(root), objects=objects)
 
+    @override
     def persist_observation(self, observation: FiledObservationProtocol) -> Path:
         """Persist one encrypted observation manifest."""
         return _call_adapter("persist_observation", lambda: self._store.persist_observation(observation))
 
+    @override
     def persist_artefact(
         self,
         observation_key: tuple[str, int, Period, str],
@@ -148,6 +159,7 @@ class FiledObservationStoreAdapter(FiledObservationPersistencePort):
             lambda: self._store.persist_artefact(observation_key, artefact, body),
         )
 
+    @override
     def load_artefact(self, storage_ref: str) -> bytes:
         """Load and verify one encrypted artefact by its content address."""
         return _call_adapter("load_artefact", lambda: self._store.load_artefact(storage_ref))
@@ -160,10 +172,12 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
         """Bind one already-composed repository instance."""
         self._repository = repository
 
+    @override
     def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
         """Load one existing calculation-observation envelope."""
         return _call_adapter("load_calculation_observation", lambda: self._repository.load_observation(modelo, period))
 
+    @override
     def prepare_observation_envelope(
         self,
         observation: RegistryModeloObservation,
@@ -187,6 +201,7 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
             ),
         )
 
+    @override
     def save(self, payload: ObservationEnvelopePayload) -> None:
         """Persist one prepared calculation-observation envelope."""
         _call_adapter("save_calculation_observation", lambda: self._repository.save(payload))
@@ -199,6 +214,7 @@ class IvaHistoryRepositoryAdapter(FiledIvaHistoryRepositoryPort):
         """Bind one already-composed repository instance."""
         self._repository = repository
 
+    @override
     def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
         """Reload one persisted IVA history period."""
         return _call_adapter("load_iva_history_period", lambda: self._repository.load_period(period))
@@ -227,6 +243,7 @@ def _history_repository(value: FiledIvaHistoryRepositoryPort) -> IvaCompensation
 class IvaObservationPersistenceAdapter(FiledIvaObservationPersistencePort):
     """Adapt the canonical atomic Modelo 303/history co-commit operation."""
 
+    @override
     def persist(
         self,
         *,
@@ -264,14 +281,17 @@ class JustificanteRepositoryAdapter(JustificanteRepositoryProtocol):
         """Bind one already-composed repository instance."""
         self._repository = repository
 
+    @override
     def load(self, csv: str, /) -> Justificante | None:
         """Load one receipt by CSV."""
         return _call_adapter("load_justificante", lambda: self._repository.load(csv))
 
+    @override
     def save(self, justificante: Justificante, /) -> None:
         """Persist one parsed receipt."""
         _call_adapter("save_justificante", lambda: self._repository.save(justificante))
 
+    @override
     def iter_justificantes(self) -> Iterator[Justificante]:
         """Yield all receipts after translating scan failures."""
         records = _call_adapter("iter_justificantes", lambda: tuple(self._repository.iter_justificantes()))
@@ -286,30 +306,37 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
         self._repository = repository
 
     @property
+    @override
     def bucket_id(self) -> str | None:
         """Return the repository's bucket binding."""
         return self._repository.bucket_id
 
+    @override
     def exists(self) -> bool:
         """Return whether the filing catalogue exists."""
         return _call_adapter("filing_exists", self._repository.exists)
 
+    @override
     def load(self) -> ModeloRecordCatalogue:
         """Load the filing catalogue."""
         return _call_adapter("filing_load", self._repository.load)
 
+    @override
     def load_revisioned(self) -> tuple[ModeloRecordCatalogue, str]:
         """Load the filing catalogue and its revision marker."""
         return _call_adapter("filing_load_revisioned", self._repository.load_revisioned)
 
+    @override
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
         """Persist the filing catalogue."""
         _call_adapter("filing_save", lambda: self._repository.save(catalogue))
 
+    @override
     def mutate(self, mutation: Callable[[ModeloRecordCatalogue], ModeloRecordCatalogue]) -> ModeloRecordCatalogue:
         """Apply one guarded filing-catalogue mutation."""
         return _call_adapter("filing_mutate", lambda: self._repository.mutate(mutation))
 
+    @override
     def to_secure_object_write(
         self,
         catalogue: ModeloRecordCatalogue,
@@ -325,6 +352,7 @@ class FilingRepositoryAdapter(ModeloRecordCatalogueRepositoryProtocol):
             ),
         )
 
+    @override
     def save_with_secure_object_writes(
         self,
         catalogue: ModeloRecordCatalogue,
@@ -350,18 +378,22 @@ class BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
         """Bind one already-composed repository instance."""
         self._repository = repository
 
+    @override
     def exists(self) -> bool:
         """Return whether the event catalogue exists."""
         return _call_adapter("bucket_events_exists", self._repository.exists)
 
+    @override
     def load(self) -> BucketEventHistoryCatalogue:
         """Load the event catalogue."""
         return _call_adapter("bucket_events_load", self._repository.load)
 
+    @override
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist the event catalogue."""
         _call_adapter("bucket_events_save", lambda: self._repository.save(catalogue))
 
+    @override
     def to_secure_object_write(
         self,
         catalogue: BucketEventHistoryCatalogue,
@@ -397,6 +429,7 @@ class BaselineImportAdapter(FiledBaselineImportPort):
         self._justificante_repository = justificante_repository
         self._observation_repository = observation_repository
 
+    @override
     def import_source(
         self,
         source: ExternalFilingBaselineSource,

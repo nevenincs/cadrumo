@@ -53,6 +53,7 @@ from .....application.operations.interactions import OperationActorReference
 from .....application.operations.models import OperationRequest, OperationRevision
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationRegistry
+from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....application.user_profile.censal_observation import (
     CensalObservation,
     CensalObservationAddress,
@@ -148,6 +149,7 @@ def _runtime(
         journal = OperationJournalRepository(storage_root=root / "operations")
         with profile_custody_secure_object_repository(profile_id=profile_id, dek=b"", root=root) as objects:
             services = compose_operation_services(
+                authority_operation=unread_authority_operation(),
                 registry=registry,
                 journal=journal,
                 reader=journal,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import TypeVar
+from typing import TypeVar, override
 
 from .....application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from .....application.auth.operator_scope_ports import OperatorScopePorts
@@ -63,10 +63,12 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
         self._walk_timeout_ms = walk_timeout_ms
 
     @property
+    @override
     def walk_timeout_ms(self) -> int:
         """Return the timeout resolved by the outer Sede composition."""
         return self._walk_timeout_ms
 
+    @override
     async def walk(self, *, modelo: str, ejercicio: int) -> tuple[FiledRegisterDeclarationProtocol, ...]:
         """Read one register pair and expose its structural application view."""
         return await _call_adapter(
@@ -74,6 +76,7 @@ class _SedeFiledDataRegisterPort(FiledDataRegisterPort):
             lambda: self._register.walk(modelo=modelo, ejercicio=ejercicio),
         )
 
+    @override
     async def capture_observation(
         self,
         declaration: FiledRegisterDeclarationProtocol,
@@ -103,6 +106,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         self._operator_scope_ports = operator_scope_ports
 
     @asynccontextmanager
+    @override
     async def open_register(self, *, operation: str) -> AsyncIterator[FiledDataRegisterPort]:
         """Open one browser-backed register for the complete operation scope."""
         try:
@@ -128,6 +132,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         except Exception as exc:
             raise _translate_adapter_error("filed_register_open", exc) from exc
 
+    @override
     async def discover_availability(
         self,
         *,
@@ -158,6 +163,7 @@ class SedeFiledDataCapturePort(FiledDataCapturePort):
         except Exception as exc:
             raise _translate_adapter_error("filed_register_discovery", exc) from exc
 
+    @override
     async def capture_source_observations(
         self,
         revision: ModeloRevision,

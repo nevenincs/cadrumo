@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -595,6 +595,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
     class Borrador100SnapshotAdapter(SecureSnapshotRepository[Borrador100Snapshot]):
         """Bind the generic secure store while retaining borrador chronology."""
 
+        @override
         def exists(self, snapshot_id: str) -> bool:
             """Check snapshot presence while translating storage failures inward."""
             try:
@@ -602,6 +603,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_exists") from exc
 
+        @override
         def load(self, snapshot_id: str) -> Borrador100Snapshot:
             """Load one snapshot while translating storage failures inward."""
             try:
@@ -609,6 +611,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_load") from exc
 
+        @override
         def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
             """List snapshots while translating storage failures inward."""
             try:
@@ -618,6 +621,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_list") from exc
 
+        @override
         def save(self, snapshot: Borrador100Snapshot) -> None:
             """Persist one snapshot while translating storage failures inward."""
             try:
@@ -807,7 +811,11 @@ def build_active_work_lifecycle_ports() -> WorkLifecyclePorts:
     return build_work_lifecycle_ports(bucket_id=require_active_bucket_id())
 
 
-def build_amendment_action_ports(*, bucket_id: str) -> AmendmentActionPorts:
+def build_amendment_action_ports(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> AmendmentActionPorts:
     """Compose every persisted authority required by one Modelo amendment."""
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
@@ -821,7 +829,10 @@ def build_amendment_action_ports(*, bucket_id: str) -> AmendmentActionPorts:
 
     normalized_bucket_id = bucket_id.strip()
     objects = secure_object_repository_for_bucket(normalized_bucket_id)
-    export_identity = resolve_export_identity(bucket_id=normalized_bucket_id)
+    export_identity = resolve_export_identity(
+        bucket_id=normalized_bucket_id,
+        operation=operation,
+    )
     taxpayer_tax_id = export_identity[0].tax_id if export_identity is not None else None
     return AmendmentActionPorts(
         work_unit_repository=WorkUnitCatalogueRepository(
@@ -994,6 +1005,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         def __init__(self, register: DeclaracionesRegisterSession) -> None:
             self._register = register
 
+        @override
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
             try:
                 rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
@@ -1010,6 +1022,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         """Adapt the browser register lifecycle to the application port."""
 
         @asynccontextmanager
+        @override
         async def open_register(self, session: AeatSession, *, settings: Settings):
             try:
                 async with (

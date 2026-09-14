@@ -40,7 +40,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
@@ -170,9 +170,13 @@ def iva_compensation_period_key(period: Period) -> str:
     return f"303:{filing_year}:{period.registry_token}"
 
 
-def require_iva_compensation_period_coordinates_current(state: IvaCompensationPeriodState) -> None:
+def require_iva_compensation_period_coordinates_current(
+    state: IvaCompensationPeriodState,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse persisted compensation state whose registry coordinate is stale."""
-    outcome = revision_carry_outcome(state.registry_snapshot_ref)
+    outcome = revision_carry_outcome(state.registry_snapshot_ref, operation=operation)
     if outcome.refused:
         raise IvaCompensationModeloError(
             "persisted IVA compensation period state registry coordinate cannot be re-confirmed: "
@@ -187,11 +191,8 @@ _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
 def _registry_snapshot_ref_for_m303_period(
     period: Period,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshotRef:
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _registry_snapshot_ref_for_m303_period(period, operation=indexed_operation)
     revision = operation.revision_for_context(
         Modelo("303").value,
         filing_year=period.filing_year,
@@ -211,6 +212,7 @@ def seed_iva_compensation_period(
     period: Period,
     amount: Decimal,
     repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     seeded_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
     """Persist a manually declared carry-forward balance for one Modelo 303 period.
@@ -242,7 +244,7 @@ def seed_iva_compensation_period(
         provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
         filing_year=period.filing_year,
         period=period,
-        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period),
+        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period, operation=operation),
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -264,6 +266,7 @@ def correct_iva_compensation_period(
     period: Period,
     amount: Decimal,
     repository: IvaCompensationHistoryRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
     corrected_at: datetime | None = None,
 ) -> IvaCompensationPeriodState:
     """Overwrite a manually-seeded carry-forward balance for one Modelo 303 period.
@@ -304,7 +307,7 @@ def correct_iva_compensation_period(
         provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION,
         filing_year=period.filing_year,
         period=period,
-        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period),
+        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period, operation=operation),
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -328,6 +331,7 @@ def iva_compensation_state_from_observation_envelope(
     expediente_id: str | None = None,
     status: str | None = None,
     source_observation_key: str,
+    operation: PinnedAuthorityOperation,
     source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
     """Project one already-normalized M303 envelope into IVA history.
@@ -340,7 +344,7 @@ def iva_compensation_state_from_observation_envelope(
     """
     from .m303_carry_ingress import validate_normalized_m303_carry_observation_envelope
 
-    validated = validate_normalized_m303_carry_observation_envelope(envelope)
+    validated = validate_normalized_m303_carry_observation_envelope(envelope, operation=operation)
     observation = validated.observation
     values = dict(observation.casilla_values)
     period = observation.filing_period or Period.from_year_and_code(observation.filing_year, observation.period)
@@ -375,6 +379,7 @@ def persist_observation_envelope_and_iva_history(
     expediente_id: str | None = None,
     status: str | None = None,
     source_observation_key: str,
+    operation: PinnedAuthorityOperation,
     source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
     """Atomically persist one M303 envelope and its history projection.
@@ -398,6 +403,7 @@ def persist_observation_envelope_and_iva_history(
         expediente_id=expediente_id,
         status=status,
         source_observation_key=source_observation_key,
+        operation=operation,
         source_artefact_sha256=source_artefact_sha256,
     )
     observation_repository.secure_object_repository.apply_batch(
@@ -411,6 +417,8 @@ def persist_observation_envelope_and_iva_history(
 
 def iva_compensation_annual_summary_from_filed_observation(
     observation: FiledDeclaracionObservationProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationAnnualSummary:
     """Build an :class:`~application.calculations.iva_compensation_history.IvaCompensationAnnualSummary`.
 
@@ -428,7 +436,7 @@ def iva_compensation_annual_summary_from_filed_observation(
             translated_message="application.calculations.iva_compensation.errors.modelo_390_only",
             context={"modelo": observation.modelo},
         )
-    values = _decimal_casilla_values(observation)
+    values = _decimal_casilla_values(observation, operation=operation)
     last_period = _resolve_casilla_value(values, _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA) or ZERO
     generated_not_in_last = (
         _resolve_casilla_value(
@@ -512,8 +520,12 @@ def cross_check_iva_compensation_annual_summary(
     )
 
 
-def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) -> dict[CasillaId, Decimal]:
-    _validate_observed_casilla_ids(observation)
+def _decimal_casilla_values(
+    observation: FiledDeclaracionObservationProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[CasillaId, Decimal]:
+    _validate_observed_casilla_ids(observation, operation=operation)
     values: dict[CasillaId, Decimal] = {}
     for casilla in observation.casillas:
         if casilla.source_artefact_kind == "justificante_pdf":
@@ -560,12 +572,8 @@ def _iva_compensation_decimal_refusal(
 def _validate_observed_casilla_ids(
     observation: FiledDeclaracionObservationProtocol,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            _validate_observed_casilla_ids(observation, operation=indexed_operation)
-        return
     revision = operation.revision_for_context(
         observation.modelo,
         filing_year=observation.ejercicio,

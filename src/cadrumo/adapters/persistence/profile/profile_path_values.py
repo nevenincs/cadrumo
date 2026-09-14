@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import override
 
 from pydantic import ValidationError
 
@@ -21,6 +22,7 @@ class ProfilePathValuesPersistenceAdapter(ProfilePathValuesReadPort):
         """Bind the already composed, session-bound profile record authority."""
         self._repository = repository
 
+    @override
     def load_path_values(self, *, bucket_id: str) -> Mapping[str, str] | None:
         """Read one profile projection and translate persistence failures inward."""
         try:

@@ -31,7 +31,6 @@ from typing import TYPE_CHECKING
 
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -81,7 +80,7 @@ def require_persisted_revision_required_bindings_resolved(
     work_unit: WorkUnit,
     revision: CalculationRevision,
     action: str,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse saved M202 revisions whose replay payload lacks required bindings.
 
@@ -90,19 +89,11 @@ def require_persisted_revision_required_bindings_resolved(
         revision: Saved :class:`CalculationRevision` carrying binding overrides
             from the previous calculation payload.
         action: Operator action name used in the refusal message.
-        operation: Optional caller-held authority operation used to select the
-            exact generation-pinned revision.
+        operation: Caller-held authority operation used to select the exact
+            generation-pinned revision.
     """
     if str(work_unit.modelo) != Modelo("202").value:
         return
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return require_persisted_revision_required_bindings_resolved(
-                work_unit=work_unit,
-                revision=revision,
-                action=action,
-                operation=indexed_operation,
-            )
     registry_revision = operation.revision_for_context(
         str(work_unit.modelo),
         filing_year=work_unit.filing_year,
@@ -144,8 +135,8 @@ def resolved_required_profile_binding_values(
     *,
     work_unit: WorkUnit,
     registry_revision: ModeloRevision,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> dict[BindingId, Decimal]:
     """Return M202 required profile bindings even when they are not formula-consumed.
 
@@ -154,21 +145,13 @@ def resolved_required_profile_binding_values(
             required-binding profile lift applies.
         registry_revision: Registry :class:`ModeloRevision` whose required
             profile-sourced binding declarations are inspected.
-        profile_decode_context: Optional decode context from the caller-held
-            authority operation used to read the encrypted profile record.
-        operation: Optional caller-held authority operation supplying the
-            profile decode context when one is not passed explicitly.
+        profile_decode_context: Decode context from the caller-held authority
+            operation used to read the encrypted profile record.
+        operation: Caller-held authority operation used for the governed
+            revision and profile read.
     """
     if str(work_unit.modelo) != Modelo("202").value:
         return {}
-    if operation is None and profile_decode_context is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return resolved_required_profile_binding_values(
-                work_unit=work_unit,
-                registry_revision=registry_revision,
-                profile_decode_context=indexed_operation.profile_decode_context(),
-                operation=indexed_operation,
-            )
     facts = _profile_facts_for_bucket(
         work_unit.bucket_id,
         profile_decode_context=profile_decode_context,
@@ -182,14 +165,10 @@ def resolved_required_profile_binding_values(
 def _profile_facts_for_bucket(
     bucket_id: str,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[str, UserProfileFactValue] | None:
     """Load the canonical typed profile facts, or none when no profile exists."""
-    if profile_decode_context is None:
-        if operation is None:
-            raise TypeError("profile facts require a caller-held profile decode context")
-        profile_decode_context = operation.profile_decode_context()
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,

@@ -34,16 +34,14 @@ from ...domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.profile_grounding import (
     ProfileKeyGrounding,
-    build_profile_grounding_index,
 )
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.temporal import select_revision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
@@ -61,7 +59,6 @@ from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE,
 from .action_errors import ModeloProfileReadinessError
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _PROFILE_ACTIVITY_START_PATH = "censo.activity_start_date"
@@ -115,8 +112,7 @@ def _requirement_for_profile_path(
     *,
     selector: str | None = None,
     grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfilePreflightRequirement:
     """Build one requirement row for a raw (possibly row-indexed) profile path.
 
@@ -126,15 +122,9 @@ def _requirement_for_profile_path(
     this package and :class:`application.user_profile.ProfilePreflightService`
     both route through.
     """
-    if profile_decode_context is not None:
-        schema = profile_decode_context.schema
-    elif authority is not None:
-        schema = authority.profile_schema()
-    else:
-        raise TypeError("profile requirement resolution requires a ProfileDecodeContext")
     return build_profile_preflight_requirement(
         path,
-        schema=schema,
+        schema=profile_decode_context.schema,
         selector=selector,
         grounding_index=grounding_index,
     )
@@ -232,16 +222,9 @@ def _validation_missing_requirements(
     record: UserProfileRecord,
     *,
     grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[ProfilePreflightRequirement, ...]:
-    if profile_decode_context is not None:
-        schema = profile_decode_context.schema
-    elif authority is not None:
-        schema = authority.profile_schema()
-    else:
-        raise TypeError("profile validation requires a ProfileDecodeContext")
-    validation = ProfileValidationService(schema=schema).validate_record(record)
+    validation = ProfileValidationService(schema=profile_decode_context.schema).validate_record(record)
     requirements: list[ProfilePreflightRequirement] = []
     for issue in validation.issues:
         if issue.severity.value != "error":
@@ -252,7 +235,6 @@ def _validation_missing_requirements(
                 path,
                 selector=issue.path or f"profile.validation.{issue.code}",
                 grounding_index=grounding_index,
-                authority=authority,
                 profile_decode_context=profile_decode_context,
             ),
         )
@@ -268,9 +250,8 @@ def modelo_work_profile_preflight_report(
     period: Period,
     revision: ModeloRevision | None = None,
     resolve_revision_when_missing: bool = True,
-    authority: ValidatedRegistryAuthority | None = None,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> ProfilePreflightReport:
     """Return the profile-field report enforced by the modelo work creation gate.
 
@@ -291,42 +272,15 @@ def modelo_work_profile_preflight_report(
             already resolved the target revision.
         resolve_revision_when_missing: Whether to resolve the registry
             revision when ``revision`` is not supplied.
-        authority: Optional :class:`ValidatedRegistryAuthority`. When
-            supplied, each missing requirement's grounding is unioned with
-            every consuming ``source = "profile"`` registry binding's
-            ``legal_refs`` and modelos. Passed by
-            :func:`require_profile_ready_for_modelo_work` (the blocking
-            work-creation gate) and by the explicitly-invoked readiness
-            surface (``app modelo readiness``)
-            alike - ``build_profile_grounding_index`` memoises its
-            registry-wide walk per authority instance, so the blocking gate's
-            per-call cost stays bounded even though it runs on every
-            filing-grade mutation.
-        profile_decode_context: Optional decode context from the caller-held
-            authority operation used to interpret the encrypted profile.
-        operation: Optional caller-held pinned authority operation used to
-            select the target revision and profile schema.
+        profile_decode_context: Decode context from the caller-held authority
+            operation used to interpret the encrypted profile.
+        operation: Caller-held pinned authority operation used to select the
+            target revision and profile schema.
 
     Returns:
         :class:`application.user_profile.ProfilePreflightReport` combining
         baseline, validation, and modelo/revision-specific missing requirements.
     """
-    if authority is None and operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return modelo_work_profile_preflight_report(
-                record=record,
-                modelo=modelo,
-                revision_id=revision_id,
-                filing_year=filing_year,
-                period=period,
-                revision=revision,
-                resolve_revision_when_missing=resolve_revision_when_missing,
-                profile_decode_context=profile_decode_context,
-                operation=indexed_operation,
-            )
-    resolved_profile_decode_context = profile_decode_context or (
-        operation.profile_decode_context() if operation is not None else None
-    )
     if revision is None and resolve_revision_when_missing:
         report = _report_for_target(
             record=record,
@@ -334,38 +288,23 @@ def modelo_work_profile_preflight_report(
             revision_id=revision_id,
             filing_year=filing_year,
             period=period,
-            authority=authority,
-            profile_decode_context=resolved_profile_decode_context,
+            profile_decode_context=profile_decode_context,
             operation=operation,
         )
     else:
-        if resolved_profile_decode_context is not None:
-            schema = resolved_profile_decode_context.schema
-        elif authority is not None:
-            schema = authority.profile_schema()
-        else:
-            raise TypeError("profile preflight requires a ProfileDecodeContext")
-        report = ProfilePreflightService(schema=schema).report(
+        report = ProfilePreflightService(schema=profile_decode_context.schema).report(
             record=record,
             modelo=modelo,
             revision_id=revision_id,
             period=period,
             revision=revision,
-            authority=authority,
         )
-    grounding_index: Mapping[str, ProfileKeyGrounding] = (
-        build_profile_grounding_index(authority)
-        if authority is not None
-        else _profile_grounding_index_for_operation(operation)
-        if operation is not None
-        else dict[str, ProfileKeyGrounding]()
-    )
+    grounding_index = _profile_grounding_index_for_operation(operation)
     baseline = tuple(
         _requirement_for_profile_path(
             path,
             grounding_index=grounding_index,
-            authority=authority,
-            profile_decode_context=resolved_profile_decode_context,
+            profile_decode_context=profile_decode_context,
         )
         for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)
     )
@@ -375,8 +314,7 @@ def modelo_work_profile_preflight_report(
             *_validation_missing_requirements(
                 record,
                 grounding_index=grounding_index,
-                authority=authority,
-                profile_decode_context=resolved_profile_decode_context,
+                profile_decode_context=profile_decode_context,
             ),
             *report.missing,
         ),
@@ -391,46 +329,24 @@ def _report_for_target(
     revision_id: RevisionId,
     filing_year: int,
     period: Period,
-    authority: ValidatedRegistryAuthority | None = None,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> ProfilePreflightReport:
     try:
-        if operation is not None:
-            revision = operation.revision_for_context(
-                modelo,
-                filing_year=filing_year,
-                period=period.registry_token,
-                revision_id=revision_id,
-            )
-        else:
-            resolved_authority = authority
-            if resolved_authority is None:
-                raise TypeError("profile preflight target resolution requires an authority operation")
-            modelo_definition = resolved_authority.modelo(modelo)
-            selected = select_revision(
-                modelo_definition,
-                filing_year=filing_year,
-                period=period.registry_token,
-            )
-            revision = selected if selected.id == revision_id else None
+        revision = operation.revision_for_context(
+            modelo,
+            filing_year=filing_year,
+            period=period.registry_token,
+            revision_id=revision_id,
+        )
     except (FileNotFoundError, RegistrySnapshotError):
         revision = None
-    if profile_decode_context is not None:
-        schema = profile_decode_context.schema
-    elif authority is not None:
-        schema = authority.profile_schema()
-    else:
-        if operation is None:
-            raise TypeError("profile preflight requires a ProfileDecodeContext")
-        schema = operation.profile_schema()
-    return ProfilePreflightService(schema=schema).report(
+    return ProfilePreflightService(schema=profile_decode_context.schema).report(
         record=record,
         modelo=modelo,
         revision_id=revision_id,
         period=period,
         revision=revision,
-        authority=authority,
     )
 
 
@@ -480,14 +396,12 @@ def _require_modelo_applicable_for_local_work(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
-    authority: ValidatedRegistryAuthority | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     refusal = modelo_applicability_refusal(
         record=record,
         bucket_id=bucket_id,
         modelo=modelo,
-        authority=authority,
         operation=operation,
     )
     if refusal is None:
@@ -504,8 +418,7 @@ def modelo_applicability_refusal(
     record: UserProfileRecord,
     bucket_id: str,
     modelo: str,
-    authority: ValidatedRegistryAuthority | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, dict[str, str]] | None:
     """Return the local-work applicability refusal for a target, if any.
 
@@ -515,15 +428,11 @@ def modelo_applicability_refusal(
         bucket_id: Active profile bucket identifier included in the refusal
             context.
         modelo: Modelo code being checked.
-        authority: Already-resolved registry authority for this application
-            operation. When omitted, applicability resolves the current
-            bundled-tree authority itself.
-        operation: Optional caller-held pinned operation for applicability
-            facts.
+        operation: Caller-held pinned operation for applicability facts.
     """
     modelo_code = modelo.strip()
     profile = projection_for_taxpayer(record)
-    applicability = derive_modelo_applicability(profile, modelo_code, authority=authority, operation=operation)
+    applicability = derive_modelo_applicability(profile, modelo_code, operation=operation)
     if applicability.verdict not in BLOCKING_APPLICABILITY_VERDICTS:
         return None
     return (
@@ -591,8 +500,7 @@ def _require_profile_filing_ready(
     filing_year: int,
     period: Period,
     grounding_index: Mapping[str, ProfileKeyGrounding] | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> None:
     """Refuse when a baseline or validation-required profile fact is missing.
 
@@ -606,7 +514,6 @@ def _require_profile_filing_ready(
         _requirement_for_profile_path(
             path,
             grounding_index=grounding_index,
-            authority=authority,
             profile_decode_context=profile_decode_context,
         )
         for path in modelo_work_profile_baseline_missing_paths(record, modelo=modelo)
@@ -615,7 +522,6 @@ def _require_profile_filing_ready(
     for requirement in _validation_missing_requirements(
         record,
         grounding_index=grounding_index,
-        authority=authority,
         profile_decode_context=profile_decode_context,
     ):
         key = (requirement.section_key, requirement.field_key)
@@ -652,7 +558,7 @@ def _load_profile_for_modelo_work(
     *,
     bucket_id: str,
     modelo: str,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[UserProfileRecord, ProfileDecodeContext]:
     try:
         repository = ProfileRecordRepository.for_current_session(
@@ -726,8 +632,8 @@ def require_profile_ready_for_modelo_work(
     filing_year: int,
     period: Period,
     enforce_applicability: bool = True,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse filing-grade modelo work when the active profile is not eligible.
 
@@ -744,23 +650,10 @@ def require_profile_ready_for_modelo_work(
     ``build_profile_grounding_index`` keeps the added per-call cost bounded on
     this hot path.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return require_profile_ready_for_modelo_work(
-                bucket_id=bucket_id,
-                modelo=modelo,
-                revision_id=revision_id,
-                filing_year=filing_year,
-                period=period,
-                enforce_applicability=enforce_applicability,
-                profile_decode_context=profile_decode_context or indexed_operation.profile_decode_context(),
-                operation=indexed_operation,
-            )
-    resolved_profile_decode_context = profile_decode_context or operation.profile_decode_context()
     record, resolved_profile_decode_context = _load_profile_for_modelo_work(
         bucket_id=bucket_id,
         modelo=modelo,
-        profile_decode_context=resolved_profile_decode_context,
+        profile_decode_context=profile_decode_context,
     )
     _require_profile_setup_complete(
         record=record,
@@ -785,7 +678,6 @@ def require_profile_ready_for_modelo_work(
         filing_year=filing_year,
         period=period,
         grounding_index=grounding_index,
-        authority=None,
         profile_decode_context=resolved_profile_decode_context,
     )
     if enforce_applicability and not applicability_first:
@@ -801,7 +693,6 @@ def require_profile_ready_for_modelo_work(
         revision_id=revision_id,
         filing_year=filing_year,
         period=period,
-        authority=None,
         profile_decode_context=resolved_profile_decode_context,
         operation=operation,
     )
@@ -822,8 +713,8 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     filing_year: int,
     period: Period,
     enforce_applicability: bool = True,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse plainly incomplete existing profiles before registry work.
 
@@ -834,22 +725,10 @@ def require_existing_profile_baseline_ready_for_modelo_work(
     Missing profiles still pass through so the later full readiness gate can
     raise the canonical missing-profile error.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return require_existing_profile_baseline_ready_for_modelo_work(
-                bucket_id=bucket_id,
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                enforce_applicability=enforce_applicability,
-                profile_decode_context=profile_decode_context or indexed_operation.profile_decode_context(),
-                operation=indexed_operation,
-            )
-    resolved_profile_decode_context = profile_decode_context or operation.profile_decode_context()
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,
-            profile_decode_context=resolved_profile_decode_context,
+            profile_decode_context=profile_decode_context,
         )
         record = repository.load(bucket_id)
     except ProfileNotFoundError:
@@ -890,8 +769,8 @@ def require_profile_ready_for_work_unit(
     work_unit: WorkUnit,
     *,
     enforce_applicability: bool = True,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    profile_decode_context: ProfileDecodeContext,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Run the profile readiness gate for an existing work unit.
 

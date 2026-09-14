@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from datetime import date
 from typing import Literal, Protocol
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from .errors import (
     AmbiguousRevisionSelectionError,
@@ -105,14 +105,47 @@ class ModeloDirectoryMetadata(RegistryModel):
         )
 
 
+class RevisionEndpointSourceEnrollment(RegistryModel):
+    """Small source-membership projection for one historical endpoint."""
+
+    revision_id: RevisionId
+    source_refs: SourceRefs
+
+
+def revision_endpoint_source_ids(modelo: ModeloDefinition, revision: ModeloRevision) -> tuple[str, ...]:
+    """Return the compiler's canonical source-enrollment basis for one endpoint."""
+    enrolled = set(modelo.source_refs) | set(revision.source_refs)
+    enrolled.update(source_ref for casilla in revision.casillas for source_ref in casilla.source_refs)
+    return tuple(sorted(enrolled))
+
+
 class ModeloRevisionDirectory(RegistryModel):
     """Point-addressed revision selection metadata for one modelo."""
 
     modelo_id: str
     modelo: ModeloDirectoryMetadata
     revisions: tuple[RevisionSelectionMetadata, ...] = Field(min_length=1)
+    endpoint_source_enrollments: tuple[RevisionEndpointSourceEnrollment, ...] = Field(min_length=1)
     pending_ejercicio_ordenes: tuple[PendingEjercicioOrden, ...] = ()
     supported_filing_years: SupportedFilingYearsCatalogue | None = None
+
+    @model_validator(mode="after")
+    def _endpoint_source_enrollment_is_complete(self) -> ModeloRevisionDirectory:
+        revision_ids = tuple(revision.id for revision in self.revisions)
+        enrollment_ids = tuple(enrollment.revision_id for enrollment in self.endpoint_source_enrollments)
+        if len(set(revision_ids)) != len(revision_ids):
+            raise ValueError("modelo directory revision metadata must declare unique revision ids")
+        if len(set(enrollment_ids)) != len(enrollment_ids) or set(enrollment_ids) != set(revision_ids):
+            raise ValueError("modelo directory endpoint source enrollment must cover every revision exactly once")
+        return self
+
+    def endpoint_source_ids(self, revision_id: RevisionId) -> tuple[str, ...]:
+        """Return the admitted source ids for one exact revision endpoint."""
+        return next(
+            enrollment.source_refs
+            for enrollment in self.endpoint_source_enrollments
+            if enrollment.revision_id == revision_id
+        )
 
     @classmethod
     def from_modelo(
@@ -127,6 +160,13 @@ class ModeloRevisionDirectory(RegistryModel):
             modelo=ModeloDirectoryMetadata.from_modelo(modelo),
             revisions=tuple(
                 RevisionSelectionMetadata.from_revision(revision)
+                for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+            ),
+            endpoint_source_enrollments=tuple(
+                RevisionEndpointSourceEnrollment(
+                    revision_id=revision.id,
+                    source_refs=revision_endpoint_source_ids(modelo, revision),
+                )
                 for revision in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
             ),
             pending_ejercicio_ordenes=modelo.pending_ejercicio_ordenes,

@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -16,6 +17,7 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
+from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.errors.hierarchy import InternalInvariantError
 from .account import (
     AccountRecomposeRequiredV1,
@@ -76,6 +78,7 @@ class TuiOperationCompositionV1:
 
     services: OperationComposedServices
     public_contracts: OperationPublicContractSetV1
+    authority_operation: PinnedAuthorityOperation
 
     def __post_init__(self) -> None:
         """Refuse a public inventory detached from the composed service graph."""
@@ -87,7 +90,8 @@ def compose_secure_profile_workbench_generation_provider(
     *,
     profile_id: str,
     profile_label: str,
-    operation_contracts: OperationPublicContractSetV1 | None = None,
+    operation: PinnedAuthorityOperation,
+    operation_contracts: OperationPublicContractSetV1,
 ) -> InstalledWorkbenchGenerationProviderV1:
     """Bind the installed provider to the current secure profile session.
 
@@ -135,10 +139,14 @@ def compose_secure_profile_workbench_generation_provider(
         )
 
     account_session()
-    ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id)
+    ledger_action_ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=profile_id,
-        profile_repository=ProfileRecordRepository.for_current_session(profile_id),
+        operation=operation,
+        profile_repository=ProfileRecordRepository.for_current_session(
+            profile_id,
+            profile_decode_context=operation.profile_decode_context(),
+        ),
         work_unit_repository=ledger_action_ports.work_unit_repository,
         calculation_repository=ledger_action_ports.calculation_repository,
         filing_repository=ModeloRecordCatalogueRepository(bucket_id=profile_id),
@@ -150,14 +158,16 @@ def compose_secure_profile_workbench_generation_provider(
         ledger_action_ports=ledger_action_ports,
         verification_repository=VerificationReportCatalogueRepository(bucket_id=profile_id),
         notification_custody_reader=_notification_custody_reader(profile_id),
-        result_casilla_reader=_declaration_result_casilla_reader(),
+        result_casilla_reader=_declaration_result_casilla_reader(operation),
         operation_contracts=operation_contracts,
-        modelo_projection_reader=_modelo_projection_reader(),
+        modelo_projection_reader=_modelo_projection_reader(operation),
     )
     return ApplicationGenerationProviderV1(door)
 
 
-def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSubmitterV1:
+def _ledger_classification_submitter(
+    profile_id: str, operation: PinnedAuthorityOperation
+) -> LedgerClassificationSubmitterV1:
     """Apply one reviewed classification patch to the operator's own ledger.
 
     The application writer owns every precondition — the row's lifecycle state,
@@ -175,7 +185,7 @@ def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSub
         from ...application.ledger.actions_manual import update_manual_transaction_fields
         from ..ledger_action_composition import compose_ledger_action_ports
 
-        ports = compose_ledger_action_ports(bucket_id=profile_id)
+        ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
 
         return update_manual_transaction_fields(
             bucket_id=profile_id,
@@ -189,7 +199,7 @@ def _ledger_classification_submitter(profile_id: str) -> LedgerClassificationSub
     return submit
 
 
-def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
+def _ledger_link_submitter(profile_id: str, operation: PinnedAuthorityOperation) -> LedgerLinkSubmitterV1:
     """Link one invoice to one transaction in the operator's own ledger.
 
     The application writer owns every precondition -- missing invoice,
@@ -205,7 +215,7 @@ def _ledger_link_submitter(profile_id: str) -> LedgerLinkSubmitterV1:
         from ..ledger_action_composition import compose_ledger_action_ports
         from .ledger.models import LedgerLinkResultV1 as _LedgerLinkResultV1
 
-        ports = compose_ledger_action_ports(bucket_id=profile_id)
+        ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
 
         result = link_manual_transaction_invoice(
             bucket_id=profile_id,
@@ -241,7 +251,9 @@ def _notification_custody_reader(profile_id: str) -> Callable[[], int]:
     return read
 
 
-def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | None]:
+def _declaration_result_casilla_reader(
+    operation: PinnedAuthorityOperation,
+) -> Callable[[str, int, Period], str | None]:
     """Name the casilla that settles one modelo revision, from the bundled registry.
 
     Resolution failures are answered with `None` rather than raised. A modelo
@@ -253,19 +265,16 @@ def _declaration_result_casilla_reader() -> Callable[[str, int, Period], str | N
 
     def read(modelo: str, filing_year: int, period: Period) -> str | None:
         from ...application.modelo.settlement_casilla import declaration_result_casilla_id
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
 
-        try:
-            with bundled_indexed_authority().operation() as operation:
-                snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
-        except Exception:
-            return None
+        snapshot = operation.snapshot(str(modelo), filing_year=filing_year, period=period.registry_token)
         return declaration_result_casilla_id(snapshot.revision)
 
     return read
 
 
-def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
+def _modelo_projection_reader(
+    operation: PinnedAuthorityOperation,
+) -> Callable[[WorkUnit], ModeloWorkspaceProjectionV1]:
     """Read one work unit's canonical workspace projection for search.
 
     The read is the same static inspection the Modelo workspace itself is
@@ -281,6 +290,7 @@ def _modelo_projection_reader() -> Callable[[WorkUnit], ModeloWorkspaceProjectio
     def project(unit: WorkUnit) -> ModeloWorkspaceProjectionV1:
         return resolve_modelo_workspace_static_inspection(
             unit,
+            operation=operation,
             output_language=_OutputLanguage(resolve_output_language()),
         ).projection
 
@@ -451,7 +461,11 @@ def compose_installed_workbench_generation_provider(
                 "workbench.profile": dependencies.profile_admission,
             }
             factories: dict[str, TuiScreenFactoryV1] = {}
-            ledger_factory = _ledger_generation_factory(current, dependencies)
+            ledger_factory = _ledger_generation_factory(
+                current,
+                dependencies,
+                operation_runtime.authority_operation,
+            )
             if ledger_factory is not None:
                 factories["workbench.ledger"] = ledger_factory
             declarations_factory = _declarations_generation_factory(current, dependencies)
@@ -530,6 +544,7 @@ def _search_inputs(generation: WorkbenchGenerationV1) -> InstalledWorkbenchSearc
 def _ledger_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
+    operation: PinnedAuthorityOperation,
 ) -> TuiScreenFactoryV1 | None:
     if current[0].ledger.projection is None:
         return None
@@ -554,7 +569,7 @@ def _ledger_generation_factory(
             # BOTH the admitted action and a submitter are present, so passing
             # one alone would read as wired while still refusing.
             link_action=dependencies.ledger_link_action,
-            link_submitter=_ledger_link_submitter(dependencies.account.profile_id),
+            link_submitter=_ledger_link_submitter(dependencies.account.profile_id, operation),
             # The classification door is a pair for the same reason the link
             # door is: the screen's control stays hidden unless BOTH the
             # admitted action and a submitter are present. The third thing it
@@ -562,7 +577,7 @@ def _ledger_generation_factory(
             # the operator supplies it by selecting a row, and it travels in
             # the workspace focus.
             classify_action=dependencies.ledger_classify_action,
-            classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id),
+            classification_submitter=_ledger_classification_submitter(dependencies.account.profile_id, operation),
         )(context)
 
     return create
@@ -621,7 +636,7 @@ def _aeat_sync_generation_factory(
 
 
 def resolve_modelo_workspace_static_inspection(
-    unit: WorkUnit, *, output_language: OutputLanguage
+    unit: WorkUnit, *, operation: PinnedAuthorityOperation, output_language: OutputLanguage
 ) -> ModeloWorkspaceStaticInspectionResultV1:
     """Assemble the workspace read result for one already-resolved unit.
 
@@ -640,7 +655,6 @@ def resolve_modelo_workspace_static_inspection(
     from ...domain.calculations.registry.authority import (
         RegistryAuthorityCapture,
         RegistryAuthorityCurrentCoordinate,
-        bundled_indexed_authority,
     )
     from ...domain.calculations.registry.snapshot import collect_snapshot_ref_ids
     from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -653,7 +667,13 @@ def resolve_modelo_workspace_static_inspection(
             self._operation = operation
 
         def capture_law_selected_projection(
-            self, modelo_id: str, *, filing_year: int, period: str, on=None, grade=None
+            self,
+            modelo_id: str,
+            *,
+            filing_year: int,
+            period: str,
+            on: date | None = None,
+            grade: RegistryAuthorityGrade | None = None,
         ) -> RegistryAuthorityCapture:
             directory = self._operation.modelo_directory(modelo_id)
             selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=on)
@@ -689,19 +709,18 @@ def resolve_modelo_workspace_static_inspection(
                 generation=0,
             )
 
-    with bundled_indexed_authority().operation() as operation:
-        return resolve_static_inspection_result(
-            ModeloWorkspaceExactWorkUnitTargetV1(
-                target=ModeloExactWorkUnitTarget(
-                    work_unit_id=unit.work_unit_id,
-                    bucket_id=unit.bucket_id,
-                )
-            ),
-            bucket_id=unit.bucket_id,
-            catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
-            authority=_PinnedAuthorityAdapter(operation),
-            output_language=output_language,
-        )
+    return resolve_static_inspection_result(
+        ModeloWorkspaceExactWorkUnitTargetV1(
+            target=ModeloExactWorkUnitTarget(
+                work_unit_id=unit.work_unit_id,
+                bucket_id=unit.bucket_id,
+            )
+        ),
+        bucket_id=unit.bucket_id,
+        catalogue_repository=WorkUnitCatalogueRepository(bucket_id=unit.bucket_id),
+        authority=_PinnedAuthorityAdapter(operation),
+        output_language=output_language,
+    )
 
 
 @contextmanager
@@ -754,17 +773,22 @@ async def operation_services_scope() -> AsyncGenerator[TuiOperationCompositionV1
     it, which is the dependency the TUI boundary exists to forbid.
     """
     from ...adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..operation_composition import compose_operation_dependencies
 
-    services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
-    composition = TuiOperationCompositionV1(
-        services=services,
-        public_contracts=services.public_contracts,
-    )
-    try:
-        yield composition
-    finally:
-        await services.shutdown()
+    with bundled_indexed_authority().operation() as authority_operation:
+        services = compose_operation_dependencies(
+            authority_operation=authority_operation,
+            operator_scope_ports=build_operator_scope_ports(),
+        )
+        try:
+            yield TuiOperationCompositionV1(
+                services=services,
+                public_contracts=services.public_contracts,
+                authority_operation=authority_operation,
+            )
+        finally:
+            await services.shutdown()
 
 
 def compose_installed_workbench_search(

@@ -22,7 +22,10 @@ __all__ = [
 
 
 class _BindingWithProvider(Protocol):
-    provider: object
+    @property
+    def provider(self) -> object:
+        """Return the binding's typed provider declaration."""
+        ...
 
 
 def prorrata_source_casilla_ids(bindings: Iterable[_BindingWithProvider]) -> tuple[CasillaId, ...]:

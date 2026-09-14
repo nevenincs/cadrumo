@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.profile.tests._file_flow_support import _FILE_
 from cadrumo.application.modelo.history import admitted_modelo_history_event_types, assemble_modelo_lifecycle_history
 from cadrumo.application.modelo.history_ports import ModeloHistoryPorts
 from cadrumo.application.modelo.work_lifecycle import create_work_unit, discard_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.modelos.errors import ModeloValidationError
@@ -47,8 +48,7 @@ def _create(repos: _Repos, *, period: str = "1T", filing_year: int = 2026):
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
         revision_id="2019-y-siguientes",
-        repository=wu_repo,
-        bucket_event_repository=bv_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T0,
     )
 

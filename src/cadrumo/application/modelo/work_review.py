@@ -223,7 +223,6 @@ def build_modelo_work_review(
         modelo,
         filing_year=filing_year,
         period=period,
-        authority=None,
         operation=operation,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,

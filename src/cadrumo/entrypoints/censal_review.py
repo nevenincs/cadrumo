@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from contextlib import AsyncExitStack
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from ..application.operations.composition import OperationComposedServices, OperationSubmission
 from ..application.operations.frontend_contracts import OperationReviewProjectionResultV1
@@ -39,6 +41,9 @@ from ..core.operations import (
 from ..core.time.clock import now
 from .operation_composition import compose_operation_dependencies
 
+if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+
 _OBSERVATION_LIMIT = 256
 _SETTLEMENT_POLLS = 500
 
@@ -61,10 +66,15 @@ async def _observe(services: OperationComposedServices, operation_id: str) -> Op
     return observed
 
 
-def _active_censal_operation_request() -> OperationRequest[CensalOperationRequest]:
+def _active_censal_operation_request(
+    operation: PinnedAuthorityOperation,
+) -> OperationRequest[CensalOperationRequest]:
     """Build the registered request from the one authenticated profile record."""
     profile_id = require_active_bucket_id()
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=operation.profile_decode_context(),
+    ).load(profile_id)
     payload = build_censal_operation_request(record)
     return OperationRequest(
         definition_id=CENSAL_OPERATION_DEFINITION_ID,
@@ -198,25 +208,18 @@ async def _run(
     *,
     actor_ref: str,
     decide: Callable[[CensalReviewProjectionV1], bool],
-    services: OperationComposedServices | None = None,
 ) -> CensalReviewedFrontendResult:
-    request = _active_censal_operation_request()
     from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
-    authority_scope = None
-    if services is None:
-        from ..domain.calculations.registry.authority import bundled_indexed_authority
-
-        authority_scope = bundled_indexed_authority().operation()
-        authority_operation = authority_scope.__enter__()
+    async with AsyncExitStack() as owned:
+        authority_operation = owned.enter_context(bundled_indexed_authority().operation())
+        request = _active_censal_operation_request(authority_operation)
         composed = compose_operation_dependencies(
             authority_operation=authority_operation,
             operator_scope_ports=build_operator_scope_ports(),
         )
-    else:
-        composed = services
-    owns_services = services is None
-    try:
+        owned.push_async_callback(composed.shutdown)
         submitted = await composed.submission.submit(
             request,
             actor_ref=actor_ref,
@@ -230,11 +233,6 @@ async def _run(
         await _answer_censal_review(composed, submitted, pending, actor_ref=actor_ref, apply=apply)
         await _await_censal_settlement(composed, operation_id, apply=apply)
         return CensalReviewedFrontendResult(operation_id=operation_id, applied=apply, projection=projection)
-    finally:
-        if owns_services:
-            await composed.shutdown()
-        if authority_scope is not None:
-            authority_scope.__exit__(None, None, None)
 
 
 def run_censal_review(

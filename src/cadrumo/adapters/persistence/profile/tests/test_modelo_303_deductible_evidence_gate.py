@@ -51,6 +51,7 @@ from cadrumo.application.modelo.verification_actions import (
     verify_modelo_revision_with_preconditions,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
@@ -314,8 +315,7 @@ def _calculate_irene_revision(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
-        bucket_event_repository=event_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
     )
     decision = _wallet_decision()

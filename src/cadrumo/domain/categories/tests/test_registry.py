@@ -13,32 +13,45 @@ cannot silently relax them.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 
 import pytest
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
+from ..profile import CategoryProfile
 from ..proportionality import ProportionalityKind
 from ..registry import resolve_category_profiles
 from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_PROFILES_2025 = resolve_category_profiles(2025)
+
+@pytest.fixture
+def profiles_2025(operation: PinnedAuthorityOperation) -> Mapping[SpendingCategory, CategoryProfile]:
+    """Resolve the 2025 projection through the test operation lease."""
+    return resolve_category_profiles(2025, operation=operation)
 
 
-def test_registry_covers_every_spending_category() -> None:
+def test_registry_covers_every_spending_category(
+    profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """Every enum member must have a concrete profile in the 2025 registry."""
 
-    assert set(_PROFILES_2025) == set(SpendingCategory)
+    assert set(profiles_2025) == set(SpendingCategory)
 
 
-def test_every_profile_has_at_least_one_citation() -> None:
+def test_every_profile_has_at_least_one_citation(
+    profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """Explainable category profiles must carry at least one citation."""
 
-    assert all(profile.proportionality.citations for profile in _PROFILES_2025.values())
+    assert all(profile.proportionality.citations for profile in profiles_2025.values())
 
 
-def test_proportionality_kinds_carry_kind_specific_fields() -> None:
+def test_proportionality_kinds_carry_kind_specific_fields(
+    profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """Cross-field invariants: each kind populates only its own metadata fields.
 
     `fixed_percentage` rules carry no `usage_ratio_*` metadata and
@@ -47,12 +60,12 @@ def test_proportionality_kinds_carry_kind_specific_fields() -> None:
     """
     fixed_percentage_rules = [
         profile.proportionality
-        for profile in _PROFILES_2025.values()
+        for profile in profiles_2025.values()
         if profile.proportionality.kind is ProportionalityKind.FIXED_PERCENTAGE
     ]
     usage_ratio_rules = [
         profile.proportionality
-        for profile in _PROFILES_2025.values()
+        for profile in profiles_2025.values()
         if profile.proportionality.kind
         in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
     ]
@@ -65,9 +78,11 @@ def test_proportionality_kinds_carry_kind_specific_fields() -> None:
     assert all(rule.fixed_pct is None for rule in usage_ratio_rules)
 
 
-def test_diet_profiles_preserve_condition_specific_daily_caps() -> None:
-    national = _PROFILES_2025[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
-    foreign = _PROFILES_2025[SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO].proportionality
+def test_diet_profiles_preserve_condition_specific_daily_caps(
+    profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
+    national = profiles_2025[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
+    foreign = profiles_2025[SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO].proportionality
 
     assert {variant.id: variant.statutory_cap_eur_per_day for variant in national.statutory_cap_variants} == {
         "sin-pernocta": Decimal("26.67"),
@@ -79,12 +94,14 @@ def test_diet_profiles_preserve_condition_specific_daily_caps() -> None:
     }
 
 
-def test_registry_preserves_conservative_semantics_for_special_categories() -> None:
+def test_registry_preserves_conservative_semantics_for_special_categories(
+    profiles_2025: Mapping[SpendingCategory, CategoryProfile],
+) -> None:
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
-    hardware = _PROFILES_2025[SpendingCategory.HARDWARE_AMORTIZABLE]
-    vehicle = _PROFILES_2025[SpendingCategory.VEHICULO_COMBUSTIBLE]
-    health = _PROFILES_2025[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
+    hardware = profiles_2025[SpendingCategory.HARDWARE_AMORTIZABLE]
+    vehicle = profiles_2025[SpendingCategory.VEHICULO_COMBUSTIBLE]
+    health = profiles_2025[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
 
     assert hardware.proportionality.kind.value == "full_deductible"
     assert vehicle.proportionality.default_ratio is None
@@ -102,8 +119,8 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
     assert health.proportionality.statutory_cap_period.value == "year_per_person"
 
 
-def test_resolve_category_profiles_rejects_unknown_year() -> None:
+def test_resolve_category_profiles_rejects_unknown_year(operation: PinnedAuthorityOperation) -> None:
     """Unsupported handbook years must fail loud."""
 
     with pytest.raises(ValueError, match=r"2099|year|unsupported|unknown"):
-        resolve_category_profiles(2099)
+        resolve_category_profiles(2099, operation=operation)

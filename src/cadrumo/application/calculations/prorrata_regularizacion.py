@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import ClassVar, Final
 
@@ -51,7 +51,7 @@ from ...core.decimal.constants import MONEY_ZERO
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
@@ -69,7 +69,7 @@ from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
     prorrata_source_casilla_ids,
 )
-from ...domain.calculations.registry.queries import RegistryQueryService
+from ...domain.calculations.registry.queries import PinnedRegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
@@ -114,8 +114,8 @@ _LEDGER_VOLUME_DIVERGENCE_SOURCE_KIND = "prorrata_regularizacion_ledger_volume_d
 
 
 def prorrata_registry_declarations(
-    query_service: RegistryQueryService,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
@@ -126,6 +126,7 @@ def prorrata_registry_declarations(
     provenance stay in the selected revision. The calculation module consumes
     only the authority-backed reports and keeps arithmetic/evidence mechanics.
     """
+    query_service = PinnedRegistryQueryService(operation)
     return (
         query_service.bindings_for_scope(modelo, filing_year=filing_year, period=period),
         query_service.formulas_for_scope(modelo, filing_year=filing_year, period=period),
@@ -676,12 +677,13 @@ def _prior_definitiva_provenance(
 def _stamped_prior_year_definitiva(
     repository: CalculationObservationRepositoryProtocol,
     *,
+    operation: PinnedAuthorityOperation,
     filing_year: int,
     modelo: str,
     revision: ModeloRevision,
 ) -> _PriorDefinitivaCarry | None:
     prior_year = filing_year - 1
-    candidates: list[tuple[object, _PriorDefinitivaCarry]] = []
+    candidates: list[tuple[datetime, _PriorDefinitivaCarry]] = []
     for payload in repository.iter_modelo(modelo):
         observation = payload.observation
         if observation.filing_year != prior_year:
@@ -689,7 +691,7 @@ def _stamped_prior_year_definitiva(
         percentage = observation.casilla_values.get(_prorrata_source_id(revision, 3))
         if percentage is None:
             continue
-        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
         if refused:
             continue
         candidates.append(
@@ -710,6 +712,7 @@ def _stamped_prior_year_definitiva(
 def _observed_source_period_values(
     repository: CalculationObservationRepositoryProtocol,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     periods: tuple[str, ...],
     filing_year: int,
@@ -722,7 +725,7 @@ def _observed_source_period_values(
             missing_periods.append(period)
             continue
         observation = payload.observation
-        if revision_carry_outcome(payload.registry_snapshot_ref).refused:
+        if revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused:
             missing_periods.append(period)
             continue
         observed_by_period[period] = observation.casilla_values
@@ -778,6 +781,7 @@ def _project_source_period_values(
 def _source_period_feed_from_observations(
     repository: CalculationObservationRepositoryProtocol,
     *,
+    operation: PinnedAuthorityOperation,
     modelo: str,
     revision: ModeloRevision,
     filing_year: int,
@@ -788,6 +792,7 @@ def _source_period_feed_from_observations(
 
     observed_by_period, missing_periods = _observed_source_period_values(
         repository,
+        operation=operation,
         modelo=modelo,
         periods=periods,
         filing_year=filing_year,
@@ -1057,6 +1062,7 @@ class ProrrataRegularizacionSourceResolver:
         unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         observation_repository: CalculationObservationRepositoryProtocol,
+        operation: PinnedAuthorityOperation,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
         """Bind the current-year prorrata inputs and repositories used to resolve carries.
@@ -1075,6 +1081,7 @@ class ProrrataRegularizacionSourceResolver:
         self._unresolved_current_year_casilla_ids = tuple(unresolved_current_year_casilla_ids)
         self._prorrata_register_repository = prorrata_register_repository
         self._observation_repository = observation_repository
+        self._operation = operation
         self._registry_snapshot = registry_snapshot
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -1093,6 +1100,7 @@ class ProrrataRegularizacionSourceResolver:
         try:
             source_period_feed = _source_period_feed_from_observations(
                 self._observation_repository,
+                operation=self._operation,
                 modelo=context.modelo,
                 revision=revision,
                 filing_year=context.filing_year,
@@ -1121,9 +1129,13 @@ class ProrrataRegularizacionSourceResolver:
             return missing_resolution
 
         try:
-            register = require_prorrata_register_coordinates_current(self._prorrata_register_repository.load())
+            register = require_prorrata_register_coordinates_current(
+                self._prorrata_register_repository.load(),
+                operation=self._operation,
+            )
             prior_definitiva = _stamped_prior_year_definitiva(
                 self._observation_repository,
+                operation=self._operation,
                 filing_year=context.filing_year,
                 modelo=context.modelo,
                 revision=revision,
@@ -1254,11 +1266,8 @@ def buildprorrata_regularizacion_advisory(
 _PRORRATA_SPECIAL_LEGAL_REF_KEY: Final = "prorrata_especial_mandatory.legal_ref"
 
 
-def _resolve_prorrata_special_legal_ref(*, ejercicio: int, operation: PinnedAuthorityOperation | None = None) -> str:
+def _resolve_prorrata_special_legal_ref(*, ejercicio: int, operation: PinnedAuthorityOperation) -> str:
     """Resolve the mandatory-special advisory's legal reference from registry data."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _resolve_prorrata_special_legal_ref(ejercicio=ejercicio, operation=indexed_operation)
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="renta-iva-deduction-ratio-policy",
@@ -1284,7 +1293,7 @@ def build_prorrata_especial_mandatory_advisory(
     deduction_under_especial: Decimal,
     ejercicio: int,
     parameters: ProrrataEspecialMandatoryParameters,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Notice | None:
     """Build the LIVA art. 103.Dos.2.º mandatory-especial settlement advisory.
 
@@ -1311,7 +1320,7 @@ def build_prorrata_especial_mandatory_advisory(
         ejercicio: The filing year being settled (for the message and context).
         parameters: The registry-resolved LIVA art-103.Dos.2 margin and its
             comparison direction for that ejercicio.
-        operation: Optional generation-pinned authority operation used to
+        operation: Caller-owned generation-pinned authority operation used to
             resolve the advisory's legal reference.
     """
     if not is_especial_mandatory(

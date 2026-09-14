@@ -5,17 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 from ...core.decimal.constants import HUNDRED
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
-from ...domain.calculations.registry.authority import (
-    PinnedAuthorityOperation,
-    ValidatedRegistryAuthority,
-    bundled_indexed_authority,
-)
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
@@ -50,38 +45,21 @@ def calculate_m303_regimen_simplificado_result(
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
-    authority: ValidatedRegistryAuthority | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> M303RegimenSimplificadoCalculationResult:
     """Calculate one immutable, source-pinned annual result from filing rows."""
-    if authority is None and operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return calculate_m303_regimen_simplificado_result(
-                period=period,
-                scope_decision=scope_decision,
-                rows=rows,
-                regimen_snapshot=regimen_snapshot,
-                dana_2024_eligibility=dana_2024_eligibility,
-                operation=indexed_operation,
-            )
     _validate_coordinate(
         period=period,
         scope_decision=scope_decision,
         rows=rows,
         regimen_snapshot=regimen_snapshot,
         dana_2024_eligibility=dana_2024_eligibility,
-        authority=authority,
         operation=operation,
     )
     _validate_rows_against_annual_orden(rows=rows, regimen_snapshot=regimen_snapshot, scope_decision=scope_decision)
     dana_authority = None
     if dana_2024_eligibility is not None:
-        if authority is None and operation is None:
-            raise M303RegimenSimplificadoCalculationError(
-                "DANA eligibility requires a pinned registry operation or explicit authority",
-            )
         dana_authority = _resolve_dana_2024_authority(
-            authority=authority,
             operation=operation,
             effective_date=period.end_date,
         )
@@ -123,15 +101,14 @@ def _validate_coordinate(
     rows: RegimenSimplificadoFilingRows,
     regimen_snapshot: M303RegimenSimplificadoSnapshot,
     dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
-    authority: ValidatedRegistryAuthority | None,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     if rows.ejercicio != period.filing_year or regimen_snapshot.orden.ejercicio != period.filing_year:
         raise M303RegimenSimplificadoCalculationError("M303 simplified rows and annual Orden must use the filing year")
     if regimen_snapshot.scope_decision != scope_decision:
         raise M303RegimenSimplificadoCalculationError("M303 simplified scope must match the annual Orden snapshot")
     requires_dana_eligibility = (
-        _dana_reduction_is_available(authority=authority, operation=operation, effective_date=period.end_date)
+        _dana_reduction_is_available(operation=operation, effective_date=period.end_date)
         and is_last_filing_period_of_year(period)
         and not scope_decision.is_not_claimed
     )
@@ -144,8 +121,7 @@ def _validate_coordinate(
 
 def _dana_reduction_is_available(
     *,
-    authority: ValidatedRegistryAuthority | None,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
     effective_date: date,
 ) -> bool:
     """Return whether the selected authority publishes the DANA reduction now.
@@ -154,13 +130,8 @@ def _dana_reduction_is_available(
     coordinate check therefore asks the same authority used to resolve the
     reduction instead of encoding a filing year in the calculation module.
     """
-    resolver = operation if operation is not None else authority
-    if resolver is None:
-        raise M303RegimenSimplificadoCalculationError(
-            "DANA applicability requires a pinned registry operation or explicit authority",
-        )
     try:
-        resolver.resolve_governed_fact(
+        operation.resolve_governed_fact(
             ScalarFactQuery(
                 fact_id=_DANA_2024_REDUCTION_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -328,17 +299,11 @@ class _DANA2024Authority:
 
 def _resolve_dana_2024_authority(
     *,
-    authority: ValidatedRegistryAuthority | None,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
     effective_date: date,
 ) -> _DANA2024Authority:
-    resolver = operation if operation is not None else authority
-    if resolver is None:
-        raise M303RegimenSimplificadoCalculationError(
-            "DANA authority requires a pinned registry operation or explicit authority",
-        )
     try:
-        resolved = resolver.resolve_governed_fact(
+        resolved = operation.resolve_governed_fact(
             ScalarFactQuery(
                 fact_id=_DANA_2024_REDUCTION_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
@@ -349,7 +314,11 @@ def _resolve_dana_2024_authority(
         raise M303RegimenSimplificadoCalculationError(
             "DANA IVA simplified-regime authority is unavailable",
         ) from exc
-    scalar = cast("ResolvedScalarFact", resolved)
+    if not isinstance(resolved, ResolvedScalarFact):
+        raise M303RegimenSimplificadoCalculationError(
+            "DANA IVA simplified-regime authority is not a scalar fact",
+        )
+    scalar = resolved
     if scalar.payload.unit != "fraction" or not isinstance(scalar.payload.value, Decimal):
         raise M303RegimenSimplificadoCalculationError(
             "DANA IVA simplified-regime authority is not the exact fraction",

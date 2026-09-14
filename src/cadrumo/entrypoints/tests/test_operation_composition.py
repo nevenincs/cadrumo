@@ -30,6 +30,7 @@ from ...application.operations.projection_services import (
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
 )
+from ...application.operations.tests.authority_test_support import unread_authority_operation
 from ...core.time.clock import now
 from ..operation_composition import build_production_operation_registry, compose_operation_dependencies
 
@@ -38,7 +39,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
         expected_registry = build_production_operation_registry()
         registry = dependencies.observation.registry
 
@@ -69,7 +70,7 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
 def test_production_composition_is_available_before_profile_login(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         assert current_active_bucket_session() is None
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
 
         assert dependencies.observation.registry.lookup("auth.profile.login").definition_id == "auth.profile.login"
         asyncio.run(dependencies.shutdown())
@@ -77,7 +78,7 @@ def test_production_composition_is_available_before_profile_login(tmp_path: Path
 
 def test_submission_issues_actor_bound_opaque_response_capability(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
         definition = dependencies.observation.registry.lookup("auth.session.logout")
         payload = definition.request_type()
         request = OperationRequest(
@@ -167,7 +168,7 @@ def test_inbound_entrypoints_do_not_import_the_operation_owner_module() -> None:
 def test_production_composition_retains_the_operand_declaring_definition(tmp_path: Path) -> None:
     """The seam constructs WITH the operand capability, not by dropping it."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
         registry = dependencies.observation.registry
         declaring = tuple(
             definition.definition_id for definition in registry.definitions if definition.transient_financial_operands
@@ -186,7 +187,7 @@ def test_production_composition_retains_the_operand_declaring_definition(tmp_pat
 def test_production_composition_submits_through_the_constructed_seam(tmp_path: Path) -> None:
     """The seam is functional end to end, not merely constructible."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
         definition = dependencies.observation.registry.lookup("auth.session.logout")
         request = OperationRequest(
             definition_id=definition.definition_id,
@@ -220,6 +221,7 @@ def test_composing_a_declaring_registry_without_custody_is_still_refused(tmp_pat
         with pytest.raises(ValueError, match="transient financial operand"):
             compose_operation_services(
                 registry=registry,
+                authority_operation=unread_authority_operation(),
                 journal=journal,
                 reader=journal,
                 event_stream=journal,

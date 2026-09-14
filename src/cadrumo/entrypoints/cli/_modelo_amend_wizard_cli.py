@@ -268,7 +268,10 @@ def run_modelo_work_amend_wizard(
             m303_rectificativa_motive=motive,
             reason=reason,
             actor=actor or deps.resolve_default_actor(),
-            ports=amendment_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
+            ports=amendment_action_ports_factory(ctx)(
+                bucket_id=unit.bucket_id,
+                operation=authority_operation(ctx),
+            ),
         )
     except (
         ModeloRecordNotFoundError,

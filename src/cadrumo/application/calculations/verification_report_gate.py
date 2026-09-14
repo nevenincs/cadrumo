@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.verification_report import VerificationReportCatalogue
 from .revision_carry_gate import revision_carry_outcome
@@ -9,10 +10,12 @@ from .revision_carry_gate import revision_carry_outcome
 
 def require_verification_report_coordinates_current(
     catalogue: VerificationReportCatalogue,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> VerificationReportCatalogue:
     """Return ``catalogue`` only when every report's producing revision re-confirms."""
     for report in catalogue.values():
-        outcome = revision_carry_outcome(report.registry_snapshot_ref)
+        outcome = revision_carry_outcome(report.registry_snapshot_ref, operation=operation)
         if outcome.refused:
             raise ModeloValidationError(
                 "verification report registry coordinate cannot be re-confirmed: "

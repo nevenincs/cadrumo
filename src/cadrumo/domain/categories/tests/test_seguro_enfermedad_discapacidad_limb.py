@@ -28,6 +28,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     ProportionalityKind,
     ProportionalityRule,
@@ -43,13 +44,13 @@ _ART_30_2_5_A_GENERAL = Decimal("500")
 _ART_30_2_5_A_DISCAPACIDAD = Decimal("1500")
 
 
-def _shipped_rule() -> ProportionalityRule:
-    return load_category_profiles()[SpendingCategory.SEGUROS_SALUD_AUTONOMO].proportionality
+def _shipped_rule(operation: PinnedAuthorityOperation) -> ProportionalityRule:
+    return load_category_profiles(operation=operation)[SpendingCategory.SEGUROS_SALUD_AUTONOMO].proportionality
 
 
-def test_the_shipped_rule_carries_both_limits_the_article_states() -> None:
+def test_the_shipped_rule_carries_both_limits_the_article_states(operation: PinnedAuthorityOperation) -> None:
     """GROUNDED against the article, not against the registry's own prior value."""
-    rule = _shipped_rule()
+    rule = _shipped_rule(operation)
     amounts = {variant.id: variant.statutory_cap_eur for variant in rule.statutory_cap_variants}
 
     assert amounts == {
@@ -58,9 +59,11 @@ def test_the_shipped_rule_carries_both_limits_the_article_states() -> None:
     }
 
 
-def test_the_higher_limb_is_three_times_the_lower_as_the_article_sets_them() -> None:
+def test_the_higher_limb_is_three_times_the_lower_as_the_article_sets_them(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A property of the two figures, so a typo in either is caught rather than copied."""
-    rule = _shipped_rule()
+    rule = _shipped_rule(operation)
     amounts = {variant.id: variant.statutory_cap_eur for variant in rule.statutory_cap_variants}
     general = amounts["general"]
     assert general is not None
@@ -68,22 +71,22 @@ def test_the_higher_limb_is_three_times_the_lower_as_the_article_sets_them() -> 
     assert amounts["discapacidad"] == general * 3
 
 
-def test_the_rule_no_longer_carries_a_single_flat_limit() -> None:
+def test_the_rule_no_longer_carries_a_single_flat_limit(operation: PinnedAuthorityOperation) -> None:
     """ANTI-REGRESSION: a lone statutory_cap_eur is the shape that lost the higher limb.
 
     If someone collapses the variants back to one amount, every person is capped at
     that amount and the discapacidad population silently loses a third of its
     allowance again.
     """
-    rule = _shipped_rule()
+    rule = _shipped_rule(operation)
 
     assert rule.statutory_cap_eur is None
     assert rule.statutory_cap_variants, "the two limbs regressed to a single flat cap"
 
 
-def test_the_variants_are_annual_per_person_not_daily() -> None:
+def test_the_variants_are_annual_per_person_not_daily(operation: PinnedAuthorityOperation) -> None:
     """The article caps per person per year; a daily reading would be a different rule."""
-    rule = _shipped_rule()
+    rule = _shipped_rule(operation)
 
     assert rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON
     assert all(not variant.is_per_day for variant in rule.statutory_cap_variants)
@@ -94,13 +97,17 @@ def _variant(variant_id: str, **amounts: Decimal | None) -> dict[str, object]:
     return {"id": variant_id, "label": tr("Etiqueta de prueba."), **amounts}
 
 
-def _rule_with(*variants: dict[str, object], period: StatutoryCapPeriod | None = None) -> ProportionalityRule:
+def _rule_with(
+    *variants: dict[str, object],
+    period: StatutoryCapPeriod | None = None,
+    operation: PinnedAuthorityOperation,
+) -> ProportionalityRule:
     return ProportionalityRule.model_validate(
         {
             "kind": ProportionalityKind.STATUTORY_CAP,
             "statutory_cap_period": period,
             "statutory_cap_variants": tuple(variants),
-            "citations": _shipped_rule().citations,
+            "citations": _shipped_rule(operation).citations,
             "notes": tr("Regla de prueba."),
         },
     )
@@ -117,25 +124,26 @@ def test_a_variant_must_declare_exactly_one_unit() -> None:
         )
 
 
-def test_variants_inside_one_rule_must_agree_on_the_unit() -> None:
+def test_variants_inside_one_rule_must_agree_on_the_unit(operation: PinnedAuthorityOperation) -> None:
     """Mixing units leaves the resolver guessing what the rule is capped in."""
     with pytest.raises(ValidationError, match="must agree on their unit"):
         _rule_with(
             _variant("annual", statutory_cap_eur=Decimal("500")),
             _variant("daily", statutory_cap_eur_per_day=Decimal("26.67")),
             period=StatutoryCapPeriod.YEAR_PER_PERSON,
+            operation=operation,
         )
 
 
-def test_an_annual_variant_set_requires_the_period_it_applies_over() -> None:
+def test_an_annual_variant_set_requires_the_period_it_applies_over(operation: PinnedAuthorityOperation) -> None:
     """ "500 per person" is not a rule until the period the person is counted over is fixed."""
     with pytest.raises(ValidationError, match="annual statutory cap variants require statutory_cap_period"):
-        _rule_with(_variant("general", statutory_cap_eur=Decimal("500")), period=None)
+        _rule_with(_variant("general", statutory_cap_eur=Decimal("500")), period=None, operation=operation)
 
 
-def test_the_daily_dietas_shape_still_loads_unchanged() -> None:
+def test_the_daily_dietas_shape_still_loads_unchanged(operation: PinnedAuthorityOperation) -> None:
     """The variant concept was widened, not repurposed; RIRPF art. 9's shape is intact."""
-    dietas = load_category_profiles()[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
+    dietas = load_category_profiles(operation=operation)[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
 
     assert dietas.statutory_cap_variants
     assert all(variant.is_per_day for variant in dietas.statutory_cap_variants)

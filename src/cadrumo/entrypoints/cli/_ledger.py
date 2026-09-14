@@ -236,6 +236,7 @@ def _manual_add_notices(
     command: ManualLedgerTransactionCommand,
     result: ManualLedgerTransactionResult,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[list[Notice], list[str]]:
     """Project add advisories into the shared notice and text channels."""
     notices: list[Notice] = []
@@ -263,6 +264,7 @@ def _manual_add_notices(
         input_classification=command.input_classification,
         sector_id=command.prorrata_sector_id,
         prorrata_register_repository=prorrata_register_repository,
+        operation=operation,
     )
     if especial_notice is not None:
         notices.append(especial_notice)
@@ -271,6 +273,7 @@ def _manual_add_notices(
         bucket_id=result.ref.bucket_id,
         sector_id=command.prorrata_sector_id,
         prorrata_register_repository=prorrata_register_repository,
+        operation=operation,
     )
     if sector_notice is not None:
         notices.append(sector_notice)
@@ -285,6 +288,7 @@ def _prorrata_especial_inert_notice(
     input_classification: InputClassification | None,
     sector_id: str | None,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> Notice | None:
     """Warn when --input-classification is set but no especial election applies.
 
@@ -299,7 +303,10 @@ def _prorrata_especial_inert_notice(
         return None
     from ...application.prorrata_register.service import ProrrataRegisterService
 
-    service = ProrrataRegisterService(repository=prorrata_register_repository)
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository,
+        operation=operation,
+    )
     entry = service.get(ejercicio, sector_id=sector_id)
     if entry is not None and entry.regime == especial_prorrata_register_regime():
         return None
@@ -324,6 +331,7 @@ def _prorrata_sector_unmatched_notice(
     bucket_id: str,
     sector_id: str | None,
     prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> Notice | None:
     """Warn when --sector names a sector absent from the declared partition.
 
@@ -343,7 +351,10 @@ def _prorrata_sector_unmatched_notice(
         return None
     from ...application.prorrata_register.service import ProrrataRegisterService
 
-    service = ProrrataRegisterService(repository=prorrata_register_repository)
+    service = ProrrataRegisterService(
+        repository=prorrata_register_repository,
+        operation=operation,
+    )
     if service.list_all().sector_definition_for(sector_id) is not None:
         return None
     message = tr(
@@ -456,10 +467,11 @@ def ledger_add(
     # Same ECB-backed normalizer the file-import path wires in: a manually
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
+    operation = authority_operation(ctx)
     result = _create_manual_add_transaction(
         command,
         transaction_repository=transaction_repository,
-        operation=authority_operation(ctx),
+        operation=operation,
     )
     from ._ledger_payloads import LedgerAddResult
 
@@ -472,6 +484,7 @@ def ledger_add(
         command=command,
         result=result,
         prorrata_register_repository=prorrata_register_repository_factory(ctx)(bucket_id=result.ref.bucket_id),
+        operation=operation,
     )
     emit_update_result(
         ctx,

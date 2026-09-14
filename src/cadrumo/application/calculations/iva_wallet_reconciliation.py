@@ -43,7 +43,7 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.period import Period
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
@@ -210,12 +210,9 @@ def _binding_source_or_none(source_kind: str) -> BindingSourceKind | None:
 def _resolve_first_period_compensation_amount(
     *,
     filing_year: int,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal:
     """Resolve the governed first-period compensation amount."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _resolve_first_period_compensation_amount(filing_year=filing_year, operation=indexed_operation)
     resolved = operation.resolve_governed_fact(
         ScalarFactQuery(
             fact_id="liva-art-99:first-period-compensation-zero",
@@ -240,11 +237,7 @@ def _resolve_reconciliation_repositories(
     """Validate the required repository pair and refuse a split secure backend."""
     repo = repository
     decision_repo = decision_repository
-    if (
-        persist
-        and decision_repository is not None
-        and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine
-    ):
+    if persist and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine:
         raise IvaCompensationReconciliationInputError(
             translated_message="application.calculations.iva_wallet.errors.decision_repository_backend_split",
             context={"persist": persist, "decision_repository_supplied": True},
@@ -267,7 +260,7 @@ def reconcile_modelo_303_iva_compensation(
     local_recurrence: LocalIvaCompensationRecurrence | None,
     prefill_report: BindingPrefillReport,
     persist: bool = True,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCompensationReconciliationReport:
     """Resolve, compare, and optionally persist the Modelo 303 IVA wallet decision.
 
@@ -318,7 +311,7 @@ def reconcile_modelo_303_iva_compensation(
         prefill_report: Required report from the same recurrence resolution.
             Reconciliation never performs a second repository fallback.
         persist: Whether to store the resulting decision for later calculation replay.
-        operation: Optional generation-pinned authority operation used to
+        operation: Caller-owned generation-pinned authority operation used to
             resolve first-period governed facts.
 
     The local side is not recomputed here. It is read through the same

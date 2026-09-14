@@ -32,6 +32,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from importlib import import_module
+from typing import override
 
 import pytest
 
@@ -93,12 +94,15 @@ class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepo
     def __init__(self) -> None:
         self._records: dict[str, ConfirmedCounterpartyFacts] = {}
 
+    @override
     def load(self, identifier: str) -> ConfirmedCounterpartyFacts | None:
         return self._records.get(identifier)
 
+    @override
     def save(self, payload: ConfirmedCounterpartyFacts) -> None:
         self._records[payload.counterparty_key] = payload
 
+    @override
     def delete(self, identifier: str) -> bool:
         return self._records.pop(identifier, None) is not None
 

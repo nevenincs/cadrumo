@@ -22,6 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n.translatable import Translatable as tr
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -137,14 +138,16 @@ def test_a_schedule_is_refused_outside_a_statutory_cap_rule() -> None:
         )
 
 
-def test_the_shipped_mutualidad_cap_matches_the_figures_aeat_publishes() -> None:
+def test_the_shipped_mutualidad_cap_matches_the_figures_aeat_publishes(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """GROUNDED against external authority, not against the registry's own formula.
 
     Each expected amount is the figure AEAT prints in the Manual practico Renta
     for that ejercicio (2026 derived from the cotizacion orden by AEAT's own
     method). If the registry drifts from what AEAT publishes, this reds.
     """
-    rule = load_category_profiles()[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
 
     assert rule.statutory_cap_schedule, "the shipped mutualidad cap carries no schedule; it regressed to a constant"
     assert rule.statutory_cap_eur is None, "a year-referenced cap must not also carry a flat amount"
@@ -153,7 +156,9 @@ def test_the_shipped_mutualidad_cap_matches_the_figures_aeat_publishes() -> None
         assert rule.cap_amount_for_year(year) == expected, f"ejercicio {year} diverges from the AEAT figure"
 
 
-def test_the_retired_flat_fifteen_thousand_is_not_the_figure_for_any_ejercicio() -> None:
+def test_the_retired_flat_fifteen_thousand_is_not_the_figure_for_any_ejercicio(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """ANTI-REGRESSION on the specific defect: 15000 was never anybody's cap.
 
     Pinned deliberately as a literal. If someone reinstates it -- as a constant
@@ -161,30 +166,36 @@ def test_the_retired_flat_fifteen_thousand_is_not_the_figure_for_any_ejercicio()
     """
     assert Decimal("15000") not in set(_AEAT_PUBLISHED_CUOTA_MAXIMA.values())
 
-    rule = load_category_profiles()[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
     shipped = {amount.value for amount in rule.statutory_cap_schedule}
 
     assert Decimal("15000") not in shipped
 
 
-def test_resolving_a_year_materialises_that_years_cap_and_drops_the_schedule() -> None:
+def test_resolving_a_year_materialises_that_years_cap_and_drops_the_schedule(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Consumers read one cap and cannot reach past the resolver for another year's."""
-    for year in sorted(category_profile_years()):
-        rule = resolve_category_profiles(year)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    for year in sorted(category_profile_years(operation=operation)):
+        rule = resolve_category_profiles(year, operation=operation)[
+            SpendingCategory.MUTUALIDAD_ALTERNATIVA
+        ].proportionality
 
         assert rule.statutory_cap_schedule == ()
         assert rule.statutory_cap_eur == _AEAT_PUBLISHED_CUOTA_MAXIMA[year]
 
 
-def test_a_year_without_a_cap_amount_is_not_reported_as_covered() -> None:
+def test_a_year_without_a_cap_amount_is_not_reported_as_covered(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The corpus may not claim a year it can cite but cannot compute.
 
     Coverage intersects citation evidence with cap availability, so a profile
     whose schedule stops early stops the corpus rather than resolving to a rule
     with no cap at all.
     """
-    grounded = category_profile_years()
-    rule = load_category_profiles()[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
+    grounded = category_profile_years(operation=operation)
+    rule = load_category_profiles(operation=operation)[SpendingCategory.MUTUALIDAD_ALTERNATIVA].proportionality
 
     for year in grounded:
         assert rule.cap_amount_for_year(year) is not None, (

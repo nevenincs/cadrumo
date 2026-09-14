@@ -12,8 +12,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
 
+from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.schema import FactSelector, MappingFactEntry, MappingFactPayload
 from ...calculations.registry.schema_base import DateAxis
@@ -24,8 +24,12 @@ from ..spending_category import SpendingCategory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _resolved_profile_fact(category: SpendingCategory, year: int) -> ResolvedMappingFact:
-    fact = compiled_bundled_authority().resolve_governed_fact(
+def _resolved_profile_fact(
+    category: SpendingCategory,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> ResolvedMappingFact:
+    fact = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=CATEGORY_PROFILE_FACT_ID,
             date_axis=DateAxis.FILING_PERIOD,
@@ -41,9 +45,11 @@ def _with_entries(fact: ResolvedMappingFact, entries: tuple[MappingFactEntry, ..
     return fact.model_copy(update={"payload": MappingFactPayload(entries=entries)})
 
 
-def test_2026_national_diet_cap_carries_both_daily_variants() -> None:
+def test_2026_national_diet_cap_carries_both_daily_variants(operation: PinnedAuthorityOperation) -> None:
     """RIRPF art. 9.A.3.a: 26,67 EUR/day without an overnight stay, 53,34 EUR/day with one."""
-    rule = resolve_category_profiles(2026)[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
+    rule = resolve_category_profiles(2026, operation=operation)[
+        SpendingCategory.MANUTENCION_DIETAS_NACIONAL
+    ].proportionality
 
     assert rule.statutory_cap_eur is None
     assert rule.statutory_cap_eur_per_day is None
@@ -54,30 +60,30 @@ def test_2026_national_diet_cap_carries_both_daily_variants() -> None:
     assert all(str(v.label) for v in rule.statutory_cap_variants)
 
 
-def test_year_referenced_cap_outside_its_schedule_is_refused() -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MUTUALIDAD_ALTERNATIVA, 2026)
+def test_year_referenced_cap_outside_its_schedule_is_refused(operation: PinnedAuthorityOperation) -> None:
+    fact = _resolved_profile_fact(SpendingCategory.MUTUALIDAD_ALTERNATIVA, 2026, operation)
 
     with pytest.raises(CategoryValidationError, match="no dated statutory cap for mutualidad_alternativa/2099"):
-        _profile_from_authority_fact(fact, authority=compiled_bundled_authority(), year=2099)
+        _profile_from_authority_fact(fact, operation=operation, year=2099)
 
 
-def test_unknown_cap_variant_field_is_refused_not_dropped() -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026)
+def test_unknown_cap_variant_field_is_refused_not_dropped(operation: PinnedAuthorityOperation) -> None:
+    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026, operation)
     tampered = _with_entries(
         fact,
         (*fact.payload.entries, MappingFactEntry(key="statutory_cap_variant.sin-pernocta.eur_per_week", value="1")),
     )
 
     with pytest.raises(CategoryValidationError, match="unknown cap variant entry"):
-        _profile_from_authority_fact(tampered, authority=compiled_bundled_authority(), year=2026)
+        _profile_from_authority_fact(tampered, operation=operation, year=2026)
 
 
-def test_cap_variant_without_an_amount_is_refused() -> None:
-    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026)
+def test_cap_variant_without_an_amount_is_refused(operation: PinnedAuthorityOperation) -> None:
+    fact = _resolved_profile_fact(SpendingCategory.MANUTENCION_DIETAS_NACIONAL, 2026, operation)
     stripped = _with_entries(
         fact,
         tuple(e for e in fact.payload.entries if e.key != "statutory_cap_variant.con-pernocta.eur_per_day"),
     )
 
     with pytest.raises(CategoryValidationError, match="declares no amount"):
-        _profile_from_authority_fact(stripped, authority=compiled_bundled_authority(), year=2026)
+        _profile_from_authority_fact(stripped, operation=operation, year=2026)

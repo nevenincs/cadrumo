@@ -91,7 +91,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints
 
@@ -428,7 +428,7 @@ def hydrate_applicability_rule(modelo: Modelo, fragment: ApplicabilityRuleDefini
                 require_irpf_estimation_regime(value) for value in fragment.required_estimation_regimes
             ),
             applicable_fiscal_residencies=frozenset(
-                FiscalResidency._from_registry(value) for value in fragment.applicable_fiscal_residencies
+                FiscalResidency.from_registry(value) for value in fragment.applicable_fiscal_residencies
             ),
             applicable_iva_regimes=frozenset(require_iva_regime(value) for value in fragment.applicable_iva_regimes),
             required_payer_fact=resolve_payer_fact(fragment.required_payer_fact)
@@ -699,15 +699,12 @@ def _iva_seed_applicability_rule(modelo: str) -> ModeloApplicabilityRule:
     fact scope instead of the first candidate that happened to import this
     module.
     """
-    common = {
-        "modelo": Modelo(modelo),
-        "applicable_entity_types": frozenset(entity_type_tokens()),
-        "required_income_categories": frozenset({irpf_income_category_actividad_economica_token()}),
-        "applicable_iva_regimes": iva_regime_self_assessment_tokens(),
-    }
     if modelo == "390":
         return ModeloApplicabilityRule(
-            **common,
+            modelo=modelo,
+            applicable_entity_types=frozenset(entity_type_tokens()),
+            required_income_categories=frozenset({irpf_income_category_actividad_economica_token()}),
+            applicable_iva_regimes=iva_regime_self_assessment_tokens(),
             applicable_reason=(
                 "Modelo 390 (resumen anual del IVA): el contribuyente realiza "
                 "una actividad económica sujeta al IVA y presenta la "
@@ -721,7 +718,10 @@ def _iva_seed_applicability_rule(modelo: str) -> ModeloApplicabilityRule:
         )
     if modelo == "303":
         return ModeloApplicabilityRule(
-            **common,
+            modelo=modelo,
+            applicable_entity_types=frozenset(entity_type_tokens()),
+            required_income_categories=frozenset({irpf_income_category_actividad_economica_token()}),
+            applicable_iva_regimes=iva_regime_self_assessment_tokens(),
             applicable_reason=(
                 "Modelo 303 (autoliquidación del IVA): el contribuyente "
                 "realiza una actividad económica sujeta al IVA y presenta la "
@@ -741,14 +741,17 @@ class _SeedApplicabilityRules(Mapping[str, ModeloApplicabilityRule]):
 
     _MODELOS = ("303", "390")
 
+    @override
     def __getitem__(self, modelo: str) -> ModeloApplicabilityRule:
         if modelo not in self._MODELOS:
             raise KeyError(modelo)
         return _iva_seed_applicability_rule(modelo)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         return iter(self._MODELOS)
 
+    @override
     def __len__(self) -> int:
         return len(self._MODELOS)
 

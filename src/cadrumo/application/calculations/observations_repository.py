@@ -54,7 +54,7 @@ from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.utc import UtcInstant
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.errors import RegistrySnapshotError
@@ -69,10 +69,14 @@ from .errors import (
 from .revision_carry_gate import revision_carry_outcome
 
 
-def require_decision_registry_coordinates_current(decision: IvaCompensationReconciliationDecision) -> None:
+def require_decision_registry_coordinates_current(
+    decision: IvaCompensationReconciliationDecision,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Refuse a persisted IVA decision whose target or source revision diverges."""
     for snapshot_ref in (decision.target_registry_snapshot_ref, *decision.source_registry_snapshot_refs):
-        outcome = revision_carry_outcome(snapshot_ref)
+        outcome = revision_carry_outcome(snapshot_ref, operation=operation)
         if outcome.refused:
             raise RegistrySnapshotError(
                 "persisted IVA compensation decision registry coordinate cannot be re-confirmed: "
@@ -315,9 +319,11 @@ class ObservationEnvelopePayload(BaseModel):
 
 def require_observation_envelope_coordinates_current(
     payload: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> ObservationEnvelopePayload:
     """Return a persisted observation only when its producing coordinate re-confirms."""
-    outcome = revision_carry_outcome(payload.registry_snapshot_ref)
+    outcome = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation)
     if outcome.refused:
         snapshot_ref = payload.registry_snapshot_ref
         raise RegistrySnapshotError(
@@ -506,7 +512,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
 def validate_observation_casilla_ids(
     observation: RegistryModeloObservation,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Validate all observed and operand casillas against the selected revision."""
     observed_casilla_ids = frozenset(observation.casilla_values)
@@ -514,9 +520,6 @@ def validate_observation_casilla_ids(
         operand_ref for item in observation.observations for operand_ref in item.operand_casilla_refs
     )
     referenced_casilla_ids = observed_casilla_ids | operand_casilla_refs
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return validate_observation_casilla_ids(observation, operation=indexed_operation)
     try:
         revision = operation.revision_for_context(
             observation.modelo,

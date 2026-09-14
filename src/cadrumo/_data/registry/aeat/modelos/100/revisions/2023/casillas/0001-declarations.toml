@@ -4250,6 +4250,9 @@ legal_refs = ["ley-35-2006:art-49"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "0456"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:802 y aeat-dr-100-2023-dictionary:814: campo NIFALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM1, tipo X, etiqueta Hijo/Hija 1 (*): NIF/NIE; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "0456"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -4258,6 +4261,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "0457"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:803 y aeat-dr-100-2023-dictionary:815: campo NONIFALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM1, tipo LGC, etiqueta Hijo/Hija 1 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "0457"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -4266,6 +4272,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "0458"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:807 y aeat-dr-100-2023-dictionary:819: campo NIFALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM2, tipo X, etiqueta Hijo/Hija 2 (*): NIF/NIE; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "0458"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -4274,6 +4283,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "0459"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:808 y aeat-dr-100-2023-dictionary:820: campo NONIFALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM2, tipo LGC, etiqueta Hijo/Hija 2 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "0459"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -4916,6 +4928,9 @@ legal_refs = ["ley-35-2006:art-7"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "0527"
+continuidad_id = "irpf-anualidades-alimentos-total"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:827 y aeat-dr-100-2023-dictionary:839: campo SUMALIM, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/SUMALIM, tipo P102, etiqueta Importe de las anualidades por alimentos en favor de los hijos satisfechas por decisión judicial ([1741] + [1744] + [1749] + [1754] + [1759]); ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "0527"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_total"
@@ -15841,6 +15856,9 @@ legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1741"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:804 y aeat-dr-100-2023-dictionary:816: campo IMPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM1, tipo P102, etiqueta Hijo/Hija 1 (*): Importe de las anualidades por alimentos satisfechas; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1741"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15848,6 +15866,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1742"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:805 y aeat-dr-100-2023-dictionary:817: campo NIFOPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM1, tipo X, etiqueta Hijo/Hija 1 (*): NIF/NIE del otro progenitor; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1742"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15856,6 +15877,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1743"
+continuidad_id = "irpf-anualidades-alimentos-hijo-1-otro-progenitor-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:806 y aeat-dr-100-2023-dictionary:818: campo NONIFOPALIM1, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM1, tipo LGC, etiqueta Hijo/Hija 1 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1743"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15864,6 +15888,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1744"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:809 y aeat-dr-100-2023-dictionary:821: campo IMPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM2, tipo P102, etiqueta Hijo/Hija 2 (*): Importe de las anualidades por alimentos satisfechas; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1744"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15871,6 +15898,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1745"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:810 y aeat-dr-100-2023-dictionary:822: campo NIFOPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM2, tipo X, etiqueta Hijo/Hija 2 (*): NIF/NIE del otro progenitor; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1745"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15879,6 +15909,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1746"
+continuidad_id = "irpf-anualidades-alimentos-hijo-2-otro-progenitor-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:811 y aeat-dr-100-2023-dictionary:823: campo NONIFOPALIM2, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM2, tipo LGC, etiqueta Hijo/Hija 2 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1746"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15887,6 +15920,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1747"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:812 y aeat-dr-100-2023-dictionary:824: campo NIFALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM3, tipo X, etiqueta Hijo/Hija 3 (*): NIF/NIE; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1747"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15895,6 +15931,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1748"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:813 y aeat-dr-100-2023-dictionary:825: campo NONIFALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM3, tipo LGC, etiqueta Hijo/Hija 3 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1748"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15903,6 +15942,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1749"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:814 y aeat-dr-100-2023-dictionary:826: campo IMPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM3, tipo P102, etiqueta Hijo/Hija 3 (*): Importe de las anualidades por alimentos satisfechas; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1749"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15910,6 +15952,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1750"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:815 y aeat-dr-100-2023-dictionary:827: campo NIFOPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM3, tipo X, etiqueta Hijo/Hija 3 (*): NIF/NIE del otro progenitor; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1750"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15918,6 +15963,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1751"
+continuidad_id = "irpf-anualidades-alimentos-hijo-3-otro-progenitor-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:816 y aeat-dr-100-2023-dictionary:828: campo NONIFOPALIM3, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM3, tipo LGC, etiqueta Hijo/Hija 3 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1751"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15926,6 +15974,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1752"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:817 y aeat-dr-100-2023-dictionary:829: campo NIFALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM4, tipo X, etiqueta Hijo/Hija 4 (*): NIF/NIE; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1752"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15934,6 +15985,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1753"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:818 y aeat-dr-100-2023-dictionary:830: campo NONIFALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM4, tipo LGC, etiqueta Hijo/Hija 4 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1753"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15942,6 +15996,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1754"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:819 y aeat-dr-100-2023-dictionary:831: campo IMPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM4, tipo P102, etiqueta Hijo/Hija 4 (*): Importe de las anualidades por alimentos satisfechas; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1754"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15949,6 +16006,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1755"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:820 y aeat-dr-100-2023-dictionary:832: campo NIFOPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM4, tipo X, etiqueta Hijo/Hija 4 (*): NIF/NIE del otro progenitor; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1755"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15957,6 +16017,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1756"
+continuidad_id = "irpf-anualidades-alimentos-hijo-4-otro-progenitor-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:821 y aeat-dr-100-2023-dictionary:833: campo NONIFOPALIM4, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM4, tipo LGC, etiqueta Hijo/Hija 4 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1756"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15965,6 +16028,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1757"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:822 y aeat-dr-100-2023-dictionary:834: campo NIFALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFALIM5, tipo X, etiqueta Hijo/Hija 5 (*): NIF/NIE; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1757"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15973,6 +16039,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1758"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:823 y aeat-dr-100-2023-dictionary:835: campo NONIFALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFALIM5, tipo LGC, etiqueta Hijo/Hija 5 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1758"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"
@@ -15981,6 +16050,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1759"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-importe"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:824 y aeat-dr-100-2023-dictionary:836: campo IMPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/IMPALIM5, tipo P102, etiqueta Hijo/Hija 5 (*): Importe de las anualidades por alimentos satisfechas; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1759"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 semantic_role = "irpf_anualidades_alimentos_hijo_importe"
@@ -15988,6 +16060,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1760"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:825 y aeat-dr-100-2023-dictionary:837: campo NIFOPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NIFOPALIM5, tipo X, etiqueta Hijo/Hija 5 (*): NIF/NIE del otro progenitor; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1760"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "nif"
@@ -15996,6 +16071,9 @@ legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75-2015"]
 additional_source_refs = ["aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd"]
 [[revisions."2023".casillas]]
 id = "1761"
+continuidad_id = "irpf-anualidades-alimentos-hijo-5-otro-progenitor-nif-ausente"
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-100-2022-dictionary:826 y aeat-dr-100-2023-dictionary:838: campo NONIFOPALIM5, ruta /DatosEconomicos/Resultados/DatosAdicionalesRes/AnualidadesAlimentosRes/NONIFOPALIM5, tipo LGC, etiqueta Hijo/Hija 5 (*): Si no tiene NIF o NIE, marque con una \"X\"; ambas ediciones mantienen el campo en AnualidadesAlimentosRes para anualidades por alimentos satisfechas por decisión judicial conforme a los arts. 64 y 75 LIRPF."
 number = "1761"
 section = ["resultados", "datos_adicionales_res", "anualidades_alimentos_res"]
 data_type = "boolean"

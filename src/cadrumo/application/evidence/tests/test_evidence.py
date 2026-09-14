@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -48,12 +49,15 @@ class InMemoryEvidenceBundleRepository(EvidenceBundleRepositoryPort):
 
     bundles: dict[str, EvidenceBundle] = field(default_factory=dict)
 
+    @override
     def load(self, identifier: str) -> EvidenceBundle | None:
         return self.bundles.get(identifier)
 
+    @override
     def save(self, payload: EvidenceBundle) -> None:
         self.bundles[payload.bundle_id] = payload
 
+    @override
     def iter_records(self) -> Iterator[EvidenceBundle]:
         return iter(tuple(self.bundles.values()))
 
@@ -64,6 +68,7 @@ class InMemoryEvidenceWorkUnits(EvidenceBundleWorkUnitPort):
 
     work_unit_ids: set[str] = field(default_factory=set)
 
+    @override
     def exists(self, work_unit_id: str) -> bool:
         return work_unit_id in self.work_unit_ids
 

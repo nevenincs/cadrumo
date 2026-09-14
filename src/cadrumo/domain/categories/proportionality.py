@@ -15,7 +15,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Self
+from typing import Self, override
 from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl, BaseModel, Field, GetCoreSchemaHandler, field_validator, model_validator
@@ -439,15 +439,19 @@ class ProportionalityKind:
     def requires_exclusive_use(self) -> bool:
         return self._requires_exclusive_use
 
+    @override
     def __str__(self) -> str:
         return self._token
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._token!r})"
 
+    @override
     def __hash__(self) -> int:
         return hash(self._token)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, ProportionalityKind) and self._token == other._token
 
@@ -501,15 +505,19 @@ class StatutoryCapPeriod:
     def is_per_person(self) -> bool:
         return self._is_per_person
 
+    @override
     def __str__(self) -> str:
         return self._token
 
+    @override
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._token!r})"
 
+    @override
     def __hash__(self) -> int:
         return hash(self._token)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return isinstance(other, StatutoryCapPeriod) and self._token == other._token
 

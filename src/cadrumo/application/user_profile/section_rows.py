@@ -33,6 +33,7 @@ from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
 
 
@@ -130,7 +131,8 @@ def add_profile_repeatable_section_row(
     profile_id: str,
     section_key: str,
     values: Mapping[str, str],
-    schema: ProfileSchemaDefinition | None = None,
+    schema: ProfileSchemaDefinition,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRepeatableRowMutationOutcome:
     """Allocate and publish one complete repeatable profile row atomically.
 
@@ -141,14 +143,13 @@ def add_profile_repeatable_section_row(
     authority operation; this operation does not consult bundled authoring
     data.
     """
-    if schema is None:
-        raise ProfileSchemaValidationError(
-            "profile row mutation requires the schema pinned to the authority operation",
-        )
     section = schema.section(section_key)
     if not section.repeatable:
         raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
-    current = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    current = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
     row_index = next_section_row_index(section.key, record_to_path_values(current))
     facts = section_row_facts(section, row_index=row_index, values=values)
     if not facts:
@@ -157,6 +158,7 @@ def add_profile_repeatable_section_row(
         profile_id=profile_id,
         changes=facts,
         door=ProfileFactWriteDoor.MANAGER_ROW,
+        profile_decode_context=profile_decode_context,
     )
     return ProfileRepeatableRowMutationOutcome(record=record, section_key=section.key, row_index=row_index)
 

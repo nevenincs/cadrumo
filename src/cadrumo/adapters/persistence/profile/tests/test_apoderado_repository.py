@@ -74,10 +74,14 @@ class TestStoredConfigurationOwnership:
         self._rekey_under(repo, _PROFILE_BUCKET_ID, self._foreign_configuration())
 
         with pytest.raises(ApoderadoConfigurationIdentityError):
-            ApoderadoService(
-                repository_factory=build_apoderado_config_repository,
-                settings=isolated_profile.settings,
-            ).status(bucket_id=_PROFILE_BUCKET_ID)
+            from .....domain.calculations.registry.authority import bundled_indexed_authority
+
+            with bundled_indexed_authority().operation() as operation:
+                ApoderadoService(
+                    repository_factory=build_apoderado_config_repository,
+                    operation=operation,
+                    settings=isolated_profile.settings,
+                ).status(bucket_id=_PROFILE_BUCKET_ID)
 
     def test_save_refuses_a_configuration_for_another_bucket(
         self,

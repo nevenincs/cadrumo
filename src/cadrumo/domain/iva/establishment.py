@@ -77,8 +77,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final, NamedTuple, cast
+from typing import TYPE_CHECKING, Final, NamedTuple, TypeGuard
 
 from ...core.identity.nif_iva import normalise_nif_iva
 from ...core.parsing.codes import normalise_iso_3166_alpha2_jurisdiction
@@ -118,6 +119,11 @@ Named rather than inlined because two things depend on agreeing about it: the
 resolver's refusal, and the gate that proves the refusal holds. A literal spelled
 twice is the drift this codebase keeps closing.
 """
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow one runtime component to an object-keyed mapping before validation."""
+    return isinstance(value, Mapping)
 
 
 def _eu_member_codes(*, operation: PinnedAuthorityOperation) -> frozenset[str]:
@@ -259,30 +265,30 @@ def _territory_carve_outs(
         IvaCatalogueError: When a published scope cannot be adapted into the
             operational closed set.
     """
-    from collections.abc import Mapping
-
     from ..calculations.registry.runtime_catalogues import TerritoryCarveOut
 
     loaded = operation.runtime_catalogue("territory_carve_outs")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         from .errors import IvaCatalogueError
 
         raise IvaCatalogueError("indexed authority territory component has an invalid shape")
-    records = cast(Mapping[str, TerritoryCarveOut], loaded)
-    if not all(isinstance(code, str) and isinstance(record, TerritoryCarveOut) for code, record in records.items()):
-        from .errors import IvaCatalogueError
+    records: list[tuple[str, TerritoryCarveOut]] = []
+    for code, record in loaded.items():
+        if not isinstance(code, str) or not isinstance(record, TerritoryCarveOut):
+            from .errors import IvaCatalogueError
 
-        raise IvaCatalogueError("indexed authority territory component has an invalid shape")
+            raise IvaCatalogueError("indexed authority territory component has an invalid shape")
+        records.append((code, record))
 
     return {
         code: _CarveOut(
             assimilated_to=record.assimilated_to,
-            scope=require_iva_territorial_scope(record.scope, authority=operation)
+            scope=require_iva_territorial_scope(record.scope, operation=operation)
             if record.scope is not None
             else None,
             establishes_nothing=record.establishes_nothing,
         )
-        for code, record in records.items()
+        for code, record in records
     }
 
 
@@ -399,8 +405,8 @@ def _scope_for_catalogued_country(
     if country_code == SPAIN_COUNTRY_CODE:
         return None
     if country_code in _eu_member_codes(operation=operation):
-        return iva_territorial_scope_alias("eu_member")
-    return iva_territorial_scope_alias("third_country")
+        return iva_territorial_scope_alias("eu_member", operation=operation)
+    return iva_territorial_scope_alias("third_country", operation=operation)
 
 
 def territorial_scope_for_country(  # noqa: D417
@@ -562,26 +568,22 @@ def _excluded_territories_by_prefix(
         IvaCatalogueError: When a published scope cannot be adapted into the
             operational closed set.
     """
-    from collections.abc import Mapping
-
     from ..calculations.registry.runtime_catalogues import SpanishPostalTerritory
 
     loaded = operation.runtime_catalogue("spanish_postal_territories")
-    if not isinstance(loaded, Mapping):
+    if not _is_object_mapping(loaded):
         from .errors import IvaCatalogueError
 
         raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
-    records = cast(Mapping[str, SpanishPostalTerritory], loaded)
-    if not all(
-        isinstance(prefix, str) and isinstance(record, SpanishPostalTerritory) for prefix, record in records.items()
-    ):
-        from .errors import IvaCatalogueError
+    records: list[tuple[str, SpanishPostalTerritory]] = []
+    for prefix, record in loaded.items():
+        if not isinstance(prefix, str) or not isinstance(record, SpanishPostalTerritory):
+            from .errors import IvaCatalogueError
 
-        raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
+            raise IvaCatalogueError("indexed authority postal-territory component has an invalid shape")
+        records.append((prefix, record))
 
-    return {
-        prefix: require_iva_territorial_scope(record.scope, authority=operation) for prefix, record in records.items()
-    }
+    return {prefix: require_iva_territorial_scope(record.scope, operation=operation) for prefix, record in records}
 
 
 def territorial_scope_for_spanish_postal_code(  # noqa: D417
@@ -624,7 +626,10 @@ def territorial_scope_for_spanish_postal_code(  # noqa: D417
     if len(candidate) != _POSTAL_CODE_LENGTH or not candidate.isdigit():
         return None
     excluded = _excluded_territories_by_prefix(operation=operation)
-    return excluded.get(candidate[:_POSTAL_PREFIX_LENGTH], iva_territorial_scope_alias("mainland"))
+    return excluded.get(
+        candidate[:_POSTAL_PREFIX_LENGTH],
+        iva_territorial_scope_alias("mainland", operation=operation),
+    )
 
 
 def country_code_for_stated_country_code(  # noqa: D417

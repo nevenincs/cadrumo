@@ -53,6 +53,7 @@ from ......application.operations.models import OperationRequest
 from ......application.operations.projection_services import OperationResultProjectionService
 from ......application.operations.registry import OperationRegistry
 from ......application.operations.supervisor import OperationSupervisor
+from ......application.operations.tests.authority_test_support import unread_authority_operation
 from ......core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ......core.operations import (
     OperationCancellation,
@@ -330,6 +331,7 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
         operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
+            authority_operation=unread_authority_operation(),
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -434,6 +436,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
         leases = OperationLeaseFilesystemRepository(storage_root=tmp_path / "operations")
         operands = operation_secure_reference_repository(objects=profile.repository)
         supervisor = OperationSupervisor(
+            authority_operation=unread_authority_operation(),
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -510,6 +513,7 @@ def test_supervisor_receipt_joins_the_exact_encrypted_child_after_settlement(tmp
         journal = OperationJournalRepository(storage_root=durable_root)
         leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
         supervisor = OperationSupervisor(
+            authority_operation=unread_authority_operation(),
             registry=_registered_filed_history_definition(definition),
             journal=journal,
             event_stream=journal,
@@ -586,6 +590,7 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
         journal = OperationJournalRepository(storage_root=durable_root)
         leases = OperationLeaseFilesystemRepository(storage_root=durable_root)
         supervisor = OperationSupervisor(
+            authority_operation=unread_authority_operation(),
             registry=registry,
             journal=journal,
             event_stream=journal,

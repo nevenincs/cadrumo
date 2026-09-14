@@ -9,7 +9,7 @@ cross the port boundary.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, override
 
 from ....application.modelo.review_package_recipient_registry import (
     RecipientFingerprintRegister,
@@ -52,6 +52,7 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
     def __init__(self, *, repository: SecureObjectRepository) -> None:
         self._repository = repository
 
+    @override
     def load(self) -> RecipientFingerprintRegister:
         """Load the register, preserving an absent row as an empty register."""
 
@@ -68,6 +69,7 @@ class RecipientFingerprintRegistryAdapter(RecipientFingerprintRegistryRepository
 
         return _translate_registry_failure("load", _load)
 
+    @override
     def save(self, register: RecipientFingerprintRegister) -> None:
         """Persist one validated register as the bucket's encrypted singleton."""
 

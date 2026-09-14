@@ -276,63 +276,67 @@ def execute_google_sheets_export(
     active = resolve_active_profile()
 
     async def run() -> GoogleSheetsExportPublicResultV1:
-        services = compose_operation_dependencies(operator_scope_ports=build_operator_scope_ports())
-        try:
-            request = OperationRequest(
-                definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-                subject_ref=profile_operation_subject(active),
-                payload=GoogleSheetsExportOperationRequest(
-                    profile_id=UUID(active),
-                    modelo=modelo,
-                    filing_year=year,
-                    period=period,
-                    prefill_relations=prefill_relations,
-                    dry_run=dry_run,
-                ),
+        with bundled_indexed_authority().operation() as authority_operation:
+            services = compose_operation_dependencies(
+                authority_operation=authority_operation,
+                operator_scope_ports=build_operator_scope_ports(),
             )
-            submitted = await services.submission.submit(
-                request,
-                actor_ref="operator:modelo-spreadsheet-push",
-            )
-            await services.submission.start(submitted.receipt.operation_id)
-            observed = await services.observation.observe(
-                OperationObservationRequestV1(
-                    operation_id=submitted.receipt.operation_id,
-                    after_cursor=0,
-                    page_limit=64,
+            try:
+                request = OperationRequest(
+                    definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+                    subject_ref=profile_operation_subject(active),
+                    payload=GoogleSheetsExportOperationRequest(
+                        profile_id=UUID(active),
+                        modelo=modelo,
+                        filing_year=year,
+                        period=period,
+                        prefill_relations=prefill_relations,
+                        dry_run=dry_run,
+                    ),
                 )
-            )
-            if not isinstance(observed, OperationObservationSuccessV1):
-                raise InternalInvariantError("supervised Google Sheets export observation is unavailable")
-            projection = observed.projection
-            code = projection.refusal_ref or projection.failure_error_code
-            if code is not None:
-                raise google_operation_error(code, diagnostic_ref=projection.diagnostic_ref)
-            if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-                raise InternalInvariantError(
-                    f"supervised Google Sheets export failed ({projection.diagnostic_ref or 'no diagnostic'})"
+                submitted = await services.submission.submit(
+                    request,
+                    actor_ref="operator:modelo-spreadsheet-push",
                 )
-            result_schema = projection.definition_contract.result_schema
-            if result_schema is None:
-                raise InternalInvariantError("supervised Google Sheets export has no public result schema")
-            resolved: (
-                OperationResultProjectionSuccessV1[GoogleSheetsExportPublicResultV1]
-                | OperationResultProjectionRefusalV1
-            ) = await services.result.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=projection.operation_id,
-                    terminal_revision=projection.revision,
-                    definition_contract_digest=projection.definition_contract.definition_contract_digest,
-                    result_schema=result_schema,
+                await services.submission.start(submitted.receipt.operation_id)
+                observed = await services.observation.observe(
+                    OperationObservationRequestV1(
+                        operation_id=submitted.receipt.operation_id,
+                        after_cursor=0,
+                        page_limit=64,
+                    )
                 )
-            )
-            if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
-                resolved.projection, GoogleSheetsExportPublicResultV1
-            ):
-                raise InternalInvariantError("supervised Google Sheets export result is unavailable")
-            return resolved.projection
-        finally:
-            await services.shutdown()
+                if not isinstance(observed, OperationObservationSuccessV1):
+                    raise InternalInvariantError("supervised Google Sheets export observation is unavailable")
+                projection = observed.projection
+                code = projection.refusal_ref or projection.failure_error_code
+                if code is not None:
+                    raise google_operation_error(code, diagnostic_ref=projection.diagnostic_ref)
+                if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+                    raise InternalInvariantError(
+                        f"supervised Google Sheets export failed ({projection.diagnostic_ref or 'no diagnostic'})"
+                    )
+                result_schema = projection.definition_contract.result_schema
+                if result_schema is None:
+                    raise InternalInvariantError("supervised Google Sheets export has no public result schema")
+                resolved: (
+                    OperationResultProjectionSuccessV1[GoogleSheetsExportPublicResultV1]
+                    | OperationResultProjectionRefusalV1
+                ) = await services.result.resolve(
+                    OperationResultProjectionRequestV1(
+                        operation_id=projection.operation_id,
+                        terminal_revision=projection.revision,
+                        definition_contract_digest=projection.definition_contract.definition_contract_digest,
+                        result_schema=result_schema,
+                    )
+                )
+                if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
+                    resolved.projection, GoogleSheetsExportPublicResultV1
+                ):
+                    raise InternalInvariantError("supervised Google Sheets export result is unavailable")
+                return resolved.projection
+            finally:
+                await services.shutdown()
 
     return active, asyncio.run(run())
 

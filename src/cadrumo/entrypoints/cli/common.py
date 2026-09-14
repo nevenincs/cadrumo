@@ -29,7 +29,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import cache, partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, cast, override
 
 import click
 import typer
@@ -77,6 +77,7 @@ class _PublishedModeloCode(click.ParamType[str]):
 
     name = "modelo"
 
+    @override
     def convert(
         self,
         value: object,
