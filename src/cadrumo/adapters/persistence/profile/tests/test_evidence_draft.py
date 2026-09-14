@@ -31,6 +31,9 @@ from io import BytesIO
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from PIL import Image
 from pydantic import ValidationError
 
@@ -55,7 +58,8 @@ from cadrumo.core.document_shape import DocumentShape
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.invoices.errors import InvoiceValidationError
 from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.llm_vision_evidence_support import json_array, run_against_loopback_ollama
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
@@ -417,7 +421,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
 
         clock = datetime(2026, 1, 1, tzinfo=UTC)
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
@@ -426,6 +430,7 @@ class TestExtractInvoiceDraftFromEvidenceVisionFallback:
                 ),
                 created_at=clock,
                 updated_at=clock,
+                context=_profile_creation_context_for_test(),
             ),
         )
 

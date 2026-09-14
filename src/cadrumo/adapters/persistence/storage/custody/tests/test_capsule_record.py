@@ -27,7 +27,8 @@ from cadrumo.application.user_profile.capsule_record import (
 )
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,9 +81,10 @@ def _create_capsule(
         sentinel=sentinel,
         data_files={"state/payload.bin": b"x"},
         recovery_envelope=mint_test_profile_recovery_envelope(_PROFILE_ID, dek=_DEK, dek_epoch=envelope.dek_epoch),
-        initial_record=UserProfileRecord(
+        initial_record=_create_profile_record_for_test(
             profile_id=str(_PROFILE_ID),
             setup_state=ProfileSetupState.INCOMPLETE,
+            context=_profile_create_context_for_test,
         ),
         record_session=session,
     )

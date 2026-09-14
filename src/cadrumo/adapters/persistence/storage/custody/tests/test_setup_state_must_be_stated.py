@@ -23,6 +23,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -34,6 +37,7 @@ from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_record_repository import require_profile_record_session
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -132,8 +136,10 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
     one can rely on it rather than discovering it.
     """
     del tmp_path
-    stated = UserProfileRecord(
-        profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e", setup_state=ProfileSetupState.COMPLETE
+    stated = _create_profile_record_for_test(
+        profile_id="8a3c2f10-9f4d-4a5b-8c7e-1d2b3a4c5d6e",
+        setup_state=ProfileSetupState.COMPLETE,
+        context=_profile_creation_context_for_test(),
     )
 
     carried = stated.model_copy(update={"record_revision": 2})

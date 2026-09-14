@@ -10,15 +10,19 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.period import Period
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
@@ -41,7 +45,7 @@ def _store_current_profile(
     composition: M303RegimeComposition,
 ) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -61,6 +65,7 @@ def _store_current_profile(
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
+            context=_profile_creation_context_for_test(),
         ),
         root=runtime_profile.storage_root,
         label="M303 CLI scope profile",

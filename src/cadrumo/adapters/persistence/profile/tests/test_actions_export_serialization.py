@@ -19,6 +19,7 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _repositories,
@@ -45,8 +46,11 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
             iva_amount=Decimal("21.00"),
             idempotency_key="export-first",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     second = create_manual_transaction(
@@ -59,8 +63,11 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
             business_classification=BusinessClassification.BUSINESS,
             idempotency_key="export-second",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 31, tzinfo=UTC),
     )
 
@@ -116,8 +123,11 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_cou
             counterparty_country="DE",
             idempotency_key="export-intracommunity",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 6, 9, 30, tzinfo=UTC),
     )
 

@@ -8,6 +8,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -27,7 +30,8 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.modelos.errors import ModeloError
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,7 +48,7 @@ _BUCKET_ID = "17171717-1717-4171-8171-171717171717"
 
 def _seed_ready_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -64,13 +68,14 @@ def _seed_ready_profile() -> None:
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
+            context=_profile_creation_context_for_test(),
         ),
     )
 
 
 def _seed_sociedad_profile() -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -90,6 +95,7 @@ def _seed_sociedad_profile() -> None:
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=Decimal("500000")),
                 UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
             ),
+            context=_profile_creation_context_for_test(),
         ),
     )
 

@@ -21,6 +21,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
@@ -28,7 +31,8 @@ from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
 )
 from cadrumo.application.user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,13 +50,14 @@ def _store_profile(**facts: str) -> None:
     actually stores.
     """
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             profile_id=_BUCKET_ID,
             setup_state=ProfileSetupState.COMPLETE,
             facts=tuple(
                 UserProfileFact(path=path, value=Decimal(value) if path.startswith("vivienda_office.") else value)
                 for path, value in facts.items()
             ),
+            context=_profile_creation_context_for_test(),
         ),
     )
 

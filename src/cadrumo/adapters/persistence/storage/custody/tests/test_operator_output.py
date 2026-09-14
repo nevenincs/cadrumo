@@ -40,7 +40,8 @@ from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.wizard.results import ConfigProfileCreateResult, ProfileWizardStatus
 from cadrumo.core.config import override_settings
 from cadrumo.core.json_contract import NoticeSeverity
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,9 +84,8 @@ def _create_committed_profile(root: Path, *, bucket_id: str, label: str) -> None
             sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
             data_files={},
             recovery_envelope=mint_test_profile_recovery_envelope(profile_id, dek=_DEK, dek_epoch=envelope.dek_epoch),
-            initial_record=UserProfileRecord(
-                profile_id=bucket_id,
-                setup_state=ProfileSetupState.INCOMPLETE,
+            initial_record=_create_profile_record_for_test(
+                profile_id=bucket_id, setup_state=ProfileSetupState.INCOMPLETE, context=_profile_create_context_for_test
             ),
             record_session=session,
         )

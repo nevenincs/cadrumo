@@ -15,6 +15,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -25,7 +28,8 @@ from cadrumo.domain.calculations.registry.formula_runtime_ops import resolve_par
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -82,12 +86,13 @@ def test_profile_binding_resolution_routes_aggregate_into_decimal_channel(tmp_pa
         descendientes = (DescendantInfo(birth_date=date(2012, 4, 1)),)
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=tuple(facts),
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         snapshot = _snapshot(2024)
@@ -108,7 +113,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=(
@@ -122,6 +127,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
                 ),
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=_BUCKET)
@@ -176,12 +182,13 @@ def test_profile_binding_resolution_routes_madrid_autonomico_into_decimal_channe
         )
         facts = [UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_list(descendientes)]
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET,
                 facts=(*facts, UserProfileFact(path="tax_residence.ccaa", value="madrid")),
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         snapshot = _snapshot(2024)

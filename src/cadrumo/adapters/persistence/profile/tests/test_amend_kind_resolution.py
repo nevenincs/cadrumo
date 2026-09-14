@@ -35,6 +35,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -70,7 +73,8 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -116,12 +120,13 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         yield (

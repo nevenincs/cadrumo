@@ -204,18 +204,17 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
     )
     assert locally_filed.external_evidence is None
 
-    with pytest.raises(AmendmentEvidenceMissingError):
-        with bundled_indexed_authority().operation() as operation:
-            amend_modelo_revision(
-                from_filing_record_id=locally_filed.filing_record_id,
-                overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
-                amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-                reason="needed to amend",
-                actor="operator-A",
-                ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
-                clock=_T4,
-                operation=operation,
-            )
+    with pytest.raises(AmendmentEvidenceMissingError), bundled_indexed_authority().operation() as operation:
+        amend_modelo_revision(
+            from_filing_record_id=locally_filed.filing_record_id,
+            overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="needed to amend",
+            actor="operator-A",
+            ports=build_amendment_action_ports(bucket_id=_PROFILE_ID, operation=operation),
+            clock=_T4,
+            operation=operation,
+        )
 
 
 def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path) -> None:

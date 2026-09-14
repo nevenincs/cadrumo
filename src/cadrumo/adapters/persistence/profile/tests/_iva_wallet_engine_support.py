@@ -10,6 +10,9 @@ from functools import cache
 from pathlib import Path
 
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -42,7 +45,8 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _EXTERNAL = load_external_constants()
 WALLET_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
@@ -238,7 +242,7 @@ def _store_operator_profile() -> None:
 
 def _store_operator_profile_with_tax_id(tax_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -262,6 +266,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
             ),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

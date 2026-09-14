@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -32,6 +35,7 @@ from cadrumo.domain.calculations.registry.relations import relation_prefill_bind
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.modelos.errors import ModeloError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -73,7 +77,7 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -97,6 +101,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
 
 

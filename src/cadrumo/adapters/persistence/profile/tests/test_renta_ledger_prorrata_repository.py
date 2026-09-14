@@ -10,7 +10,14 @@ from typing import Any, cast
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
+from cadrumo.adapters.persistence.profile.catalogue_reads import (
+    InvoiceCatalogueReadAdapter,
+    TransactionCatalogueReadAdapter,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -20,6 +27,7 @@ from cadrumo.application.aggregation.renta_ledger import (
     RentaLedgerExpenseAggregation,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.categories.spending_category import SpendingCategory
@@ -28,12 +36,25 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 _ANNUAL_2025 = Period.from_year_and_code(2025, "0A")
 _M100_ASESORIA_CASILLA = "0199"
+
+
+def _renta_ports(
+    *,
+    transaction_repository: TransactionCatalogueRepository,
+    invoice_repository: InvoiceCatalogueRepository,
+) -> InvoiceCatalogueReadPorts:
+    """Compose canonical catalogue-read ports around test repositories."""
+    return InvoiceCatalogueReadPorts(
+        transaction_reader=TransactionCatalogueReadAdapter(repository=transaction_repository),
+        invoice_reader=InvoiceCatalogueReadAdapter(repository=invoice_repository),
+    )
 
 
 @pytest.fixture
@@ -98,10 +119,11 @@ def _transaction(
 
 def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
     """Build a user-profile record from explicitly supplied IVA facts."""
-    return UserProfileRecord(
+    return _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="33333333-3333-4333-8333-333333333333",
         facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
+        context=_profile_creation_context_for_test(),
     )
 
 
@@ -135,8 +157,10 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
         return aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            ports=_renta_ports(
+                transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+                invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            ),
             profile_year=2025,
             profile_record=profile_record,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
@@ -191,8 +215,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        ),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     )
@@ -228,8 +254,10 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        ),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     )
@@ -283,8 +311,10 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
             result = aggregate_renta_ledger_expenses_from_repositories(
                 bucket_id=runtime.secondary.bucket_id,
                 period=_ANNUAL_2025,
-                transaction_repository=transaction_repository,
-                invoice_repository=invoice_repository,
+                ports=_renta_ports(
+                    transaction_repository=transaction_repository,
+                    invoice_repository=invoice_repository,
+                ),
                 profile_year=2025,
                 profile_record=_profile_with_iva_regime(),
                 prorrata_register_repository=secondary_prorrata_repository,
@@ -303,6 +333,5 @@ def test_repository_wrapper_refuses_an_implicit_prorrata_repository() -> None:
         cast(Any, aggregate_renta_ledger_expenses_from_repositories)(
             bucket_id=_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=None,
-            invoice_repository=None,
+            ports=cast(Any, None),
         )

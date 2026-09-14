@@ -24,6 +24,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -39,7 +42,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -227,12 +231,13 @@ def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCata
 
 def _seed_m303_ready_profile(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_M303_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

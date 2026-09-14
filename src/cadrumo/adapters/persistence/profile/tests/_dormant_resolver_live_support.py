@@ -3,11 +3,15 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
@@ -34,12 +38,13 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

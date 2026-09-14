@@ -14,10 +14,14 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -27,7 +31,7 @@ from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
-from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ......domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
 _REVISION = "2019-y-siguientes"
@@ -57,12 +61,13 @@ def bucket_and_repository(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalog
     """Yield one real bucket-scoped work-unit repository over an isolated profile."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)

@@ -46,7 +46,8 @@ from cadrumo.application.user_profile.recovery_custody import (
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope, render_error_text
 from cadrumo.core.i18n.render import tr
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -94,9 +95,10 @@ class _EnrolledProfile:
                 password_envelope=self.envelope,
                 sentinel=self.sentinel,
                 data_files={},
-                initial_record=UserProfileRecord(
+                initial_record=_create_profile_record_for_test(
                     profile_id=str(self.profile_id),
                     setup_state=ProfileSetupState.INCOMPLETE,
+                    context=_profile_create_context_for_test,
                 ),
                 record_session=session,
                 recovery_envelope=self.enrollment.envelope,
@@ -510,9 +512,10 @@ def test_restore_refuses_a_database_key_the_committed_sentinel_does_not_commit_t
             password_envelope=enrolled.envelope,
             sentinel=create_profile_custody_sentinel(envelope=enrolled.envelope, dek=divergent_dek),
             data_files={},
-            initial_record=UserProfileRecord(
+            initial_record=_create_profile_record_for_test(
                 profile_id=str(enrolled.profile_id),
                 setup_state=ProfileSetupState.INCOMPLETE,
+                context=_profile_create_context_for_test,
             ),
             record_session=divergent_session,
             recovery_envelope=enrolled.enrollment.envelope,

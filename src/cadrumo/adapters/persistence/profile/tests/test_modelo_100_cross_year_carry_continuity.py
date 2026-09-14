@@ -55,12 +55,12 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
-from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
@@ -68,6 +68,7 @@ from cadrumo.application.modelo.calculation_actions import calculate_modelo_revi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -75,7 +76,9 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -151,7 +154,7 @@ def _seed_taxpayer_unit_profile() -> None:
     # The display_name MUST match the label the isolated_runtime_profile
     # fixture stamps on the bucket's profile manifest ("Test runtime profile");
     # a divergent label trips the torn-rename guard in CommittedProfileView.
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_PROFILE_ID,
         facts=(
@@ -188,6 +191,7 @@ def _seed_taxpayer_unit_profile() -> None:
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
@@ -203,9 +207,13 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
     persisted :class:`CalculationRevision`.
     """
     snapshot = _snapshot(filing_year)
-    carry = resolve_bindings_from_local_store(
-        snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
-    ).binding_values
+    with bundled_indexed_authority().operation() as operation:
+        carry = resolve_bindings_from_local_store(
+            snapshot,
+            operation=operation,
+            repository=obs_repo,
+            iva_history_repository=IvaCompensationHistoryRepository(),
+        ).binding_values
     # Every non-profile binding defaults to zero through the caller channel;
     # the previous_filing carry overlays its real resolved value. profile
     # bindings are deliberately omitted so the profile resolver fills them.
@@ -218,29 +226,25 @@ def _calculate_100(*, filing_year: int, obs_repo: CalculationObservationReposito
         for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
     }
 
-    work_repo = WorkUnitCatalogueRepository()
-    calc_repo = CalculationRevisionCatalogueRepository()
-    event_repo = BucketEventHistoryRepository()
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=_MODELO,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, _PERIOD),
         revision_id=str(filing_year),
-        repository=work_repo,
+        ports=build_work_lifecycle_ports(bucket_id=_BUCKET_ID),
         clock=_CLOCK,
     )
-    return calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor=_BUCKET_ID,
-        casilla_inputs={},
-        binding_values=binding_values,
-        relation_values=relation_values,
-        work_unit_repository=work_repo,
-        calculation_repository=calc_repo,
-        bucket_event_repository=event_repo,
-        clock=_CLOCK,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
+            actor=_BUCKET_ID,
+            casilla_inputs={},
+            binding_values=binding_values,
+            relation_values=relation_values,
+            clock=_CLOCK,
+        )
 
 
 def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Path) -> None:

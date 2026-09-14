@@ -78,6 +78,9 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -99,7 +102,8 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.period import calculation_filing_date
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -141,7 +145,7 @@ def _seed_sociedad_m_profile() -> None:
     (clave 03) is the applicable one - matching the manual's scenario, which
     never mentions the art. 40.3 obligation.
     """
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -164,6 +168,7 @@ def _seed_sociedad_m_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

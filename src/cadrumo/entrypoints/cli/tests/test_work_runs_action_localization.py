@@ -11,12 +11,16 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.operator_actions.models import (
@@ -48,7 +52,7 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .._action_rendering import resolved_precondition_action_json_cell
 from .._modelo_work_runs_cli import _workflow_run_payload, _workflow_run_tab_line
 from ..common import resolve_cli_precondition_action
@@ -88,12 +92,13 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     ):
         register_minimal_profile(profile_id=_PROFILE_ID, display_name=_PROFILE_LABEL)
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_PROFILE_FACTS,
                 created_at=_T,
                 updated_at=_T,
+                context=_profile_creation_context_for_test(),
             ),
             label=_PROFILE_LABEL,
         )

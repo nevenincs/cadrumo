@@ -56,6 +56,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.errors import ProfileNotFoundError
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -155,7 +156,11 @@ def test_lifecycle_projects_only_its_committed_capsule_and_owns_selection(tmp_pa
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
+        initial_record=_create_profile_record_for_test(
+            profile_id=str(_PROFILE_ID),
+            setup_state=ProfileSetupState.INCOMPLETE,
+            context=_profile_create_context_for_test,
+        ),
         record_session=record_session,
     )
 
@@ -254,10 +259,11 @@ def test_complete_setup_cas_replaces_only_the_current_authenticated_record(tmp_p
         # about the compare-and-swap, so its subject has to be a record that
         # promotion would legitimately accept; an empty one would fail here for
         # the promotion door's reason rather than this test's.
-        initial_record=UserProfileRecord(
+        initial_record=_create_profile_record_for_test(
             profile_id=str(_PROFILE_ID),
             facts=complete_profile_facts(load_user_profile_schema()),
             setup_state=ProfileSetupState.INCOMPLETE,
+            context=_profile_create_context_for_test,
         ),
         record_session=record_session,
     )
@@ -300,7 +306,11 @@ def test_fact_command_cas_publishes_the_record_and_authenticated_event_together(
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(profile_id=str(_PROFILE_ID), setup_state=ProfileSetupState.INCOMPLETE),
+        initial_record=_create_profile_record_for_test(
+            profile_id=str(_PROFILE_ID),
+            setup_state=ProfileSetupState.INCOMPLETE,
+            context=_profile_create_context_for_test,
+        ),
         record_session=record_session,
     )
 
@@ -352,7 +362,11 @@ def test_label_provenance_is_uuid_bound_and_revisioned_at_create(tmp_path: Path)
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
+        initial_record=_create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(_PROFILE_ID),
+            context=_profile_create_context_for_test,
+        ),
         record_session=session,
     )
     initial = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
@@ -381,7 +395,11 @@ def test_label_provenance_refuses_a_same_uuid_canonical_substitution(tmp_path: P
             sentinel=sentinel,
             data_files=data_files,
             recovery_envelope=_recovery_envelope(profile_id, envelope.dek_epoch),
-            initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(profile_id)),
+            initial_record=_create_profile_record_for_test(
+                setup_state=ProfileSetupState.COMPLETE,
+                profile_id=str(profile_id),
+                context=_profile_create_context_for_test,
+            ),
             record_session=session,
         )
         label_records.append((profile_id, load_committed_profile_custody_label_record(profile_id, root=tmp_path)))
@@ -408,7 +426,11 @@ def test_locked_label_read_refuses_a_fresh_canonical_same_uuid_substitution(tmp_
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
+        initial_record=_create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(_PROFILE_ID),
+            context=_profile_create_context_for_test,
+        ),
         record_session=session,
     )
     original = load_committed_profile_custody_label_record(_PROFILE_ID, root=tmp_path)
@@ -438,7 +460,11 @@ def test_real_crash_between_label_and_head_recovers_the_durable_advance(tmp_path
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=str(_PROFILE_ID)),
+        initial_record=_create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=str(_PROFILE_ID),
+            context=_profile_create_context_for_test,
+        ),
         record_session=session,
     )
     before = CommittedProfileRepository(root=tmp_path).load(_PROFILE_ID)
@@ -472,10 +498,11 @@ def test_committed_profile_view_keeps_facts_locked_until_the_current_session_aut
         sentinel=sentinel,
         data_files=data_files,
         recovery_envelope=_recovery_envelope(_PROFILE_ID, envelope.dek_epoch),
-        initial_record=UserProfileRecord(
+        initial_record=_create_profile_record_for_test(
             profile_id=str(_PROFILE_ID),
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             setup_state=ProfileSetupState.INCOMPLETE,
+            context=_profile_create_context_for_test,
         ),
         record_session=session,
     )

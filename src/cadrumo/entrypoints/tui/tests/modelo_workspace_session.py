@@ -27,8 +27,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -43,7 +47,7 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.modelos.codes import ModeloCode
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _BUCKET_ID = "13000000-0000-4000-8000-000000000451"
 _REVISION = "2019-y-siguientes"
@@ -114,12 +118,13 @@ def real_workspace_inspection_result(
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=profile.bucket_id,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)

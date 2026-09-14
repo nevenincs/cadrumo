@@ -19,6 +19,7 @@ from .ledger_action_create_support import (
     POST_UPDATE_EVENT_PAYLOADS,
     PRESERVED_CREATE_AUDIT_FIELDS,
     UPDATED_FIELD_EXPECTATIONS,
+    ledger_ports_for_test,
 )
 from .ledger_action_persistence_support import _BUCKET_ID, _repositories
 
@@ -52,8 +53,11 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
             description="draft description",
             idempotency_key="cash-row",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     updated = update_manual_transaction(
@@ -70,8 +74,11 @@ def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> 
             actor="operator-B",
             source_command="aeat app ledger update",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
     reloaded = transaction_repository.load()

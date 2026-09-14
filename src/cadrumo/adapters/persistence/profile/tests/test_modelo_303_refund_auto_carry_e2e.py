@@ -39,6 +39,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -73,7 +76,8 @@ from cadrumo.domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -144,7 +148,7 @@ def _activity_start_date_for_period(period_token: str) -> date:
 
 def _store_operator_profile(*, period_token: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -167,6 +171,7 @@ def _store_operator_profile(*, period_token: str) -> None:
             ),
             created_at=_DECIDED_AT,
             updated_at=_DECIDED_AT,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

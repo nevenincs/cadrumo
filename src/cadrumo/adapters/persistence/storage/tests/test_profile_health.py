@@ -15,6 +15,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     _profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....adapters.persistence.storage.custody.records import (
     ProfileCustodyEnvelope,
@@ -34,7 +35,7 @@ from .....application.workflow.profile_health import assess_active_profile_healt
 from .....application.workflow.state_models import WorkflowState
 from .....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from .....core.config import override_settings
-from .....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -94,7 +95,12 @@ def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = 
         sentinel=create_profile_custody_sentinel(envelope=envelope, dek=_DEK),
         data_files={},
         recovery_envelope=mint_test_profile_recovery_envelope(identity, dek=_DEK, dek_epoch=envelope.dek_epoch),
-        initial_record=UserProfileRecord(setup_state=ProfileSetupState.COMPLETE, profile_id=_PROFILE_ID, facts=facts),
+        initial_record=_create_profile_record_for_test(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_PROFILE_ID,
+            facts=facts,
+            context=_profile_create_context_for_test,
+        ),
         record_session=session,
     )
     return session

@@ -13,6 +13,8 @@ from cadrumo.application.ledger.actions_split_merge import split_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, SplitChildCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 
+from .ledger_action_create_support import ledger_ports_for_test
+
 _BUCKET_ID = "25252525-2525-4525-8525-252525252525"
 
 
@@ -41,8 +43,11 @@ def _split_setup(
     )
     parent = create_manual_transaction(
         parent_command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     half = parent_amount / Decimal("2")
@@ -54,8 +59,11 @@ def _split_setup(
             SplitChildCommand(amount=parent_amount - half, description="personal portion"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
     )
     return parent, split

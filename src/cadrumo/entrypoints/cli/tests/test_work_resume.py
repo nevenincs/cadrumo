@@ -9,12 +9,16 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
     seed_test_profile_record,
 )
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -44,7 +48,7 @@ from ....core.operator_action_enums import (
 )
 from ....core.period import Period
 from ....domain.deadlines.models import ObligationStatus
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -79,12 +83,13 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 
 def _seed_ready_profile_record(bucket_id: str) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=_READY_PROFILE_FACTS,
             created_at=_T,
             updated_at=_T,
+            context=_profile_creation_context_for_test(),
         ),
         label=_PROFILE_LABEL,
     )

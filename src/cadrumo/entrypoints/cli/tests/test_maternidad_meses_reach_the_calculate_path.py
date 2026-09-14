@@ -36,13 +36,17 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.config import override_settings
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
@@ -99,7 +103,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -122,6 +126,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
         ),
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Maternidad meses arrival test profile")
 

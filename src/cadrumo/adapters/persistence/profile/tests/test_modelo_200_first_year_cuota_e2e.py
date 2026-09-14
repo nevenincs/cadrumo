@@ -46,6 +46,9 @@ from decimal import Decimal
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -71,7 +74,8 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -105,7 +109,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
     modalidad-cuota filer. ``incn_prior_12_months`` 500.000 <= the
     6.000.000 LIS art. 40.3 threshold -> ART_40_2_OPTIONAL (modalidad cuota).
     """
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -131,6 +135,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

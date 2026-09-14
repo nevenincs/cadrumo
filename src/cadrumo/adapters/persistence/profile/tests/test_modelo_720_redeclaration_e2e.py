@@ -45,6 +45,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
@@ -55,6 +58,7 @@ from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -84,7 +88,7 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationReport,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -132,7 +136,7 @@ def _source_casilla_id(binding: BindingDefinition) -> CasillaId:
 def _secure_backend(tmp_path: Path) -> Generator[None]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_BUCKET_ID,
                 facts=(
@@ -148,6 +152,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
                 ),
                 created_at=_CLOCK_N,
                 updated_at=_CLOCK_N,
+                context=_profile_creation_context_for_test(),
             ),
         )
         yield

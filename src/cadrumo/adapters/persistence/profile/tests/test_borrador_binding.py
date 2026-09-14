@@ -10,6 +10,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -36,7 +39,8 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -140,7 +144,7 @@ def _zero_relation_values() -> dict[RelationId, Decimal]:
 def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
     """Persist the profile facts required by the live calculation adapter path."""
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=(
@@ -169,6 +173,7 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
+            context=_profile_creation_context_for_test(),
         ),
     )
 

@@ -30,9 +30,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from sqlalchemy.engine import Engine
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -47,13 +51,15 @@ from cadrumo.application.modelo.work_lifecycle import (
     get_work_unit,
     rename_work_unit,
 )
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.write_unit_recorder import WriteUnitRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -108,12 +114,13 @@ def fixture(tmp_path: Path) -> Iterator[_Fixture]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as profile:
         objects = profile.repository
         seed_test_profile_record(
-            UserProfileRecord(
+            _create_profile_record_for_test(
                 setup_state=ProfileSetupState.COMPLETE,
                 profile_id=_PROFILE_ID,
                 facts=_READY_PROFILE_FACTS,
                 created_at=_T0,
                 updated_at=_T0,
+                context=_profile_creation_context_for_test(),
             ),
         )
         yield _Fixture(
@@ -132,7 +139,10 @@ def _seed_work_unit(fixture: _Fixture) -> WorkUnit:
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2019-y-siguientes",
-        repository=fixture.work_units,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=fixture.work_units,
+            bucket_event_repository=fixture.events,
+        ),
         clock=_T0,
     )
     persist_justificante_metadata(
@@ -157,6 +167,7 @@ def _import(fixture: _Fixture, work_unit: WorkUnit):
         calculation_repository=fixture.calculations,
         filing_repository=fixture.filings,
         bucket_event_repository=fixture.events,
+        observation_repository=CalculationObservationRepository(),
         expected_tax_id=_TAX_ID,
         clock=_T1,
     )
@@ -213,7 +224,13 @@ def test_external_import_persists_its_filing_imported_event(fixture: _Fixture) -
     revision = fixture.calculations.load().get(filing.calculation_revision_id)
     assert revision is not None
     assert revision.state is CalculationRevisionState.PRESENTADO
-    refreshed = get_work_unit(work_unit.work_unit_id, repository=fixture.work_units)
+    refreshed = get_work_unit(
+        work_unit.work_unit_id,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=fixture.work_units,
+            bucket_event_repository=fixture.events,
+        ),
+    )
     assert refreshed.filed_calculation_revision_id == filing.calculation_revision_id
     assert refreshed.current_filing_record_id == filing.filing_record_id
 
@@ -284,7 +301,10 @@ def test_work_unit_creation_commits_state_and_event_in_one_transaction(fixture: 
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             revision_id="2019-y-siguientes",
-            repository=fixture.work_units,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=fixture.work_units,
+                bucket_event_repository=fixture.events,
+            ),
             clock=_T0,
         )
 
@@ -344,7 +364,10 @@ def test_work_unit_rename_and_discard_commit_their_events_in_one_transaction(fix
             work_unit_id=work_unit.work_unit_id,
             new_name="Renamed unit",
             actor="operator",
-            repository=fixture.work_units,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=fixture.work_units,
+                bucket_event_repository=fixture.events,
+            ),
             clock=_T1,
         )
     assert rename_recorder.commits_between_writes() == 0
@@ -355,7 +378,10 @@ def test_work_unit_rename_and_discard_commit_their_events_in_one_transaction(fix
             work_unit_id=work_unit.work_unit_id,
             actor="operator",
             reason="superseded",
-            repository=fixture.work_units,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=fixture.work_units,
+                bucket_event_repository=fixture.events,
+            ),
             clock=_T1,
         )
     assert discard_recorder.commits_between_writes() == 0

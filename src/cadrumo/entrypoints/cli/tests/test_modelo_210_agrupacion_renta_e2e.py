@@ -16,12 +16,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from ....application.modelo.work_lifecycle import create_work_unit
+from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....core.period import Period
@@ -114,7 +116,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             filing_year=_FILING_YEAR,
             period=Period.from_year_and_code(_FILING_YEAR, "0A"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=work_repo, bucket_event_repository=event_repo),
             clock=_CLOCK,
         )
 
@@ -126,9 +128,12 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
                 text_casilla_inputs={"tipo_renta": "general"},
                 m210_official_tipo_renta_code="35",
                 detail_rows=rows,
-                work_unit_repository=work_repo,
-                calculation_repository=calculation_repo,
-                bucket_event_repository=event_repo,
+                ports=calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_repo,
+                    calculation_repository=calculation_repo,
+                    bucket_event_repository=event_repo,
+                ),
                 clock=_CLOCK,
             )
 
@@ -139,9 +144,12 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             text_casilla_inputs={"tipo_renta": "general"},
             m210_official_tipo_renta_code="01",
             detail_rows=rows,
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            bucket_event_repository=event_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                work_unit_repository=work_repo,
+                calculation_repository=calculation_repo,
+                bucket_event_repository=event_repo,
+            ),
             clock=_CLOCK,
         )
         plazo_resolution = calculated_m210_plazo_resolution(
@@ -227,7 +235,10 @@ def test_calculate_and_verify_project_exactly_one_grounded_qualified_plazo_notic
             filing_year=_FILING_YEAR,
             period=Period.from_year_and_code(_FILING_YEAR, "0A"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK,
         )
         calculation_result = calculate_modelo_work_revision(
@@ -291,7 +302,10 @@ def test_calculate_and_verify_never_project_an_ungrounded_tipo_28_offset(tmp_pat
             filing_year=_FILING_YEAR,
             period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK,
         )
         calculation_result = calculate_modelo_work_revision(
@@ -328,7 +342,10 @@ def test_imputadas_02_event_work_projects_the_grounded_annual_notice_on_calculat
             filing_year=_FILING_YEAR,
             period=Period.from_year_and_code(_FILING_YEAR, "EVENT-1"),
             revision_id=snapshot.revision.id,
-            repository=work_repo,
+            ports=WorkLifecyclePorts(
+                work_unit_repository=work_repo,
+                bucket_event_repository=BucketEventHistoryRepository(),
+            ),
             clock=_CLOCK,
         )
         calculation_result = calculate_modelo_work_revision(

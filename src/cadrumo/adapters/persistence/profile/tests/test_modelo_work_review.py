@@ -35,8 +35,8 @@ from cadrumo.application.modelo.work_review import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.modelo_work_progress_state import ModeloWorkProgressState
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef

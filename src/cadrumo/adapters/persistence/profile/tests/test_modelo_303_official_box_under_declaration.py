@@ -39,14 +39,22 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
+    build_test_verification_repository_bundle,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -59,9 +67,11 @@ from cadrumo.application.modelo.calculation_actions import (
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -71,7 +81,8 @@ from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -161,7 +172,7 @@ def workflow_profile() -> TaxpayerProfile:
 
 def _store_profile(objects: SecureObjectRepository) -> None:
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET,
             facts=(
@@ -184,6 +195,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
             ),
             created_at=_T0,
             updated_at=_T0,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -271,14 +283,17 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
     )
 
 
-def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
+def _seed_work_unit(
+    wu_repo: WorkUnitCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+):
     return create_work_unit(
         bucket_id=_BUCKET,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2026-y-siguientes",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
     )
 
@@ -316,7 +331,7 @@ def _seeded_calculation(
     # unmistakable (no copy/contamination can satisfy both legs).
     assert _SALE_CUOTA != _PURCHASE_CUOTA
 
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, event_repo)
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
@@ -326,10 +341,13 @@ def _seeded_calculation(
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         },
         iva_compensation_decision=_wallet_decision(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
+        ports=calculation_ports_for_test(
+            bucket_id=_BUCKET,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+        ),
         filing_instance_evidence=_filing_evidence(work_unit.period),
         clock=_T1,
     )
@@ -402,7 +420,7 @@ def test_calculate_rejects_caller_override_of_projected_box(
         taxable_base=_SALE_BASE,
         iva_amount=_SALE_CUOTA,
     )
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo, event_repo)
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
 
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
@@ -415,10 +433,13 @@ def test_calculate_rejects_caller_override_of_projected_box(
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
             },
             iva_compensation_decision=_wallet_decision(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
+            ports=calculation_ports_for_test(
+                bucket_id=_BUCKET,
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                bucket_event_repository=event_repo,
+                transaction_repository=tx_repo,
+            ),
             filing_instance_evidence=_filing_evidence(work_unit.period),
             clock=_T1,
         )
@@ -447,17 +468,17 @@ def test_verify_passes_with_projected_boxes_and_no_under_declaration_advisory(
     vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
     bv_repo = BucketEventHistoryRepository(objects=secure_objects)
 
-    report = verify_modelo_revision(
-        result.revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T1,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        report = verify_modelo_revision(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
 
     # The retired Stage-1 under-declaration ADVISORY (devengado art. 88 +
     # rd-1624 art. 71 + orden) must be absent — the boxes are populated.

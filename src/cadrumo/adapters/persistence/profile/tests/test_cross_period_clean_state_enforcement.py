@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -20,6 +23,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 __all__ = ["register_wizard_catalogue"]
 
@@ -80,7 +84,7 @@ from cadrumo.domain.modelos.filing_record import (
 )
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -178,18 +182,19 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             ),
         )
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=tuple(facts),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
 
 def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | None) -> None:
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=bucket_id,
         facts=(
@@ -217,6 +222,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 

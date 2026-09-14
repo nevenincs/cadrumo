@@ -19,6 +19,9 @@ from typing import ClassVar, TypedDict, override
 
 import httpx
 import pytest
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.inbound.einvoice.application_translation import translate_parsed_einvoice
 from cadrumo.adapters.inbound.einvoice.parsers import parse_einvoice_document
@@ -87,7 +90,8 @@ from cadrumo.core.config_support import LLMProvider
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
 from cadrumo.core.optional_extras import MissingOptionalExtraError
 from cadrumo.domain.iva.supply_nature import SupplyNature
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -260,12 +264,13 @@ def seed_filer_profile(*, tax_id: str | None = "12345678Z") -> None:
     if tax_id is not None:
         facts.insert(0, UserProfileFact(path="identity.tax_id", value=tax_id))
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=_BUCKET_ID,
             facts=tuple(facts),
             created_at=clock,
             updated_at=clock,
+            context=_profile_creation_context_for_test(),
         ),
     )
 

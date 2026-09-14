@@ -15,6 +15,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
@@ -22,6 +25,7 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition import (
     build_calculation_action_ports,
     build_filing_action_ports,
@@ -70,7 +74,7 @@ from cadrumo.domain.modelos.calculation_revision import (
 )
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -180,12 +184,13 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
     if incn is not None:
         facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
     seed_test_profile_record(
-        UserProfileRecord(
+        _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
             facts=tuple(facts),
             created_at=_CLOCK,
             updated_at=_CLOCK,
+            context=_profile_creation_context_for_test(),
         ),
     )
 
@@ -505,23 +510,22 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
         with pytest.raises(
             CalculationRevisionStateError,
             match="error_modelo_calculation_revision_state",
-        ) as state_error:
-            with bundled_indexed_authority().operation() as operation:
-                file_modelo_revision(
-                    revision.calculation_revision_id,
-                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-                    actor="operator-test",
-                    workflow_profile=workflow_profile(Decimal("500000")),
-                    ports=_filing_ports(
-                        work_repo=work_repo,
-                        calc_repo=calc_repo,
-                        filing_repo=filing_repo,
-                        verification_repo=verification_repo,
-                    ),
-                    clock=_CLOCK,
-                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    operation=operation,
-                )
+        ) as state_error, bundled_indexed_authority().operation() as operation:
+            file_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator-test",
+                workflow_profile=workflow_profile(Decimal("500000")),
+                ports=_filing_ports(
+                    work_repo=work_repo,
+                    calc_repo=calc_repo,
+                    filing_repo=filing_repo,
+                    verification_repo=verification_repo,
+                ),
+                clock=_CLOCK,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         state_context = state_error.value.context
         assert state_context is not None
         state = state_context["state"]

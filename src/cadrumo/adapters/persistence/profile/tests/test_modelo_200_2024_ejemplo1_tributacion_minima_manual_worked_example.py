@@ -127,6 +127,9 @@ from pathlib import Path
 
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.tests.profile_schema_support import (
+    profile_creation_context_for_test as _profile_creation_context_for_test,
+)
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -153,7 +156,8 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
+from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -257,7 +261,7 @@ def _seed_sociedad_profile() -> None:
     general bracket (INCN > 10.000.000). ``tributacion_estado_porcentaje`` is
     100 (comun regimen, no forales mentioned in the scenario).
     """
-    record = UserProfileRecord(
+    record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
         facts=(
@@ -279,6 +283,7 @@ def _seed_sociedad_profile() -> None:
         ),
         created_at=_T0,
         updated_at=_T0,
+        context=_profile_creation_context_for_test(),
     )
     seed_test_profile_record(record)
 
