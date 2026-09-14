@@ -492,9 +492,12 @@ required_text = ["comunidad autónoma", "cuota líquida"]
 [[revisions."2024".formulas]]
 id = "renta-estimacion-objetiva-agricola-rendimiento-neto-reducido"
 target_casilla_id = "1550"
-expression = { op = "subtract", args = [
+# aeat-dr-100-2024-dictionary:441 E5AF: reducciones temporales de esta edicion, sin arrastrar numeros reutilizados en 2025.
+expression = { op = "sum", args = [
     { casilla_id = "1548" },
-    { casilla_id = "1549" },
+    { op = "negate", args = [{ casilla_id = "1549" }] },
+    { op = "negate", args = [{ casilla_id = "0162" }] },
+    { op = "negate", args = [{ casilla_id = "0160" }] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-31", "ley-35-2006:art-32", "orden-hfp-1359-2023:art-4", "orden-hfp-1359-2023:da-5", "orden-hfp-1359-2023:da-6", "real-decreto-ley-7-2024:art-11"]

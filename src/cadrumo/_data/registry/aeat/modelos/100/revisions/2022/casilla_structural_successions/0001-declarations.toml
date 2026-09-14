@@ -1,0 +1,47 @@
+[[revisions."2022".casilla_structural_successions]]
+id = "regularizacion-0574-incentivo-empresa-familiar-desglosado"
+kind = "split"
+from_revision = "2021"
+to_revision = "2022"
+source_lineages = ["irpf-perdida-derecho-deduccion-transitoria-estatal-incluido-incentivo-empresa-familiar"]
+target_lineages = ["irpf-perdida-derecho-deduccion-transitoria-estatal", "irpf-incremento-perdida-incentivo-fiscal-estatal"]
+legal_refs = ["ley-35-2006:art-33", "rd-439-2007:art-59"]
+from_source_refs = ["boe-modelo-100-2021-form", "aeat-dr-100-2021-dictionary"]
+to_source_refs = ["boe-modelo-100-2022-form", "aeat-dr-100-2022-dictionary"]
+evidence = "BOE-A-2022-4296 modelo100 pagina20: nota de 0574 incluye deducciones e incentivo por donacion de empresa/participaciones (ISD20.6). BOE-A-2023-8118 modelo100 pagina21 separa 0568 para ese incentivo y conserva 0574 para las otras deducciones; se desglosan igualmente sus intereses. aeat-dr-100-2021-dictionary campo DED97E, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97E; sucesor2022 campos DED97E y DED33E en ese mismo GravamenesRes. La identidad conjunta termina y ambas identidades sucesoras empiezan aqui; no hay conversion ni herencia automatica de importes o etiquetas. https://www.boe.es/boe/dias/2022/03/18/pdfs/BOE-A-2022-4296.pdf ; https://www.boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8118.pdf"
+
+[[revisions."2022".casilla_structural_successions]]
+id = "regularizacion-0576-incentivo-empresa-familiar-desglosado"
+kind = "split"
+from_revision = "2021"
+to_revision = "2022"
+source_lineages = ["irpf-intereses-demora-perdida-transitoria-estatal-incluido-incentivo-empresa-familiar"]
+target_lineages = ["irpf-intereses-demora-perdida-transitoria-estatal", "irpf-intereses-demora-regularizacion-estatal"]
+legal_refs = ["ley-35-2006:art-33", "rd-439-2007:art-59"]
+from_source_refs = ["boe-modelo-100-2021-form", "aeat-dr-100-2021-dictionary"]
+to_source_refs = ["boe-modelo-100-2022-form", "aeat-dr-100-2022-dictionary"]
+evidence = "BOE-A-2022-4296 modelo100 pagina20: nota de 0576 incluye deducciones e incentivo por donacion de empresa/participaciones (ISD20.6). BOE-A-2023-8118 modelo100 pagina21 separa 0582 para ese incentivo y conserva 0576 para las otras deducciones; se desglosan igualmente sus intereses. aeat-dr-100-2021-dictionary campo INT97E, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT97E; sucesor2022 campos INT97E y INT33E en ese mismo GravamenesRes. La identidad conjunta termina y ambas identidades sucesoras empiezan aqui; no hay conversion ni herencia automatica de importes o etiquetas. https://www.boe.es/boe/dias/2022/03/18/pdfs/BOE-A-2022-4296.pdf ; https://www.boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8118.pdf"
+
+[[revisions."2022".casilla_structural_successions]]
+id = "regularizacion-0577-incentivo-empresa-familiar-desglosado"
+kind = "split"
+from_revision = "2021"
+to_revision = "2022"
+source_lineages = ["irpf-perdida-derecho-deduccion-autonomica-incluido-incentivo-empresa-familiar"]
+target_lineages = ["irpf-perdida-derecho-deduccion-autonomica", "irpf-incremento-perdida-incentivo-fiscal-autonomico"]
+legal_refs = ["ley-35-2006:art-33", "rd-439-2007:art-59"]
+from_source_refs = ["boe-modelo-100-2021-form", "aeat-dr-100-2021-dictionary"]
+to_source_refs = ["boe-modelo-100-2022-form", "aeat-dr-100-2022-dictionary"]
+evidence = "BOE-A-2022-4296 modelo100 pagina20: nota de 0577 incluye deducciones e incentivo por donacion de empresa/participaciones (ISD20.6). BOE-A-2023-8118 modelo100 pagina21 separa 0569 para ese incentivo y conserva 0577 para las otras deducciones; se desglosan igualmente sus intereses. aeat-dr-100-2021-dictionary campo DED97A, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97A; sucesor2022 campos DED97A y DED33A en ese mismo GravamenesRes. La identidad conjunta termina y ambas identidades sucesoras empiezan aqui; no hay conversion ni herencia automatica de importes o etiquetas. https://www.boe.es/boe/dias/2022/03/18/pdfs/BOE-A-2022-4296.pdf ; https://www.boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8118.pdf"
+
+[[revisions."2022".casilla_structural_successions]]
+id = "regularizacion-0578-incentivo-empresa-familiar-desglosado"
+kind = "split"
+from_revision = "2021"
+to_revision = "2022"
+source_lineages = ["irpf-intereses-demora-perdida-deduccion-autonomica-incluido-incentivo-empresa-familiar"]
+target_lineages = ["irpf-intereses-demora-perdida-deduccion-general-autonomica", "irpf-intereses-demora-regularizacion-autonomico"]
+legal_refs = ["ley-35-2006:art-33", "rd-439-2007:art-59"]
+from_source_refs = ["boe-modelo-100-2021-form", "aeat-dr-100-2021-dictionary"]
+to_source_refs = ["boe-modelo-100-2022-form", "aeat-dr-100-2022-dictionary"]
+evidence = "BOE-A-2022-4296 modelo100 pagina20: nota de 0578 incluye deducciones e incentivo por donacion de empresa/participaciones (ISD20.6). BOE-A-2023-8118 modelo100 pagina21 separa 0583 para ese incentivo y conserva 0578 para las otras deducciones; se desglosan igualmente sus intereses. aeat-dr-100-2021-dictionary campo INT97A, ruta /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT97A; sucesor2022 campos INT97A y INT33A en ese mismo GravamenesRes. La identidad conjunta termina y ambas identidades sucesoras empiezan aqui; no hay conversion ni herencia automatica de importes o etiquetas. https://www.boe.es/boe/dias/2022/03/18/pdfs/BOE-A-2022-4296.pdf ; https://www.boe.es/boe/dias/2023/03/31/pdfs/BOE-A-2023-8118.pdf"
