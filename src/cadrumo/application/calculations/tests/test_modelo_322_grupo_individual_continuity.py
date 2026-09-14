@@ -41,8 +41,11 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ledger_iva_bindings import (
@@ -51,7 +54,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
 )
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
-from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,8 +83,8 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
         flow_direction=flow,
         base_amount=Decimal("1000.00"),
         iva_amount=iva,
@@ -91,17 +94,25 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         # out of the ledger. Output lines must carry NEITHER, so this is supplied
         # only for the input direction.
         deduction_fact_kind=(
-            IvaDeductionFactKind.DOMESTIC_CURRENT
-            if flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            IvaDeductionFactKind._from_registry("domestic_current")
+            if flow
+            in {
+                IvaFlowDirection._from_registry("soportado"),
+                IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            }
             else None
         ),
         deduction_provenance=(
             IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="a" * 64,
             )
-            if flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+            if flow
+            in {
+                IvaFlowDirection._from_registry("soportado"),
+                IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+            }
             else None
         ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -114,13 +125,13 @@ def _year_ledger(filing_year: int) -> tuple[IvaLedgerObservation, ...]:
         _ledger_line(
             ledger_id=f"{filing_year}-12-out",
             txn_date=date(filing_year, 12, 10),
-            flow=IvaFlowDirection.REPERCUTIDO,
+            flow=IvaFlowDirection._from_registry("repercutido"),
             iva=repercutido,
         ),
         _ledger_line(
             ledger_id=f"{filing_year}-12-in",
             txn_date=date(filing_year, 12, 20),
-            flow=IvaFlowDirection.SOPORTADO,
+            flow=IvaFlowDirection._from_registry("soportado"),
             iva=soportado,
         ),
     )

@@ -11,6 +11,8 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -43,7 +45,7 @@ from ....domain.calculations.registry.m303_orden_projection_models import M303Re
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.calculation_revision import (
@@ -246,7 +248,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         activity_start_date=date(2000, 1, 1),
         has_employees=False,
         pays_rent_with_retencion=False,

@@ -34,13 +34,14 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.iva.classification import IvaTerritorialScope
+from cadrumo.domain.iva.schema import require_eu_member_state
+
 from ._ledger_value_fixtures import repository
 
 __all__ = ["repository"]
 
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import IvaTerritorialScope
-from ....domain.iva.schema import EUMemberState
 from ..counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from ..establishment_ladder import (
     CounterpartyEstablishment,
@@ -140,7 +141,7 @@ class TestARegistrationAloneSettlesNoTerritory:
         """
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
 
-        assert resolved.identification_state is EUMemberState.DE
+        assert resolved.identification_state == require_eu_member_state("DE")
         assert resolved.scope is None
 
 
@@ -159,7 +160,7 @@ class TestConcordantPapersResolveSilently:
         """
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="Alemania", postal_code=_BERLIN)
 
-        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+        assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
         assert resolved.source is ClassifierInputSource.DOCUMENT_EVIDENCE
         assert resolved.registration_conflict is None
@@ -171,9 +172,9 @@ class TestConcordantPapersResolveSilently:
         """The concordance rung proper: registration plus an independent treatment."""
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE)
 
-        assert resolved.scope is IvaTerritorialScope.EU_MEMBER
+        assert resolved.scope == IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is EstablishmentRung.CONCORDANT_REGISTRATION
-        assert resolved.identification_state is EUMemberState.DE
+        assert resolved.identification_state == require_eu_member_state("DE")
         assert resolved.registration_conflict is None
 
     def test_the_mention_corroborates_nothing_without_a_registration(
@@ -204,7 +205,7 @@ class TestConcordantPapersResolveSilently:
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
         )
 
-        assert resolved.scope is not IvaTerritorialScope.EU_MEMBER
+        assert resolved.scope != IvaTerritorialScope._from_registry("eu_member")
         assert resolved.rung is not EstablishmentRung.CONCORDANT_REGISTRATION
 
 
@@ -225,7 +226,7 @@ class TestConflictedPapersSurface:
         assert resolved.conflicted
         assert resolved.scope is None
         assert resolved.registration_conflict is not None
-        assert resolved.registration_conflict.identification_state is EUMemberState.DE
+        assert resolved.registration_conflict.identification_state == require_eu_member_state("DE")
         assert resolved.registration_conflict.spain_indicating
 
     def test_a_spanish_address_beside_a_foreign_registration_conflicts(
@@ -251,7 +252,7 @@ class TestConflictedPapersSurface:
         """
         resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
 
-        assert resolved.scope is not IvaTerritorialScope.ES_MAINLAND
+        assert resolved.scope != IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is not EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_spanish_registration_with_a_spanish_address_does_not_conflict(
@@ -267,7 +268,7 @@ class TestConflictedPapersSurface:
         resolved = _resolve(repository, tax_identifier=_SPANISH_CIF, country_name="España", postal_code=_MADRID)
 
         assert not resolved.conflicted
-        assert resolved.scope is IvaTerritorialScope.ES_MAINLAND
+        assert resolved.scope == IvaTerritorialScope._from_registry("es_mainland")
         assert resolved.rung is EstablishmentRung.SPANISH_POSTAL_CODE
 
     def test_a_foreign_rate_charged_beside_a_foreign_registration_does_not_conflict(

@@ -24,9 +24,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
-from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -86,9 +88,9 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 # --- behavior contract: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
 def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
     cases = [
-        (Decimal("0.21"), IvaCategory.DOMESTIC_GENERAL),
-        (Decimal("0.10"), IvaCategory.DOMESTIC_REDUCED),
-        (Decimal("0.04"), IvaCategory.DOMESTIC_SUPER_REDUCED),
+        (Decimal("0.21"), IvaCategory("domestic_general")),
+        (Decimal("0.10"), IvaCategory("domestic_reduced")),
+        (Decimal("0.04"), IvaCategory("domestic_super_reduced")),
     ]
     gross = Decimal("121.00")
     txns = []
@@ -128,7 +130,7 @@ def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
 
 # --- behavior contract: business_pct / usage-ratio proportionality propagates -------------
 # arrendamiento_local maps to a first-slice Modelo 100 deductible casilla.
-_DEDUCTIBLE_CATEGORY = SpendingCategory.ARRENDAMIENTO_LOCAL
+_DEDUCTIBLE_CATEGORY = SpendingCategory._from_registry("arrendamiento_local")
 
 
 def _deductible_total(*, classification: BusinessClassification, business_pct: Decimal | None) -> Decimal:

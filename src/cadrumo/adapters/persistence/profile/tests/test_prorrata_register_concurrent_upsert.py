@@ -25,8 +25,9 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+
 from .....core.modelo import Modelo
-from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -46,10 +47,10 @@ def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
-        regime=ProrrataRegisterRegime.GENERAL,
+        regime=ProrrataRegisterRegime._from_registry("general"),
         especial_transition=None,
         provisional_percentage=Decimal(percentage),
-        provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+        provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
         source_observation_ref=f"303:{ejercicio - 1}:4T",
         source_registry_snapshot_refs=(_m303_snapshot_ref(ejercicio - 1),),
     )

@@ -24,9 +24,10 @@ import pytest
 import typer
 import yaml
 
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IrpfSpecialRegime
+
 from ....application.ledger.source_jurisdiction import OUTCOMES_REQUIRING_AN_OPERATOR_STATEMENT
-from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import IrpfSpecialRegime
 from .._ledger_support import _SOURCE_JURISDICTION_REFUSAL_LOCALE_KEYS, resolve_source_jurisdiction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -47,7 +48,7 @@ def test_a_declared_resident_still_defaults_to_es() -> None:
     """
     resolved = resolve_source_jurisdiction(
         None,
-        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+        fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
         irpf_special_regime=None,
     )
 
@@ -60,7 +61,7 @@ def test_an_operator_supplied_value_wins_over_every_profile_signal() -> None:
     assert (
         resolve_source_jurisdiction(
             "DE",
-            fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+            fiscal_residency=FiscalResidency.from_registry("resident_irpf"),
             irpf_special_regime=None,
         )
         == "DE"
@@ -72,7 +73,7 @@ def test_a_declared_non_resident_still_refuses() -> None:
     with pytest.raises(typer.BadParameter):
         resolve_source_jurisdiction(
             None,
-            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
             irpf_special_regime=None,
         )
 
@@ -83,7 +84,7 @@ def test_a_declared_impatriado_still_refuses() -> None:
         resolve_source_jurisdiction(
             None,
             fiscal_residency=None,
-            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            irpf_special_regime=IrpfSpecialRegime._from_registry("impatriado"),
         )
 
 
@@ -99,7 +100,7 @@ def test_the_impatriado_refusal_outranks_the_undeclared_residency_path() -> None
         resolve_source_jurisdiction(
             None,
             fiscal_residency=None,
-            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            irpf_special_regime=IrpfSpecialRegime._from_registry("impatriado"),
         )
 
 

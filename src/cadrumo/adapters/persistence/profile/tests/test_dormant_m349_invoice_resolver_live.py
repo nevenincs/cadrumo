@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -26,9 +27,10 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
+from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
@@ -102,12 +104,12 @@ def _intra_community_invoice(
                 quantity=Decimal("1"),
                 unit_price=base_total,
                 subtotal=base_total,
-                iva_rate=IvaRate.RATE_0,
+                iva_rate=resolve_iva_rate_token("rate_0", date.today()),
                 iva_amount=Decimal("0"),
             ),
         ),
         payment_status=PaymentStatus.PENDING,
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        iva_category=IvaCategory("intra_community_supply"),
     )
 
 
@@ -154,7 +156,9 @@ def test_m349_importe_operaciones_folds_seeded_invoices_on_live_calculate(
         filing_year=_M349_YEAR,
         period=Period.from_year_and_code(_M349_YEAR, "1T"),
         revision_id=_M349_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m349_objects)
+        ),
         clock=_T0,
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

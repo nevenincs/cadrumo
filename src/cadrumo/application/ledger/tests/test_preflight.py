@@ -7,10 +7,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.categories.spending_category import SpendingCategory
+from cadrumo.domain.iva.schema import require_eu_member_state
+
 from ....core.config import override_settings
 from ....core.i18n.render import clear_output_language_cache
-from ....domain.categories.spending_category import SpendingCategory
-from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import TransactionCatalogue
 from ...aggregation.iva_ledger import IvaLedgerAggregationIssueReason
@@ -77,7 +79,7 @@ def test_preflight_reports_all_missing_modelo_readiness_facts() -> None:
         "row-mixed",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.40"),
-        category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+        category_id=SpendingCategory._from_registry("telefonia_movil").value,
         usage_ratio_id=None,
     )
 
@@ -192,8 +194,8 @@ def test_preflight_blocks_intracom_sale_with_domestic_counterparty_before_aggreg
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_identification_state=EUMemberState.ES,
+        iva_category=IvaCategory("intra_community_supply"),
+        counterparty_identification_state=require_eu_member_state("ES"),
     )
 
     report = preflight_transaction_catalogue(
@@ -217,8 +219,8 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
-        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        counterparty_identification_state=EUMemberState.ES,
+        iva_category=IvaCategory("intra_community_supply"),
+        counterparty_identification_state=require_eu_member_state("ES"),
     )
 
     with override_settings(cadrumo_output_language="hu"):
@@ -247,7 +249,7 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() 
         taxable_base=Decimal("800.00"),
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
-        iva_category=IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        iva_category=IvaCategory("export_third_country_zero_rated"),
         counterparty_country="DE",
     )
 
@@ -261,7 +263,7 @@ def test_preflight_blocks_export_sale_with_eu_member_state_before_aggregation() 
     assert [issue.reason for issue in report.issues] == [
         LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
     ]
-    assert EUMemberState.DE.value in report.issues[0].detail
+    assert require_eu_member_state("DE").value in report.issues[0].detail
 
 
 class TestEveryMappedIvaReasonResolves:

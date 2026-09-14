@@ -34,9 +34,11 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope
+from cadrumo.domain.iva.schema import IvaRateKind
+
 from ....core.classifier_input_source import ClassifierInputSource
-from ....domain.iva.classification import CustomerTaxStatus, InvoiceKind, IvaTerritorialScope
-from ....domain.iva.schema import IvaRateKind
+from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,
@@ -151,7 +153,9 @@ class TestTheChannelReachesTheAssembly:
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2C_CONSUMER, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                ),
             ),
             issuer_country_code="DE",
             customer_country_code="FR",
@@ -168,13 +172,15 @@ class TestTheChannelReachesTheAssembly:
             inputs=ClassifierInputs(),
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
             ),
             issuer_country_code="ES",
             customer_country_code="ES",
-            rate_tier=IvaRateKind.GENERAL,
+            rate_tier=IvaRateKind("general"),
         )
 
         assert "issuer_residency" not in {gap.field for gap in supplied.missing}
@@ -195,7 +201,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         with pytest.raises(ValueError, match="must not carry a document anchor"):
             ClassifierInputFact(
                 name="customer_tax_status",
-                value=CustomerTaxStatus.B2C_CONSUMER.value,
+                value=CustomerTaxStatus._from_registry("b2c_consumer").value,
                 source=_ASSERTED,
                 anchor="Cliente particular",
             )
@@ -205,7 +211,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         with pytest.raises(ValueError, match="vouched for by the operator"):
             ClassifierInputFact(
                 name="customer_tax_status",
-                value=CustomerTaxStatus.B2C_CONSUMER.value,
+                value=CustomerTaxStatus._from_registry("b2c_consumer").value,
                 source=_ASSERTED,
                 authority="censo",
             )
@@ -218,7 +224,7 @@ class TestTheEnvelopeRefusesLaunderedBacking:
         """
         fact = ClassifierInputFact(
             name="customer_tax_status",
-            value=CustomerTaxStatus.B2C_CONSUMER.value,
+            value=CustomerTaxStatus._from_registry("b2c_consumer").value,
             source=_ASSERTED,
         )
 

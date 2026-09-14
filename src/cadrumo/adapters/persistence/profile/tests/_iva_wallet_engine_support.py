@@ -249,7 +249,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="activities.description", value="economic activity"),
-                UserProfileFact(path="iva.regime", value=IVARegime.GENERAL),
+                UserProfileFact(path="iva.regime", value=IVARegime("GENERAL")),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
                 UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
@@ -270,7 +270,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
 def workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=tax_id,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

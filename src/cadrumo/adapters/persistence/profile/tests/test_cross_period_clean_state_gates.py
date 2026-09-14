@@ -78,7 +78,7 @@ _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_S
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
     )
 
 
@@ -94,7 +94,7 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
                 UserProfileFact(path="activities.description", value="design"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-                UserProfileFact(path="iva.regime", value=IVARegime.GENERAL.value),
+                UserProfileFact(path="iva.regime", value=IVARegime("GENERAL").value),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
                 UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),

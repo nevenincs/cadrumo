@@ -8,8 +8,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+
 from ....core.invoice_link import LinkInconsistencyDirection
-from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.enums import PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.invoices.service import verify_link_consistency
 from ....domain.iva.classification import InvoiceKind
@@ -104,7 +106,7 @@ def _invoice(
                         "quantity": Decimal("1"),
                         "unit_price": Decimal("100.00"),
                         "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.RATE_21,
+                        "iva_rate": resolve_iva_rate_token("rate_21", date.today()),
                         "iva_amount": Decimal("21.00"),
                     },
                 ),

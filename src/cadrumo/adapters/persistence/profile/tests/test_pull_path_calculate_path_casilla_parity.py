@@ -103,6 +103,7 @@ from cadrumo.application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import (
     AggregationCaptureKind,
     BindingSourceKind,
@@ -328,9 +329,9 @@ def _m303_iva_transaction(
 ) -> Transaction:
     deduction_authority = (
         {
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="8" * 64,
             ),
@@ -445,7 +446,9 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snap_180.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
 
@@ -570,10 +573,10 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
             entries=(
                 ProrrataRegisterEntry(
                     ejercicio=_PRORRATA_YEAR,
-                    regime=ProrrataRegisterRegime.GENERAL,
+                    regime=ProrrataRegisterRegime._from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
-                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                     source_observation_ref="303:2025:4T",
                     source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
                 ),

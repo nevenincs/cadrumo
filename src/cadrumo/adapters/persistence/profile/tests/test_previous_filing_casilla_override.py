@@ -16,6 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -107,7 +108,7 @@ def _work_unit_3t(repos: _Repos):
             filing_year=2026,
             period=Period.from_year_and_code(2026, "3T"),
             revision_id="2019-y-siguientes",
-            repository=wu_repo,
+            ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
             clock=_CLOCK,
         ),
         wu_repo,

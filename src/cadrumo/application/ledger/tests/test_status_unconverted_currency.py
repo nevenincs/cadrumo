@@ -21,7 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -79,11 +80,13 @@ def iva_transaction(
             "iva_rate": _IVA_RATE,
             "iva_amount": iva_amount,
             "deduction_fact_kind": (
-                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+                IvaDeductionFactKind._from_registry("domestic_current")
+                if direction is TransactionDirection.OUTGOING
+                else None
             ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )

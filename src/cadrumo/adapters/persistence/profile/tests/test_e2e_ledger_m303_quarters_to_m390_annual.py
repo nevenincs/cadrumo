@@ -81,6 +81,7 @@ from cadrumo.application.modelo.filed_revision_observation import persist_filed_
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -91,7 +92,7 @@ from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
+from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
@@ -318,9 +319,9 @@ def _persist_year_of_invoices(
             purchase_invoice_evidence_id=purchase_invoice.invoice_id,
             # Domestic purchase from an ES supplier: cuota soportada established
             # by that supplier's invoice (LIVA art. 97.Uno.1).
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
             deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{purchase_invoice.invoice_id}",
                 evidence_digest="a" * 64,
             ),
@@ -338,7 +339,7 @@ def _persist_year_of_invoices(
                     iva_rate=Decimal("0.00"),
                     period=period,
                     filing_year=filing_year,
-                    iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+                    iva_category=IvaCategory("intra_community_supply"),
                     # Established in Germany AND IVA-identified there. Art. 25
                     # exempts an intra-community supply on the acquirer's
                     # IDENTIFICATION, not on establishment, so declaring only the
@@ -348,7 +349,7 @@ def _persist_year_of_invoices(
                     # and a real filer supplies the second via
                     # `aeat app ledger classify --counterparty-identification-state`.
                     counterparty_country="DE",
-                    counterparty_identification_state=EUMemberState.DE,
+                    counterparty_identification_state=require_eu_member_state("DE"),
                 ),
             )
         if facts["reverse_charge_base"] > Decimal("0"):
@@ -361,15 +362,15 @@ def _persist_year_of_invoices(
                     amount=facts["reverse_charge_base"],
                     period=period,
                     filing_year=filing_year,
-                    iva_category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+                    iva_category=IvaCategory("domestic_reverse_charge"),
                     # Inversion del sujeto pasivo on a DOMESTIC supply (LIVA
                     # art. 84.Uno.2): the recipient self-repercutes, but the
                     # deduction family stays domestic and the establishing
                     # evidence is the supplier's invoice, NOT an intra-EU
                     # self-assessment.
-                    deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+                    deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
                     deduction_provenance=IvaDeductionClassificationProvenance(
-                        authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                        authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                         source_locator=f"invoice:reverse-charge-{filing_year}-{period}",
                         evidence_digest="b" * 64,
                     ),
@@ -487,7 +488,7 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
 def workflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_TAX_ID,
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=True,
@@ -499,9 +500,9 @@ def workflow_profile() -> TaxpayerProfile:
 def _ireneworkflow_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id=_IRENE_TAX_ID,
-        entity_type=EntityType.LEGAL_ENTITY,
-        legal_entity_form=LegalEntityForm.SL,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        legal_entity_form=LegalEntityForm._from_registry("sl"),
+        iva_regime=IVARegime("GENERAL"),
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
@@ -532,7 +533,9 @@ def _calculate_m303_quarter_revision(
         revision_id=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=typed_period.registry_token)
         .revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     decision = _wallet_decision(
@@ -658,7 +661,9 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository, *, filing_yea
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

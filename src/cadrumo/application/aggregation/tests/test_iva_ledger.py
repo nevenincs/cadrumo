@@ -79,8 +79,8 @@ def _iva_binding(
                 "flow_direction": flow_direction,
                 "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
                 "cash_accounting_treatments": (
-                    IvaCashAccountingTreatment.NONE,
-                    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+                    IvaCashAccountingTreatment("none"),
+                    IvaCashAccountingTreatment("supplier_regime"),
                 ),
                 "fact": "iva_amount_sum",
             },
@@ -110,8 +110,8 @@ def _modelo_303_iva_revision() -> ModeloRevision:
         _iva_binding(
             "modelo-303-iva-repercutido-general-cuota",
             categories=(IvaCategory("domestic_general"),),
-            rate_kinds=(IvaRateKind.GENERAL,),
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            rate_kinds=(IvaRateKind("general"),),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
         ),
         _iva_binding(
             "modelo-303-iva-soportado-interiores-cuota",
@@ -120,8 +120,8 @@ def _modelo_303_iva_revision() -> ModeloRevision:
                 IvaCategory("domestic_reduced"),
                 IvaCategory("domestic_super_reduced"),
             ),
-            rate_kinds=(IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED),
-            flow_direction=IvaFlowDirection.SOPORTADO,
+            rate_kinds=(IvaRateKind("general"), IvaRateKind("reduced"), IvaRateKind("super_reduced")),
+            flow_direction=IvaFlowDirection._from_registry("soportado"),
         ),
     )
 
@@ -226,10 +226,12 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
-            "deduction_fact_kind": (IvaDeductionFactKind.DOMESTIC_CURRENT if carries_input_iva else None),
+            "deduction_fact_kind": (
+                IvaDeductionFactKind._from_registry("domestic_current") if carries_input_iva else None
+            ),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                     source_locator=f"test-invoice:{provider_id}",
                     evidence_digest="a" * 64,
                 )
@@ -251,7 +253,7 @@ def _transaction(
 def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> None:
     transaction = _transaction("direct-investment").model_copy(
         update={
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_investment"),
             "investment_asset_id": "asset-direct",
             "prorrata_sector_id": "sector-a",
         }
@@ -265,7 +267,7 @@ def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> 
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
     transaction = _transaction("direct-investment-valid").model_copy(
         update={
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_investment"),
             "investment_asset_id": "asset-direct",
             "prorrata_sector_id": "sector-a",
         }
@@ -278,7 +280,7 @@ def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> N
                 acquisition_year=2026,
                 cuota_soportada=Decimal("21.00"),
                 prorrata_inicial_pct=Decimal("100"),
-                kind=BienInversionKind.MUEBLE,
+                kind=BienInversionKind._from_registry("mueble"),
                 acquisition_ledger_id=transaction.transaction_id,
                 prorrata_sector_id="sector-a",
             ),
@@ -307,7 +309,7 @@ def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> 
     tagged = _transaction(
         "row-non-habitual-inmueble",
         direction=TransactionDirection.INCOMING,
-        art_104_tres_exclusion=Art104TresExclusion.NON_HABITUAL_REAL_ESTATE_OR_FINANCIAL,
+        art_104_tres_exclusion=Art104TresExclusion("non_habitual_real_estate_or_financial"),
     )
 
     result = aggregate_iva_ledger_observations(
@@ -333,8 +335,8 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     assert observation.ledger_id == transaction.transaction_id
     assert observation.transaction_date == date(2026, 4, 5)
     assert observation.category == IvaCategory("domestic_general")
-    assert observation.rate_kind is IvaRateKind.GENERAL
-    assert observation.flow_direction is IvaFlowDirection.SOPORTADO
+    assert observation.rate_kind is IvaRateKind("general")
+    assert observation.flow_direction is IvaFlowDirection._from_registry("soportado")
     assert observation.base_amount == transaction.taxable_base
     assert observation.iva_amount == transaction.iva_amount
 
@@ -408,8 +410,8 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
     assert result.issues == ()
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_reduced")
-    assert observation.rate_kind is IvaRateKind.REDUCED
-    assert observation.flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert observation.rate_kind is IvaRateKind("reduced")
+    assert observation.flow_direction is IvaFlowDirection._from_registry("repercutido")
     assert observation.iva_amount == Decimal("10.00")
 
 
@@ -452,8 +454,8 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert reference.transaction_id == transaction.transaction_id
     assert reference.transaction_date == date(2026, 4, 5)
     assert reference.reference.year == 2026
-    assert reference.reference.kind is ProrrataKind.PROVISIONAL
-    assert reference.reference.regime is ProrrataRegime.GENERAL
+    assert reference.reference.kind is ProrrataKind._from_registry("provisional")
+    assert reference.reference.regime is ProrrataRegime("general")
     assert reference.base_amount == Decimal("200.00")
     assert reference.input_iva_amount == Decimal("42.00")
     assert result.observations[0].iva_amount == Decimal("42.00")
@@ -507,7 +509,7 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
         period=_Q2_2026,
     )
 
-    assert result.observations[0].flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert result.observations[0].flow_direction is IvaFlowDirection._from_registry("repercutido")
     assert result.prorrata_references == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
 
@@ -792,8 +794,8 @@ def test_the_applied_rate_survives_tier_resolution() -> None:
     assert set(by_rate) == {Decimal("0.21"), Decimal("0.10")}
     # The tier is still carried, unchanged -- the value rides ALONGSIDE it, and a
     # reader must not conclude one replaced the other.
-    assert by_rate[Decimal("0.21")].rate_kind is IvaRateKind.GENERAL
-    assert by_rate[Decimal("0.10")].rate_kind is IvaRateKind.REDUCED
+    assert by_rate[Decimal("0.21")].rate_kind is IvaRateKind("general")
+    assert by_rate[Decimal("0.10")].rate_kind is IvaRateKind("reduced")
 
 
 def test_a_covered_date_with_a_non_canonical_rate_still_blames_the_rate() -> None:
@@ -846,7 +848,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
         iva_rate=Decimal("0"),
         iva_amount=Decimal("0"),
         iva_category=IvaCategory("domestic_exempt"),
-        exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+        exemption_article=IvaExemptionArticle("art_20_uno_8"),
     )
 
     result = aggregate_iva_ledger_observations(
@@ -859,7 +861,7 @@ def test_transaction_exemption_article_projects_to_iva_observation() -> None:
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_exempt")
     assert observation.ledger_id == transaction.transaction_id
-    assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_8
+    assert observation.exemption_article is IvaExemptionArticle("art_20_uno_8")
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:
@@ -921,7 +923,7 @@ def test_a_two_percent_food_sale_reaches_the_super_reducido_cuota() -> None:
 
     assert result.observations != (), f"the 2 % sale was refused: {[i.reason for i in result.issues]}"
     observation = result.observations[0]
-    assert observation.rate_kind is IvaRateKind.SUPER_REDUCED
+    assert observation.rate_kind is IvaRateKind("super_reduced")
     assert observation.applied_rate == Decimal("0.02")
 
 

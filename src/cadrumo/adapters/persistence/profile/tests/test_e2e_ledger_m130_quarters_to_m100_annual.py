@@ -81,6 +81,7 @@ from cadrumo.application.modelo.external_import_actions import import_external_f
 from cadrumo.application.modelo.filed_revision_observation import persist_filed_revision_observation
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -350,7 +351,9 @@ def _calculate_and_file_m130_quarter(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=_M130_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -391,7 +394,9 @@ def _import_official_m130_result_observation(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_FILE_AT,
     )
     casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
@@ -594,7 +599,9 @@ def _calculate_m100_annual(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _M100_ANNUAL_PERIOD),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

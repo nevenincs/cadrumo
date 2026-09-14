@@ -110,7 +110,11 @@ def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssue
     declared set is pinned to behaviour: a branch that starts emitting a
     different reason moves this set and reds the parity assertion below.
     """
-    states: tuple[EUMemberState | None, ...] = (None, EUMemberState.ES, EUMemberState.DE)
+    states: tuple[EUMemberState | None, ...] = (
+        None,
+        EUMemberState._from_registry("es"),
+        EUMemberState._from_registry("de"),
+    )
     observed: set[IvaLedgerAggregationIssueReason] = set()
     for category in (*IvaCategory, None):
         for eu_member_state in states:

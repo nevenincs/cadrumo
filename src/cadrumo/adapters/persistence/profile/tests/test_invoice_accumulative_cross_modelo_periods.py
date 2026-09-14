@@ -52,6 +52,7 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -73,6 +74,7 @@ from cadrumo.application.modelo.filed_revision_observation import persist_filed_
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -372,7 +374,9 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     decision = _wallet_decision(period=period)
@@ -426,7 +430,9 @@ def _calculate_m390_annual(secure_objects: SecureObjectRepository) -> Calculatio
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -452,7 +458,9 @@ def _calculate_and_file_m130_quarter(secure_objects: SecureObjectRepository, *, 
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -509,7 +517,9 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> Calculatio
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision_id=snapshot.revision.id,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=secure_objects)
+        ),
         clock=_T0,
     )
     return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(

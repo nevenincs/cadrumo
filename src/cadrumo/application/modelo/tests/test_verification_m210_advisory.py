@@ -31,11 +31,12 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IVARegime
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
-from ....domain.contribuyente.renta_codes import FiscalResidency
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
 
@@ -191,8 +192,8 @@ def _non_eea_irnr_profile() -> TaxpayerProfile:
     """A NON_RESIDENT_IRNR profile whose country of fiscal residence is outside the EU/EEA."""
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="AR",
         representante_fiscal_nif="12345678Z",
         representante_fiscal_nombre="Test Representative",
@@ -203,8 +204,8 @@ def _eea_irnr_profile() -> TaxpayerProfile:
     """A NON_RESIDENT_IRNR profile whose country of fiscal residence IS an EU/EEA member."""
     return TaxpayerProfile(
         tax_id="X1234567L",
-        iva_regime=IVARegime.GENERAL,
-        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        iva_regime=IVARegime("GENERAL"),
+        fiscal_residency=FiscalResidency.from_registry("non_resident_irnr"),
         country_of_fiscal_residence="DE",
     )
 

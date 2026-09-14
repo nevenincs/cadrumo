@@ -100,19 +100,19 @@ def _ledger_observation(
     transaction_date: date,
     category: IvaCategory,
     base: str,
-    flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
+    flow: IvaFlowDirection = IvaFlowDirection._from_registry("repercutido"),
     exemption_article: IvaExemptionArticle | None = None,
 ) -> IvaLedgerObservation:
     deduction = (
         {
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current"),
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{ledger_id}",
                 evidence_digest="d" * 64,
             ),
         }
-        if flow is IvaFlowDirection.SOPORTADO
+        if flow == IvaFlowDirection._from_registry("soportado")
         else {}
     )
     return IvaLedgerObservation(
@@ -120,7 +120,7 @@ def _ledger_observation(
         transaction_date=transaction_date,
         category=category,
         exemption_article=exemption_article,
-        rate_kind=IvaRateKind.GENERAL,
+        rate_kind=IvaRateKind("general"),
         flow_direction=flow,
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
@@ -308,27 +308,27 @@ def test_declared_volume_divergence_advisory_preserves_declared_authority() -> N
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="1000.00",
         ),
         _ledger_observation(
             "art20-8-exempt-sale",
             transaction_date=date(2026, 5, 3),
-            category=IvaCategory.DOMESTIC_EXEMPT,
-            exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+            category=IvaCategory("domestic_exempt"),
+            exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
         ),
         _ledger_observation(
             "input-purchase-ignored",
             transaction_date=date(2026, 2, 15),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            flow=IvaFlowDirection.SOPORTADO,
+            category=IvaCategory("domestic_general"),
+            flow=IvaFlowDirection._from_registry("soportado"),
             base="700.00",
         ),
         _ledger_observation(
             "outside-ejercicio-ignored",
             transaction_date=date(2025, 12, 31),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="999.00",
         ),
     )
@@ -364,13 +364,13 @@ def test_rollup_excludes_operator_tagged_art_104_tres_operations_from_both_terms
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="1000.00",
         ),
         _ledger_observation(
             "non-habitual-inmueble",
             transaction_date=date(2026, 6, 10),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="4000.00",
         ),
     )
@@ -403,13 +403,13 @@ def test_rollup_divergence_message_surfaces_applied_art_104_tres_exclusion() -> 
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="1000.00",
         ),
         _ledger_observation(
             "foreign-pe-sale",
             transaction_date=date(2026, 6, 10),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="4000.00",
         ),
     )
@@ -437,14 +437,14 @@ def test_declared_volume_rollup_is_silent_when_ledger_matches_declared_values() 
         _ledger_observation(
             "taxable-sale",
             transaction_date=date(2026, 1, 20),
-            category=IvaCategory.DOMESTIC_GENERAL,
+            category=IvaCategory("domestic_general"),
             base="1000.00",
         ),
         _ledger_observation(
             "art20-8-exempt-sale",
             transaction_date=date(2026, 5, 3),
-            category=IvaCategory.DOMESTIC_EXEMPT,
-            exemption_article=IvaExemptionArticle.ART_20_UNO_8,
+            category=IvaCategory("domestic_exempt"),
+            exemption_article=IvaExemptionArticle("art_20_uno_8"),
             base="500.00",
         ),
     )
@@ -466,13 +466,13 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
     taxable_sale = _ledger_observation(
         "taxable-sale",
         transaction_date=date(2026, 1, 20),
-        category=IvaCategory.DOMESTIC_GENERAL,
+        category=IvaCategory("domestic_general"),
         base="1000.00",
     )
     domestic_exempt_sale = _ledger_observation(
         "art20-generic-exempt-sale",
         transaction_date=date(2026, 5, 3),
-        category=IvaCategory.DOMESTIC_EXEMPT,
+        category=IvaCategory("domestic_exempt"),
         base="300.00",
     )
 
@@ -656,5 +656,5 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
     assert seed.stamped_revision_id == _m303_revision_id(filing_year=_SETTLEMENT_YEAR, period=_SETTLEMENT_PERIOD)
     assert seed.entry.ejercicio == _CARRY_YEAR
     assert seed.entry.provisional_percentage == Decimal("75")
-    assert seed.entry.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    assert seed.entry.provisional_provenance == ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva")
     assert seed.entry.source_observation_ref == "303:2026:4T"

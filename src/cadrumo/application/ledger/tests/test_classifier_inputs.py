@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.domain.iva.classification import CustomerTaxStatus
+
 from ....core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
-from ....domain.iva.classification import CustomerTaxStatus
 from ..classifier_inputs import ClassifierInputFact, collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
 
@@ -90,7 +91,7 @@ def test_an_unknown_status_carries_no_anchor() -> None:
 def test_a_printed_identifier_is_not_promoted_to_iva_registered() -> None:
     """The expensive one. An unverified number must not reach the art. 25 exemption.
 
-    `CustomerTaxStatus.B2B_IVA_REGISTERED` is the trigger for the
+    `CustomerTaxStatus._from_registry("b2b_iva_registered")` is the trigger for the
     intra-community supply rule, which classifies the operation exempt. This
     envelope must not be able to express that claim at all — not merely decline
     to make it today — because VIES is deferred and nothing here has verified
@@ -99,8 +100,8 @@ def test_a_printed_identifier_is_not_promoted_to_iva_registered() -> None:
     inputs = collect_classifier_inputs(InvoiceDraft(customer_tax_id=_CUSTOMER_NIF))
 
     values = {fact.value for fact in inputs.facts}
-    assert CustomerTaxStatus.B2B_IVA_REGISTERED.value not in values
-    assert CustomerTaxStatus.B2B_IVA_REGISTERED.value not in {
+    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in values
+    assert CustomerTaxStatus._from_registry("b2b_iva_registered").value not in {
         member.value for member in CounterpartyTaxablePersonStatus
     }
 
@@ -109,11 +110,11 @@ def test_a_declared_regime_is_taken_from_the_profile_authority() -> None:
     """The filer's censo regime is system-authoritative, not read off the page."""
     inputs = collect_classifier_inputs(
         InvoiceDraft(customer_tax_id=_CUSTOMER_NIF),
-        profile=_profile(IVARegime.RECARGO_EQUIVALENCIA),
+        profile=_profile(IVARegime("RECARGO_EQUIVALENCIA")),
     )
     fact = next(f for f in inputs.facts if f.name == "filer_iva_regime")
 
-    assert inputs.filer_iva_regime is IVARegime.RECARGO_EQUIVALENCIA
+    assert inputs.filer_iva_regime == IVARegime("RECARGO_EQUIVALENCIA")
     assert fact.source is ClassifierInputSource.PROFILE_AUTHORITY
     assert fact.authority
     assert fact.anchor is None, "a profile fact has no printed form on this document"
@@ -165,7 +166,7 @@ def test_every_collected_fact_states_where_it_came_from() -> None:
     """The envelope's whole purpose: an audit reads the inputs, not a re-run."""
     inputs = collect_classifier_inputs(
         InvoiceDraft(customer_tax_id=_CUSTOMER_NIF),
-        profile=_profile(IVARegime.GENERAL),
+        profile=_profile(IVARegime("GENERAL")),
     )
 
     assert len(inputs.facts) == 2

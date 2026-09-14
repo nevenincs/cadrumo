@@ -14,10 +14,12 @@ from datetime import date, timedelta
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IrpfIncomeCategory, IVARegime
+
 from ....core.calendar_shift import shift_by_calendar_years
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict
-from ....domain.contribuyente.entity_type import EntityType
-from ....domain.deadlines.models import IrpfIncomeCategory, IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.deadlines.recargo import twelve_month_anniversary
 from ....domain.retention.floor import retention_floor_years
 from ..errors import OverviewExplainError
@@ -30,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def _undeclared_profile() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime("GENERAL"))
 
 
 def test_explain_returns_typed_envelope_for_applicable_modelo() -> None:
@@ -174,7 +176,7 @@ def test_explain_historical_warning_uses_the_recargo_anniversary_with_its_inclus
 
 def test_explain_historical_warning_uses_the_retention_prescription_boundary() -> None:
     closes_on = date(2023, 6, 30)
-    floor_years = retention_floor_years(effective_date=today)
+    floor_years = retention_floor_years(effective_date=date.today())
     prescription_boundary = shift_by_calendar_years(closes_on, floor_years)
 
     on_boundary = build_overview_explain(_autonomo_profile(), modelo="100", year=2022, today=prescription_boundary)
@@ -226,9 +228,9 @@ def test_explain_applicable_flag_matches_derived_verdict() -> None:
 def test_explain_721_depends_on_crypto_abroad_threshold_fact() -> None:
     profile = TaxpayerProfile(
         tax_id="X1234567L",
-        entity_type=EntityType.NATURAL_PERSON,
-        irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("natural_person"),
+        irpf_income_categories=frozenset({IrpfIncomeCategory._from_registry("trabajo")}),
+        iva_regime=IVARegime("GENERAL"),
         bienes_extranjero_above_threshold=False,
         monedas_virtuales_extranjero_above_threshold=True,
     )

@@ -11,6 +11,7 @@ from typing import Any
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -55,6 +56,7 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -297,7 +299,9 @@ def test_m369_exterior_period_calculate_review_export_e2e(
         filing_year=_M369_YEAR,
         period=period,
         revision_id="esquema-exterior",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
         clock=_T0,
     )
     result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -461,7 +465,10 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                 filing_year=_M369_YEAR,
                 period=Period.from_year_and_code(_M369_YEAR, "1T"),
                 revision_id=_M369_REVISION,
-                repository=wu_repo,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=wu_repo,
+                    bucket_event_repository=BucketEventHistoryRepository(objects=runtime.repository),
+                ),
                 clock=_T0,
             )
             result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
@@ -602,7 +609,9 @@ def test_m369_unresolved_oss_source_refuses_verification_and_export(
         filing_year=_M369_YEAR,
         period=Period.from_year_and_code(_M369_YEAR, "1T"),
         revision_id=_M369_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
         clock=_T0,
     )
 
@@ -699,7 +708,9 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
         filing_year=_M369_YEAR,
         period=Period.from_year_and_code(_M369_YEAR, "1T"),
         revision_id=_M369_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
         clock=_T0,
     )
 
@@ -818,7 +829,9 @@ def test_m369_zero_valued_oss_invoice_remains_verifiable(
         filing_year=_M369_YEAR,
         period=Period.from_year_and_code(_M369_YEAR, "1T"),
         revision_id=_M369_REVISION,
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
         clock=_T0,
     )
 

@@ -20,8 +20,9 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.aggregation import RetencionClave
+
 from ....application.evidence.models import BundleVerificationState
-from ....core.aggregation import RetencionClave
 from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..modelo_aux_payloads import (
     EvidenceRecordRefPayload,
@@ -67,17 +68,17 @@ class TestWithholdingClaveBreakdown:
 
     def test_well_formed_row_validates(self) -> None:
         row = WithholdingClaveBreakdownPayload(
-            clave=RetencionClave.A,
+            clave=RetencionClave._from_registry("a"),
             percepcion_count=2,
             percibido_total="1200.00",
             retencion_total="180.00",
         )
-        assert row.model_dump(mode="json")["clave"] == RetencionClave.A.value
+        assert row.model_dump(mode="json")["clave"] == RetencionClave._from_registry("a").value
 
     def test_negative_perception_count_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             WithholdingClaveBreakdownPayload(
-                clave=RetencionClave.A,
+                clave=RetencionClave._from_registry("a"),
                 percepcion_count=-1,
                 percibido_total="1200.00",
                 retencion_total="180.00",
@@ -87,7 +88,7 @@ class TestWithholdingClaveBreakdown:
     def test_non_decimal_or_negative_total_is_refused(self, total: str) -> None:
         with pytest.raises(ValidationError):
             WithholdingClaveBreakdownPayload(
-                clave=RetencionClave.A,
+                clave=RetencionClave._from_registry("a"),
                 percepcion_count=1,
                 percibido_total=total,
                 retencion_total="180.00",

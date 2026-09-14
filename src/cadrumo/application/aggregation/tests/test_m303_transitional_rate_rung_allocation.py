@@ -37,14 +37,16 @@ from pathlib import Path
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind, require_eu_member_state
+
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ....domain.calculations.registry.schema import ModeloRevision
-from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.lookup import rate_kinds_for_declared_rate
-from ....domain.iva.schema import EUMemberState, IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -280,7 +282,7 @@ def test_the_narrowed_rate_sets_are_exhaustive_against_the_rate_table() -> None:
             continue
         for on_date in probe_dates:
             for pct in candidates:
-                if tier in rate_kinds_for_declared_rate(EUMemberState.ES, pct, on_date):
+                if tier in rate_kinds_for_declared_rate(require_eu_member_state("ES"), pct, on_date):
                     assert pct in covered, f"{tier.value} admits {pct} on {on_date} but no Modelo 303 rung accepts it"
 
 
@@ -302,7 +304,12 @@ def test_a_domestic_row_always_carries_the_rate_the_rungs_key_on() -> None:
     domestic = [
         o
         for o in aggregation.observations
-        if o.rate_kind in {IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED, IvaRateKind.GENERAL}
+        if o.rate_kind
+        in {
+            IvaRateKind("reduced"),
+            IvaRateKind("super_reduced"),
+            IvaRateKind("general"),
+        }
     ]
     assert domestic, "no domestic observation was produced -- the probe proves nothing"
     for observation in domestic:
@@ -355,9 +362,9 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
         observation = IvaLedgerObservation(
             ledger_id="control",
             transaction_date=date(2024, 11, 6),
-            category=IvaCategory.DOMESTIC_REDUCED,
-            rate_kind=IvaRateKind.REDUCED,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_reduced"),
+            rate_kind=IvaRateKind("reduced"),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("1600.00"),
             iva_amount=Decimal("120.00"),
             recargo_amount=Decimal("0"),

@@ -12,6 +12,10 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
+from cadrumo.core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
+from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M303TaxTerritory
+
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_producer_key import FilingProducerKey
@@ -19,7 +23,7 @@ from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
-from ....core.prorrata_register import ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ....core.prorrata_register import ProrrataEspecialTransitionKind
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -33,16 +37,13 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionParameterProvenance,
     BienesInversionRegularizacionParameters,
 )
-from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema_base import ThresholdComparison
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
     ChargeAccount,
-    IVARegime,
     M303RegimeComposition,
-    M303TaxTerritory,
     ModeloIVAProfile,
     RefundAccount,
     TaxpayerProfile,
@@ -188,8 +189,8 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
 
 def _m303_profile() -> ModeloIVAProfile:
     return ModeloIVAProfile(
-        tax_territory=M303TaxTerritory.COMMON_REGIME,
-        regime_composition=M303RegimeComposition.GENERAL,
+        tax_territory=M303TaxTerritory._from_registry("common_regime"),
+        regime_composition=M303RegimeComposition._from_registry("general"),
         roi_enrolled=False,
         oss_enrolled=False,
         group_member_enrolled=False,
@@ -240,7 +241,7 @@ def _covered_prorrata_register(filing_year: int) -> ProrrataRegister:
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=filing_year,
-                regime=ProrrataRegisterRegime.NINGUNA,
+                regime=ProrrataRegisterRegime._from_registry("ninguna"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -269,7 +270,7 @@ def _bien_inversion(identifier: str) -> BienInversionIvaRecord:
         acquisition_year=2024,
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("70"),
-        kind=BienInversionKind.MUEBLE,
+        kind=BienInversionKind._from_registry("mueble"),
         acquisition_ledger_id=f"ledger:{identifier}",
     )
 
@@ -386,9 +387,9 @@ def _m303_prorrata_transition_arrival(
     entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
         regime=(
-            ProrrataRegisterRegime.ESPECIAL
-            if transition is ProrrataEspecialTransitionKind.OPCION
-            else ProrrataRegisterRegime.GENERAL
+            ProrrataRegisterRegime._from_registry("especial")
+            if transition == ProrrataEspecialTransitionKind._from_registry("opcion")
+            else ProrrataRegisterRegime._from_registry("general")
         ),
         especial_transition=ProrrataEspecialTransitionEvidence(
             kind=transition,
@@ -400,12 +401,12 @@ def _m303_prorrata_transition_arrival(
         (
             ProrrataRegisterEntry(
                 ejercicio=2025,
-                regime=ProrrataRegisterRegime.ESPECIAL,
+                regime=ProrrataRegisterRegime._from_registry("especial"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
         )
-        if transition is ProrrataEspecialTransitionKind.REVOCACION
+        if transition == ProrrataEspecialTransitionKind._from_registry("revocacion")
         else ()
     )
     register = ProrrataRegister(entries=(*prior_entries, entry))
@@ -447,8 +448,8 @@ def _m303_foral_snapshot(
     )
     profile = _m303_profile().model_copy(
         update={
-            "tax_territory": M303TaxTerritory.FORAL,
-            "regime_composition": M303RegimeComposition.MIXED,
+            "tax_territory": M303TaxTerritory._from_registry("foral"),
+            "regime_composition": M303RegimeComposition._from_registry("mixed"),
             "redeme_enrolled": True,
             "cash_accounting_regime_enrolled": True,
             "voluntary_sii_enrolled": True,
@@ -548,7 +549,7 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
     taxpayer_profile = TaxpayerProfile(
         tax_id=_TAXPAYER_TAX_ID,
         iva=_m303_profile(),
-        iva_regime=IVARegime.GENERAL,
+        iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("999999.99"),
         ley_49_2002_special_regime_option_declared=True,
         ley_49_2002_special_regime_option_date=date(2025, 1, 1),
@@ -675,7 +676,7 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
-        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory.FORAL}),
+        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory._from_registry("foral")}),
         elections=_elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,
@@ -688,7 +689,10 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
 
 @pytest.mark.parametrize(
     "transition",
-    (ProrrataEspecialTransitionKind.OPCION, ProrrataEspecialTransitionKind.REVOCACION),
+    (
+        ProrrataEspecialTransitionKind._from_registry("opcion"),
+        ProrrataEspecialTransitionKind._from_registry("revocacion"),
+    ),
 )
 def test_modelo_303_foral_note_5_overrides_each_a16_to_a30_lexical_branch(
     transition: ProrrataEspecialTransitionKind,
@@ -755,9 +759,9 @@ def test_modelo_303_foral_note_5_retains_blank_prorrata_slots_before_final_perio
 @pytest.mark.parametrize(
     ("composition", "expected"),
     (
-        (M303RegimeComposition.SIMPLIFIED, "1"),
-        (M303RegimeComposition.MIXED, "2"),
-        (M303RegimeComposition.GENERAL, "3"),
+        (M303RegimeComposition._from_registry("simplified"), "1"),
+        (M303RegimeComposition._from_registry("mixed"), "2"),
+        (M303RegimeComposition._from_registry("general"), "3"),
     ),
 )
 def test_m303_regime_composition_projects_only_the_exclusively_simplified_arm(
@@ -943,8 +947,8 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
     refund_account = RefundAccount(iban=_REFUND_IBAN)
     charge_account = ChargeAccount(iban=_CHARGE_IBAN)
     source_profile = ModeloIVAProfile(
-        tax_territory=M303TaxTerritory.COMMON_REGIME,
-        regime_composition=M303RegimeComposition.GENERAL,
+        tax_territory=M303TaxTerritory._from_registry("common_regime"),
+        regime_composition=M303RegimeComposition._from_registry("general"),
         redeme_enrolled=False,
         cash_accounting_regime_enrolled=False,
         voluntary_sii_enrolled=False,
@@ -1146,7 +1150,7 @@ def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> 
         (
             Modelo("202"),
             Modelo202ProducerProfile(
-                taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime.GENERAL),
+                taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime("GENERAL")),
                 activities=(),
             ),
         ),
@@ -1280,9 +1284,9 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     period = Period.from_year_and_code(2026, "4T")
     canonical_entry = ProrrataRegisterEntry(
         ejercicio=period.filing_year,
-        regime=ProrrataRegisterRegime.ESPECIAL,
+        regime=ProrrataRegisterRegime._from_registry("especial"),
         especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind.OPCION,
+            kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
             evidence_reference="operator-evidence:canonical-option",
         ),
         source_registry_snapshot_refs=(),
@@ -1290,7 +1294,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     foreign_entry = canonical_entry.model_copy(
         update={
             "especial_transition": ProrrataEspecialTransitionEvidence(
-                kind=ProrrataEspecialTransitionKind.OPCION,
+                kind=ProrrataEspecialTransitionKind._from_registry("opcion"),
                 evidence_reference="operator-evidence:foreign-option",
             )
         }
@@ -1298,7 +1302,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
     payload = _m303_filing_facts().model_dump()
     payload["prorrata_transition"] = M303ProrrataTransitionArrival(
         period=period,
-        transition=ProrrataEspecialTransitionKind.OPCION,
+        transition=ProrrataEspecialTransitionKind._from_registry("opcion"),
         register_evidence=(foreign_entry,),
     )
     payload["prorrata_register"] = ProrrataRegister(entries=(canonical_entry,))

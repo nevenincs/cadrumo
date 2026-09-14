@@ -493,7 +493,7 @@ def _build_verified_modelo_303_revision(
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
         actor="operator",
-        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id=taxpayer_nif, iva_regime=IVARegime("GENERAL")),
         settings=ready_clave_settings(taxpayer_nif),
         clock=datetime(2026, 5, 21, 12, 2, tzinfo=UTC),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,

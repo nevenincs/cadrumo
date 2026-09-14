@@ -29,6 +29,7 @@ from cadrumo.application.live.errors import LiveApplicationInputError
 from cadrumo.application.live.snapshot_base import SnapshotLifecycleState
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
@@ -190,7 +191,9 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
-        repository=work_unit_repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+        ),
     )
     snapshot_id = _save_snapshot(
         snapshot_repository,
@@ -268,7 +271,9 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, _PERIOD),
         revision_id="2025",
-        repository=work_unit_repository,
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+        ),
     )
     snapshot_id = _save_snapshot(
         snapshot_repository,

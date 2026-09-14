@@ -59,7 +59,7 @@ def _transaction(
     booked_date: date,
     taxable_base: Decimal,
     iva_amount: Decimal,
-    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+    cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment("none"),
     operation_date: date | None = None,
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = (),
 ) -> Transaction:
@@ -73,12 +73,12 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
-            "iva_category": IvaCategory.DOMESTIC_GENERAL,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
+            "iva_category": IvaCategory("domestic_general"),
+            "deduction_fact_kind": IvaDeductionFactKind._from_registry("domestic_current")
             if direction is TransactionDirection.OUTGOING
             else None,
             "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
                 source_locator=f"invoice:{provider_id}",
                 evidence_digest="a" * 64,
             )
@@ -122,7 +122,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
         booked_date=date(2026, 4, 15),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
-        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        cash_accounting_treatment=IvaCashAccountingTreatment("supplier_regime"),
         operation_date=date(2026, 3, 20),
         cash_accounting_payment_evidence=(
             IvaCashAccountingPaymentEvidence(

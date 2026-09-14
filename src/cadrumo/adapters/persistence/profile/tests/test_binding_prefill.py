@@ -108,23 +108,23 @@ def _observation(
     *,
     ledger_id: str,
     txn_date: date,
-    flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
+    flow: IvaFlowDirection = IvaFlowDirection._from_registry("repercutido"),
     iva: Decimal,
 ) -> IvaLedgerObservation:
     deduction_fact_kind: IvaDeductionFactKind | None = None
     deduction_provenance: IvaDeductionClassificationProvenance | None = None
-    if flow is IvaFlowDirection.SOPORTADO:
-        deduction_fact_kind = IvaDeductionFactKind.DOMESTIC_CURRENT
+    if flow == IvaFlowDirection._from_registry("soportado"):
+        deduction_fact_kind = IvaDeductionFactKind._from_registry("domestic_current")
         deduction_provenance = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            authority=IvaDeductionEvidenceAuthority._from_registry("invoice_evidence"),
             source_locator=f"invoice:{ledger_id}",
             evidence_digest="d" * 64,
         )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
-        category=IvaCategory.DOMESTIC_GENERAL,
-        rate_kind=IvaRateKind.GENERAL,
+        category=IvaCategory("domestic_general"),
+        rate_kind=IvaRateKind("general"),
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
@@ -205,7 +205,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                 _observation(
                     ledger_id="q1-input",
                     txn_date=date(2025, 3, 1),
-                    flow=IvaFlowDirection.SOPORTADO,
+                    flow=IvaFlowDirection._from_registry("soportado"),
                     iva=Decimal("42.00"),
                 ),
             ),
@@ -214,7 +214,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                 _observation(
                     ledger_id="q2-input",
                     txn_date=date(2025, 6, 20),
-                    flow=IvaFlowDirection.SOPORTADO,
+                    flow=IvaFlowDirection._from_registry("soportado"),
                     iva=Decimal("30.00"),
                 ),
             ),
@@ -224,7 +224,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                 _observation(
                     ledger_id="q4-input",
                     txn_date=date(2025, 12, 12),
-                    flow=IvaFlowDirection.SOPORTADO,
+                    flow=IvaFlowDirection._from_registry("soportado"),
                     iva=Decimal("45.00"),
                 ),
             ),

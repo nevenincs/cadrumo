@@ -123,7 +123,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
     row = _transaction(
         "row-exento",
         amount=Decimal("9600.00"),
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         taxable_base=Decimal("8000.00"),
         iva_amount=Decimal("1600.00"),
     )
@@ -170,7 +170,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     row = _transaction(
         "row-prorrata",
         amount=Decimal("1210.00"),
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
@@ -180,10 +180,10 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime.GENERAL,
+            regime=ProrrataRegisterRegime._from_registry("general"),
             especial_transition=None,
             provisional_percentage=Decimal("70"),
-            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
@@ -209,7 +209,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     row = _transaction(
         "row-ninguna",
         amount=Decimal("1210.00"),
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         taxable_base=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
     )
@@ -219,7 +219,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
         ProrrataRegisterEntry(
             ejercicio=2025,
-            regime=ProrrataRegisterRegime.NINGUNA,
+            regime=ProrrataRegisterRegime._from_registry("ninguna"),
             especial_transition=None,
             source_registry_snapshot_refs=(),
         ),
@@ -247,7 +247,7 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
         row = _transaction(
             "secondary-prorrata",
             amount=Decimal("1210.00"),
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             taxable_base=Decimal("1000.00"),
             iva_amount=Decimal("210.00"),
         )
@@ -272,10 +272,10 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
             secondary_prorrata_repository.upsert_entry(
                 ProrrataRegisterEntry(
                     ejercicio=2025,
-                    regime=ProrrataRegisterRegime.GENERAL,
+                    regime=ProrrataRegisterRegime._from_registry("general"),
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
-                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    provisional_provenance=ProrrataProvisionalProvenance._from_registry("carried_prior_definitiva"),
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )

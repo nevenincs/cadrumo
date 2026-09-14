@@ -70,6 +70,7 @@ from cadrumo.application.modelo.calculation_actions import (
 )
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -636,7 +637,7 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         revision_id="2025",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
 
@@ -663,7 +664,7 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         revision_id="2025",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
 
@@ -744,7 +745,7 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
         revision_id="2025",
-        repository=wu_repo,
+        ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=bv_repo),
         clock=_T1,
     )
 

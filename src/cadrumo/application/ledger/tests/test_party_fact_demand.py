@@ -27,17 +27,17 @@ from datetime import date
 
 import pytest
 
+from cadrumo.domain.iva.classification import CustomerTaxStatus, IvaTerritorialScope, TransactionKind
+from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+
 from ....core.classifier_input_source import ClassifierInputSource, CounterpartyTaxablePersonStatus
 from ....domain.iva.classification import (
-    CustomerTaxStatus,
     InvoiceKind,
     IvaInvoiceClassificationCriteria,
-    IvaTerritorialScope,
     PartyFact,
-    TransactionKind,
     classify_iva,
 )
-from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
+from ....domain.iva.schema import IvaCategory
 from ....domain.iva.supply_nature import SupplyNature
 from ..classification_assembly import (
     DeclaredFact,
@@ -114,9 +114,11 @@ class TestARegistrationSettlesNoPlace:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
             ),
         )
         assert not assembly.assembled
@@ -134,11 +136,13 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2C_CONSUMER, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2c_consumer"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
             ),
-            rate_tier=IvaRateKind.GENERAL,
+            rate_tier=IvaRateKind("general"),
         )
         assert assembly.assembled, [gap.field for gap in assembly.missing]
         assert assembly.criteria is not None
@@ -157,15 +161,17 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
             ),
             customer_identifier=_GERMAN_IVA_NUMBER,
         )
         assert assembly.assembled, [gap.field for gap in assembly.missing]
         assert assembly.criteria is not None
-        assert assembly.criteria.customer_identification_state is EUMemberState.DE
+        assert assembly.criteria.customer_identification_state == require_eu_member_state("DE")
 
     def test_an_intra_community_branch_with_no_printed_number_asks(self) -> None:
         """The same operation without the evidence: a question, never a blank."""
@@ -175,9 +181,11 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
             ),
         )
         assert not assembly.assembled
@@ -191,15 +199,17 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
-                customer_identification_state=DeclaredFact(value=EUMemberState.FR, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("es_mainland"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
+                customer_identification_state=DeclaredFact(value=require_eu_member_state("FR"), source=_ASSERTED),
             ),
         )
         assert assembly.assembled, [gap.field for gap in assembly.missing]
         assert assembly.criteria is not None
-        assert assembly.criteria.customer_identification_state is EUMemberState.FR
+        assert assembly.criteria.customer_identification_state == require_eu_member_state("FR")
 
 
 class TestTheUnplacedOperationGuardCoversTheNewAxis:
@@ -217,9 +227,11 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
             inputs=_TAXABLE,
             declared=DeclaredFacts(
                 supply_nature=DeclaredFact(value=SupplyNature.GOODS, source=_ASSERTED),
-                customer_tax_status=DeclaredFact(value=CustomerTaxStatus.B2B_IVA_REGISTERED, source=_ASSERTED),
-                issuer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
-                customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
+                customer_tax_status=DeclaredFact(
+                    value=CustomerTaxStatus._from_registry("b2b_iva_registered"), source=_ASSERTED
+                ),
+                issuer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
+                customer_scope=DeclaredFact(value=IvaTerritorialScope._from_registry("eu_member"), source=_ASSERTED),
             ),
         )
         assert not assembly.assembled
@@ -235,12 +247,12 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
         unplaced = classify_iva(
             IvaInvoiceClassificationCriteria(
                 transaction_date=_DATE,
-                issuer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_residency=IvaTerritorialScope.EU_MEMBER,
-                customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
-                kind=TransactionKind.GOODS,
+                issuer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_residency=IvaTerritorialScope._from_registry("eu_member"),
+                customer_tax_status=CustomerTaxStatus._from_registry("b2b_iva_registered"),
+                kind=TransactionKind("goods"),
                 direction=InvoiceKind.ISSUED,
             ),
         )
-        assert unplaced.category is IvaCategory.UNKNOWN
+        assert unplaced.category == IvaCategory("unknown")
         assert PartyFact.IVA_IDENTIFICATION_STATE in unplaced.consumes_party_facts

@@ -112,7 +112,7 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_cou
             taxable_base=Decimal("1000.00"),
             iva_rate=Decimal("0.00"),
             iva_amount=Decimal("0.00"),
-            iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            iva_category=IvaCategory("intra_community_supply"),
             counterparty_country="DE",
             idempotency_key="export-intracommunity",
         ),
@@ -141,5 +141,5 @@ def test_export_ledger_transactions_serializes_iva_category_and_counterparty_cou
 
     assert len(rows) == 1
     assert rows[0]["transaction_id"] == created.ref.transaction_id
-    assert rows[0]["iva_category"] == IvaCategory.INTRA_COMMUNITY_SUPPLY.value
+    assert rows[0]["iva_category"] == IvaCategory("intra_community_supply").value
     assert rows[0]["counterparty_country"] == "DE"

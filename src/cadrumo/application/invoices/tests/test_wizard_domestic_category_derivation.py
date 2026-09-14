@@ -28,6 +28,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.iva.schema import IvaCategory
+
 from ....domain.iva.schema import IvaCategory
 from ..creation_wizard import _derived_domestic_category
 
@@ -39,14 +41,14 @@ _DAY = date(2025, 6, 15)
 @pytest.mark.parametrize(
     ("rate", "expected"),
     [
-        (Decimal("21"), IvaCategory.DOMESTIC_GENERAL),
-        (Decimal("10"), IvaCategory.DOMESTIC_REDUCED),
-        (Decimal("4"), IvaCategory.DOMESTIC_SUPER_REDUCED),
+        (Decimal("21"), IvaCategory("domestic_general")),
+        (Decimal("10"), IvaCategory("domestic_reduced")),
+        (Decimal("4"), IvaCategory("domestic_super_reduced")),
     ],
 )
 def test_a_domestic_rate_derives_its_category(rate: Decimal, expected: IvaCategory) -> None:
     """Each in-force tier reaches its own category, so the income path is grounded."""
-    assert _derived_domestic_category(country_code="ES", iva_rate=rate, on_date=_DAY) is expected
+    assert _derived_domestic_category(country_code="ES", iva_rate=rate, on_date=_DAY) == expected
 
 
 def test_a_non_domestic_counterparty_derives_nothing() -> None:
@@ -90,7 +92,6 @@ def test_the_same_rate_derives_again_once_its_window_reopens() -> None:
     """
     inside_the_window = date(2024, 3, 1)
 
-    assert (
-        _derived_domestic_category(country_code="ES", iva_rate=Decimal("5"), on_date=inside_the_window)
-        is IvaCategory.DOMESTIC_REDUCED
-    )
+    assert _derived_domestic_category(
+        country_code="ES", iva_rate=Decimal("5"), on_date=inside_the_window
+    ) == IvaCategory("domestic_reduced")
