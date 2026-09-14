@@ -6,7 +6,7 @@ tags:
 date: '2026-09-10'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:b65323bba9fed160606d9e7faf708b4b863a73a8249d7d917384e5f84d640444'
+body_hash: 'sha256:b068c9422b4bb711812af287ee8f035f4440d617f17aef27bfa3320bef96a7d6'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P01-S01]]'
   - '[[2026-09-10-registry-authority-artifact-boundary-W01-P02-S02]]'
@@ -69,6 +69,26 @@ related:
   - '[[2026-09-12-registry-authority-artifact-boundary-typed-runtime-catalogues-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-installed-v4-boundary-proof-audit]]'
   - '[[2026-09-13-registry-authority-artifact-boundary-v4-artifact-regeneration-audit]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P01-S01]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P01-S02]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P01-S07]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P02-S13]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P02-S14]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P02-S15]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P02-S16]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W01-P02-S17]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P03-S19]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P03-S20]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P03-S21]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P03-S22]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P03-S23]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W02-P07-S110]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P08-S124]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P08-S126]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P08-S127]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P08-S129]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P09-S131]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-W03-P09-S135]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]'
@@ -154,11 +174,31 @@ Auto-generated index of all documents tagged with `#registry-authority-artifact-
 - `2026-09-10-registry-authority-artifact-boundary-W05-P12-S26` - Capture compiler-schema identity and exact uncached or staged transitive input manifests for publication
 - `2026-09-10-registry-authority-artifact-boundary-W05-P12-S27` - Prove concurrent-input refusal while retaining full-only canonical publication; defer selective component output and equivalence claims until exact dependency closure is implemented
 - `2026-09-10-registry-authority-artifact-boundary-W05-P13-S28` - Retain the optimized current format and defer indexed storage until concrete product startup or memory SLOs require a separate architecture decision
+- `2026-09-14-registry-authority-artifact-boundary-W01-P01-S01` - Introduce the explicit source set and expose profile-source selection through pipeline/cli.py; thread captured schema through compilation, validation, fingerprints and memo identities without ambient fallback
+- `2026-09-14-registry-authority-artifact-boundary-W01-P01-S02` - Implement strict captured-byte profile parsing and declared-reference validation, with focused missing-input, unknown-envelope and legal-reference defect fixtures
+- `2026-09-14-registry-authority-artifact-boundary-W01-P01-S07` - Make subtree ownership and dependency domains executable; reconcile nested fact census and family enrollment with focused defect fixtures
+- `2026-09-14-registry-authority-artifact-boundary-W01-P02-S13` - Define the component/codec contract and public typed query, generation-pin and profile create/decode context signatures, with representative fake behavior for the consumer lanes
+- `2026-09-14-registry-authority-artifact-boundary-W01-P02-S14` - Implement the typed SQLite store and independent complete candidate reader, including read-only admission, full-file digest, manifest/global closure, structural checks and supported-library refusal
+- `2026-09-14-registry-authority-artifact-boundary-W01-P02-S15` - Compile the complete source set into indexed SQLite components, including profile declarations, separately addressable layouts and evidence
+- `2026-09-14-registry-authority-artifact-boundary-W01-P02-S16` - Run checkpoint A once on representative source/enrollment and encoded-candidate fixtures; freeze lane contracts and preserve a runnable paired JSON baseline before retiring old APIs
+- `2026-09-14-registry-authority-artifact-boundary-W01-P02-S17` - Implement complete candidate validation, exclusive content-addressed installation and atomic descriptor publication in an isolated staging destination, preserving prior state on failure
+- `2026-09-14-registry-authority-artifact-boundary-W02-P03-S19` - Add operation/component identity checks, resource leases and at most four exclusive connection checkouts per reader; release before dependency decoding and distinguish cutover from corruption
+- `2026-09-14-registry-authority-artifact-boundary-W02-P03-S20` - Implement accounted LRU retention and concurrent-load coalescing with oversize, failure, cycle and lease-retirement behavior
+- `2026-09-14-registry-authority-artifact-boundary-W02-P03-S21` - Expose generation-pinned typed access and replace eager public graph fields while preserving incarnation and stale-capture semantics
+- `2026-09-14-registry-authority-artifact-boundary-W02-P03-S22` - Use complete revision metadata in the existing canonical selection rules without synthesising partial revision models
+- `2026-09-14-registry-authority-artifact-boundary-W02-P03-S23` - Resolve requested facts and preserve exact temporal, selector, precedence and provenance semantics without whole-catalogue hydration
+- `2026-09-14-registry-authority-artifact-boundary-W02-P07-S110` - Require draft filing coordinates in runtime, export and verification; use selected source/layout dependencies and preserve stale-draft refusal
+- `2026-09-14-registry-authority-artifact-boundary-W03-P08-S124` - Implement shared acceptance cases for component laziness, cache accounting, generation changes and admission-versus-use refusal; run them at checkpoint C
+- `2026-09-14-registry-authority-artifact-boundary-W03-P08-S126` - Implement one publication acceptance suite for Windows held-reader cutover, database tamper, collisions and deferred cleanup; run it at checkpoint C
+- `2026-09-14-registry-authority-artifact-boundary-W03-P08-S127` - Switch package resource selection to one descriptor and its database; update archive gates and exclude every runtime authoring source and JSON fallback
+- `2026-09-14-registry-authority-artifact-boundary-W03-P08-S129` - Extend the single installed cohort with profile, fact, model, evidence and CLI/MCP isolation and refusal cases
+- `2026-09-14-registry-authority-artifact-boundary-W03-P09-S131` - Extend the paired benchmark driver for independent workloads, full admission cost, incremental RSS and cache telemetry; run release measurements at checkpoint C
+- `2026-09-14-registry-authority-artifact-boundary-W03-P09-S135` - Update how-to/publish-runtime-authority.md and reference/registry-legal-api.md from the final implementation and measured limitations
 
 ### plan
 
 - `2026-09-10-registry-authority-artifact-boundary-plan` - `registry-authority-artifact-boundary` plan
-- `2026-09-14-registry-authority-artifact-boundary-plan` - `registry-authority-artifact-boundary` plan
+- `2026-09-14-registry-authority-artifact-boundary-plan` - Authority backend implementation plan
 
 ### reference
 

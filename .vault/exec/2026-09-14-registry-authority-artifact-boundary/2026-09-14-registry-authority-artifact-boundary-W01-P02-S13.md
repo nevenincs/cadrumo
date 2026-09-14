@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:c4d9dfbab7388759048c43c9687e2cb36b101ffa322c51a24589e9f68a9d34f9'
+body_hash: 'sha256:08b93a0fe6c87534bbabc57d13d80f1efeb5e3ee86a3b96efe64f8c5a936255b'
 step_id: 'S13'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"

@@ -12,7 +12,7 @@ related:
   - '[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-readiness-audit]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:09c0563fb9ebaa0bab875ca0c9915501f714e265e4d0942b899acf46827a97f8'
+body_hash: 'sha256:87ecea071cfcb3b8033e7f59c46b7e0f669a97d3500ca14756386fe1e67d1311'
 ---
 
 <!-- RETIRED: S03, S04, S05, S06, S08, S09, S10, S11, S12, S18, S25, S26, S29, S30, S31, S32, S33, S35, S36, S37, S38, S39, S40, S41, S43, S44, S45, S46, S48, S49, S51, S52, S53, S54, S55, S57, S58, S59, S60, S61, S62, S63, S64, S67, S68, S69, S70, S71, S72, S73, S75, S76, S77, S78, S79, S80, S81, S82, S83, S85, S86, S87, S88, S89, S90, S91, S94, S95, S96, S97, S98, S99, S100, S101, S102, S103, S104, S105, S107, S109, S111, S112, S113, S115, S116, S118, S119, S120, S121, S122, S123, S125, S128, S130, S133, S136, S137 -->
@@ -37,19 +37,19 @@ Capture every authority source, repair enrollment gaps and build a fully validat
 
 Make profile schema and provider-owned declarations explicit captured inputs with strict parsing and coherent validation/cache identity.
 
-- [ ] `W01.P01.S01` - Introduce the explicit source set and expose profile-source selection through pipeline/cli.py; thread captured schema through compilation, validation, fingerprints and memo identities without ambient fallback; `dev/registry`.
-- [ ] `W01.P01.S02` - Implement strict captured-byte profile parsing and declared-reference validation, with focused missing-input, unknown-envelope and legal-reference defect fixtures; `dev/registry/compiler/profile_schema.py`.
-- [ ] `W01.P01.S07` - Make subtree ownership and dependency domains executable; reconcile nested fact census and family enrollment with focused defect fixtures; `dev/registry/compiler/fact_providers.py`.
+- [x] `W01.P01.S01` - Introduce the explicit source set and expose profile-source selection through pipeline/cli.py; thread captured schema through compilation, validation, fingerprints and memo identities without ambient fallback; `dev/registry`.
+- [x] `W01.P01.S02` - Implement strict captured-byte profile parsing and declared-reference validation, with focused missing-input, unknown-envelope and legal-reference defect fixtures; `dev/registry/compiler/profile_schema.py`.
+- [x] `W01.P01.S07` - Make subtree ownership and dependency domains executable; reconcile nested fact census and family enrollment with focused defect fixtures; `dev/registry/compiler/fact_providers.py`.
 
 ### Phase `W01.P02` - Compile and verify the SQLite candidate
 
 Define the format and build a complete independently verified database with source, component and generation identities.
 
 - [x] `W01.P02.S13` - Define the component/codec contract and public typed query, generation-pin and profile create/decode context signatures, with representative fake behavior for the consumer lanes; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
-- [ ] `W01.P02.S14` - Implement the typed SQLite store and independent complete candidate reader, including read-only admission, full-file digest, manifest/global closure, structural checks and supported-library refusal; `src/cadrumo/domain/calculations/registry/authority_store.py`.
-- [ ] `W01.P02.S15` - Compile the complete source set into indexed SQLite components, including profile declarations, separately addressable layouts and evidence; `dev/registry/compiler/authority_database.py`.
-- [ ] `W01.P02.S17` - Implement complete candidate validation, exclusive content-addressed installation and atomic descriptor publication in an isolated staging destination, preserving prior state on failure; `dev/registry/pipeline/authority_publication.py`.
-- [ ] `W01.P02.S16` - Run checkpoint A once on representative source/enrollment and encoded-candidate fixtures; freeze lane contracts and preserve a runnable paired JSON baseline before retiring old APIs; `dev/registry/tests`.
+- [x] `W01.P02.S14` - Implement the typed SQLite store and independent complete candidate reader, including read-only admission, full-file digest, manifest/global closure, structural checks and supported-library refusal; `src/cadrumo/domain/calculations/registry/authority_store.py`.
+- [x] `W01.P02.S15` - Compile the complete source set into indexed SQLite components, including profile declarations, separately addressable layouts and evidence; `dev/registry/compiler/authority_database.py`.
+- [x] `W01.P02.S17` - Implement complete candidate validation, exclusive content-addressed installation and atomic descriptor publication in an isolated staging destination, preserving prior state on failure; `dev/registry/pipeline/authority_publication.py`.
+- [x] `W01.P02.S16` - Run checkpoint A once on representative source/enrollment and encoded-candidate fixtures; freeze lane contracts and preserve a runnable paired JSON baseline before retiring old APIs; `dev/registry/tests`.
 
 ## Wave `W02` - Replace eager runtime access
 
@@ -59,12 +59,12 @@ Implement generation-pinned typed loaders and migrate the enumerated profile, mo
 
 Preserve canonical selection and bootstrap semantics while introducing component loaders, generation leases and bounded concurrent caches.
 
-- [ ] `W02.P03.S19` - Add operation/component identity checks, resource leases and at most four exclusive connection checkouts per reader; release before dependency decoding and distinguish cutover from corruption; `src/cadrumo/domain/calculations/registry/authority_store.py`.
-- [ ] `W02.P03.S20` - Implement accounted LRU retention and concurrent-load coalescing with oversize, failure, cycle and lease-retirement behavior; `src/cadrumo/domain/calculations/registry/authority_cache.py`.
-- [ ] `W02.P03.S21` - Expose generation-pinned typed access and replace eager public graph fields while preserving incarnation and stale-capture semantics; `src/cadrumo/domain/calculations/registry/authority.py`.
-- [ ] `W02.P03.S22` - Use complete revision metadata in the existing canonical selection rules without synthesising partial revision models; `src/cadrumo/domain/calculations/registry/temporal.py`.
-- [ ] `W02.P03.S23` - Resolve requested facts and preserve exact temporal, selector, precedence and provenance semantics without whole-catalogue hydration; `src/cadrumo/domain/calculations/registry/facts/resolution.py`.
-- [ ] `W02.P03.S24` - Replace whole-catalogue validation and snapshot construction in governed_fact_scope.py and snapshot.py with declared same-generation dependencies; refuse recursive bundled loading; `src/cadrumo/domain/calculations/registry`.
+- [x] `W02.P03.S19` - Add operation/component identity checks, resource leases and at most four exclusive connection checkouts per reader; release before dependency decoding and distinguish cutover from corruption; `src/cadrumo/domain/calculations/registry/authority_store.py`.
+- [x] `W02.P03.S20` - Implement accounted LRU retention and concurrent-load coalescing with oversize, failure, cycle and lease-retirement behavior; `src/cadrumo/domain/calculations/registry/authority_cache.py`.
+- [x] `W02.P03.S21` - Expose generation-pinned typed access and replace eager public graph fields while preserving incarnation and stale-capture semantics; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W02.P03.S22` - Use complete revision metadata in the existing canonical selection rules without synthesising partial revision models; `src/cadrumo/domain/calculations/registry/temporal.py`.
+- [x] `W02.P03.S23` - Resolve requested facts and preserve exact temporal, selector, precedence and provenance semantics without whole-catalogue hydration; `src/cadrumo/domain/calculations/registry/facts/resolution.py`.
+- [x] `W02.P03.S24` - Replace whole-catalogue validation and snapshot construction in governed_fact_scope.py and snapshot.py with declared same-generation dependencies; refuse recursive bundled loading; `src/cadrumo/domain/calculations/registry`.
 
 ### Phase `W02.P04` - Pin profile schema through record and application flows
 
@@ -100,7 +100,7 @@ Route catalogue and evidence access through selected generation components witho
 
 Fix default filing selection and remove displaced raw-loader/eager API surfaces with their owning test fixtures.
 
-- [ ] `W02.P07.S110` - Require draft filing coordinates in runtime, export and verification; use selected source/layout dependencies and preserve stale-draft refusal; `src/cadrumo/application/filing`.
+- [x] `W02.P07.S110` - Require draft filing coordinates in runtime, export and verification; use selected source/layout dependencies and preserve stale-draft refusal; `src/cadrumo/application/filing`.
 - [ ] `W02.P07.S114` - Retire the raw runtime parser after source tooling and all inventoried consumer fixtures migrate; remove displaced eager APIs and forwarding paths; `src/cadrumo/domain/user_profile/loader.py`.
 - [ ] `W02.P07.S117` - Run checkpoint B once on the integrated authority/profile/filing contract selection plus focused import, lint and type checks; repair only observed failures; `src/cadrumo`.
 
@@ -112,19 +112,19 @@ Prove semantic, concurrency, package and performance acceptance before replacing
 
 Exercise real encoded generations, Windows readers, package boundaries and profile/model/evidence operations without authoring files.
 
-- [ ] `W03.P08.S124` - Implement shared acceptance cases for component laziness, cache accounting, generation changes and admission-versus-use refusal; run them at checkpoint C; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `W03.P08.S126` - Implement one publication acceptance suite for Windows held-reader cutover, database tamper, collisions and deferred cleanup; run it at checkpoint C; `dev/registry/tests/test_authority_generation_publication.py`.
-- [ ] `W03.P08.S127` - Switch package resource selection to one descriptor and its database; update archive gates and exclude every runtime authoring source and JSON fallback; `pyproject.toml`.
-- [ ] `W03.P08.S129` - Extend the single installed cohort with profile, fact, model, evidence and CLI/MCP isolation and refusal cases; `dev/packaging/tests/test_installed_oracles.py`.
+- [x] `W03.P08.S124` - Implement shared acceptance cases for component laziness, cache accounting, generation changes and admission-versus-use refusal; run them at checkpoint C; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W03.P08.S126` - Implement one publication acceptance suite for Windows held-reader cutover, database tamper, collisions and deferred cleanup; run it at checkpoint C; `dev/registry/tests/test_authority_generation_publication.py`.
+- [x] `W03.P08.S127` - Switch package resource selection to one descriptor and its database; update archive gates and exclude every runtime authoring source and JSON fallback; `pyproject.toml`.
+- [x] `W03.P08.S129` - Extend the single installed cohort with profile, fact, model, evidence and CLI/MCP isolation and refusal cases; `dev/packaging/tests/test_installed_oracles.py`.
 
 ### Phase `W03.P09` - Measure and complete the backend cutover
 
 Apply paired performance gates, publish the single referenced SQLite generation and reconcile operational documentation and release gates.
 
-- [ ] `W03.P09.S131` - Extend the paired benchmark driver for independent workloads, full admission cost, incremental RSS and cache telemetry; run release measurements at checkpoint C; `dev/registry/benchmark_authority.py`.
+- [x] `W03.P09.S131` - Extend the paired benchmark driver for independent workloads, full admission cost, incremental RSS and cache telemetry; run release measurements at checkpoint C; `dev/registry/benchmark_authority.py`.
 - [ ] `W03.P09.S132` - Run checkpoint C once against isolated candidate publication: canonical compile/validation, final gates, one candidate installed cohort and paired benchmarks, reusing the exact artifact; `justfile`.
 - [ ] `W03.P09.S134` - Promote the C-approved descriptor/database and retire shipped JSON; verify exact accepted bytes and package manifest without recompilation or another release suite; `src/cadrumo/_data/registry/authority`.
-- [ ] `W03.P09.S135` - Update how-to/publish-runtime-authority.md and reference/registry-legal-api.md from the final implementation and measured limitations; `docs`.
+- [x] `W03.P09.S135` - Update how-to/publish-runtime-authority.md and reference/registry-legal-api.md from the final implementation and measured limitations; `docs`.
 
 ## Parallelization
 
