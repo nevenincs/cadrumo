@@ -25,17 +25,23 @@ from typing import Any
 import pytest
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
+from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
-from .._renta_income_evidence import SalesInvoiceEvidenceRefusal
+from .._renta_income_evidence import (
+    SalesInvoiceEvidenceRefusal,
+    income_withheld_amount,
+    sales_invoice_evidence_payload,
+)
 from .._retencion_rate_advisory import (
     _conforms_to_fixed_rate,
     inferred_actividad_retencion_rate_advisory_observations,
@@ -48,6 +54,18 @@ _BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _OTHER_BUCKET = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
 _QUARTER = Period.from_year_and_code(2024, "1T")
 _ANNUAL = Period.from_year_and_code(2024, "0A")
+_M130_INGRESOS_CASILLA = validated_casilla_id("01")
+_M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
+
+
+def _is_activity_income(transaction: Transaction) -> bool:
+    """Use the registry-owned activity category predicate for the selected Renta target."""
+    return has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction)
+
+
+def _is_employment_income(transaction: Transaction) -> bool:
+    """Use the registry-owned employment category predicate for the selected Renta target."""
+    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
 
 
 def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
@@ -172,7 +190,16 @@ def test_the_declared_retencion_is_preferred_over_the_inference() -> None:
     ).observations[0]
 
     assert observation.withheld_amount == Decimal("150.00")
-    assert observation.withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    transaction = next(iter(transactions.values()))
+    evidence, refusal = sales_invoice_evidence_payload(
+        invoices=invoices,
+        bucket_id=_BUCKET,
+        transaction=transaction,
+    )
+    assert refusal is None
+    assert income_withheld_amount(transaction, evidence=evidence).derivation is (
+        LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    )
 
 
 def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
@@ -203,7 +230,16 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
     ).observations
 
     assert observations[0].withheld_amount == Decimal("123.45")
-    assert observations[0].withheld_derivation is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    transaction = next(iter(transactions.values()))
+    evidence, refusal = sales_invoice_evidence_payload(
+        invoices=invoices,
+        bucket_id=_BUCKET,
+        transaction=transaction,
+    )
+    assert refusal is None
+    assert income_withheld_amount(transaction, evidence=evidence).derivation is (
+        LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
+    )
     assert observations[0].taxable_base_amount == Decimal("1000.00")
     assert not any(
         _conforms_to_fixed_rate(Decimal("1000.00"), observations[0].withheld_amount, rate)

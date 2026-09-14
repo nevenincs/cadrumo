@@ -13,6 +13,7 @@ from cadrumo.adapters.persistence.profile.justificante import JustificanteReposi
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -64,6 +65,7 @@ from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_suppor
 from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
     store_ready_profile as _store_ready_profile,
 )
+from cadrumo.adapters.persistence.profile.tests._file_flow_support import calculation_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -78,6 +80,7 @@ from cadrumo.application.calculations.cross_period_models import (
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -462,12 +465,19 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
             _store_ready_profile()
+            work_unit_repository = WorkUnitCatalogueRepository()
+            calculation_repository = CalculationRevisionCatalogueRepository()
+            bucket_event_repository = BucketEventHistoryRepository()
             work_unit = create_work_unit(
                 bucket_id=_BUCKET_ID,
                 modelo="390",
                 filing_year=_M390_YEAR,
                 period=Period.from_year_and_code(_M390_YEAR, _M390_PERIOD),
                 revision_id=_M390_REVISION,
+                ports=WorkLifecyclePorts(
+                    work_unit_repository=work_unit_repository,
+                    bucket_event_repository=bucket_event_repository,
+                ),
                 clock=_CLOCK,
             )
             snapshot = _snapshot_390()
@@ -476,8 +486,12 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
                 work_unit.work_unit_id,
                 casilla_inputs={},
                 binding_values=binding_values,
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                bucket_event_repository=BucketEventHistoryRepository(),
+                ports=calculation_ports_for_test(
+                    bucket_id=_BUCKET_ID,
+                    work_unit_repository=work_unit_repository,
+                    calculation_repository=calculation_repository,
+                    bucket_event_repository=bucket_event_repository,
+                ),
                 clock=_CLOCK,
             )
 
@@ -498,7 +512,7 @@ def test_verify_modelo_revision_refuses_m390_when_prior_filings_are_not_clean(tm
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 operation=_authority_operation_for_test,
             )
-            reloaded = CalculationRevisionCatalogueRepository().load().get(revision.calculation_revision_id)
+            reloaded = calculation_repository.load().get(revision.calculation_revision_id)
 
         assert report.granted_verificado_completo is False
         assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
