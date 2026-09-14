@@ -14,7 +14,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.authority import (
+    ValidatedRegistryAuthority,
+    bundled_indexed_authority as _indexed_authority_for_test,
+)
 
 from ..compiler.authority import compiled_bundled_authority
 from ..pipeline.generated_tree_dispositions import disposition_ledger_from_path, record_drift_dispositions
@@ -153,12 +156,15 @@ def test_a_revision_without_a_generated_layout_is_refused_by_name(
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
-    without_layout = [
-        (modelo, revision_id)
-        for modelo in sorted(str(code) for code in registry_modelo_codes())
-        for revision_id, revision in authority.modelo(modelo).revisions.items()
-        if not revision.export_layouts
-    ]
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        without_layout = [
+            (modelo, revision_id)
+            for modelo in sorted(
+                str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test)
+            )
+            for revision_id, revision in authority.modelo(modelo).revisions.items()
+            if not revision.export_layouts
+        ]
 
     assert without_layout, "no revision lacks a generated layout, so this refusal cannot be exercised"
 
@@ -190,13 +196,16 @@ def test_a_cited_source_of_the_wrong_kind_is_refused_by_name_not_treated_as_the_
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
     sources = authority.catalogues.sources
-    candidates = [
-        (modelo, revision_id, str(ref))
-        for modelo in sorted(str(code) for code in registry_modelo_codes())
-        for revision_id, revision in authority.modelo(modelo).revisions.items()
-        for ref in revision.source_refs
-        if (source := sources.get(ref)) is not None and source.kind != "record_design"
-    ]
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        candidates = [
+            (modelo, revision_id, str(ref))
+            for modelo in sorted(
+                str(code) for code in registry_modelo_codes(operation=_authority_operation_for_test)
+            )
+            for revision_id, revision in authority.modelo(modelo).revisions.items()
+            for ref in revision.source_refs
+            if (source := sources.get(ref)) is not None and source.kind != "record_design"
+        ]
 
     assert candidates, "no revision cites a non-record-design source, so this refusal cannot be exercised"
 
@@ -237,13 +246,18 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
         assert source.sha256 == row.source_sha256, f"{row.subject}: disposition source was reissued; reconsider the pin"
 
     drifting: set[str] = set()
-    for code in sorted(str(item) for item in registry_modelo_codes()):
-        for revision_id in authority.modelo(code).revisions:
-            if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
-                continue
-            comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-            if comparison.disposition_class == "record_drift":
-                drifting.add(f"{code}/{revision_id}")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for code in sorted(
+            str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)
+        ):
+            for revision_id in authority.modelo(code).revisions:
+                if not bundled_path(
+                    "registry", "aeat", "modelos", code, "revisions", revision_id, "export"
+                ).is_dir():
+                    continue
+                comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
+                if comparison.disposition_class == "record_drift":
+                    drifting.add(f"{code}/{revision_id}")
 
     assert drifting == set(dispositioned), (
         f"trees whose records drifted and carry no disposition: {sorted(drifting - set(dispositioned))}; "
@@ -265,13 +279,18 @@ def test_every_manifest_stale_tree_really_does_reproduce_its_records(
     from ..pipeline.render_check import compare_revision_against_committed
 
     unsafe: list[str] = []
-    for code in sorted(str(item) for item in registry_modelo_codes()):
-        for revision_id in authority.modelo(code).revisions:
-            if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
-                continue
-            comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-            if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced:
-                unsafe.append(f"{code}/{revision_id}")
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        for code in sorted(
+            str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)
+        ):
+            for revision_id in authority.modelo(code).revisions:
+                if not bundled_path(
+                    "registry", "aeat", "modelos", code, "revisions", revision_id, "export"
+                ).is_dir():
+                    continue
+                comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
+                if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced:
+                    unsafe.append(f"{code}/{revision_id}")
 
     assert not unsafe, f"trees called provenance-only whose records do not reproduce semantically: {unsafe}"
 

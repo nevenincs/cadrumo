@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import re
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -39,11 +39,17 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.iva.catalogue import iva_catalogue_years, resolve_catalogue
+from cadrumo.core.validity_window import ValidityWindow, years_covered_by_every_group
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.runtime_catalogues import (
+    PublishedIvaPlaceOfSupplyRule,
+)
+from cadrumo.domain.iva.catalogue import resolve_catalogue
 from cadrumo.domain.iva.errors import IvaCatalogueError
-from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule, place_of_supply_years
+from cadrumo.domain.iva.place_of_supply import load_place_of_supply_table, place_of_supply_rule
 
 from ...compiler.loader import load_registry_tree
+from ...compiler.runtime_catalogues import _read, _records, _regulations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +78,7 @@ class ExactKeyCorpus:
     relative_source: tuple[str, ...]
     years_under: Callable[[Path], frozenset[int]]
     narrow: Callable[[Path, int], None]
-    resolve: Callable[[int], object]
+    resolve: Callable[[int, PinnedAuthorityOperation], object]
     raises: type[Exception]
 
     def bundled_source(self) -> Path:
@@ -140,22 +146,43 @@ def _narrow_by_rewriting_citation_windows(source: Path, year: int) -> None:
 
 
 def _iva_catalogue_years(source: Path) -> frozenset[int]:
-    return iva_catalogue_years(source)
+    regulations = _regulations(_read(source))
+    return years_covered_by_every_group(
+        [ValidityWindow(valid_from=citation.valid_from, valid_to=citation.valid_to) for citation in regulation.citations]
+        for regulation in regulations.values()
+        if not regulation.legal_basis_exempt
+    )
 
 
 def _place_of_supply_years(source: Path) -> frozenset[int]:
-    return place_of_supply_years(source)
+    rules = _records(_read(source), "place_of_supply_rules", PublishedIvaPlaceOfSupplyRule, "rule_id")
+    return years_covered_by_every_group(
+        [ValidityWindow(valid_from=rule.valid_from, valid_to=rule.valid_to)]
+        for rule in rules.values()
+        if not rule.legal_basis_exempt and rule.valid_from is not None and rule.valid_to is not None
+    )
 
 
-def _resolve_any_place_of_supply_rule(year: int) -> object:
+def _resolve_any_place_of_supply_rule(year: int, operation: PinnedAuthorityOperation) -> object:
     """Resolve one grounded rule for ``year`` through the raising public resolver.
 
     The rule id is taken from the table rather than pinned, so this stays honest
     when the rule set changes. A year the table does not ground refuses before
     the rule id is even consulted, which is the contract under test.
     """
-    rule_id = next(iter(sorted(load_place_of_supply_table())), "")
-    return place_of_supply_rule(rule_id, on=date(year, 1, 1))
+    rule_id = next(iter(sorted(load_place_of_supply_table(operation=operation))), "")
+    return place_of_supply_rule(
+        rule_id,
+        on=date(year, 1, 1),
+        operation=operation,
+        projected_year=year,
+    )
+
+
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
 
 
 ENROLLED_EXACT_KEY_CORPORA: tuple[ExactKeyCorpus, ...] = (
@@ -164,7 +191,11 @@ ENROLLED_EXACT_KEY_CORPORA: tuple[ExactKeyCorpus, ...] = (
         relative_source=("registry", "aeat", "iva", "catalogues.toml"),
         years_under=_iva_catalogue_years,
         narrow=_narrow_by_rewriting_citation_windows,
-        resolve=lambda year: resolve_catalogue(on=date(year, 1, 1)),
+        resolve=lambda year, operation: resolve_catalogue(
+            on=date(year, 1, 1),
+            operation=operation,
+            projected_year=year,
+        ),
         raises=IvaCatalogueError,
     ),
     ExactKeyCorpus(
@@ -212,7 +243,10 @@ def test_every_exact_key_corpus_covers_the_whole_master_filing_window(corpus: Ex
 
 
 @pytest.mark.parametrize("corpus", ENROLLED_EXACT_KEY_CORPORA, ids=lambda c: c.name)
-def test_every_enrolled_resolver_refuses_a_year_it_does_not_ground(corpus: ExactKeyCorpus) -> None:
+def test_every_enrolled_resolver_refuses_a_year_it_does_not_ground(
+    corpus: ExactKeyCorpus,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Anchor: enrolment is only meaningful while the resolver still raises on a miss.
 
     Without this, a resolver that quietly gained a fallback would keep passing
@@ -222,7 +256,7 @@ def test_every_enrolled_resolver_refuses_a_year_it_does_not_ground(corpus: Exact
     absent_year = max(corpus.bundled_years()) + 1000
 
     with pytest.raises(corpus.raises):
-        corpus.resolve(absent_year)
+        corpus.resolve(absent_year, authority_operation)
 
 
 @pytest.mark.parametrize("corpus", ENROLLED_EXACT_KEY_CORPORA, ids=lambda c: c.name)
