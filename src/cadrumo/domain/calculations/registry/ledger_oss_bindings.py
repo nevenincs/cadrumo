@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, Self
+from typing import TYPE_CHECKING, Annotated, Literal, Self, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
 
@@ -32,6 +32,7 @@ from .ledger_binding_selector_support import LedgerIvaFact, OssIossLedgerFact
 from .schema_base import coerce_enum_member, coerce_enum_tuple
 
 if TYPE_CHECKING:
+    from .authority import PinnedAuthorityOperation
     from .schema import BindingDefinition, ModeloRevision
 
 
@@ -83,10 +84,24 @@ class OssIossLedgerObservation(BaseModel):
     @model_validator(mode="after")
     def _validate_registry_regime(self) -> Self:
         """Refuse an observation whose regime is absent from facts authority."""
-        regime = require_oss_ioss_regime(self.regime, effective_date=self.transaction_date)
-        require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date)
-        transaction_kind = require_transaction_kind(self.transaction_kind, effective_date=self.transaction_date)
-        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=self.transaction_date)
+        authority = governed_facts_in_scope()
+        if authority is None:
+            raise RegistryValidationError("ledger OSS observation validation requires generation-pinned governed facts")
+        regime = require_oss_ioss_regime(
+            self.regime,
+            effective_date=self.transaction_date,
+            authority=authority,
+        )
+        require_iva_rate_kind(self.rate_kind, effective_date=self.transaction_date, authority=authority)
+        transaction_kind = require_transaction_kind(
+            self.transaction_kind,
+            effective_date=self.transaction_date,
+            operation=cast("PinnedAuthorityOperation", authority),
+        )
+        catalogue = resolve_oss_ioss_regime_catalogue(
+            effective_date=self.transaction_date,
+            authority=authority,
+        )
         if transaction_kind.value not in catalogue.transaction_kinds_for(regime):
             raise RegistryValidationError(
                 "transaction kind is not admitted by the supplied OSS/IOSS regime",
@@ -137,7 +152,10 @@ class LedgerOssProvider(BaseModel):
     def _validate_registry_transaction_kinds(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         """Refuse binding transaction kinds absent from the classification fact."""
         authority = governed_facts_in_scope()
-        return tuple(require_transaction_kind(kind, effective_date=date.today(), authority=authority) for kind in value)
+        if authority is None:
+            raise RegistryValidationError("ledger OSS binding validation requires candidate governed facts")
+        operation = cast("PinnedAuthorityOperation", authority)
+        return tuple(require_transaction_kind(kind, effective_date=date.today(), operation=operation) for kind in value)
 
     @field_validator("transaction_kinds", mode="after")
     @classmethod

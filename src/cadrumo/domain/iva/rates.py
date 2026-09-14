@@ -78,7 +78,7 @@ def load_iva_rate_table(
 def iva_rate_record_from_fact(
     resolved: ResolvedMappingFact,
     *,
-    authority: GovernedFactSource | None = None,
+    authority: GovernedFactSource,
 ) -> IvaRateRecord:
     """Project an authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
