@@ -19,12 +19,13 @@ preserve.
 ## Summary
 
 The source inventory contains 69 direct built-in exception roots: the intentional
-`CadrumoError` root and 68 migration targets. Targets partition into 48 application,
-9 entrypoint, 5 domain, 3 adapter, and 3 core exceptions. The repaired five-base gate
+`CadrumoError` root, the Playwright protocol fallback, and 67 Cadrumo-owned migration
+targets. Owned targets partition into 48 application, 9 entrypoint, 5 domain, 2
+adapter, and 3 core exceptions. The repaired five-base gate
 misses `OperationObservationUnknownOperationError`, whose `LookupError` base is at
 `src/cadrumo/application/operations/persistence/journal.py:200`.
 
-Migration produces 81 new registry identities because 13 currently unregistered
+Migration produces 80 new registry identities because 13 currently unregistered
 descendants enter the canonical hierarchy with their bare parent. These include the
 manifest validation, authority artifact/store, and TUI navigation families.
 

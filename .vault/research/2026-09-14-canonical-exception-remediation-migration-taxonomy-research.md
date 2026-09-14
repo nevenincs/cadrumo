@@ -13,8 +13,8 @@ related:
 # `canonical-exception-remediation` research: `migration taxonomy`
 
 The repository must choose whether Cadrumo-owned built-in exception roots remain local
-acknowledgements or become registered failures. Rationale metadata leaves 68 direct
-production roots and 13 newly reachable descendants without stable envelopes. Package-
+acknowledgements or become registered failures. Rationale metadata leaves 67 owned
+direct production roots and 13 newly reachable descendants without stable envelopes. Package-
 owned registered classes, with external translation only where a protocol proves it,
 are the only option that satisfies downstream machine-readable behavior.
 
@@ -62,7 +62,7 @@ refusals do not (`src/cadrumo/core/errors/error_codes.py:86`).
 
 Changing a bare parent to inherit from `CadrumoError` causes every unregistered
 descendant to participate in import-time binding. The direct-root inventory therefore
-expands to 81 new identities: 68 direct targets and 13 currently unregistered
+expands to 80 new identities: 67 direct targets and 13 currently unregistered
 descendants. Registering only the direct roots would make affected modules fail during
 class creation rather than produce valid envelopes.
 

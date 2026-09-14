@@ -2,7 +2,7 @@
 
 Use this guide when you change Cadrumo's tax-rule registry or its legal
 evidence. Publication turns validated Agencia Estatal de Administración
-Tributaria (AEAT) modelo rules into the artifact the runtime reads for
+Tributaria (AEAT) modelo rules into the authority the runtime reads for
 calculations and filing exports. It is a development and release operation,
 not an `aeat` command for taxpayers.
 
@@ -16,7 +16,7 @@ It is also the sole shipped runtime source: installed code does not open the
 authored registry tree, parse profile TOML, or maintain a parallel cache of
 tables parsed from it.
 
-For the artifact format, runtime checks, error classes, and Python application
+For the publication format, runtime checks, error classes, and Python application
 programming interface (API), see [Registry, legal sources, and Python API](../reference/registry-legal-api.md).
 For an ordinary installed-command failure, use [Diagnose and repair](troubleshooting.md).
 
@@ -40,14 +40,21 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    it atomically replace
    `src/cadrumo/_data/registry/authority/authority.current.json`.
    The command prints the descriptor path and logical generation it recorded.
-   The registry-root, source-root, profile-schema, and publication-destination
-   options select other inputs or an isolated candidate destination.
+   `--registry-root`, `--source-root`, `--profile-schema`, and `--destination`
+   select other inputs or an isolated candidate destination. Custom registry or
+   source roots must provide `--profile-schema` explicitly.
    There is no facts-only publication command and no component-selective reuse:
    every successful publication is a fresh, full generation.
 3. Commit the regenerated `authority.current.json` and its exact
    content-addressed `authority-<database_sha256>.sqlite3` together with the
    registry change that required them. Do not rename a database or edit the
    descriptor by hand.
+
+For an isolated package or installed-cohort check, set
+`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory containing the accepted
+descriptor and its selected database. The packaging checks copy only those
+two bytes into a private source snapshot; they never mutate the checkout or
+read the authored registry as a runtime fallback.
 
 Publication holds the destination lock while it captures the input receipt,
 validates and serializes the complete component set, stages and flushes the
@@ -67,7 +74,33 @@ identifiers accept their stable syntax in code, but membership belongs to this
 validated authority; an identifier absent from its published vocabulary is not
 silently admitted.
 
-## Check that the artifact is current
+## Measure a release candidate
+
+Checkpoint C compares the isolated candidate with a JSON baseline written from
+the same validated in-memory generation. Run both backends with the default ten
+fresh processes per workload; the driver keeps modelo 100, 200, and 303 results
+separate and also reports fact-only, profile-only, evidence, and explicit
+enumeration costs.
+The JSON file is a disposable development benchmark input, not a publication
+candidate or an installable runtime fallback.
+
+```powershell
+uv run --no-sync python -m dev.registry.benchmark_authority --runs 10 --backend json --artifact <candidate-baseline.json>
+uv run --no-sync python -m dev.registry.benchmark_authority --runs 10 --backend sqlite --descriptor <candidate-authority.current.json>
+```
+
+Do not average modelo results. Each SQLite modelo workload must independently
+use at most half the JSON median for post-import admission plus its first
+snapshot and for incremental authority RSS. Its cached context lookup median
+must be at most 1 ms. A miss blocks promotion; it is not a reason to weaken the
+threshold or compile another candidate.
+Record the raw samples and per-workload summary with the accepted candidate;
+this guide intentionally carries no machine-specific measurement values.
+The packaging checks stage only that descriptor and its selected database into
+their private cohort. Superseded content-addressed files retained by a source
+checkout are not members of the candidate package.
+
+## Check that the publication is current
 
 Run the registry gate:
 
@@ -87,7 +120,7 @@ receipt covers the compiler and relevant Cadrumo code, `pyproject.toml`,
 `uv.lock`, the Python major/minor version, and the installed `pydantic` and
 `pydantic-core` versions. A fresh clone in the same declared environment is
 stable; an incompatible interpreter, dependency set, manifest, or compiler
-change makes the artifact stale and requires republication. The component
+change makes the publication stale and requires republication. The component
 receipt binds those source and compiler receipts to the complete-authority
 generation. The database digest independently protects all stored component
 bytes, while each on-demand component load checks its own payload digest and
@@ -104,8 +137,15 @@ generation-pinned operation and keeps only bounded, generation-scoped values;
 a descriptor replacement starts a new authority generation while existing
 operations retain their admitted reader.
 
-1. Preserve the failed artifact when it is present, plus the package version,
-   artifact digest, error class, and redacted logs.
+On Windows, publication removes an older content-addressed database only after
+it can acquire an exclusive handle, so an in-flight reader defers cleanup until
+a later publication. On POSIX systems publication retains superseded database
+files: unlinking an open file succeeds there and does not provide a safe
+cross-process lease signal. The immutable filename prevents those retained
+bytes from being selected by the current descriptor.
+
+1. Preserve the failed descriptor/database pair when present, plus the package
+   version, logical and physical digests, error class, and redacted logs.
 2. Republish from a validated registry, and confirm that `just check-registry`
    passes.
 3. Rebuild the package so it contains the replacement descriptor and the
@@ -113,5 +153,5 @@ operations retain their admitted reader.
    registry, profile schema TOML, or retired JSON frame.
 
 Escalate through the [project issue tracker](https://github.com/nevenincs/cadrumo/issues)
-with the release version, artifact digest, error class, and redacted log
+with the release version, authority digests, error class, and redacted log
 context. Never include taxpayer data.
