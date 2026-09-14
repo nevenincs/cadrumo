@@ -36,7 +36,10 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
+from ...calculations.registry.descendant_relacion_catalogue import (
+    descendant_relacion_entitling_tokens,
+    descendant_relacion_tokens,
+)
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -239,7 +242,7 @@ class TestMaternidadAltaPosteriorIncrementApplies:
             meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
-        assert child.maternidad_alta_posterior_increment_applies(2023) is True
+        assert child.maternidad_alta_posterior_increment_applies(2023, context=_FACT_CONTEXT) is True
 
     def test_does_not_apply_before_2023_even_when_declared(self) -> None:
         """Same descendant, one filing year earlier: the route does not exist yet."""
@@ -248,11 +251,11 @@ class TestMaternidadAltaPosteriorIncrementApplies:
             meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12),
             alta_posterior_nacimiento_mes=5,
         )
-        assert child.maternidad_alta_posterior_increment_applies(2022) is False
+        assert child.maternidad_alta_posterior_increment_applies(2022, context=_FACT_CONTEXT) is False
 
     def test_does_not_apply_when_nothing_is_declared(self) -> None:
         child = DescendantInfo(birth_date=date(2023, 1, 1), meses_madre_trabajo=(5, 6, 7, 8, 9, 10, 11, 12))
-        assert child.maternidad_alta_posterior_increment_applies(2023) is False
+        assert child.maternidad_alta_posterior_increment_applies(2023, context=_FACT_CONTEXT) is False
 
 
 # ---------------------------------------------------------------------------
@@ -390,33 +393,33 @@ class TestMaternidadEligibleMeses:
     """
 
     def test_a_child_under_three_all_year_has_every_month(self) -> None:
-        assert _hijo_menor_3("").maternidad_eligible_meses(2024) == 12
+        assert _hijo_menor_3("").maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 12
 
     def test_the_birth_month_counts_in_full(self) -> None:
         """Born in June 2024: June to December is seven months, not six."""
         child = DescendantInfo(birth_date=date(2024, 6, 15))
 
-        assert child.maternidad_eligible_meses(2024) == 7
+        assert child.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 7
 
     def test_the_month_the_child_turns_three_does_not_count(self) -> None:
         """Born April 2021, turns three in April 2024: January to March only."""
         child = DescendantInfo(birth_date=date(2021, 4, 15))
 
-        assert child.maternidad_eligible_meses(2024) == 3
+        assert child.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 3
 
     def test_a_january_third_birthday_leaves_no_eligible_month(self) -> None:
         child = DescendantInfo(birth_date=date(2021, 1, 20))
 
-        assert child.maternidad_eligible_meses(2024) == 0
+        assert child.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 0
 
     def test_a_leap_day_birth_resolves_without_constructing_a_third_birthday(self) -> None:
         """29 February has no anniversary in a non-leap year; the window still resolves."""
         child = DescendantInfo(birth_date=date(2020, 2, 29))
 
-        assert child.maternidad_eligible_meses(2023) == 1
+        assert child.maternidad_eligible_meses(2023, context=_FACT_CONTEXT) == 1
 
     def test_a_period_before_the_birth_has_no_eligible_month(self) -> None:
-        assert DescendantInfo(birth_date=date(2025, 3, 1)).maternidad_eligible_meses(2024) == 0
+        assert DescendantInfo(birth_date=date(2025, 3, 1)).maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 0
 
 
 class TestArt811EntryWindowDivergesFromArt582:
@@ -442,13 +445,13 @@ class TestArt811EntryWindowDivergesFromArt582:
 
     def test_the_entry_period_is_whole_for_art_58_2_and_partial_for_art_81_1(self) -> None:
         """First direction: the period limb is wider in the year of entry."""
-        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2021) is True
-        assert self._ADOPTADO.art_81_1_entry_window_meses(2021) == 2
+        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2021, context=_FACT_CONTEXT) is True
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2021, context=_FACT_CONTEXT) == 2
 
     def test_the_fourth_year_is_inside_art_81_1_and_outside_art_58_2(self) -> None:
         """Second direction: the date limb outlives the period limb."""
-        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2024) is False
-        assert self._ADOPTADO.art_81_1_entry_window_meses(2024) == 10
+        assert self._ADOPTADO.is_eligible_minimo_incremento_menor_tres(2024, context=_FACT_CONTEXT) is False
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 10
 
     def test_the_window_is_age_independent(self) -> None:
         """ "Con independencia de la edad del menor": the child was five at inscription.
@@ -456,9 +459,9 @@ class TestArt811EntryWindowDivergesFromArt582:
         The under-three limb contributes nothing for a five-year-old, so every
         eligible month in 2022 came from the entry window.
         """
-        assert self._ADOPTADO._maternidad_edad_months(2022) == frozenset()
-        assert self._ADOPTADO.art_81_1_entry_window_meses(2022) == 12
-        assert self._ADOPTADO.maternidad_eligible_meses(2022) == 12
+        assert self._ADOPTADO._maternidad_edad_months(2022, context=_FACT_CONTEXT) == frozenset()
+        assert self._ADOPTADO.art_81_1_entry_window_meses(2022, context=_FACT_CONTEXT) == 12
+        assert self._ADOPTADO.maternidad_eligible_meses(2022, context=_FACT_CONTEXT) == 12
 
     def test_a_relacion_the_statute_excludes_opens_no_window(self) -> None:
         """A temporal acogimiento carer takes the tranches and not this limb."""
@@ -468,7 +471,7 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert temporal.art_81_1_entry_window_meses(2024) == 0
+        assert temporal.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 0
 
     def test_an_entitling_relacion_with_no_recorded_date_opens_no_window(self) -> None:
         """The window has nothing to measure from, so it withholds rather than guesses."""
@@ -478,7 +481,7 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert undated.art_81_1_entry_window_meses(2024) == 0
+        assert undated.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 0
 
     def test_a_fostered_then_adopted_child_gets_one_window_not_two(self) -> None:
         """The cap: anchoring on the later event would grant six years, not three."""
@@ -490,8 +493,8 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert fostered_then_adopted.art_81_1_entry_window_meses(2024) == 10
-        assert fostered_then_adopted.art_81_1_entry_window_meses(2025) == 0
+        assert fostered_then_adopted.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 10
+        assert fostered_then_adopted.art_81_1_entry_window_meses(2025, context=_FACT_CONTEXT) == 0
 
     def test_no_month_before_the_adoption_is_eligible(self) -> None:
         """An infant born in January and adopted in October yields three months, not twelve.
@@ -509,10 +512,10 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert len(infant._maternidad_edad_months(2024)) == 12
-        assert infant.art_81_1_entry_window_meses(2024) == 3
-        assert infant.maternidad_eligible_meses(2024) == 3
-        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
+        assert len(infant._maternidad_edad_months(2024, context=_FACT_CONTEXT)) == 12
+        assert infant.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 3
+        assert infant.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 3
+        assert infant.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 3
 
     def test_the_year_where_union_and_wider_limb_genuinely_differ(self) -> None:
         """The only shape that distinguishes the two candidate rules, and it favours the clip.
@@ -531,17 +534,17 @@ class TestArt811EntryWindowDivergesFromArt582:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert len(child._maternidad_edad_months(2024)) == 3
-        assert child.art_81_1_entry_window_meses(2024) == 11
-        assert child.maternidad_eligible_meses(2024) == 11
-        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 11
+        assert len(child._maternidad_edad_months(2024, context=_FACT_CONTEXT)) == 3
+        assert child.art_81_1_entry_window_meses(2024, context=_FACT_CONTEXT) == 11
+        assert child.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 11
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 11
 
     def test_a_descendant_with_no_entry_date_is_unclipped(self) -> None:
         """The clip must not touch an ordinary child, who has no entry event at all."""
         ordinary = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo=tuple(range(1, 13)))
 
-        assert ordinary.maternidad_eligible_meses(2024) == 12
-        assert ordinary.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 12
+        assert ordinary.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 12
+        assert ordinary.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 12
 
     def test_the_entry_window_reaches_the_deduccion(self) -> None:
         """The consumer clause: a window nothing calls is indistinguishable from no window.
@@ -549,9 +552,9 @@ class TestArt811EntryWindowDivergesFromArt582:
         This child is five, so the under-three limb grants nothing. Every month
         that survives here came from the entry window.
         """
-        assert self._ADOPTADO._maternidad_edad_months(2024) == frozenset()
-        assert self._ADOPTADO.maternidad_eligible_meses(2024) == 10
-        assert self._ADOPTADO.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 10
+        assert self._ADOPTADO._maternidad_edad_months(2024, context=_FACT_CONTEXT) == frozenset()
+        assert self._ADOPTADO.maternidad_eligible_meses(2024, context=_FACT_CONTEXT) == 10
+        assert self._ADOPTADO.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 10
 
 
 class TestMaternidadContributingMeses:
@@ -562,11 +565,11 @@ class TestMaternidadContributingMeses:
     """
 
     def test_an_eligible_child_contributes_its_declared_months(self) -> None:
-        assert _hijo_menor_3("1-9").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 9
+        assert _hijo_menor_3("1-9").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 9
 
     def test_a_child_over_three_contributes_nothing(self) -> None:
         """Art. 81.1 runs only "hasta que el menor alcance los tres años de edad"."""
-        assert _hijo_no_menor_3().maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert _hijo_no_menor_3().maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
 
     def test_a_non_cohabiting_child_contributes_nothing(self) -> None:
         """The mínimo por descendientes the deduction keys on needs the household limb."""
@@ -576,11 +579,11 @@ class TestMaternidadContributingMeses:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
 
     def test_an_eligible_child_with_no_declared_months_contributes_nothing(self) -> None:
         """The employment months stay the operator's: absent means none, never inferred."""
-        assert _hijo_menor_3("").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert _hijo_menor_3("").maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
 
     def test_a_child_over_the_rentas_ceiling_contributes_nothing(self) -> None:
         """The added half of the predicate: Art. 58.1 excludes on the descendant's own rentas.
@@ -595,7 +598,7 @@ class TestMaternidadContributingMeses:
             meses_madre_trabajo=tuple(range(1, 13)),
         )
 
-        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
 
     def test_declared_months_are_capped_by_the_eligible_window(self) -> None:
         """A turning-three child whose mother worked all year contributes the window.
@@ -607,13 +610,13 @@ class TestMaternidadContributingMeses:
         """
         child = DescendantInfo(birth_date=date(2021, 4, 15), meses_madre_trabajo=tuple(range(1, 13)))
 
-        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 3
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 3
 
     def test_the_cap_never_raises_a_declared_figure(self) -> None:
         """An operator who declared fewer months than the window keeps their figure."""
         child = DescendantInfo(birth_date=date(2022, 6, 1), meses_madre_trabajo=(1, 2, 3, 4))
 
-        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 4
+        assert child.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 4
 
 
 class TestArt811PopulationGate:
@@ -640,8 +643,8 @@ class TestArt811PopulationGate:
         """The over-grant this gate removes: twelve months where none are due."""
         carer = self._under_three(DescendantRelacion._from_registry("acogimiento_temporal"))
 
-        assert carer.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
-        assert carer.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS) == 0
+        assert carer.is_eligible_ordinary(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) is True
+        assert carer.maternidad_contributing_meses(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == 0
 
     def test_the_gate_is_not_implied_by_the_minimo_test(self) -> None:
         """Both conditions are load-bearing, which is why they are separate calls.
@@ -663,7 +666,9 @@ class TestArt811PopulationGate:
         tutelado alcance los tres años de edad".
         """
         for relacion in _ART_81_1_MATERNITY_RELATIONS:
-            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            contributed = self._under_three(relacion).maternidad_contributing_meses(
+                2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT
+            )
             assert contributed == 12, relacion
 
     def test_no_relacion_outside_the_declared_set_contributes(self) -> None:
@@ -673,10 +678,15 @@ class TestArt811PopulationGate:
         later defaults to contributing nothing until it is deliberately admitted,
         which is the under-granting direction.
         """
-        for relacion in DescendantRelacion:
+        for relacion in descendant_relacion_tokens(
+            effective_date=_FACT_CONTEXT.filing_period,
+            authority=_FACT_CONTEXT.authority,
+        ):
             if relacion in _ART_81_1_MATERNITY_RELATIONS:
                 continue
-            contributed = self._under_three(relacion).maternidad_contributing_meses(2024, thresholds=_THRESHOLDS)
+            contributed = self._under_three(relacion).maternidad_contributing_meses(
+                2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT
+            )
             assert contributed == 0, relacion
 
 
@@ -697,7 +707,7 @@ class TestMesesMaternidadPorDescendienteHasAProductionConsumer:
         """
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3("1-6")))
 
-        pairs = profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS)
+        pairs = profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT)
 
         assert dict(pairs).get("0") is None
         assert dict(pairs)["1"] == 6
@@ -709,7 +719,10 @@ class TestMesesMaternidadPorDescendiente:
     def test_pairs_carry_the_descendant_index_as_the_hijo_id(self) -> None:
         profile = RentaFamilyProfile(descendientes=(_hijo_menor_3("1-12"), _hijo_menor_3("1-6")))
 
-        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("0", 12), ("1", 6))
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (
+            ("0", 12),
+            ("1", 6),
+        )
 
     def test_ineligible_descendants_are_omitted_but_do_not_shift_the_indices(self) -> None:
         """A withheld child must not renumber the ones after it.
@@ -720,12 +733,12 @@ class TestMesesMaternidadPorDescendiente:
         """
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(), _hijo_menor_3("1-6")))
 
-        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("1", 6),)
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (("1", 6),)
 
     def test_a_profile_with_no_contributing_descendants_pairs_nothing(self) -> None:
         profile = RentaFamilyProfile(descendientes=(_hijo_no_menor_3(),))
 
-        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == ()
+        assert profile.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == ()
 
     def test_declared_anualidades_suppress_a_dependency_assimilated_descendant(self) -> None:
         """The anualidades carve-out reaches the deducción, not only the mínimo.
@@ -748,5 +761,5 @@ class TestMesesMaternidadPorDescendiente:
             anualidades_alimentos_euros=Decimal("1200"),
         )
 
-        assert assimilated.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == (("0", 12),)
-        assert suppressed.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS) == ()
+        assert assimilated.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == (("0", 12),)
+        assert suppressed.meses_maternidad_por_descendiente(2024, thresholds=_THRESHOLDS, context=_FACT_CONTEXT) == ()
