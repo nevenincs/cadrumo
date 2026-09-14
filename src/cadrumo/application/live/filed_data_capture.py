@@ -1931,7 +1931,7 @@ def recapture_divergence_notices(
         stored = repository.load_observation(observation.modelo, observation.period)
         if stored is None:
             continue
-        require_observation_envelope_coordinates_current(stored)
+        require_observation_envelope_coordinates_current(stored, operation=operation)
         try:
             snapshot = operation.snapshot(
                 observation.modelo,

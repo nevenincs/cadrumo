@@ -36,6 +36,7 @@ from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ..auth_credentials import ActiveCertificateCredentials
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
@@ -707,17 +708,19 @@ async def login_operator_auth(
         ):
             repository = workflow_state_repository()
             _assert_auth_recovery_not_in_progress(repository.load())
-            result = await ensure_authenticated_aeat_session(
-                resolved_settings,
-                certificate_secret_backend_factory=certificate_secret_backend_factory,
-                browser_session_factory=browser_session_factory,
-                kind=provider_kind,
-                certificate_credentials=certificate_credentials,
-                fresh=fresh,
-                reset_lock=reset_lock,
-                operation="operator-auth-login",
-                operator_scope_ports=operator_scope_ports,
-            )
+            with bundled_indexed_authority().operation() as authority_operation:
+                result = await ensure_authenticated_aeat_session(
+                    resolved_settings,
+                    certificate_secret_backend_factory=certificate_secret_backend_factory,
+                    browser_session_factory=browser_session_factory,
+                    kind=provider_kind,
+                    certificate_credentials=certificate_credentials,
+                    fresh=fresh,
+                    reset_lock=reset_lock,
+                    operation="operator-auth-login",
+                    operator_scope_ports=operator_scope_ports,
+                    profile_decode_context=authority_operation.profile_decode_context(),
+                )
 
             occurred_at = now()
             repository.update_with_bucket_events(

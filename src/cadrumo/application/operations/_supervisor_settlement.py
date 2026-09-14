@@ -3,32 +3,89 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING
 
-from ...core.async_cleanup import close_async_resources
+from ...core.async_cleanup import AsyncCloseable, close_async_resources
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
     OperationCancellation,
+    OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from ._execution_context import DefinitionBoundContext
 from .errors import OperationDeclarationError
-from .models import OperationId, OperationTerminalReceipt
+from .interactions import OperationConsumedInteraction, OperationPendingInteraction
+from .models import OperationId, OperationIdentity, OperationReference, OperationTerminalReceipt
 from .persistence.events import (
     OperationDiagnosticEvent,
     OperationEvent,
     OperationTerminalEvent,
 )
-from .persistence.journal import OperationPersistedSnapshot
+from .persistence.journal import OperationJournal, OperationPersistedSnapshot
 from .persistence.leases import OperationOwnerLease
 
+if TYPE_CHECKING:
+    from .registry import OperationDefinition, OperationRegistry
+    from .secret_submission import EphemeralSecretBroker
 
-class SupervisorHost(Protocol):
+
+class SupervisorHost:
     if TYPE_CHECKING:
+        registry: OperationRegistry
+        _journal: OperationJournal
+        _clock: Callable[[], datetime]
+        _cleanup_timeout: timedelta | None
+        _contexts: dict[OperationId, DefinitionBoundContext]
+        _executor_tasks: dict[OperationId, asyncio.Task[OperationReference | None]]
+        _cleanup_tasks: dict[OperationId, asyncio.Task[None]]
+        _continuation_tasks: dict[OperationId, asyncio.Task[OperationPersistedSnapshot]]
+        _resources: dict[OperationId, list[AsyncCloseable]]
+        _ephemeral_secrets: EphemeralSecretBroker
 
-        def __getattr__(self, name: str) -> Any: ...
+        def _require_pinned_definition(self, snapshot: OperationPersistedSnapshot) -> OperationDefinition: ...
+
+        def _require_cleanup_timeout(self, cancellation: OperationCancellation) -> None: ...
+
+        def _lease_lock(self, operation_id: OperationId) -> asyncio.Lock: ...
+
+        async def _require_owned_lease_unlocked(
+            self,
+            identity: OperationIdentity,
+            now: datetime,
+        ) -> OperationOwnerLease: ...
+
+        async def _release_exact_lease(self, lease: OperationOwnerLease, *, observed_at: datetime) -> None: ...
+
+        async def inspect(self, operation_id: OperationId) -> OperationPersistedSnapshot: ...
+
+        async def _cancel_pre_entry_secret(
+            self,
+            snapshot: OperationPersistedSnapshot,
+        ) -> OperationPersistedSnapshot | None: ...
+
+        def _notify_durable_change(self, snapshot: OperationPersistedSnapshot) -> None: ...
+
+        async def _advance(
+            self,
+            snapshot: OperationPersistedSnapshot,
+            *,
+            lifecycle: OperationLifecycle,
+            events: tuple[OperationEvent, ...] = (),
+            pending: OperationPendingInteraction | None = None,
+            consumed: tuple[OperationConsumedInteraction, ...] | None = None,
+            effect: OperationEffect | None = None,
+            execution_deadline: datetime | None = None,
+            cleanup_deadline: datetime | None = None,
+            cancellation_requested_at: datetime | None = None,
+            cancellation_acknowledged_at: datetime | None = None,
+            cancellation_deferred: bool | None = None,
+            executor_entered_at: datetime | None = None,
+            discard_ephemeral_secret: bool = False,
+        ) -> OperationPersistedSnapshot: ...
 
 
 class SupervisorSettlementMixin(SupervisorHost):

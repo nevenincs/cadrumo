@@ -61,6 +61,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -71,6 +72,11 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
 from ..renta_income_ledger import aggregate_renta_income_ledger
+from .renta_income_aggregation_support import (
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -156,6 +162,10 @@ def _aggregated(*, declares_substrate: bool, cash: Decimal | None = None):
         TransactionCatalogue.from_transactions((_invoice_row(declares_substrate=declares_substrate, cash=cash),)),
         bucket_id=_BUCKET,
         period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
 
 

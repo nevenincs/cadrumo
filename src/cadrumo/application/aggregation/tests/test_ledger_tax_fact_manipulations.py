@@ -41,6 +41,12 @@ from ..iva_ledger import (
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger
 from ..renta_ledger import aggregate_renta_ledger_expenses
+from .renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -196,7 +202,15 @@ def _income_observation_count(irpf_category: str) -> int:
         },
     )
     catalogue = TransactionCatalogue.from_transactions((txn,))
-    result = aggregate_renta_income_ledger(catalogue, bucket_id="corpus", period=_Q1_2025)
+    result = aggregate_renta_income_ledger(
+        catalogue,
+        bucket_id="corpus",
+        period=_Q1_2025,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
+    )
     return len(result.observations)
 
 

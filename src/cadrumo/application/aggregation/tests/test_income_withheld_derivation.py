@@ -39,6 +39,12 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.transactions.retencion_facts import maximum_supported_activity_retencion_rate
 from .._renta_income_evidence import income_withheld_amount as income_withheld_amount
 from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
+from .renta_income_aggregation_support import (
+    _M130_INGRESOS_CASILLA,
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -259,6 +265,10 @@ def test_the_exempt_recovery_reaches_the_aggregated_observation() -> None:
         catalogue,
         bucket_id="test",
         period=Period.from_year_and_code(2024, "1T"),
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
 
     assert len(aggregation.observations) == 1
@@ -331,6 +341,10 @@ def test_the_builder_never_emits_an_unmarked_withholding() -> None:
         catalogue,
         bucket_id="test",
         period=Period.from_year_and_code(2024, "1T"),
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
 
     assert len(aggregation.observations) == len(rows)

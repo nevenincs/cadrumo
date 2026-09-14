@@ -15,11 +15,12 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TypedDict, Unpack, override
+from typing import Any, TypedDict, Unpack, cast, override
 
 import pytest
 
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
     LedgerDatePartition,
@@ -30,7 +31,9 @@ from ....domain.transactions.models import (
 )
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ....domain.usage_ratios.model import UsageRatioProfile
 from ...review.filter import LedgerReviewFilterSpec
+from ..action_ports import LedgerActionPorts
 from ..list_query import LedgerTransactionListQuery, query_ledger_transaction_list, sort_ledger_results
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -162,8 +165,29 @@ class _InMemoryTransactionRepository(TransactionCatalogueRepositoryProtocol):
         self._catalogue = catalogue
 
 
+class _MissingEventHistoryRepository:
+    """Preserve the refusal contract when rejection filtering lacks events."""
+
+    @staticmethod
+    def load() -> object:
+        raise ValueError("event history repository is required")
+
+
 def _page(repository: TransactionCatalogueRepositoryProtocol, query: LedgerTransactionListQuery):
-    return query_ledger_transaction_list(query, bucket_id=_BUCKET, transaction_repository=repository)
+    with bundled_indexed_authority().operation() as operation:
+        ports = LedgerActionPorts(
+            operation=operation,
+            transaction_repository=cast(Any, repository),
+            bucket_event_repository=cast(Any, _MissingEventHistoryRepository()),
+            invoice_repository=cast(Any, None),
+            attachment_store=cast(Any, None),
+            usage_ratio_profile=UsageRatioProfile(),
+            usage_ratio_profile_loader=cast(Any, None),
+            work_unit_repository=cast(Any, None),
+            calculation_repository=cast(Any, None),
+            purchase_invoice_evidence_records=(),
+        )
+        return query_ledger_transaction_list(query, bucket_id=_BUCKET, ports=ports)
 
 
 def test_an_unfiltered_listing_returns_every_row_and_is_not_truncated() -> None:

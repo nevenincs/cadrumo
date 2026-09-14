@@ -25,15 +25,14 @@ from ...core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..review.filter import LedgerReviewFilterSpec
+from .action_ports import LedgerActionPorts
 from .actions_manual import list_manual_transactions, query_ledger_review_rows
 from .models import ManualLedgerTransactionResult
 from .review_filter import ledger_review_query_for_spec
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEventHistoryCatalogue
-    from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.transactions.models import Transaction
-    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 #: Sorts after every real group label, so ungrouped rows trail named groups.
 _UNGROUPED_SENTINEL: Final[str] = "￿"
@@ -226,14 +225,14 @@ def _filter_by_review_spec(
     *,
     query: LedgerTransactionListQuery,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    ports: LedgerActionPorts,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Apply the canonical review-filter projection when clauses are present."""
     if not query.spec.clauses:
         return results
     matching = query_ledger_review_rows(
         ledger_review_query_for_spec(query.spec, bucket_id=bucket_id),
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     matching_ids = {row.id for row in matching.rows}
     return tuple(item for item in results if item.transaction.transaction_id in matching_ids)
@@ -243,14 +242,12 @@ def _exclude_rejected_results(
     results: tuple[ManualLedgerTransactionResult, ...],
     *,
     query: LedgerTransactionListQuery,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    ports: LedgerActionPorts,
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     """Drop rows whose latest model decision is a rejection when requested."""
     if not query.exclude_llm_rejected:
         return results
-    if bucket_event_repository is None:
-        raise ValueError("excluding model-rejected rows requires the bucket event history repository")
-    catalogue = bucket_event_repository.load()
+    catalogue = ports.bucket_event_repository.load()
     return tuple(
         item for item in results if not latest_llm_decision_is_rejection(catalogue, item.transaction.transaction_id)
     )
@@ -324,8 +321,7 @@ def query_ledger_transaction_list(
     query: LedgerTransactionListQuery,
     *,
     bucket_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    ports: LedgerActionPorts,
 ) -> LedgerTransactionListPageV1:
     """Select, order, and page one window over a bucket's stored transactions.
 
@@ -337,29 +333,23 @@ def query_ledger_transaction_list(
     Args:
         query: The operator's selection intent.
         bucket_id: The owning profile bucket.
-        transaction_repository: Injected transaction catalogue; resolved from
-            ``bucket_id`` when omitted.
-        bucket_event_repository: Injected event history, required only when
-            ``exclude_llm_rejected`` is set.
+        ports: The canonical bucket-scoped ledger action capabilities.
 
     Returns:
         The selected window with its unfiltered total and truncation flag.
 
-    Raises:
-        ValueError: If model-rejection exclusion is requested without an event
-            repository to read the decisions from.
     """
-    results = list_manual_transactions(bucket_id=bucket_id, transaction_repository=transaction_repository)
+    results = list_manual_transactions(bucket_id=bucket_id, ports=ports)
     results = _filter_by_review_spec(
         results,
         query=query,
         bucket_id=bucket_id,
-        transaction_repository=transaction_repository,
+        ports=ports,
     )
     results = _exclude_rejected_results(
         results,
         query=query,
-        bucket_event_repository=bucket_event_repository,
+        ports=ports,
     )
     results = _filter_by_group(results, group=query.group)
     results = _sort_if_requested(

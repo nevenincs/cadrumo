@@ -32,7 +32,6 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
@@ -47,6 +46,10 @@ from .._retencion_rate_advisory import (
     inferred_actividad_retencion_rate_advisory_observations,
 )
 from ..renta_income_ledger import aggregate_renta_income_ledger, aggregate_renta_m100_income_ledger
+from .renta_income_aggregation_support import (
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -56,16 +59,8 @@ _QUARTER = Period.from_year_and_code(2024, "1T")
 _ANNUAL = Period.from_year_and_code(2024, "0A")
 _M130_INGRESOS_CASILLA = validated_casilla_id("01")
 _M100_ACTIVIDAD_INGRESOS_CASILLA = validated_casilla_id("0171")
-
-
-def _is_activity_income(transaction: Transaction) -> bool:
-    """Use the registry-owned activity category predicate for the selected Renta target."""
-    return has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction)
-
-
-def _is_employment_income(transaction: Transaction) -> bool:
-    """Use the registry-owned employment category predicate for the selected Renta target."""
-    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
+_is_activity_income = _m130_activity_category_matcher
+_is_employment_income = _m130_employment_category_matcher
 
 
 def _transaction(*, cash: str, provider_id: str = "cobro-1") -> Transaction:
@@ -332,7 +327,16 @@ def test_a_credit_matching_the_gross_rather_than_the_net_is_refused() -> None:
     """
     transactions, invoices = _linked(cash="1210.00")
 
-    aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1210.00")
@@ -342,7 +346,16 @@ def test_an_invoice_without_retencion_is_matched_on_its_gross() -> None:
     """With no retención declared, net and gross coincide and the row grounds."""
     transactions, invoices = _linked(cash="1210.00", retention_amount=None)
 
-    aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert aggregation.issues == ()
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
@@ -353,7 +366,16 @@ def test_a_received_invoice_is_refused_as_income_evidence() -> None:
     """A purchase invoice is not this taxpayer's income, whatever it is linked to."""
     transactions, invoices = _linked(kind=InvoiceKind.RECEIVED)
 
-    aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
@@ -363,7 +385,16 @@ def test_an_invoice_from_another_bucket_is_refused() -> None:
     """Evidence must belong to the bucket whose return is being built."""
     transactions, invoices = _linked(bucket_id=_OTHER_BUCKET)
 
-    aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.BUCKET_MISMATCH
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
@@ -384,6 +415,10 @@ def test_a_one_directional_link_is_refused() -> None:
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     assert aggregation.observations[0].sales_invoice_refusal is SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
@@ -405,6 +440,10 @@ def test_an_invoice_spanning_several_transactions_is_refused() -> None:
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     assert aggregation.observations[0].sales_invoice_refusal is (
@@ -416,13 +455,37 @@ def test_an_invoice_spanning_several_transactions_is_refused() -> None:
 def test_each_guard_reports_its_own_reason() -> None:
     """Five distinct repairs must not present as one generic mismatch."""
     reasons = {
-        aggregate_renta_income_ledger(*_linked(kind=InvoiceKind.RECEIVED), bucket_id=_BUCKET, period=_QUARTER)
+        aggregate_renta_income_ledger(
+            *_linked(kind=InvoiceKind.RECEIVED),
+            bucket_id=_BUCKET,
+            period=_QUARTER,
+            modelo="130",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_is_activity_income,
+            employment_category_matcher=_is_employment_income,
+        )
         .observations[0]
         .sales_invoice_refusal,
-        aggregate_renta_income_ledger(*_linked(bucket_id=_OTHER_BUCKET), bucket_id=_BUCKET, period=_QUARTER)
+        aggregate_renta_income_ledger(
+            *_linked(bucket_id=_OTHER_BUCKET),
+            bucket_id=_BUCKET,
+            period=_QUARTER,
+            modelo="130",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_is_activity_income,
+            employment_category_matcher=_is_employment_income,
+        )
         .observations[0]
         .sales_invoice_refusal,
-        aggregate_renta_income_ledger(*_linked(cash="1210.00"), bucket_id=_BUCKET, period=_QUARTER)
+        aggregate_renta_income_ledger(
+            *_linked(cash="1210.00"),
+            bucket_id=_BUCKET,
+            period=_QUARTER,
+            modelo="130",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_is_activity_income,
+            employment_category_matcher=_is_employment_income,
+        )
         .observations[0]
         .sales_invoice_refusal,
     }
@@ -454,6 +517,10 @@ def test_an_instalment_paid_invoice_still_declares_its_cash() -> None:
         InvoiceCatalogue.from_invoices((invoice,)),
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")
@@ -479,7 +546,16 @@ def test_no_evidence_guard_ever_removes_income_from_the_aggregation() -> None:
         _linked(cash="1210.00"),
     )
     for transactions, invoices in cases:
-        aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+        aggregation = aggregate_renta_income_ledger(
+            transactions,
+            invoices,
+            bucket_id=_BUCKET,
+            period=_QUARTER,
+            modelo="130",
+            target_casilla_id=_M130_INGRESOS_CASILLA,
+            activity_category_matcher=_is_activity_income,
+            employment_category_matcher=_is_employment_income,
+        )
         assert len(aggregation.observations) == 1, "an evidence guard excluded a declarable income row"
         assert aggregation.issues == ()
         assert aggregation.casilla_aggregation.casilla_values["01"] > Decimal("0")
@@ -505,6 +581,10 @@ def test_an_uncategorised_invoice_is_refused_even_though_it_reconciles_perfectly
         period=Period.from_year_and_code(2024, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     (observation,) = result.observations
@@ -528,6 +608,10 @@ def test_a_categorised_invoice_still_grounds_on_its_base() -> None:
         period=Period.from_year_and_code(2024, "1T"),
         bucket_id=_BUCKET,
         invoices=invoices,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     (observation,) = result.observations

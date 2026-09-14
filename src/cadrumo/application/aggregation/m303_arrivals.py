@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel, field_validator, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.i18n.render import tr as t
+from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind

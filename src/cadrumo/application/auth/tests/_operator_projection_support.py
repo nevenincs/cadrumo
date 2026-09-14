@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
@@ -35,7 +35,11 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.application.diagnostics_ports import DiagnosticSecureObjectNamespace, DiagnosticsPorts
+from cadrumo.application.diagnostics_ports import (
+    DiagnosticSecureObjectNamespace,
+    DiagnosticSessionFailureClassifier,
+    DiagnosticsPorts,
+)
 from cadrumo.application.state_projection import (
     ModeloReadinessRequest,
     OperatorStateProjection,
@@ -65,13 +69,22 @@ class _EmptyDiagnosticRepository:
         return ()
 
 
+class _EmptySessionFailureClassifier(DiagnosticSessionFailureClassifier):
+    """Classify the empty test repository without widening the diagnostics port."""
+
+    @override
+    def __call__(self, error: BaseException) -> bool:
+        del error
+        return False
+
+
 def state_projection_read_ports() -> StateProjectionReadPorts:
     """Compose the persistence-backed projection read ports used by auth tests."""
 
     adapter = StateProjectionPersistenceAdapter(
         diagnostics_ports=DiagnosticsPorts(
             secure_object_repository=_EmptyDiagnosticRepository(),
-            session_failure_classifier=lambda _error: False,
+            session_failure_classifier=_EmptySessionFailureClassifier(),
         ),
     )
     return StateProjectionReadPorts(

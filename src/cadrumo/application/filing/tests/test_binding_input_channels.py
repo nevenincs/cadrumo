@@ -20,29 +20,32 @@ valid year.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_value_contract import BindingValueContract
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.filing.errors import ModeloBuilderError
 from ..draft_construction import _binding_input
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-class _Selector:
-    """Minimal binding selector carrying only a declared data type."""
-
-    def __init__(self, data_type: str | None = None, row_field: str | None = None) -> None:
-        self.data_type = data_type
-        self.row_field = row_field
-
-
-class _Binding:
-    def __init__(self, selector: _Selector) -> None:
-        self.selector = selector
+@pytest.fixture(autouse=True)
+def _authority_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    """Exercise NIF coercion under the same pinned fact scope as the filing door."""
+    with validating_governed_facts(operation):
+        yield
 
 
-def _binding(data_type: str | None = None, row_field: str | None = None) -> _Binding:
-    return _Binding(_Selector(data_type=data_type, row_field=row_field))
+def _binding(data_type: str | None = None, row_field: str | None = None) -> BindingDefinition:
+    """Build the nominal registry shape while isolating the value contract under test."""
+    del row_field
+    value = BindingValueContract.model_construct(data_type=data_type or "decimal")
+    return BindingDefinition.model_construct(value=value)
 
 
 class TestFamiliesTheLiteralChainHandled:
@@ -105,6 +108,6 @@ class TestUnknownDataType:
             "application.filing.build_draft.errors.binding_data_type_unsupported"
         )
 
-    def test_undeclared_selector_defaults_to_the_decimal_channel(self) -> None:
-        """Documents the surviving default; the row-field gap is tracked separately."""
+    def test_fixture_default_exercises_the_decimal_channel(self) -> None:
+        """Keep the helper fixture's omitted argument on its explicit decimal case."""
         assert str(_binding_input("b", "5", _binding())) == "5"

@@ -404,7 +404,7 @@ def resolve_iva_deduction_ratio(
             if regime == iva_regime_exento_token():
                 return exempt_ratio
 
-    register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
+    register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
     entry = register.entry_for(ejercicio, sector_id=None)
     if entry is None or not regime_apportions_deduction(entry.regime):
         return None
