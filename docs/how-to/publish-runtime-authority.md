@@ -6,12 +6,15 @@ Tributaria (AEAT) modelo rules into the artifact the runtime reads for
 calculations and filing exports. It is a development and release operation,
 not an `aeat` command for taxpayers.
 
-The artifact is generated output. Its versioned frame records a payload digest
-and separate receipts for its source inputs, compiler, and complete-authority
-component dependencies, so the registry gate can tell when either its payload
-or the inputs that produced it have changed.
+The publication is generated output. It consists of one small descriptor and
+one content-addressed SQLite database. The descriptor records the database
+byte count and digest plus the logical generation; the database manifest and
+component rows record the complete source/compiler receipts and dependency
+closure. The descriptor is the only cutover edge, so an installed process can
+admit one exact generation and retain it for an in-flight operation.
 It is also the sole shipped runtime source: installed code does not open the
-authored registry tree or maintain a parallel cache of tables parsed from it.
+authored registry tree, parse profile TOML, or maintain a parallel cache of
+tables parsed from it.
 
 For the artifact format, runtime checks, error classes, and Python application
 programming interface (API), see [Registry, legal sources, and Python API](../reference/registry-legal-api.md).
@@ -27,25 +30,34 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    uv run --no-sync python -m dev.registry.pipeline publish-authority
    ```
 
-   The command compiles every modelo and catalogue into one complete authority,
-   materializes authoring deltas into complete typed revisions, runs full
-   registry conformance against the exact evidence closure, then
-   atomically replaces `src/cadrumo/_data/registry/authority/authority.json`.
-   It prints the artifact path and the identity digest it recorded.
-   `--registry-root`, `--source-root`, and `--artifact` select other trees or
-   another destination.
+   The command compiles every modelo, profile declaration, catalogue, fact,
+   export layout, and legal/source evidence projection into one complete
+   authority, materializes authoring deltas into complete typed revisions,
+   runs full registry conformance against the exact evidence closure, and
+   installs a content-addressed SQLite candidate under
+   `src/cadrumo/_data/registry/authority/authority-<database_sha256>.sqlite3`.
+   Only after the database has been independently admitted and traversed does
+   it atomically replace
+   `src/cadrumo/_data/registry/authority/authority.current.json`.
+   The command prints the descriptor path and logical generation it recorded.
+   The registry-root, source-root, profile-schema, and publication-destination
+   options select other inputs or an isolated candidate destination.
    There is no facts-only publication command and no component-selective reuse:
    every successful publication is a fresh, full generation.
-3. Commit the regenerated `authority.json` together with the registry change
-   that required it.
+3. Commit the regenerated `authority.current.json` and its exact
+   content-addressed `authority-<database_sha256>.sqlite3` together with the
+   registry change that required them. Do not rename a database or edit the
+   descriptor by hand.
 
 Publication holds the destination lock while it captures the input receipt,
-validates, serializes and admits the canonical bytes through the runtime
-decoder, stages and flushes them to durable storage, and checks the receipt
-again immediately before atomic replacement. If validation or admission is
-refused, or any registry, evidence, compiler, or dependency input drifts, the
-command fails and leaves the previous artifact byte-for-byte in place. Don't
-edit the artifact by hand. Correct the input, then publish again.
+validates and serializes the complete component set, stages and flushes the
+SQLite bytes, verifies the full database digest, checks manifest/global
+closure, opens a fresh read-only candidate, and checks the receipt again
+immediately before descriptor replacement. If validation or admission is
+refused, a content-addressed collision is found, or any registry, evidence,
+compiler, or dependency input drifts, the command fails and leaves the
+previous descriptor byte-for-byte in place. Correct the input, then publish
+again.
 
 Publication also projects the shared `floor`, `horizon`, and optional
 `hard_ceiling` support envelope and the typed runtime catalogues for IVA rules,
@@ -63,10 +75,11 @@ Run the registry gate:
 just check-registry
 ```
 
-Its first step, `python -m dev.registry.conformance integrity`, exits 1 with a
-refusal on standard error when the artifact is stale, unreadable, or in a
-malformed format. The refusal names the recorded and the expected identity
-digests and the command that republishes the artifact.
+Its authority step admits the descriptor and its named database in read-only
+mode. It exits 1 with a refusal on standard error when either selector or
+database is stale, unreadable, malformed, tampered, or no longer matches the
+live candidate. The refusal names the recorded and expected identity digests
+and the command that republishes the authority.
 
 The source receipt depends on file content and paths relative to the registry
 and source roots, including manually maintained evidence sidecars. The compiler
@@ -76,23 +89,28 @@ receipt covers the compiler and relevant Cadrumo code, `pyproject.toml`,
 stable; an incompatible interpreter, dependency set, manifest, or compiler
 change makes the artifact stale and requires republication. The component
 receipt binds those source and compiler receipts to the complete-authority
-generation, while the payload digest independently protects the shipped bytes.
+generation. The database digest independently protects all stored component
+bytes, while each on-demand component load checks its own payload digest and
+dependency closure.
 
 ## Recover from an invalid authority
 
 When an installed workflow refuses an unavailable, malformed, altered, or
-unreadable artifact, stop the workflow. The `bundled_authority()` load is
-artifact-only: it doesn't compile authoring sources, parse raw TOML, repair an
-artifact, or fall back to a separately cached runtime table. Runtime shares
-deeply immutable model graphs for one verified artifact identity and keeps only
-bounded, generation-scoped projections; a replacement artifact starts a new
-authority generation.
+unreadable authority, stop the workflow. The
+`IndexedRegistryAuthority.operation()` path is artifact-only: it doesn't
+compile authoring sources, parse raw TOML, repair a database, or fall back to
+the retired JSON frame. Runtime loads typed components on demand through the
+generation-pinned operation and keeps only bounded, generation-scoped values;
+a descriptor replacement starts a new authority generation while existing
+operations retain their admitted reader.
 
 1. Preserve the failed artifact when it is present, plus the package version,
    artifact digest, error class, and redacted logs.
 2. Republish from a validated registry, and confirm that `just check-registry`
    passes.
-3. Rebuild the package so it contains the replacement artifact.
+3. Rebuild the package so it contains the replacement descriptor and the
+   exact database named by it. The package must not contain the authored
+   registry, profile schema TOML, or retired JSON frame.
 
 Escalate through the [project issue tracker](https://github.com/nevenincs/cadrumo/issues)
 with the release version, artifact digest, error class, and redacted log

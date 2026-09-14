@@ -19,13 +19,15 @@ identify the exact rule set.
 | `source_refs` | Official manual or source material supporting the implementation |
 | Evidence provenance | Local record, document, observation, or prior filed revision that supplied a value |
 
-## Runtime authority artifact
+## Runtime authority publication
 
-The runtime authority artifact is the digest-checked publication of
-the validated AEAT registry intended for installed calculations and filing
-exports. It is generated output. `bundled_authority()` reads the packaged
-`registry/authority/authority.json` and checks its content
-digest before reconstructing typed authority data.
+The runtime authority is the digest-checked publication of the validated AEAT
+registry intended for installed calculations and filing exports. It is
+generated output with two files: `registry/authority/authority.current.json`
+is a small canonical descriptor, and its `database` member names the exact
+`authority-<database_sha256>.sqlite3` payload beside it. The descriptor and
+database are admitted together; the database is opened read-only and is not
+hydrated into one process-wide model graph.
 
 | Term | Meaning |
 | --- | --- |
@@ -34,12 +36,16 @@ digest before reconstructing typed authority data.
 | Compiler receipt | Relevant Cadrumo and compiler code, dependency manifests, Python major/minor, and Pydantic versions. |
 | Component receipt | The source and compiler receipts bound to one fresh, complete-authority generation. |
 | Identity digest | The content-addressed combination of those receipts, recorded so a stale artifact can be detected. |
-| Authority artifact | The atomically written JSON publication containing the resolved authority. |
+| Authority descriptor | The atomically replaced selector containing the database basename, byte count, physical SHA-256, and logical generation. |
+| Authority database | The content-addressed SQLite publication containing typed components, dependency rows, and the complete manifest. |
 
-The v5 artifact is one canonical JSON frame with exactly `format`, `payload`,
-and `payload_sha256`. Its format value is
-`cadrumo-authority-artifact-v5`. `payload_sha256` is the SHA-256 digest of the
-canonical JSON payload and detects a truncated, corrupted, or hand-edited file.
+The descriptor format is `cadrumo-authority-descriptor-v1`; its exact members
+are `format`, `database`, `database_size`, `database_sha256`, and
+`logical_generation`. The database format is
+`cadrumo-authority-sqlite-v1`. Its manifest binds the logical generation and
+the complete component directory. The physical database digest is both the
+descriptor's admission check and the content-addressed filename, so a changed
+or colliding payload is refused before runtime work begins.
 
 The source receipt folds each registry and source-evidence file's root-relative
 path and content digest. Registry files fold CRLF to LF; source evidence is
@@ -48,16 +54,15 @@ byte-exact. The compiler receipt also changes with relevant source code,
 `pydantic-core` versions. A fresh clone in the same declared environment is
 stable, without promising identity across incompatible build environments.
 
-The payload is a compact
-projection of the complete typed authority. Required fields are always written;
-a field is omitted only when its typed value equals the default declared by its
-schema. Strict rehydration restores those defaults. Discriminators and authored
-union spellings remain on the wire, so compaction never guesses which typed
-variant to construct. Decimals and dates are JSON strings where
-the schema types a field as a decimal or a date. A governed-fact value can be
-text, an integer, a decimal, a boolean, or a date, and JSON cannot tell those
-apart by value alone. Every non-text fact value is therefore written as an
-object with one tag that names its type:
+Each component payload is a compact canonical projection of one typed authority
+value. Required fields are always written; a field is omitted only when its
+typed value equals the default declared by its schema. Strict rehydration
+restores those defaults. Discriminators and authored union spellings remain on
+the wire, so compaction never guesses which typed variant to construct.
+Decimals and dates are JSON strings where the schema types a field as a decimal
+or a date. A governed-fact value can be text, an integer, a decimal, a boolean,
+or a date, and JSON cannot tell those apart by value alone. Every non-text fact
+value is therefore written as an object with one tag that names its type:
 
 | Fact value | Written as |
 | --- | --- |
@@ -73,7 +78,7 @@ value, and an untagged non-text fact value; it never infers a type from the
 shape of a string.
 
 The compiler, not the product runtime, expands authoring deltas into complete
-canonical revisions. The artifact also carries typed runtime catalogues for IVA
+canonical revisions. The database also carries typed runtime catalogues for IVA
 regulations, place-of-supply rules, country aliases, Spanish postal territories,
 territorial carve-outs, recargo bands, and apoderamiento scopes. These are
 frozen schema records, not embedded TOML bytes or an untyped JSON bag. A
@@ -85,16 +90,18 @@ identifiers against its published vocabularies. The same authority projects the
 shared temporal support envelope—`floor`, `horizon`, and optional
 `hard_ceiling`—used to admit supported coordinates.
 
-The `bundled_authority()` artifact-loading path has no source compilation, raw
-authored-tree loader, repair path, or parallel runtime-table cache. A missing
-artifact raises an unavailable error. A malformed frame, unexpected member,
-incomplete typed catalogue, or invalid payload raises a format error. A digest
-mismatch raises an integrity error. These failures occur before
-authority-dependent calculation or filing proceeds.
+The `IndexedRegistryAuthority.operation()` path has no source compilation, raw
+authored-tree loader, repair path, or JSON fallback. A missing descriptor or
+database raises an unavailable error. A malformed descriptor, unexpected
+database member, incomplete manifest, or invalid component raises a format
+error. A descriptor/database or component digest mismatch raises an integrity
+error. These failures occur before authority-dependent calculation or filing
+proceeds. Components are loaded only when a pinned operation asks for them;
+successful values remain in a bounded generation-scoped cache.
 
-`python -m dev.registry.conformance integrity` refuses an artifact whose
-recorded identity digest differs from the identity of the live registry and
-its compiler environment. See
+`python -m dev.registry.conformance integrity` refuses a descriptor/database
+publication whose recorded identity digest differs from the identity of the
+live registry and its compiler environment. See
 [Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
 for the canonical command, publication guarantees, currentness checks, and
 recovery path.
