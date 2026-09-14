@@ -6,17 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "third-party-declaration-role-catalogue"
 _ORDER_KEY = "role.order"
@@ -170,33 +165,23 @@ def _catalogue(entries: Mapping[str, str]) -> ThirdPartyDeclarationRoleCatalogue
     )
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_catalogue(effective_date: date) -> ThirdPartyDeclarationRoleCatalogue:
-    from .authority import bundled_authority
-
-    return _catalogue(
-        _resolve_entries(
-            effective_date=effective_date,
-            authority=governed_facts_in_scope() or bundled_authority(),
-        )
-    )
-
-
 def _selected_catalogue(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> ThirdPartyDeclarationRoleCatalogue:
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        return _bundled_catalogue(effective_date)
+        raise RegistryValidationError(
+            "third-party declaration-role resolution requires a generation-pinned governed-fact source",
+        )
     return _catalogue(_resolve_entries(effective_date=effective_date, authority=selected))
 
 
 def resolve_third_party_declaration_role_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ThirdPartyDeclarationRoleCatalogue:
     """Resolve the dated third-party declaration-role vocabulary."""
     coordinate = effective_date or date.today()
@@ -207,7 +192,7 @@ def require_third_party_declaration_role(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ThirdPartyDeclarationRole:
     """Project one role through the dated facts-registry catalogue."""
     return resolve_third_party_declaration_role_catalogue(
@@ -219,7 +204,7 @@ def require_third_party_declaration_role(
 def third_party_declaration_role_choices(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[ThirdPartyDeclarationRole, ...]:
     """Return registry-declared role choices in canonical order."""
     return resolve_third_party_declaration_role_catalogue(

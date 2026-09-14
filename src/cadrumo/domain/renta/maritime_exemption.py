@@ -44,9 +44,9 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from ..calculations.registry.authority import ValidatedRegistryAuthority
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 from ..user_profile.schema import ProfileSchemaDefinition
@@ -225,7 +225,7 @@ def calculate_art_7p_exemption(
     annual_salary: Decimal,
     qualifying_days: int,
     facts: MaritimeWorkerFacts,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
     filing_period: date | None = None,
 ) -> CasillaObservation:
     """Calculate a registry-selected day-count amount.
@@ -267,7 +267,7 @@ def calculate_rebeca_exemption(
     *,
     gross_navigation_income: Decimal,
     facts: MaritimeWorkerFacts,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
     devengo_date: date | None = None,
 ) -> CasillaObservation:
     """Calculate a registry-selected fraction of navigation income.

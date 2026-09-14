@@ -1,9 +1,10 @@
-"""Validated access point for registry-backed modelo definitions.
+"""Generation-pinned access to compiled registry authority components.
 
-:class:`ValidatedRegistryAuthority` is the production boundary for all registry
-access. It reconstructs the published, validated authority artifact into typed
-:class:`ModeloDefinition` and :class:`ModeloRevision` objects, and produces
-:class:`RegistrySnapshot` instances on demand for each filing context.
+:class:`IndexedRegistryAuthority` is the production boundary.  It admits the
+descriptor-selected SQLite generation and loads typed components through one
+leased :class:`PinnedAuthorityOperation`.  The eager
+:class:`ValidatedRegistryAuthority` remains only for development validation and
+the paired pre-cutover JSON benchmark.
 """
 
 from __future__ import annotations
@@ -868,9 +869,11 @@ _bundled_indexed_authority: IndexedRegistryAuthority | None = None
 
 
 def bundled_authority() -> ValidatedRegistryAuthority:
-    """Return an authority over the bundled published artifact.
+    """Return the development-only eager comparison authority.
 
-    See :func:`published_authority` for the sharing and refusal contract.
+    Release packages exclude this JSON input and production consumers must use
+    :func:`bundled_indexed_authority`.  The eager path remains only for compiler
+    validation, repository fixtures, and the paired release benchmark.
     """
     return published_authority(bundled_authority_artifact_path())
 
@@ -885,12 +888,11 @@ def bundled_indexed_authority() -> IndexedRegistryAuthority:
 
 
 def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
-    """Return the shared authority over the current artifact at ``artifact_path``.
+    """Return a shared eager authority for development validation and comparison.
 
-    Publication validates authoring inputs before producing the artifact.  A
-    product process never recompiles those inputs: a missing, corrupt, or
-    unsupported-version publication is refused here, on every call, before a
-    calculation or filing can begin.
+    Publication validates authoring inputs before producing the comparison
+    artifact. A missing, corrupt, or unsupported-version artifact is refused;
+    this helper is not an installed-product fallback for the indexed authority.
 
     The verified model graph and its authority-private snapshot cache are
     shared for one artifact file identity.  A republished artifact is detected

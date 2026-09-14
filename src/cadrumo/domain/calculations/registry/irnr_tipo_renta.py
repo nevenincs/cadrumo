@@ -10,7 +10,7 @@ from types import MappingProxyType
 from ....core.irnr import TipoRentaIrnr
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _FACT_ID = "detail-m349-m210-catalogues"
@@ -163,13 +163,6 @@ def _resolve_entries(
     return _mapping_entries(resolved)
 
 
-@cache_governed_projection(maxsize=64)
-def _bundled_entries(effective_date: date) -> Mapping[str, str]:
-    from .authority import bundled_authority
-
-    return _resolve_entries(effective_date=effective_date, authority=(governed_facts_in_scope() or bundled_authority()))
-
-
 def _selected_entries(
     *,
     effective_date: date | None,
@@ -178,7 +171,9 @@ def _selected_entries(
     coordinate = effective_date or date.today()
     selected = authority or governed_facts_in_scope()
     if selected is None:
-        return _bundled_entries(coordinate)
+        raise RegistryValidationError(
+            "IRNR tipo-renta catalogue resolution requires a generation-pinned governed-fact source",
+        )
     return _resolve_entries(effective_date=coordinate, authority=selected)
 
 

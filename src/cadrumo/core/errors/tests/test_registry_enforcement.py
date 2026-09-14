@@ -67,6 +67,22 @@ def _source_error_key(error_type: _SourceErrorClass) -> str:
     return f"{error_type.module}.{error_type.qualname}"
 
 
+def _source_import_bindings(tree: ast.AST, module: str, *, is_package: bool) -> dict[str, str]:
+    """Resolve absolute and first-party relative import aliases for one module."""
+    bindings = import_binding_map(tree)
+    package = module.split(".") if is_package else module.split(".")[:-1]
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or not node.level:
+            continue
+        ascend = node.level - 1
+        prefix = package[: len(package) - ascend] if ascend else package
+        imported_module = [*prefix, *(node.module or "").split(".")]
+        origin_module = ".".join(part for part in imported_module if part)
+        for alias in node.names:
+            bindings[alias.asname or alias.name] = f"{origin_module}.{alias.name}"
+    return bindings
+
+
 def _class_qualnames(tree: ast.AST) -> dict[int, str]:
     qualnames: dict[int, str] = {}
 
@@ -89,7 +105,7 @@ def _source_error_classes() -> tuple[_SourceErrorClass, ...]:
     declarations: list[tuple[str, str, tuple[str, ...]]] = []
     for path, tree in production_ast_items():
         module = inventory_module_name(path)
-        bindings = import_binding_map(tree)
+        bindings = _source_import_bindings(tree, module, is_package=path.name == "__init__.py")
         qualnames = _class_qualnames(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.ClassDef):
@@ -128,7 +144,7 @@ def _source_error_classes() -> tuple[_SourceErrorClass, ...]:
 
     return tuple(
         _SourceErrorClass(module, qualname, bases)
-        for module, qualname, _bases in (by_key[key] for key in sorted(descendants - roots))
+        for module, qualname, bases in (by_key[key] for key in sorted(descendants - roots))
     )
 
 
@@ -238,6 +254,10 @@ def test_every_cadrumo_error_subclass_has_a_registered_code() -> None:
     declared = dict(ALL_DECLARED_ERROR_CODES)
     missing = [_source_error_key(error_type) for error_type in ordered if _source_error_key(error_type) not in declared]
     assert missing == []
+
+    discovered = {_source_error_key(error_type) for error_type in subclasses}
+    orphaned = sorted(set(declared) - discovered)
+    assert orphaned == [], f"registry row(s) have no source CadrumoError declaration: {orphaned}"
 
     bound = {_source_error_key(error_type): declared[_source_error_key(error_type)] for error_type in subclasses}
     assert len(bound) == len(subclasses)

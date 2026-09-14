@@ -6,9 +6,9 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from ..calculations.registry.authority import ValidatedRegistryAuthority
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from ..calculations.registry.schema_base import DateAxis
 
 _MODELO_FACT_DATE_AXES: dict[str, DateAxis] = {
@@ -29,7 +29,7 @@ _MODELO_FACT_DATE_AXES: dict[str, DateAxis] = {
 class ModeloFactResolutionContext:
     """Authority and explicit filing/devengo coordinates for modelo facts."""
 
-    authority: ValidatedRegistryAuthority
+    authority: GovernedFactSource
     filing_period: date
     devengo_date: date
 

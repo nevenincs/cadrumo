@@ -10,6 +10,9 @@ from typing import TYPE_CHECKING
 
 from ._application_part1 import DECLARED_ERROR_CODES as _APPLICATION_PART1_CODES
 from ._application_part2 import DECLARED_ERROR_CODES as _APPLICATION_PART2_CODES
+from ._application_part3a1 import DECLARED_ERROR_CODES as _APPLICATION_PART3A1_CODES
+from ._application_part3a2 import DECLARED_ERROR_CODES as _APPLICATION_PART3A2_CODES
+from ._application_part3b import DECLARED_ERROR_CODES as _APPLICATION_PART3B_CODES
 
 if TYPE_CHECKING:
     from ..error_codes import ErrorCode
@@ -17,4 +20,7 @@ if TYPE_CHECKING:
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     *_APPLICATION_PART1_CODES,
     *_APPLICATION_PART2_CODES,
+    *_APPLICATION_PART3A1_CODES,
+    *_APPLICATION_PART3A2_CODES,
+    *_APPLICATION_PART3B_CODES,
 )

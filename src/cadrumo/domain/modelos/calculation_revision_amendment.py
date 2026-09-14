@@ -10,10 +10,9 @@ from pydantic import BaseModel, model_validator
 
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.ids import RevisionId
-from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
@@ -65,11 +64,14 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
         return self
 
 
-def _registry_m303_rectificativa_declarations() -> Mapping[str, str]:
+def _registry_m303_rectificativa_declarations(
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[str, str]:
     """Resolve M303 amendment declarations from the dated registry mapping."""
-    authority = bundled_authority()
-    model_report = RegistryQueryService(authority).describe_modelo("303")
-    resolved = authority.resolve_governed_fact(
+    if not any(metadata.contains_date(date.today()) for metadata in operation.modelo_directory("303").revisions):
+        raise ModeloValidationError("M303 has no registry revision for today's date")
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="modelo-303-rectificativa-record-design-mapping",
             date_axis=DateAxis.FILING_PERIOD,
@@ -78,7 +80,6 @@ def _registry_m303_rectificativa_declarations() -> Mapping[str, str]:
     )
     if not isinstance(resolved, ResolvedMappingFact):
         raise ModeloValidationError("M303 rectificativa declarations must resolve as a mapping fact")
-    del model_report
     return {str(entry.key): str(entry.value) for entry in resolved.payload.entries}
 
 
@@ -93,9 +94,17 @@ def m303_rectificativa_motive_is_applicable(
     *,
     registry_revision_id: RevisionId,
     record_design: SourceReference,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> bool:
     """Return whether the exact reviewed revision/source coordinate admits a motive."""
-    declarations = _registry_m303_rectificativa_declarations()
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return m303_rectificativa_motive_is_applicable(
+                registry_revision_id=registry_revision_id,
+                record_design=record_design,
+                operation=indexed_operation,
+            )
+    declarations = _registry_m303_rectificativa_declarations(operation=operation)
     prefix = f"record_design.{registry_revision_id}"
     return (
         registry_revision_id,
@@ -110,8 +119,15 @@ def m303_rectificativa_motive_is_applicable(
     )
 
 
-def m303_rectificativa_record_design_from_snapshot(snapshot: RegistrySnapshot) -> SourceReference | None:
+def m303_rectificativa_record_design_from_snapshot(
+    snapshot: RegistrySnapshot,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> SourceReference | None:
     """Resolve the sole admitted record-design source owned by a snapshot."""
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return m303_rectificativa_record_design_from_snapshot(snapshot, operation=indexed_operation)
     candidates = tuple(
         source
         for source in snapshot.sources.values()
@@ -119,6 +135,7 @@ def m303_rectificativa_record_design_from_snapshot(snapshot: RegistrySnapshot) -
         and m303_rectificativa_motive_is_applicable(
             registry_revision_id=snapshot.revision.id,
             record_design=source,
+            operation=operation,
         )
     )
     if len(candidates) > 1:

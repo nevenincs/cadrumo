@@ -21,10 +21,10 @@ from ...core.identity.digest import ContentDigest
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ..calculations.registry.authority import bundled_authority
+from ..calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
-from ..calculations.registry.queries import RegistryQueryService
 from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
@@ -45,9 +45,17 @@ from .calculation_revision_m303_evidence import (
 from .errors import ModeloValidationError
 
 
-def _selected_m303_revision_declares_fact(*, filing_year: int, period: Period) -> bool:
+def _selected_m303_revision_declares_fact(
+    *,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation | None = None,
+) -> bool:
     """Read a simplified-regime fact declaration from the selected M303 revision."""
-    snapshot = bundled_authority().snapshot(
+    selected = operation or governed_facts_in_scope()
+    if not isinstance(selected, PinnedAuthorityOperation):
+        raise ModeloValidationError("M303 revision selection requires a generation-pinned authority operation")
+    snapshot = selected.snapshot(
         "303",
         filing_year=filing_year,
         period=period.registry_token,
@@ -66,32 +74,36 @@ def _resolve_m303_m390_handoff_declarations(
     source_period: str,
     target_filing_year: int,
     target_period: str,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> tuple[object, object, object]:
     """Resolve selected cross-model handoff surfaces without local declarations."""
-    query_service = RegistryQueryService(bundled_authority())
-    source_report = query_service.describe_modelo_for_scope(
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return _resolve_m303_m390_handoff_declarations(
+                source_filing_year=source_filing_year,
+                source_period=source_period,
+                target_filing_year=target_filing_year,
+                target_period=target_period,
+                operation=indexed_operation,
+            )
+    source_report = operation.revision_for_context(
         "303",
         filing_year=source_filing_year,
         period=source_period,
-        as_of=date(source_filing_year, 12, 31),
+        on=date(source_filing_year, 12, 31),
     )
-    target_report = query_service.describe_modelo_for_scope(
+    target_report = operation.revision_for_context(
         "390",
         filing_year=target_filing_year,
         period=target_period,
-        as_of=date(target_filing_year, 12, 31),
-    )
-    target_bindings = query_service.bindings_for_scope(
-        "390",
-        filing_year=target_filing_year,
-        period=target_period,
-        as_of=date(target_filing_year, 12, 31),
+        on=date(target_filing_year, 12, 31),
     )
     if not any(
-        row.provider.kind is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for row in target_bindings.rows
+        binding.provider.kind is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+        for binding in target_report.bindings
     ):
         raise ModeloValidationError("selected Modelo 390 revision has no M303 annual-summary handoff bindings")
-    return source_report, target_report, target_bindings
+    return source_report, target_report, target_report.bindings
 
 
 class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):

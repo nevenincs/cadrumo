@@ -353,6 +353,50 @@ errors:
     modelo_work_selector: The modelo work selector failed.
     modelo_work_selector_unit_not_found: The selected modelo work unit was not found.
   fail:
+    canonical_tui_account_session_expired: The TUI account session has expired; sign
+      in again to continue.
+    canonical_authority_artifact_unavailable: The required published authority artifact
+      could not be opened.
+    canonical_modelo_edit_receipt_persistence: The Modelo edit receipt could not be
+      persisted.
+    canonical_m036_declaration_persistence: The Modelo 036 declaration could not be
+      persisted.
+    canonical_m145_communication_record_persistence: The Modelo 145 communication
+      record could not be persisted.
+    canonical_taxation_comparison_persistence: The work units for the taxation
+      comparison could not be loaded.
+    canonical_workflow_gate_persistence: The workflow gate could not be persisted.
+    canonical_percepcion_observation_persistence: Perceptor observations could not be
+      persisted.
+    canonical_retencion_observation_persistence: Retention observations could not be
+      persisted.
+    canonical_auth_diagnostic_persistence: Authentication diagnostics could not be
+      persisted.
+    canonical_operator_scope_storage: The operator authentication storage operation
+      failed.
+    canonical_operator_scope_session: The active operator custody session could not be
+      read.
+    canonical_diagnostic_run_telemetry: The diagnostic run telemetry could not be read.
+    canonical_evidence_bundle_persistence: The evidence bundle could not be persisted.
+    canonical_catalogue_invoice_persistence: The invoice catalogue could not be
+      persisted.
+    canonical_catalogue_invoice_rate: The invoice-catalogue exchange-rate lookup
+      failed.
+    canonical_invoice_catalogue_read_persistence: The invoice catalogue could not be
+      loaded for link verification.
+    canonical_invoice_source_persistence: The invoice source catalogue could not be
+      read.
+    canonical_counterparty_establishment_persistence: The counterparty establishment
+      record could not be persisted.
+    canonical_invoice_confirmation_persistence: The invoice confirmation attachment
+      could not be saved.
+    canonical_invoice_draft_reader_unavailable: The selected invoice-draft reader is
+      unavailable.
+    canonical_llm_diagnostics_read: The language-model diagnostics could not be read.
+    canonical_persistence_degradation: The persistence capability could not provide
+      the requested operation.
+    canonical_state_projection_read: The application state projection could not be
+      read.
     censo_sync: The Modelo 036 censo sync failed.
     currency_error: Currency normalization failed.
     declaration_parse: The filed declaration export could not be parsed for reconciliation.
@@ -500,6 +544,43 @@ errors:
       Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    canonical_orden_anual_html_parse: The annual IVA order HTML has an invalid or
+      unsupported structure.
+    canonical_manifest_payload_validation: The corpus manifest payload failed validation.
+    canonical_malformed_manifest_payload: The corpus manifest payload is malformed
+      and cannot be parsed.
+    canonical_unsupported_manifest_version: The corpus manifest uses an unsupported
+      version.
+    canonical_tampered_manifest_payload: The corpus manifest digest does not match
+      its contents; it may be corrupted or tampered with.
+    canonical_authority_component_codec: An authority component could not be encoded
+      or decoded in the canonical format.
+    canonical_authority_artifact: The published authority artifact could not be safely
+      consumed.
+    canonical_authority_artifact_integrity: The published authority artifact failed
+      its integrity check.
+    canonical_authority_artifact_format: The published authority artifact has an
+      unsupported format.
+    canonical_authority_store: The published authority store could not be safely
+      admitted or queried.
+    canonical_authority_store_cutover: The authority store pin refers to a different
+      reader generation.
+    canonical_authority_store_corruption: The authority store content or declared
+      component closure changed unexpectedly.
+    canonical_relation_binding_join: The bundled relation-to-binding join could not
+      be read as declared.
+    canonical_declarations_calendar_projection: The supplied calendar authorities
+      cannot form one coherent safe view.
+    canonical_declarations_workspace_projection: The supplied authorities cannot form
+      one coherent safe snapshot.
+    canonical_modelo_workspace_absent_registry_projection: The registry capture returned
+      without its promised projection.
+    canonical_aeat_sync_workspace_projection: The loaded AEAT authorities cannot form
+      one safe snapshot.
+    canonical_filing_producer_snapshot: Filing facts cannot form a complete producer
+      snapshot.
+    canonical_ledger_workspace_projection: The ledger input facts cannot form one
+      truthful workspace snapshot.
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
     integrity_apoderado_configuration_identity: The stored apoderado configuration
@@ -578,6 +659,20 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
+    canonical_tui_search_host: The TUI search palette requires a workbench root host.
+    canonical_authority_cache_cycle: The authority component loader detected a
+      recursive load cycle.
+    canonical_calibration_deadline_elapsed: Profile key-derivation calibration exceeded
+      its total time limit.
+    canonical_operation_financial_operand_custody: The financial operand custody
+      transition order was violated.
+    canonical_operation_definition_contract_mismatch: The operation definition does
+      not match its contract.
+    canonical_schema_resolution: The command schema projection is incomplete.
+    canonical_invoice_row_parse: An invoice-import row could not be parsed.
+    canonical_invoice_wizard_field: An invoice wizard field failed validation.
+    canonical_structured_invoice_read: The structured invoice could not be read by the
+      selected reader.
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
       it with the command you ran.
@@ -619,6 +714,10 @@ errors:
     rate_slot_not_in_force: That IVA rate was not in force for its rate tier in Spain
       on the operation date.
   locked:
+    canonical_operation_financial_operand_custody_conflict: Another process advanced
+      the financial operand custody state; retry.
+    canonical_ledger_persistence_conflict: Another process changed the ledger while
+      this update was being saved; retry.
     locked_access_gate_live_submit_forbidden: Live submission to the AEAT is permanently
       forbidden. This application builds, validates and exports filings; the filing
       itself must be done outside the application.
@@ -644,6 +743,54 @@ errors:
     locked: Locked.
     refused: Refused.
   refused:
+    canonical_tui_module_argument: The TUI module accepts only its supported arguments.
+    canonical_tui_unknown_design_token: The TUI stylesheet references an undeclared
+      design token.
+    canonical_tui_modelo_workspace_declaration_admission: The Modelo workspace
+      declaration cannot be admitted in the current workspace generation.
+    canonical_tui_modelo_workspace_session_admission: The Modelo workspace session
+      cannot be admitted from the supplied projection.
+    canonical_tui_navigation_contract: The TUI navigation request violates its contract.
+    canonical_tui_unknown_destination: The requested TUI destination is not in the
+      supported catalogue.
+    canonical_tui_destination_admission: The TUI destination admission does not match
+      the requested route.
+    canonical_tui_destination_unavailable: The requested TUI destination is not
+      currently available.
+    canonical_tui_unresolved_action_candidate: The TUI action candidate has no matching
+      catalogue declaration.
+    canonical_tui_destination_factory: The TUI destination could not produce a valid
+      screen.
+    canonical_tui_recovery_handover_abandoned: The recovery handover was abandoned
+      before confirmation could be completed.
+    canonical_tui_recovery_handover_cancelled: The recovery handover was cancelled by
+      the operator.
+    canonical_previous_filing_observation_absent: The required previous filing has not
+      been observed.
+    canonical_m036_declaration_not_found: No Modelo 036 declaration matches the
+      requested identifier.
+    canonical_m036_declaration_ambiguous: The Modelo 036 declaration identifier prefix
+      matches multiple records.
+    canonical_ambiguous_declaration_result: The revision declares more than one
+      final-result casilla.
+    canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved
+      work selection.
+    canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
+      current baseline; restart the query.
+    canonical_operation_observation_unknown_operation: No observation journal exists
+      for the requested operation.
+    canonical_operation_observation_cursor_ahead: The requested observation cursor is
+      beyond the authoritative anchor.
+    canonical_prorrata_election: The prorrata election does not satisfy LIVA Article
+      105.
+    canonical_bien_inversion_disposal_incomplete: A capital-good disposal requires
+      both a disposal year and a disposal regime.
+    canonical_inventory_closing_authority_conflict: A different immutable inventory
+      closing authority is already recorded.
+    canonical_evidence_sweep_file_not_reachable: The evidence provider refused a file
+      under the current access scope.
+    canonical_ledger_period_validation: The ledger period token is not a valid
+      canonical AEAT period.
     auth_configure_no_active_bucket: Authentication cannot be configured without an
       active profile. Create a profile with `aeat config profile create NAME` and
       try again.

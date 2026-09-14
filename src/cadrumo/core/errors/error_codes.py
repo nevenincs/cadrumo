@@ -115,6 +115,8 @@ class ErrorCode(BaseModel):
     The agent cannot distinguish it from the transient case, and telling it to
     retry is what produces the loop.
     """
+    public_message_from_registry: bool = False
+    """Ignore positional diagnostic text when rendering a public envelope."""
     runbook_id: str | None
 
 
@@ -507,6 +509,8 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None, *
     from ..i18n.render import tr
 
     interpolation = _coerce_interpolation_kwargs(getattr(error, "context", None))
+    if resolved_code.public_message_from_registry or ".canonical_" in resolved_code.message_key:
+        return tr(resolved_code.message_key, locale=locale, **interpolation)
     translated_message = getattr(error, "translated_message", None)
     if isinstance(translated_message, str) and translated_message:
         return tr(translated_message, locale=locale, **interpolation)

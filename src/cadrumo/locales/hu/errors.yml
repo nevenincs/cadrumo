@@ -358,6 +358,49 @@ errors:
     modelo_work_selector: A modell munkaválasztó hibázott.
     modelo_work_selector_unit_not_found: A kiválasztott modell munkaegység nem található.
   fail:
+    canonical_tui_account_session_expired: A TUI-fiók munkamenete lejárt; a folytatáshoz
+      jelentkezzen be újra.
+    canonical_authority_artifact_unavailable: A szükséges közzétett hatósági artefaktum
+      nem nyitható meg.
+    canonical_modelo_edit_receipt_persistence: A Modelo szerkesztési bizonylatát nem
+      sikerült menteni.
+    canonical_m036_declaration_persistence: A Modelo 036-bevallást nem sikerült
+      menteni.
+    canonical_m145_communication_record_persistence: A Modelo 145 kommunikációs rekordját
+      nem sikerült menteni.
+    canonical_taxation_comparison_persistence: Az adózási összehasonlításhoz szükséges
+      munkaegységeket nem sikerült betölteni.
+    canonical_workflow_gate_persistence: A munkafolyamat-kaput nem sikerült menteni.
+    canonical_percepcion_observation_persistence: A kifizetői megfigyeléseket nem
+      sikerült menteni.
+    canonical_retencion_observation_persistence: A forrásadó-levonási megfigyeléseket
+      nem sikerült menteni.
+    canonical_auth_diagnostic_persistence: A hitelesítési diagnosztikát nem sikerült
+      menteni.
+    canonical_operator_scope_storage: Az operátori hitelesítés tárolási művelete
+      meghiúsult.
+    canonical_operator_scope_session: Az operátor aktív őrzési munkamenetét nem sikerült
+      beolvasni.
+    canonical_diagnostic_run_telemetry: A diagnosztikai futtatás telemetriáját nem
+      sikerült beolvasni.
+    canonical_evidence_bundle_persistence: A bizonyítékcsomagot nem sikerült menteni.
+    canonical_catalogue_invoice_persistence: A számlakatalógust nem sikerült menteni.
+    canonical_catalogue_invoice_rate: A számlakatalógus árfolyamlekérdezése meghiúsult.
+    canonical_invoice_catalogue_read_persistence: A számlakatalógust nem sikerült
+      betölteni a hivatkozások ellenőrzéséhez.
+    canonical_invoice_source_persistence: A számlaforrás-katalógust nem sikerült
+      beolvasni.
+    canonical_counterparty_establishment_persistence: A partner letelepedési rekordját
+      nem sikerült menteni.
+    canonical_invoice_confirmation_persistence: A számlamegerősítés bizonylatát nem
+      sikerült menteni.
+    canonical_invoice_draft_reader_unavailable: A kiválasztott számlatervezet-olvasó
+      nem érhető el.
+    canonical_llm_diagnostics_read: A nyelvimodell-diagnosztikát nem sikerült beolvasni.
+    canonical_persistence_degradation: A tárolási képesség nem tudta biztosítani a kért
+      műveletet.
+    canonical_state_projection_read: Az alkalmazás állapotvetítését nem sikerült
+      beolvasni.
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból
@@ -513,6 +556,44 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
+    canonical_orden_anual_html_parse: Az éves IVA-rendelet HTML-dokumentuma érvénytelen
+      vagy nem támogatott szerkezetű.
+    canonical_manifest_payload_validation: A korpusz manifesztjének adatai nem mentek
+      át az érvényesítésen.
+    canonical_malformed_manifest_payload: A korpusz manifesztjének adatai hibás
+      formátumúak, ezért nem elemezhetők.
+    canonical_unsupported_manifest_version: A korpusz manifesztje nem támogatott
+      verziót használ.
+    canonical_tampered_manifest_payload: A korpusz manifesztjének kivonata nem egyezik
+      a tartalmával; a manifeszt sérült vagy manipulált lehet.
+    canonical_authority_component_codec: Egy hatósági komponenst nem lehet kanonikus
+      formátumban kódolni vagy dekódolni.
+    canonical_authority_artifact: A közzétett hatósági artefaktum biztonságosan nem
+      használható fel.
+    canonical_authority_artifact_integrity: A közzétett hatósági artefaktum nem ment át
+      az integritás-ellenőrzésen.
+    canonical_authority_artifact_format: A közzétett hatósági artefaktum formátuma nem
+      támogatott.
+    canonical_authority_store: A közzétett hatósági tároló biztonságosan nem fogadható
+      el és nem kérdezhető le.
+    canonical_authority_store_cutover: A hatósági tároló rögzített hivatkozása más
+      olvasógenerációra mutat.
+    canonical_authority_store_corruption: A hatósági tároló tartalma vagy a deklarált
+      komponenskészlet váratlanul megváltozott.
+    canonical_relation_binding_join: A csomagolt reláció–kötés megfeleltetés nem
+      olvasható a deklarált módon.
+    canonical_declarations_calendar_projection: A megadott naptári forrásokból nem
+      állítható össze koherens, biztonságos nézet.
+    canonical_declarations_workspace_projection: A megadott forrásokból nem állítható
+      össze koherens, biztonságos pillanatkép.
+    canonical_modelo_workspace_absent_registry_projection: A nyilvántartási rögzítés az
+      ígért vetítés nélkül tért vissza.
+    canonical_aeat_sync_workspace_projection: A már betöltött AEAT-forrásokból nem
+      állítható össze biztonságos pillanatkép.
+    canonical_filing_producer_snapshot: A benyújtási tényekből nem állítható össze teljes
+      előállítói pillanatkép.
+    canonical_ledger_workspace_projection: A főkönyv bemeneti tényeiből nem állítható
+      össze hiteles munkaterületi pillanatkép.
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsa a
       kiválasztott profilt a folytatás előtt.
     integrity_apoderado_configuration_identity: A tárolt apoderado-beállítás nem ahhoz
@@ -593,6 +674,22 @@ errors:
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
   internal:
+    canonical_tui_search_host: A TUI keresési palettájához a munkaterület gyökér-gazdagépe
+      szükséges.
+    canonical_authority_cache_cycle: A hatósági komponensbetöltő rekurzív betöltési
+      ciklust észlelt.
+    canonical_calibration_deadline_elapsed: A profil kulcsszármaztatási kalibrálása
+      túllépte a teljes időkorlátot.
+    canonical_operation_financial_operand_custody: Megsértették a pénzügyi operandus
+      őrzésének rögzített átmeneti sorrendjét.
+    canonical_operation_definition_contract_mismatch: A műveletdefiníció nem egyezik a
+      szerződésével.
+    canonical_schema_resolution: A parancsséma vetítése hiányos.
+    canonical_invoice_row_parse: Egy számlaimportálási sort nem sikerült elemezni.
+    canonical_invoice_wizard_field: A számlavarázsló egyik mezője nem ment át az
+      érvényesítésen.
+    canonical_structured_invoice_read: A kiválasztott olvasó nem tudta beolvasni a
+      strukturált számlát.
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.
       Jelentsd a futtatott paranccsal együtt.
@@ -636,6 +733,10 @@ errors:
     rate_slot_not_in_force: Ez az IVA-kulcs a művelet napján Spanyolországban nem
       volt hatályban az adott kulcssávra.
   locked:
+    canonical_operation_financial_operand_custody_conflict: Egy másik folyamat módosította
+      a pénzügyi operandus őrzési állapotát; próbálja újra.
+    canonical_ledger_persistence_conflict: Egy másik folyamat módosította a főkönyvet a
+      frissítés mentése közben; próbálja újra.
     locked_access_gate_live_submit_forbidden: Az élő benyújtás az AEAT-hoz véglegesen
       tiltott. Ez az alkalmazás bevallásokat épít, érvényesít és exportál; a benyújtást
       magát az alkalmazáson kívül kell elvégezni.
@@ -661,6 +762,53 @@ errors:
     locked: Zárolva.
     refused: Elutasítva.
   refused:
+    canonical_tui_module_argument: A TUI-modul csak a támogatott argumentumokat fogadja
+      el.
+    canonical_tui_unknown_design_token: A TUI-stíluslap nem deklarált tervezési tokenre
+      hivatkozik.
+    canonical_tui_modelo_workspace_declaration_admission: A Modelo munkaterület-deklarációja
+      nem engedélyezhető a jelenlegi munkaterület-generációban.
+    canonical_tui_modelo_workspace_session_admission: A Modelo munkaterület-munkamenete
+      nem engedélyezhető a megadott vetítés alapján.
+    canonical_tui_navigation_contract: A TUI navigációs kérése megsérti a szerződését.
+    canonical_tui_unknown_destination: A kért TUI-célállomás nincs a támogatott
+      katalógusban.
+    canonical_tui_destination_admission: A TUI-célállomás engedélyezése nem egyezik a
+      kért útvonallal.
+    canonical_tui_destination_unavailable: A kért TUI-célállomás jelenleg nem érhető el.
+    canonical_tui_unresolved_action_candidate: A TUI-műveletjelöltnek nincs megfelelő
+      katalógusdeklarációja.
+    canonical_tui_destination_factory: A TUI-célállomás nem tudott érvényes képernyőt
+      létrehozni.
+    canonical_tui_recovery_handover_abandoned: A helyreállítási átadást a megerősítés
+      befejezése előtt elhagyták.
+    canonical_tui_recovery_handover_cancelled: A helyreállítási átadást az operátor
+      megszakította.
+    canonical_previous_filing_observation_absent: A szükséges korábbi bevallás nem
+      került megfigyelésre.
+    canonical_m036_declaration_not_found: A kért azonosítónak megfelelő Modelo 036-
+      bevallás nem található.
+    canonical_m036_declaration_ambiguous: A Modelo 036-bevallás azonosítójának előtagja
+      több rekordra illeszkedik.
+    canonical_ambiguous_declaration_result: A revízió egynél több végső eredménymezőt
+      deklarál.
+    canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan
+      munkaválasztást talált.
+    canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
+      aktuális alappal; indítsa újra a lekérdezést.
+    canonical_operation_observation_unknown_operation: A kért művelethez nem tartozik
+      megfigyelési napló.
+    canonical_operation_observation_cursor_ahead: A kért megfigyelési kurzor túlmutat a
+      hiteles horgonyon.
+    canonical_prorrata_election: A prorrata-választás nem felel meg a LIVA 105. cikkének.
+    canonical_bien_inversion_disposal_incomplete: Egy beruházási eszköz értékesítéséhez
+      az értékesítés éve és rendszere is szükséges.
+    canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik,
+      megváltoztathatatlan készletzárási hatóság.
+    canonical_evidence_sweep_file_not_reachable: A bizonyítékszolgáltató egy fájlt
+      elutasított a jelenlegi hozzáférési hatókörben.
+    canonical_ledger_period_validation: A főkönyvi időszaktoken nem érvényes kanonikus
+      AEAT-időszak.
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
       Hozzon létre profilt az  paranccsal, és próbálja újra.
     auth_profile_identity_mismatch: Az aktív profil azonossága nem rendelkezhet a
