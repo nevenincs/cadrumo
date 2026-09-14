@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:27819f69598e2d882a01a3b798274bdf9342d00d22ee17456797f2ae0544b0af'
+body_hash: 'sha256:19465bcefb4f5f810799dec6505d6ec78a70a568659d49147993612cec34b1b7'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]"
   - "[[2026-09-09-facts-registry-governed-fact-catalogue-adr]]"
@@ -90,3 +90,7 @@ Provider `lifecycle_components` is not consumed, and `inherited_identity_domains
 `src/cadrumo/domain/user_profile/values.py:236` obtains the default schema version through the raw loader; record/snapshot validators at lines 248-276 also load it implicitly. Moving only the visible profile service calls would leave schema access during secure record deserialization. The new contract must supply the pinned schema explicitly through validated factories/context and retain schema-version mismatch refusal. It must not serialize taxpayer records into the public authority. `src/cadrumo/application/user_profile/projections.py:42` separately caches the default schema for process lifetime; this cache is not keyed by authority generation.
 
 The raw loader has 22 production consumer/definition files in the exact-text inventory. Paths relative to `src/cadrumo/`: `domain/user_profile/loader.py`, `domain/user_profile/values.py`, `domain/renta/maritime_exemption.py`; `application/user_profile/overview.py`, `projections.py`, `section_rows.py`, `validation.py`; `application/modelo/_autonomic_deduccion_advisory.py`, `_required_binding_gate.py`, `profile_binding.py`, `profile_export_binding.py`, `profile_readiness_gate.py`; `application/auth/sessions.py`; `application/aggregation/atribucion_member.py`, `renta_ledger.py`; `application/wizard/status.py`; `application/diagnostics.py`; `entrypoints/cli/_modelo_discovery_rendering.py`, `_overview.py`, `common.py`, `config/_complete_setup_cli.py`, `config/_profile_inspect.py`. Development consumers are `dev/registry/compiler/validator.py` and `dev/locales/_registry_scanner.py`. The parser should move to development; semantic tests remain with the canonical profile schema. Existing test/support migration spans domain profile, profile application, modelo, auth, aggregation, wizard, secure persistence, CLI/TUI and development fixtures.
+
+### Snapshot dependency boundary
+
+`src/cadrumo/domain/calculations/registry/snapshot.py:170` accepts complete `RegistryCatalogues`, selects a revision, checks legal/source relationships, and attaches convenio and supplementary orders at lines 262-263. Merely replacing the authority fields would leave this constructor coupled to wholesale catalogues. The core migration must narrow these inputs to the selected revision's declared dependencies while preserving all existing grade, capability, reference and applicability checks.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e428d2707c9637b72c930f3849ba037518dbe01d8ba4b4eb16e4ed697ff4552a'
+body_hash: 'sha256:3945c2d4cb6bed87c77a0dad36aeaaec0bca5852ca2e3f1fbf9ce3ce4f120b31'
 related:
   - '[[2026-09-14-registry-corpus-pruning-ownership-reference]]'
 ---
@@ -66,3 +66,11 @@ Acceptance must compare canonical source hashes, anchored/versioned text, exact 
 `verify_source_file` no longer calls the structured-manual loader. The previous call made byte-identity verification depend on authored chapter availability and review metadata, and ran only for local sources, not companion-resolved binaries. The separate legal-reference manual-section validator remains unchanged. No manual structures or primary PDFs were deleted. Removed the unused loader protocol, helper and helper-only tests; replacement tests prove absent/corrupt optional structure cannot alter source identity while same-length byte tampering and size changes still fail.
 
 All 23 declared manual PDFs pass exact source verification. The targeted source-identity, companion and structured-section checks completed with 10 passed (exit 0); targeted Ruff and diff checks passed. The wider catalogue-verifier run completed with 25 passed and 26 failures, including obsolete calls missing required `source_root` and `effective_date` arguments; this is not a whole-catalogue success claim. Search descriptions now distinguish normative lexical coverage from signed exact citations and broader development RAG. The environment reference was regenerated through its owner and passes its freshness check.
+
+### Follow-up: replace disguised authored overlays with source-bound page selections
+
+The two Renta 2025 `source.pdf.extracted.md.extracted.json` overlays were removed. Their nine `title`/`section`/`text` records were manually composed and none was an exact contiguous extraction from the official manuals, so preserving those bytes would have preserved an unsupported authored evidence copy. They are replaced by two minimal `source.pdf.annotation.json` files containing only schema version, source SHA-256, stable anchors and exact page numbers. Text is reconstructed from the hash-bound `source.pdf.extracted.json`; the annotation schema forbids embedded prose.
+
+All nine legal references now cite the underlying `source.pdf#anchor`. Every required clause resolves from exact selected pages. Resolved bodies intentionally grow from the former 729–1002-character recompositions to complete 1824–4174-character page selections; this is a provenance correction, not byte parity. Both annotations are catalogued as `SemanticAnnotation` against the PDFs, with independent manual-manifest and registry-source identity agreement. Orphan annotations, malformed metadata, stale source/extraction hashes and undeclared targets refuse validation.
+
+The resolver accepts physically separate source, annotation and extraction paths, preserving the installed split-wheel contract: the command wheel contains annotations and extractions while `cadrumo-data-manuals` supplies PDFs. A real wheel build proved both annotations present and the existing PDF exclusion intact. The freshness gate now rejects any units-only `*.extracted.json` lacking provenance instead of silently excluding it, and `.vaultragignore` excludes `*.annotation.json` because selectors are metadata rather than indexable prose. Focused proofs passed: 6 core annotation tests, 5 compiler/catalog tests, 26 preprocessing/freshness tests, the wheel membership test, and direct resolution of all nine real legal references.

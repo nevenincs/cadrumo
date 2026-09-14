@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4bd971d3ae33ce5252a7f3278127d48b07283ab80bf53f5ca00bd03390c53b8'
+body_hash: 'sha256:4ced7747e7fb60ccd459d0fa44535dadfe0fcf9a5caff5941780e1aa5022f692'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-indexed-storage-source-enrollment-reference]]"
 ---
@@ -49,7 +49,6 @@ Packaging excludes the AEAT authoring tree but not the sibling profile schema. F
 ### performance-acceptance | medium | The current benchmark supplies observations without cutover criteria
 
 The benchmark measures eager hydration and warm access but does not expose component reads, cache memory or enforce comparative cutover targets. Evidence: `dev/registry/benchmark_authority.py:14`. The next plan needs paired generation-equivalent workloads, post-import authority costs, separate total startup, incremental memory and explicit enumeration behavior. Previous measurements remain historical evidence, not measurements of SQLite.
-
 
 ### filing-default-context | high | Default export and verification select a schema without the draft coordinate
 
