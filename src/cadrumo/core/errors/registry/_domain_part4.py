@@ -18,46 +18,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.calculations.registry.authority_artifact.AuthorityArtifactError",
-        ErrorCode(
-            code="INTEGRITY_AUTHORITY_ARTIFACT",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.canonical_authority_artifact",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.calculations.registry.authority_artifact.AuthorityArtifactUnavailableError",
-        ErrorCode(
-            code="FAIL_AUTHORITY_ARTIFACT_UNAVAILABLE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.canonical_authority_artifact_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.calculations.registry.authority_artifact.AuthorityArtifactIntegrityError",
-        ErrorCode(
-            code="INTEGRITY_AUTHORITY_ARTIFACT_INTEGRITY",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.canonical_authority_artifact_integrity",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.calculations.registry.authority_artifact.AuthorityArtifactFormatError",
-        ErrorCode(
-            code="INTEGRITY_AUTHORITY_ARTIFACT_FORMAT",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.canonical_authority_artifact_format",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.calculations.registry.authority_cache.AuthorityCacheCycleError",
         ErrorCode(
             code="INTERNAL_AUTHORITY_CACHE_CYCLE",

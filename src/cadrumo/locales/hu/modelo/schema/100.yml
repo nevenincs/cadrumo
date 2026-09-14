@@ -5259,10 +5259,8 @@ modelo:
               label: 'Összeg szerinti a levonások a(z) a amely -ként ha perdido a
                 jog -ban/-ben 2020. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Adja meg vagy ellenőrizze a(z) „Intereses szerinti demora megfelelő
-                a(z) a levonások előző (*): Parte estatal” értékét ehhez az önadózáshoz.'
-              label: 'Intereses szerinti demora megfelelő a(z) a levonások előző (*):
-                Parte estatal'
+              help: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
+              label: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
             0579:
               help: 'Adja meg vagy ellenőrizze a(z) „Összeg szerinti a levonások autonómicas
                 a(z) a amely -ként ha perdido a jog -ban/-ben 2020: Parte autonómica”
@@ -5278,10 +5276,8 @@ modelo:
                 pontjában vagy 45. kiegészítő rendelkezése 3. pontjában meghatározott
                 körülmények indokolják, jelölje ezt a mezőt ''X''-szel: állami rész'
             0581:
-              help: 'Adja meg vagy ellenőrizze a(z) „Intereses szerinti demora megfelelő
-                a(z) a levonások előző (*): Parte estatal” értékét ehhez az önadózáshoz.'
-              label: 'Intereses szerinti demora megfelelő a(z) a levonások előző (*):
-                Parte estatal'
+              help: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
+              label: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
             0585:
               help: 'Adja meg vagy ellenőrizze a(z) „Adó nettó estatal incrementada:
                 Parte estatal” értékét ehhez az önadózáshoz.'
@@ -12848,9 +12844,8 @@ modelo:
               label: 'Összeg szerinti a levonások a(z) a amely -ként ha perdido a
                 jog -ban/-ben 2021. Parte autonómica (*): Parte autonómica'
             0578:
-              help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
-                késedelmi kamatok: állami rész” értékét ehhez az önadózáshoz.'
-              label: 'A korábbi levonásoknak megfelelő késedelmi kamatok: állami rész'
+              help: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
+              label: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
             0579:
               help: 'Adja meg vagy ellenőrizze a(z) „Összeg szerinti a levonások autonómicas
                 a(z) a amely -ként ha perdido a jog -ban/-ben 2021: Parte autonómica”
@@ -12866,9 +12861,8 @@ modelo:
                 pontjában vagy 45. kiegészítő rendelkezése 3. pontjában meghatározott
                 körülmények indokolják, jelölje ezt a mezőt ''X''-szel: állami rész'
             0581:
-              help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
-                késedelmi kamatok: állami rész” értékét ehhez az önadózáshoz.'
-              label: 'A korábbi levonásoknak megfelelő késedelmi kamatok: állami rész'
+              help: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
+              label: "Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi rész"
             0585:
               help: 'Adja meg vagy ellenőrizze a(z) „Adó nettó estatal incrementada:
                 Parte estatal” értékét ehhez az önadózáshoz.'
@@ -52820,19 +52814,14 @@ modelo:
                 értékét ehhez az önadózáshoz.
               label: Terméknek megfelelő alapjövedelem
             '1530':
-              help: Adja meg vagy ellenőrizze a(z) „Az űrlap adóadata” értékét ehhez
-                az önadózáshoz.
-              label: 'Mezőgazdasági termelők, állattenyésztők vagy erdészeti tevékenység
-                jogosultjai által végzett egyéb kiegészítő munkák és szolgáltatások,
-                az állattenyésztési, -őrzési és -hizlalási szolgáltatások (beleértve
-                a baromfit) kivételével: Bruttó bevétel...'
+              help: "A 15. termék a mezőgazdasági termelők, állattartók és erdőgazdálkodók egyéb kiegészítő munkáit és szolgáltatásait, valamint a tutajon történő kagylótenyésztést foglalja magában. Az állatok (beleértve a baromfit) tenyésztése, őrzése és hizlalása kivétel. A kör 2025-től bővül."
+              label: "Egyéb kiegészítő munkák, szolgáltatások és tutajon történő kagylótenyésztés bruttó bevétele"
             '1531':
-              help: Adja meg vagy ellenőrizze a(z) „Index” értékét ehhez az önadózáshoz.
-              label: Index
+              help: "A 15. termék a mezőgazdasági termelők, állattartók és erdőgazdálkodók egyéb kiegészítő munkáit és szolgáltatásait, valamint a tutajon történő kagylótenyésztést foglalja magában. Az állatok (beleértve a baromfit) tenyésztése, őrzése és hizlalása kivétel. A kör 2025-től bővül."
+              label: "15. termék indexe: kiegészítő szolgáltatások és tutajon tenyésztett kagyló"
             '1532':
-              help: Adja meg vagy ellenőrizze a(z) „Terméknek megfelelő alapjövedelem”
-                értékét ehhez az önadózáshoz.
-              label: Terméknek megfelelő alapjövedelem
+              help: "A 15. termék a mezőgazdasági termelők, állattartók és erdőgazdálkodók egyéb kiegészítő munkáit és szolgáltatásait, valamint a tutajon történő kagylótenyésztést foglalja magában. Az állatok (beleértve a baromfit) tenyésztése, őrzése és hizlalása kivétel. A kör 2025-től bővül."
+              label: "15. termék alapjövedelme: kiegészítő szolgáltatások és tutajon tenyésztett kagyló"
             '1533':
               help: 'Adja meg vagy ellenőrizze a(z) „Állattenyésztési, -őrzési és
                 -hizlalási szolgáltatások (beleértve a baromfit): Bruttó bevétel”

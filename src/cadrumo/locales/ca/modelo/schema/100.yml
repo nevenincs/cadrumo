@@ -4969,10 +4969,8 @@ modelo:
               label: 'Import de les deduccions a les quals s''ha perdut el dret en
                 2020. Part autonòmica (*): Part autonòmica'
             0578:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors (*): Part estatal» per completar aquesta autoliquidació.'
-              label: 'Interessos de demora corresponents a les deduccions anteriors
-                (*): Part estatal'
+              help: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
+              label: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
             0579:
               help: 'Indiqueu o reviseu «Import de les deduccions autonòmiques a les
                 quals s''ha perdut el dret en 2020: Part autonòmica» per completar
@@ -4988,10 +4986,8 @@ modelo:
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part estatal'
             0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors (*): Part estatal» per completar aquesta autoliquidació.'
-              label: 'Interessos de demora corresponents a les deduccions anteriors
-                (*): Part estatal'
+              help: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
+              label: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
             0585:
               help: 'Indiqueu o reviseu «Quota líquida estatal incrementada: Part
                 estatal» per completar aquesta autoliquidació.'
@@ -11993,10 +11989,8 @@ modelo:
               label: 'Import de les deduccions a les quals s''ha perdut el dret en
                 2021. Part autonòmica (*): Part autonòmica'
             0578:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part estatal» per completar aquesta autoliquidació.'
-              label: 'Interessos de demora corresponents a les deduccions anteriors:
-                Part estatal'
+              help: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
+              label: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
             0579:
               help: 'Indiqueu o reviseu «Import de les deduccions autonòmiques a les
                 quals s''ha perdut el dret en 2021: Part autonòmica» per completar
@@ -12012,10 +12006,8 @@ modelo:
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part estatal'
             0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part estatal» per completar aquesta autoliquidació.'
-              label: 'Interessos de demora corresponents a les deduccions anteriors:
-                Part estatal'
+              help: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
+              label: "Interessos de demora corresponents a les deduccions anteriors: Part autonòmica"
             0585:
               help: 'Indiqueu o reviseu «Quota líquida estatal incrementada: Part
                 estatal» per completar aquesta autoliquidació.'
@@ -50055,18 +50047,14 @@ modelo:
                 autoliquidació.
               label: rendiment base producte
             '1530':
-              help: Indiqueu o reviseu «Informació fiscal de la casella» per completar
-                aquesta autoliquidació.
-              label: 'Altres treballs i serveis accesorios realitzats per agricultors,
-                ramaders o titulars d''activitats forestals, excepte serveis de cria,
-                guarda i engreix de bestiar (aus incloses): Ingressos ...'
+              help: "Producte 15: altres treballs i serveis accessoris d'agricultors, ramaders o titulars forestals, excepte cria, guarda i engreix de bestiar (aus incloses), i producció de musclo en batea. Inclou l'àmbit ampliat des de 2025."
+              label: "Ingressos íntegres d'altres treballs i serveis accessoris i de producció de musclo en batea"
             '1531':
-              help: Indiqueu o reviseu «Índex» per completar aquesta autoliquidació.
-              label: Índex
+              help: "Producte 15: altres treballs i serveis accessoris d'agricultors, ramaders o titulars forestals, excepte cria, guarda i engreix de bestiar (aus incloses), i producció de musclo en batea. Inclou l'àmbit ampliat des de 2025."
+              label: "Índex del producte 15: serveis accessoris i musclo en batea"
             '1532':
-              help: Indiqueu o reviseu «Rendiment base producte» per completar aquesta
-                autoliquidació.
-              label: rendiment base producte
+              help: "Producte 15: altres treballs i serveis accessoris d'agricultors, ramaders o titulars forestals, excepte cria, guarda i engreix de bestiar (aus incloses), i producció de musclo en batea. Inclou l'àmbit ampliat des de 2025."
+              label: "Rendiment base del producte 15: serveis accessoris i musclo en batea"
             '1533':
               help: 'Indiqueu o reviseu «Serveis de cria, guarda i engreix de bestiar
                 (aus incloses): Ingressos íntegres» per completar aquesta autoliquidació.'

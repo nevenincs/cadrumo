@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import pytest
-from dev.registry.compiler.authority import compiled_bundled_authority
+from typing import TYPE_CHECKING
 
-from .authority import ValidatedRegistryAuthority
+import pytest
+
+if TYPE_CHECKING:
+    from .authority import ValidatedRegistryAuthority
 
 
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
     return compiled_bundled_authority()

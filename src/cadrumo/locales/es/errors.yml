@@ -389,51 +389,49 @@ errors:
     modelo_work_selector_unit_not_found: No se encontró la unidad de trabajo de modelo
       seleccionada.
   fail:
-    canonical_tui_account_session_expired: La sesión de la cuenta del TUI ha caducado;
-      vuelve a iniciar sesión para continuar.
-    canonical_authority_artifact_unavailable: No se pudo abrir el artefacto de autoridad
-      publicado necesario.
-    canonical_modelo_edit_receipt_persistence: No se pudo guardar el recibo de edición
-      del Modelo.
-    canonical_m036_declaration_persistence: No se pudo guardar la declaración del
-      Modelo 036.
-    canonical_m145_communication_record_persistence: No se pudo guardar el registro de
-      comunicación del Modelo 145.
-    canonical_taxation_comparison_persistence: No se pudieron cargar las unidades de
-      trabajo para comparar la tributación.
-    canonical_workflow_gate_persistence: No se pudo guardar el control de acceso del
-      flujo de trabajo.
-    canonical_percepcion_observation_persistence: No se pudieron guardar las
-      observaciones de percepciones.
-    canonical_retencion_observation_persistence: No se pudieron guardar las
-      observaciones de retenciones.
-    canonical_auth_diagnostic_persistence: No se pudieron guardar los diagnósticos de
-      autenticación.
-    canonical_operator_scope_storage: Falló la operación de almacenamiento de la
-      autenticación del operador.
-    canonical_operator_scope_session: No se pudo leer la sesión de custodia activa del
-      operador.
-    canonical_diagnostic_run_telemetry: No se pudo leer la telemetría de la ejecución
-      diagnóstica.
-    canonical_evidence_bundle_persistence: No se pudo guardar el conjunto de evidencias.
+    canonical_auth_diagnostic_persistence: No se pudieron guardar los diagnósticos
+      de autenticación.
     canonical_catalogue_invoice_persistence: No se pudo guardar el catálogo de facturas.
     canonical_catalogue_invoice_rate: Falló la consulta del tipo de cambio para el
       catálogo de facturas.
+    canonical_counterparty_establishment_persistence: No se pudo guardar el registro
+      de establecimiento de la contraparte.
+    canonical_diagnostic_run_telemetry: No se pudo leer la telemetría de la ejecución
+      diagnóstica.
+    canonical_evidence_bundle_persistence: No se pudo guardar el conjunto de evidencias.
     canonical_invoice_catalogue_read_persistence: No se pudo cargar el catálogo de
       facturas para verificar los enlaces.
+    canonical_invoice_confirmation_persistence: No se pudo guardar el justificante
+      de confirmación de la factura.
+    canonical_invoice_draft_reader_unavailable: El lector seleccionado de borradores
+      de facturas no está disponible.
     canonical_invoice_source_persistence: No se pudo leer el catálogo de fuentes de
       facturas.
-    canonical_counterparty_establishment_persistence: No se pudo guardar el registro de
-      establecimiento de la contraparte.
-    canonical_invoice_confirmation_persistence: No se pudo guardar el justificante de
-      confirmación de la factura.
-    canonical_invoice_draft_reader_unavailable: El lector seleccionado de borradores de
-      facturas no está disponible.
     canonical_llm_diagnostics_read: No se pudo leer el diagnóstico del modelo de lenguaje.
+    canonical_m036_declaration_persistence: No se pudo guardar la declaración del
+      Modelo 036.
+    canonical_m145_communication_record_persistence: No se pudo guardar el registro
+      de comunicación del Modelo 145.
+    canonical_modelo_edit_receipt_persistence: No se pudo guardar el recibo de edición
+      del Modelo.
+    canonical_operator_scope_session: No se pudo leer la sesión de custodia activa
+      del operador.
+    canonical_operator_scope_storage: Falló la operación de almacenamiento de la autenticación
+      del operador.
+    canonical_percepcion_observation_persistence: No se pudieron guardar las observaciones
+      de percepciones.
     canonical_persistence_degradation: La capacidad de persistencia no pudo proporcionar
       la operación solicitada.
+    canonical_retencion_observation_persistence: No se pudieron guardar las observaciones
+      de retenciones.
     canonical_state_projection_read: No se pudo leer la proyección del estado de la
       aplicación.
+    canonical_taxation_comparison_persistence: No se pudieron cargar las unidades
+      de trabajo para comparar la tributación.
+    canonical_tui_account_session_expired: La sesión de la cuenta del TUI ha caducado;
+      vuelve a iniciar sesión para continuar.
+    canonical_workflow_gate_persistence: No se pudo guardar el control de acceso del
+      flujo de trabajo.
     censo_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
     declaration_parse: No se pudo interpretar la exportación de la declaración presentada
@@ -592,44 +590,38 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
-    canonical_orden_anual_html_parse: El HTML de la orden anual del IVA tiene una
-      estructura no válida o no compatible.
-    canonical_manifest_payload_validation: La carga útil del manifiesto del corpus no
-      superó la validación.
-    canonical_malformed_manifest_payload: La carga útil del manifiesto del corpus está
-      mal formada y no se puede interpretar.
-    canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
-      no compatible.
-    canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no
-      coincide con su contenido; puede estar dañado o manipulado.
-    canonical_authority_component_codec: No se pudo codificar o descodificar un
-      componente de autoridad en el formato canónico.
-    canonical_authority_artifact: El artefacto de autoridad publicado no se puede
-      consumir de forma segura.
-    canonical_authority_artifact_integrity: El artefacto de autoridad publicado no
-      superó la comprobación de integridad.
-    canonical_authority_artifact_format: El artefacto de autoridad publicado tiene un
-      formato no compatible.
-    canonical_authority_store: El almacén de autoridad publicado no se pudo admitir ni
-      consultar de forma segura.
+    canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas
+      no pueden formar una instantánea segura.
+    canonical_authority_component_codec: No se pudo codificar o descodificar un componente
+      de autoridad en el formato canónico.
+    canonical_authority_store: El almacén de autoridad publicado no se pudo admitir
+      ni consultar de forma segura.
+    canonical_authority_store_corruption: El contenido del almacén de autoridad o
+      el conjunto declarado de sus componentes cambió inesperadamente.
     canonical_authority_store_cutover: La referencia fijada del almacén de autoridad
       apunta a otra generación del lector.
-    canonical_authority_store_corruption: El contenido del almacén de autoridad o el
-      conjunto declarado de sus componentes cambió inesperadamente.
-    canonical_relation_binding_join: No se pudo leer conforme a lo declarado la
-      correspondencia incluida entre relaciones y bindings.
-    canonical_declarations_calendar_projection: Las autoridades de calendario
-      proporcionadas no pueden formar una vista segura y coherente.
+    canonical_declarations_calendar_projection: Las autoridades de calendario proporcionadas
+      no pueden formar una vista segura y coherente.
     canonical_declarations_workspace_projection: Las autoridades proporcionadas no
       pueden formar una instantánea segura y coherente.
-    canonical_modelo_workspace_absent_registry_projection: La captura del registro se
-      devolvió sin la proyección prometida.
-    canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas no
-      pueden formar una instantánea segura.
-    canonical_filing_producer_snapshot: Los datos de la presentación no pueden formar una
-      instantánea completa del productor.
-    canonical_ledger_workspace_projection: Los datos de entrada del libro no pueden formar
-      una instantánea veraz del espacio de trabajo.
+    canonical_filing_producer_snapshot: Los datos de la presentación no pueden formar
+      una instantánea completa del productor.
+    canonical_ledger_workspace_projection: Los datos de entrada del libro no pueden
+      formar una instantánea veraz del espacio de trabajo.
+    canonical_malformed_manifest_payload: La carga útil del manifiesto del corpus
+      está mal formada y no se puede interpretar.
+    canonical_manifest_payload_validation: La carga útil del manifiesto del corpus
+      no superó la validación.
+    canonical_modelo_workspace_absent_registry_projection: La captura del registro
+      se devolvió sin la proyección prometida.
+    canonical_orden_anual_html_parse: El HTML de la orden anual del IVA tiene una
+      estructura no válida o no compatible.
+    canonical_relation_binding_join: No se pudo leer conforme a lo declarado la correspondencia
+      incluida entre relaciones y bindings.
+    canonical_tampered_manifest_payload: El resumen del manifiesto del corpus no coincide
+      con su contenido; puede estar dañado o manipulado.
+    canonical_unsupported_manifest_version: El manifiesto del corpus usa una versión
+      no compatible.
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
     integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
@@ -717,24 +709,24 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
-    canonical_internal_invariant: Se infringió una invariancia interna de la aplicación.
-    canonical_tui_search_host: La paleta de búsqueda del TUI requiere un anfitrión raíz
-      del espacio de trabajo.
     canonical_authority_cache_cycle: El cargador de componentes de autoridad detectó
       un ciclo de carga recursivo.
-    canonical_calibration_deadline_elapsed: La calibración de derivación de claves del
-      perfil superó su límite total de tiempo.
-    canonical_operation_financial_operand_custody: Se ha infringido el orden fijo de
-      transición de custodia del operando financiero.
-    canonical_operation_definition_contract_mismatch: La definición de la operación no
-      coincide con su contrato.
-    canonical_schema_resolution: La proyección del esquema de comandos está incompleta.
+    canonical_calibration_deadline_elapsed: La calibración de derivación de claves
+      del perfil superó su límite total de tiempo.
+    canonical_internal_invariant: Se infringió una invariancia interna de la aplicación.
     canonical_invoice_row_parse: No se pudo interpretar una fila de importación de
       facturas.
     canonical_invoice_wizard_field: Un campo del asistente de facturas no superó la
       validación.
+    canonical_operation_definition_contract_mismatch: La definición de la operación
+      no coincide con su contrato.
+    canonical_operation_financial_operand_custody: Se ha infringido el orden fijo
+      de transición de custodia del operando financiero.
+    canonical_schema_resolution: La proyección del esquema de comandos está incompleta.
     canonical_structured_invoice_read: El lector seleccionado no pudo leer la factura
       estructurada.
+    canonical_tui_search_host: La paleta de búsqueda del TUI requiere un anfitrión
+      raíz del espacio de trabajo.
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto
       de Cadrumo. Comunícalo indicando el comando que ejecutaste.
@@ -778,10 +770,10 @@ errors:
     rate_slot_not_in_force: Ese tipo de IVA no estaba en vigor para su tramo en España
       en la fecha de la operación.
   locked:
-    canonical_operation_financial_operand_custody_conflict: Otro proceso ha avanzado el
-      estado de custodia del operando financiero; vuelve a intentarlo.
-    canonical_ledger_persistence_conflict: Otro proceso modificó el libro mientras se
-      guardaba esta actualización; vuelve a intentarlo.
+    canonical_ledger_persistence_conflict: Otro proceso modificó el libro mientras
+      se guardaba esta actualización; vuelve a intentarlo.
+    canonical_operation_financial_operand_custody_conflict: Otro proceso ha avanzado
+      el estado de custodia del operando financiero; vuelve a intentarlo.
     locked_access_gate_live_submit_forbidden: El envío en vivo a la AEAT está permanentemente
       prohibido. Esta aplicación construye, valida y exporta declaraciones; la presentación
       debe realizarse fuera de la aplicación.
@@ -808,55 +800,6 @@ errors:
     locked: Bloqueado.
     refused: Rechazado.
   refused:
-    canonical_tui_module_argument: El módulo TUI solo admite los argumentos compatibles.
-    canonical_tui_unknown_design_token: La hoja de estilos del TUI hace referencia a
-      un token de diseño no declarado.
-    canonical_tui_modelo_workspace_declaration_admission: La declaración del espacio de
-      trabajo de Modelo no se puede admitir en la generación actual del espacio de
-      trabajo.
-    canonical_tui_modelo_workspace_session_admission: La sesión del espacio de trabajo
-      de Modelo no se puede admitir a partir de la proyección proporcionada.
-    canonical_tui_navigation_contract: La petición de navegación del TUI infringe su
-      contrato.
-    canonical_tui_unknown_destination: El destino TUI solicitado no pertenece al
-      catálogo compatible.
-    canonical_tui_destination_admission: La admisión del destino TUI no coincide con la
-      ruta solicitada.
-    canonical_tui_destination_unavailable: El destino TUI solicitado no está disponible
-      actualmente.
-    canonical_tui_unresolved_action_candidate: El candidato de acción del TUI no tiene
-      una declaración de catálogo coincidente.
-    canonical_tui_destination_factory: El destino TUI no pudo crear una pantalla válida.
-    canonical_tui_recovery_handover_abandoned: La transferencia de recuperación se
-      abandonó antes de completar la confirmación.
-    canonical_tui_recovery_handover_cancelled: El operador canceló la transferencia de
-      recuperación.
-    canonical_previous_filing_observation_absent: No se ha observado la presentación
-      anterior requerida.
-    canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide
-      con el identificador solicitado.
-    canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
-      del Modelo 036 coincide con varios registros.
-    canonical_ambiguous_declaration_result: La revisión declara más de una casilla de
-      resultado final.
-    canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo ha
-      encontrado una selección de trabajo sin resolver.
-    canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
-      referencia actual; reinicia la consulta.
-    canonical_operation_observation_unknown_operation: No existe un diario de
-      observaciones para la operación solicitada.
-    canonical_operation_observation_cursor_ahead: El cursor de observación solicitado
-      supera el ancla autorizada.
-    canonical_prorrata_election: La elección de prorrata no cumple el artículo 105 de la
-      LIVA.
-    canonical_bien_inversion_disposal_incomplete: La enajenación de un bien de inversión
-      requiere tanto el ejercicio como el régimen de enajenación.
-    canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable de
-      cierre del inventario.
-    canonical_evidence_sweep_file_not_reachable: El proveedor de evidencias rechazó un
-      archivo dentro del ámbito de acceso concedido.
-    canonical_ledger_period_validation: El periodo del libro no es un periodo AEAT
-      canónico válido.
     auth_configure_no_active_bucket: No se puede configurar la autenticación sin un
       perfil activo. Crea un perfil con `aeat config profile create NOMBRE` y vuelve
       a intentarlo.
@@ -865,6 +808,55 @@ errors:
     bootstrap_already_complete: El arranque del almacenamiento seguro ya está completo.
       Usa aeat config login NAME para activar un perfil existente o aeat config profile
       create NAME para añadir otro perfil.
+    canonical_ambiguous_declaration_result: La revisión declara más de una casilla
+      de resultado final.
+    canonical_bien_inversion_disposal_incomplete: La enajenación de un bien de inversión
+      requiere tanto el ejercicio como el régimen de enajenación.
+    canonical_evidence_sweep_file_not_reachable: El proveedor de evidencias rechazó
+      un archivo dentro del ámbito de acceso concedido.
+    canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
+      de cierre del inventario.
+    canonical_ledger_period_validation: El periodo del libro no es un periodo AEAT
+      canónico válido.
+    canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
+      del Modelo 036 coincide con varios registros.
+    canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide
+      con el identificador solicitado.
+    canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
+      referencia actual; reinicia la consulta.
+    canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo
+      ha encontrado una selección de trabajo sin resolver.
+    canonical_operation_observation_cursor_ahead: El cursor de observación solicitado
+      supera el ancla autorizada.
+    canonical_operation_observation_unknown_operation: No existe un diario de observaciones
+      para la operación solicitada.
+    canonical_previous_filing_observation_absent: No se ha observado la presentación
+      anterior requerida.
+    canonical_prorrata_election: La elección de prorrata no cumple el artículo 105
+      de la LIVA.
+    canonical_tui_destination_admission: La admisión del destino TUI no coincide con
+      la ruta solicitada.
+    canonical_tui_destination_factory: El destino TUI no pudo crear una pantalla válida.
+    canonical_tui_destination_unavailable: El destino TUI solicitado no está disponible
+      actualmente.
+    canonical_tui_modelo_workspace_declaration_admission: La declaración del espacio
+      de trabajo de Modelo no se puede admitir en la generación actual del espacio
+      de trabajo.
+    canonical_tui_modelo_workspace_session_admission: La sesión del espacio de trabajo
+      de Modelo no se puede admitir a partir de la proyección proporcionada.
+    canonical_tui_module_argument: El módulo TUI solo admite los argumentos compatibles.
+    canonical_tui_navigation_contract: La petición de navegación del TUI infringe
+      su contrato.
+    canonical_tui_recovery_handover_abandoned: La transferencia de recuperación se
+      abandonó antes de completar la confirmación.
+    canonical_tui_recovery_handover_cancelled: El operador canceló la transferencia
+      de recuperación.
+    canonical_tui_unknown_design_token: La hoja de estilos del TUI hace referencia
+      a un token de diseño no declarado.
+    canonical_tui_unknown_destination: El destino TUI solicitado no pertenece al catálogo
+      compatible.
+    canonical_tui_unresolved_action_candidate: El candidato de acción del TUI no tiene
+      una declaración de catálogo coincidente.
     censal_read_identity: La lectura censal no corresponde al contribuyente de este
       perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
@@ -1141,15 +1133,15 @@ errors:
       disponible.
     refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere
       un resultado positivo.
-    refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificacion
-      de la domiciliacion previa porque falta o no es valida la rectificativa del
-      modelo 303 o la prueba oficial de la presentacion base U.
     refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
       ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
       sin una cuenta. Configure una cuenta de devolución o compense el crédito (compensar).
     refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
       periodo donde no está disponible; solo el último periodo de declaración del
       año permite la devolución a un no inscrito en REDEME.
+    refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificacion
+      de la domiciliacion previa porque falta o no es valida la rectificativa del
+      modelo 303 o la prueba oficial de la presentacion base U.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
       un perfil y vuelve a intentarlo.
     refused_operator_surface_contract: La superficie solicitada queda fuera del contrato
