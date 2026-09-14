@@ -139,7 +139,7 @@ def _extract_record_design_workbook_cached(
             for worksheet in workbook.worksheets:
                 try:
                     sheets.append(extract_sheet(worksheet, corrections))
-                except ValueError as exc:
+                except RegistryValidationError as exc:
                     if "has no record-design header" not in str(exc):
                         raise
                     sheet_title = worksheet.title.strip()
@@ -176,7 +176,7 @@ def _extract_record_design_xls_workbook_cached(
             worksheet = workbook.sheet_by_name(sheet_name)
             try:
                 sheets.append(extract_xls_sheet(worksheet, corrections))
-            except ValueError as exc:
+            except RegistryValidationError as exc:
                 if "has no record-design header" not in str(exc):
                     raise
                 stripped_name = sheet_name.strip()

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import sqlite3
+from contextlib import closing
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -24,6 +27,7 @@ from cadrumo.domain.calculations.registry.authority_store import (
     SQLiteAuthorityReader,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.tests._artifact_runtime_support import (
     _minimal_catalogues,
     _minimal_modelo,
@@ -41,9 +45,40 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _artifact() -> AuthorityArtifact:
     build_identity = AuthorityBuildIdentity.from_inputs(sha256_hex(b"source"), sha256_hex(b"compiler"))
     profile_schema = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1]
+    catalogues = _minimal_catalogues()
+    # Snapshot validation resolves this declaration even when the miniature
+    # revision has no retenciones binding and therefore requires no redirect.
+    route = GovernedFact.model_validate(
+        {
+            "fact_id": "m130-retenciones-output-routing",
+            "family": "mapping",
+            "provider_id": "artifact-fixture",
+            "variants": (
+                {
+                    "variant_id": "m130-retenciones-output-routing:fixture",
+                    "date_axis": "filing_period",
+                    "valid_from": date(2024, 1, 1),
+                    "legal_refs": ("ley-35-2006:art-1",),
+                    "review_status": "agent_reviewed",
+                    "ownership": "authored",
+                    "payload": {
+                        "kind": "mapping",
+                        "entries": (
+                            {"key": "modelo", "value": "130"},
+                            {"key": "binding_id", "value": "fixture-retenciones"},
+                            {"key": "output_casilla", "value": "01"},
+                        ),
+                    },
+                },
+            ),
+        }
+    )
+    catalogues = catalogues.model_copy(
+        update={"facts": GovernedFactCatalogue(facts={**catalogues.facts.facts, route.fact_id: route})}
+    )
     return AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_minimal_catalogues(),
+        catalogues=catalogues,
         identity_digest=build_identity.identity_digest,
         build_identity=build_identity,
         evidence=AuthorityEvidenceProjection(),
@@ -117,8 +152,14 @@ def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path
     descriptor_path = _published_candidate(tmp_path)
     original = AuthorityDescriptor.read(descriptor_path)
     database = tmp_path / original.database
-    malformed = b"{}"
-    with sqlite3.connect(database) as connection:
+    with closing(sqlite3.connect(database)) as connection:
+        (encoded,) = connection.execute(
+            "SELECT payload FROM components WHERE kind = ? AND key = ?",
+            ("profile_schema", "cadrumo.user_profile"),
+        ).fetchone()
+        frame = json.loads(encoded)
+        frame["payload"] = {}
+        malformed = json.dumps(frame).encode("utf-8")
         connection.execute(
             "UPDATE components SET payload = ?, payload_sha256 = ?, retained_weight = ? WHERE kind = ? AND key = ?",
             (malformed, sha256_hex(malformed), len(malformed), "profile_schema", "cadrumo.user_profile"),
@@ -140,7 +181,7 @@ def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path
     reader = SQLiteAuthorityReader(descriptor_path)
     try:
         assert reader.telemetry().entries == 0
-        with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError):
+        with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError, match="failed typed decoding"):
             reader.load(ProfileSchemaComponentQuery(), pin=pin)
         assert reader.telemetry().entries == 0
     finally:

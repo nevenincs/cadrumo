@@ -113,6 +113,7 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
                 snapshot_globals_query,
                 SnapshotGlobalCatalogues.from_catalogues(artifact.catalogues),
             ),
+            dependencies=fact_queries,
         )
     )
     for family in type(artifact.catalogues.runtime).model_fields:
