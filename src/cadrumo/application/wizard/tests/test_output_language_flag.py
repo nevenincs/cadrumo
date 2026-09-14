@@ -20,16 +20,15 @@ from __future__ import annotations
 import click
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
-from ..catalogue import SETUP_FLOW
 from ..commands import SETUP_OPTION_INFOS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
-
-_TITLE_KEY = str(SETUP_FLOW.title)
-_PROMPT_KEY = str(SETUP_FLOW.sections[0].questions[0].prompt)
 
 
 def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
@@ -47,7 +46,7 @@ def test_wizard_output_language_flag_constrains_to_supported_set() -> None:
     assert tuple(choice.choices) == tuple(SUPPORTED_OUTPUT_LANGUAGES)
 
 
-def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
+def test_wizard_prose_localizes_and_resolves_under_both_overrides(*, registry_setup_flow: WizardFlow) -> None:
     """The wizard title and first prompt resolve and differ across languages.
 
     Structural assertions only: each key must resolve to authored prose
@@ -57,6 +56,8 @@ def test_wizard_prose_localizes_and_resolves_under_both_overrides() -> None:
     re-sequencing of the first page cannot break the test without breaking
     the property it pins.
     """
+    _TITLE_KEY = str(registry_setup_flow.title)
+    _PROMPT_KEY = str(registry_setup_flow.sections[0].questions[0].prompt)
     with override_settings(cadrumo_output_language="en"):
         title_en, prompt_en = tr(_TITLE_KEY), tr(_PROMPT_KEY)
     with override_settings(cadrumo_output_language="es"):

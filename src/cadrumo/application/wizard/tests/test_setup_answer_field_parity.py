@@ -18,12 +18,14 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....domain.deadlines.setup_answer_projection import SETUP_ANSWER_FIELDS, project_setup_answers
 from ....domain.user_profile.setup_answers import (
     PROFILE_OUTPUT_LANGUAGE_PATH,
     SetupAnswers,
 )
-from ..catalogue import SETUP_FLOW
 from ..models import WizardQuestion
 from ..persistence import project_answers
 from ..widgets import _POSTCODE_QUESTION_IDS
@@ -32,8 +34,6 @@ pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_application,
 ]
-
-_QUESTIONS = tuple(question for section in SETUP_FLOW.sections for question in section.questions)
 
 _TABLE_ONLY_FIELDS = frozenset(
     {"professional_income_withholding_ge_70pct", "irpf_activity_kind", "colegio_concertado"},
@@ -60,8 +60,9 @@ surface, and until they do, filing the modelo refuses rather than assuming.
 """
 
 
-def test_every_question_has_a_matching_table_row() -> None:
+def test_every_question_has_a_matching_table_row(*, registry_setup_flow: WizardFlow) -> None:
     """Path, type and default must agree field by field."""
+    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     mismatches: list[str] = []
     for question in _QUESTIONS:
         field = question.id.replace("-", "_")
@@ -76,8 +77,9 @@ def test_every_question_has_a_matching_table_row() -> None:
     assert not mismatches, "\n".join(mismatches)
 
 
-def test_the_table_adds_nothing_beyond_the_documented_rows() -> None:
+def test_the_table_adds_nothing_beyond_the_documented_rows(*, registry_setup_flow: WizardFlow) -> None:
     """A row with no question must be a deliberate, named addition."""
+    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     asked = {question.id.replace("-", "_") for question in _QUESTIONS}
     assert set(SETUP_ANSWER_FIELDS) - asked == _TABLE_ONLY_FIELDS
 
@@ -87,13 +89,14 @@ def test_every_table_field_exists_on_the_answers_model() -> None:
     assert set(SETUP_ANSWER_FIELDS) <= set(SetupAnswers.model_fields)
 
 
-def test_both_projections_agree_on_a_populated_record() -> None:
+def test_both_projections_agree_on_a_populated_record(*, registry_setup_flow: WizardFlow) -> None:
     """The relocation is behaviour-preserving on every field the wizard collected.
 
     Values are chosen to differ from each field's default so a projection
     that silently fell back to defaults could not pass: a blank record
     would make the two implementations agree for the wrong reason.
     """
+    _QUESTIONS = tuple(question for section in registry_setup_flow.sections for question in section.questions)
     values = {
         question.profile_key: _non_default_token(question)
         for question in _QUESTIONS
@@ -134,14 +137,16 @@ def test_both_projections_agree_on_a_populated_record() -> None:
         values[decimal_path] = "12.5"
 
     from_table = project_setup_answers(values)
-    from_catalogue = project_answers(SETUP_FLOW, values)
+    from_catalogue = project_answers(registry_setup_flow, values)
 
     ignored = {*_TABLE_ONLY_FIELDS}
     assert from_table.model_dump(exclude=ignored) == from_catalogue.model_dump(exclude=ignored)
     assert from_table.has_employees is True, "the fixture must not be all-defaults"
 
 
-def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_for() -> None:
+def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_for(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     """The under-declaration this relocation closed, pinned.
 
     A profile that records the art. 109 professional-withholding fact now
@@ -149,7 +154,7 @@ def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_fo
     every taxpayer looked like they had never declared it.
     """
     declared = {"identity.tax_id": "12345678Z", "irpf.professional_income_withholding_ge_70pct": "true"}
-    from_catalogue = project_answers(SETUP_FLOW, declared)
+    from_catalogue = project_answers(registry_setup_flow, declared)
     assert isinstance(from_catalogue, SetupAnswers)
 
     assert project_setup_answers(declared).professional_income_withholding_ge_70pct is True

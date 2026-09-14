@@ -25,13 +25,19 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.resources.registry import resources
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import (
+    ProfileSetupState,
+    UserProfileFact,
+    UserProfileRecord,
+    create_user_profile_record,
+)
 from ..renta_ledger import aggregate_renta_ledger_expenses
 from .renta_income_aggregation_support import _period
 
@@ -89,16 +95,17 @@ def _seguro_transaction() -> Transaction:
     )
 
 
-def _profile(**facts: str) -> UserProfileRecord:
+def _profile(*, operation: PinnedAuthorityOperation, **facts: str) -> UserProfileRecord:
     """Return a real UserProfileRecord carrying the stored family facts, no mocks."""
-    return UserProfileRecord(
+    return create_user_profile_record(
+        context=operation.profile_create_context(),
         profile_id="55555555-5555-4555-8555-555555555555",
         setup_state=ProfileSetupState.COMPLETE,
         facts=tuple(UserProfileFact(path=path, value=value) for path, value in facts.items()),
     )
 
 
-def _deducted(profile: UserProfileRecord | None) -> Decimal:
+def _deducted(profile: UserProfileRecord | None, *, operation: PinnedAuthorityOperation) -> Decimal:
     """Run the shipped aggregation and return what it allowed for the premium."""
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((_seguro_transaction(),)),
@@ -106,6 +113,7 @@ def _deducted(profile: UserProfileRecord | None) -> Decimal:
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL,
         profile_record=profile,
+        operation=operation,
     )
     assert len(result.observations) == 1, (
         f"the seguro premium did not survive aggregation; issues={[i.reason for i in result.issues]}"
@@ -113,12 +121,12 @@ def _deducted(profile: UserProfileRecord | None) -> Decimal:
     return result.observations[0].deductible_amount
 
 
-def test_a_lone_contribuyente_is_capped_at_the_ordinary_limb() -> None:
+def test_a_lone_contribuyente_is_capped_at_the_ordinary_limb(operation: PinnedAuthorityOperation) -> None:
     """One insured person, no discapacidad: 500 euros, the ordinary limit."""
-    assert _deducted(_profile()) == Decimal("500")
+    assert _deducted(_profile(operation=operation), operation=operation) == Decimal("500")
 
 
-def test_a_married_couple_is_capped_at_two_ordinary_limbs() -> None:
+def test_a_married_couple_is_capped_at_two_ordinary_limbs(operation: PinnedAuthorityOperation) -> None:
     """The defect in one line: the cap is a sum over persons, not one flat limit.
 
     The article insures "su propia cobertura y a la de su conyuge". Before the
@@ -126,23 +134,27 @@ def test_a_married_couple_is_capped_at_two_ordinary_limbs() -> None:
     1.000, so the filer deducted half what the law allowed and nothing in the
     product said so.
     """
-    couple = _profile(**{"renta_taxpayer.marital_status": "2"})
+    couple = _profile(operation=operation, **{"renta_taxpayer.marital_status": "2"})
 
-    assert _deducted(couple) == Decimal("1000")
+    assert _deducted(couple, operation=operation) == Decimal("1000")
 
 
-def test_a_declared_discapacidad_moves_that_person_to_the_higher_limb() -> None:
+def test_a_declared_discapacidad_moves_that_person_to_the_higher_limb(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """RIRPF art. 72 qualifies a grado at or above 33 for the 1.500 euro limit."""
     couple = _profile(
+        operation=operation,
         **{"renta_taxpayer.marital_status": "2", "renta_spouse.disability_grade": "65"},
     )
 
-    assert _deducted(couple) == Decimal("2000")
+    assert _deducted(couple, operation=operation) == Decimal("2000")
 
 
-def test_a_cohabiting_child_under_twenty_five_joins_the_cap() -> None:
+def test_a_cohabiting_child_under_twenty_five_joins_the_cap(operation: PinnedAuthorityOperation) -> None:
     """The article names hijos menores de veinticinco anos que convivan con el."""
     household = _profile(
+        operation=operation,
         **{
             "renta_taxpayer.marital_status": "2",
             "renta_family.descendiente.0.birth_date": "2012-05-04",
@@ -150,10 +162,10 @@ def test_a_cohabiting_child_under_twenty_five_joins_the_cap() -> None:
         },
     )
 
-    assert _deducted(household) == Decimal("1500")
+    assert _deducted(household, operation=operation) == Decimal("1500")
 
 
-def test_a_child_of_twenty_five_or_more_does_not_raise_the_cap() -> None:
+def test_a_child_of_twenty_five_or_more_does_not_raise_the_cap(operation: PinnedAuthorityOperation) -> None:
     """Membership is this article's age limb, not the wider Art. 58.1 one.
 
     Art. 58.1 would still admit this descendant on its "under 25 OR any
@@ -162,16 +174,19 @@ def test_a_child_of_twenty_five_or_more_does_not_raise_the_cap() -> None:
     the one being fixed, and just as wrong.
     """
     household = _profile(
+        operation=operation,
         **{
             "renta_family.descendiente.0.birth_date": "1995-05-04",
             "renta_family.descendiente.0.convivencia": "true",
         },
     )
 
-    assert _deducted(household) == Decimal("500")
+    assert _deducted(household, operation=operation) == Decimal("500")
 
 
-def test_the_wired_variant_ids_are_the_ones_the_shipped_rule_declares() -> None:
+def test_the_wired_variant_ids_are_the_ones_the_shipped_rule_declares(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The counts are keyed by variant id, so a corpus rename must red here.
 
     The resolver refuses a count naming a variant the rule does not declare, but
@@ -180,7 +195,7 @@ def test_the_wired_variant_ids_are_the_ones_the_shipped_rule_declares() -> None:
     and the cap quietly falls back to the ordinary limb for everyone. Asserting
     the two names agree is what makes that loud.
     """
-    profiles = resources().category_profiles.get(_FILING_YEAR)
+    profiles = resolve_category_profiles(_FILING_YEAR, operation=operation)
     rule = profiles[SpendingCategory._from_registry("seguros_salud_autonomo")].proportionality
     declared = {variant.id for variant in rule.statutory_cap_variants}
 

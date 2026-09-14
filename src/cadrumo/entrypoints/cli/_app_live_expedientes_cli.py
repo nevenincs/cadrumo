@@ -20,6 +20,7 @@ from ...application.live.expedientes import capture_expedientes_bulk
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_pull_year_range
 from .state_projection_support import (
+    authority_operation,
     certificate_secret_backend_factory,
     expedientes_ports_factory,
     operator_scope_ports,
@@ -104,6 +105,7 @@ def expedientes_pull(
         return
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
+    operation = authority_operation(ctx)
     report = asyncio.run(
         capture_expedientes_bulk(
             bucket_id=bucket_id,
@@ -114,6 +116,7 @@ def expedientes_pull(
             certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
             browser_session_factory=default_browser_session_factory,
             operator_scope_ports=operator_scope_ports(ctx),
+            operation=operation,
         ),
     )
     lines = [

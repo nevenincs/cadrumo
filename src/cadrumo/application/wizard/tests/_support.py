@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 
+import pytest
 from pydantic import BaseModel, ConfigDict
+
+from cadrumo.application.wizard.catalogue import build_setup_flow
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from ....core.flows import FlowMode
 from ...flows.definition import FlowDefinition
@@ -62,3 +67,10 @@ def scripted_run_over_setup_definition(
         aligned.append(raw)
         answers[target.key] = raw
     return run_scripted_flow(definition, aligned, mode=mode)
+
+
+@pytest.fixture
+def registry_setup_flow() -> Iterator[WizardFlow]:
+    """Keep the authority lease open for the complete consuming test."""
+    with bundled_indexed_authority().operation() as operation:
+        yield build_setup_flow(operation)

@@ -17,6 +17,7 @@ from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (
     ModeloDraft,
@@ -164,13 +165,18 @@ def _seed_all_sources(tmp_path: Path) -> tuple[Settings, DraftReviewPorts]:
     )
 
 
-def _collect(settings: Settings, ports: DraftReviewPorts, **kwargs: Any) -> tuple[Any, ...]:
-    return ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, ports=ports, **kwargs)
+def _collect(
+    settings: Settings,
+    ports: DraftReviewPorts,
+    operation: PinnedAuthorityOperation,
+    **kwargs: Any,
+) -> tuple[Any, ...]:
+    return ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, ports=ports, operation=operation, **kwargs)
 
 
-def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
+def test_collect_returns_one_item_per_source(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings, ports = _seed_all_sources(tmp_path)
-    items = _collect(settings, ports)
+    items = _collect(settings, ports, operation)
     kinds = {item.kind for item in items}
     assert kinds == {
         ReviewItemKind.TRANSACTION,
@@ -180,37 +186,40 @@ def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
     assert len(items) == 3
 
 
-def test_collect_sorts_critical_before_normal(tmp_path: Path) -> None:
+def test_collect_sorts_critical_before_normal(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings, ports = _seed_all_sources(tmp_path)
-    items = _collect(settings, ports)
+    items = _collect(settings, ports, operation)
     severities = [item.severity for item in items]
     # CRITICAL comes first; NORMAL last; the seeded items are CRITICAL x1, HIGH x1, NORMAL x1.
     assert severities[0] is ReviewSeverity.CRITICAL
     assert severities[-1] is ReviewSeverity.NORMAL
 
 
-def test_collect_filters_by_kind(tmp_path: Path) -> None:
+def test_collect_filters_by_kind(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings, ports = _seed_all_sources(tmp_path)
-    items = _collect(settings, ports, kinds=frozenset({ReviewItemKind.FINDING}))
+    items = _collect(settings, ports, operation, kinds=frozenset({ReviewItemKind.FINDING}))
     kinds = {item.kind for item in items}
     assert kinds == {ReviewItemKind.FINDING}
     assert len(items) == 1
 
 
-def test_collect_filters_by_modelo(tmp_path: Path) -> None:
+def test_collect_filters_by_modelo(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings, ports = _seed_all_sources(tmp_path)
-    items = _collect(settings, ports, modelo="130")
+    items = _collect(settings, ports, operation, modelo="130")
     # Transaction and invoice carry no modelo so they are excluded.
     assert {item.kind for item in items} == {ReviewItemKind.FINDING}
 
 
-def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:
+def test_collect_state_all_matches_pending_today(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     settings, ports = _seed_all_sources(tmp_path)
-    pending = _collect(settings, ports, state=ReviewState.PENDING)
-    every = _collect(settings, ports, state=ReviewState.ALL)
+    pending = _collect(settings, ports, operation, state=ReviewState.PENDING)
+    every = _collect(settings, ports, operation, state=ReviewState.ALL)
     assert pending == every
 
 
-def test_collect_returns_empty_tuple_when_no_sources_present(tmp_path: Path) -> None:
+def test_collect_returns_empty_tuple_when_no_sources_present(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     settings = _build_settings(tmp_path)
-    assert ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, ports=draft_review_ports()) == ()
+    assert ReviewQueue.collect(settings, bucket_id=_PROFILE_ID, ports=draft_review_ports(), operation=operation) == ()

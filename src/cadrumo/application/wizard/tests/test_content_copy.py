@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.config import override_settings
 from ....core.flows import CheckpointAvailability, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
@@ -12,17 +15,16 @@ from ...flows.definition import FlowPage
 from ...flows.engine import answer, start_flow
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
 from .._format_hints import PAGE_FORMAT_HINTS, PAGE_WIDGET_KINDS, attach_format_hints
-from ..catalogue import SETUP_FLOW
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _LOCALES = ("en", "es", "ca", "hu")
 
 
-def _definition():
+def _definition(*, registry_setup_flow: WizardFlow):
     return attach_format_hints(
         flow_definition_from_wizard_flow(
-            SETUP_FLOW,
+            registry_setup_flow,
             checkpoint={
                 FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
                 FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
@@ -31,10 +33,10 @@ def _definition():
     )
 
 
-def test_every_declared_choice_description_resolves_in_all_locales() -> None:
+def test_every_declared_choice_description_resolves_in_all_locales(*, registry_setup_flow: WizardFlow) -> None:
     """A description ref that does not resolve would refuse loudly at render."""
     checked = 0
-    for section in SETUP_FLOW.sections:
+    for section in registry_setup_flow.sections:
         for question in section.questions:
             for choice in question.choices:
                 if choice.description is None:
@@ -47,7 +49,7 @@ def test_every_declared_choice_description_resolves_in_all_locales() -> None:
     assert checked >= 25 * len(_LOCALES)
 
 
-def test_decision_pages_carry_choice_explainers() -> None:
+def test_decision_pages_carry_choice_explainers(*, registry_setup_flow: WizardFlow) -> None:
     """The pick-consequence pages each explain every offered option."""
     fully_described = {
         "entity-type",
@@ -59,7 +61,7 @@ def test_decision_pages_carry_choice_explainers() -> None:
         "taxpayer-disability-grade",
         "taxation-type",
     }
-    for section in SETUP_FLOW.sections:
+    for section in registry_setup_flow.sections:
         for question in section.questions:
             if question.id in fully_described:
                 assert question.choices, question.id
@@ -67,8 +69,8 @@ def test_decision_pages_carry_choice_explainers() -> None:
                 assert not missing, (question.id, missing)
 
 
-def test_format_hints_attach_to_exactly_the_mapped_pages() -> None:
-    definition = _definition()
+def test_format_hints_attach_to_exactly_the_mapped_pages(*, registry_setup_flow: WizardFlow) -> None:
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     hinted: dict[str, str] = {}
     for section in definition.sections:
         for item in section.items:
@@ -77,14 +79,14 @@ def test_format_hints_attach_to_exactly_the_mapped_pages() -> None:
     assert hinted == dict(PAGE_FORMAT_HINTS)
 
 
-def test_widget_kinds_assigned_to_exactly_the_mapped_pages() -> None:
+def test_widget_kinds_assigned_to_exactly_the_mapped_pages(*, registry_setup_flow: WizardFlow) -> None:
     """DATE / DECIMAL land on exactly the mapped pages and nowhere else.
 
     The bridge never emits DATE or DECIMAL (the wizard widget set has no
     such members), so every shape-validated page in the decorated
     definition originates from :data:`PAGE_WIDGET_KINDS`.
     """
-    definition = _definition()
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     shape_widgets = {FlowWidgetKind.DATE, FlowWidgetKind.DECIMAL}
     assigned: dict[str, FlowWidgetKind] = {}
     for section in definition.sections:
@@ -94,9 +96,9 @@ def test_widget_kinds_assigned_to_exactly_the_mapped_pages() -> None:
     assert assigned == dict(PAGE_WIDGET_KINDS)
 
 
-def test_shape_widget_pages_stay_valid_non_choice_pages() -> None:
+def test_shape_widget_pages_stay_valid_non_choice_pages(*, registry_setup_flow: WizardFlow) -> None:
     """Every overridden page keeps ``answer_type = str`` and no choices."""
-    definition = _definition()
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     overridden = {
         item.id: item
         for section in definition.sections
@@ -110,9 +112,9 @@ def test_shape_widget_pages_stay_valid_non_choice_pages() -> None:
         assert page.choices == (), page_id
 
 
-def test_date_page_shape_validation_refuses_then_commits_through_the_engine() -> None:
+def test_date_page_shape_validation_refuses_then_commits_through_the_engine(*, registry_setup_flow: WizardFlow) -> None:
     """Drive a real DATE page: malformed refuses as a verdict, ISO commits."""
-    definition = _definition()
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     state = start_flow(definition, mode=FlowMode.CREATE)
 
     rejected = answer(definition, state, "activity-start-date", "not-a-date")
@@ -127,9 +129,11 @@ def test_date_page_shape_validation_refuses_then_commits_through_the_engine() ->
     assert "activity-start-date" not in committed.verdicts
 
 
-def test_decimal_page_shape_validation_refuses_then_commits_through_the_engine() -> None:
+def test_decimal_page_shape_validation_refuses_then_commits_through_the_engine(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     """Drive a real DECIMAL page: non-numeric refuses as a verdict, Decimal commits."""
-    definition = _definition()
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     state = start_flow(definition, mode=FlowMode.CREATE)
 
     rejected = answer(definition, state, "incn-prior-12-months", "not-a-number")
@@ -144,8 +148,8 @@ def test_decimal_page_shape_validation_refuses_then_commits_through_the_engine()
     assert "incn-prior-12-months" not in committed.verdicts
 
 
-def test_tax_id_page_copy_carries_the_identity_hint_in_spanish() -> None:
-    definition = _definition()
+def test_tax_id_page_copy_carries_the_identity_hint_in_spanish(*, registry_setup_flow: WizardFlow) -> None:
+    definition = _definition(registry_setup_flow=registry_setup_flow)
     page = next(
         item for section in definition.sections for item in section.items if getattr(item, "id", "") == "tax-id"
     )

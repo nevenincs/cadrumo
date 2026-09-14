@@ -27,6 +27,7 @@ from pydantic import TypeAdapter, ValidationError
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.hashing import content_hash_hex
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.filing.protocols import ModeloInputs
@@ -63,6 +64,7 @@ def build_registry_filing_draft(
     *,
     modelo: str,
     period: object,
+    operation: PinnedAuthorityOperation,
     profile_tax_id: str = "Y0000001S",
     casilla_values: ModeloInputs,
     binding_values: ModeloInputs | None = None,
@@ -74,6 +76,8 @@ def build_registry_filing_draft(
         modelo: Stable modelo id to resolve from the bundled registry.
         period: Typed :class:`~core.Period`; raw string periods are
             rejected before registry lookup.
+        operation: Generation-pinned authored authority used by the approval
+            path.
         profile_tax_id: Tax identifier written to the generated test profile.
         casilla_values: Casilla input mapping passed to
             :func:`application.filing.build_draft`.
@@ -122,6 +126,7 @@ def build_registry_filing_draft(
             approved_by="registry",
             schema_provider=schema_provider,
             ports=draft_review_ports(),
+            operation=operation,
             prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
             profile_activity_fingerprint=empty_profile_activity_fingerprint(),
         )
@@ -140,6 +145,7 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     *,
     modelo: str,
     period: Period,
+    operation: PinnedAuthorityOperation,
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[CasillaKey, str | Decimal],
     binding_decimals: Mapping[BindingKey, str | Decimal] | None = None,
@@ -155,6 +161,8 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     Args:
         modelo: Stable modelo id to resolve from the bundled registry.
         period: Typed :class:`~core.Period` passed through unchanged.
+        operation: Generation-pinned authored authority passed to the
+            approval path.
         profile_tax_id: Tax identifier written to the generated test profile.
         casilla_decimals: Casilla-id keyed values as :class:`Decimal` instances
             or decimal strings.
@@ -186,6 +194,7 @@ def build_registry_filing_draft_from_decimals[CasillaKey, BindingKey](
     return build_registry_filing_draft(
         modelo=modelo,
         period=period,
+        operation=operation,
         profile_tax_id=profile_tax_id,
         casilla_values=coerced,
         binding_values=coerced_bindings,

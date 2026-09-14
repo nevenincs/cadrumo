@@ -41,6 +41,9 @@ from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core.i18n.render import tr
 from ....core.json_contract import NoticeSeverity
@@ -48,7 +51,6 @@ from ...flows.checkpoint import checkpoint_available
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.line_frontend import LineFlowFrontend
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from ..catalogue import SETUP_FLOW
 from ..commands import (
     _MODIFY_DESCENDANTS_DOOR_CODE,
     _MODIFY_NO_RESUME_CODE,
@@ -117,14 +119,14 @@ def test_modify_review_renders_save_unavailable_refusal() -> None:
     assert _SAVE_UNAVAILABLE_MESSAGE in rendered
 
 
-def test_setup_flow_declares_checkpoint_unavailable_in_both_modes() -> None:
+def test_setup_flow_declares_checkpoint_unavailable_in_both_modes(*, registry_setup_flow: WizardFlow) -> None:
     """The bridged setup definition offers no obsolete save/resume route.
 
     The no-op checkpoint is a per-mode declaration on the definition (never
     a silent implementation detail), which is what drives the substrate
     refusal above.
     """
-    definition = flow_definition_from_wizard_flow(SETUP_FLOW, checkpoint=_SETUP_CHECKPOINT)
+    definition = flow_definition_from_wizard_flow(registry_setup_flow, checkpoint=_SETUP_CHECKPOINT)
 
     for mode in (FlowMode.CREATE, FlowMode.MODIFY):
         assert definition.checkpoint[mode] is CheckpointAvailability.UNAVAILABLE
@@ -170,7 +172,7 @@ def test_envelope_omits_modify_notice_when_not_requested(
 # ── surface 3: the descendant group is withheld from modify mode ─────────
 
 
-def test_modify_definition_carries_no_descendant_pages() -> None:
+def test_modify_definition_carries_no_descendant_pages(*, registry_setup_flow: WizardFlow) -> None:
     """MODIFY withholds the descendant group; CREATE splices it in.
 
     Modify-mode seeding cannot instantiate the repeating group, so rendering
@@ -179,8 +181,8 @@ def test_modify_definition_carries_no_descendant_pages() -> None:
     definition carries the count page, the group, and the adoption cross-field
     validator; the MODIFY definition carries none of them.
     """
-    create_definition = setup_flow_definition(SETUP_FLOW, attach_descendants=True)
-    modify_definition = setup_flow_definition(SETUP_FLOW, attach_descendants=False)
+    create_definition = setup_flow_definition(registry_setup_flow, attach_descendants=True)
+    modify_definition = setup_flow_definition(registry_setup_flow, attach_descendants=False)
 
     create_familia = next(section for section in create_definition.sections if section.id == "familia")
     modify_familia = next(section for section in modify_definition.sections if section.id == "familia")

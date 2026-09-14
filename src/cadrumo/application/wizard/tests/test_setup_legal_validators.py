@@ -24,6 +24,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
 from cadrumo.domain.contribuyente.renta_codes import SituacionFamiliar
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
@@ -32,7 +34,6 @@ from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.engine import SECTION_VERDICT_PREFIX, answer, next_page, start_flow
 from ...flows.validators import ValidationVerdict, resolve_cross_field_validator
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from ..catalogue import SETUP_FLOW
 from ..commands import _SETUP_CHECKPOINT
 from ..setup_legal_validators import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
@@ -166,11 +167,11 @@ def test_validator_is_registered_under_its_id() -> None:
     assert _has_failure(resolved({_TAXATION_TYPE_PAGE: _JOINT, _SITUACION_FAMILIAR_PAGE: "soltero"}))
 
 
-def test_attach_wires_the_validator_onto_the_real_familia_section() -> None:
+def test_attach_wires_the_validator_onto_the_real_familia_section(*, registry_setup_flow: WizardFlow) -> None:
     """The decorator names the validator only on the real projected setup
     flow's familia section, leaving every other section untouched."""
     definition = attach_setup_legal_validators(
-        flow_definition_from_wizard_flow(SETUP_FLOW, checkpoint=dict(_SETUP_CHECKPOINT)),
+        flow_definition_from_wizard_flow(registry_setup_flow, checkpoint=dict(_SETUP_CHECKPOINT)),
     )
     familia = next(section for section in definition.sections if section.id == _FAMILIA_SECTION_ID)
     assert SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID in familia.exit_validator_ids
@@ -179,9 +180,9 @@ def test_attach_wires_the_validator_onto_the_real_familia_section() -> None:
             assert SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID not in section.exit_validator_ids
 
 
-def test_attach_is_idempotent() -> None:
+def test_attach_is_idempotent(*, registry_setup_flow: WizardFlow) -> None:
     once = attach_setup_legal_validators(
-        flow_definition_from_wizard_flow(SETUP_FLOW, checkpoint=dict(_SETUP_CHECKPOINT)),
+        flow_definition_from_wizard_flow(registry_setup_flow, checkpoint=dict(_SETUP_CHECKPOINT)),
     )
     twice = attach_setup_legal_validators(once)
     familia = next(section for section in twice.sections if section.id == _FAMILIA_SECTION_ID)

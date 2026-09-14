@@ -14,8 +14,8 @@ from datetime import UTC, datetime
 import pytest
 from click.testing import Result
 
-from ....application.live.justificante import JustificanteCaptureSnapshotService
 from ....core.period import Period
+from .._app_live_justificante_composition import build_justificante_capture_service
 from ._live_read_profile_fixture import _ACTIVE_TEST_BUCKET_ID, _isolated_backend
 from .cli_runner import invoke_cached_cli
 
@@ -50,7 +50,7 @@ def test_justificante_view_refuses_unknown_snapshot() -> None:
 
 def test_justificante_list_and_view_emit_registry_period_tokens() -> None:
     pdf_bytes = b"%PDF-1.4\njustificante period cli smoke\n%%EOF"
-    snapshot = JustificanteCaptureSnapshotService(bucket_id=_ACTIVE_TEST_BUCKET_ID).capture(
+    snapshot = build_justificante_capture_service(_ACTIVE_TEST_BUCKET_ID).capture(
         modelo="130",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),

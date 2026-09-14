@@ -13,12 +13,14 @@ from collections import deque
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.flows import FlowMode
 from ....domain.contribuyente.entity_type import LegalEntityForm
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH, SetupAnswers
 from ...flows.errors import FlowAnswerError
 from ...flows.scripted import run_scripted_flow
-from ..catalogue import SETUP_FLOW
 from ..commands import (
     _answers_model_from_canonical,
     _force_pages_visible,
@@ -32,21 +34,19 @@ from ..persistence import project_answers, serialise_answers
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _default_tokens() -> dict[str, str]:
+def _default_tokens(*, registry_setup_flow: WizardFlow) -> dict[str, str]:
     """Every descriptor default, keyed by question id — the quiet-path seed."""
 
     return {
         question.id: question.default or ""
-        for section in SETUP_FLOW.sections
+        for section in registry_setup_flow.sections
         for question in section.questions
         if question.default is not None
     }
 
 
 def _drive_scripted(
-    canonical: dict[str, str],
-    *,
-    force_visible: frozenset[str] = frozenset(),
+    canonical: dict[str, str], *, force_visible: frozenset[str] = frozenset(), registry_setup_flow: WizardFlow
 ) -> tuple[SetupAnswers, dict[str, str]]:
     """Drive a non-interactive walk through the shared flow substrate.
 
@@ -61,21 +61,21 @@ def _drive_scripted(
     a question the walk visited carries a key in the map, a gate-hidden
     question is absent.
     """
-    definition = _force_pages_visible(setup_flow_definition(SETUP_FLOW), force_visible)
+    definition = _force_pages_visible(setup_flow_definition(registry_setup_flow), force_visible)
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     state, _projection = run_scripted_flow(
         definition,
         tokens,
         mode=FlowMode.CREATE,
-        defaults=_default_tokens(),
+        defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
     )
     committed = dict(state.answers)
-    answers = _answers_model_from_canonical(SETUP_FLOW, committed)
+    answers = _answers_model_from_canonical(registry_setup_flow, committed)
     assert isinstance(answers, SetupAnswers)
     return answers, committed
 
 
-def _scripted_answers_for_individual_declaration() -> deque[str]:
+def _scripted_answers_for_individual_declaration(*, registry_setup_flow: WizardFlow) -> deque[str]:
     """Build the ordered scripted token queue for an individual taxation profile.
 
     The order matches the scripted driver's visible-sequence walk over the
@@ -88,7 +88,7 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
     """
 
     canonical = _individual_declaration_canonical()
-    definition = setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(registry_setup_flow)
     _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     # The shared fixture carries no token for the descendant count page:
     # the sibling scripted-walk helper defaults that page in walk order, so
@@ -170,30 +170,32 @@ def _individual_declaration_canonical() -> dict[str, str]:
     }
 
 
-def test_output_language_is_the_first_page_of_the_flow() -> None:
+def test_output_language_is_the_first_page_of_the_flow(*, registry_setup_flow: WizardFlow) -> None:
     """The operator chooses the output language before anything else renders.
 
     The language question must open the flow so the chosen locale can be
     activated for the remainder of the walk; it therefore heads the first
     section and appears nowhere else.
     """
-    first_section = SETUP_FLOW.sections[0]
+    first_section = registry_setup_flow.sections[0]
     first_question = first_section.questions[0]
     assert first_question.id == "output-language"
     assert first_question.profile_key == PROFILE_OUTPUT_LANGUAGE_PATH
-    all_ids = [question.id for section in SETUP_FLOW.sections for question in section.questions]
+    all_ids = [question.id for section in registry_setup_flow.sections for question in section.questions]
     assert all_ids.count("output-language") == 1
 
 
-def test_scripted_walk_collects_visible_questions_in_order() -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical())
+def test_scripted_walk_collects_visible_questions_in_order(*, registry_setup_flow: WizardFlow) -> None:
+    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     assert answers.tax_id == "12345678Z"
     assert answers.activity == "Software development"
     assert answers.output_language == "en"
 
 
-def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual() -> None:
-    _answers, committed = _drive_scripted(_individual_declaration_canonical())
+def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    _answers, committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
     # Every spouse question is joint-gated; none is visited for an
     # individual declaration (taxation_type != "2").
     assert "spouse-tax-id" not in committed
@@ -203,10 +205,10 @@ def test_scripted_walk_skips_spouse_questions_when_declaration_is_individual() -
     assert "spouse-disability-grade" not in committed
 
 
-def test_scripted_driver_rejects_unconsumed_tokens() -> None:
+def test_scripted_driver_rejects_unconsumed_tokens(*, registry_setup_flow: WizardFlow) -> None:
     """A queue longer than the visible walk raises overflow, counts only."""
 
-    definition = setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(registry_setup_flow)
     tokens, _intended = _project_scripted_answers(
         definition,
         _individual_declaration_canonical(),
@@ -217,7 +219,7 @@ def test_scripted_driver_rejects_unconsumed_tokens() -> None:
             definition,
             [*tokens, "orphan"],
             mode=FlowMode.CREATE,
-            defaults=_default_tokens(),
+            defaults=_default_tokens(registry_setup_flow=registry_setup_flow),
         )
     assert excinfo.value.translated_message == "application.flows.errors.scripted_queue_overflow"
     assert excinfo.value.context == {
@@ -227,19 +229,19 @@ def test_scripted_driver_rejects_unconsumed_tokens() -> None:
     assert "orphan" not in str(excinfo.value.context)
 
 
-def test_serialised_answers_round_trip_via_project_answers() -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical())
-    canonical = serialise_answers(SETUP_FLOW, answers)
-    rebuilt = project_answers(SETUP_FLOW, canonical)
+def test_serialised_answers_round_trip_via_project_answers(*, registry_setup_flow: WizardFlow) -> None:
+    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    canonical = serialise_answers(registry_setup_flow, answers)
+    rebuilt = project_answers(registry_setup_flow, canonical)
     assert isinstance(rebuilt, SetupAnswers)
     assert rebuilt.tax_id == answers.tax_id
     assert rebuilt.iva_regime == answers.iva_regime
     assert rebuilt.tax_residence_ccaa == answers.tax_residence_ccaa
 
 
-def test_canonical_dict_only_carries_profile_bound_keys() -> None:
-    answers, _committed = _drive_scripted(_individual_declaration_canonical())
-    canonical = serialise_answers(SETUP_FLOW, answers)
+def test_canonical_dict_only_carries_profile_bound_keys(*, registry_setup_flow: WizardFlow) -> None:
+    answers, _committed = _drive_scripted(_individual_declaration_canonical(), registry_setup_flow=registry_setup_flow)
+    canonical = serialise_answers(registry_setup_flow, answers)
     assert "identity.tax_id" in canonical
     assert canonical["identity.tax_id"] == "12345678Z"
     assert canonical[PROFILE_OUTPUT_LANGUAGE_PATH] == "en"
@@ -248,7 +250,7 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
     # Non-profile-bound questions don't surface in the canonical map
     non_profile_questions = {
         question.id.replace("-", "_")
-        for section in SETUP_FLOW.sections
+        for section in registry_setup_flow.sections
         for question in section.questions
         if question.profile_key is None
     }
@@ -256,7 +258,7 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
         assert key not in canonical
 
 
-def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
+def test_scripted_walk_visits_joint_taxation_spouse_questions(*, registry_setup_flow: WizardFlow) -> None:
     """When ``taxation_type == "2"``, the spouse questions become visible."""
 
     joint = _individual_declaration_canonical()
@@ -275,29 +277,31 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
             # spouse-eu-eea-resident stays gate-hidden (non-resident=False)
         },
     )
-    answers, committed = _drive_scripted(joint)
+    answers, committed = _drive_scripted(joint, registry_setup_flow=registry_setup_flow)
     assert "spouse-tax-id" in committed
     assert "spouse-name" in committed
     assert "spouse-eu-eea-resident" not in committed
     assert answers.spouse_tax_id == "87654321X"
 
 
-def test_iva_regime_has_no_implicit_runtime_default() -> None:
+def test_iva_regime_has_no_implicit_runtime_default(*, registry_setup_flow: WizardFlow) -> None:
     """A profile must declare its IVA regime explicitly."""
 
-    iva_question = next(q for section in SETUP_FLOW.sections for q in section.questions if q.id == "iva-regime")
+    iva_question = next(
+        q for section in registry_setup_flow.sections for q in section.questions if q.id == "iva-regime"
+    )
     assert iva_question.widget is WizardWidget.SELECT
     assert iva_question.default is None
 
 
-def _non_interactive_canonical(explicit: dict[str, str]) -> dict[str, str]:
+def _non_interactive_canonical(explicit: dict[str, str], *, registry_setup_flow: WizardFlow) -> dict[str, str]:
     """Seed descriptor defaults, then layer the operator's explicit flags.
 
     Mirrors the ``--accept-defaults`` create path: the canonical dict is
     every descriptor default plus the operator's explicit flag values.
     """
 
-    seeded = _default_tokens()
+    seeded = _default_tokens(registry_setup_flow=registry_setup_flow)
     seeded.update(explicit)
     return seeded
 
@@ -311,7 +315,7 @@ _LEGAL_ENTITY_FLAGS: dict[str, str] = {
 }
 
 
-def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
+def test_legal_entity_intra_section_gate_walks_legal_entity_form(*, registry_setup_flow: WizardFlow) -> None:
     """A legal entity reveals ``legal-entity-form`` even though its gate
     names ``entity-type`` in the *same* section.
 
@@ -320,20 +324,20 @@ def test_legal_entity_intra_section_gate_walks_legal_entity_form() -> None:
     same section. A section-wide upfront evaluation hid this question.
     """
 
-    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
+    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "legal-entity-form" in committed
     assert answers.legal_entity_form is LegalEntityForm._from_registry("sl")
 
 
-def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
+def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions(*, registry_setup_flow: WizardFlow) -> None:
     """A legal entity is never asked the spouse / personal-IRPF or the
     IRPF income-category questions — they are gated to natural persons."""
 
-    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS)
+    canonical = _non_interactive_canonical(_LEGAL_ENTITY_FLAGS, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(_LEGAL_ENTITY_FLAGS)
-    _answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    _answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     for hidden in (
         "irpf-income-categories",
         "taxation-type",
@@ -346,7 +350,7 @@ def test_legal_entity_does_not_walk_spouse_or_irpf_personal_questions() -> None:
         assert hidden not in committed, hidden
 
 
-def test_explicit_flag_forces_a_gated_question_visible() -> None:
+def test_explicit_flag_forces_a_gated_question_visible(*, registry_setup_flow: WizardFlow) -> None:
     """An explicitly-supplied flag is honoured even when its
     ``visible_when`` gate would hide the question.
 
@@ -363,14 +367,14 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
         "activity": "explicitly supplied",
         "tax-residence-jurisdiction-scope": "common_regime",
     }
-    canonical = _non_interactive_canonical(flags)
+    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "activity" in committed
     assert answers.activity == "explicitly supplied"
 
 
-def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
+def test_landlord_without_activity_flag_is_not_asked_for_activity(*, registry_setup_flow: WizardFlow) -> None:
     """A pure landlord (only capital_inmobiliario, no --activity flag)
     is never asked for an economic activity — the gate stays closed."""
 
@@ -380,14 +384,14 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
         "tax-id": "12345678Z",
         "tax-residence-jurisdiction-scope": "common_regime",
     }
-    canonical = _non_interactive_canonical(flags)
+    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "activity" not in committed
     assert answers.activity == ""
 
 
-def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> None:
+def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts(*, registry_setup_flow: WizardFlow) -> None:
     """The módulos annual facts are gated to estimación objetiva only."""
 
     flags = {
@@ -398,16 +402,16 @@ def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> No
         "irpf-estimation-regime": "directa_normal",
         "tax-residence-jurisdiction-scope": "common_regime",
     }
-    canonical = _non_interactive_canonical(flags)
+    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
     assert "objective-estimation-modulos-iae-epigraph" not in committed
     assert "objective-estimation-modulos-module-1-units" not in committed
     assert answers.objective_estimation_modulos_iae_epigraph == ""
     assert answers.objective_estimation_modulos_module_1_units == ""
 
 
-def test_objetiva_profile_collects_modulos_annual_facts() -> None:
+def test_objetiva_profile_collects_modulos_annual_facts(*, registry_setup_flow: WizardFlow) -> None:
     """Objective-estimation profiles collect stable annual módulo facts once."""
 
     flags = {
@@ -422,9 +426,9 @@ def test_objetiva_profile_collects_modulos_annual_facts() -> None:
         "objective-estimation-modulos-module-3-units": "12000.75",
         "tax-residence-jurisdiction-scope": "common_regime",
     }
-    canonical = _non_interactive_canonical(flags)
+    canonical = _non_interactive_canonical(flags, registry_setup_flow=registry_setup_flow)
     explicit = frozenset(flags)
-    answers, committed = _drive_scripted(canonical, force_visible=explicit)
+    answers, committed = _drive_scripted(canonical, force_visible=explicit, registry_setup_flow=registry_setup_flow)
 
     assert "objective-estimation-modulos-iae-epigraph" in committed
     assert "objective-estimation-modulos-module-1-units" in committed
@@ -433,6 +437,6 @@ def test_objetiva_profile_collects_modulos_annual_facts() -> None:
     assert answers.objective_estimation_modulos_module_2_units == "85"
     assert answers.objective_estimation_modulos_module_3_units == "12000.75"
 
-    canonical_profile = serialise_answers(SETUP_FLOW, answers)
+    canonical_profile = serialise_answers(registry_setup_flow, answers)
     assert canonical_profile["irpf.objective_estimation_modulos_iae_epigraph"] == "972.1"
     assert canonical_profile["irpf.objective_estimation_modulos_module_1_units"] == "2.50"

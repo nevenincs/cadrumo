@@ -52,7 +52,6 @@ from ...core.provenance_stamp import provenance_stamp_transport
 from ...core.time.clock import now
 from ...core.time.utc import coerce_utc_aware
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
-from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
 from ...domain.iva.schema import IvaCategory
@@ -69,7 +68,6 @@ from ...domain.transactions.llm import (
     prompt_spec_with_saturation_fields,
 )
 from ...domain.transactions.models import Transaction, TransactionCatalogue
-from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.service import set_classification
 from .action_ports import LedgerActionPorts
 from .actions_common import (
@@ -98,6 +96,7 @@ from .llm_classification_ports import (
 )
 from .models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult, SplitChildCommand
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+from .protocols import BucketEventHistoryCoCommitWriterProtocol, TransactionCatalogueCoCommitWriterProtocol
 
 _logger = get_logger(__name__)
 
@@ -373,8 +372,8 @@ def _load_llm_transaction(
     *,
     bucket_id: str,
     transaction_id: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
-) -> tuple[TransactionCatalogueRepositoryProtocol, Transaction]:
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol | None,
+) -> tuple[TransactionCatalogueCoCommitWriterProtocol, Transaction]:
     """Resolve the catalogue port and load one addressed ledger transaction."""
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transaction = repository.load().get(transaction_id)
@@ -420,7 +419,7 @@ def suggest_llm_classification(
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     read_evidence: bool = False,
     settings: Settings,
     ports: LLMClassificationPorts,
@@ -557,8 +556,8 @@ def apply_llm_classification(
     business_pct: Decimal | None = None,
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist an accepted LLM suggestion with ``llm:`` provenance.
@@ -710,7 +709,7 @@ def saturate_llm_classification(
     classifier: LLMClassifier | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     on_date: date | None = None,
     read_evidence: bool = False,
     settings: Settings,
@@ -1098,7 +1097,7 @@ def suggest_evidence_split(
     proposer: LLMSplitProposer | None = None,
     vision_classifier: VisionClassifier | None = None,
     vision_model: str | None = None,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
     on_date: date | None = None,
     read_evidence: bool = True,
     settings: Settings,
@@ -1429,8 +1428,8 @@ def reject_llm_suggestion(
     reason: str = "",
     actor: str = "operator",
     source_command: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    transaction_repository: TransactionCatalogueCoCommitWriterProtocol,
+    bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol,
     occurred_at: datetime | None = None,
 ) -> LLMSuggestionRejectionResult:
     """Record an explicit, audit-trailed rejection of an LLM suggestion.

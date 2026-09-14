@@ -12,8 +12,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ...user_profile.profile_keys import profile_keys as catalogue_profile_keys
-from ..catalogue import SETUP_FLOW, WIZARD_FLOWS
 from ..compiler import compile_profile_keys
 from ..models import WizardQuestion, iter_conditions
 from ..widgets import validate_widget_answer
@@ -21,32 +23,32 @@ from ..widgets import validate_widget_answer
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _setup_questions() -> tuple[WizardQuestion, ...]:
-    return tuple(question for section in SETUP_FLOW.sections for question in section.questions)
+def _setup_questions(*, registry_setup_flow: WizardFlow) -> tuple[WizardQuestion, ...]:
+    return tuple(question for section in registry_setup_flow.sections for question in section.questions)
 
 
-def test_every_question_id_is_unique_inside_the_setup_flow() -> None:
-    ids = [question.id for question in _setup_questions()]
+def test_every_question_id_is_unique_inside_the_setup_flow(*, registry_setup_flow: WizardFlow) -> None:
+    ids = [question.id for question in _setup_questions(registry_setup_flow=registry_setup_flow)]
     assert len(ids) == len(set(ids))
 
 
-def test_every_visible_when_resolves_to_an_earlier_question() -> None:
+def test_every_visible_when_resolves_to_an_earlier_question(*, registry_setup_flow: WizardFlow) -> None:
     seen: set[str] = set()
-    for question in _setup_questions():
+    for question in _setup_questions(registry_setup_flow=registry_setup_flow):
         for clause in iter_conditions(question.visible_when):
             assert clause.question_id in seen
         seen.add(question.id)
 
 
-def test_every_profile_key_appears_in_profile_keys() -> None:
+def test_every_profile_key_appears_in_profile_keys(*, registry_setup_flow: WizardFlow) -> None:
     catalogue = {entry.key for entry in catalogue_profile_keys()}
-    for question in _setup_questions():
+    for question in _setup_questions(registry_setup_flow=registry_setup_flow):
         if question.profile_key is not None:
             assert question.profile_key in catalogue
 
 
-def test_every_choice_value_passes_its_widget_validator() -> None:
-    questions_with_choices = [q for q in _setup_questions() if q.choices]
+def test_every_choice_value_passes_its_widget_validator(*, registry_setup_flow: WizardFlow) -> None:
+    questions_with_choices = [q for q in _setup_questions(registry_setup_flow=registry_setup_flow) if q.choices]
     assert questions_with_choices, "setup must declare at least one question with choices"
     validated = 0
     for question in questions_with_choices:
@@ -56,21 +58,27 @@ def test_every_choice_value_passes_its_widget_validator() -> None:
     assert validated > 0, "validator must have processed at least one choice"
 
 
-def test_compile_profile_keys_returns_one_entry_per_profile_bound_question() -> None:
-    expected = {question.profile_key for question in _setup_questions() if question.profile_key is not None}
-    compiled = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
+def test_compile_profile_keys_returns_one_entry_per_profile_bound_question(*, registry_setup_flow: WizardFlow) -> None:
+    expected = {
+        question.profile_key
+        for question in _setup_questions(registry_setup_flow=registry_setup_flow)
+        if question.profile_key is not None
+    }
+    compiled = {entry.key for entry in compile_profile_keys((registry_setup_flow,))}
     assert expected == compiled
 
 
-def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key() -> None:
-    profile_keys = {question.profile_key for question in _setup_questions()}
+def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key(*, registry_setup_flow: WizardFlow) -> None:
+    profile_keys = {question.profile_key for question in _setup_questions(registry_setup_flow=registry_setup_flow)}
     assert "tax_residence.ccaa" in profile_keys
     catalogue = {entry.key for entry in catalogue_profile_keys()}
     assert "tax_residence.ccaa" in catalogue
 
 
-def test_pays_capital_income_and_irpf_estimation_regime_are_descriptor_questions() -> None:
-    profile_keys = {question.profile_key for question in _setup_questions()}
+def test_pays_capital_income_and_irpf_estimation_regime_are_descriptor_questions(
+    *, registry_setup_flow: WizardFlow
+) -> None:
+    profile_keys = {question.profile_key for question in _setup_questions(registry_setup_flow=registry_setup_flow)}
     assert "withholding.pays_capital_income_with_retencion" in profile_keys
     assert "irpf.estimation_regime" in profile_keys
     assert "irpf.uses_objective_estimation" not in profile_keys

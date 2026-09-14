@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ...filing.draft_review import ModeloApprovalStaleReason, describe_stale_reason
@@ -68,7 +69,10 @@ def _approved(*, review_checksum: str | None) -> ModeloDraft:
     )
 
 
-def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(tmp_path: Path) -> None:
+def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """A checksum that does not describe the stored basis ages the approval out."""
     settings = _build_settings(tmp_path)
     draft = _approved(review_checksum=_B)
@@ -76,6 +80,7 @@ def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(tmp_path: Pat
         settings,
         bucket_id=_PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
+        operation=operation,
     )
 
     assert len(items) == 1
@@ -84,7 +89,10 @@ def test_an_approval_whose_basis_no_longer_holds_surfaces_as_stale(tmp_path: Pat
     assert items[0].summary == "review.filing.stale_approval_summary"
 
 
-def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> None:
+def test_an_approval_with_no_metadata_is_not_reported_stale(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The control: the refresh must not mark every approved draft stale.
 
     Without it the first case passes just as well against a queue that reports
@@ -97,12 +105,13 @@ def test_an_approval_with_no_metadata_is_not_reported_stale(tmp_path: Path) -> N
         settings,
         bucket_id=_PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
+        operation=operation,
     )
 
     assert all(item.summary != "review.filing.stale_approval_summary" for item in items)
 
 
-def test_the_adapter_records_which_axis_moved(tmp_path: Path) -> None:
+def test_the_adapter_records_which_axis_moved(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """The reasons ride on the item as stable enum tokens."""
     settings = _build_settings(tmp_path)
     draft = _approved(review_checksum=_B)
@@ -110,6 +119,7 @@ def test_the_adapter_records_which_axis_moved(tmp_path: Path) -> None:
         settings,
         bucket_id=_PROFILE_ID,
         ports=draft_review_ports(drafts=(draft,)),
+        operation=operation,
     )
 
     assert items[0].stale_reasons == (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)

@@ -94,7 +94,10 @@ from pathlib import Path
 
 import pytest
 
+from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -102,7 +105,6 @@ from ....domain.iva.classification import InvoiceKind, TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import IvaCashAccountingTreatment, IvaRateKind
 from ....domain.renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseObservation
-from ....domain.resources.registry import resources
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -180,7 +182,7 @@ def _converted_transaction(
     return Transaction.model_validate(payload)
 
 
-def test_renta_ledger_m100_expense_reads_converted_eur_amount() -> None:
+def test_renta_ledger_m100_expense_reads_converted_eur_amount(operation: PinnedAuthorityOperation) -> None:
     """Already-correct comparator: gross_amount is the converted 900.00, not 1000.00."""
     tx = _converted_transaction(
         direction=TransactionDirection.OUTGOING,
@@ -192,7 +194,7 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount() -> None:
         bucket_id="parity-bucket",
         resolved_period=Period.from_year_and_code(2025, "0A"),
         resolved_profile_year=2025,
-        profiles=resources().category_profiles.get(2025),
+        profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
         context=RentaDeductibilityContext(profile_year=2025),
         activity_key="activity-1",
@@ -202,7 +204,9 @@ def test_renta_ledger_m100_expense_reads_converted_eur_amount() -> None:
     assert result.gross_amount != _NATIVE_AMOUNT
 
 
-def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted() -> None:
+def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """FIXED: the taxable_base fallback (no linked invoice) is EUR-converted.
 
     This is the coverage gap the original comparator test missed: without a
@@ -223,7 +227,7 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted() -> None:
         bucket_id="parity-bucket",
         resolved_period=Period.from_year_and_code(2025, "0A"),
         resolved_profile_year=2025,
-        profiles=resources().category_profiles.get(2025),
+        profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
         context=RentaDeductibilityContext(profile_year=2025),
         activity_key="activity-1",
@@ -234,7 +238,9 @@ def test_renta_ledger_m100_expense_taxable_base_fallback_is_converted() -> None:
     assert result.deductible_amount != Decimal("826.45")
 
 
-def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted() -> None:
+def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """FIXED: a linked foreign-currency invoice's totals are EUR-converted.
 
     Before the fix, ``_purchase_invoice_evidence_payload`` compared the
@@ -299,7 +305,7 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted() -> Non
         bucket_id="parity-bucket",
         resolved_period=Period.from_year_and_code(2025, "0A"),
         resolved_profile_year=2025,
-        profiles=resources().category_profiles.get(2025),
+        profiles=resolve_category_profiles(2025, operation=operation),
         region_overrides={},
         context=RentaDeductibilityContext(profile_year=2025),
         activity_key="activity-1",
@@ -311,7 +317,9 @@ def test_renta_ledger_m100_expense_linked_invoice_evidence_is_converted() -> Non
     assert result.taxable_base != base_total_native
 
 
-def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate() -> None:
+def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Already-correct comparator: IVA refuses converted rows outright (defensible policy).
 
     Not the same bug: the tax substrate (taxable_base/iva_amount) stays
@@ -328,6 +336,7 @@ def test_iva_ledger_refuses_converted_row_rather_than_reading_native_substrate()
         resolved_period=Period.from_year_and_code(2025, "1T"),
         operation_date=date(2025, 2, 10),
         cash_treatment=IvaCashAccountingTreatment("none"),
+        operation=operation,
     )
     assert issue is not None
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE
@@ -345,6 +354,9 @@ def test_renta_income_ledger_reads_converted_eur_amount() -> None:
         bucket_id="parity-bucket",
         cumulative_start=date(2025, 1, 1),
         cumulative_end=date(2025, 3, 31),
+        target_casilla_id=validated_casilla_id("01", surface="currency parity income target"),
+        activity_category_matcher=lambda _transaction: True,
+        employment_category_matcher=lambda _transaction: False,
     )
     assert not isinstance(result, RentaIncomeLedgerAggregationIssue), result
     assert result is not None
@@ -364,6 +376,8 @@ def test_renta_gasto_ledger_reads_converted_eur_substrate() -> None:
         tx,
         cumulative_start=date(2025, 1, 1),
         cumulative_end=date(2025, 3, 31),
+        target_casilla_id=validated_casilla_id("02", surface="currency parity gasto target"),
+        accept_activity_marker=True,
     )
     assert not isinstance(result, RentaGastoLedgerAggregationIssue), result
     assert result is not None
@@ -382,6 +396,9 @@ def test_impatriado_income_ledger_reads_converted_eur_amount() -> None:
         tx,
         window_start=date(2025, 1, 1),
         window_end=date(2025, 12, 31),
+        target_casilla_id=validated_casilla_id("01", surface="currency parity impatriado target"),
+        source_jurisdictions=frozenset({"ES"}),
+        eligible_income_categories=frozenset({"actividad_economica"}),
     )
     assert not isinstance(result, ImpatriadoIncomeLedgerAggregationIssue), result
     assert result is not None

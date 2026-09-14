@@ -28,6 +28,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
@@ -37,7 +39,6 @@ from ....domain.renta.ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
 )
-from ....domain.resources.registry import resources
 from ..renta_ledger import _casilla_aggregation
 from .renta_income_aggregation_support import _period
 
@@ -58,6 +59,7 @@ def _tx_id(label: str) -> str:
 def _observation(
     transaction_id: str,
     *,
+    operation: PinnedAuthorityOperation,
     category: SpendingCategory,
     gross_amount: Decimal,
 ) -> RentaDeductibleExpenseObservation:
@@ -70,7 +72,7 @@ def _observation(
         direction=RentaExpenseDirection.OUTGOING_EXPENSE,
         category=category,
     )
-    profile = resources().category_profiles.get(2025)[category]
+    profile = resolve_category_profiles(2025, operation=operation)[category]
     result = evaluate_renta_deductibility(
         fact,
         profile,
@@ -100,10 +102,13 @@ def test_casilla_aggregation_empty_observations_yields_empty_totals_and_provenan
     assert result.provenance == ()
 
 
-def test_casilla_aggregation_modelo_propagates_to_output() -> None:
+def test_casilla_aggregation_modelo_propagates_to_output(operation: PinnedAuthorityOperation) -> None:
     """The modelo passed to the aggregator is reflected in the output."""
     obs = _observation(
-        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-1",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
@@ -111,9 +116,12 @@ def test_casilla_aggregation_modelo_propagates_to_output() -> None:
     assert result.modelo == "100"
 
 
-def test_casilla_aggregation_preserves_period_argument() -> None:
+def test_casilla_aggregation_preserves_period_argument(operation: PinnedAuthorityOperation) -> None:
     obs = _observation(
-        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-1",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
 
     other_period = _period(2024, "0A")
@@ -127,9 +135,14 @@ def test_casilla_aggregation_preserves_period_argument() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_aggregation_single_observation_produces_one_total_and_one_provenance_row() -> None:
+def test_casilla_aggregation_single_observation_produces_one_total_and_one_provenance_row(
+    operation: PinnedAuthorityOperation,
+) -> None:
     obs = _observation(
-        "tx-1", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-1",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
@@ -141,14 +154,22 @@ def test_casilla_aggregation_single_observation_produces_one_total_and_one_prove
     assert result.provenance[0].transaction_ids == (_tx_id("tx-1"),)
 
 
-def test_casilla_aggregation_groups_observations_same_casilla_same_category_into_one_row() -> None:
+def test_casilla_aggregation_groups_observations_same_casilla_same_category_into_one_row(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Two observations from the same (casilla, category) collapse into
     a single provenance row that lists both transaction_ids."""
     obs_a = _observation(
-        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-a",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
     obs_b = _observation(
-        "tx-b", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+        "tx-b",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("200.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
@@ -159,17 +180,23 @@ def test_casilla_aggregation_groups_observations_same_casilla_same_category_into
     assert set(result.casilla_values.keys()) == {_M100_AUTONOMOS_SS_CASILLA}
 
 
-def test_casilla_aggregation_groups_same_casilla_different_categories_into_separate_rows() -> None:
+def test_casilla_aggregation_groups_same_casilla_different_categories_into_separate_rows(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """ASESORIA_CONTABLE and ASESORIA_FISCAL both target casilla 0199.
     The total under 0199 sums BOTH categories, but provenance has TWO
     rows so the audit trail preserves per-category attribution."""
     obs_contable = _observation(
         "tx-contable",
+        operation=operation,
         category=SpendingCategory._from_registry("asesoria_contable"),
         gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation(
-        "tx-fiscal", category=SpendingCategory._from_registry("asesoria_fiscal"), gross_amount=Decimal("79.00")
+        "tx-fiscal",
+        operation=operation,
+        category=SpendingCategory._from_registry("asesoria_fiscal"),
+        gross_amount=Decimal("79.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
@@ -189,17 +216,28 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category() -> None:
+def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Provenance rows iterate in lexicographic (casilla, category)
     order so audit-diff output is stable regardless of input ordering."""
     obs_186 = _observation(
-        "tx-186", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-186",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
     obs_192 = _observation(
-        "tx-192", category=SpendingCategory._from_registry("arrendamiento_local"), gross_amount=Decimal("500.00")
+        "tx-192",
+        operation=operation,
+        category=SpendingCategory._from_registry("arrendamiento_local"),
+        gross_amount=Decimal("500.00"),
     )
     obs_199 = _observation(
-        "tx-199", category=SpendingCategory._from_registry("asesoria_contable"), gross_amount=Decimal("121.00")
+        "tx-199",
+        operation=operation,
+        category=SpendingCategory._from_registry("asesoria_contable"),
+        gross_amount=Decimal("121.00"),
     )
 
     # Feed observations in random-ish order.
@@ -209,18 +247,29 @@ def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category
     assert keys == sorted(keys)
 
 
-def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted() -> None:
+def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """transaction_ids on each provenance row are lexicographically
     sorted; the aggregator never preserves input ordering for the
     transaction sequence."""
     obs_z = _observation(
-        "tx-z", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("100.00")
+        "tx-z",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("100.00"),
     )
     obs_a = _observation(
-        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+        "tx-a",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("200.00"),
     )
     obs_m = _observation(
-        "tx-m", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-m",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
@@ -238,7 +287,9 @@ def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted() -> None
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_aggregation_subtotal_equals_sum_of_member_observations() -> None:
+def test_casilla_aggregation_subtotal_equals_sum_of_member_observations(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The aggregator-contract assertion: subtotal on each provenance
     row equals the sum of deductible_amount of its member observations.
     This is an aggregator-contract check (the helper must correctly
@@ -247,10 +298,16 @@ def test_casilla_aggregation_subtotal_equals_sum_of_member_observations() -> Non
     observation; it asserts the aggregator's internal sum matches
     Python's built-in sum() over the same inputs."""
     obs_a = _observation(
-        "tx-a", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-a",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
     obs_b = _observation(
-        "tx-b", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("200.00")
+        "tx-b",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("200.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
@@ -259,18 +316,24 @@ def test_casilla_aggregation_subtotal_equals_sum_of_member_observations() -> Non
     assert result.provenance[0].subtotal == expected_subtotal
 
 
-def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_casilla() -> None:
+def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_casilla(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """Same aggregator-contract assertion at the casilla-level: the
     helper must correctly sum every observation that targets the same
     casilla, regardless of category. Asserts the aggregator's
     casilla_values entry matches Python's sum() over the same inputs."""
     obs_contable = _observation(
         "tx-contable",
+        operation=operation,
         category=SpendingCategory._from_registry("asesoria_contable"),
         gross_amount=Decimal("121.00"),
     )
     obs_fiscal = _observation(
-        "tx-fiscal", category=SpendingCategory._from_registry("asesoria_fiscal"), gross_amount=Decimal("79.00")
+        "tx-fiscal",
+        operation=operation,
+        category=SpendingCategory._from_registry("asesoria_fiscal"),
+        gross_amount=Decimal("79.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
@@ -284,7 +347,9 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
 # ---------------------------------------------------------------------------
 
 
-def test_casilla_aggregation_category_id_is_typed_spending_category_instance() -> None:
+def test_casilla_aggregation_category_id_is_typed_spending_category_instance(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """category_id on CasillaProvenance rows is a SpendingCategory enum member.
 
     The ledger→renta handoff must preserve the typed ``SpendingCategory``
@@ -303,7 +368,10 @@ def test_casilla_aggregation_category_id_is_typed_spending_category_instance() -
     """
 
     obs = _observation(
-        "tx-typed", category=SpendingCategory._from_registry("cuotas_autonomos_ss"), gross_amount=Decimal("300.00")
+        "tx-typed",
+        operation=operation,
+        category=SpendingCategory._from_registry("cuotas_autonomos_ss"),
+        gross_amount=Decimal("300.00"),
     )
 
     result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")

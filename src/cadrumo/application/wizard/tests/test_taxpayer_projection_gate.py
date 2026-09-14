@@ -21,6 +21,9 @@ from collections.abc import Mapping
 
 import pytest
 
+from cadrumo.application.wizard.models import WizardFlow
+from cadrumo.application.wizard.tests._support import registry_setup_flow as registry_setup_flow
+
 from ....core.flows import FlowMode
 from ....core.i18n.render import tr
 from ...flows.definition import FlowDefinition
@@ -28,7 +31,6 @@ from ...flows.engine import FlowState, answer, first_unanswered_key, jump_to, ne
 from ...flows.errors import FlowSubmitError
 from ...flows.review import ReviewProjection, review
 from ...flows.scripted import run_scripted_flow
-from ..catalogue import SETUP_FLOW
 from ..commands import _project_scripted_answers, setup_flow_definition
 from ..flow_validators import TAXPAYER_PROJECTION_VALIDATOR_ID
 from .test_setup_runtime import _default_tokens, _individual_declaration_canonical
@@ -46,7 +48,7 @@ def _canonical(**overrides: str) -> dict[str, str]:
     return canonical
 
 
-def _walk(canonical: Mapping[str, str]) -> tuple[FlowDefinition, FlowState]:
+def _walk(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> tuple[FlowDefinition, FlowState]:
     """Walk the live setup definition to completion through the real engine.
 
     Mirrors the production non-interactive projection (each visible page
@@ -54,7 +56,7 @@ def _walk(canonical: Mapping[str, str]) -> tuple[FlowDefinition, FlowState]:
     commit) but stops short of the submit assertion, so the review
     projection can be inspected for a blocked run as well as a passing one.
     """
-    definition = setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(registry_setup_flow)
     _tokens, intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     state = start_flow(definition, mode=FlowMode.CREATE)
     while True:
@@ -66,17 +68,19 @@ def _walk(canonical: Mapping[str, str]) -> tuple[FlowDefinition, FlowState]:
         state = next_page(definition, state)
 
 
-def _review(canonical: Mapping[str, str]) -> ReviewProjection:
-    definition, state = _walk(canonical)
+def _review(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> ReviewProjection:
+    definition, state = _walk(canonical, registry_setup_flow=registry_setup_flow)
     return review(definition, state)
 
 
-def _submit_refusal(canonical: Mapping[str, str]) -> FlowSubmitError:
+def _submit_refusal(canonical: Mapping[str, str], *, registry_setup_flow: WizardFlow) -> FlowSubmitError:
     """Drive the production scripted path and return its submit refusal."""
-    definition = setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(registry_setup_flow)
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
     with pytest.raises(FlowSubmitError) as caught:
-        run_scripted_flow(definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens())
+        run_scripted_flow(
+            definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens(registry_setup_flow=registry_setup_flow)
+        )
     return caught.value
 
 
@@ -84,25 +88,27 @@ def _blocking_keys(projection: ReviewProjection) -> set[str]:
     return {verdict.message_key for verdict in projection.blocking if verdict.message_key}
 
 
-def test_setup_definition_names_the_taxpayer_projection_validator() -> None:
+def test_setup_definition_names_the_taxpayer_projection_validator(*, registry_setup_flow: WizardFlow) -> None:
     """The composed definition carries the flow-scope validator id."""
-    definition = setup_flow_definition(SETUP_FLOW)
+    definition = setup_flow_definition(registry_setup_flow)
     assert TAXPAYER_PROJECTION_VALIDATOR_ID in definition.flow_validator_ids
 
 
-def test_impatriado_without_start_date_blocks_review_and_submit() -> None:
+def test_impatriado_without_start_date_blocks_review_and_submit(*, registry_setup_flow: WizardFlow) -> None:
     """An impatriado election with no start date cannot be persisted through setup."""
     canonical = _canonical(**{"irpf-special-regime": "impatriado", "irpf-special-regime-start-date": ""})
-    projection = _review(canonical)
+    projection = _review(canonical, registry_setup_flow=registry_setup_flow)
     assert not projection.submit_eligible
     assert _IMPATRIADO_KEY in _blocking_keys(projection)
     row = next(v for v in projection.blocking if v.message_key == _IMPATRIADO_KEY)
     assert row.context["check"] == "impatriado_requires_start_date"
-    refusal = _submit_refusal(canonical)
+    refusal = _submit_refusal(canonical, registry_setup_flow=registry_setup_flow)
     assert refusal.translated_message == "application.flows.errors.submit_blocked"
 
 
-def test_non_eea_non_resident_without_representante_blocks_review_and_submit() -> None:
+def test_non_eea_non_resident_without_representante_blocks_review_and_submit(
+    *, registry_setup_flow: WizardFlow
+) -> None:
     """A non-EU/EEA non-resident with no fiscal representative is refused at submit."""
     canonical = _canonical(
         **{
@@ -112,16 +118,16 @@ def test_non_eea_non_resident_without_representante_blocks_review_and_submit() -
             "representante-fiscal-nombre": "",
         },
     )
-    projection = _review(canonical)
+    projection = _review(canonical, registry_setup_flow=registry_setup_flow)
     assert not projection.submit_eligible
     assert _REPRESENTANTE_KEY in _blocking_keys(projection)
     row = next(v for v in projection.blocking if v.message_key == _REPRESENTANTE_KEY)
     assert row.context["check"] == "non_resident_requires_representante"
-    refusal = _submit_refusal(canonical)
+    refusal = _submit_refusal(canonical, registry_setup_flow=registry_setup_flow)
     assert refusal.translated_message == "application.flows.errors.submit_blocked"
 
 
-def test_legally_complete_profiles_still_reach_submit() -> None:
+def test_legally_complete_profiles_still_reach_submit(*, registry_setup_flow: WizardFlow) -> None:
     """The gate has teeth without false positives: three valid profiles submit.
 
     The resident baseline, the same impatriado election carrying its start
@@ -142,11 +148,13 @@ def test_legally_complete_profiles_still_reach_submit() -> None:
         ),
     )
     for canonical in valid_sets:
-        projection = _review(canonical)
+        projection = _review(canonical, registry_setup_flow=registry_setup_flow)
         assert projection.submit_eligible, sorted(_blocking_keys(projection))
-        definition = setup_flow_definition(SETUP_FLOW)
+        definition = setup_flow_definition(registry_setup_flow)
         tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
-        run_scripted_flow(definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens())
+        run_scripted_flow(
+            definition, tokens, mode=FlowMode.CREATE, defaults=_default_tokens(registry_setup_flow=registry_setup_flow)
+        )
 
 
 @pytest.mark.parametrize("message_key", [_IMPATRIADO_KEY, _REPRESENTANTE_KEY])

@@ -13,6 +13,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.errors import ModeloBuilderError, ModeloDraftError
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft, ModeloValidationFinding, ModeloValueKind, compute_modelo_draft_id
@@ -483,7 +484,7 @@ def test_compute_draft_id_uses_snapshot_ref_not_schema_version() -> None:
     assert snapshot_mutated_id != draft.draft_id
 
 
-def test_approve_draft_uses_registry_schema_fingerprint() -> None:
+def test_approve_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="130",
@@ -504,6 +505,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
         approved_by="operator",
         schema_provider=schema_provider,
         ports=draft_review_ports(),
+        operation=operation,
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -514,7 +516,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.review_checksum is not None
 
 
-def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:
+def test_approve_draft_rejects_blank_approver_with_translated_message(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)
 
@@ -525,12 +527,13 @@ def test_approve_draft_rejects_blank_approver_with_translated_message() -> None:
             approved_by="   ",
             schema_provider=schema_provider,
             ports=draft_review_ports(),
+            operation=operation,
         )
 
     assert exc_info.value.translated_message == "application.filing.review.errors.approved_by_blank"
 
 
-def test_approve_draft_rejects_unready_draft_with_translated_message() -> None:
+def test_approve_draft_rejects_unready_draft_with_translated_message(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _schema_provider()
     finding = ModeloValidationFinding(
         casilla_id=None,
@@ -547,12 +550,13 @@ def test_approve_draft_rejects_unready_draft_with_translated_message() -> None:
             approved_by="operator",
             schema_provider=schema_provider,
             ports=draft_review_ports(),
+            operation=operation,
         )
 
     assert exc_info.value.translated_message == "application.filing.review.errors.draft_not_ready"
 
 
-def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
+def test_approve_modelo_111_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="111",
@@ -579,6 +583,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
         approved_by="registry",
         schema_provider=schema_provider,
         ports=draft_review_ports(),
+        operation=operation,
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -589,7 +594,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.approval_basis.schema_formula_fingerprint
 
 
-def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
+def test_approve_modelo_115_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _unscoped_schema_provider()
     draft = build_draft(
         modelo="115",
@@ -609,6 +614,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
         approved_by="registry",
         schema_provider=schema_provider,
         ports=draft_review_ports(),
+        operation=operation,
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -619,7 +625,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.approval_basis.schema_formula_fingerprint
 
 
-def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
+def test_approve_modelo_123_draft_uses_registry_schema_fingerprint(operation: PinnedAuthorityOperation) -> None:
     snapshot = compiled_bundled_authority().snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     schema_provider = _unscoped_schema_provider()
     draft = build_draft(
@@ -646,6 +652,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
         approved_by="registry",
         schema_provider=schema_provider,
         ports=draft_review_ports(),
+        operation=operation,
         prior_filing_observations_fingerprint=empty_prior_filing_observations_fingerprint(),
         profile_activity_fingerprint=empty_profile_activity_fingerprint(),
     )
@@ -656,7 +663,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
     assert approved.approval_basis.schema_formula_fingerprint
 
 
-def test_approve_draft_rejects_schema_version_mismatch() -> None:
+def test_approve_draft_rejects_schema_version_mismatch(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
@@ -667,6 +674,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
             approved_by="operator",
             schema_provider=schema_provider,
             ports=draft_review_ports(),
+            operation=operation,
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
     context = exc_info.value.context
@@ -677,7 +685,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
     assert context["finding_count"] == 1
 
 
-def test_approve_draft_rejects_formula_trace_mismatch() -> None:
+def test_approve_draft_rejects_formula_trace_mismatch(operation: PinnedAuthorityOperation) -> None:
     schema_provider = _schema_provider()
     values = tuple(
         value.model_copy(update={"formula_trace_casilla_ids": (_M130_CASILLA_01,)})
@@ -694,6 +702,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
             approved_by="operator",
             schema_provider=schema_provider,
             ports=draft_review_ports(),
+            operation=operation,
         )
     assert exc_info.value.translated_message == "application.filing.review.errors.registry_review_mismatch"
     context = exc_info.value.context
@@ -704,7 +713,9 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
     assert context["finding_count"] == 1
 
 
-def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval() -> None:
+def test_refresh_review_status_preserves_submitted_status_but_clears_stale_approval(
+    operation: PinnedAuthorityOperation,
+) -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider).model_copy(
         update={
@@ -720,6 +731,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
         bucket_id="test",
         schema_provider=schema_provider,
         ports=draft_review_ports(),
+        operation=operation,
     )
     assert refreshed.status is ModeloDraftStatus.PRESENTADA
     assert refreshed.approved_at is None
