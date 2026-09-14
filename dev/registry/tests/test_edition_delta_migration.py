@@ -42,10 +42,10 @@ from ..compiler.authority import compile_validated_authority
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..edition_delta_migration import (
     BlockedCause,
     EditionPlan,
-    KeptReason,
     MigrationOutcome,
     MigrationPlan,
     PredecessorBasis,
@@ -421,41 +421,45 @@ def test_a_lower_grade_successor_reuses_the_adjacent_storage_baseline(
     assert str(hydrated.authority_grade) == "applicability"
 
 
-def test_a_changed_same_id_without_lineage_uses_a_storage_override(
-    pilot: MigrationOutcome,
-    pilot_before: ModeloDefinition,
-    pilot_input: Path,
-    tmp_path: Path,
-) -> None:
-    edition = _last_edition(pilot)
-    planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
-    edition_dir = _edition_dir(planted, _PILOT, edition.revision_id)
-    successor = pilot_before.revisions[edition.revision_id]
-    predecessor = pilot_before.revisions[str(edition.predecessor)]
-    predecessor_ids = {casilla.id for casilla in predecessor.casillas if casilla.continuidad_id is None}
-    original = next(
-        casilla
-        for casilla in successor.casillas
-        if casilla.continuidad_id is None and casilla.id in predecessor_ids and casilla.number is not None
-    )
-    row_id = str(original.id)
-    fragment, block = _row_block(edition_dir, row_id)
-    text = fragment.read_text(encoding="utf-8")
-    changed_number = f"{original.number}-changed"
-    fragment.write_text(
-        text.replace(block, block.replace(f'number = "{original.number}"', f'number = "{changed_number}"', 1)),
-        encoding="utf-8",
-        newline="\n",
-    )
+def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_override(tmp_path: Path) -> None:
+    modelo_dir = tmp_path / "modelos" / "999"
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Storage fixture")
+    legal_ref = "ley-58-2003:art-29"
 
-    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
+    def write_revision(revision_id: str, year: int, *, changed_number: str) -> None:
+        revision_dir = modelo_dir / "revisions" / revision_id
+        (revision_dir / "casillas").mkdir(parents=True)
+        (revision_dir / "revision.toml").write_text(
+            f'[revisions."{revision_id}"]\nid = "{revision_id}"\nvalid_from = {year}-01-01\n'
+            f'valid_to = {year}-12-31\nperiod_selector = {{ years = [{year}], periods = ["0A"] }}\n'
+            f'orden_aplicabilidad = ["{legal_ref}"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+        rows = (
+            f'[[revisions."{revision_id}".casillas]]\nid = "0001"\nnumber = "{changed_number}"\n'
+            f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n\n'
+            f'[[revisions."{revision_id}".casillas]]\nid = "0002"\nnumber = "2"\n'
+            f'section = ["liquidacion"]\nlegal_refs = ["{legal_ref}"]\nsource_refs = ["aeat-manual"]\n'
+        )
+        (revision_dir / "casillas" / "c0001__c0002.toml").write_text(rows, encoding="utf-8", newline="\n")
 
-    changed = next(item for item in plan.editions if item.revision_id == edition.revision_id)
-    override = next(item for item in changed.casilla_overrides if item["selector"]["id"] == row_id)
-    assert override["selector"] == {"revision": edition.predecessor, "id": row_id}
-    assert override["fields"]["number"] == changed_number
-    assert row_id not in changed.stated_ids
-    assert row_id in changed.inherited_ids
+    write_revision("2024", 2024, changed_number="1")
+    write_revision("2025", 2025, changed_number="11")
+    plan = plan_migration(modelo_dir, load_modelo_directory(modelo_dir))
+
+    successor = next(item for item in plan.editions if item.revision_id == "2025")
+    assert successor.blocked == ()
+    assert successor.stated_ids == ()
+    assert successor.inherited_ids == ("0001", "0002")
+    assert successor.casilla_overrides == (
+        {
+            "selector": {"revision": "2024", "id": "0001"},
+            "fields": {"number": "11"},
+            "removed_fields": [],
+        },
+    )
 
 
 def _withdrawable_row(definition: ModeloDefinition, edition_dir: Path, candidates: tuple[str, ...]) -> str:

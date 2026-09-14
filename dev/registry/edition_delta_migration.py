@@ -132,6 +132,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import hashlib
 import json
 import re
 import shutil
@@ -150,7 +151,9 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
 from cadrumo.domain.calculations.registry.keyed_families import (
+    CANONICAL_FAMILY_SPECS,
     DROPPABLE_FAMILY_SPECS,
+    FamilyInheritanceMode,
     HELD_BACK_FAMILY_REASONS,
     family_identity_value,
 )
@@ -163,6 +166,7 @@ from dev.test_runs.paths import allocate_run_directory
 from .analysis.delta_minimality import restatement_differences
 from .compiler.edition_materialisation import materialise_edition
 from .compiler.loader import load_modelo_directory
+from .compiler.loader import load_modelo_declarations
 from .edition_export_scenarios import edition_export_scenarios
 from .edition_round_trip import (
     EditionExportScenario,
@@ -188,10 +192,13 @@ __all__ = [
     "MigrationOutcome",
     "MigrationPlan",
     "MigrationRefusedError",
+    "MigrationAssessment",
+    "MigrationStatus",
     "PredecessorBasis",
     "drop_restatement",
     "main",
     "migrate_modelo",
+    "assess_migration_state",
     "persist_migration_report",
     "plan_drop",
     "plan_migration",
