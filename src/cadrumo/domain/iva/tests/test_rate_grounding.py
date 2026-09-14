@@ -12,6 +12,8 @@ from typing import override
 import pypdfium2 as pdfium
 import pytest
 
+from cadrumo.domain.iva.schema import require_eu_member_state
+
 from ....core.corpus_text import normalise_corpus_text
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -25,34 +27,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _EPRS_SOURCE = "eu-eprs-iva-rates-2025-07-01"
 _YOUR_EUROPE_SOURCE = "eu-your-europe-iva-rates-2026-07-13"
 _RETIRED_IDENTITY_STEM = re.compile(r"(^|[._:/-])vat([._:/-]|$)", re.IGNORECASE)
-_YOUR_EUROPE_CODES = {EUMemberState.GR: "EL"}
+_YOUR_EUROPE_CODES = {require_eu_member_state("GR"): "EL"}
 _COUNTRY_NAMES = {
-    EUMemberState.AT: "austria",
-    EUMemberState.BE: "belgium",
-    EUMemberState.BG: "bulgaria",
-    EUMemberState.CY: "cyprus",
-    EUMemberState.CZ: "czech republic",
-    EUMemberState.DE: "germany",
-    EUMemberState.DK: "denmark",
-    EUMemberState.EE: "estonia",
-    EUMemberState.FI: "finland",
-    EUMemberState.FR: "france",
-    EUMemberState.GR: "greece",
-    EUMemberState.HR: "croatia",
-    EUMemberState.HU: "hungary",
-    EUMemberState.IE: "ireland",
-    EUMemberState.IT: "italy",
-    EUMemberState.LT: "lithuania",
-    EUMemberState.LU: "luxembourg",
-    EUMemberState.LV: "latvia",
-    EUMemberState.MT: "malta",
-    EUMemberState.NL: "netherlands",
-    EUMemberState.PL: "poland",
-    EUMemberState.PT: "portugal",
-    EUMemberState.RO: "romania",
-    EUMemberState.SE: "sweden",
-    EUMemberState.SI: "slovenia",
-    EUMemberState.SK: "slovakia",
+    require_eu_member_state("AT"): "austria",
+    require_eu_member_state("BE"): "belgium",
+    require_eu_member_state("BG"): "bulgaria",
+    require_eu_member_state("CY"): "cyprus",
+    require_eu_member_state("CZ"): "czech republic",
+    require_eu_member_state("DE"): "germany",
+    require_eu_member_state("DK"): "denmark",
+    require_eu_member_state("EE"): "estonia",
+    require_eu_member_state("FI"): "finland",
+    require_eu_member_state("FR"): "france",
+    require_eu_member_state("GR"): "greece",
+    require_eu_member_state("HR"): "croatia",
+    require_eu_member_state("HU"): "hungary",
+    require_eu_member_state("IE"): "ireland",
+    require_eu_member_state("IT"): "italy",
+    require_eu_member_state("LT"): "lithuania",
+    require_eu_member_state("LU"): "luxembourg",
+    require_eu_member_state("LV"): "latvia",
+    require_eu_member_state("MT"): "malta",
+    require_eu_member_state("NL"): "netherlands",
+    require_eu_member_state("PL"): "poland",
+    require_eu_member_state("PT"): "portugal",
+    require_eu_member_state("RO"): "romania",
+    require_eu_member_state("SE"): "sweden",
+    require_eu_member_state("SI"): "slovenia",
+    require_eu_member_state("SK"): "slovakia",
 }
 
 
@@ -113,9 +115,9 @@ def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> Non
     # every record it ships is grounded and resolvable -- asserted directly
     # below, and unaffected by a record being legitimately added or withdrawn.
     assert rates, "the shipped rate table must not be empty"
-    assert all(rate.legal_refs for rate in rates if rate.member_state is EUMemberState.ES)
-    assert all(not rate.legal_refs for rate in rates if rate.member_state is not EUMemberState.ES)
-    assert all(rate.source_refs for rate in rates if rate.member_state is not EUMemberState.ES)
+    assert all(rate.legal_refs for rate in rates if rate.member_state == require_eu_member_state("ES"))
+    assert all(not rate.legal_refs for rate in rates if rate.member_state != require_eu_member_state("ES"))
+    assert all(rate.source_refs for rate in rates if rate.member_state != require_eu_member_state("ES"))
 
 
 def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
@@ -141,7 +143,7 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
     foreign_rates = tuple(
         rate
         for member_state, member_rates in table.items()
-        if member_state is not EUMemberState.ES
+        if member_state != require_eu_member_state("ES")
         for rate in member_rates
     )
     corpus = bundled_path("corpus", "eu_official", "iva")
@@ -168,7 +170,7 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
                 eprs_table,
             )
             assert evidence is not None, f"EPRS table has no parsed row for {country}"
-            if rate.kind is IvaRateKind.GENERAL:
+            if rate.kind == IvaRateKind("general"):
                 assert pct == evidence.group("standard")
             else:
                 assert pct in evidence.group("reduced").split("/")
@@ -198,9 +200,9 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
             country_code = _YOUR_EUROPE_CODES.get(rate.member_state, rate.member_state.value.upper())
             cells = _your_europe_rate_cells(your_europe, country_code)
             column = {
-                IvaRateKind.GENERAL: 1,
-                IvaRateKind.REDUCED: 2,
-                IvaRateKind.SUPER_REDUCED: 3,
+                IvaRateKind("general"): 1,
+                IvaRateKind("reduced"): 2,
+                IvaRateKind("super_reduced"): 3,
             }[rate.kind]
             assert pct in cells[column].split(" / ")
             if rate.effective_from >= date(2026, 7, 13):
@@ -215,18 +217,23 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
 
 def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
     """Date lookup switches exactly where the bundled national sources say it does."""
-    assert lookup_rate(EUMemberState.EE, IvaRateKind.GENERAL, date(2025, 6, 30)).pct == Decimal("22")
-    assert lookup_rate(EUMemberState.EE, IvaRateKind.GENERAL, date(2025, 7, 1)).pct == Decimal("24")
-    assert lookup_rate(EUMemberState.RO, IvaRateKind.GENERAL, date(2025, 7, 31)).pct == Decimal("19")
-    assert lookup_rate(EUMemberState.RO, IvaRateKind.GENERAL, date(2025, 8, 1)).pct == Decimal("21")
-    assert lookup_rate(EUMemberState.RO, IvaRateKind.REDUCED, date(2025, 7, 31)).pct == Decimal("9")
-    assert lookup_rate(EUMemberState.RO, IvaRateKind.REDUCED, date(2025, 8, 1)).pct == Decimal("11")
-    assert lookup_rate(EUMemberState.FI, IvaRateKind.REDUCED, date(2025, 12, 31)).pct == Decimal("14")
-    assert lookup_rate(EUMemberState.FI, IvaRateKind.REDUCED, date(2026, 1, 1)).pct == Decimal("13.5")
-    assert lookup_rate(EUMemberState.LT, IvaRateKind.REDUCED, date(2025, 12, 31)).pct == Decimal("9")
-    assert lookup_rate(EUMemberState.LT, IvaRateKind.REDUCED, date(2026, 1, 1)).pct == Decimal("12")
+    assert lookup_rate(require_eu_member_state("EE"), IvaRateKind("general"), date(2025, 6, 30)).pct == Decimal("22")
+    assert lookup_rate(require_eu_member_state("EE"), IvaRateKind("general"), date(2025, 7, 1)).pct == Decimal("24")
+    assert lookup_rate(require_eu_member_state("RO"), IvaRateKind("general"), date(2025, 7, 31)).pct == Decimal("19")
+    assert lookup_rate(require_eu_member_state("RO"), IvaRateKind("general"), date(2025, 8, 1)).pct == Decimal("21")
+    assert lookup_rate(require_eu_member_state("RO"), IvaRateKind("reduced"), date(2025, 7, 31)).pct == Decimal("9")
+    assert lookup_rate(require_eu_member_state("RO"), IvaRateKind("reduced"), date(2025, 8, 1)).pct == Decimal("11")
+    assert lookup_rate(require_eu_member_state("FI"), IvaRateKind("reduced"), date(2025, 12, 31)).pct == Decimal("14")
+    assert lookup_rate(require_eu_member_state("FI"), IvaRateKind("reduced"), date(2026, 1, 1)).pct == Decimal("13.5")
+    assert lookup_rate(require_eu_member_state("LT"), IvaRateKind("reduced"), date(2025, 12, 31)).pct == Decimal("9")
+    assert lookup_rate(require_eu_member_state("LT"), IvaRateKind("reduced"), date(2026, 1, 1)).pct == Decimal("12")
     with pytest.raises(IvaRateNotFoundError):
-        lookup_rate(EUMemberState.DE, IvaRateKind.GENERAL, date(2025, 6, 30))
-    for member_state in (EUMemberState.DE, EUMemberState.FR, EUMemberState.IT, EUMemberState.NL):
+        lookup_rate(require_eu_member_state("DE"), IvaRateKind("general"), date(2025, 6, 30))
+    for member_state in (
+        require_eu_member_state("DE"),
+        require_eu_member_state("FR"),
+        require_eu_member_state("IT"),
+        require_eu_member_state("NL"),
+    ):
         with pytest.raises(IvaRateNotFoundError):
-            lookup_rate(member_state, IvaRateKind.ZERO, date(2026, 7, 13))
+            lookup_rate(member_state, IvaRateKind("zero"), date(2026, 7, 13))

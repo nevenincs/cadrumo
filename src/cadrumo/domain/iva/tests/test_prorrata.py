@@ -58,21 +58,21 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
 
 _INPUT_DEDUCTION_CASES = (
     (
-        InputClassification.EXCLUSIVELY_DEDUCTIBLE,
+        InputClassification._from_registry("exclusively_deductible"),
         Decimal("210.00"),
         Decimal("40"),
         Decimal("100"),
         Decimal("210.00"),
     ),
     (
-        InputClassification.EXCLUSIVELY_NON_DEDUCTIBLE,
+        InputClassification._from_registry("exclusively_non_deductible"),
         Decimal("210.00"),
         Decimal("80"),
         Decimal("0"),
         Decimal("0.00"),
     ),
     (
-        InputClassification.COMMON,
+        InputClassification._from_registry("common"),
         Decimal("210.00"),
         Decimal("70"),
         Decimal("70"),
@@ -110,14 +110,14 @@ _ESPECIAL_MANDATORY_CASES = (
 _ACCEPTED_PRORRATA_REFERENCE_CASES = (
     (
         "prorrata:2026:provisional:general",
-        ProrrataKind.PROVISIONAL,
-        ProrrataRegime.GENERAL,
+        ProrrataKind._from_registry("provisional"),
+        ProrrataRegime("general"),
         None,
     ),
     (
         "prorrata:2026:definitiva:especial:sector-retail",
-        ProrrataKind.DEFINITIVA,
-        ProrrataRegime.ESPECIAL,
+        ProrrataKind._from_registry("definitiva"),
+        ProrrataRegime("especial"),
         "sector-retail",
     ),
 )
@@ -138,11 +138,11 @@ def test_general_percentage_is_100_when_all_operations_grant_right() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("100")
-    assert result.regime is ProrrataRegime.GENERAL
-    assert result.kind is ProrrataKind.DEFINITIVA
+    assert result.regime is ProrrataRegime("general")
+    assert result.kind is ProrrataKind._from_registry("definitiva")
     assert result.inputs == inputs
 
 
@@ -156,7 +156,7 @@ def test_general_percentage_is_zero_when_no_operations_grant_right() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("0")
 
@@ -178,7 +178,7 @@ def test_general_percentage_aeat_manual_practico_iva_worked_example() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("70")
 
@@ -196,7 +196,7 @@ def test_general_percentage_zero_total_defaults_to_100() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("100")
 
@@ -224,7 +224,7 @@ def test_general_percentage_rounds_up_when_fraction_exceeds_whole() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("77")
 
@@ -243,7 +243,7 @@ def test_general_percentage_does_not_round_up_exact_whole_integer() -> None:
     result = compute_prorrata_general(
         inputs,
         year=2026,
-        kind=ProrrataKind.DEFINITIVA,
+        kind=ProrrataKind._from_registry("definitiva"),
     )
     assert result.percentage == Decimal("50")
 
@@ -402,8 +402,8 @@ def test_result_provisional_requires_period() -> None:
     )
     with pytest.raises(ValidationError, match=r"provisional prorrata result must carry a period"):
         ProrrataResult(
-            regime=ProrrataRegime.GENERAL,
-            kind=ProrrataKind.PROVISIONAL,
+            regime=ProrrataRegime("general"),
+            kind=ProrrataKind._from_registry("provisional"),
             percentage=Decimal("100"),
             inputs=inputs,
             year=2026,
@@ -418,8 +418,8 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
     )
     with pytest.raises(ValidationError, match=r"definitiva prorrata result period must be 'annual' or omitted"):
         ProrrataResult(
-            regime=ProrrataRegime.GENERAL,
-            kind=ProrrataKind.DEFINITIVA,
+            regime=ProrrataRegime("general"),
+            kind=ProrrataKind._from_registry("definitiva"),
             percentage=Decimal("100"),
             inputs=inputs,
             year=2026,
@@ -457,8 +457,8 @@ def test_prorrata_reference_schema_rejects_noncanonical_payload() -> None:
         ProrrataReference(
             reference_id="prorrata:2026:definitiva:general",
             year=2026,
-            kind=ProrrataKind.PROVISIONAL,
-            regime=ProrrataRegime.GENERAL,
+            kind=ProrrataKind._from_registry("provisional"),
+            regime=ProrrataRegime("general"),
         )
 
 
@@ -468,9 +468,9 @@ def test_compute_general_rejects_year_out_of_range() -> None:
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
     with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
-        compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.DEFINITIVA)
+        compute_prorrata_general(inputs, year=1999, kind=ProrrataKind._from_registry("definitiva"))
     with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
-        compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.DEFINITIVA)
+        compute_prorrata_general(inputs, year=2101, kind=ProrrataKind._from_registry("definitiva"))
 
 
 def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
@@ -483,7 +483,7 @@ def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
         compute_prorrata_general(
             inputs,
             year=2026,
-            kind=ProrrataKind.DEFINITIVA,
+            kind=ProrrataKind._from_registry("definitiva"),
             period="Q1",
         )
 

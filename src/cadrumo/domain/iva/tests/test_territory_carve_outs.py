@@ -39,7 +39,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..classification import IvaTerritorialScope
+from cadrumo.domain.iva.classification import IvaTerritorialScope
+
 from ..establishment import (
     StatedCountryCodeStatus,
     stated_country_code_status,
@@ -51,7 +52,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def test_monaco_is_not_a_third_country() -> None:
     """The defect the table exists to prevent, asserted on the side where it exempts."""
-    assert territorial_scope_for_country("MC") is not IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country("MC") != IvaTerritorialScope._from_registry("third_country")
 
 
 def test_monaco_resolves_exactly_as_france_does() -> None:
@@ -80,7 +81,7 @@ def test_an_excluded_territory_is_a_third_territory(code: str) -> None:
     Two readings of the same provision rather than an inference, which is why
     these carry a scope directly while the assimilations carry a pointer.
     """
-    assert territorial_scope_for_country(code) is IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country(code) == IvaTerritorialScope._from_registry("third_country")
 
 
 @pytest.mark.parametrize("code", ["AX", "GP", "MQ", "GF", "RE", "YT"])
@@ -92,7 +93,7 @@ def test_an_excluded_territory_does_not_inherit_its_member_state(code: str) -> N
     ``EU_MEMBER`` -- the ordering the table depends on, asserted rather than
     assumed.
     """
-    assert territorial_scope_for_country(code) is not IvaTerritorialScope.EU_MEMBER
+    assert territorial_scope_for_country(code) != IvaTerritorialScope._from_registry("eu_member")
 
 
 @pytest.mark.parametrize("code", ["IC", "EA"])
@@ -123,9 +124,9 @@ def test_a_spanish_territory_code_never_yields_a_spanish_scope(code: str) -> Non
     second authority on the Spanish territories.
     """
     assert territorial_scope_for_country(code) not in {
-        IvaTerritorialScope.ES_MAINLAND,
-        IvaTerritorialScope.ES_CANARIAS,
-        IvaTerritorialScope.ES_CEUTA_MELILLA,
+        IvaTerritorialScope._from_registry("es_mainland"),
+        IvaTerritorialScope._from_registry("es_canarias"),
+        IvaTerritorialScope._from_registry("es_ceuta_melilla"),
     }
 
 
@@ -136,7 +137,7 @@ def test_the_carve_outs_do_not_disturb_the_ordinary_answers() -> None:
     more codes than it names -- would pass every case above while quietly
     changing what an ordinary Member State or third country establishes.
     """
-    assert territorial_scope_for_country("FR") is IvaTerritorialScope.EU_MEMBER
-    assert territorial_scope_for_country("FI") is IvaTerritorialScope.EU_MEMBER
-    assert territorial_scope_for_country("US") is IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country("FR") == IvaTerritorialScope._from_registry("eu_member")
+    assert territorial_scope_for_country("FI") == IvaTerritorialScope._from_registry("eu_member")
+    assert territorial_scope_for_country("US") == IvaTerritorialScope._from_registry("third_country")
     assert territorial_scope_for_country("ES") is None

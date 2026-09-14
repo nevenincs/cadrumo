@@ -35,12 +35,14 @@ from typing import cast
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.invoices.enums import resolve_iva_rate_token
+from cadrumo.domain.iva.schema import IvaRateKind, require_eu_member_state
+
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.schema_base import ThresholdComparison
-from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
+from ...invoices.enums import iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
-from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,15 +93,15 @@ def test_liva_art_90_corpus_excerpt_quotes_21_per_cent_general_rate() -> None:
 
 
 def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE)
+    rate = lookup_rate(require_eu_member_state("ES"), IvaRateKind("general"), _BINDING_DATE)
     assert rate.pct == Decimal("21")
 
 
 def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
-    """IvaRate.RATE_21 wrapper must return the substrate's GENERAL
+    """resolve_iva_rate_token("rate_21", date.today()) wrapper must return the substrate's GENERAL
     rate divided by 100, anchored to LIVA art 90."""
-    expected = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE).pct / Decimal("100")
-    assert iva_rate_percentage(IvaRate.RATE_21, on_date=_BINDING_DATE) == expected
+    expected = lookup_rate(require_eu_member_state("ES"), IvaRateKind("general"), _BINDING_DATE).pct / Decimal("100")
+    assert iva_rate_percentage(resolve_iva_rate_token("rate_21", date.today()), on_date=_BINDING_DATE) == expected
 
 
 def test_liva_art_90_legal_entry_carries_required_text() -> None:
@@ -122,13 +124,13 @@ def test_liva_art_91_corpus_excerpt_quotes_10_and_4_per_cent_reduced_rates() -> 
 
 
 def test_liva_art_91_substrate_reduced_rate_resolves_to_10_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE)
+    rate = lookup_rate(require_eu_member_state("ES"), IvaRateKind("reduced"), _BINDING_DATE)
     assert rate.pct == Decimal("10")
 
 
 def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
-    expected = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE).pct / Decimal("100")
-    assert iva_rate_percentage(IvaRate.RATE_10, on_date=_BINDING_DATE) == expected
+    expected = lookup_rate(require_eu_member_state("ES"), IvaRateKind("reduced"), _BINDING_DATE).pct / Decimal("100")
+    assert iva_rate_percentage(resolve_iva_rate_token("rate_10", date.today()), on_date=_BINDING_DATE) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -137,13 +139,15 @@ def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
 
 
 def test_liva_art_91_substrate_super_reduced_rate_resolves_to_4_per_cent_for_es() -> None:
-    rate = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE)
+    rate = lookup_rate(require_eu_member_state("ES"), IvaRateKind("super_reduced"), _BINDING_DATE)
     assert rate.pct == Decimal("4")
 
 
 def test_iva_rate_4_helper_resolves_to_substrate_super_reduced_rate() -> None:
-    expected = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE).pct / Decimal("100")
-    assert iva_rate_percentage(IvaRate.RATE_4, on_date=_BINDING_DATE) == expected
+    expected = lookup_rate(require_eu_member_state("ES"), IvaRateKind("super_reduced"), _BINDING_DATE).pct / Decimal(
+        "100"
+    )
+    assert iva_rate_percentage(resolve_iva_rate_token("rate_4", date.today()), on_date=_BINDING_DATE) == expected
 
 
 def test_liva_art_91_legal_entry_carries_both_reduced_and_super_reduced_quotes() -> None:
@@ -267,28 +271,28 @@ def test_iva_rate_slot_to_iva_rate_kind_mapping_is_total_and_consistent() -> Non
     assert {
         rate: iva_rate_kind(rate)
         for rate in (
-            IvaRate.RATE_0,
-            IvaRate.RATE_4,
-            IvaRate.RATE_10,
-            IvaRate.RATE_21,
-            IvaRate.EXEMPT,
-            IvaRate.NOT_SUBJECT,
+            resolve_iva_rate_token("rate_0", date.today()),
+            resolve_iva_rate_token("rate_4", date.today()),
+            resolve_iva_rate_token("rate_10", date.today()),
+            resolve_iva_rate_token("rate_21", date.today()),
+            resolve_iva_rate_token("exempt", date.today()),
+            resolve_iva_rate_token("not_subject", date.today()),
         )
     } == {
-        IvaRate.RATE_0: IvaRateKind.ZERO,
-        IvaRate.RATE_4: IvaRateKind.SUPER_REDUCED,
-        IvaRate.RATE_10: IvaRateKind.REDUCED,
-        IvaRate.RATE_21: IvaRateKind.GENERAL,
-        IvaRate.EXEMPT: IvaRateKind.EXEMPT,
-        IvaRate.NOT_SUBJECT: None,
+        resolve_iva_rate_token("rate_0", date.today()): IvaRateKind("zero"),
+        resolve_iva_rate_token("rate_4", date.today()): IvaRateKind("super_reduced"),
+        resolve_iva_rate_token("rate_10", date.today()): IvaRateKind("reduced"),
+        resolve_iva_rate_token("rate_21", date.today()): IvaRateKind("general"),
+        resolve_iva_rate_token("exempt", date.today()): IvaRateKind("exempt"),
+        resolve_iva_rate_token("not_subject", date.today()): None,
     }
 
     for rate, kind in (
-        (IvaRate.RATE_4, IvaRateKind.SUPER_REDUCED),
-        (IvaRate.RATE_10, IvaRateKind.REDUCED),
-        (IvaRate.RATE_21, IvaRateKind.GENERAL),
+        (resolve_iva_rate_token("rate_4", date.today()), IvaRateKind("super_reduced")),
+        (resolve_iva_rate_token("rate_10", date.today()), IvaRateKind("reduced")),
+        (resolve_iva_rate_token("rate_21", date.today()), IvaRateKind("general")),
     ):
-        assert lookup_rate(EUMemberState.ES, kind, _BINDING_DATE) is not None
+        assert lookup_rate(require_eu_member_state("ES"), kind, _BINDING_DATE) is not None
         assert iva_rate_percentage(rate, on_date=_BINDING_DATE) is not None
 
 
@@ -309,8 +313,8 @@ def test_iva_rate_zero_resolves_to_zero_percent_inside_its_statutory_window() ->
     the law, and `iva_rate_percentage` is the guard that refuses it.
     """
     in_window = date(2024, 8, 20)  # RDL 4/2024 art. 1.Dos.1: 0 % from 07-01 to 09-30
-    assert iva_rate_kind(IvaRate.RATE_0) is IvaRateKind.ZERO
-    assert iva_rate_percentage(IvaRate.RATE_0, on_date=in_window) == Decimal("0")
+    assert iva_rate_kind(resolve_iva_rate_token("rate_0", date.today())) == IvaRateKind("zero")
+    assert iva_rate_percentage(resolve_iva_rate_token("rate_0", date.today()), on_date=in_window) == Decimal("0")
 
 
 def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outlives_it() -> None:
@@ -342,16 +346,16 @@ def test_iva_rate_zero_resolves_outside_the_food_window_because_zero_rating_outl
     where registry coverage IS complete and the guard stays sound.
     """
     for on_date in (date(2024, 3, 15), _BINDING_DATE):
-        assert iva_rate_percentage(IvaRate.RATE_0, on_date=on_date) == Decimal("0")
+        assert iva_rate_percentage(resolve_iva_rate_token("rate_0", date.today()), on_date=on_date) == Decimal("0")
 
 
 def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
     """EXEMPT has a classification tier but no numeric percentage;
     NOT_SUBJECT has neither a rate tier nor a numeric percentage."""
-    assert iva_rate_kind(IvaRate.EXEMPT) is IvaRateKind.EXEMPT
-    assert iva_rate_kind(IvaRate.NOT_SUBJECT) is None
-    assert iva_rate_percentage(IvaRate.EXEMPT, on_date=_BINDING_DATE) is None
-    assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=_BINDING_DATE) is None
+    assert iva_rate_kind(resolve_iva_rate_token("exempt", date.today())) == IvaRateKind("exempt")
+    assert iva_rate_kind(resolve_iva_rate_token("not_subject", date.today())) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("exempt", date.today()), on_date=_BINDING_DATE) is None
+    assert iva_rate_percentage(resolve_iva_rate_token("not_subject", date.today()), on_date=_BINDING_DATE) is None
 
 
 # ---------------------------------------------------------------------------

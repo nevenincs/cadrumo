@@ -23,7 +23,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.descendant_relacion import DescendantRelacion
+from cadrumo.core.descendant_relacion import DescendantRelacion
+
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
     descendant_facts_from_list,
@@ -65,7 +66,7 @@ _ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...]
         (
             DescendantInfo(
                 birth_date=date(2022, 3, 1),
-                relacion=DescendantRelacion.ADOPTADO,
+                relacion=DescendantRelacion._from_registry("adoptado"),
                 inscripcion_registro_civil_date=date(2024, 5, 12),
             ),
         ),
@@ -137,7 +138,7 @@ class TestDescendantInfoValidation:
         with pytest.raises((ValidationError, ValueError), match="inscripcion_registro_civil_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
-                relacion=DescendantRelacion.ADOPTADO,
+                relacion=DescendantRelacion._from_registry("adoptado"),
                 inscripcion_registro_civil_date=date(2020, 5, 31),
             )
 
@@ -145,14 +146,14 @@ class TestDescendantInfoValidation:
         with pytest.raises((ValidationError, ValueError), match="acogimiento_resolucion_date"):
             DescendantInfo(
                 birth_date=date(2020, 6, 1),
-                relacion=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+                relacion=DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
                 acogimiento_resolucion_date=date(2020, 5, 31),
             )
 
     def test_inscripcion_date_equal_to_birth_date_is_accepted(self) -> None:
         d = DescendantInfo(
             birth_date=date(2020, 6, 1),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date(2020, 6, 1),
         )
         assert d.inscripcion_registro_civil_date == date(2020, 6, 1)
@@ -161,13 +162,13 @@ class TestDescendantInfoValidation:
         with pytest.raises((ValidationError, ValueError), match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
-                relacion=DescendantRelacion.ADOPTADO,
+                relacion=DescendantRelacion._from_registry("adoptado"),
                 inscripcion_registro_civil_date=date(2099, 1, 1),
             )
         with pytest.raises((ValidationError, ValueError), match="future"):
             DescendantInfo(
                 birth_date=date(2000, 1, 1),
-                relacion=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+                relacion=DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
                 acogimiento_resolucion_date=date(2099, 1, 1),
             )
 
@@ -332,7 +333,7 @@ class TestDescendantFactsRoundtrip:
         )
         d2 = DescendantInfo(
             birth_date=date(2022, 11, 5),
-            relacion=DescendantRelacion.ADOPTADO,
+            relacion=DescendantRelacion._from_registry("adoptado"),
             inscripcion_registro_civil_date=date(2023, 4, 1),
             convive_con_contribuyente=True,
         )
@@ -370,7 +371,7 @@ class TestParseDescendienteFlag:
     def test_nacimiento_only(self) -> None:
         d = parse_descendiente_flag("NACIMIENTO=2020-03-15")
         assert d.birth_date == date(2020, 3, 15)
-        assert d.relacion is DescendantRelacion.DESCENDIENTE
+        assert d.relacion == DescendantRelacion._from_registry("descendiente")
         assert d.inscripcion_registro_civil_date is None
         assert d.acogimiento_resolucion_date is None
         assert d.convive_con_contribuyente is True
@@ -382,7 +383,7 @@ class TestParseDescendienteFlag:
             "ACOGIMIENTO=2022-01-10,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=TAXIDABCD",
         )
         assert d.birth_date == date(2020, 3, 15)
-        assert d.relacion is DescendantRelacion.ADOPTADO
+        assert d.relacion == DescendantRelacion._from_registry("adoptado")
         assert d.inscripcion_registro_civil_date == date(2024, 5, 12)
         assert d.acogimiento_resolucion_date == date(2022, 1, 10)
         assert d.discapacidad_grado == 33

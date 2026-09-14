@@ -25,9 +25,11 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.invoices.enums import InvoiceLegalMention, resolve_iva_rate_token
+
 from ....core.resources.bundled_data import bundled_path
 from ....domain.iva.classification import InvoiceKind
-from ..enums import InvoiceLegalMention, IvaRate, PaymentStatus
+from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -44,7 +46,7 @@ def _line() -> InvoiceLine:
         quantity=Decimal("1"),
         unit_price=_BASE,
         subtotal=_BASE,
-        iva_rate=IvaRate.RATE_21,
+        iva_rate=resolve_iva_rate_token("rate_21", date.today()),
         iva_amount=_CUOTA,
     )
 
@@ -104,12 +106,15 @@ def test_an_invoice_can_state_the_exemption_reference() -> None:
 def test_an_invoice_can_state_its_fixed_legal_mentions() -> None:
     """art. 6.1.m/.p: an invoice under inversión del sujeto pasivo and criterio de caja."""
     invoice = _invoice(
-        legal_mentions=[InvoiceLegalMention.REVERSE_CHARGE, InvoiceLegalMention.CASH_ACCOUNTING_REGIME],
+        legal_mentions=[
+            InvoiceLegalMention._from_registry("reverse_charge"),
+            InvoiceLegalMention._from_registry("cash_accounting_regime"),
+        ],
     )
 
     assert invoice.legal_mentions == (
-        InvoiceLegalMention.REVERSE_CHARGE,
-        InvoiceLegalMention.CASH_ACCOUNTING_REGIME,
+        InvoiceLegalMention._from_registry("reverse_charge"),
+        InvoiceLegalMention._from_registry("cash_accounting_regime"),
     )
 
 
@@ -117,7 +122,7 @@ def test_legal_mentions_coerces_plain_string_values() -> None:
     """A JSON-decoded payload carries plain strings, not enum instances."""
     invoice = _invoice(legal_mentions=["REVERSE_CHARGE"])
 
-    assert invoice.legal_mentions == (InvoiceLegalMention.REVERSE_CHARGE,)
+    assert invoice.legal_mentions == (InvoiceLegalMention._from_registry("reverse_charge"),)
 
 
 def test_an_unknown_legal_mention_is_refused() -> None:
@@ -158,14 +163,14 @@ def test_legal_mentions_are_never_derived_from_iva_category() -> None:
     from ....domain.iva.schema import IvaCategory
 
     invoice = _invoice(
-        iva_category=IvaCategory.DOMESTIC_EXEMPT,
+        iva_category=IvaCategory("domestic_exempt"),
         lines=(
             InvoiceLine(
                 description="Servicio exento",
                 quantity=Decimal("1"),
                 unit_price=_BASE,
                 subtotal=_BASE,
-                iva_rate=IvaRate.EXEMPT,
+                iva_rate=resolve_iva_rate_token("exempt", date.today()),
                 iva_amount=Decimal("0"),
             ),
         ),

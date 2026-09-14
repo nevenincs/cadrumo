@@ -20,7 +20,8 @@ from decimal import Decimal
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....core.descendant_relacion import DescendantRelacion
+from cadrumo.core.descendant_relacion import DescendantRelacion
+
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -89,7 +90,7 @@ def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
     """
     fostered = DescendantInfo(
         birth_date=date(2018, 5, 1),
-        relacion=DescendantRelacion.ACOGIMIENTO_PREADOPTIVO_O_PERMANENTE,
+        relacion=DescendantRelacion._from_registry("acogimiento_preadoptivo_o_permanente"),
         acogimiento_resolucion_date=date(2024, 3, 10),
     )
     assert fostered.entry_year() == 2018

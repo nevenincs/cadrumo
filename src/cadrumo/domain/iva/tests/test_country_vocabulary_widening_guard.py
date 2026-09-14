@@ -49,7 +49,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..classification import IvaTerritorialScope
+from cadrumo.domain.iva.classification import IvaTerritorialScope
+
 from ..establishment import territorial_scope_for_country
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -72,7 +73,7 @@ NEVER_THIRD_COUNTRY = (
 @pytest.mark.parametrize("code", NEVER_THIRD_COUNTRY)
 def test_a_widening_must_not_admit_this_code_as_a_third_country(code: str) -> None:
     """The tripwire. Trivially satisfied today; loud the moment it is not."""
-    assert territorial_scope_for_country(code) is not IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country(code) != IvaTerritorialScope._from_registry("third_country")
 
 
 @pytest.mark.parametrize("code", NEVER_THIRD_COUNTRY)
@@ -87,9 +88,9 @@ def test_a_widening_must_not_admit_this_code_as_a_spanish_scope(code: str) -> No
     Spanish territories.
     """
     assert territorial_scope_for_country(code) not in {
-        IvaTerritorialScope.ES_MAINLAND,
-        IvaTerritorialScope.ES_CANARIAS,
-        IvaTerritorialScope.ES_CEUTA_MELILLA,
+        IvaTerritorialScope._from_registry("es_mainland"),
+        IvaTerritorialScope._from_registry("es_canarias"),
+        IvaTerritorialScope._from_registry("es_ceuta_melilla"),
     }
 
 
@@ -101,4 +102,4 @@ def test_the_guard_would_notice_a_real_third_country() -> None:
     be measuring nothing at all. The control is a catalogued third country, which
     must still reach the scope the cases above forbid.
     """
-    assert territorial_scope_for_country("US") is IvaTerritorialScope.THIRD_COUNTRY
+    assert territorial_scope_for_country("US") == IvaTerritorialScope._from_registry("third_country")

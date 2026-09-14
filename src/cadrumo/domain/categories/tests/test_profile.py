@@ -14,6 +14,9 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.categories.proportionality import ProportionalityKind
+from cadrumo.domain.categories.spending_category import SpendingCategory
+
 from ....core.citation_grounding import CitationGrounding
 from ....core.i18n.translatable import Translatable as tr
 from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
@@ -21,11 +24,9 @@ from ..profile import CategoryProfile
 from ..proportionality import (
     CategoryCitation,
     CategoryCitationSource,
-    ProportionalityKind,
     ProportionalityRule,
     parse_http_url,
 )
-from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -101,7 +102,7 @@ def test_category_citation_accepts_a_missing_quote_only_with_a_stated_reason() -
 def test_category_profile_rejects_blank_display_label_at_schema_boundary() -> None:
     with pytest.raises(ValidationError, match="display_label"):
         CategoryProfile(
-            category=SpendingCategory.MATERIAL_OFICINA,
+            category=SpendingCategory._from_registry("material_oficina"),
             display_label=tr("   "),
             proportionality=_rule(),
             iva_hint=None,
@@ -110,7 +111,7 @@ def test_category_profile_rejects_blank_display_label_at_schema_boundary() -> No
 
 def _rule() -> ProportionalityRule:
     return ProportionalityRule(
-        kind=ProportionalityKind.FULL_DEDUCTIBLE,
+        kind=ProportionalityKind._from_registry("full_deductible"),
         citations=(_citation(),),
         notes=tr("Regla de prueba."),
     )
@@ -120,17 +121,17 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
     """Profiles carry category semantics, not filing-layout projection."""
 
     profile = CategoryProfile(
-        category=SpendingCategory.MATERIAL_OFICINA,
+        category=SpendingCategory._from_registry("material_oficina"),
         display_label=tr("categories.test_profile.display_label_851219"),
         proportionality=ProportionalityRule(
-            kind=ProportionalityKind.FIXED_PERCENTAGE,
+            kind=ProportionalityKind._from_registry("fixed_percentage"),
             fixed_pct=Decimal("1.00"),
             citations=(_citation(),),
             notes=tr("Perfil sin proyección a casillas."),
         ),
         iva_hint=None,
     )
-    assert profile.category is SpendingCategory.MATERIAL_OFICINA
+    assert profile.category == SpendingCategory._from_registry("material_oficina")
 
 
 def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
@@ -139,10 +140,10 @@ def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted|projection"):
         CategoryProfile.model_validate(
             {
-                "category": SpendingCategory.MATERIAL_OFICINA,
+                "category": SpendingCategory._from_registry("material_oficina"),
                 "display_label": {"es": "Material"},
                 "proportionality": {
-                    "kind": ProportionalityKind.FULL_DEDUCTIBLE,
+                    "kind": ProportionalityKind._from_registry("full_deductible"),
                     "citations": [_citation().model_dump(mode="json")],
                     "notes": "Perfil sin proyección a casillas.",
                 },

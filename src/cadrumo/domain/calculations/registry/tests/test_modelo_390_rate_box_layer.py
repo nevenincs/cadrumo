@@ -37,7 +37,8 @@ import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel
 
-from ....iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.flow import IvaFlowDirection
+
 from ....iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from ..binding_selector_utils import selector_as_dict
 from ..ledger_iva_bindings import (
@@ -64,13 +65,55 @@ def _axis_sequence(axes: Mapping[str, object], key: str) -> tuple[object, ...]:
 # 5 % applies 1 Jul - 30 Sep 2024 and 7,5 % / 2 % from 1 Oct (RDL 4/2024 art. 1),
 # so each windowed rate is exercised on a date where it is actually in force.
 _TIERS = (
-    ("21", IvaCategory.DOMESTIC_GENERAL, IvaRateKind.GENERAL, date(2024, 3, 10), "4000.00", "840.00"),
-    ("10", IvaCategory.DOMESTIC_REDUCED, IvaRateKind.REDUCED, date(2024, 3, 11), "2500.00", "250.00"),
-    ("7-5", IvaCategory.DOMESTIC_REDUCED, IvaRateKind.REDUCED, date(2024, 11, 12), "1600.00", "120.00"),
-    ("5", IvaCategory.DOMESTIC_REDUCED, IvaRateKind.REDUCED, date(2024, 8, 13), "1400.00", "70.00"),
-    ("4", IvaCategory.DOMESTIC_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED, date(2024, 3, 14), "1200.00", "48.00"),
-    ("2", IvaCategory.DOMESTIC_SUPER_REDUCED, IvaRateKind.SUPER_REDUCED, date(2024, 11, 15), "900.00", "18.00"),
-    ("0", IvaCategory.DOMESTIC_ZERO, IvaRateKind.ZERO, date(2024, 3, 16), "700.00", "0.00"),
+    (
+        "21",
+        IvaCategory("domestic_general"),
+        IvaRateKind("general"),
+        date(2024, 3, 10),
+        "4000.00",
+        "840.00",
+    ),
+    (
+        "10",
+        IvaCategory("domestic_reduced"),
+        IvaRateKind("reduced"),
+        date(2024, 3, 11),
+        "2500.00",
+        "250.00",
+    ),
+    (
+        "7-5",
+        IvaCategory("domestic_reduced"),
+        IvaRateKind("reduced"),
+        date(2024, 11, 12),
+        "1600.00",
+        "120.00",
+    ),
+    (
+        "5",
+        IvaCategory("domestic_reduced"),
+        IvaRateKind("reduced"),
+        date(2024, 8, 13),
+        "1400.00",
+        "70.00",
+    ),
+    (
+        "4",
+        IvaCategory("domestic_super_reduced"),
+        IvaRateKind("super_reduced"),
+        date(2024, 3, 14),
+        "1200.00",
+        "48.00",
+    ),
+    (
+        "2",
+        IvaCategory("domestic_super_reduced"),
+        IvaRateKind("super_reduced"),
+        date(2024, 11, 15),
+        "900.00",
+        "18.00",
+    ),
+    ("0", IvaCategory("domestic_zero"), IvaRateKind("zero"), date(2024, 3, 16), "700.00", "0.00"),
 )
 
 _APPLIED_RATE = {"21": "0.21", "10": "0.10", "7-5": "0.075", "5": "0.05", "4": "0.04", "2": "0.02", "0": "0.00"}
@@ -98,7 +141,7 @@ def _observation(
         category=category,
         exemption_article=None,
         rate_kind=rate_kind,
-        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        flow_direction=IvaFlowDirection._from_registry("repercutido"),
         base_amount=base,
         iva_amount=cuota,
         recargo_amount=Decimal("0"),
@@ -124,8 +167,8 @@ def _rated_rows() -> tuple[IvaLedgerObservation, ...]:
 def _unrated_row() -> IvaLedgerObservation:
     """A reducido row whose rate the ledger never captured (``iva_rate`` is optional)."""
     return _observation(
-        category=IvaCategory.DOMESTIC_REDUCED,
-        rate_kind=IvaRateKind.REDUCED,
+        category=IvaCategory("domestic_reduced"),
+        rate_kind=IvaRateKind("reduced"),
         on=date(2024, 6, 1),
         base=_UNRATED_BASE,
         cuota=_UNRATED_CUOTA,
@@ -189,8 +232,8 @@ def test_the_rate_blind_total_layer_retains_the_unrated_row() -> None:
 def _unrated_zero_row() -> IvaLedgerObservation:
     """A zero-tier row whose rate the ledger never captured."""
     return _observation(
-        category=IvaCategory.DOMESTIC_ZERO,
-        rate_kind=IvaRateKind.ZERO,
+        category=IvaCategory("domestic_zero"),
+        rate_kind=IvaRateKind("zero"),
         on=date(2024, 6, 2),
         base=_UNRATED_BASE,
         cuota=Decimal("0.00"),

@@ -21,11 +21,12 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ..models import (
     CrossPeriodGroupMemberRoster,
-    IVARegime,
     ModeloDeadline,
     ObligationStatus,
     Schedule,
@@ -38,7 +39,7 @@ _UTC_STAMP = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 
 
 def _profile() -> TaxpayerProfile:
-    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
 
 
 def _obligation(*, filing_year: int, code: str = "1T") -> ModeloDeadline:

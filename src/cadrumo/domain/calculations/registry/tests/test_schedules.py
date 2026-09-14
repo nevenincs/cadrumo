@@ -19,6 +19,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.deadlines.models import IVARegime
+
 from ..errors import RegistryValidationError
 from ..schedules import (
     _resolve_profile_fact,
@@ -127,16 +130,15 @@ def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
     The special case must resolve ``taxpayer.entity_type`` against the object's
     ``entity_type`` attribute, mirroring the ``iva.regime`` -> ``iva_regime`` pattern.
     """
-    from ....contribuyente.entity_type import EntityType
-    from ....deadlines.models import IVARegime, TaxpayerProfile
+    from ....deadlines.models import TaxpayerProfile
 
     profile = TaxpayerProfile(
         tax_id="B12345674",
-        entity_type=EntityType.LEGAL_ENTITY,
-        iva_regime=IVARegime.GENERAL,
+        entity_type=EntityType._from_registry("legal_entity"),
+        iva_regime=IVARegime("GENERAL"),
     )
     result = _resolve_profile_fact(profile, "taxpayer.entity_type")
-    assert result is EntityType.LEGAL_ENTITY
+    assert result == EntityType._from_registry("legal_entity")
 
 
 # ---------------------------------------------------------------------------

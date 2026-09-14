@@ -38,7 +38,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..classification import IvaTerritorialScope
+from cadrumo.domain.iva.classification import IvaTerritorialScope
+
 from ..country_vocabulary import country_codes_by_printed_name, normalise_printed_country_name
 from ..establishment import (
     country_code_for_printed_country_name,
@@ -93,9 +94,9 @@ class TestAnUnrecognisedNameEstablishesNothing:
         """
         assert country_code_for_printed_country_name(printed) != "ES"
         assert territorial_scope_for_country(country_code_for_printed_country_name(printed)) not in {
-            IvaTerritorialScope.ES_MAINLAND,
-            IvaTerritorialScope.ES_CANARIAS,
-            IvaTerritorialScope.ES_CEUTA_MELILLA,
+            IvaTerritorialScope._from_registry("es_mainland"),
+            IvaTerritorialScope._from_registry("es_canarias"),
+            IvaTerritorialScope._from_registry("es_ceuta_melilla"),
         }
 
 
@@ -185,16 +186,14 @@ class TestTheRungComposesRatherThanDecides:
     """Scope comes from the country resolver; this axis only names the country."""
 
     def test_a_member_state_name_establishes_the_eu_scope(self) -> None:
-        assert (
-            territorial_scope_for_country(country_code_for_printed_country_name("Deutschland"))
-            is IvaTerritorialScope.EU_MEMBER
-        )
+        assert territorial_scope_for_country(
+            country_code_for_printed_country_name("Deutschland")
+        ) == IvaTerritorialScope._from_registry("eu_member")
 
     def test_a_third_country_name_establishes_the_third_country_scope(self) -> None:
-        assert (
-            territorial_scope_for_country(country_code_for_printed_country_name("Suiza"))
-            is IvaTerritorialScope.THIRD_COUNTRY
-        )
+        assert territorial_scope_for_country(
+            country_code_for_printed_country_name("Suiza")
+        ) == IvaTerritorialScope._from_registry("third_country")
 
     def test_a_spanish_name_names_the_state_but_establishes_no_scope(self) -> None:
         """The composition proving nothing about Spain is decided twice.

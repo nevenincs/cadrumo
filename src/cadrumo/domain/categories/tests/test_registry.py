@@ -18,9 +18,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.categories.proportionality import ProportionalityKind
+
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..profile import CategoryProfile
-from ..proportionality import ProportionalityKind
 from ..registry import resolve_category_profiles
 from ..spending_category import SpendingCategory
 
@@ -61,13 +62,16 @@ def test_proportionality_kinds_carry_kind_specific_fields(
     fixed_percentage_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
-        if profile.proportionality.kind is ProportionalityKind.FIXED_PERCENTAGE
+        if profile.proportionality.kind == ProportionalityKind._from_registry("fixed_percentage")
     ]
     usage_ratio_rules = [
         profile.proportionality
         for profile in profiles_2025.values()
         if profile.proportionality.kind
-        in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}
+        in {
+            ProportionalityKind._from_registry("usage_ratio_home_area"),
+            ProportionalityKind._from_registry("usage_ratio_personal"),
+        }
     ]
 
     assert all(rule.fixed_pct is not None and rule.default_ratio is None for rule in fixed_percentage_rules)
@@ -81,8 +85,8 @@ def test_proportionality_kinds_carry_kind_specific_fields(
 def test_diet_profiles_preserve_condition_specific_daily_caps(
     profiles_2025: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
-    national = profiles_2025[SpendingCategory.MANUTENCION_DIETAS_NACIONAL].proportionality
-    foreign = profiles_2025[SpendingCategory.MANUTENCION_DIETAS_EXTRANJERO].proportionality
+    national = profiles_2025[SpendingCategory._from_registry("manutencion_dietas_nacional")].proportionality
+    foreign = profiles_2025[SpendingCategory._from_registry("manutencion_dietas_extranjero")].proportionality
 
     assert {variant.id: variant.statutory_cap_eur_per_day for variant in national.statutory_cap_variants} == {
         "sin-pernocta": Decimal("26.67"),
@@ -99,9 +103,9 @@ def test_registry_preserves_conservative_semantics_for_special_categories(
 ) -> None:
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
-    hardware = profiles_2025[SpendingCategory.HARDWARE_AMORTIZABLE]
-    vehicle = profiles_2025[SpendingCategory.VEHICULO_COMBUSTIBLE]
-    health = profiles_2025[SpendingCategory.SEGUROS_SALUD_AUTONOMO]
+    hardware = profiles_2025[SpendingCategory._from_registry("hardware_amortizable")]
+    vehicle = profiles_2025[SpendingCategory._from_registry("vehiculo_combustible")]
+    health = profiles_2025[SpendingCategory._from_registry("seguros_salud_autonomo")]
 
     assert hardware.proportionality.kind.value == "full_deductible"
     assert vehicle.proportionality.default_ratio is None

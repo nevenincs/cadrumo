@@ -26,6 +26,8 @@ import tomllib
 import pytest
 from dev.registry.compiler.authority import compiled_bundled_authority
 
+from cadrumo.domain.iva.flow import IvaSettlementSide
+
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.binding_selector_utils import selector_as_dict
 from ..classification import InvoiceKind
@@ -50,105 +52,105 @@ def test_iva_flow_direction_enum_has_four_closed_members() -> None:
     as though the supplier owed the cuota it had deliberately not charged.
     """
     assert {m for m in IvaFlowDirection} == {
-        IvaFlowDirection.REPERCUTIDO,
-        IvaFlowDirection.SOPORTADO,
-        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-        IvaFlowDirection.OPERACION_CON_INVERSION,
+        IvaFlowDirection._from_registry("repercutido"),
+        IvaFlowDirection._from_registry("soportado"),
+        IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
+        IvaFlowDirection._from_registry("operacion_con_inversion"),
     }
 
 
 def test_iva_flow_direction_string_values_are_kebab_case() -> None:
-    assert IvaFlowDirection.REPERCUTIDO.value == "repercutido"
-    assert IvaFlowDirection.SOPORTADO.value == "soportado"
-    assert IvaFlowDirection.INVERSION_SUJETO_PASIVO.value == "inversion_sujeto_pasivo"
-    assert IvaFlowDirection.OPERACION_CON_INVERSION.value == "operacion_con_inversion"
+    assert IvaFlowDirection._from_registry("repercutido").value == "repercutido"
+    assert IvaFlowDirection._from_registry("soportado").value == "soportado"
+    assert IvaFlowDirection._from_registry("inversion_sujeto_pasivo").value == "inversion_sujeto_pasivo"
+    assert IvaFlowDirection._from_registry("operacion_con_inversion").value == "operacion_con_inversion"
 
 
 @pytest.mark.parametrize(
     ("category", "direction", "expected"),
     (
         pytest.param(
-            IvaCategory.DOMESTIC_GENERAL,
+            IvaCategory("domestic_general"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-general",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_REDUCED,
+            IvaCategory("domestic_reduced"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-reduced",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_SUPER_REDUCED,
+            IvaCategory("domestic_super_reduced"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-super-reduced",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_ZERO,
+            IvaCategory("domestic_zero"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-zero",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_EXEMPT,
+            IvaCategory("domestic_exempt"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-exempt",
         ),
         pytest.param(
-            IvaCategory.RECARGO_EQUIVALENCIA,
+            IvaCategory("recargo_equivalencia"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-recargo",
         ),
         pytest.param(
-            IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            IvaCategory("intra_community_supply"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-intracom-supply",
         ),
         pytest.param(
-            IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+            IvaCategory("export_third_country_zero_rated"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-export-third-country",
         ),
         pytest.param(
-            IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
+            IvaCategory("export_assimilated_zero_rated"),
             InvoiceKind.ISSUED,
-            IvaFlowDirection.REPERCUTIDO,
+            IvaFlowDirection._from_registry("repercutido"),
             id="issued-export-assimilated",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_GENERAL,
+            IvaCategory("domestic_general"),
             InvoiceKind.RECEIVED,
-            IvaFlowDirection.SOPORTADO,
+            IvaFlowDirection._from_registry("soportado"),
             id="received-general",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_REDUCED,
+            IvaCategory("domestic_reduced"),
             InvoiceKind.RECEIVED,
-            IvaFlowDirection.SOPORTADO,
+            IvaFlowDirection._from_registry("soportado"),
             id="received-reduced",
         ),
         pytest.param(
-            IvaCategory.DOMESTIC_SUPER_REDUCED,
+            IvaCategory("domestic_super_reduced"),
             InvoiceKind.RECEIVED,
-            IvaFlowDirection.SOPORTADO,
+            IvaFlowDirection._from_registry("soportado"),
             id="received-super-reduced",
         ),
         pytest.param(
-            IvaCategory.IMPORT_THIRD_COUNTRY,
+            IvaCategory("import_third_country"),
             InvoiceKind.RECEIVED,
-            IvaFlowDirection.SOPORTADO,
+            IvaFlowDirection._from_registry("soportado"),
             id="received-import-third-country",
         ),
         pytest.param(
-            IvaCategory.RECARGO_EQUIVALENCIA,
+            IvaCategory("recargo_equivalencia"),
             InvoiceKind.RECEIVED,
-            IvaFlowDirection.SOPORTADO,
+            IvaFlowDirection._from_registry("soportado"),
             id="received-recargo",
         ),
     ),
@@ -163,13 +165,10 @@ def test_derive_flow_classifies_non_reverse_charge_categories(
 
 def test_received_domestic_reverse_charge_self_assesses() -> None:
     """The RECIPIENT of a domestic art. 84.Uno.2 operation is the sujeto pasivo."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            invoice_direction=InvoiceKind.RECEIVED,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    )
+    assert derive_flow_for_classification(
+        category=IvaCategory("domestic_reverse_charge"),
+        invoice_direction=InvoiceKind.RECEIVED,
+    ) == IvaFlowDirection._from_registry("inversion_sujeto_pasivo")
 
 
 def test_issued_domestic_reverse_charge_is_the_suppliers_side_not_a_self_assessment() -> None:
@@ -183,13 +182,10 @@ def test_issued_domestic_reverse_charge_is_the_suppliers_side_not_a_self_assessm
     both cuota totals, and claimed a deduction of input IVA the supplier never
     bore. The two errors cancel in the resultado, which is why nothing caught it.
     """
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            invoice_direction=InvoiceKind.ISSUED,
-        )
-        is IvaFlowDirection.OPERACION_CON_INVERSION
-    )
+    assert derive_flow_for_classification(
+        category=IvaCategory("domestic_reverse_charge"),
+        invoice_direction=InvoiceKind.ISSUED,
+    ) == IvaFlowDirection._from_registry("operacion_con_inversion")
 
 
 def test_a_supplier_side_reverse_charge_operation_reaches_no_settlement_side() -> None:
@@ -200,9 +196,9 @@ def test_a_supplier_side_reverse_charge_operation_reaches_no_settlement_side() -
     the taxpayer would file. This test reds if a later change puts the supplier's
     side back on either side of the settlement.
     """
-    assert settlement_sides_for_flow(IvaFlowDirection.OPERACION_CON_INVERSION) == frozenset()
-    assert not is_devengada_flow(IvaFlowDirection.OPERACION_CON_INVERSION)
-    assert not is_deducible_flow(IvaFlowDirection.OPERACION_CON_INVERSION)
+    assert settlement_sides_for_flow(IvaFlowDirection._from_registry("operacion_con_inversion")) == frozenset()
+    assert not is_devengada_flow(IvaFlowDirection._from_registry("operacion_con_inversion"))
+    assert not is_deducible_flow(IvaFlowDirection._from_registry("operacion_con_inversion"))
 
 
 @pytest.mark.parametrize(
@@ -216,13 +212,10 @@ def test_derive_flow_classifies_intracomm_acquisition_rc_as_autorepercutido(dire
     """Intra-community acquisition reverse-charge (LIVA art 84.Uno.2.e)
     self-assesses both the repercutido and soportado entries on the
     same operation."""
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    )
+    assert derive_flow_for_classification(
+        category=IvaCategory("intra_community_acquisition_reverse_charge"),
+        invoice_direction=direction,
+    ) == IvaFlowDirection._from_registry("inversion_sujeto_pasivo")
 
 
 @pytest.mark.parametrize(
@@ -242,13 +235,10 @@ def test_derive_flow_classifies_intracomm_service_acquisition_rc_as_autorepercut
     pasivo -- the same position as the intra-community goods acquisition
     above, so the same flow.
     """
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-            invoice_direction=direction,
-        )
-        is IvaFlowDirection.INVERSION_SUJETO_PASIVO
-    )
+    assert derive_flow_for_classification(
+        category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
+        invoice_direction=direction,
+    ) == IvaFlowDirection._from_registry("inversion_sujeto_pasivo")
 
 
 def test_received_eu_service_reaches_the_devengada_side_not_only_the_deducible() -> None:
@@ -260,14 +250,17 @@ def test_received_eu_service_reaches_the_devengada_side_not_only_the_deducible()
     under-declaration on Modelo 303, not a casilla mix-up, and it is invisible
     from the value of any single casilla.
     """
-    from ..flow import IvaSettlementSide, is_deducible_flow, is_devengada_flow, settlement_sides_for_flow
+    from ..flow import is_deducible_flow, is_devengada_flow, settlement_sides_for_flow
 
     flow = derive_flow_for_classification(
-        category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
         invoice_direction=InvoiceKind.RECEIVED,
     )
     assert settlement_sides_for_flow(flow) == frozenset(
-        {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE},
+        {
+            IvaSettlementSide._from_registry("devengada"),
+            IvaSettlementSide._from_registry("deducible"),
+        },
     )
     assert is_devengada_flow(flow), "the self-assessed cuota must be declared, not only deducted"
     assert is_deducible_flow(flow)
@@ -282,13 +275,10 @@ def test_intracomm_service_supply_is_not_a_reverse_charge_for_the_spanish_suppli
     Spanish cuota arises for the supplier to self-assess. The recipient
     self-assesses in their own Member State.
     """
-    assert (
-        derive_flow_for_classification(
-            category=IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-            invoice_direction=InvoiceKind.ISSUED,
-        )
-        is IvaFlowDirection.REPERCUTIDO
-    )
+    assert derive_flow_for_classification(
+        category=IvaCategory("intra_community_service_supply"),
+        invoice_direction=InvoiceKind.ISSUED,
+    ) == IvaFlowDirection._from_registry("repercutido")
 
 
 def test_iva_flow_legal_articles_present_in_registry_toml() -> None:
@@ -346,34 +336,33 @@ def test_iva_settlement_side_enum_has_two_closed_members() -> None:
     from ..flow import IvaSettlementSide
 
     assert {s for s in IvaSettlementSide} == {
-        IvaSettlementSide.DEVENGADA,
-        IvaSettlementSide.DEDUCIBLE,
+        IvaSettlementSide._from_registry("devengada"),
+        IvaSettlementSide._from_registry("deducible"),
     }
 
 
 def test_iva_settlement_side_string_values_are_kebab_case() -> None:
-    from ..flow import IvaSettlementSide
 
-    assert IvaSettlementSide.DEVENGADA.value == "devengada"
-    assert IvaSettlementSide.DEDUCIBLE.value == "deducible"
+    assert IvaSettlementSide._from_registry("devengada").value == "devengada"
+    assert IvaSettlementSide._from_registry("deducible").value == "deducible"
 
 
 def test_repercutido_flow_contributes_to_devengada_only() -> None:
     """LIVA art 88 — repercusión charges output IVA to the customer;
     nothing on the deducible side."""
-    from ..flow import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.REPERCUTIDO)
-    assert sides == frozenset({IvaSettlementSide.DEVENGADA})
+    sides = settlement_sides_for_flow(IvaFlowDirection._from_registry("repercutido"))
+    assert sides == frozenset({IvaSettlementSide._from_registry("devengada")})
 
 
 def test_soportado_flow_contributes_to_deducible_only() -> None:
     """LIVA art 92 — cuotas tributarias deducibles; the sujeto pasivo
     bears IVA via direct repercusión and may deduct it."""
-    from ..flow import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.SOPORTADO)
-    assert sides == frozenset({IvaSettlementSide.DEDUCIBLE})
+    sides = settlement_sides_for_flow(IvaFlowDirection._from_registry("soportado"))
+    assert sides == frozenset({IvaSettlementSide._from_registry("deducible")})
 
 
 def test_autorepercutido_flow_contributes_to_both_sides() -> None:
@@ -381,18 +370,23 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     self-assesses BOTH a devengada entry and a matching deducible entry
     on the same operation. The two cancel arithmetically inside Modelo
     303 but both must be booked."""
-    from ..flow import IvaSettlementSide, settlement_sides_for_flow
+    from ..flow import settlement_sides_for_flow
 
-    sides = settlement_sides_for_flow(IvaFlowDirection.INVERSION_SUJETO_PASIVO)
-    assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
+    sides = settlement_sides_for_flow(IvaFlowDirection._from_registry("inversion_sujeto_pasivo"))
+    assert sides == frozenset(
+        {
+            IvaSettlementSide._from_registry("devengada"),
+            IvaSettlementSide._from_registry("deducible"),
+        }
+    )
 
 
 def test_devengada_flow_predicate_matches_settlement_semantics() -> None:
     from ..flow import is_devengada_flow
 
     expected = {
-        IvaFlowDirection.REPERCUTIDO,
-        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        IvaFlowDirection._from_registry("repercutido"),
+        IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
     }
     for flow in IvaFlowDirection:
         assert is_devengada_flow(flow) == (flow in expected)
@@ -402,8 +396,8 @@ def test_deducible_flow_predicate_matches_settlement_semantics() -> None:
     from ..flow import is_deducible_flow
 
     expected = {
-        IvaFlowDirection.SOPORTADO,
-        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        IvaFlowDirection._from_registry("soportado"),
+        IvaFlowDirection._from_registry("inversion_sujeto_pasivo"),
     }
     for flow in IvaFlowDirection:
         assert is_deducible_flow(flow) == (flow in expected)
@@ -425,7 +419,7 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     for flow in IvaFlowDirection:
         settlement_sides_for_flow(flow)  # raises KeyError if the member is unmapped
     sideless = {flow for flow in IvaFlowDirection if not settlement_sides_for_flow(flow)}
-    assert sideless == {IvaFlowDirection.OPERACION_CON_INVERSION}, (
+    assert sideless == {IvaFlowDirection._from_registry("operacion_con_inversion")}, (
         "exactly one flow settles on neither side — the supplier's own reverse-charge "
         f"supply. A second one appearing here is unreviewed: {sorted(f.value for f in sideless)}"
     )
