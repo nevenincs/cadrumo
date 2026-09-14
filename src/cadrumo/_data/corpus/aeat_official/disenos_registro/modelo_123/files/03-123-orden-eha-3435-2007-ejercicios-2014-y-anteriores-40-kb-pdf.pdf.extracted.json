@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_123/files/03-123-orden-eha-3435-2007-ejercicios-2014-y-anteriores-40-kb-pdf.pdf",
   "source_sha256": "172c238f5b06c4360c9e47e13092ef6703fe0c8f04bd4b7a279017694087f3c5",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/123_2008.pdf",
   "units": [
     {

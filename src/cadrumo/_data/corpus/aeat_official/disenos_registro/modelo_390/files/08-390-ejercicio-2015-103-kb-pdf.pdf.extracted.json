@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/08-390-ejercicio-2015-103-kb-pdf.pdf",
   "source_sha256": "49aa7389ea31d2a166b7ecc050a8f5066fdf052e84dff72f45e71063f3e57a60",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/390v01e2015_v1.00.pdf",
   "units": [
     {

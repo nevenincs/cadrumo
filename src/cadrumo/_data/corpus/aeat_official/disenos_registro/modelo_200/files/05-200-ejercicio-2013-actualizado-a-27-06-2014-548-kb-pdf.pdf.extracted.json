@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/05-200-ejercicio-2013-actualizado-a-27-06-2014-548-kb-pdf.pdf",
   "source_sha256": "e6e13ae029bc8f73659351c0cf828b86a6035fe1a04cb23dd59c09a46009edfe",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2013.pdf",
   "units": [
     {

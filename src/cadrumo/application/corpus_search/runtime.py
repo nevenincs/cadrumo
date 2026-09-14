@@ -2,9 +2,10 @@
 
 External tools and resources consume grounding through one service
 entry, :func:`search_corpus`, so the protocol layer never re-derives the
-retrieval wiring. On first use the lexical index is built once from the
-bundled corpus into an app-controlled cache under the Settings storage root
-and reused until its exact source identity changes.
+retrieval wiring. The lexical index covers top-level
+``normatives/html/*.html.extracted.json`` payloads. It is provisioned in an
+app-controlled cache and rebuilt atomically whenever the indexed bytes or
+schema identity changes.
 
 Retrieval is fully offline: the FTS5 lexical ranking and the exact-citation
 lookup need no model, no vectors, and no network. The service has no degraded
@@ -159,10 +160,10 @@ def search_corpus(
     limit: int = _DEFAULT_LIMIT,
     settings: Settings | None = None,
 ) -> RetrievalResponse:
-    """Run grounding retrieval for ``query`` over the bundled corpus.
+    """Run grounding retrieval for ``query``.
 
-    Provisions the lexical index (build-once cache) and runs the exact-citation
-    short-circuit over the ranked FTS5 lexical search.
+    Provisions the content-keyed normative-HTML lexical index and runs the
+    separate signed-authority citation lookup before ranked FTS5 search.
 
     Args:
         query: The free-text query or an exact citation id.

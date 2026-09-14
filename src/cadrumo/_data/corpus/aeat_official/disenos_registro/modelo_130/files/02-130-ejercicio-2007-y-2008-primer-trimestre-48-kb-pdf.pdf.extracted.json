@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008-primer-trimestre-48-kb-pdf.pdf",
   "source_sha256": "b1e2ffcbd9196de5ddc87fcb16e6576a77d7f2e4c5a88d87fd9527ec8d873c40",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr130.pdf",
   "units": [
     {

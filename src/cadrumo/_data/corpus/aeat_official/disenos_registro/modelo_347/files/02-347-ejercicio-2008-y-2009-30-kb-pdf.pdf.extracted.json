@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/02-347-ejercicio-2008-y-2009-30-kb-pdf.pdf",
   "source_sha256": "f670c1ac4b4c4d094a9657da278332f2f4f419447c60f95672f857778eaf69cb",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347-2008-TIPOS.pdf",
   "units": [
     {

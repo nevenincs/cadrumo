@@ -452,8 +452,8 @@ class Settings(CadrumoLlmSettings):
         default=Path("cache") / "corpus-search",
         description=(
             "Directory for the corpus-search lexical index (a SQLite database "
-            "stemmed from the bundled corpus on first search, and current "
-            "thereafter because that corpus is static)"
+            "built from bundled normative extractions and rebuilt when their "
+            "exact content identity changes)"
         ),
     )
     cadrumo_validation_verdict_cache_dir: Path = Field(

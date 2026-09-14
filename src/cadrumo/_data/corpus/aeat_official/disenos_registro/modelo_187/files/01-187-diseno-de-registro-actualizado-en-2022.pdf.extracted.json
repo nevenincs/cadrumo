@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_187/files/01-187-diseno-de-registro-actualizado-en-2022.pdf",
   "source_sha256": "c7a21c1feb9619380bb0da3e73066fa3c58c628f430bf85ed9dbea15b1308eb1",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_187_2022.pdf",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_604/files/02-604-diseno-de-registro-atf-en-ingles.pdf",
   "source_sha256": "97b7fae21fba5c5e6eb7c19fe854758484bbc834698124cc81e825e925dd89af",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF_Ingles.pdf",
   "units": [
     {

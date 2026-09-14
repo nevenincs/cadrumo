@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_185/files/01-185-ejercicio-2026-y-siguientes.pdf",
   "source_sha256": "102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR185_2025.pdf",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/manuals/sociedades/2023/source.pdf",
   "source_sha256": "56c03e2215af54967af83323220ce5bff421ad50e1f733c66ecacedf7f9548ed",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2023.pdf",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/03-349-orden-hac-360-2002-28-kb-pdf.pdf",
   "source_sha256": "2aec34746d7f91b89b4f59b127a4fc00658b49d091137a8777dee68ae50d7ea2",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/TIPOS34905.pdf",
   "units": [
     {

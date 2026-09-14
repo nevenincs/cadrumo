@@ -1,10 +1,11 @@
-"""Build-time FTS5 lexical index over the bundled BOE/AEAT corpus.
+"""FTS5 lexical index over bundled normative HTML extractions.
 
 The index is the ranking half of the grounding surface, alongside the
-exact-citation lookup. It is built from the already-bundled
-``*.extracted.json`` corpus triples (the same triples the registry legal
-catalogue grounds against, read through the :mod:`~core.resources`
-boundary) into a caller-supplied SQLite path. No dependency beyond the
+separate exact-citation lookup. It is built from top-level
+``normatives/html/*.html.extracted.json`` payloads, including content-aware
+extractions of XML responses, into a caller-supplied SQLite path. PDFs,
+workbooks, and terminology sources enrolled in the development RAG index are
+outside this runtime lexical index. No dependency beyond the
 standard library ``sqlite3`` (FTS5 is present in every standard CPython
 build) and the core ``snowballstemmer`` (a pure-Python Spanish Snowball
 stemmer) is required, so this module imports and runs on every install.
@@ -18,9 +19,9 @@ English-only, which is why the Spanish stem rides its own precomputed
 column.
 
 Exact citation lookup ("art. 27.2 LGT") does NOT go through this index;
-it is a structured key lookup over the registry legal catalogue (see
-:mod:`~application.corpus_search._citation_lookup`). This index covers
-in-prose concept recall.
+it resolves through the signed registry authority (see
+:mod:`~application.corpus_search.citation_lookup`). This index covers
+in-prose concept recall only within the normative HTML extraction set.
 """
 
 from __future__ import annotations
@@ -63,15 +64,15 @@ def bundled_corpus_html_root() -> Path:
 
 
 def iter_corpus_chunks(corpus_root: Path | None = None) -> Iterator[CorpusChunk]:
-    """Yield deterministic :class:`CorpusChunk` records from the corpus.
+    """Yield deterministic chunks from normative HTML extraction payloads.
 
-    The corpus is walked in sorted filename order, and each extracted unit
-    is split into paragraph-bounded chunks, so the same corpus always
-    yields the same chunk sequence with the same ids.
+    The extraction directory is walked in sorted filename order, and each
+    extracted unit is split into paragraph-bounded chunks, so the same inputs
+    yield the same chunk sequence with the same ids.
 
     Args:
         corpus_root: Directory holding the ``*.html.extracted.json``
-            triples. Defaults to the package-bundled corpus.
+            payloads. Defaults to the package-bundled normative HTML directory.
 
     Yields:
         One :class:`CorpusChunk` per prose chunk, in document then unit

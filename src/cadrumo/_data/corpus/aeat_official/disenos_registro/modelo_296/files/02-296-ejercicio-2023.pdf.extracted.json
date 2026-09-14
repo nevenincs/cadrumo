@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_296/files/02-296-ejercicio-2023.pdf",
   "source_sha256": "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR_296_2023.pdf",
   "units": [
     {

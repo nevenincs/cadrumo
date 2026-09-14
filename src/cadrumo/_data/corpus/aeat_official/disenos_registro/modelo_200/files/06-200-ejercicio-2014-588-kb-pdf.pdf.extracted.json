@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files/06-200-ejercicio-2014-588-kb-pdf.pdf",
   "source_sha256": "0733d9fdd39249b8b933aef2ed465b6824aa04dc1d7e4d52dbf3e821eddd4405",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_200_299/archivos/DR200-2014.pdf",
   "units": [
     {

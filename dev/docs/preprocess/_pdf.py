@@ -53,7 +53,7 @@ PDF_EXTRACTOR_ID = "corpus-pdf"
 
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
-PDF_EXTRACTOR_VERSION = "1.1"
+PDF_EXTRACTOR_VERSION = "1.2"
 
 _UNKNOWN_ATTRIBUTION = "Source attribution unavailable: no matching acquisition manifest entry."
 
@@ -75,8 +75,10 @@ def _attribution_for(source: Path) -> str:
 
     Handles both shipped manifest shapes:
 
-    * Diseno de registro: ``manifest.json`` one directory above ``files/``,
-      carrying an ``artefacts`` list whose matching entry has a ``url``.
+    * Diseno de registro: ``manifest.json`` either beside the PDF or one
+      directory above ``files/``, carrying an ``artefacts`` list whose exact
+      ``stored_path`` match has a ``url`` and, when recorded, a matching
+      ``sha256``.
     * Manuales practicos: a sibling ``manifest.json`` carrying a flat
       ``source_pdf_url``.
 
@@ -89,11 +91,12 @@ def _attribution_for(source: Path) -> str:
     if url:
         return _url_attribution(url)
 
-    # Diseno de registro: manifest one level above the files/ directory.
-    diseno = source.parent.parent / "manifest.json"
-    url = _diseno_url(diseno, source)
-    if url:
-        return _url_attribution(url)
+    # Diseno de registro: most PDFs live below files/, while the shipped
+    # historical Modelo 210 PDF sits directly beside its per-model manifest.
+    for diseno in (sibling, source.parent.parent / "manifest.json"):
+        url = _diseno_url(diseno, source)
+        if url:
+            return _url_attribution(url)
 
     return _UNKNOWN_ATTRIBUTION
 
@@ -105,11 +108,11 @@ def _load_manifest(path: Path) -> dict[str, object] | None:
         data = json.loads(path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
         return None
-    return data if isinstance(data, dict) else None
+    return cast("dict[str, object]", data) if isinstance(data, dict) else None
 
 
 def _manuals_url(manifest_path: Path, source: Path) -> str:
-    """Return the manuales ``source_pdf_url`` when this manifest describes the PDF."""
+    """Return the manuales URL when its path and optional digest identify the PDF."""
     manifest = _load_manifest(manifest_path)
     if manifest is None:
         return ""
@@ -117,20 +120,26 @@ def _manuals_url(manifest_path: Path, source: Path) -> str:
     rel = rel_value.strip() if isinstance(rel_value, str) else ""
     # The manuales manifest names the PDF it describes; only trust its URL
     # when the named file is this source (a directory may hold one PDF).
-    if not rel or (manifest_path.parent / rel).resolve() != source.resolve():
+    if not rel or (manifest_path.parent / rel).resolve() != source.resolve() or not source.is_file():
+        return ""
+    recorded_sha256 = manifest.get("sha256")
+    if recorded_sha256 is not None and (
+        not isinstance(recorded_sha256, str) or recorded_sha256.strip().lower() != sha256_of(source)
+    ):
         return ""
     url = manifest.get("source_pdf_url")
     return url.strip() if isinstance(url, str) else ""
 
 
 def _diseno_url(manifest_path: Path, source: Path) -> str:
-    """Return the matching Diseno artefact ``url`` for this PDF, if any."""
+    """Return the hash-verified Diseno artefact ``url`` for this PDF, if any."""
     manifest = _load_manifest(manifest_path)
     if manifest is None:
         return ""
-    artefacts = manifest.get("artefacts")
-    if not isinstance(artefacts, list):
+    artefacts_value = manifest.get("artefacts")
+    if not isinstance(artefacts_value, list):
         return ""
+    artefacts = cast("list[object]", artefacts_value)
     for entry in artefacts:
         if not isinstance(entry, dict):
             continue
@@ -140,9 +149,17 @@ def _diseno_url(manifest_path: Path, source: Path) -> str:
         # boundary, documented per the type-escape rule).
         artefact = cast("dict[str, object]", entry)
         stored = artefact.get("stored_path")
-        if isinstance(stored, str) and (manifest_path.parent / stored).resolve() == source.resolve():
-            url = artefact.get("url")
-            return url.strip() if isinstance(url, str) else ""
+        if not isinstance(stored, str) or (manifest_path.parent / stored).resolve() != source.resolve():
+            continue
+        if not source.is_file():
+            return ""
+        recorded_sha256 = artefact.get("sha256")
+        if recorded_sha256 is not None and (
+            not isinstance(recorded_sha256, str) or recorded_sha256.strip().lower() != sha256_of(source)
+        ):
+            return ""
+        url = artefact.get("url")
+        return url.strip() if isinstance(url, str) else ""
     return ""
 
 

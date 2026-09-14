@@ -38,6 +38,7 @@ from ..sidecar import (
     EXTRACTED_TEXT_SUFFIX,
     PreprocessSidecarError,
     load_sidecar,
+    sha256_of,
     sidecar_paths_for,
 )
 
@@ -74,15 +75,40 @@ def test_missing_manifest_does_not_invent_aeat_attribution(tmp_path: Path) -> No
 
 
 def test_manual_manifest_must_identify_its_pdf(tmp_path: Path) -> None:
+    source = tmp_path / "source.pdf"
+    source.write_bytes(b"manual PDF")
     manifest = tmp_path / "manifest.json"
-    manifest.write_text(json.dumps({"source_pdf_url": "https://www.boe.es/manual.pdf"}), encoding="utf-8")
+    manifest.write_text(
+        json.dumps(
+            {
+                "relative_pdf_path": source.name,
+                "source_pdf_url": "https://www.boe.es/manual.pdf",
+                "sha256": "0" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
     assert "unavailable" in _attribution_for(tmp_path / "unrelated.pdf")
+    assert "unavailable" in _attribution_for(source)
+
+    manifest.write_text(
+        json.dumps(
+            {
+                "relative_pdf_path": source.name,
+                "source_pdf_url": "https://www.boe.es/manual.pdf",
+                "sha256": sha256_of(source),
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert "BOE" in _attribution_for(source)
 
 
 def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None:
     files = tmp_path / "files"
     files.mkdir()
     source = files / "law.pdf"
+    source.write_bytes(b"the expected PDF bytes")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -105,6 +131,7 @@ def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None
                     {
                         "stored_path": "files/law.pdf",
                         "url": "https://www.boe.es/law.pdf",
+                        "sha256": sha256_of(source),
                     }
                 ]
             }
@@ -113,6 +140,45 @@ def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None
     )
     assert "BOE" in _attribution_for(source)
     assert "AEAT" not in _attribution_for(source)
+
+    source.write_bytes(b"a different file at the same path")
+    assert "unavailable" in _attribution_for(source)
+
+
+@pytest.mark.parametrize(
+    ("url", "expected", "unexpected"),
+    [
+        ("https://www.boe.es/law.pdf", "BOE", "AEAT"),
+        ("https://sede.agenciatributaria.gob.es/file.pdf", "AEAT", "BOE"),
+        ("https://boe.es.example/file.pdf", "Source URL recorded", "BOE"),
+    ],
+)
+def test_pdf_attribution_classifies_only_exact_official_hosts(
+    tmp_path: Path,
+    url: str,
+    expected: str,
+    unexpected: str,
+) -> None:
+    source = tmp_path / "source.pdf"
+    source.write_bytes(b"pdf bytes")
+    (tmp_path / "manifest.json").write_text(
+        json.dumps(
+            {
+                "artefacts": [
+                    {
+                        "stored_path": source.name,
+                        "url": url,
+                        "sha256": sha256_of(source),
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    attribution = _attribution_for(source)
+    assert expected in attribution
+    assert unexpected not in attribution
 
 
 def test_pdf_extracts_readable_per_page_text() -> None:
@@ -152,6 +218,20 @@ def test_attribution_resolves_for_both_manifest_shapes() -> None:
         manual = _attribution_for(_MANUAL_PDF)
         assert "agenciatributaria.gob.es" in manual
         assert "Manual" in manual  # the manuales URL path
+
+
+def test_attribution_resolves_shipped_sibling_diseno_manifest() -> None:
+    historical = (
+        _CORPUS
+        / "aeat_official"
+        / "disenos_registro"
+        / "modelo_210"
+        / "dr210_2011.pdf"
+    )
+
+    attribution = _attribution_for(historical)
+    assert "AEAT" in attribution
+    assert attribution.endswith("/DR_200_299/archivos/dr210_2011.pdf")
 
 
 def test_sidecar_round_trips_and_is_walker_indexable(tmp_path: Path) -> None:

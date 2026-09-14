@@ -1,21 +1,18 @@
-"""On-host lexical corpus-search grounding surface.
+"""On-host corpus-search grounding surface.
 
-The console's grounding surface: a licence-clean, fully offline retrieval
-stack over the bundled BOE/AEAT corpus, built from the already-shipped
-``*.extracted`` triples. Two cooperating pieces live here:
+The console's fully offline retrieval stack has two cooperating paths:
 
 * the FTS5 lexical index
-  (:mod:`~application.corpus_search._lexical_index`) — standard-library
-  SQLite plus a Spanish Snowball stemmed column;
+  (:mod:`~application.corpus_search.lexical_index`) — concept recall over
+  top-level ``normatives/html/*.html.extracted.json`` payloads, including
+  content-aware extractions of XML responses;
 * the structured citation lookup
-  (:mod:`~application.corpus_search._citation_lookup`) — an exact
-  ``legal_refs`` id resolver over the registry legal catalogue that
-  returns verbatim authoritative text.
+  (:mod:`~application.corpus_search.citation_lookup`) — exact ``legal_refs``
+  resolution through the signed registry authority.
 
-Neither needs a model, vectors, or the network, so the surface has one shape
-on every install: it refuses nothing for want of a download. Semantic search
-is a dev-side precompile step whose laundered output ships with the
-documentation, never a runtime the product carries.
+The lexical index is intentionally narrower than the development RAG index,
+which also enrolls corpus PDFs, workbooks, and terminology sources. Neither
+runtime path needs a model, vectors, or the network.
 """
 
 from __future__ import annotations

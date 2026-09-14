@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf",
   "source_sha256": "d24f733078f69cd28923ac7d9a3ccab5222634c0cd9d1fb725c1c53214e4ad1f",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/TIPOS18000.pdf",
   "units": [
     {
