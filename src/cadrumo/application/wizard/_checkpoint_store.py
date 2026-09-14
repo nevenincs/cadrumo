@@ -51,6 +51,8 @@ def descendant_clearing_facts(
         record: The :class:`UserProfileRecord` to scan for stale descendant
             paths, or ``None``.
         answers: The page-keyed canonical answer map for the current run.
+        operation: Caller-owned pinned authority operation used to project the
+            descendant facts.
     """
     if record is None or DESCENDANTS_COUNT_PAGE_ID not in answers:
         return ()

@@ -28,6 +28,7 @@ from typing import NoReturn
 import typer
 from pydantic import ValidationError
 
+from ...application.calculations.observations_repository import CalculationObservationRepositoryProtocol
 from ...application.prorrata_register.sector_lifecycle import (
     seed_sector_carried_definitive_from_register,
     settle_sector_definitive,
@@ -80,7 +81,11 @@ from ._prorrata_register_payloads import (
 )
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import calculation_action_ports_factory, prorrata_register_repository_factory
+from .state_projection_support import (
+    authority_operation,
+    calculation_action_ports_factory,
+    prorrata_register_repository_factory,
+)
 
 #: Machine-readable notice codes for the carried-seed advisory channel. They are
 #: transport tokens, never localised presentation text.
@@ -457,7 +462,7 @@ def _seed_findings_with_existing_entry(
     ejercicio: int,
     sector: str | None,
     findings: tuple[ProrrataSeedFinding, ...],
-    observation_repository,
+    observation_repository: CalculationObservationRepositoryProtocol,
 ) -> tuple[ProrrataSeedFinding, ...]:
     """Cross-check an existing entry before allowing a carried seed to replace it."""
     existing = service.get(ejercicio, sector_id=sector)
@@ -496,7 +501,10 @@ def prorrata_seed(
     absent prior observation refuses as absent rather than seeding a zero.
     """
     bucket_id = _register_bucket_id()
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id,
+        operation=authority_operation(ctx),
+    )
     evaluation = evaluate_carried_prior_definitiva_seed(
         ejercicio=ejercicio,
         observation_repository=calculation_ports.observation_repository,

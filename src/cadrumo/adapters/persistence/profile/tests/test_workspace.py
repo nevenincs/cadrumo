@@ -12,6 +12,8 @@ import pytest
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -56,7 +58,6 @@ from cadrumo.application.modelo.workspace_models import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
@@ -207,7 +208,7 @@ def test_visible_target_projects_into_a_selector_request_with_no_exact_operands(
 
 def test_formula_operand_references_answer_the_input_direction_not_the_output_direction() -> None:
     """A real revision where the same casilla is both a formula's output and another's input."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("130", filing_year=2026, period="1T")
     formulas = snapshot.revision.formulas
 
@@ -225,7 +226,7 @@ def test_formula_operand_references_answer_the_input_direction_not_the_output_di
 
 
 def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
     bindings = snapshot.revision.bindings
     assert bindings  # sanity: this fixture coordinate carries a real fold slot
@@ -241,7 +242,7 @@ def test_relation_source_endpoint_matches_the_registrys_own_source_casilla_field
 
 
 def test_relation_target_endpoint_matches_the_registrys_own_target_binding_field() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("303", filing_year=2026, period="1T")
     bindings = snapshot.revision.bindings
 
@@ -260,7 +261,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
     from cadrumo.application.modelo.workspace_manifest import generate_modelo_workspace_field_manifest_for_inspection
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
@@ -277,7 +278,7 @@ def test_static_inspection_schema_identity_is_stable_and_uses_the_s278_manifest_
 
 
 def test_static_inspection_evidence_horizon_is_stable_and_sourced_from_the_inspection() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
     inspection = capture.projection
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -315,7 +316,7 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
     from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     work_capture, registry_capture, _axes = capture_modelo_workspace_target_captures(
         _visible_target(bucket_id),
         bucket_id=bucket_id,
@@ -372,7 +373,7 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
 def test_static_inspection_casilla_schema_records_use_the_s277_joins_and_s283_absence() -> None:
     from cadrumo.core.external_constants import OutputLanguage
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     capture = authority.capture_law_selected_projection("130", filing_year=2026, period="1T")
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -523,7 +524,7 @@ def test_schema_facet_stale_cursor_refuses_rather_than_returning_a_different_pag
 def _real_303_inspection() -> RegistryRevisionInspection:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     capture = authority.capture_law_selected_projection("303", filing_year=2026, period="1T")
     inspection = capture.projection
     assert isinstance(inspection, RegistryRevisionInspection)
@@ -534,7 +535,7 @@ def _real_303_snapshot():
     from cadrumo.core.authority_grade import RegistryAuthorityGrade
     from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     capture = authority.capture_law_selected_projection(
         "303", filing_year=2026, period="1T", grade=RegistryAuthorityGrade.CALCULATION
     )
@@ -714,7 +715,7 @@ def test_a_caller_can_spend_the_cursor_the_schema_facet_mints(
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     def _resolve(cursor=None):
         return resolve_static_inspection_result(
@@ -758,7 +759,7 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     minted = resolve_static_inspection_result(
         _visible_target(bucket_id),
@@ -790,7 +791,7 @@ def test_resolve_static_inspection_result_assembles_a_complete_valid_projection(
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     result = resolve_static_inspection_result(
         _visible_target(bucket_id),
@@ -825,7 +826,7 @@ def test_resolve_static_inspection_result_never_re_reads_the_work_catalogue(
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     from cadrumo.core.external_constants import OutputLanguage
 
@@ -856,7 +857,7 @@ def test_capture_with_a_grade_admits_a_registry_snapshot_reading_work_and_regist
 
     bucket_id, repository = workspace_repos
     _seed_work_unit(repository, bucket_id=bucket_id)
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     caplog.clear()
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.profile.modelos_work_units"):

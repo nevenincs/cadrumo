@@ -587,7 +587,7 @@ def setup_flow_definition(
     flow: WizardFlow,
     *,
     attach_descendants: bool = True,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> FlowDefinition:
     """Bridge and decorate the wizard flow into the shared substrate definition.
 
@@ -717,7 +717,7 @@ def _run_scripted_walk(
     *,
     mode: WizardPersistMode,
     explicit_question_ids: frozenset[str],
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> BaseModel:
     """Drive a non-interactive walk through the shared flow substrate.
 
@@ -968,7 +968,7 @@ def scripted_profile_facts(
     flow: WizardFlow,
     kwargs: Mapping[str, object],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[UserProfileFact, ...]:
     """Project a scripted ``create``'s field flags into initial profile facts.
 
@@ -999,6 +999,8 @@ def scripted_profile_facts(
     Args:
         flow: The setup flow whose questions name the accepted flags.
         kwargs: The verb's parsed keyword arguments, keyed by parameter name.
+        operation: Caller-owned pinned authority operation used for all
+            operation-scoped catalogue checks.
 
     Returns:
         The supplied flags as facts, empty when the caller named none.
@@ -1020,7 +1022,7 @@ def _run_patch_edit(
     explicit_flags: dict[str, str],
     *,
     profile_id: str,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
     """Persist a non-interactive ``edit`` as a true patch.
 
@@ -1038,7 +1040,7 @@ def _run_patch_edit(
     )
 
     patched_values = profile_values_from_patch(flow, explicit_flags)
-    profile_decode_context = operation.profile_decode_context() if operation is not None else None
+    profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
@@ -1071,7 +1073,7 @@ def _persist_full_flow_answers(
     answers: BaseModel,
     *,
     profile_id: str,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
     """Validate and persist one completed full-flow answer model."""
     from ...domain.user_profile.values import UserProfileFact
@@ -1081,7 +1083,7 @@ def _persist_full_flow_answers(
     from .persistence import project_answers, serialise_answers
 
     profile_values = serialise_answers(flow, answers)
-    profile_decode_context = operation.profile_decode_context() if operation is not None else None
+    profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
@@ -1109,7 +1111,7 @@ def _run_full_flow(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
     explicit_question_ids: frozenset[str] = frozenset(),
 ) -> dict[str, str]:
     """Walk the full wizard flow and persist the resulting answer set.
@@ -1348,17 +1350,11 @@ def _refuse_foral_ccaa(
     canonical: dict[str, str],
     explicit_flags: dict[str, str],
     *,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Reject foral CCAA tokens before any persistence or prompt."""
     ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
     if ccaa_token is None:
-        return
-
-    if operation is None:
-        # Metadata-only callers do not have an authority operation.  The
-        # operation-backed command path supplies one before any profile facts
-        # are projected, so this branch cannot admit a production value.
         return
 
     from ...core.text_fold import fold_diacritics
@@ -1511,7 +1507,7 @@ def _run_wizard_persistence_path(
     accept_defaults: bool,
     profile_name: str,
     profile_id: str,
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
     """Dispatch to patch-edit or full-flow persistence."""
     non_interactive = quiet or accept_defaults
@@ -1564,6 +1560,8 @@ def profile_next_step_modelo(
             :func:`~cadrumo.application.user_profile.record_to_path_values`
             projection of a :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`
             — the two share the same ``taxpayer_type.fiscal_residency`` key.
+        operation: Caller-owned pinned authority operation used to classify the
+            fiscal-residency token.
     """
     fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
     from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
@@ -1873,7 +1871,7 @@ def _execute_wizard_command(
     mode: WizardPersistMode,
     *,
     kwargs: dict[str, object],
-    operation: PinnedAuthorityOperation | None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
     profile_name, profile_id = _resolve_profile_target_for_mode(
@@ -1925,11 +1923,7 @@ def _execute_wizard_command(
         ),
         None,
     )
-    next_command = (
-        next_step_command_for_profile_values(profile_values, operation=operation)
-        if operation is not None
-        else DEFAULT_PROFILE_NEXT_COMMAND
-    )
+    next_command = next_step_command_for_profile_values(profile_values, operation=operation)
     _emit_wizard_success(
         mode,
         profile_name,
@@ -1953,7 +1947,7 @@ def build_wizard_command(
     flow: WizardFlow,
     *,
     mode: WizardPersistMode,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 

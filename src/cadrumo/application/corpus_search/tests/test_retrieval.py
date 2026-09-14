@@ -12,10 +12,10 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
-from ....domain.calculations.registry import authority as authority_module
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority_artifact import (
     AuthorityComponentKind,
@@ -74,7 +74,7 @@ def test_limit_caps_the_returned_page(tmp_path: Path) -> None:
 def test_citation_short_circuit(tmp_path: Path) -> None:
     database_path, _ids = _index_and_chunks(tmp_path)
     citation_id = "ley-58-2003:art-27.2"
-    authority = authority_module.bundled_authority()
+    authority = compiled_bundled_authority()
     reference = authority.catalogues.legal[citation_id]
     anchored_text = authority.legal_evidence_text(reference.id)
     reference_query = ReferenceComponentQuery(citation_id, AuthorityComponentKind.LEGAL_REFERENCE)

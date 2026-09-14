@@ -15,12 +15,12 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.overview.calendar_models import OverviewCalendarEvent, OverviewCalendarEventType
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ....core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ....core.post_filing_event import PostFilingEventKind
-from ....domain.calculations.registry.authority import bundled_authority
 from .._overview_rendering import overview_deemed_served_notification_notices, overview_post_filing_event_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -69,7 +69,7 @@ def test_deemed_served_notifications_emit_one_warning_notice_with_legal_provenan
 
 def test_deemed_served_legal_ref_resolves_against_the_registry_catalogue() -> None:
     """The provenance the notice hands the operator is a real, corpus-backed entry."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     catalogue = authority.catalogues.legal
     notice = overview_deemed_served_notification_notices(
         (_notificacion(reference_id="2596230606502", estado=NotificacionEstadoServicio.RECHAZO_TACITO),),

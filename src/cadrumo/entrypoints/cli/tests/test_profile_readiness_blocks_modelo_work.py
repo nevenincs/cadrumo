@@ -5,13 +5,13 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
-from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
 
@@ -57,7 +57,7 @@ def test_defaulted_profile_readiness_surfaces_block_before_modelo_work(
 ) -> None:
     _create_defaulted_natural_person_profile(profile_name)
     revision_id = str(
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=int(filing_year),

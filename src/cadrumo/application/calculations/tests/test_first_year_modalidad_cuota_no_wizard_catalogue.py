@@ -64,7 +64,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.period import Period
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 from cadrumo.domain.resources.registry import resources
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -164,7 +164,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
     # and deliberately refuses the filing rung while it spans two incompatible
     # AEAT layouts, so demanding filing here would be asking for an authority
     # this work does not need and the registry is right to withhold.
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         "200",
         filing_year=2025,
         period="0A",

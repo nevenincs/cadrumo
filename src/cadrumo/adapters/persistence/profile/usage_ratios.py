@@ -30,11 +30,15 @@ from ....core.logging import get_logger
 from ....core.time.clock import now
 from ....domain.categories.spending_category import home_office_categories
 from ....domain.usage_ratios.errors import CensoRatioMismatchError, UsageRatioPersistenceError
-from ....domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
+from ....domain.usage_ratios.model import (
+    ELIGIBLE_USAGE_RATIO_CATEGORIES,
+    UsageRatioProfile,
+)
 from ....domain.usage_ratios.service import derive_home_office_ratios_from_censo, usage_ratios_object_key
 from ..storage.secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..storage.sql.secure_objects import SecureObjectRepository
 
 __all__ = [
@@ -49,11 +53,17 @@ _USAGE_RATIO_SENSITIVITY = USAGE_RATIO_PROFILE_NAMESPACE.sensitivity
 _USAGE_RATIO_NAMESPACE = USAGE_RATIO_PROFILE_NAMESPACE.namespace
 
 
-def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
+def load_usage_ratios(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    objects: SecureObjectRepository | None = None,
+) -> UsageRatioProfile:
     """Load one bucket's persisted :class:`UsageRatioProfile`, or return an empty one.
 
     Args:
         bucket_id: Profile bucket identifier.
+        operation: Authority generation whose eligibility vocabulary validates the payload.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
     from ..storage.envelope.contract import Envelope
@@ -72,8 +82,14 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         )
         if record is None:
             _LOGGER.debug("usage-ratios object not found; returning empty profile bucket_id=%s", bucket_id)
-            return UsageRatioProfile()
-        envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode(UTF_8_ENCODING))
+            from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+            with validating_governed_facts(operation):
+                return UsageRatioProfile()
+        from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+        with validating_governed_facts(operation):
+            envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode(UTF_8_ENCODING))
         if not inner_envelope_classification_is_expected(envelope.classification, _USAGE_RATIO_SENSITIVITY):
             raise ClassificationError(
                 f"usage-ratio profile object has classification {envelope.classification}; "
@@ -86,8 +102,12 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
             )
     except ValidationError as exc:
         _LOGGER.error("usage-ratios object validation failed", exc_info=True)
+        from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+        with validating_governed_facts(operation):
+            summary = _summarise_validation_errors(exc)
         raise UsageRatioPersistenceError(
-            f"invalid usage-ratio profile object\n{_summarise_validation_errors(exc)}",
+            f"invalid usage-ratio profile object\n{summary}",
         ) from exc
     except UnicodeDecodeError as exc:
         _LOGGER.error("usage-ratios object payload is not UTF-8", exc_info=True)
@@ -176,6 +196,7 @@ def load_usage_ratios_with_censo_guard(
     bucket_id: str,
     raw_afectacion_ratio: Decimal | None,
     year: int,
+    operation: PinnedAuthorityOperation,
     objects: SecureObjectRepository | None = None,
 ) -> UsageRatioProfile:
     """Load a usage-ratio profile and refuse on censo disagreement.
@@ -204,6 +225,7 @@ def load_usage_ratios_with_censo_guard(
             applied a censo.
         year: Registry year whose proportionality rules drive the
             derivation.
+        operation: Authority generation whose eligibility vocabulary validates the payload.
         objects: Optional injected :class:`SecureObjectRepository`
             (testing seam).
 
@@ -217,7 +239,7 @@ def load_usage_ratios_with_censo_guard(
             persisted HOME_OFFICE override exists with ``raw_afectacion_ratio``
             unset.
     """
-    profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
+    profile = load_usage_ratios(bucket_id=bucket_id, operation=operation, objects=objects)
     home_office = home_office_categories()
     persisted_home_office = {category: ratio for category, ratio in profile.ratios.items() if category in home_office}
     if not persisted_home_office:

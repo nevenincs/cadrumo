@@ -868,7 +868,7 @@ def overview_prepare(
     from ...application.overview.data_prep import build_data_prep_walkthrough
     from ...domain.calculations.registry.errors import RegistrySnapshotError
     from ..ledger_action_composition import compose_ledger_action_ports
-    from .state_projection_support import ledger_evidence_ports_factory
+    from .state_projection_support import authority_operation, ledger_evidence_ports_factory
 
     current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
@@ -887,7 +887,7 @@ def overview_prepare(
         ) from exc
 
     transaction_repository = transaction_catalogue_repo(current)
-    ledger_action_ports = compose_ledger_action_ports(bucket_id=bucket_id)
+    ledger_action_ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
     invoice_catalogue = load_invoices()
     evidence_records = PurchaseInvoiceEvidenceService(
         ports=ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id),
@@ -897,6 +897,7 @@ def overview_prepare(
         period=canonical_period,
         transaction_repository=transaction_repository,
         usage_ratio_profile_loader=ledger_action_ports.usage_ratio_profile_loader,
+        operation=authority_operation(ctx),
     )
     work_unit_catalogue = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
 
@@ -938,7 +939,11 @@ def overview_pipeline(
     from ...domain.modelos.verification_report import VerificationReport
     from ..ledger_action_composition import compose_ledger_action_ports
     from ._ledger_payloads import LedgerStatusResult
-    from .state_projection_support import calculation_action_ports_factory, filing_action_ports_factory
+    from .state_projection_support import (
+        authority_operation,
+        calculation_action_ports_factory,
+        filing_action_ports_factory,
+    )
 
     current = current_workflow_state()
     bucket_id = current.active_profile_bucket_id()
@@ -949,10 +954,13 @@ def overview_pipeline(
     ledger_report = summarize_manual_transactions(
         bucket_id=bucket_id,
         period=canonical_period,
-        ports=compose_ledger_action_ports(bucket_id=bucket_id),
+        ports=compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx)),
     )
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id)
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id,
+        operation=authority_operation(ctx),
+    )
     all_work_units = list_work_units(
         bucket_id=bucket_id,
         include_discarded=False,

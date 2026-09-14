@@ -39,11 +39,15 @@ settled here.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.usage_ratios.service import derive_home_office_ratios_from_censo
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from .censo_sync import bound_raw_afectacion_ratio_for_bucket
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = ["resolve_effective_usage_ratios"]
 
@@ -53,6 +57,7 @@ def resolve_effective_usage_ratios(
     bucket_id: str,
     year: int,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> dict[SpendingCategory, Decimal]:
     """Return the effective usage ratio per category for one bucket and filing year.
 
@@ -67,13 +72,14 @@ def resolve_effective_usage_ratios(
             take the raw area proportion under art. 29.2).
         usage_ratio_profile_loader: Required application-owned read capability for
             the persisted usage-ratio profile.
+        operation: Generation-pinned authority for governed ratio vocabulary.
 
     Returns:
         Category-to-effective-ratio mapping, ready for
         :class:`~domain.renta.RentaDeductibilityContext`. Empty when the operator has
         stored nothing and declared no dwelling m².
     """
-    stored = dict(usage_ratio_profile_loader(bucket_id=bucket_id).ratios)
+    stored = dict(usage_ratio_profile_loader(bucket_id=bucket_id, operation=operation).ratios)
     raw_afectacion_ratio = bound_raw_afectacion_ratio_for_bucket(bucket_id)
     if raw_afectacion_ratio is None:
         return stored

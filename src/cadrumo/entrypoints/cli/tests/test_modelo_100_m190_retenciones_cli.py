@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -15,7 +16,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -96,7 +96,9 @@ def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CAPTURED_AT,
-            stamped_revision_id=str(bundled_authority().snapshot("100", filing_year=2024, period="0A").revision.id),
+            stamped_revision_id=str(
+                compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A").revision.id
+            ),
         )
     )
 

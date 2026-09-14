@@ -1894,10 +1894,12 @@ class ModeloEditApplyExecutor:
     def __init__(
         self,
         *,
+        authority_factory: Callable[[], IndexedRegistryAuthority],
         calculation_action_ports_factory: CalculationActionPortsFactory,
         receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
     ) -> None:
         """Bind the calculation authorities supplied by the composition root."""
+        self._authority_factory = authority_factory
         self._calculation_action_ports_factory = calculation_action_ports_factory
         self._receipt_repository_factory = receipt_repository_factory
 
@@ -1927,13 +1929,17 @@ class ModeloEditApplyExecutor:
             operation_id=context.identity.operation_id,
             submission=submission,
         )
-        outcome = apply_modelo_edit(
-            apply_request,
-            ports=self._calculation_action_ports_factory(bucket_id=baseline.bucket_id),
-            receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
-            now=datetime.now(UTC),
-            result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
-        )
+        with self._authority_factory().operation() as operation:
+            outcome = apply_modelo_edit(
+                apply_request,
+                ports=self._calculation_action_ports_factory(
+                    bucket_id=baseline.bucket_id,
+                    operation=operation,
+                ),
+                receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
+                now=datetime.now(UTC),
+                result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
+            )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):
             # A failed compare-and-swap changed nothing, and NONE is the
             # truthful report of that -- distinct from the UNKNOWN carried
@@ -1946,6 +1952,7 @@ class ModeloEditApplyExecutor:
 
 def build_modelo_edit_apply_definition(
     *,
+    authority_factory: Callable[[], IndexedRegistryAuthority],
     calculation_action_ports_factory: CalculationActionPortsFactory,
     receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
 ) -> OperationDefinition:
@@ -1953,6 +1960,7 @@ def build_modelo_edit_apply_definition(
 
     def build() -> ModeloEditApplyExecutor:
         return ModeloEditApplyExecutor(
+            authority_factory=authority_factory,
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         )
@@ -2141,6 +2149,7 @@ def build_modelo_lifecycle_operation_definitions(
     """
     return (
         build_modelo_edit_apply_definition(
+            authority_factory=authority_factory,
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
         ),

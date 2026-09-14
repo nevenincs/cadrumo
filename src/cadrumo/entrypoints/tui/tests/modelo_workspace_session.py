@@ -26,6 +26,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -39,7 +41,6 @@ from ....application.modelo.workspace_models import (
 )
 from ....core.external_constants import OutputLanguage
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.modelos.codes import ModeloCode
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -123,7 +124,7 @@ def real_workspace_inspection_result(
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
         period = Period.from_year_and_code(filing_year, period_code)
-        authority = bundled_authority()
+        authority = compiled_bundled_authority()
         # Selected from the authority when the caller does not pin one, so a
         # caller choosing an address does not also have to know which revision
         # governs it -- a hand-written revision id is the shape that goes stale

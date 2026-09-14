@@ -8,6 +8,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 from click.testing import Result
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -31,7 +32,6 @@ from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import clear_output_language_cache
 from ....core.period import Period
 from ....core.time.clock import frozen_clock, now, today_madrid
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState
@@ -225,7 +225,7 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
         profile = profile_to_taxpayer(current)
         record = current.active_profile_record()
         raw_values = record_to_values(record) if record is not None else None
-        supported_years = bundled_authority().catalogues.supported_filing_years
+        supported_years = compiled_bundled_authority().catalogues.supported_filing_years
         assert supported_years is not None
 
         for filing_year in supported_years.years:

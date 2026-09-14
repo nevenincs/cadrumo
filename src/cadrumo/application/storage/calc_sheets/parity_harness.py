@@ -125,7 +125,7 @@ class CalcSheetsParityApplyPort(Protocol):
         self,
         plan: SheetExportPlan,
         *,
-        credentials: object,
+        credentials: Credentials,
         root_folder_id: str,
     ) -> CalcSheetsParityApplyResult:
         """Materialise ``plan`` and return its application-facing identity."""

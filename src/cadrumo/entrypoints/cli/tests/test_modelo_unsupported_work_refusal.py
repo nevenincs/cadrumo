@@ -11,11 +11,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,  # noqa: F401 - autouse fixture
 )
-from ....domain.calculations.registry.authority import bundled_authority
 from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
 from .cli_runner import invoke_cached_cli
 
@@ -104,8 +104,8 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
         "714": ("ley-19-1991:art-28", "boe-modelo-714-layout"),
         "721": ("ley-11-2021:da-10", "boe-modelo-721-2023-layout"),
     }
-    modelos = bundled_authority().modelos
-    catalogues = bundled_authority().catalogues
+    modelos = compiled_bundled_authority().modelos
+    catalogues = compiled_bundled_authority().catalogues
     modelo_ids = {modelo.id for modelo in modelos}
 
     for modelo, (legal_id, source_id) in expected.items():

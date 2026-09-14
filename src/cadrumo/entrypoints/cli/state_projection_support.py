@@ -42,10 +42,11 @@ from ...application.prorrata_register.ports import ProrrataRegisterRepositoryFac
 from ...application.state_projection_ports import StateProjectionReadPorts
 from ...application.user_profile.custody_ports import ProfileBucketStoragePort
 from ...core.errors.hierarchy import InternalInvariantError
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 
 _STATE_PROJECTION_PORTS_KEY = "state_projection_read_ports"
 _DIAGNOSTICS_PORTS_KEY = "diagnostics_ports"
-_CERTIFICATE_SECRET_BACKEND_FACTORY_KEY = "certificate_secret_backend_factory"
+_CERTIFICATE_BACKEND_FACTORY_SLOT = "certificate_backend_factory"
 _OPERATOR_PROBE_PORTS_KEY = "operator_probe_ports"
 _OPERATOR_SCOPE_PORTS_KEY = "operator_scope_ports"
 _VERIFICATION_REPOSITORY_BUNDLE_FACTORY_KEY = "verification_repository_bundle_factory"
@@ -78,6 +79,19 @@ _RECIPIENT_ENCRYPTION_CAPABILITY_FACTORY_KEY = "recipient_encryption_capability_
 _REVIEW_PACKAGE_SIGNING_KEYPAIR_CAPABILITY_FACTORY_KEY = "review_package_signing_keypair_capability_factory"
 _PRORRATA_REGISTER_REPOSITORY_FACTORY_KEY = "prorrata_register_repository_factory"
 _BUCKET_STORAGE_KEY = "bucket_storage"
+_AUTHORITY_OPERATION_KEY = "authority_operation"
+
+
+def authority_operation(ctx: typer.Context) -> PinnedAuthorityOperation:
+    """Return one lazy generation pin owned by the root command context."""
+    root = ctx.find_root()
+    root_state = cast("dict[str, object]", root.ensure_object(dict))
+    existing = root_state.get(_AUTHORITY_OPERATION_KEY)
+    if isinstance(existing, PinnedAuthorityOperation):
+        return existing
+    operation = root.with_resource(bundled_indexed_authority().operation())
+    root_state[_AUTHORITY_OPERATION_KEY] = operation
+    return operation
 
 
 def state_projection_read_ports(ctx: typer.Context) -> StateProjectionReadPorts:
@@ -101,7 +115,7 @@ def diagnostics_ports(ctx: typer.Context) -> DiagnosticsPorts:
 def certificate_secret_backend_factory(ctx: typer.Context) -> CertificateSecretBackendFactory:
     """Return the certificate-secret factory supplied by the CLI composition root."""
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
-    return cast(CertificateSecretBackendFactory, root_state[_CERTIFICATE_SECRET_BACKEND_FACTORY_KEY])
+    return cast(CertificateSecretBackendFactory, root_state[_CERTIFICATE_BACKEND_FACTORY_SLOT])
 
 
 def operator_probe_ports(ctx: typer.Context) -> OperatorProbePorts:

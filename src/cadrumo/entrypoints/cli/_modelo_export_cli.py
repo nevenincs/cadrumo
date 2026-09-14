@@ -41,7 +41,7 @@ from ._modelo_cli_support import (
 )
 from ._modelo_payloads import ModeloExportPayload
 from .common import emit_envelope, filing_taxpayer_or_refuse
-from .state_projection_support import calculation_action_ports_factory, modelo_export_ports_factory
+from .state_projection_support import authority_operation, calculation_action_ports_factory, modelo_export_ports_factory
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
@@ -174,7 +174,10 @@ def modelo_export_verb(
         registry_revision=operator_input.registry_revision,
         bucket_id=operator_input.bucket_id,
         select=operator_input.select,
-        calculation_ports=calculation_action_ports_factory(ctx)(bucket_id=resolved_bucket_id),
+        calculation_ports=calculation_action_ports_factory(ctx)(
+            bucket_id=resolved_bucket_id,
+            operation=authority_operation(ctx),
+        ),
     )
     target_revision_id = selected_revision.calculation_revision_id
     result = export_modelo_revision_for_cli(

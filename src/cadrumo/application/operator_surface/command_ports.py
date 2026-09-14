@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.json_contract import RegisteredSchema
+from ...core.type_guards import is_object_list_or_tuple
 from .manifest import CommandSchemaRef
 
 _FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
@@ -422,7 +423,7 @@ def cli_argv_for(schema: VerbInputSchema, arguments: Mapping[str, object]) -> li
         if parameter.name not in arguments:
             continue
         value = arguments[parameter.name]
-        values: Sequence[object] = value if parameter.multiple and isinstance(value, list | tuple) else (value,)
+        values: Sequence[object] = value if parameter.multiple and is_object_list_or_tuple(value) else (value,)
         if parameter.kind is ParameterKind.ARGUMENT:
             positional.extend(str(item) for item in values)
         elif parameter.is_flag:

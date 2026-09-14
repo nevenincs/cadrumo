@@ -19,6 +19,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from google.auth.credentials import Credentials
+
+    from ..adapters.outbound.aeat.sede.declarations import DeclaracionesRegisterSession
+    from ..adapters.outbound.aeat.sede.declarations_schema import Declaracion
+    from ..adapters.persistence.storage.sql.secure_object_records import SecureObjectNamespaceIntegrity
     from ..application.aggregation.percepciones_observations_repository import (
         PercepcionObservationPorts,
         PercepcionObservationPortsFactory,
@@ -31,6 +36,7 @@ if TYPE_CHECKING:
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.auth.operator_probe_ports import OperatorProbePorts
     from ..application.auth.operator_scope_ports import OperatorScopePorts
+    from ..application.auth.session_types import AeatSession
     from ..application.bienes_inversion.ports import (
         BienesInversionIvaRegisterRepositoryFactory,
         BienesInversionIvaRegisterRepositoryProtocol,
@@ -91,7 +97,10 @@ if TYPE_CHECKING:
     from ..application.storage.calc_sheets.records import SheetExportPlan
     from ..application.user_profile.custody_ports import ProfileBucketStoragePort
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
+    from ..core.config import Settings
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
+    from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,7 +153,7 @@ def build_censal_fetch_port() -> CensalFetchPort:
     from ..application.live.errors import LiveApplicationError
     from ..application.user_profile.censal_observation import CensalObservation
 
-    async def fetch(session: object, *, taxpayer_nif: str, settings: object) -> CensalObservation:
+    async def fetch(session: AeatSession, *, taxpayer_nif: str, settings: Settings) -> CensalObservation:
         """Read through Sede and translate its result and failures inward."""
         try:
             captured = await fetch_censal_datos(
@@ -187,7 +196,7 @@ def build_calc_sheets_parity_apply_port() -> CalcSheetsParityApplyPort:
     def apply(
         plan: SheetExportPlan,
         *,
-        credentials: object,
+        credentials: Credentials,
         root_folder_id: str,
     ) -> CalcSheetsParityApplyResult:
         """Translate the concrete Google apply record at the outer boundary."""
@@ -320,7 +329,7 @@ def build_diagnostics_ports() -> DiagnosticsPorts:
             return secure_object_repository_for_active_bucket_or_default_route()
 
         @staticmethod
-        def _translate(row) -> DiagnosticSecureObjectNamespace:
+        def _translate(row: SecureObjectNamespaceIntegrity) -> DiagnosticSecureObjectNamespace:
             return DiagnosticSecureObjectNamespace(
                 namespace=row.namespace,
                 readable=row.readable,
@@ -665,7 +674,11 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
     )
 
 
-def build_calculation_action_ports(*, bucket_id: str) -> CalculationActionPorts:
+def build_calculation_action_ports(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -700,8 +713,13 @@ def build_calculation_action_ports(*, bucket_id: str) -> CalculationActionPorts:
     class RelationOverrideMigration:
         """Adapt the existing migration implementation to the application port."""
 
-        def migrate(self, repository: object) -> None:
-            migrate_stored_relation_overrides_to_binding_ids(repository)
+        def migrate(
+            self,
+            repository: CalculationRevisionCatalogueRepositoryProtocol,
+            *,
+            operation: PinnedAuthorityOperation,
+        ) -> None:
+            migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
 
     invoice_repository = InvoiceCatalogueRepository(
         bucket_id=normalized_bucket_id,
@@ -718,6 +736,7 @@ def build_calculation_action_ports(*, bucket_id: str) -> CalculationActionPorts:
     )
 
     return CalculationActionPorts(
+        operation=operation,
         work_unit_repository=work_unit_repository,
         work_lifecycle_ports=WorkLifecyclePorts(
             work_unit_repository=work_unit_repository,
@@ -921,7 +940,6 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         ExpedientesPorts,
         ExpedientesRegisterProtocol,
     )
-    from ..core.config import Settings
 
     def snapshot_repository_factory(bucket: str) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
         """Bind one encrypted snapshot repository to the requested bucket."""
@@ -944,7 +962,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
             objects=secure_object_repository_for_bucket(normalized),
         )
 
-    def translate_declaration(row: object) -> ExpedientesDeclaration:
+    def translate_declaration(row: Declaracion) -> ExpedientesDeclaration:
         """Translate the Sede row DTO before it enters application state."""
         try:
             return ExpedientesDeclaration(
@@ -973,7 +991,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
     class SedeExpedientesRegister(ExpedientesRegisterProtocol):
         """Translate rows returned by the concrete Sede register session."""
 
-        def __init__(self, register: object) -> None:
+        def __init__(self, register: DeclaracionesRegisterSession) -> None:
             self._register = register
 
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
@@ -992,7 +1010,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         """Adapt the browser register lifecycle to the application port."""
 
         @asynccontextmanager
-        async def open_register(self, session: object, *, settings: Settings):
+        async def open_register(self, session: AeatSession, *, settings: Settings):
             try:
                 async with (
                     shared_playwright(session) as playwright,

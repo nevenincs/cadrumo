@@ -9,6 +9,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -22,7 +23,6 @@ from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
@@ -149,13 +149,13 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         assert observed.source_metadata["captured_by"] == "sofia-local"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+        m100_snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(
             m100_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
         )
         assert m100_prefill.binding_values["renta-base-liquidable-negativa-general-anterior"] == Decimal("0")
 
-        m130_snapshot = bundled_authority().snapshot("130", filing_year=2025, period="1T")
+        m130_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2025, period="1T")
         m130_prefill = resolve_bindings_from_local_store(
             m130_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
         )
@@ -239,7 +239,7 @@ def test_observe_local_exposes_and_executes_explicit_official_evidence_replaceme
                 source_kind="aeat_sede_justificante",
                 captured_at=datetime(2026, 4, 1, 9, 30, tzinfo=UTC),
                 stamped_revision_id=str(
-                    bundled_authority()
+                    compiled_bundled_authority()
                     .snapshot(
                         "303",
                         filing_year=period.filing_year,

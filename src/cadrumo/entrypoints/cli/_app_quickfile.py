@@ -42,6 +42,7 @@ from .common import (
     no_active_profile_refusal,
 )
 from .state_projection_support import (
+    authority_operation,
     calculation_action_ports_factory,
     certificate_secret_backend_factory,
     modelo_export_ports_factory,
@@ -109,7 +110,10 @@ def quickfile(
         period=resolved_period,
         evidence_file=m303_filing_evidence,
     )
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=resolved_bucket)
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=resolved_bucket,
+        operation=authority_operation(ctx),
+    )
 
     def _build_inputs(work_unit_id: str):
         return work_calculate_input_bundle_from_cli(

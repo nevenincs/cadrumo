@@ -72,7 +72,6 @@ from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _MADRID_NACIMIENTO_ADOPCION_SEMANTIC_ROLE = "irpf_deduccion_madrid_nacimiento_adopcion"
 
@@ -111,7 +110,6 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
-    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm Madrid nacimiento/adopción eligibility for an indeterminate unit.
 
@@ -149,7 +147,6 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
 
     fact_index = _load_fact_index(
         bucket_id,
-        profile_decode_context=profile_decode_context,
         operation=operation,
     )
     if fact_index is None:
@@ -162,12 +159,17 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
 
     coordinate = date(snapshot.filing_year, 12, 31)
     family_context = FamilyFactResolutionContext(authority=operation, filing_period=coordinate, devengo_date=coordinate)
-    if not is_madrid_autonomic_deduccion_filing_year(snapshot.filing_year, context=family_context):
+    if not is_madrid_autonomic_deduccion_filing_year(
+        snapshot.filing_year,
+        context=family_context,
+        operation=operation,
+    ):
         return None
     weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
         fact_index,
         snapshot.filing_year,
         context=family_context,
+        operation=operation,
     )
     if weighted_count <= 0:
         return None
@@ -188,18 +190,13 @@ def madrid_nacimiento_adopcion_eligibility_advisory_finding(
 def _load_fact_index(
     bucket_id: str,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, UserProfileFactValue] | None:
     """Return the bucket's profile fact index, or ``None`` when no profile exists."""
-    if profile_decode_context is None:
-        if operation is None:
-            raise TypeError("profile advisory facts require a pinned authority operation")
-        profile_decode_context = operation.profile_decode_context()
     try:
         repository = ProfileRecordRepository.for_current_session(
             bucket_id,
-            profile_decode_context=profile_decode_context,
+            profile_decode_context=operation.profile_decode_context(),
         )
         record = repository.load(bucket_id)
     except ProfileNotFoundError:
@@ -213,7 +210,6 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
     *,
     work_unit: WorkUnit,
     operation: PinnedAuthorityOperation,
-    profile_decode_context: ProfileDecodeContext | None = None,
 ) -> ModeloVerificationFinding | None:
     """Convenience wrapper reading ``bucket_id`` off a :class:`WorkUnit`."""
     return madrid_nacimiento_adopcion_eligibility_advisory_finding(
@@ -221,7 +217,6 @@ def madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
         casilla_values,
         bucket_id=work_unit.bucket_id,
         operation=operation,
-        profile_decode_context=profile_decode_context,
     )
 
 

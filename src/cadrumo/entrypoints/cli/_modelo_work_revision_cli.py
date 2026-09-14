@@ -21,6 +21,7 @@ import typer
 
 from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.calculate_input import modelo_202_modality_for_work_unit
+from ...application.modelo.calculation_action_ports import CalculationActionPorts
 from ...application.modelo.calculation_actions import list_calculation_revisions
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.bucket_pointer import require_active_bucket_id
@@ -41,7 +42,7 @@ from ._modelo_rendering import (
 )
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .common import activate_subcommand_output_language, emit_envelope
-from .state_projection_support import calculation_action_ports_factory
+from .state_projection_support import authority_operation, calculation_action_ports_factory
 
 
 @dataclass(frozen=True)
@@ -78,7 +79,7 @@ def _resolve_selected_revision(
     registry_revision: str | None,
     bucket_id: str | None,
     selector: str,
-    calculation_ports,
+    calculation_ports: CalculationActionPorts,
 ) -> CalculationRevision:
     """Resolve the selected :class:`CalculationRevision` for read-only commands."""
     try:
@@ -213,7 +214,10 @@ def work_revisions(
     )
     revisions = list_calculation_revisions(
         work_unit_id=resolved_work_unit_id,
-        ports=calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id()),
+        ports=calculation_action_ports_factory(ctx)(
+            bucket_id=bucket_id or require_active_bucket_id(),
+            operation=authority_operation(ctx),
+        ),
     )
     result = _work_revisions_result(resolved_work_unit_id, revisions)
     lines = _work_revisions_lines(resolved_work_unit_id, revisions)
@@ -243,7 +247,10 @@ def work_revision(
     """
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id or require_active_bucket_id(),
+        operation=authority_operation(ctx),
+    )
     selected_revision = _resolve_selected_revision(
         _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,
@@ -297,7 +304,10 @@ def work_observations(
     """
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id or require_active_bucket_id(),
+        operation=authority_operation(ctx),
+    )
     selected_revision = _resolve_selected_revision(
         _revision_dependencies(),
         calculation_revision_id=calculation_revision_id,

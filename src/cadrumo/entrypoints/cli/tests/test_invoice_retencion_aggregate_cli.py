@@ -19,6 +19,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
@@ -36,7 +37,6 @@ from ....application.modelo.calculation_actions import (
 )
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -122,7 +122,7 @@ def _seed_ready_profile(root: Path) -> None:
 
 
 def _calculate_m111(objects: SecureObjectRepository, period: Period) -> dict[str, Decimal]:
-    snapshot = bundled_authority().snapshot("111", filing_year=period.filing_year, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("111", filing_year=period.filing_year, period="1T")
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

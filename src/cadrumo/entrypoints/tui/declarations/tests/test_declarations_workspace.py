@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
 from textual.screen import Screen
@@ -28,7 +29,6 @@ from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -64,7 +64,7 @@ _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
-_REGISTRY_SNAPSHOT_REF = bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
 _EXPECTED = {
     OutputLanguage.ES: (
         "Resumen de declaraciones",

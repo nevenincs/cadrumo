@@ -26,7 +26,7 @@ from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_serializer, field_validator
 
@@ -66,6 +66,9 @@ from ..aggregation.iva_ledger import (
 from ..user_profile.censo_sync import bound_raw_afectacion_ratio_for_bucket
 from .transaction_repository import transaction_catalogue_repository
 from .usage_ratio_repository import UsageRatioProfileLoader, usage_ratio_profile_with_censo_guard
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class LedgerPreflightIssueReason(StrEnum):
@@ -153,6 +156,7 @@ def preflight_ledger_tax_readiness(
     bucket_id: str,
     period: Period,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     raw_afectacion_ratio: Decimal | None = None,
 ) -> LedgerPreflightReport:
@@ -164,6 +168,7 @@ def preflight_ledger_tax_readiness(
             the readiness window.
         usage_ratio_profile_loader: Required application-owned read capability
             for resolving declared usage-ratio profiles.
+        operation: Generation-pinned authority for governed ratio and IVA vocabulary.
         transaction_repository: Optional transaction-catalogue port used to
             load the bucket-local catalogue; the outward-composed repository
             is resolved when ``None``.
@@ -192,11 +197,13 @@ def preflight_ledger_tax_readiness(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion_ratio,
             year=period.filing_year,
+            operation=operation,
         )
         missing_home_office_afectacion_detail = _missing_home_office_afectacion_detail(
             bucket_id=bucket_id,
             year=period.filing_year,
             usage_ratio_profile_loader=usage_ratio_profile_loader,
+            operation=operation,
         )
     return preflight_transaction_catalogue(
         bucket_id=bucket_id,
@@ -302,6 +309,7 @@ def _missing_home_office_afectacion_detail(
     bucket_id: str,
     year: int,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Report the absence of any proportion a home-office row could deduct on.
 
@@ -320,6 +328,7 @@ def _missing_home_office_afectacion_detail(
         bucket_id=bucket_id,
         year=year,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     if any(category in ratios for category in home_office_categories()):
         return None
@@ -333,7 +342,13 @@ def _missing_home_office_afectacion_detail(
     )
 
 
-def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decimal | None, year: int) -> str | None:
+def _censo_ratio_mismatch_detail(
+    *,
+    bucket_id: str,
+    raw_afectacion_ratio: Decimal | None,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
     resolved_raw = raw_afectacion_ratio
     if resolved_raw is None:
         resolved_raw = bound_raw_afectacion_ratio_for_bucket(bucket_id)
@@ -342,6 +357,7 @@ def _censo_ratio_mismatch_detail(*, bucket_id: str, raw_afectacion_ratio: Decima
             bucket_id=bucket_id,
             raw_afectacion_ratio=resolved_raw,
             year=year,
+            operation=operation,
         )
     except CensoRatioMismatchError as exc:
         return str(exc)

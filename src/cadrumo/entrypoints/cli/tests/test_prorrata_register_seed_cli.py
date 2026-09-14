@@ -20,6 +20,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 
@@ -31,7 +32,6 @@ from ....core.i18n.render import output_language, tr
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
@@ -73,7 +73,7 @@ _NEW_TRANSLATION_KEYS = (
 
 
 def _law_determined_prior_revision_id() -> str:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,

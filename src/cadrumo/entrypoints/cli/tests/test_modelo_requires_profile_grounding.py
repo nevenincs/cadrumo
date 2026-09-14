@@ -10,10 +10,10 @@ machine-readable notice context.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.user_profile.preflight import format_profile_selector_requirements
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import binding_profile_keys, build_profile_grounding_index
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _profile_bindings_with_keys():
     """Return committed profile bindings that name at least one profile key."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     found = []
     for definition in authority.modelos:
         for revision in definition.revisions.values():
@@ -45,7 +45,7 @@ def test_a_profile_binding_key_renders_as_a_label_rather_than_the_binding_id() -
     one example a hand-picked fixture would cover.
     """
     schema = load_user_profile_schema()
-    grounding_index = build_profile_grounding_index(bundled_authority())
+    grounding_index = build_profile_grounding_index(compiled_bundled_authority())
 
     for binding, keys in _profile_bindings_with_keys():
         rendered = format_profile_selector_requirements(

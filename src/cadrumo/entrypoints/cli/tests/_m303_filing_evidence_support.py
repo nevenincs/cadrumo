@@ -14,9 +14,10 @@ from __future__ import annotations
 from datetime import date
 from pathlib import Path
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -50,7 +51,7 @@ def build_m303_filing_evidence(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot(
+        registry_snapshot=compiled_bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.code,

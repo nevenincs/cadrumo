@@ -64,6 +64,8 @@ def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPay
 
 @dataclass(frozen=True, slots=True)
 class LiveNodeRegistrationMetadata:
+    """One executable CLI node projected without importing its handler."""
+
     path: tuple[str, ...]
     kind: CommandNodeKind
     loader_owner: str | None
@@ -74,6 +76,8 @@ class LiveNodeRegistrationMetadata:
 
 @dataclass(frozen=True, slots=True)
 class CommandRegistrationProjection:
+    """Complete command and node metadata projected from the canonical graph."""
+
     commands: tuple[CommandRegistrationMetadata, ...]
     nodes: tuple[LiveNodeRegistrationMetadata, ...]
     profile_authentication_contract: ProfileAuthenticationContractMetadata
@@ -277,11 +281,13 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
 
 
 def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
+    """Return deterministic metadata for every executable command."""
     return command_registration_projection().commands
 
 
 @cache
 def command_registration_policy(command: str) -> CommandExecutionPolicy:
+    """Return the execution policy declared for ``command``."""
     from ._command_policy import CommandExecutionPolicy
     from .command_specs import COMMAND_GRAPH
 
@@ -300,6 +306,7 @@ def command_registration_policy(command: str) -> CommandExecutionPolicy:
 
 @cache
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
+    """Return registered result-schema references for executable commands."""
     from ...application.operator_surface.manifest import CommandSchemaRef
     from .command_specs import COMMAND_GRAPH
 

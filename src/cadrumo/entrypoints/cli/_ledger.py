@@ -35,6 +35,7 @@ from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_exclusions import Art104TresExclusion
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
@@ -84,7 +85,7 @@ from .ledger_lifecycle_cli import (
     ledger_split,
     ledger_stash,
 )
-from .state_projection_support import prorrata_register_repository_factory
+from .state_projection_support import authority_operation, prorrata_register_repository_factory
 
 __all__ = [
     "ledger_archive",
@@ -211,13 +212,14 @@ def _create_manual_add_transaction(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
 ) -> ManualLedgerTransactionResult:
     """Persist the canonical add command with the configured FX provider."""
     from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
     from ...domain.currency.service import CurrencyNormalizationService
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    ports = compose_ledger_action_ports(bucket_id=command.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=command.bucket_id, operation=operation)
 
     try:
         return create_manual_transaction(
@@ -454,7 +456,11 @@ def ledger_add(
     # Same ECB-backed normalizer the file-import path wires in: a manually
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
-    result = _create_manual_add_transaction(command, transaction_repository=transaction_repository)
+    result = _create_manual_add_transaction(
+        command,
+        transaction_repository=transaction_repository,
+        operation=authority_operation(ctx),
+    )
     from ._ledger_payloads import LedgerAddResult
 
     # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
@@ -502,7 +508,7 @@ def ledger_update(
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     resolved_id = resolve_id(transaction_repository, transaction_id)
     # A leaked `pydantic.ValidationError` (negative amount, illegal field
     # combination) would be swallowed by the generic CLI boundary into an
@@ -738,7 +744,7 @@ def ledger_classify(
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
 
     if _dispatch_bulk_classification_route(
         ctx,
@@ -825,7 +831,7 @@ def ledger_allocate(
     transaction_repository = transaction_catalogue_repo(state)
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id, operation=authority_operation(ctx))
     validated_category_id = validate_category_id(category_id)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
@@ -905,7 +911,7 @@ def ledger_link(
     transaction_repository = transaction_catalogue_repo(state)
     resolved_id = resolve_id(transaction_repository, transaction_id)
     bucket_id = transaction_repository.bucket_id
-    ports = compose_ledger_action_ports(bucket_id=bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
     actor_label = (actor or "operator").strip() or "operator"
 
     try:

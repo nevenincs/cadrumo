@@ -53,7 +53,6 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing.dates import parse_iso8601_date
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.binding_value_contract import BindingValueChannel
@@ -235,7 +234,7 @@ def _inject_derived_family_facts(
     declared_selectors: frozenset[str],
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the two Art. 81.2 guardería terms of the 0613 cap into *fact_index*.
 
@@ -277,8 +276,6 @@ def _inject_derived_family_facts(
     misnamed.
     """
     if context is None:
-        if operation is None:
-            raise TypeError("derived family facts require a pinned authority operation")
         coordinate = date(filing_year, 12, 31)
         context = FamilyFactResolutionContext(
             authority=operation,
@@ -397,7 +394,7 @@ def resolve_maternidad_meses(
     snapshot: RegistrySnapshot,
     *,
     schema: ProfileSchemaDefinition | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> MaternidadMesesResolution:
     """Resolve the Art. 81.1 maternidad months a profile record contributes.
 
@@ -414,14 +411,6 @@ def resolve_maternidad_meses(
     mínimo aggregate makes, for the same reason — and the caller discloses it
     rather than letting a declared figure vanish.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return resolve_maternidad_meses(
-                record,
-                snapshot,
-                schema=schema or indexed_operation.profile_schema(),
-                operation=indexed_operation,
-            )
     if schema is None:
         schema = operation.profile_schema()
     fact_index = profile_fact_index(record, schema)
@@ -772,7 +761,7 @@ def inject_derived_minimo_descendientes_facts(
     snapshot: RegistrySnapshot,
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the Art. 58/61 LIRPF mínimo por descendientes aggregates (casillas 0513/0514).
 
@@ -818,14 +807,6 @@ def inject_derived_minimo_descendientes_facts(
     registry rather than restated as a Python constant.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return inject_derived_minimo_descendientes_facts(
-                    fact_index,
-                    snapshot,
-                    context=None,
-                    operation=indexed_operation,
-                )
         context = _family_fact_context(snapshot, operation=operation)
     estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
     autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
@@ -918,7 +899,7 @@ def inject_derived_anualidades_eligibility_facts(
     snapshot: RegistrySnapshot,
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
 
@@ -973,14 +954,6 @@ def inject_derived_anualidades_eligibility_facts(
     change.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return inject_derived_anualidades_eligibility_facts(
-                    fact_index,
-                    snapshot,
-                    context=None,
-                    operation=indexed_operation,
-                )
         context = _family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
@@ -1026,17 +999,10 @@ def is_madrid_autonomic_deduccion_filing_year(
     filing_year: int,
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether the registry declares the Madrid deduction for *filing_year*."""
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return is_madrid_autonomic_deduccion_filing_year(
-                    filing_year,
-                    context=None,
-                    operation=indexed_operation,
-                )
         coordinate = date(filing_year, 12, 31)
         context = FamilyFactResolutionContext(
             authority=operation,
@@ -1077,7 +1043,7 @@ def madrid_nacimiento_adopcion_candidate_weighted_count(
     filing_year: int,
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal:
     """Return the prorrateo-weighted Madrid nacimiento/adopción eligible count.
 
@@ -1091,14 +1057,6 @@ def madrid_nacimiento_adopcion_candidate_weighted_count(
     zero.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return madrid_nacimiento_adopcion_candidate_weighted_count(
-                    fact_index,
-                    filing_year,
-                    context=None,
-                    operation=indexed_operation,
-                )
         coordinate = date(filing_year, 12, 31)
         context = FamilyFactResolutionContext(
             authority=operation,
@@ -1120,7 +1078,7 @@ def inject_derived_autonomic_deduccion_facts(
     filing_year: int,
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
 
@@ -1146,21 +1104,13 @@ def inject_derived_autonomic_deduccion_facts(
     overwritten.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return inject_derived_autonomic_deduccion_facts(
-                    fact_index,
-                    filing_year,
-                    context=None,
-                    operation=indexed_operation,
-                )
         coordinate = date(filing_year, 12, 31)
         context = FamilyFactResolutionContext(
             authority=operation,
             filing_period=coordinate,
             devengo_date=coordinate,
         )
-    if not is_madrid_autonomic_deduccion_filing_year(filing_year, context=context):
+    if not is_madrid_autonomic_deduccion_filing_year(filing_year, context=context, operation=operation):
         return
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
@@ -1177,7 +1127,12 @@ def inject_derived_autonomic_deduccion_facts(
     if is_indeterminate_unidad_familiar(fact_index):
         return
 
-    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year, context=context)
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
+        fact_index,
+        filing_year,
+        context=context,
+        operation=operation,
+    )
     if weighted_count <= 0:
         return
 
@@ -1210,7 +1165,7 @@ def _inject_derived_incremento_guarderia_facts(
     declared_selectors: frozenset[str],
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the Art. 81.2 guardería increment (casilla 0613) into *fact_index*.
 
@@ -1237,15 +1192,6 @@ def _inject_derived_incremento_guarderia_facts(
     change here.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return _inject_derived_incremento_guarderia_facts(
-                    fact_index,
-                    snapshot,
-                    declared_selectors,
-                    context=None,
-                    operation=indexed_operation,
-                )
         context = _family_fact_context(snapshot, operation=operation)
     key = f"renta_family.incremento_guarderia_{snapshot.filing_year}"
     if key not in declared_selectors:
@@ -1273,7 +1219,7 @@ def _inject_derived_deduccion_maternidad_facts(
     declared_selectors: frozenset[str],
     *,
     context: FamilyFactResolutionContext | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the Art. 81.1 maternidad deduction (casilla 0611) into *fact_index*.
 
@@ -1290,15 +1236,6 @@ def _inject_derived_deduccion_maternidad_facts(
     selector: it is derived from the descendant record at calculation time.
     """
     if context is None:
-        if operation is None:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                return _inject_derived_deduccion_maternidad_facts(
-                    fact_index,
-                    snapshot,
-                    declared_selectors,
-                    context=None,
-                    operation=indexed_operation,
-                )
         context = _family_fact_context(snapshot, operation=operation)
     key = f"renta_family.deduccion_maternidad_{snapshot.filing_year}"
     if key not in declared_selectors:
@@ -1321,6 +1258,7 @@ def _inject_derived_state_attribution_facts(
     fact_index: dict[str, UserProfileFactValue],
     *,
     effective_date: date | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Inject the M303 state-attribution ratio derived from jurisdiction_scope.
 
@@ -1347,6 +1285,7 @@ def _inject_derived_state_attribution_facts(
         fact_index[synthetic_key] = m303_tax_territory_state_attribution_ratio(
             scope,
             effective_date=effective_date,
+            authority=operation,
         )
     except RegistryValidationError as exc:
         raise ProfileBindingResolutionError(
@@ -1639,18 +1578,52 @@ def _load_profile_facts(
     family_context = _family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     declared_selectors = _declared_profile_selectors(snapshot.revision)
-    _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors, context=family_context)
-    inject_derived_anualidades_eligibility_facts(fact_index, snapshot, context=family_context)
-    inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year, context=family_context)
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot, context=family_context)
-    _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors, context=family_context)
-    _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors, context=family_context)
+    _inject_derived_family_facts(
+        fact_index,
+        snapshot.filing_year,
+        declared_selectors,
+        context=family_context,
+        operation=operation,
+    )
+    inject_derived_anualidades_eligibility_facts(
+        fact_index,
+        snapshot,
+        context=family_context,
+        operation=operation,
+    )
+    inject_derived_autonomic_deduccion_facts(
+        fact_index,
+        snapshot.filing_year,
+        context=family_context,
+        operation=operation,
+    )
+    inject_derived_minimo_descendientes_facts(
+        fact_index,
+        snapshot,
+        context=family_context,
+        operation=operation,
+    )
+    _inject_derived_deduccion_maternidad_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        context=family_context,
+        operation=operation,
+    )
+    _inject_derived_incremento_guarderia_facts(
+        fact_index,
+        snapshot,
+        declared_selectors,
+        context=family_context,
+        operation=operation,
+    )
     if "tax_residence.state_attribution_ratio" in {
         selector for binding in selected_bindings for selector in profile_binding_selectors(binding.provider)
     }:
         _inject_derived_state_attribution_facts(
             fact_index,
             effective_date=date(snapshot.filing_year, 1, 1),
+            operation=operation,
         )
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 
@@ -1663,6 +1636,7 @@ def resolve_profile_binding_channels(
     formula_date_consumed: frozenset[BindingId],
     enum_bindings: frozenset[BindingId],
     effective_date: date | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _ResolvedBindingChannels:
     """Resolve each selected binding into the Decimal / enum / date / boolean channels."""
     channels = _ResolvedBindingChannels()
@@ -1677,6 +1651,7 @@ def resolve_profile_binding_channels(
             value = require_rental_reduction_art232_tier(
                 value,
                 effective_date=effective_date,
+                authority=operation,
             )
         _route_resolved_binding(
             binding_id,
@@ -1732,7 +1707,7 @@ def resolve_profile_sourced_bindings(
     profile_record: object | None = None,
     caller_binding_ids: frozenset[BindingId] = frozenset(),
     schema: ProfileSchemaDefinition | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
     """Resolve every ``source = "profile"`` binding the revision declares.
 
@@ -1744,8 +1719,8 @@ def resolve_profile_sourced_bindings(
         caller_binding_ids: Binding ids already supplied by the caller; these are
             skipped so caller overrides take precedence over the profile.
         schema: Optional profile schema definition override.
-        operation: Caller-held pinned authority operation. When omitted, the
-            bundled indexed authority is opened at this application boundary.
+        operation: Caller-held pinned authority operation for every governed
+            schema, vocabulary, and catalogue lookup in this resolution.
 
     Walks the registry revision's ``source = "profile"`` bindings,
     matches each against a fact on the bucket's user profile, and routes
@@ -1771,16 +1746,6 @@ def resolve_profile_sourced_bindings(
     selection = _select_profile_bindings(snapshot)
     if not selection.bindings:
         return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return resolve_profile_sourced_bindings(
-                snapshot,
-                bucket_id=bucket_id,
-                profile_record=profile_record,
-                caller_binding_ids=caller_binding_ids,
-                schema=schema or indexed_operation.profile_schema(),
-                operation=indexed_operation,
-            )
     resolved_schema = schema or operation.profile_schema()
     facts = _load_profile_facts(
         snapshot,
@@ -1799,6 +1764,7 @@ def resolve_profile_sourced_bindings(
         formula_date_consumed=selection.formula_date_consumed,
         enum_bindings=enum_consumed_binding_ids(snapshot.revision),
         effective_date=date(snapshot.filing_year, 1, 1),
+        operation=operation,
     )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values

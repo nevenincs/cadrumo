@@ -36,13 +36,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -335,7 +335,7 @@ def test_compare_delta_rows_carry_provenance() -> None:
 
     Authority: AEAT DR 130 Instrucciones; IRPF Art. 99 (BOE-A-2006-20764).
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snap = authority.snapshot("130", filing_year=2026, period="1T")
     engine_result = calculate_registry_snapshot(
         snap,

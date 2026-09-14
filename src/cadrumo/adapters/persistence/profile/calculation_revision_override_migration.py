@@ -49,12 +49,11 @@ log record here. The migration reports identifiers only.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.logging import get_logger
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryError
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -64,10 +63,8 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     derive_calculation_revision_id_from_revision,
 )
+from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from .relation_binding_join import bundled_relation_binding_join, bundled_relation_binding_join_targets
-
-if TYPE_CHECKING:  # pragma: no cover — the repository is a signature type only
-    from .modelos_calculation import CalculationRevisionCatalogueRepository
 
 _LOGGER = get_logger(__name__)
 _MIGRATION_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
@@ -254,7 +251,7 @@ def _rekeyed_overrides_for_revision(
 def rekey_calculation_revision_overrides(
     catalogue: CalculationRevisionCatalogue,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevisionOverrideMigrationResult:
     """Rekey every stored relation override onto its binding id, in memory.
 
@@ -266,8 +263,7 @@ def rekey_calculation_revision_overrides(
 
     Args:
         catalogue: The catalogue as read from storage.
-        operation: Existing generation-pinned authority operation. When omitted,
-            one indexed operation is opened at this composition boundary.
+        operation: Existing generation-pinned authority operation.
 
     Returns:
         The migrated catalogue plus the identifier-only record of what moved.
@@ -276,9 +272,6 @@ def rekey_calculation_revision_overrides(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved, or two keys folded onto one binding with different values.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return rekey_calculation_revision_overrides(catalogue, operation=indexed_operation)
     join = bundled_relation_binding_join()
     join_targets = bundled_relation_binding_join_targets()
     migrated: dict[str, CalculationRevision] = {}
@@ -339,9 +332,9 @@ def rekey_calculation_revision_overrides(
 
 
 def migrate_stored_relation_overrides_to_binding_ids(
-    repository: CalculationRevisionCatalogueRepository,
+    repository: CalculationRevisionCatalogueRepositoryProtocol,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevisionOverrideMigrationResult:
     """Rekey one profile's stored overrides and persist the result atomically.
 
@@ -356,8 +349,7 @@ def migrate_stored_relation_overrides_to_binding_ids(
 
     Args:
         repository: The bucket-bound calculation-revision catalogue repository.
-        operation: Existing generation-pinned authority operation. When omitted,
-            one indexed operation is opened at this composition boundary.
+        operation: Existing generation-pinned authority operation.
 
     Returns:
         The identifier-only record of what moved, carrying the migrated
@@ -367,9 +359,6 @@ def migrate_stored_relation_overrides_to_binding_ids(
         OrphanedRelationOverrideError: A stored override key could not be
             resolved to a binding.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return migrate_stored_relation_overrides_to_binding_ids(repository, operation=indexed_operation)
     catalogue, expected_revision_id = repository.load_revisioned()
     result = rekey_calculation_revision_overrides(catalogue, operation=operation)
     if not result.changed:

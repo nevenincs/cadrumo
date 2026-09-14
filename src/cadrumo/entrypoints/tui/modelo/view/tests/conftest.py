@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
@@ -24,7 +25,6 @@ from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
-from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
@@ -86,6 +86,6 @@ def resolve_real_result(bucket_id: str, repository: WorkUnitCatalogueRepository,
         ),
         bucket_id=bucket_id,
         catalogue_repository=repository,
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         output_language=language,
     )

@@ -68,6 +68,7 @@ from ._modelo_rendering import (
 )
 from .common import activate_subcommand_output_language, emit_envelope, filing_taxpayer_or_refuse
 from .state_projection_support import (
+    authority_operation,
     calculation_action_ports_factory,
     certificate_secret_backend_factory,
     filing_action_ports_factory,
@@ -271,7 +272,10 @@ def work_verify(
     require_active_profile()
     from ...core.bucket_pointer import require_active_bucket_id
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id or require_active_bucket_id(),
+        operation=authority_operation(ctx),
+    )
     selected_revision = resolve_revision_for_cli(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
@@ -424,7 +428,10 @@ def work_file(
     require_active_profile()
     from ...core.bucket_pointer import require_active_bucket_id
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id or require_active_bucket_id())
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=bucket_id or require_active_bucket_id(),
+        operation=authority_operation(ctx),
+    )
     selected_revision = resolve_revision_for_cli(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,

@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -41,7 +42,6 @@ from ....application.calculations.tests.filing_evidence import regimen_simplific
 from ....application.state_projection import ProjectionModeloReadiness
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -162,7 +162,7 @@ def _write_m303_filing_evidence(path: Path) -> None:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot(
+        registry_snapshot=compiled_bundled_authority().snapshot(
             "303",
             filing_year=period.filing_year,
             period=period.code,
@@ -308,7 +308,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
                 taxpayer_nif="12345678Z",
                 target_year=2026,
                 target_period=Period.from_year_and_code(2026, "1T"),
-                target_registry_snapshot_ref=bundled_authority()
+                target_registry_snapshot_ref=compiled_bundled_authority()
                 .snapshot("303", filing_year=2026, period="1T")
                 .snapshot_ref,
                 source_registry_snapshot_refs=(),

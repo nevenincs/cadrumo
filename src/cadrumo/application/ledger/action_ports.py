@@ -7,6 +7,7 @@ for one bucket and passes its members to the public action it invokes.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -20,11 +21,15 @@ from .protocols import (
 )
 from .usage_ratio_repository import UsageRatioProfileLoader
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 @dataclass(frozen=True)
 class LedgerActionPorts:
     """All persistence ports one ledger action may need for one bucket."""
 
+    operation: PinnedAuthorityOperation
     transaction_repository: TransactionCatalogueCoCommitWriterProtocol
     bucket_event_repository: BucketEventHistoryCoCommitWriterProtocol
     invoice_repository: InvoiceCatalogueCoCommitWriterProtocol
