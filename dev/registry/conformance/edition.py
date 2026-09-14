@@ -236,7 +236,7 @@ def _review_scope(
 def _edition_review_status(modelo_directory: Path, revision_id: str) -> str:
     """Return the review status an edition's own files declare."""
     edition = materialise_edition(modelo_directory, revision_id)
-    return edition.withdrawn_review_status or _declared_status(edition.table)
+    return _declared_status(edition.table)
 
 
 def _declared_status(table: Mapping[str, object]) -> str:

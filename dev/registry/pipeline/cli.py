@@ -97,6 +97,13 @@ def publish_authority(
             help="Profile declaration captured with the candidate; required for custom source sets.",
         ),
     ] = None,
+    eager_baseline: Annotated[
+        Path | None,
+        typer.Option(
+            "--eager-baseline",
+            help="Write the development benchmark baseline from the same validated artifact.",
+        ),
+    ] = None,
 ) -> None:
     """Validate the registry candidate and atomically republish the runtime authority artifact.
 
@@ -114,6 +121,7 @@ def publish_authority(
         source_root=source_root or bundled_path(),
         destination=destination_path,
         profile_schema_path=profile_schema or bundled_path("registry", "cadrumo", "user_profile", "schema.toml"),
+        eager_baseline_path=eager_baseline,
     )
     typer.echo(
         "publish-authority"

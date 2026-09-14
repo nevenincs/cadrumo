@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tomllib
 from pathlib import Path
 
 import pytest
@@ -14,6 +13,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
+from ..conformance.edition import ReviewCoverage, read_registry_edition
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -110,38 +110,63 @@ def _standalone(table: object) -> ModeloRevision:
     return ModeloRevision.model_validate({**scalars, "id": "2025", "localization_key": "standalone"})
 
 
-def test_a_reviewed_delta_edition_resolves_to_an_unreviewed_full_copy_that_says_what_it_set_aside(
+def test_a_reviewed_delta_edition_preserves_its_review_when_materialised(
     tmp_path: Path,
 ) -> None:
-    """The delta's review covered only its stated rows, so the full copy claims no review and reports the withdrawal."""
+    """Removing inheritance changes representation, not the historical comparison review."""
     edition = materialise_edition(_modelo(tmp_path, successor_extra=_REVIEWED_DELTA), "2025")
 
-    assert edition.withdrawn_review_status == "agent_reviewed"
-    assert edition.table["review_status"] == "pending_review"
-    assert not {"reviewed_by", "reviewed_at", "reviewed_against"} & set(edition.table)
+    assert edition.table["review_status"] == "agent_reviewed"
+    assert edition.table["reviewed_by"] == "agent:reviewer"
+    assert edition.table["reviewed_at"].isoformat() == "2026-09-10"
+    assert edition.table["reviewed_against"] == "2024"
     assert edition.table["engineered_by"] == "agent:author"
     standalone = _standalone(edition.table)
-    assert standalone.review_status.value == "pending_review"
-    assert standalone.reviewed_against is None
+    assert standalone.review_status.value == "agent_reviewed"
+    assert standalone.reviewed_against == "2024"
 
 
-def test_the_delta_review_cannot_stand_on_the_full_copy(tmp_path: Path) -> None:
-    """The teeth: carrying the delta's claim onto the full copy is refused by the schema itself."""
-    source = _modelo(tmp_path, successor_extra=_REVIEWED_DELTA) / "revisions" / "2025" / "revision.toml"
-    declared = tomllib.loads(source.read_text(encoding="utf-8"))["revisions"]["2025"]
-    edition = materialise_edition(source.parents[2], "2025")
-    carried = {**edition.table, **{key: declared[key] for key in ("review_status", "reviewed_by", "reviewed_at")}}
-    carried["reviewed_against"] = declared["reviewed_against"]
+def test_materialisation_does_not_rewrite_the_historical_comparison(tmp_path: Path) -> None:
+    modelos = tmp_path / "modelos"
+    modelos.mkdir()
+    modelo = _modelo(modelos, successor_extra=_REVIEWED_DELTA)
+    edition = materialise_edition(modelo, "2025")
 
-    with pytest.raises(RegistryValidationError, match="names no predecessor"):
-        _standalone(carried)
+    assert _standalone(edition.table).reviewed_against == "2024"
+    scope = read_registry_edition("999", "2025", registry_root=tmp_path).review_scope
+    assert scope.coverage is ReviewCoverage.STATED_ROWS
+    assert scope.reviewed_against == "2024"
+    assert scope.rendered_review_status == "agent_reviewed"
+
+
+def test_a_dangling_review_comparison_is_refused_specifically(tmp_path: Path) -> None:
+    invalid = _REVIEWED_DELTA.replace('reviewed_against = "2024"', 'reviewed_against = "2023"')
+
+    with pytest.raises(RegistryValidationError, match=r"dangling review reference reviewed_against='2023'"):
+        load_modelo_directory(_modelo(tmp_path, successor_extra=invalid))
+
+
+def test_storage_inheritance_does_not_import_the_baseline_review(tmp_path: Path) -> None:
+    modelo = _modelo(tmp_path, successor_extra='predecessor = "2024"\n')
+    predecessor_manifest = modelo / "revisions" / "2024" / "revision.toml"
+    predecessor_manifest.write_text(
+        predecessor_manifest.read_text(encoding="utf-8")
+        + 'review_status = "agent_reviewed"\nreviewed_by = "agent:source"\nreviewed_at = 2026-09-10\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+
+    definition = load_modelo_directory(modelo)
+
+    assert definition.revisions["2024"].review_status.value == "agent_reviewed"
+    assert definition.revisions["2025"].review_status.value == "pending_review"
+    assert definition.revisions["2025"].reviewed_by is None
 
 
 def test_an_edition_stating_every_row_keeps_its_review(tmp_path: Path) -> None:
     extra = 'review_status = "agent_reviewed"\nreviewed_by = "agent:reviewer"\nreviewed_at = 2026-09-10\n'
     edition = materialise_edition(_modelo(tmp_path, successor_extra=extra), "2025")
 
-    assert edition.withdrawn_review_status is None
     assert edition.table["review_status"] == "agent_reviewed"
     assert edition.table["reviewed_by"] == "agent:reviewer"
 
@@ -149,8 +174,7 @@ def test_an_edition_stating_every_row_keeps_its_review(tmp_path: Path) -> None:
 def test_an_unreviewed_delta_edition_withdraws_nothing(tmp_path: Path) -> None:
     edition = materialise_edition(_modelo(tmp_path, successor_extra='predecessor = "2024"\n'), "2025")
 
-    assert edition.withdrawn_review_status is None
-    assert edition.table["review_status"] == "pending_review"
+    assert edition.table.get("review_status", "pending_review") == "pending_review"
 
 
 def _attested_modelo(tmp_path: Path, *, extra: str = "") -> Path:

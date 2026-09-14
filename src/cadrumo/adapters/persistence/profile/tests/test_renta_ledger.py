@@ -9,6 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.catalogue_reads import (
+    InvoiceCatalogueReadAdapter,
+    TransactionCatalogueReadAdapter,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -30,6 +34,7 @@ from cadrumo.application.aggregation.renta_ledger import (
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
+from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.i18n.translatable import Translatable as tr
@@ -59,6 +64,16 @@ from cadrumo.tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTU
 SECURE_OBJECTS_BUCKET_ID = "78804f92-b6f7-4daf-9ddf-a8ce3829dbb1"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _renta_ports(*, transaction_repository, invoice_repository=None) -> InvoiceCatalogueReadPorts:
+    """Compose canonical catalogue-read ports around test repositories."""
+    return InvoiceCatalogueReadPorts(
+        transaction_reader=TransactionCatalogueReadAdapter(repository=transaction_repository),
+        invoice_reader=InvoiceCatalogueReadAdapter(
+            repository=invoice_repository or InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID),
+        ),
+    )
 
 
 @pytest.fixture
@@ -240,10 +255,12 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -282,8 +299,10 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
         ),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
@@ -471,10 +490,12 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -532,10 +553,12 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
     m100_result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -574,8 +597,12 @@ def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mis
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=repo,
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
+            ports=_renta_ports(
+                transaction_repository=repo,
+                invoice_repository=InvoiceCatalogueRepository(
+                    bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+                ),
+            ),
             profile_year=2025,
             prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -593,8 +620,10 @@ def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatc
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
+            ports=_renta_ports(
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+            ),
             profile_year=2025,
             prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -612,8 +641,10 @@ def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
+            ports=_renta_ports(
+                transaction_repository=tx_repo,
+                invoice_repository=invoice_repo,
+            ),
             profile_year=2025,
             prorrata_register_repository=ProrrataRegisterRepository(
                 bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -671,10 +702,12 @@ def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_i
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -706,10 +739,12 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ports=_renta_ports(
+            transaction_repository=TransactionCatalogueRepository(
+                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ),
+            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         ),
-        invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
         profile_year=2025,
         prorrata_register_repository=ProrrataRegisterRepository(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
@@ -803,10 +838,14 @@ def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empt
         return aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ports=_renta_ports(
+                transaction_repository=TransactionCatalogueRepository(
+                    bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+                ),
+                invoice_repository=InvoiceCatalogueRepository(
+                    bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+                ),
             ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
             prorrata_register_repository=ProrrataRegisterRepository(
@@ -853,10 +892,14 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
         return aggregate_renta_ledger_expenses_from_repositories(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
             period=_ANNUAL_2025,
-            transaction_repository=TransactionCatalogueRepository(
-                bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+            ports=_renta_ports(
+                transaction_repository=TransactionCatalogueRepository(
+                    bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+                ),
+                invoice_repository=InvoiceCatalogueRepository(
+                    bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+                ),
             ),
-            invoice_repository=InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
             region_category_overrides=overrides,

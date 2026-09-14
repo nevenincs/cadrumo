@@ -251,6 +251,37 @@ def test_a_source_only_change_authors_only_source_refs_and_the_selector(tmp_path
     assert successor.casillas[0].source_refs == ("aeat-form",)
 
 
+def test_storage_reuse_preserves_a_successors_missing_continuity_id(tmp_path: Path) -> None:
+    modelo_dir = _modelo_root(tmp_path)
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        casillas=_casilla("2024", "0456", number="456", lineage="annualidades-alimentos"),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra=(
+            'casilla_storage_baseline = "2024"\n'
+            '[[revisions."2025".casilla_overrides]]\n'
+            'selector = { revision = "2024", id = "0456" }\n'
+            'removed_fields = ["continuidad_id"]\n'
+        ),
+        casillas="",
+    )
+
+    definition = load_modelo_directory(modelo_dir)
+
+    assert definition.revisions["2024"].casillas[0].continuidad_id == "annualidades-alimentos"
+    successor = definition.revisions["2025"].casillas[0]
+    assert successor.id == "0456"
+    assert successor.continuidad_id is None
+    assert successor.continuidad_origin is None
+    assert successor.continuidad_evidence is None
+
+
 def test_an_inherited_row_takes_the_successor_editions_locale_key(tmp_path: Path) -> None:
     """Materialisation runs before enrolment, so no successor row carries a key naming its predecessor."""
     successor = load_modelo_directory(_delta_successor_modelo(tmp_path, declare_predecessor=True)).revisions["2025"]

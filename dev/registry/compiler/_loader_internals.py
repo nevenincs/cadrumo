@@ -885,18 +885,20 @@ def _materialise_revision(
         )
         merged: dict[str, object] = {**table, _INHERITED_SECTION: rows}
         restated = _restated_families(table)
-        for family in _KEYED_FAMILIES if predecessor_id is not None else ():
-            if family.section in restated:
-                continue
-            merged[family.section] = _inherit_keyed_family(
-                f"{source_path}: revision {revision_id!r} inheriting from {predecessor_id!r}",
-                revision_id=revision_id,
-                family=family,
-                inherited=_raw_keyed_members(source_path, predecessor_id, predecessor.table, family),
-                inherited_casillas=_raw_casilla_rows(source_path, predecessor_id, predecessor.table),
-                successor_casillas=rows,
-                successor=table,
-            )
+        semantic_predecessor_id = predecessor_id
+        if semantic_predecessor_id is not None:
+            for family in _KEYED_FAMILIES:
+                if family.section in restated:
+                    continue
+                merged[family.section] = _inherit_keyed_family(
+                    f"{source_path}: revision {revision_id!r} inheriting from {semantic_predecessor_id!r}",
+                    revision_id=revision_id,
+                    family=family,
+                    inherited=_raw_keyed_members(source_path, semantic_predecessor_id, predecessor.table, family),
+                    inherited_casillas=_raw_casilla_rows(source_path, semantic_predecessor_id, predecessor.table),
+                    successor_casillas=rows,
+                    successor=table,
+                )
         result = _MaterialisedRevision(table=merged, label_origins=label_origins)
     resolved[revision_id] = result
     return result
@@ -1044,7 +1046,7 @@ def _apply_casilla_storage_delta(
         table = _as_toml_table(result[by_id[identity]])
         if table is None:
             raise RegistryLoadError(f"{context}: selected casilla {identity!r} is not a table")
-        patched = dict(_without_lineage_claims(table))
+        patched = {key: value for key, value in table.items() if key not in _ROW_LINEAGE_CLAIM_FIELDS}
         for field in declaration.removed_fields:
             if field not in patched:
                 raise RegistryLoadError(f"{context}: casilla {identity!r} cannot remove absent field {field!r}")

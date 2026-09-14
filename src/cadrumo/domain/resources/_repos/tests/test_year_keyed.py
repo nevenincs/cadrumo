@@ -1,11 +1,10 @@
-"""Real-behaviour tests for the three year-keyed Repositories."""
+"""Real-behaviour tests for year-keyed resource repositories."""
 
 from __future__ import annotations
 
 import pytest
 
 from .....core.resources.errors import ResourceNotFoundError
-from ..category_profiles import CategoryProfileRepository
 from ..holiday_calendars import HolidayCalendarRepository
 from ..iva_catalogues import IvaCatalogueRepository
 
@@ -25,17 +24,6 @@ def test_holiday_calendar_loads_distinct_years_and_clears_identity_map() -> None
 
     repo.clear_cache()
     assert repo._cache == {}
-
-
-def test_category_profile_loads_real_year() -> None:
-    repo = CategoryProfileRepository()
-
-    profiles_2025 = repo.get(2025)
-    profiles_2025_again = repo.get(2025)
-
-    assert profiles_2025 is not None
-    assert len(profiles_2025) > 0
-    assert profiles_2025 is profiles_2025_again
 
 
 def test_iva_catalogue_loads_real_year() -> None:

@@ -56,7 +56,6 @@ class MaterialisedEdition:
     table: Mapping[str, object]
     inherits_from: str | None
     label_origins: tuple[str | None, ...] | None
-    withdrawn_review_status: str | None = None
 
 
 def materialise_edition(modelo_directory: Path, revision_id: str) -> MaterialisedEdition:
@@ -111,7 +110,6 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
         table=table,
         inherits_from=predecessor,
         label_origins=resolution.label_origins.get(revision_id),
-        withdrawn_review_status=None,
     )
 
 

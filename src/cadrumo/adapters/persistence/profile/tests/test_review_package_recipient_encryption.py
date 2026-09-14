@@ -190,7 +190,9 @@ def test_encrypt_then_decrypt_with_matching_key_recovers_original_bytes(tmp_path
     assert envelope.ephemeral_public_key_hex != recipient_public_key_hex
 
     recovered = decrypt_review_package_for_recipient(
-        envelope, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        envelope,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
     assert recovered.review_only is False
@@ -219,13 +221,17 @@ def test_two_encryptions_of_same_bytes_use_distinct_ephemeral_keys_nonces_and_ci
     # Both still decrypt correctly under the same recipient key.
     assert (
         decrypt_review_package_for_recipient(
-            first, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+            first,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
         ).package_bytes
         == package_bytes
     )
     assert (
         decrypt_review_package_for_recipient(
-            second, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+            second,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
         ).package_bytes
         == package_bytes
     )
@@ -245,7 +251,9 @@ def test_decrypt_fails_with_wrong_recipient_private_key(tmp_path: Path) -> None:
 
     with pytest.raises(RecipientDecryptionError):
         decrypt_review_package_for_recipient(
-            envelope, recipient_private_key_hex=wrong_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+            envelope,
+            recipient_private_key_hex=wrong_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -264,7 +272,9 @@ def test_decrypt_fails_when_ciphertext_is_tampered(tmp_path: Path) -> None:
 
     with pytest.raises(RecipientDecryptionError):
         decrypt_review_package_for_recipient(
-            tampered, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+            tampered,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -286,7 +296,9 @@ def test_decrypt_fails_when_ephemeral_public_key_is_swapped(tmp_path: Path) -> N
 
     with pytest.raises(RecipientDecryptionError):
         decrypt_review_package_for_recipient(
-            swapped, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+            swapped,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
 
 
@@ -323,7 +335,9 @@ def test_registered_recipient_public_key_is_the_encryption_target(tmp_path: Path
         package_bytes, recipient_public_key_hex=registered.public_key_hex, recipient_encryption=_CRYPTO_CAPABILITY
     )
     recovered = decrypt_review_package_for_recipient(
-        envelope, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        envelope,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
 
@@ -347,7 +361,7 @@ def test_encrypt_with_no_valid_for_never_expires(tmp_path: Path) -> None:
     far_future = _NOW + timedelta(days=3650)
     recovered = decrypt_review_package_for_recipient(
         envelope,
-        recipient_private_key_hex=recipient_private_key,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
         now=far_future,
         recipient_encryption=_CRYPTO_CAPABILITY,
     )
@@ -372,7 +386,7 @@ def test_decrypt_succeeds_inside_the_validity_window(tmp_path: Path) -> None:
 
     recovered = decrypt_review_package_for_recipient(
         envelope,
-        recipient_private_key_hex=recipient_private_key,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
         now=_NOW + timedelta(days=6),
         recipient_encryption=_CRYPTO_CAPABILITY,
     )
@@ -398,7 +412,7 @@ def test_decrypt_refuses_a_package_presented_past_its_expiry(tmp_path: Path) -> 
     with pytest.raises(RecipientPackageExpiredError):
         decrypt_review_package_for_recipient(
             envelope,
-            recipient_private_key_hex=recipient_private_key,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=7, seconds=1),
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
@@ -423,7 +437,7 @@ def test_decrypt_refuses_a_package_presented_exactly_at_its_expiry(tmp_path: Pat
     with pytest.raises(RecipientPackageExpiredError):
         decrypt_review_package_for_recipient(
             envelope,
-            recipient_private_key_hex=recipient_private_key,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
             now=envelope.valid_until,
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
@@ -456,7 +470,7 @@ def test_expired_check_precedes_cryptographic_work_even_with_tampered_ciphertext
     with pytest.raises(RecipientPackageExpiredError):
         decrypt_review_package_for_recipient(
             tampered_and_expired,
-            recipient_private_key_hex=recipient_private_key,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
             now=_NOW + timedelta(days=2),
             recipient_encryption=_CRYPTO_CAPABILITY,
         )
@@ -518,7 +532,10 @@ def test_review_only_envelope_decrypts_but_carries_the_flag(tmp_path: Path) -> N
     assert envelope.review_only is True
 
     recovered = decrypt_review_package_for_recipient(
-        envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
+        envelope,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+        now=_NOW,
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
     assert recovered.review_only is True
@@ -556,7 +573,10 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
 
         # First presentation: decrypts and the nonce is recorded consumed.
         first_pass = decrypt_review_package_for_recipient(
-            envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
+            envelope,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
         guard.mark_consumed(envelope.envelope_nonce_hex, consumed_at=_NOW)
         assert first_pass.package_bytes == package_bytes
@@ -565,7 +585,10 @@ def test_replay_guard_refuses_a_second_presentation_of_the_same_envelope_nonce(t
         # succeeds (it is a pure cryptographic primitive with no ledger
         # dependency), but the composed replay check refuses it.
         second_pass = decrypt_review_package_for_recipient(
-            envelope, recipient_private_key_hex=recipient_private_key, now=_NOW, recipient_encryption=_CRYPTO_CAPABILITY
+            envelope,
+            recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+            now=_NOW,
+            recipient_encryption=_CRYPTO_CAPABILITY,
         )
         assert second_pass.package_bytes == package_bytes
         assert guard.is_consumed(envelope.envelope_nonce_hex) is True
@@ -636,7 +659,9 @@ def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> 
     assert reloaded == envelope
 
     recovered = decrypt_review_package_for_recipient(
-        reloaded, recipient_private_key_hex=recipient_private_key, recipient_encryption=_CRYPTO_CAPABILITY
+        reloaded,
+        recipient_private_key_hex=recipient_private_key.private_bytes_raw().hex(),
+        recipient_encryption=_CRYPTO_CAPABILITY,
     )
     assert recovered.package_bytes == package_bytes
 

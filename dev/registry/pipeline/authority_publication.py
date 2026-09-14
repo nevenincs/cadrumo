@@ -392,8 +392,9 @@ def publish_sqlite_authority_candidate(
     source_root: Path,
     profile_schema_path: Path,
     destination: Path,
+    eager_baseline_path: Path | None = None,
 ) -> AuthorityDescriptor:
-    """Validate, independently traverse, and atomically publish one SQLite generation."""
+    """Validate once and publish SQLite plus an optional same-artifact benchmark baseline."""
     resolved_destination = destination.resolve()
     resolved_destination.mkdir(parents=True, exist_ok=True)
     descriptor_path = resolved_destination / "authority.current.json"
@@ -407,6 +408,10 @@ def publish_sqlite_authority_candidate(
             source_root=source_root,
             profile_schema_path=profile_schema_path,
         )
+        if eager_baseline_path is not None:
+            from ..eager_authority_baseline import write_eager_authority_baseline
+
+            write_eager_authority_baseline(eager_baseline_path, candidate.artifact)
         return _install_validated_authority_database(
             candidate.artifact,
             destination=resolved_destination,

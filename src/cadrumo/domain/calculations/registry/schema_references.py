@@ -397,9 +397,9 @@ class TemporalProjectionDirection(StrEnum):
 
 def _validate_support_bounds[T](floor: T, horizon: T, hard_ceiling: T | None) -> None:
     if horizon < floor:  # type: ignore[operator]
-        raise RegistryValidationError("temporal support horizon must be on or after floor")
+        raise ValueError("temporal support horizon must be on or after floor")
     if hard_ceiling is not None and hard_ceiling < horizon:  # type: ignore[operator]
-        raise RegistryValidationError(
+        raise ValueError(
             "temporal support hard_ceiling must be on or after horizon; a ceiling before "
             "the horizon would close a span the corpus already declares coverage for"
         )

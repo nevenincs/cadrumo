@@ -63,13 +63,11 @@ materialiser under test.
 Where the gate stops
 --------------------
 - The ``predecessor`` declaration is excluded from equality: it is the one
-  field a migration must change. So is ``reviewed_against``, which a migration
-  adds to carry a reviewed edition's claim forward: the full-copy review saw
-  every row the materialised edition now inherits, which is what this gate
-  proves, and the schema holds the scope equal to the declared predecessor.
-  ``casilla_source_refs`` is excluded too: it is the edition-level default a
-  migration introduces to lift restated row references, and every row it fills
-  is still compared, so a default that changed any row's references fails.
+  field a migration must change. Review metadata is not excluded: comparison
+  target, reviewer, date and status record historical meaning and must survive
+  representation-only transformations exactly. ``casilla_source_refs`` is the
+  edition-level default a migration introduces to lift restated row references,
+  and every row it fills is still compared, so a default that changed any row's references fails.
   Everything else in the edition is compared.
 - Shared catalogues and the dependency closure come from the same live tree on
   both sides, so a change to them is outside this comparison. The locale
@@ -219,7 +217,18 @@ _MODELOS_DIR: Final = "modelos"
 #: Edition fields that a lift declares rather than change: the edition-level
 #: reference defaults of every family that lifts member refs to the manifest.
 _EXCLUDED_FROM_EQUALITY: Final = frozenset(
-    {"predecessor", "reviewed_against", "casilla_source_refs"}
+    {
+        "predecessor",
+        "casilla_source_refs",
+        "casilla_storage_baseline",
+        "casilla_overrides",
+        "casilla_removals",
+        "casilla_positions",
+        # Migration may move row-level continuity claims into a typed sidecar.
+        # The hydrated casilla fields remain fully compared below, including
+        # continuity identity, origin, evidence, legal refs and source refs.
+        "lineage_attestations",
+    }
     | {default_field for _section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS}
 )
 _GIT_TIMEOUT_SECONDS: Final = 120
@@ -570,6 +579,8 @@ def _edition_findings(
         )
     reference_dump = reference.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
     live_dump = live.model_dump(exclude=set(_EXCLUDED_FROM_EQUALITY))
+    _remove_projected_lineage_attestations(reference_dump)
+    _remove_projected_lineage_attestations(live_dump)
     changed_fields = sorted(
         name
         for name in reference_dump.keys() | live_dump.keys()
@@ -587,6 +598,41 @@ def _edition_findings(
             )
         )
     return findings
+
+
+def _remove_projected_lineage_attestations(revision: dict[str, object]) -> None:
+    """Remove only a sidecar that is exactly projected onto its target row.
+
+    The row remains fully compared, including origin, evidence and ordered
+    references.  A non-matching attestation stays visible as edition content.
+    """
+    rows = revision.get("casillas")
+    claims = revision.get("lineage_attestations")
+    if not isinstance(rows, list | tuple) or not isinstance(claims, list | tuple):
+        return
+    by_lineage = {
+        row.get("continuidad_id"): row
+        for row in rows
+        if isinstance(row, dict) and row.get("continuidad_id") is not None
+    }
+    retained: list[object] = []
+    for claim in claims:
+        if not isinstance(claim, dict) or claim.get("family") != "casillas":
+            retained.append(claim)
+            continue
+        target = by_lineage.get(claim.get("continuidad_id"))
+        projected = isinstance(target, dict) and all(
+            claim.get(claim_field) == target.get(row_field)
+            for claim_field, row_field in (
+                ("origin", "continuidad_origin"),
+                ("evidence", "continuidad_evidence"),
+                ("legal_refs", "legal_refs"),
+                ("source_refs", "source_refs"),
+            )
+        )
+        if not projected:
+            retained.append(claim)
+    revision["lineage_attestations"] = tuple(retained)
 
 
 def _casilla_row_differences(reference_rows: list[dict[str, object]], live_rows: list[dict[str, object]]) -> list[str]:

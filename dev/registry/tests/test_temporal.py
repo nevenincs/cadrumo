@@ -18,7 +18,6 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
     NoRevisionForPeriodError,
@@ -36,7 +35,6 @@ from cadrumo.domain.calculations.registry.temporal import (
     select_revision_for_year,
     select_revision_metadata,
 )
-from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.loader import load_modelo_directory
 
 from ..compiler.validate_revision_rules import validate_revision_windows
@@ -56,6 +54,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _committed_modelo_100() -> ModeloDefinition:
     return load_modelo_directory(
         Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "100"
+    )
+
+
+def _committed_modelo_390() -> ModeloDefinition:
+    return load_modelo_directory(
+        Path(__file__).parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos" / "390"
     )
 
 
@@ -83,6 +87,13 @@ def test_nearest_authored_projection_works_backward_forward_and_across_gaps() ->
     assert select_revision(gap, filing_year=2024, period="0A", support=_support()).id == "2025"
 
 
+def test_supported_request_can_project_from_an_authored_anchor_before_the_global_floor() -> None:
+    modelo = _committed_modelo_100()
+    historical = modelo.model_copy(update={"revisions": {"2020": modelo.revisions["2020"]}})
+
+    assert select_revision(historical, filing_year=2022, period="0A", support=_support()).id == "2020"
+
+
 def test_equal_distance_projection_uses_the_earlier_authored_anchor() -> None:
     modelo = _committed_modelo_100()
     gap = modelo.model_copy(update={"revisions": {key: modelo.revisions[key] for key in ("2023", "2025")}})
@@ -98,23 +109,40 @@ def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> No
 
     assert select_revision(modelo, filing_year=support.floor, period="0A", support=support).id == "2022"
     assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == "2025"
-    for outside in (support.floor - 1, support.horizon + 1):
-        with pytest.raises(NoRevisionForPeriodError):
-            select_revision(modelo, filing_year=outside, period="0A", support=support)
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=support.floor - 1, period="0A", support=support)
+    assert select_revision(modelo, filing_year=support.horizon + 1, period="0A", support=support).id == "2025"
+    closed = support.model_copy(update={"hard_ceiling": support.horizon})
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=closed.horizon + 1, period="0A", support=closed)
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2024, period="3T", support=support)
 
 
 def test_technical_root_does_not_disable_projection_or_invent_continuity() -> None:
     modelo = _committed_modelo_100()
-    source = modelo.revisions["2025"]
-    assert isinstance(source.predecessor, NoPredecessor)
+    authored = modelo.revisions["2025"]
+    source = authored.model_copy(
+        update={
+            "predecessor": NoPredecessor(
+                reason="technical converter refusal",
+                legal_refs=authored.legal_refs[:1],
+                source_refs=authored.source_refs[:1],
+            )
+        }
+    )
     isolated = modelo.model_copy(update={"revisions": {"2025": source}})
 
     projected = select_revision(isolated, filing_year=2026, period="0A", support=_support())
 
     assert projected is source
     assert projected.model_dump() == source.model_dump()
+    assert (projected.review_status, projected.reviewed_by, projected.reviewed_at, projected.reviewed_against) == (
+        source.review_status,
+        source.reviewed_by,
+        source.reviewed_at,
+        source.reviewed_against,
+    )
 
 
 def test_source_and_indexed_directory_select_the_same_authored_anchor() -> None:
@@ -269,38 +297,20 @@ def test_no_revision_raises_typed_subclass_with_structured_natural_key() -> None
     assert err.revision_id == "r9"
 
 
-def test_modelo_390_2026_refusal_lists_the_enrolled_revision_set() -> None:
-    """The live Modelo 390 refusal distinguishes missing authority from failure.
-
-    The set is read from the bundled authority at the temporal raiser, not
-    reconstructed by a caller. This keeps the operator-facing fallback message
-    and machine-readable context synchronized with the enrolled registry.
-    """
-    with pytest.raises(NoRevisionForPeriodError) as excinfo:
-        compiled_bundled_authority().snapshot("390", filing_year=2026, period="0A")
-
-    err = excinfo.value
-    assert err.available_revision_ids == ("2021", "2022", "2023", "2024", "2025")
-    assert err.context == {
-        "modelo_id": "390",
-        "filing_year": 2026,
-        "period": "0A",
-        "revision_id": "",
-        "available_revision_ids": "2021,2022,2023,2024,2025",
-    }
-    assert str(err) == (
-        "modelo 390: no revision for year=2026 period='0A' revision=None; "
-        "modelo 390 declares: 2021, 2022, 2023, 2024, 2025"
+def test_modelo_390_2026_projects_the_nearest_authored_revision() -> None:
+    """An absent edition projects from 2025 instead of becoming a support gap."""
+    revision = select_revision(_committed_modelo_390(), filing_year=2026, period="0A", support=_support())
+    resolution = revision_temporal_resolution(
+        revision,
+        filing_year=2026,
+        period="0A",
+        support=_support(),
     )
 
-
-@pytest.mark.parametrize("locale", ("en", "es", "ca", "hu"))
-def test_modelo_390_2026_localized_refusal_lists_the_enrolled_revision_set(locale: str) -> None:
-    """The canonical renderer preserves the accepted set in every shipped locale."""
-    with pytest.raises(NoRevisionForPeriodError) as excinfo:
-        compiled_bundled_authority().snapshot("390", filing_year=2026, period="0A")
-
-    assert "2021,2022,2023,2024,2025" in resolve_error_message(excinfo.value, locale=locale)
+    assert resolution.revision.id == "2025"
+    assert resolution.requested_filing_year == 2026
+    assert resolution.authored_filing_year == 2025
+    assert resolution.projection_direction is TemporalProjectionDirection.FORWARD
 
 
 def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
