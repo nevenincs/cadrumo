@@ -49,7 +49,7 @@ class RegistryFailureClassification:
     facts: Mapping[str, str | int | bool]
 
 
-class RegistryError(TerminalPreconditionErrorMixin[object], CadrumoError, ValueError):
+class RegistryError(TerminalPreconditionErrorMixin[object], CadrumoError):
     """Base error retaining domain facts for a higher-layer action projection."""
 
     def __init__(
@@ -93,9 +93,10 @@ def _csv(items: Iterable[str]) -> str:
 class RegistryValidationError(RegistryError, CoreValidationError):
     """Raised when registry definitions are incomplete or contradictory.
 
-    Inherits from CoreValidationError to participate in the shared
-    CoreValidationError catch surface across all layers. RegistryError
-    already provides ValueError co-inheritance.
+    Its registered ancestry includes :class:`CoreValidationError` under
+    :class:`RegistryError`, so callers use the canonical registry-bound catch
+    surface. Pydantic validators translate this registered failure to
+    ``ValueError`` at their narrow boundary.
 
     Canonical raise scenarios route through one of the ``for_*``
     classmethod factories so the context-dict keys consumed by

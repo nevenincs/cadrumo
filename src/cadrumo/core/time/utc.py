@@ -23,7 +23,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
-from ..errors.hierarchy import CoreValidationError
+from ..errors.hierarchy import CoreValidationError, pydantic_validation_boundary
 
 
 def parse_iso_datetime(raw: str) -> datetime:
@@ -78,7 +78,7 @@ def validate_utc_aware(value: datetime) -> datetime:
     return value
 
 
-UtcInstant = Annotated[datetime, AfterValidator(validate_utc_aware)]
+UtcInstant = Annotated[datetime, AfterValidator(pydantic_validation_boundary(validate_utc_aware))]
 """A :class:`~datetime.datetime` field pinned to the canonical UTC contract.
 
 The declarative form of :func:`validate_utc_aware`, for the many models

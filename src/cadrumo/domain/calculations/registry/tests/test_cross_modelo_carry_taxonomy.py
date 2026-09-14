@@ -40,9 +40,9 @@ from dataclasses import dataclass
 from typing import TypedDict
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import BindingSourceKind
-from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..binding_temporal import BindingTemporalKind, FilingYearOffset, SameTargetContext
 from ..binding_value_contract import (
@@ -172,7 +172,7 @@ def _relation_targets(revision: ModeloRevision) -> frozenset[str]:
 
 def _scan() -> _ScanResult:
     """Walk every modelo × revision and collect the cross-modelo carry facts."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     modelos_scanned: set[str] = set()
     revisions_scanned = 0

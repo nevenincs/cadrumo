@@ -192,11 +192,13 @@ def register(code: ErrorCode) -> ErrorCode:
         sites.
 
     Raises:
-        ValueError: If a duplicate code identifier is encountered.
+        InternalInvariantError: If a duplicate code identifier is encountered.
     """
     existing = _ERROR_REGISTRY_MUTABLE.get(code.code)
     if existing is not None:
-        raise ValueError(f"duplicate ErrorCode registration for {code.code!r}")
+        from .hierarchy import InternalInvariantError
+
+        raise InternalInvariantError(f"duplicate ErrorCode registration for {code.code!r}")
     _ERROR_REGISTRY_MUTABLE[code.code] = code
     return code
 
@@ -210,7 +212,9 @@ def _build_declared_code_map(rows: tuple[tuple[str, ErrorCode], ...]) -> Mapping
     declared: dict[str, ErrorCode] = {}
     for qualname, code in rows:
         if qualname in declared:
-            raise ValueError(f"duplicate ErrorCode declaration for {qualname!r}")
+            from .hierarchy import InternalInvariantError
+
+            raise InternalInvariantError(f"duplicate ErrorCode declaration for {qualname!r}")
         declared[qualname] = register(code)
     return MappingProxyType(declared)
 
@@ -222,7 +226,9 @@ def get_registered_error_code_by_code(code: str) -> ErrorCode:
     """Resolve one stable code through the sole declared ErrorCode authority."""
     matches = tuple(error_code for error_code in _DECLARED_CODE_BY_QUALNAME.values() if error_code.code == code)
     if len(matches) != 1:
-        raise ValueError(f"error code {code!r} is not uniquely registered (found {len(matches)})")
+        from .hierarchy import InternalInvariantError
+
+        raise InternalInvariantError(f"error code {code!r} is not uniquely registered (found {len(matches)})")
     return matches[0]
 
 
@@ -266,7 +272,7 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         The registered :class:`ErrorCode` for ``error_type``.
 
     Raises:
-        ValueError: When the mapping is available but contains no entry
+        InternalInvariantError: When the mapping is available but contains no entry
             for this class.
     """
     bound = _CLASS_CODE_REGISTRY.get(error_type)
@@ -284,11 +290,15 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode | None:
         # get_registered_error_code drains _DEFERRED_BIND after loading.
         return None
     if not is_object_mapping(declared):
-        raise RuntimeError("the declared error-code registry is not a mapping")
+        from .hierarchy import InternalInvariantError
+
+        raise InternalInvariantError("the declared error-code registry is not a mapping")
     qualname = _qualname(error_type)
     code = declared.get(qualname)
     if not isinstance(code, ErrorCode):
-        raise ValueError(
+        from .hierarchy import InternalInvariantError
+
+        raise InternalInvariantError(
             f"CadrumoError subclass {qualname} is missing a declared ErrorCode "
             f"registry entry. If this class was just added, declare it in the "
             f"error-code registry alongside the class. If you encountered this "
@@ -320,7 +330,9 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
         # loading so the deferred set has been drained by _flush_deferred_binds
         # above; None here would mean the class has no declared ErrorCode entry.
         if resolved is None:
-            raise ValueError(
+            from .hierarchy import InternalInvariantError
+
+            raise InternalInvariantError(
                 f"CadrumoError subclass {_qualname(error_type)} has no registered ErrorCode "
                 f"even after deferred-bind drain; ensure it is declared in the error-code registry.",
             )

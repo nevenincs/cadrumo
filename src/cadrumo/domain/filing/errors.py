@@ -26,9 +26,10 @@ class FilingValidationError(ModeloDraftError, CoreValidationError):
     draft. The schema models also raise it from their cross-field validators for
     a record that is structurally malformed: a provenance kind contradicting its
     own value, an identity that is not its own content address, or two identity
-    axes naming different taxpayers. Inheriting :class:`ValueError` (via
-    :class:`~core.errors.CoreValidationError`) means pydantic surfaces the second
-    kind as a :class:`pydantic.ValidationError` at the model boundary.
+    Its registered ancestry includes :class:`~core.errors.CoreValidationError`
+    under the filing error family. Pydantic model validators translate the
+    registered failure to ``ValueError`` at their narrow boundary, yielding a
+    :class:`pydantic.ValidationError` for structurally malformed records.
     """
 
 
@@ -44,5 +45,10 @@ class FilingExportError(ModeloDraftError):
     """Raised when exporting a draft to an AEAT wire format fails."""
 
 
-class FilingExportValidationError(FilingExportError, ValueError):
-    """Raised on invalid export field values or layouts. Inherits from ValueError for Pydantic."""
+class FilingExportValidationError(FilingExportError):
+    """Raised on invalid export field values or layouts.
+
+    Its canonical registered ancestry is :class:`FilingExportError`; any
+    Pydantic export validator translates this registered failure to
+    ``ValueError`` at its narrow boundary.
+    """

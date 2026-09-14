@@ -93,6 +93,17 @@ def _has_only_bare_bases(error_type: type[BaseException] | _SourceExceptionClass
     return bool(bare) and len(bare) == len(bases)
 
 
+def _has_mixed_builtin_base(error_type: type[BaseException] | _SourceExceptionClass) -> bool:
+    """Whether a registered declaration also names a builtin exception base."""
+    if isinstance(error_type, _SourceExceptionClass):
+        bases = error_type.bases
+        bare_count = sum(base.name.rsplit(".", 1)[-1] in _BARE_BASE_NAMES for base in bases)
+    else:
+        bases = error_type.__bases__
+        bare_count = sum(base in _BARE_EXCEPTION_BASES for base in bases)
+    return 0 < bare_count < len(bases)
+
+
 @dataclass(frozen=True)
 class _SourceBase:
     """One class base as written in a production source file."""
@@ -315,6 +326,33 @@ def test_production_exception_classes_do_not_introduce_unregistered_builtin_root
     )
 
 
+def test_registered_exception_classes_do_not_mix_in_builtin_exception_bases() -> None:
+    """Builtin protocol behavior belongs at callbacks, not in registered ancestry."""
+    violations = [
+        _describe_exception(error_type)
+        for error_type in _production_exception_classes()
+        if _has_mixed_builtin_base(error_type)
+    ]
+    assert violations == [], (
+        "registered production exception class(es) also inherit builtin exception bases. "
+        "Keep the internal failure canonical and translate it only at the narrow external "
+        "protocol boundary:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_production_does_not_construct_runtime_error_for_owned_invariants() -> None:
+    """Operational invariants use the registered, envelope-safe failure type."""
+    violations: list[str] = []
+    for path, tree in production_ast_items():
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "RuntimeError":
+                violations.append(f"{repo_relative(path)}:{node.lineno}")
+    assert violations == [], (
+        "production operational failures raise bare RuntimeError. Use a registered Cadrumo "
+        "exception internally; translate only at a proven external protocol boundary:\n  " + "\n  ".join(violations)
+    )
+
+
 def test_no_class_declares_a_rationale_it_does_not_need() -> None:
     """A rationale on a class that no longer roots at a bare builtin must go.
 
@@ -381,6 +419,8 @@ def test_the_rationale_declaration_is_per_class_and_discriminates() -> None:
     assert not _has_only_bare_bases(_DeclaredButNoLongerBareError), (
         "the reciprocal gate must flag a class whose declaration outlived its bare-base condition"
     )
+    assert _has_mixed_builtin_base(_DeclaredButNoLongerBareError)
+    assert not _has_mixed_builtin_base(_DeclaredError)
 
 
 # ---------------------------------------------------------------------------

@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import validated_casilla_id
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
 from .. import export as owner
-from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..export import clasificar_casillas_oficiales
 
@@ -19,7 +19,7 @@ def test_classifier_is_the_public_registry_identity() -> None:
 
 
 def test_m720_binding_derived_design_distinguishes_declared_binding_representation() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.validate_modelo("720").revisions["2013-y-siguientes"]
 
     # M720 declares no inline CASILLA-bearing field: every box it addresses is
@@ -54,7 +54,7 @@ def test_m720_binding_derived_design_distinguishes_declared_binding_representati
 
 
 def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.snapshot("100", filing_year=2024, period="0A").revision
 
     with pytest.raises(RegistryValidationError, match="requires source_root and sources"):
@@ -73,7 +73,7 @@ def test_m100_2024_uses_the_official_xml_dictionary_and_requires_its_authority()
 
 
 def test_m349_binding_derived_rows_address_casillas_without_export_refs() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.snapshot("349", filing_year=2026, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)
@@ -92,7 +92,7 @@ def _layoutless_revisions() -> list[tuple[str, str]]:
     """Every committed revision that declares no export layout at all."""
     return sorted(
         (str(modelo.id), revision_id)
-        for modelo in bundled_authority().modelos
+        for modelo in compiled_bundled_authority().modelos
         for revision_id, revision in modelo.revisions.items()
         if not revision.export_layouts
     )
@@ -108,7 +108,7 @@ def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id
     regression. The subject is now derived from the property it needs, so a
     revision leaves this gate exactly when it gains a layout.
     """
-    revision = bundled_authority().validate_modelo(modelo_id).revisions[revision_id]
+    revision = compiled_bundled_authority().validate_modelo(modelo_id).revisions[revision_id]
 
     statuses = clasificar_casillas_oficiales(revision)
 
@@ -124,7 +124,7 @@ def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
     other direction on a revision that HAS a layout, so classification stays
     covered no matter how far the authoring gets.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.snapshot("130", filing_year=2026, period="1T").revision
 
     statuses = clasificar_casillas_oficiales(revision)

@@ -6,11 +6,11 @@ persisted on ledger records. Each previously carried a per-boundary copy of
 its shape check, so the same token could be accepted at one boundary and
 refused at the next.
 
-These are pure functions at the ``core`` layer. They raise
-:class:`~core.errors.CoreValidationError` — a :class:`ValueError` subclass, so
-a Pydantic validator delegating here reports a normal validation failure —
-and each caller re-raises its own domain error to keep operator diagnostics
-boundary-specific.
+These are pure functions at the ``core`` layer. They raise the registered
+:class:`~core.errors.CoreValidationError` ancestry, and a Pydantic validator
+delegating here translates that failure to ``ValueError`` at its narrow
+boundary. Each caller re-raises its own domain error to keep operator
+diagnostics boundary-specific.
 """
 
 from __future__ import annotations

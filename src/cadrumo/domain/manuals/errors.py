@@ -47,11 +47,12 @@ class ManifestError(ManualError):
     """Raised when a ``manifest.json`` fails schema or sha256 checks."""
 
 
-class ManualValidationError(ManualError, ValueError):
+class ManualValidationError(ManualError):
     """Raised when manual records violate state or shape invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Its canonical registered ancestry is :class:`ManualError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow boundary.
     """
 
 

@@ -145,7 +145,7 @@ def is_identity_structurally_shaped(candidate: object) -> bool:
     return bool(re.fullmatch(r"[0-9]+[A-Z]", normalised) or re.fullmatch(r"[A-Z][0-9]+[A-Z0-9]", normalised))
 
 
-class IdentityError(CadrumoError, ValueError):
+class IdentityError(CadrumoError):
     """Raised when a candidate string is not a valid Spanish identity document.
 
     Bound to the registered error code ``INTEGRITY_IDENTITY_DOCUMENT``
@@ -153,9 +153,9 @@ class IdentityError(CadrumoError, ValueError):
     diagnostic that names the failing shape (``NIF``, ``NIE``, ``CIF``)
     and, where relevant, the expected vs observed check character.
 
-    Inherits from :class:`ValueError` so that pydantic's
-    :class:`~pydantic.AfterValidator` can wrap it directly into a
-    :class:`~pydantic.ValidationError` without a re-raise shim.
+    Its canonical registered ancestry is :class:`CadrumoError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow validator boundary.
     """
 
 

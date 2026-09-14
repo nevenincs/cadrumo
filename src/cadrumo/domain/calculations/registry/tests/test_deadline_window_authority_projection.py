@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..deadline_coordinate import deadline_window_semantic_coordinates
 from ..schema import ModeloRevision
 from ..schema_deadlines import DeadlineWindowDefinition
@@ -27,7 +27,7 @@ def test_fleet_deadline_projection_is_canonically_owned_exact_and_filter_invaria
     a separate registry invariant, so future-year gaps cannot weaken or block the
     ownership and projection contract proved here.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assert authority.catalogues.supported_filing_years is not None
 
     for filing_year in authority.catalogues.supported_filing_years.years:
@@ -72,7 +72,7 @@ def test_fleet_deadline_projection_is_canonically_owned_exact_and_filter_invaria
 
 
 def test_fleet_projection_preserves_distinct_qualified_variants() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     projected = authority.deadline_windows(2025, modelos=("210",))
     by_base_coordinate = defaultdict(list)
     for modelo_id, revision, window in projected:
@@ -100,7 +100,7 @@ def _window_by_period(
 ) -> dict[str, DeadlineWindowDefinition]:
     return {
         window.period.registry_token: window
-        for _modelo, _revision, window in bundled_authority().deadline_windows(filing_year, modelos=(modelo,))
+        for _modelo, _revision, window in compiled_bundled_authority().deadline_windows(filing_year, modelos=(modelo,))
     }
 
 
@@ -112,7 +112,7 @@ def test_shared_iva_group_year_end_rule_stays_relationally_consistent_over_suppo
     presentation timetable, so it remains meaningful when the supported-year
     catalogue advances.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assert authority.catalogues.supported_filing_years is not None
     compared_years = 0
 
@@ -136,7 +136,7 @@ def test_shared_iva_group_year_end_rule_stays_relationally_consistent_over_suppo
 @pytest.mark.parametrize("modelo", ("303", "349"))
 def test_monthly_and_quarterly_year_end_variants_share_their_endpoint(modelo: str) -> None:
     """December and Q4 variants governed by one January rule cannot disagree."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     assert authority.catalogues.supported_filing_years is not None
     compared_years = 0
 

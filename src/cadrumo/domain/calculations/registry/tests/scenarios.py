@@ -12,13 +12,13 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, Field, model_validator
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.period import Period
-from ..authority import bundled_authority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import (
     RegistryCalculationEntry,
@@ -245,7 +245,7 @@ def run_registry_calculation_scenario(
     Returns:
         A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     try:
         authority.modelo(scenario.modelo)
     except RegistrySnapshotError as exc:

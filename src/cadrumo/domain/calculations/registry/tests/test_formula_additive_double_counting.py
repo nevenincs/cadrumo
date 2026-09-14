@@ -29,8 +29,8 @@ from __future__ import annotations
 from collections import Counter
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -73,7 +73,7 @@ def _double_counts() -> tuple[list[str], list[str], int]:
     circular: list[str] = []
     scanned = 0
 
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             canonical = {
                 str(casilla.number): str(casilla.id)

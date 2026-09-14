@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..applicability import MODELO_APPLICABILITY_RULES
-from ..authority import bundled_authority
 from ..facts.schema import GovernedFactCatalogue
 from ..governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _candidate_with_mapping_value(fact_id: str, key: str, value: str) -> CandidateFactAuthority:
-    catalogue = bundled_authority().catalogues.facts
+    catalogue = compiled_bundled_authority().catalogues.facts
     fact = catalogue.facts[fact_id]
     variant = fact.variants[0]
     payload = variant.payload

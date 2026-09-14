@@ -14,9 +14,9 @@ answer, same refusals, and nothing mutable handed out.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @pytest.fixture(scope="module")
 def authority():
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.mark.parametrize(

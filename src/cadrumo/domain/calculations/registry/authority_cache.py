@@ -3,15 +3,40 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Callable, Hashable
+from collections.abc import Callable, Hashable, Mapping
 from concurrent.futures import Future
-from dataclasses import dataclass
-from threading import RLock, local
+from dataclasses import dataclass, fields, is_dataclass
+from sys import getsizeof
+from threading import RLock, get_ident, local
 from typing import cast
 
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 
 DEFAULT_AUTHORITY_CACHE_BUDGET = 64 * 1024 * 1024
+
+
+def retained_object_size(value: object) -> int:
+    """Estimate a decoded immutable graph without following types or callables."""
+    seen: set[int] = set()
+
+    def measure(item: object) -> int:
+        identity = id(item)
+        if identity in seen:
+            return 0
+        seen.add(identity)
+        size = getsizeof(item)
+        if isinstance(item, Mapping):
+            return size + sum(measure(key) + measure(member) for key, member in item.items())
+        if isinstance(item, (tuple, list, set, frozenset)):
+            return size + sum(measure(member) for member in item)
+        if is_dataclass(item) and not isinstance(item, type):
+            return size + sum(measure(getattr(item, field.name)) for field in fields(item))
+        model_fields = getattr(type(item), "model_fields", None)
+        if isinstance(model_fields, Mapping):
+            return size + sum(measure(getattr(item, name)) for name in model_fields)
+        return size
+
+    return measure(value)
 
 
 class AuthorityCacheCycleError(CadrumoError):
@@ -55,6 +80,8 @@ class AccountedAuthorityCache[K: Hashable, V]:
         self._budget = budget
         self._values: OrderedDict[K, RetainedAuthorityValue[V]] = OrderedDict()
         self._in_flight: dict[K, Future[RetainedAuthorityValue[V]]] = {}
+        self._owners: dict[K, int] = {}
+        self._waiting_for: dict[int, K] = {}
         self._lock = RLock()
         self._loading = local()
 
@@ -77,8 +104,17 @@ class AccountedAuthorityCache[K: Hashable, V]:
             if future is None:
                 future = Future()
                 self._in_flight[key] = future
+                self._owners[key] = get_ident()
         if not owner:
-            return cast(V, future.result().value)
+            waiter = get_ident()
+            with self._lock:
+                self._refuse_wait_cycle(waiter, key)
+                self._waiting_for[waiter] = key
+            try:
+                return cast(V, future.result().value)
+            finally:
+                with self._lock:
+                    self._waiting_for.pop(waiter, None)
         self._loading.keys = (*stack, key)
         try:
             loaded = loader()
@@ -99,6 +135,20 @@ class AccountedAuthorityCache[K: Hashable, V]:
             self._loading.keys = stack
             with self._lock:
                 self._in_flight.pop(key, None)
+                self._owners.pop(key, None)
+
+    def _refuse_wait_cycle(self, waiter: int, key: K) -> None:
+        """Reject a wait edge that closes a cross-thread loader dependency cycle."""
+        owner = self._owners.get(key)
+        visited: set[int] = set()
+        while owner is not None and owner not in visited:
+            if owner == waiter:
+                raise AuthorityCacheCycleError(f"concurrent authority component load cycle through {key!r}")
+            visited.add(owner)
+            owner_wait = self._waiting_for.get(owner)
+            if owner_wait is None:
+                return
+            owner = self._owners.get(owner_wait)
 
     def discard(self, key: K) -> None:
         """Stop retaining a key without affecting values already held by callers."""
@@ -131,7 +181,7 @@ class AccountedAuthorityCache[K: Hashable, V]:
             for token, weight in item.shared_weights:
                 previous = shared.setdefault(token, weight)
                 if previous != weight:
-                    raise RuntimeError(f"authority cache shared token {token!r} has contradictory weights")
+                    raise InternalInvariantError(f"authority cache shared token {token!r} has contradictory weights")
         return exclusive + sum(shared.values())
 
     def _evict_to_budget(self) -> None:

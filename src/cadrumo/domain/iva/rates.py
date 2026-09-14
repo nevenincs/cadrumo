@@ -33,15 +33,13 @@ gate.
 
 def load_iva_rate_table(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[EUMemberState, tuple[IvaRateRecord, ...]]:
     """Return IVA rates projected from the installed authority artifact.
 
     Rate TOML is authoring input.  A caller cannot redirect the shipped runtime
     at an arbitrary source tree: publication is the only route to changed rates.
     """
-    if operation is None:
-        raise IvaCatalogueError("IVA rate table requires an explicit pinned authority operation")
     fact = operation.governed_fact(IVA_RATE_FACT_ID)
     table: dict[EUMemberState, list[IvaRateRecord]] = {}
     for variant in fact.variants:

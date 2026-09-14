@@ -23,6 +23,7 @@ from decimal import Decimal
 from typing import TypedDict, get_type_hints
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
@@ -43,7 +44,6 @@ from ....modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....submission.models import ModeloDraftStatus
-from ..authority import bundled_authority
 from ..bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -541,7 +541,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
     )
     work_unit_id = "b" * 64
     registry_snapshot_ref = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=2025,

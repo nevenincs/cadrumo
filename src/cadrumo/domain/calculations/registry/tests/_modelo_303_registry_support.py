@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
-from ..authority import bundled_authority
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 _WWW1_HOST = aeat_host("www1")
@@ -102,5 +103,5 @@ for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
 
 
 def load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelo("303"), authority.catalogues

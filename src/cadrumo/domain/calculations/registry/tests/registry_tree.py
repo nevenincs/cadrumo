@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from functools import cache
 
-from ..authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ..schema import ModeloDefinition, RegistryCatalogues
 
 
@@ -17,7 +18,7 @@ def bundled_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatal
     published artifact, so shared source tests do not reach ``dev`` or a root
     test-support package just to obtain bundled facts.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelos, authority.catalogues
 
 

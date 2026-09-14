@@ -49,6 +49,8 @@ See Also:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import validate_spanish_tax_id
 from ..calculations.registry.errors import RegistryValidationError
@@ -56,11 +58,16 @@ from ..calculations.registry.tax_id_format import runtime_tax_id_format, tax_id_
 from .establishment import country_code_for_printed_tax_identifier
 from .schema import EUMemberState, require_eu_member_state
 
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
 __all__ = ["identification_state_for_printed_tax_identifier"]
 
 
 def identification_state_for_printed_tax_identifier(
     printed_identifier: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> EUMemberState | None:
     """Return the Member State a printed IVA number identifies the party in.
 
@@ -73,6 +80,8 @@ def identification_state_for_printed_tax_identifier(
 
     Args:
         printed_identifier: The identifier as transcribed, or ``None``.
+        operation: Caller-owned pinned authority operation for the country and
+            member-state catalogues used by this lookup.
 
     Returns:
         The :class:`~domain.iva.EUMemberState` the number identifies the party
@@ -84,11 +93,11 @@ def identification_state_for_printed_tax_identifier(
         all, so reading absence as a Spanish identification would manufacture
         the fact from its own silence.
     """
-    code = country_code_for_printed_tax_identifier(printed_identifier)
+    code = country_code_for_printed_tax_identifier(printed_identifier, operation=operation)
     if code is None:
-        return _spanish_identification(printed_identifier)
+        return _spanish_identification(printed_identifier, operation=operation)
     try:
-        return require_eu_member_state(code.lower())
+        return require_eu_member_state(code.lower(), authority=operation)
     except (TypeError, ValueError, RegistryValidationError):
         # A prefix naming a country outside the rate-schedule catalogue states a
         # registration this fact's closed type cannot carry. Unestablished is
@@ -96,7 +105,11 @@ def identification_state_for_printed_tax_identifier(
         return None
 
 
-def _spanish_identification(printed_identifier: str | None) -> EUMemberState | None:
+def _spanish_identification(
+    printed_identifier: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> EUMemberState | None:
     """Return Spain when the printed number is an ES-prefixed Spanish identifier.
 
     The other half of an axis that was one-sided. Every sibling prefix is
@@ -134,4 +147,4 @@ def _spanish_identification(printed_identifier: str | None) -> EUMemberState | N
         # Spanish identification; it is a misread or a different country's
         # number wearing the wrong prefix. Silence is the honest answer.
         return None
-    return require_eu_member_state("ES")
+    return require_eu_member_state("ES", authority=operation)

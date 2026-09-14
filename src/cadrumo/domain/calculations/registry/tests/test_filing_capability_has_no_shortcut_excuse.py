@@ -31,8 +31,7 @@ not hold, so a later reader reaches for evidence instead.
 from __future__ import annotations
 
 import pytest
-
-from ..authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -40,7 +39,7 @@ _APPLICABILITY = "applicability"
 
 
 def _revisions():
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             yield modelo.id, revision_id, revision
 
@@ -102,7 +101,7 @@ def test_an_all_informational_casilla_set_is_not_a_parser_fingerprint() -> None:
     assert "840/2003-y-siguientes" in all_informational, sorted(all_informational)
     assert "390/2021" in all_informational, sorted(all_informational)
 
-    modelo_840 = next(m for m in bundled_authority().modelos if m.id == "840")
+    modelo_840 = next(m for m in compiled_bundled_authority().modelos if m.id == "840")
     revision = modelo_840.revisions["2003-y-siguientes"]
 
     assert not revision.export_layouts, "modelo 840 now carries a layout, so it is no longer the counterexample"
