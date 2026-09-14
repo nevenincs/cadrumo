@@ -5,47 +5,19 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:f326a4441ff46bf87678e478ffa2d674da5b1fcad14dae6d45266b1f379a2207'
+body_hash: 'sha256:e31c64b8eb38b3414a6897af167fe6829d612e1d68aef5961896acdb41111204'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace registry-edition-authoring with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
 # `registry-edition-authoring` audit: `Minimal registry storage implementation`
 
 ## Scope
 
-<!-- What was audited and why -->
+Lossless declaration packing, schema-default elision, unchanged-member omission and evidence standardization across all 58 bundled modelos. Source changes are guarded against concurrent writers; exact originals and per-file hashes are retained. This audit distinguishes source equivalence from full authority conformance and actual rendered filing bytes.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Minimal registry storage implementation | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Minimal registry storage implementation is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### apply-preflight | high | A late concurrent edit can leave a partially published modelo
 
@@ -85,6 +57,14 @@ No open finding in the bounded implementation. Whole-modelo sidecar membership, 
 
 ## Recommendations
 
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
+The reviewed publication, comment-association, localized-help and evidence-projection findings are resolved. Keep complete typed-field comparison (including serialization-excluded fields), ordered references, label/help resolution, exact-edge evidence validation and race-preserving publication as transformation gates.
+
+The final combined proof passed for all 58 modelos: 20,551 TOMLs became 1,938 and 793,421 authored leaf occurrences became 736,787. The work removed 46,241 explicit schema defaults and 967 redundant members, including five M390 evidence-bearing rows. Generated export and locale files remain byte-identical. Detailed field-path enumeration and fingerprints are in `.logs/audit-runs/2026-09-14/registry-storage-fields.json` and `registry-storage-proof.json`; the condensed human overview is `registry-storage-overview.md` in that directory.
+
+Focused transformation and fact-scope tests passed (32). The stable directory-loader suite passed 21 and failed three pre-existing tests expecting the retired global parameters catalogue. Those failures are not storage-proof failures, but the suite is not green. The delta diagnostic suite passed 146 tests; the final chain diagnostic suite passed 59, including duplicate-target and row-plus-sidecar ownership refusals. Malformed sidecars produce an explicit diagnostic limitation rather than a grounding claim.
+
+The authority artifact was regenerated through the owning pipeline (exit 0, 58 modelos). That command currently uses structural compilation, not full conformance; publication does not discharge grounding or filing obligations. The full compile, delta/chain aggregate screens and exclusive lineage seeder were not duplicated in this evidence-standardization pass.
+
+Remaining work is substantive or separately owned: adjudicate unknown continuity using official evidence, repair obsolete global-parameter fixtures, and run actual export scenarios once their input/provider issues are resolved. Further root changes and reference lifting require their own proof. This reduction is not a claim of an absolute minimum encoding or registry-wide filing completion.
+
+The feature metadata check reports 44 pre-existing execution-mapping problems (retired per-step records and a separate closed S65 without ledger evidence). S70 is recorded through the current consolidated ledger with 21,455 mechanical path rows. No historical execution records were deleted to suppress those findings.
