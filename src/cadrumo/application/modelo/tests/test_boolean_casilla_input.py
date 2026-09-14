@@ -19,9 +19,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
@@ -42,7 +42,7 @@ _NUMERIC_CASILLA: CasillaId = validated_casilla_id("0003", surface="_NUMERIC_CAS
 
 
 def _snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> dict[CasillaId, Decimal]:

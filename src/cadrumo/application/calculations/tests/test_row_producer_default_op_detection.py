@@ -16,9 +16,9 @@ row producer, the BIND-01 regression has returned.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition
@@ -67,7 +67,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
     detection keeps it.
     """
 
-    revision = bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
     revision_with_default = revision.model_copy(update={"bindings": (_rows_default_detail_binding(),)})
 
     lookup = _row_field_lookup(revision_with_default)
@@ -76,7 +76,7 @@ def test_row_field_lookup_detects_none_aggregation_rows_default_binding() -> Non
 
 
 def test_row_field_lookup_rejects_rows_binding_without_row_set_projection() -> None:
-    revision = bundled_authority().modelo("720").revisions["2013-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("720").revisions["2013-y-siguientes"]
     malformed_row_binding = BindingDefinition.model_validate(
         {
             "id": "synthetic-row-without-grouping",

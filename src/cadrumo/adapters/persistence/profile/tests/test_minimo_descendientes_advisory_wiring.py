@@ -35,6 +35,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
     advisory_profile_bucket,  # noqa: F401
@@ -43,7 +44,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -72,7 +72,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
+    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period="0A").revision
 
 
 def _write(
@@ -172,7 +172,7 @@ def test_the_settlement_advisory_reaches_the_coordinator() -> None:
     case in this module). The state is a property of the revision alone, so no
     profile setup is needed.
     """
-    revision = bundled_authority().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    revision = compiled_bundled_authority().snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},
@@ -195,7 +195,7 @@ def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> N
     this the test above would pass against a collector that fired on every
     revision, which would say nothing about the condition it claims to detect.
     """
-    revision = bundled_authority().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    revision = compiled_bundled_authority().snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
     diagnostics = collect_bucket_aggregation_advisory_diagnostics(
         revision,
         {},

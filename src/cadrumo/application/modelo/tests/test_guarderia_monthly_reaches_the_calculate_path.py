@@ -27,8 +27,8 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -49,7 +49,7 @@ _COUNT_BINDING = "renta-profile-descendientes-guarderia"
 
 @lru_cache
 def _snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period="0A")
 
 
 def _resolved(*descendientes: DescendantInfo) -> dict[str, Decimal]:

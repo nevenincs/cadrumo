@@ -99,6 +99,7 @@ from .filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territo
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
     from .invoice_draft_records import InvoiceDraft
 
@@ -333,6 +334,7 @@ def resolve_confirmed_establishment(
     *,
     bucket_id: str,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
     draft: InvoiceDraft,
     kind: InvoiceKind,
     invoice_date: date | None = None,
@@ -354,6 +356,8 @@ def resolve_confirmed_establishment(
             pinned authority operation. The same tuple is used by the ladder
             and the regime contradiction check; this function does not resolve
             a second vocabulary.
+        operation: The caller-owned pinned authority operation retained for all
+            establishment and classification catalogue lookups.
         draft: The pre-direction reading of the document being confirmed.
         kind: Which side of the invoice the filer is on, as the operator settled
             it at confirm. Never the reader's suggestion, and never inferred
@@ -394,6 +398,7 @@ def resolve_confirmed_establishment(
     counterparty = resolve_draft_counterparty_establishment(
         bucket_id=bucket_id,
         legends=legends,
+        operation=operation,
         draft=draft,
         kind=kind,
         repository=repository,
@@ -460,7 +465,7 @@ def resolve_confirmed_establishment(
         # supply the status directly -- stayed green. The record token also
         # carries the alpha-3 spelling Facturae states, which the printed-value
         # status axis declines to judge at all.
-        counterparty_country_status=record_country_code_status(side.stated_country_token),
+        counterparty_country_status=record_country_code_status(side.stated_country_token, operation=operation),
         # Which party the counterparty IS, so the catalogue-gap exemption
         # forgives that party's residency and no other. The operator settled
         # this direction; it is never the reader's suggestion.

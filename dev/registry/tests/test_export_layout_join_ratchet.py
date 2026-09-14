@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 
@@ -78,7 +78,7 @@ def _resolve(
 
 def _scan() -> tuple[frozenset[tuple[str, str, str]], int, dict[tuple[str, str, str], int]]:
     """Return the unjoined sheets, revisions scanned, and each entry's record count."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     source_refs = authority.catalogues.sources
     source_refs = getattr(source_refs, "entries", None) or source_refs
     if not hasattr(source_refs, "get"):
@@ -214,7 +214,7 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
     gave up no rigor whatsoever. The sibling multi-record assertion catches one
     flavour of overstatement; this catches the other.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     source_refs = authority.catalogues.sources
     source_refs = getattr(source_refs, "entries", None) or source_refs
     if not hasattr(source_refs, "get"):
@@ -249,3 +249,6 @@ def test_no_inventory_entry_is_an_auxiliary_envelope_header() -> None:
         "inventory entr(ies) are auxiliary envelope headers, which the coverage check handles on "
         "their own branch rather than through the weak fallback, so they are not debt: " + ", ".join(sorted(misfiled))
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

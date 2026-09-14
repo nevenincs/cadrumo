@@ -27,13 +27,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from .....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
@@ -71,7 +71,7 @@ _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01
 _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
 _DECL_PERIODO_CODE = "1T"
-_REGISTRY_SNAPSHOT_REF = bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+_REGISTRY_SNAPSHOT_REF = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
 _WORK_UNIT_PERIOD = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=_BUCKET_ID,
@@ -118,7 +118,7 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
     snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=bundled_authority().snapshot("303", filing_year=2026, period="1T"),
+        registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T"),
         scope_decision=scope,
     )
     return FilingInstanceEvidence(

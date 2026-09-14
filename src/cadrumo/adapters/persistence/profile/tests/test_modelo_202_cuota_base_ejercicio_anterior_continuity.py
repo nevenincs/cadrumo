@@ -42,13 +42,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.relation_prefill import resolve_relations_from_local_store
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -95,7 +95,7 @@ def _modalidad_rate_from_snapshot(filing_year: int) -> Decimal:
     ``is.modalidad_cuota.percentage`` parameter on the 2P snapshot;
     the authority is ``aeat-modelo-202-instructions``.
     """
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _MODELO_202, filing_year=filing_year, period="2P", grade=RegistryAuthorityGrade.CALCULATION
     )
     param = next(p for p in snapshot.revision.parameters if p.id == "is.modalidad_cuota.percentage")
@@ -212,7 +212,7 @@ def _calculate_202_2p(
     casilla_02: Decimal,
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M202 2P calculation from the resolved prior-cuota relation."""
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _MODELO_202, filing_year=filing_year, period="2P", grade=RegistryAuthorityGrade.CALCULATION
     )
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="2P")
@@ -239,7 +239,7 @@ def _resolve_202_relations(
     period: str = "2P",
     obs_repo: CalculationObservationRepository,
 ) -> dict[RelationId, Decimal]:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _MODELO_202, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.CALCULATION
     )
     prefill = resolve_relations_from_local_store(snapshot, repository=obs_repo)

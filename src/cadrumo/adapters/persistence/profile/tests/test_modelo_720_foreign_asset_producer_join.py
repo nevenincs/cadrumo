@@ -51,6 +51,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -58,7 +59,6 @@ from cadrumo.adapters.persistence.profile.tests.verification_repository_support 
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 
 __all__ = ["register_wizard_catalogue"]
@@ -261,7 +261,7 @@ def _calculate_through_the_mesh(
             )
         )
 
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             Modelo("720").value,
             filing_year=_YEAR_N_PLUS_1,
             period=_PERIOD,

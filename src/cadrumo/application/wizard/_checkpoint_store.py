@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
 from .descendant_group import DESCENDANTS_COUNT_PAGE_ID
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 # The descendant fact namespace: indexed rows renta_family.descendiente.{n}.*
 # plus the one aggregate the projection still stores.
@@ -27,6 +31,8 @@ def _in_descendant_namespace(path: str) -> bool:
 def descendant_clearing_facts(
     record: UserProfileRecord | None,
     answers: Mapping[str, str],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[UserProfileFact, ...]:
     """Return value-cleared facts for descendant rows the projection replaces.
 
@@ -45,13 +51,15 @@ def descendant_clearing_facts(
         record: The :class:`UserProfileRecord` to scan for stale descendant
             paths, or ``None``.
         answers: The page-keyed canonical answer map for the current run.
+        operation: Caller-owned pinned authority operation used to project the
+            descendant facts.
     """
     if record is None or DESCENDANTS_COUNT_PAGE_ID not in answers:
         return ()
     from ..user_profile.projections import record_to_path_values
     from .persistence import descendant_facts_from_answers
 
-    projected = {path for path, _ in descendant_facts_from_answers(answers)}
+    projected = {path for path, _ in descendant_facts_from_answers(answers, operation=operation)}
     existing = record_to_path_values(record)
     return tuple(
         UserProfileFact(path=path, value=None)

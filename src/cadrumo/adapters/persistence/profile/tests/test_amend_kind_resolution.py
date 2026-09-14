@@ -34,6 +34,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -49,7 +50,6 @@ from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -149,7 +149,7 @@ def _seed_m303_external_baseline(
         modelo="303",
         filing_year=filing_year,
         period=period,
-        revision_id=bundled_authority()
+        revision_id=compiled_bundled_authority()
         .snapshot("303", filing_year=filing_year, period=period.registry_token)
         .revision.id,
         repository=wu_repo,

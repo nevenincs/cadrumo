@@ -24,14 +24,12 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
 
 
-def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation | None = None) -> IvaCatalogue:
+def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation) -> IvaCatalogue:
     """Adapt one selected IVA runtime component into the operational catalogue.
 
     ``operation`` addresses only the IVA regulation component already pinned by
-    the caller; an unpinned call is refused.
+    the caller.
     """
-    if operation is None:
-        raise IvaCatalogueError("IVA catalogue requires an explicit pinned authority operation")
     from ..calculations.registry.runtime_catalogues import PublishedIvaRegulation
 
     loaded = operation.runtime_catalogue("iva_regulations")
@@ -71,7 +69,7 @@ def bundled_iva_catalogue(*, operation: PinnedAuthorityOperation | None = None) 
     return IvaCatalogue(regulations=regulations)
 
 
-def iva_catalogue_years(*, operation: PinnedAuthorityOperation | None = None) -> frozenset[int]:
+def iva_catalogue_years(*, operation: PinnedAuthorityOperation) -> frozenset[int]:
     """Return every filing year the catalogue can be resolved for.
 
     A year counts only when EVERY grounded regulation has at least one citation
@@ -92,7 +90,7 @@ def iva_catalogue_years(*, operation: PinnedAuthorityOperation | None = None) ->
 def resolve_catalogue(
     *,
     on: date,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     projected_year: int | None = None,
 ) -> IvaCatalogue:
     """Return the IVA catalogue as grounded for the filing year of ``on``.
@@ -121,7 +119,7 @@ def _resolve_catalogue(
     year: int,
     grounded: tuple[int, ...],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaCatalogue:
     if year not in grounded:
         raise IvaCatalogueError(

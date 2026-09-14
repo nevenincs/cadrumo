@@ -7,6 +7,7 @@ from decimal import Decimal
 from functools import cache
 from typing import Literal
 
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.outbound.aeat.sede.schema import (
@@ -24,7 +25,6 @@ from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvena
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
@@ -44,7 +44,7 @@ _TAXPAYER_REF = "12345678Z"
 def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
     """Return the law-selected canonical coordinate used by a test fixture."""
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("303").value,
             filing_year=filing_year,
@@ -173,7 +173,7 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
                 captured_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
             ),
         ),
-        registry_snapshot_ref=bundled_authority()
+        registry_snapshot_ref=compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=2024,

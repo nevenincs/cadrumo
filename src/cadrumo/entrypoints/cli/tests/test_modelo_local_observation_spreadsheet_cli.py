@@ -13,6 +13,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from openpyxl import Workbook
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -22,7 +23,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_envelope_notices, unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 
@@ -108,7 +108,7 @@ def test_observe_local_from_csv_spreadsheet_persists_non_official_observation(
         assert observed.source_kind == "operator_manual"
         assert observed.observation.casilla_values["1391"] == Decimal("0")
 
-        m100_snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+        m100_snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
         m100_prefill = resolve_bindings_from_local_store(
             m100_snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
         )

@@ -7,11 +7,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.row_source_identity import RowSourceIdentity
@@ -1049,7 +1049,7 @@ def test_source_resolution_merge_preserves_values_provenance_and_diagnostics() -
 
 
 def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> None:
-    modelo_303 = bundled_authority().modelo("303")
+    modelo_303 = compiled_bundled_authority().modelo("303")
     revision = modelo_303.revisions["2022"]
 
     diagnostics = collect_unhandled_source_diagnostics(revision, handled_sources=frozenset())

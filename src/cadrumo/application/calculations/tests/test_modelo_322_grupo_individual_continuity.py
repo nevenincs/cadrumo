@@ -39,10 +39,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ledger_iva_bindings import (
@@ -133,7 +133,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     IVA ledger lines, resolves bound casilla inputs, and evaluates the engine.
     Returns the result plus its produced-value count.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

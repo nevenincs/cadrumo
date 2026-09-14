@@ -20,6 +20,13 @@ requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026"]
 [[revisions."2026".application_links]]
+id = "modelo-131-extractor"
+surface = "extractor"
+consumer = "cadrumo.domain.calculations.registry.export_parse.parse_export_payload"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026"]
+[[revisions."2026".application_links]]
 id = "modelo-131-review"
 surface = "review"
 consumer = "cadrumo.application.review"
@@ -41,9 +48,30 @@ requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
 [[revisions."2026".application_links]]
-id = "modelo-131-extractor"
+id = "modelo-131-filed-declarations-observation"
+surface = "portal"
+consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
+[[revisions."2026".application_links]]
+id = "modelo-131-workflow"
+surface = "workflow"
+consumer = "cadrumo.application.workflow"
+requires_snapshot = true
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]
+[[revisions."2026".application_links]]
+id = "modelo-131-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-procedure"]
+[[revisions."2026".application_links]]
+id = "modelo-131-declaracion-extractor"
 surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion"
+consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-modelo-131-formulario-presentacion", "aeat-dr-131-2026"]
@@ -58,24 +86,3 @@ source_refs = [
     "aeat-modelo-131-formulario-presentacion",
     "aeat-modelo-131-recuperacion-declaraciones",
 ]
-[[revisions."2026".application_links]]
-id = "modelo-131-filed-declarations-observation"
-surface = "portal"
-consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
-requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
-[[revisions."2026".application_links]]
-id = "modelo-131-deadline"
-surface = "deadline"
-consumer = "cadrumo.domain.deadlines"
-requires_snapshot = true
-legal_refs = ["orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-procedure"]
-[[revisions."2026".application_links]]
-id = "modelo-131-workflow"
-surface = "workflow"
-consumer = "cadrumo.application.workflow"
-requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-procedure", "aeat-modelo-131-instructions"]

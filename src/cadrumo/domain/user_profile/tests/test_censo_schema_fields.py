@@ -7,8 +7,8 @@ declare ``legal_refs`` pointing to a primary BOE source.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
@@ -35,7 +35,7 @@ def _field(schema: ProfileSchemaDefinition, path: tuple[str, str]):
 
 
 def _legal_ids() -> set[str]:
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     return set(catalogues.legal)
 
 

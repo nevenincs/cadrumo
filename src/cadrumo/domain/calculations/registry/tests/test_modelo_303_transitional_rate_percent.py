@@ -49,11 +49,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from ....period import calculation_filing_date
-from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -75,7 +75,7 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
     ratio) are pinned to their no-op values, mirroring the sibling worked-
     example tests in this package.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
@@ -153,7 +153,7 @@ def test_the_expired_window_is_not_declared_in_the_revisions_that_neutralise_it(
     Loaded through the committed authority artifact so this exercises the same
     published declaration a shipped calculation consumes.
     """
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     assert snapshot.revision.id == expected_revision_id
 
     parameters = {p.id: p for p in snapshot.revision.parameters}

@@ -30,6 +30,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
@@ -53,7 +54,6 @@ from .....application.workflow.persistence import workflow_state_repository
 from .....core.period import Period
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.repository import upsert_work_unit
@@ -98,7 +98,9 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
     # selects, so a fabricated pin diverts reconcile into a snapshot_unavailable
     # advisory instead of reaching the branch under test.
     revision_id = (
-        bundled_authority().snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token).revision.id
+        compiled_bundled_authority()
+        .snapshot(modelo, filing_year=filing_year, period=typed_period.registry_token)
+        .revision.id
     )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,

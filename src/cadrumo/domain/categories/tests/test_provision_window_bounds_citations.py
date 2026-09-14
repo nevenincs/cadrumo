@@ -22,9 +22,9 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.validity_window import ValidityWindow
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.schema_references import LegalReference
 from ..proportionality import (
     ANNUAL_EDITION_CITATION_SOURCES,
@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _legal_catalogue() -> dict[str, LegalReference]:
-    return dict(bundled_authority().catalogues.legal)
+    return dict(compiled_bundled_authority().catalogues.legal)
 
 
 def _statutory_citations() -> list[tuple[str, CategoryCitation]]:

@@ -7,9 +7,9 @@ from functools import cache
 from typing import Annotated, Literal, get_args
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import BaseModel, ValidationError
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ..workspace_manifest import (
     ModeloWorkspaceFieldManifestEntryV1,
@@ -63,7 +63,7 @@ class _UnresolvedForwardReference(BaseModel):
 @cache
 def _snapshot():
     """Use one real, exported authority snapshot with generated export layouts."""
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T")
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T")
 
 
 @cache
@@ -74,7 +74,7 @@ def _manifest() -> ModeloWorkspaceFieldManifestV1:
 @cache
 def _inspection():
     """Use one real, exported static-inspection projection for the same coordinate."""
-    return bundled_authority().capture_law_selected_projection("303", filing_year=2025, period="4T").projection
+    return compiled_bundled_authority().capture_law_selected_projection("303", filing_year=2025, period="4T").projection
 
 
 @cache
@@ -320,7 +320,7 @@ def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> Non
 def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
     """Two filing coordinates never validate each other's capture."""
     snapshot = _snapshot()
-    other = bundled_authority().snapshot("303", filing_year=2025, period="3T")
+    other = compiled_bundled_authority().snapshot("303", filing_year=2025, period="3T")
 
     captured = capture_modelo_workspace_manifest(snapshot)
     other_coordinate = read_modelo_workspace_manifest_current_coordinate(other)

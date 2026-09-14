@@ -50,12 +50,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -112,7 +112,7 @@ def _calculate_369(
     from those facts and the engine computes ``iva.union.cuota-total`` via the
     real ``add`` formula.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     binding_values = dict(destination_cuotas)
     inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(

@@ -12,10 +12,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.core.aggregation import IntracomOperationType
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import structurally_unroutable_iva_base_categories
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
@@ -66,7 +66,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         iva_category=IvaCategory.DOMESTIC_EXEMPT,
     )
 
-    revision = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD).revision
+    revision = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD).revision
     unroutable = frozenset(structurally_unroutable_iva_base_categories(revision))
     assert contradicted.iva_category not in unroutable
     assert domestic.iva_category in unroutable

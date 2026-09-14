@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -53,7 +54,6 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.iva.classification import InvoiceKind
@@ -164,7 +164,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, _PERIOD),
-        target_registry_snapshot_ref=bundled_authority()
+        target_registry_snapshot_ref=compiled_bundled_authority()
         .snapshot("303", filing_year=_YEAR, period=_PERIOD)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
@@ -307,7 +307,7 @@ def _calculate_irene_revision(
         taxable_base=Decimal("200.00"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale, purchase)))
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",

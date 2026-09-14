@@ -29,8 +29,8 @@ from datetime import date
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema_input_kind import InputKind
 
@@ -64,7 +64,7 @@ _MANIFEST_MODELOS = [
 
 
 def _manifest_and_casillas(modelo: str, year: int, period: str, on: date) -> tuple[Any, dict[str, Any]]:
-    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     manifest = revision.completeness_manifest
     assert manifest is not None, f"modelo {modelo} must declare a completeness manifest"

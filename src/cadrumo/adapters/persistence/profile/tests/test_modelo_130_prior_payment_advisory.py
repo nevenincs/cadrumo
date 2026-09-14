@@ -39,6 +39,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -60,7 +61,6 @@ from cadrumo.application.modelo.prior_payment_advisory import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -91,7 +91,7 @@ _THIRD_TRIMESTRE = "3T"
 
 
 def _m130_revision(period: str) -> ModeloRevision:
-    return bundled_authority().snapshot("130", filing_year=_YEAR, period=period).revision
+    return compiled_bundled_authority().snapshot("130", filing_year=_YEAR, period=period).revision
 
 
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")

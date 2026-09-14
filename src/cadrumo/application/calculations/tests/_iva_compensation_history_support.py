@@ -7,12 +7,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
@@ -78,7 +79,7 @@ class _FiledObservation:
 def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
     """Return the law-selected canonical coordinate used by a test fixture."""
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("303").value,
             filing_year=filing_year,

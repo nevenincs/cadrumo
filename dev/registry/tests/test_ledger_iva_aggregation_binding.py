@@ -9,7 +9,6 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregationOp
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,
     BindingValueChannel,
@@ -59,7 +58,7 @@ def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
     binding = _binding()
     assert binding.id == "modelo-303-iva-repercutido-general-cuota"
     assert binding.provider, "binding must declare a selector for validation to be meaningful"
-    with validating_governed_facts(bundled_authority()):
+    with validating_governed_facts(compiled_bundled_authority()):
         result = validate_ledger_iva_aggregation_binding_definition(binding)
     assert result is None
 
@@ -77,14 +76,14 @@ _MALFORMED_SELECTOR_CASES = (
 @pytest.mark.parametrize("selector_updates", _MALFORMED_SELECTOR_CASES)
 def test_validate_rejects_malformed_selector(selector_updates: dict[str, object]) -> None:
     binding = _with_selector(_binding(), **selector_updates)
-    with validating_governed_facts(bundled_authority()):
+    with validating_governed_facts(compiled_bundled_authority()):
         failures = validate_ledger_iva_aggregation_binding(binding)
     assert failures, "the registry build gate must reject a malformed typed provider member"
 
 
 def test_validate_rejects_non_sum_aggregation() -> None:
     with (
-        validating_governed_facts(bundled_authority()),
+        validating_governed_facts(compiled_bundled_authority()),
         pytest.raises(
             RegistryValidationError,
             match="aggregation op 'sum'",
@@ -113,7 +112,7 @@ def _article_filter_binding(**selector_updates: object) -> BindingDefinition:
         ),
     }
     selector.update(selector_updates)
-    with validating_governed_facts(bundled_authority()):
+    with validating_governed_facts(compiled_bundled_authority()):
         return BindingDefinition(
             id="test-art-20-base",
             provider=LedgerIvaProvider.model_validate(selector),
@@ -611,3 +610,6 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
         "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
     }
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

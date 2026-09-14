@@ -32,7 +32,6 @@ from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.descendant_relacion_catalogue import (
     descendant_relacion_adoption_token,
     descendant_relacion_default_token,
@@ -230,14 +229,11 @@ def _accepted_disability_grades(*, operation: PinnedAuthorityOperation) -> froze
 def _discapacidad_grade(
     raw: str,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Literal[0, 33, 65] | None:
     """Narrow a discapacidad answer token through the governed grade catalogue."""
     if not raw:
         return None
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _discapacidad_grade(raw, operation=indexed_operation)
     try:
         grade = int(raw)
     except ValueError:
@@ -481,7 +477,7 @@ def _safe_guarderia_spend(row: Mapping[str, str]) -> _GuarderiaSpend:
 def descendant_facts_from_answers(
     answers: Mapping[str, str],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> list[tuple[str, str]]:
     """Project the descendant repeating-group answers into profile facts.
 
@@ -498,9 +494,6 @@ def descendant_facts_from_answers(
     count page carries no answer), so a descendant-free profile writes no
     descendant fact.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return descendant_facts_from_answers(answers, operation=indexed_operation)
     if DESCENDANTS_COUNT_PAGE_ID not in answers:
         return []
     from ...domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -519,7 +512,7 @@ def descendant_facts_from_answers(
 def descendant_answers_from_record(
     record: UserProfileRecord | None,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
     """Re-project a record's descendant facts into repeating-group answers.
 
@@ -543,14 +536,11 @@ def descendant_answers_from_record(
     Args:
         record: The :class:`UserProfileRecord` whose descendant facts are
             re-projected into repeating-group answers, or ``None``.
-        operation: Optional caller-held pinned authority operation used for
-            registry relationship tokens.
+        operation: Caller-held pinned authority operation used for registry
+            relationship tokens.
     """
     if record is None:
         return {}
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return descendant_answers_from_record(record, operation=indexed_operation)
     from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
     from ..user_profile.projections import record_to_path_values
 

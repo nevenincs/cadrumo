@@ -22,10 +22,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
@@ -49,7 +49,7 @@ _M347_CLAVE_C_THRESHOLD = m347_threshold_decimal(
 
 
 def _revision(revision_id: str):
-    return bundled_authority().modelo("347").revisions[revision_id]
+    return compiled_bundled_authority().modelo("347").revisions[revision_id]
 
 
 def _declarado_record(revision) -> ExportRecordDefinition:

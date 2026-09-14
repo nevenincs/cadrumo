@@ -18,6 +18,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from .....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from .....application.user_profile.capsule_record import ProfileRecordSession
 from .....application.user_profile.custody_ports import ProfileCustodyRecoveryEnvelopePort
@@ -33,7 +35,6 @@ from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
 from .....domain.buckets.event import BucketEventType
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.user_profile.errors import ProfileSchemaValidationError
 from .....domain.user_profile.values import (
     ProfileSetupState,
@@ -59,7 +60,7 @@ def derive_test_bucket_key(identity: str, *, purpose: str) -> bytes:
 
 def _profile_authority_contexts() -> tuple[ProfileCreateContext, ProfileDecodeContext]:
     """Return create/decode contexts from one bundled authority generation."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.profile_create_context(), authority.profile_decode_context()
 
 

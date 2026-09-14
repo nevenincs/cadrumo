@@ -7,7 +7,6 @@ import pytest
 from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
@@ -118,7 +117,7 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
 
 def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_again() -> None:
     """Every casilla-keyed consumer may safely derive the real M720 layout first."""
-    revision = bundled_authority().snapshot("720", filing_year=2025, period="0A").revision
+    revision = compiled_bundled_authority().snapshot("720", filing_year=2025, period="0A").revision
     binding_fields = tuple(
         field
         for layout in revision.export_layouts
@@ -308,3 +307,6 @@ def _minimal_revision(
         bindings=bindings,
         export_layouts=export_layouts,
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

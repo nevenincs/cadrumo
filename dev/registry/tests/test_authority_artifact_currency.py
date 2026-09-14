@@ -1,7 +1,7 @@
-"""The authority-artifact currency gate refuses a stale publication and accepts a fresh one.
+"""The indexed-authority currency gate refuses a stale publication and accepts a fresh one.
 
 Every case runs on an isolated temporary registry and source tree: the artifact
-is written through the real writer, read back through the real runtime reader,
+is installed through the real SQLite publisher, read back through the real runtime reader,
 and judged against the identity the publisher derives for the live inputs.
 """
 
@@ -17,13 +17,12 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
-    write_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.runtime_catalogues import (
     ApoderamientoScopeRecord,
@@ -36,13 +35,15 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
     TerritoryCarveOut,
 )
 from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.build_identity import authority_compiler_identity
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
     AuthorityArtifactCurrencyStatus,
-    authority_artifact_currency,
     authority_candidate_identity,
+    authority_database_currency,
+    install_validated_authority_database,
 )
 from ._referential_integrity_support import (
     minimal_catalogues,
@@ -119,7 +120,8 @@ def _publication_catalogues() -> RegistryCatalogues:
             )
         },
     ).require_complete()
-    published_facts = bundled_authority().catalogues.facts
+    compiled = compiled_bundled_authority()
+    published_facts = compiled.catalogues.facts
     tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
     return catalogues.model_copy(
         update={
@@ -151,29 +153,34 @@ def _stage_inputs(root: Path) -> tuple[Path, Path]:
     evidence_dir = root / "corpus" / "test"
     evidence_dir.mkdir(parents=True)
     (evidence_dir / "ley.html").write_bytes(b"<html>provision text</html>\r\n")
+    profile_schema = root / "registry" / "cadrumo" / "user_profile" / "schema.toml"
+    profile_schema.parent.mkdir(parents=True)
+    shutil.copyfile(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"), profile_schema)
     return registry_root, root
 
 
 def _publish(artifact_path: Path, build_identity: AuthorityBuildIdentity) -> None:
-    """Write an artifact recording ``build_identity`` through the real writer."""
-    write_authority_artifact(
-        artifact_path,
+    """Install a generation recording ``build_identity`` through the real publisher."""
+    install_validated_authority_database(
         AuthorityArtifact(
             modelos=(minimal_modelo(minimal_revision()),),
             catalogues=_publication_catalogues(),
             build_identity=build_identity,
             identity_digest=build_identity.identity_digest,
+            profile_schema=compiled_bundled_authority().profile_schema(),
             evidence=_publication_evidence(),
         ),
+        destination=artifact_path.parent,
+        require_current=lambda: None,
     )
 
 
 def _fresh_publication(tmp_path: Path) -> tuple[Path, Path, Path]:
     """Stage inputs and publish an artifact recording their live identity."""
     registry_root, source_root = _stage_inputs(tmp_path / "candidate")
-    artifact_path = tmp_path / "published" / "authority.json"
+    artifact_path = tmp_path / "published" / "authority.current.json"
     artifact_path.parent.mkdir()
-    candidate = authority_artifact_currency(
+    candidate = authority_database_currency(
         artifact_path,
         registry_root=registry_root,
         source_root=source_root,
@@ -183,13 +190,13 @@ def _fresh_publication(tmp_path: Path) -> tuple[Path, Path, Path]:
 
 
 def _status(artifact_path: Path, registry_root: Path, source_root: Path) -> AuthorityArtifactCurrencyStatus:
-    return authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root).status
+    return authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root).status
 
 
 def test_an_artifact_published_from_the_live_inputs_is_current(tmp_path: Path) -> None:
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
 
-    currency = authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
     assert currency.is_current
     assert currency.recorded_identity_digest == currency.candidate_identity_digest
@@ -229,7 +236,7 @@ def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Pa
     revision = registry_root / "modelos" / "999" / "revisions" / "2025" / "revision.toml"
     revision.write_bytes(revision.read_bytes().replace(b"2025-01-01", b"2025-01-02"))
 
-    currency = authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
     assert currency.status is AuthorityArtifactCurrencyStatus.STALE
     assert currency.recorded_identity_digest != currency.candidate_identity_digest
@@ -251,19 +258,18 @@ def test_a_source_evidence_edit_after_publication_makes_the_artifact_stale(tmp_p
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
     (source_root / "corpus" / "test" / "ley.html").write_bytes(b"<html>amended provision</html>\r\n")
 
-    currency = authority_artifact_currency(
+    currency = authority_database_currency(
         artifact_path,
         registry_root=registry_root,
         source_root=source_root,
     )
     assert currency.status is AuthorityArtifactCurrencyStatus.STALE
-    assert "source manifest" in currency.detail
-    assert "compiler/schema build" not in currency.detail
+    assert "logical identity differs" in currency.detail
 
 
 def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Path) -> None:
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    current = authority_artifact_currency(
+    current = authority_database_currency(
         artifact_path,
         registry_root=registry_root,
         source_root=source_root,
@@ -274,14 +280,13 @@ def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Pa
     )
     _publish(artifact_path, compiler_changed)
 
-    currency = authority_artifact_currency(
+    currency = authority_database_currency(
         artifact_path,
         registry_root=registry_root,
         source_root=source_root,
     )
     assert currency.status is AuthorityArtifactCurrencyStatus.STALE
-    assert "compiler/schema build" in currency.detail
-    assert "source manifest" not in currency.detail
+    assert "logical identity differs" in currency.detail
 
 
 def test_a_planted_artifact_recording_another_candidate_is_stale(tmp_path: Path) -> None:
@@ -324,23 +329,24 @@ def test_source_evidence_line_endings_are_byte_exact(tmp_path: Path) -> None:
 
 def test_a_missing_or_malformed_artifact_is_unreadable_rather_than_current(tmp_path: Path) -> None:
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    missing = authority_artifact_currency(
-        tmp_path / "absent.json", registry_root=registry_root, source_root=source_root
+    missing = authority_database_currency(
+        tmp_path / "authority.current.json", registry_root=registry_root, source_root=source_root
     )
     artifact_path.write_bytes(b'{"payload":')
-    malformed = authority_artifact_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+    malformed = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
 
     assert missing.status is AuthorityArtifactCurrencyStatus.UNREADABLE
-    assert "AuthorityArtifactUnavailableError" in missing.detail
+    assert "AuthorityStoreError" in missing.detail
     assert malformed.status is AuthorityArtifactCurrencyStatus.UNREADABLE
-    assert "AuthorityArtifactFormatError" in malformed.detail
+    assert "AuthorityStoreError" in malformed.detail
     assert missing.recorded_identity_digest is None
 
 
 def test_the_integrity_gate_refuses_a_stale_artifact_on_stderr_before_compiling(tmp_path: Path) -> None:
     """The planted stale copy fails the owning gate with exit 1; the registry is never compiled."""
     registry_root, source_root, _artifact_path = _fresh_publication(tmp_path)
-    stale = tmp_path / "published" / "stale-authority.json"
+    stale = tmp_path / "stale" / "authority.current.json"
+    stale.parent.mkdir()
     _publish(stale, _STALE_BUILD_IDENTITY)
 
     result = CliRunner().invoke(

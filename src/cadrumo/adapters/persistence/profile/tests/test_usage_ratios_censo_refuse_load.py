@@ -10,9 +10,13 @@ and no silent coercion (per the modelo-036-037 foundation contract
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 
 import pytest
+
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
 from .....domain.categories.spending_category import SpendingCategory
 from .....domain.usage_ratios.errors import CensoRatioMismatchError
@@ -32,7 +36,16 @@ _BUCKET_ID = "73737373-7373-4373-8373-737373737311"
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
-def test_load_returns_profile_when_no_home_office_overrides() -> None:
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin one indexed authority generation for profile construction and decode."""
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield operation
+
+
+def test_load_returns_profile_when_no_home_office_overrides(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}),
         bucket_id=_BUCKET_ID,
@@ -42,12 +55,15 @@ def test_load_returns_profile_when_no_home_office_overrides() -> None:
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=None,
         year=2025,
+        operation=authority_operation,
     )
 
     assert profile.ratios == {SpendingCategory.TELEFONIA_MOVIL: Decimal("0.50")}
 
 
-def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
+def test_refuses_when_censo_unset_but_home_office_override_persisted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.20")}),
         bucket_id=_BUCKET_ID,
@@ -58,12 +74,15 @@ def test_refuses_when_censo_unset_but_home_office_override_persisted() -> None:
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
             year=2025,
+            operation=authority_operation,
         )
 
     assert "suministros_home_office_luz" in str(exc.value)
 
 
-def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted() -> None:
+def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The censo guard now covers telefonia_fija: it is no longer freely overridable.
 
     Before this category joined HOME_OFFICE_SUMINISTROS, an operator (or a
@@ -82,12 +101,15 @@ def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted() -> Non
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
             year=2025,
+            operation=authority_operation,
         )
 
     assert "telefonia_fija" in str(exc.value)
 
 
-def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value() -> None:
+def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """A telefonia_fija override equal to raw * 0.30 (its statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
     save_usage_ratios(
@@ -99,12 +121,15 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value() -> 
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
         year=2025,
+        operation=authority_operation,
     )
 
     assert profile.ratios[SpendingCategory.TELEFONIA_FIJA] == Decimal("0.060")
 
 
-def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_persisted() -> None:
+def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_persisted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The censo guard now covers arrendamiento_vivienda_afecto: it is no longer freely overridable.
 
     Before this category joined HOME_OFFICE_OWNERSHIP (it lived in PREMISES,
@@ -123,12 +148,15 @@ def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_per
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=None,
             year=2025,
+            operation=authority_operation,
         )
 
     assert "arrendamiento_vivienda_afecto" in str(exc.value)
 
 
-def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_derived_value() -> None:
+def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_derived_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An arrendamiento override equal to the raw ratio (no statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
     save_usage_ratios(
@@ -140,12 +168,15 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
         year=2025,
+        operation=authority_operation,
     )
 
     assert profile.ratios[SpendingCategory.ARRENDAMIENTO_VIVIENDA_AFECTO] == Decimal("0.20")
 
 
-def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
+def test_refuses_on_mismatch_between_persisted_and_censo_derived(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     save_usage_ratios(
         UsageRatioProfile(ratios={SpendingCategory.AMORTIZACION_VIVIENDA_AFECTO: Decimal("0.50")}),
         bucket_id=_BUCKET_ID,
@@ -156,6 +187,7 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
             bucket_id=_BUCKET_ID,
             raw_afectacion_ratio=Decimal("0.20"),
             year=2025,
+            operation=authority_operation,
         )
 
     assert "amortizacion_vivienda_afecto" in str(exc.value)
@@ -163,7 +195,9 @@ def test_refuses_on_mismatch_between_persisted_and_censo_derived() -> None:
     assert "0.20" in str(exc.value)
 
 
-def test_accepts_when_persisted_matches_censo_derived_value() -> None:
+def test_accepts_when_persisted_matches_censo_derived_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     raw = Decimal("0.20")
     save_usage_ratios(
         UsageRatioProfile(
@@ -179,6 +213,7 @@ def test_accepts_when_persisted_matches_censo_derived_value() -> None:
         bucket_id=_BUCKET_ID,
         raw_afectacion_ratio=raw,
         year=2025,
+        operation=authority_operation,
     )
 
     assert profile.ratios[SpendingCategory.IBI_VIVIENDA_AFECTO] == raw

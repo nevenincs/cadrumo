@@ -33,9 +33,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ..verification_predicates import evaluate_predicate_expression
@@ -62,7 +62,7 @@ def _profile() -> TaxpayerProfile:
 
 
 def _revision(year: int):
-    return bundled_authority().snapshot("151", filing_year=year, period="0A").revision
+    return compiled_bundled_authority().snapshot("151", filing_year=year, period="0A").revision
 
 
 def _predicate(year: int):

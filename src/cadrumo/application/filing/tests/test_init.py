@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _authority():
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def test_formula_backed_casillas_are_computed_inputs() -> None:

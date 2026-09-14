@@ -25,8 +25,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from cadrumo.domain.calculations.registry.orden_applicability import orden_aplicabilidad_hard_failures
+from cadrumo.domain.calculations.registry.period_selector_overlap import period_selectors_overlap
 from cadrumo.domain.calculations.registry.revision_context import RevisionValidationContext
-from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ._validate_application_links import validate_application_link_closure
@@ -81,6 +82,7 @@ def _validate_revision_reference_surfaces(
     failures: list[str],
     *,
     prefix: str,
+    modelo: ModeloDefinition,
     revision: ModeloRevision,
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
@@ -110,6 +112,35 @@ def _validate_revision_reference_surfaces(
                 _REVISION_REFERENCE_SOURCE_TIERS,
             ),
         )
+    for relation in revision.casilla_structural_successions:
+        owner = f"casilla structural succession {relation.id!r}"
+        failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
+        for endpoint_id, endpoint_refs in (
+            (relation.from_revision, relation.from_source_refs),
+            (relation.to_revision, relation.to_source_refs),
+        ):
+            failures.extend(_missing_refs(prefix, owner, endpoint_refs, source_refs, "source"))
+            failures.extend(
+                evidence.require_any_source_tier(prefix, owner, endpoint_refs, _REVISION_REFERENCE_SOURCE_TIERS),
+            )
+            endpoint = modelo.revisions.get(endpoint_id)
+            if endpoint is None:
+                continue  # The structural endpoint validator owns this refusal.
+            enrolled = set(modelo.source_refs) | set(endpoint.source_refs)
+            enrolled.update(ref for row in endpoint.casillas for ref in row.source_refs)
+            for source_id in endpoint_refs:
+                source = source_refs.get(source_id)
+                if source is None:
+                    continue  # Already reported by reference closure above.
+                scope = f"{prefix}: {owner} endpoint {endpoint_id!r} source {source_id!r}"
+                if source_id not in enrolled:
+                    failures.append(f"{scope} is not enrolled for this modelo or endpoint edition")
+                if not source.applies_across(endpoint.valid_from, endpoint.valid_to):
+                    failures.append(f"{scope} does not apply within the endpoint edition's validity window")
+                if source.period_selector is not None and not period_selectors_overlap(
+                    source.period_selector, endpoint.period_selector
+                ):
+                    failures.append(f"{scope} does not apply to the endpoint edition's filing periods")
     for evolution in revision.casilla_continuidad_evolutions:
         owner = f"casilla continuidad evolution {evolution.id!r}"
         failures.extend(_missing_refs(prefix, owner, evolution.legal_refs, legal_refs, "legal"))

@@ -384,7 +384,7 @@ modelo:
               help: Casella 951-1300 del model 309, exercicis 2004-2015.
               label: Observacions
           construct:
-            modelo-309-historical-no-periodica:
+            modelo-309-iva-no-periodica:
               field:
                 title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
           field:

@@ -16,6 +16,7 @@ from datetime import UTC, date, datetime
 from enum import StrEnum
 from typing import Any, Final, cast
 
+from dev.registry.compiler.authority import compiled_bundled_authority
 from textual.app import App
 from textual.screen import Screen
 
@@ -105,7 +106,6 @@ from ....application.user_profile.censal_operation import (
 from ....core.casilla_id import validated_casilla_id
 from ....core.operations import OperationEffect, OperationLifecycle
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -416,7 +416,7 @@ def _declaration_catalogues(
         return WorkUnitCatalogue(), CalculationRevisionCatalogue(), ModeloRecordCatalogue(), ()
     period = Period.from_year_and_code(2026, "1T")
     casilla = validated_casilla_id("01")
-    registry_snapshot_ref = bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
+    registry_snapshot_ref = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo=ModeloCode("130"),

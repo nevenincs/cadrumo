@@ -11,7 +11,6 @@ from typing import Final
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 
@@ -28,7 +27,7 @@ _SERVED: Final = ("2T", "3T", "4T")
 
 def _overridden_revision() -> ModeloRevision:
     """The bundled revision with :data:`_YEAR` overridden to drop :data:`_DROPPED`."""
-    revision = bundled_authority().modelo(_MODELO).revisions[_REVISION]
+    revision = compiled_bundled_authority().modelo(_MODELO).revisions[_REVISION]
     declared = revision.period_selector
     assert declared.periods[0] == _DROPPED, "the fixture must discriminate a flat read"
     selector = PeriodSelector(
@@ -63,3 +62,6 @@ def test_a_year_outside_the_override_keeps_the_flat_surface() -> None:
 
     assert selected is not None
     assert selected.id == _REVISION
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

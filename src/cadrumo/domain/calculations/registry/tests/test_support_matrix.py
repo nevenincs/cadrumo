@@ -28,21 +28,21 @@ See Also:
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.export_layout_format import ExportLayoutFormat
-from ..authority import bundled_authority
 from ..support_matrix import ModeloEntry, build_support_matrix
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _entries() -> dict[str, ModeloEntry]:
-    return {entry.modelo_id: entry for entry in build_support_matrix(bundled_authority())}
+    return {entry.modelo_id: entry for entry in build_support_matrix(compiled_bundled_authority())}
 
 
 def test_matrix_covers_every_bundled_modelo() -> None:
     """The matrix has one entry per registry-loadable modelo, sorted by id."""
-    entries = build_support_matrix(bundled_authority())
+    entries = build_support_matrix(compiled_bundled_authority())
 
     assert entries, "expected at least one modelo entry from the bundled registry"
     assert [entry.modelo_id for entry in entries] == sorted(entry.modelo_id for entry in entries)
@@ -100,7 +100,7 @@ def test_modelo_100_latest_revision_carries_declared_renames() -> None:
     ``casilla_continuidad_evolutions`` rather than trusting the entry, so the
     projection cannot silently drop or fabricate rename records.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("100").revisions["2025"]
     entry = _entries()["100"]
 
@@ -119,7 +119,7 @@ def test_modelo_100_latest_revision_carries_declared_renames() -> None:
 
 def test_modelo_100_latest_revision_carries_declared_portal_compatibility_refs() -> None:
     """Ground truth: Modelo 100's 2025 revision declares a live AEAT-portal cross-reference."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("100").revisions["2025"]
     entry = _entries()["100"]
 
@@ -136,7 +136,7 @@ def test_build_support_matrix_is_never_a_fabricated_positive() -> None:
     Proves the entry is not hand-computed independently of the registry data
     it claims to summarise.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     entries = _entries()
 
     for modelo in authority.modelos:

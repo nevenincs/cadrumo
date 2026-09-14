@@ -57,6 +57,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -75,7 +76,6 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
@@ -190,7 +190,7 @@ def _calculate_and_verify_m210_inmobiliaria(
     ``isolated_runtime_profile`` provisioning passes over the same ``tmp_path``.
     """
     with _secure_backend(tmp_path):
-        snapshot = bundled_authority().snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
+        snapshot = compiled_bundled_authority().snapshot(_M210, filing_year=_FILING_YEAR, period=_PERIOD_CODE)
         work_repo, calc_repo, event_repo = _repositories()
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,

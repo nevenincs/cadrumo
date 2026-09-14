@@ -17,6 +17,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
@@ -30,7 +31,6 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import RegistryFoldRequirement, relation_prefill_bindings_for_period
@@ -52,7 +52,7 @@ _M202_2023_2024_PRIOR_PAYMENTS_BINDING = "modelo-202-pagos-fraccionados-anterior
 
 @cache
 def _snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _modelo_115_observations() -> tuple[RegistryModeloObservation, ...]:

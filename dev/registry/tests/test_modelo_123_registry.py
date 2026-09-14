@@ -9,11 +9,11 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,7 +72,7 @@ _M123_2019_2023_INGRESO_CASILLA: CasillaId = validated_casilla_id("07")
 
 
 def test_modelo_123_guidance_and_layout_sources_are_separated() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("123"), authority.catalogues
 
     procedure = catalogues.sources["aeat-modelo-123-procedure"]
@@ -147,7 +147,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     filing_year: int,
     required_surfaces: set[str],
 ) -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("123"), authority.catalogues
 
     snapshot = build_snapshot(
@@ -167,7 +167,7 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
 
 
 def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership() -> None:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo = authority.modelo("123")
     windows = {
         (window.filing_year, window.period.registry_token): (revision, window)
@@ -184,7 +184,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
     for filing_year, expected_year in _SUPPORTED_DEADLINES.items():
         expected_periods = {"1T", "2T", "3T", "4T"}
         assert {period for year, period in windows if year == filing_year} == expected_periods
-        projected = bundled_authority().deadline_windows(filing_year, modelos=("123",))
+        projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("123",))
         assert len(projected) == 4
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
 
@@ -216,7 +216,7 @@ def test_modelo_123_supported_year_deadline_census_dates_sources_and_ownership()
 
 
 def _snapshot_2024(filing_year: int = 2024) -> RegistrySnapshot:
-    return bundled_authority().snapshot("123", filing_year=filing_year, period="1T")
+    return compiled_bundled_authority().snapshot("123", filing_year=filing_year, period="1T")
 
 
 def _calculate_2024(
@@ -338,7 +338,7 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
     manual pass-through casillas with no formula; they must not affect
     casilla 06 (Suma de retenciones y regularizacion = [03] + [05]).
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, catalogues = authority.modelo("123"), authority.catalogues
     snapshot = build_snapshot(
         modelo,

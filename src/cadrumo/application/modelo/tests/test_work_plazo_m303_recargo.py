@@ -33,9 +33,9 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.plazo import resolve_filing_closes_on
 from ....domain.deadlines.recargo import build_recovery_for_overdue
 from ....domain.modelos.codes import ModeloCode
@@ -60,7 +60,9 @@ def _quarter_year_cases():
 
 def _work_unit_for(quarter: str, filing_year: int) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, quarter)
-    revision_id = bundled_authority().snapshot("303", filing_year=filing_year, period=period.registry_token).revision.id
+    revision_id = (
+        compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period.registry_token).revision.id
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

@@ -8,9 +8,10 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
-from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..schema import RegistrySnapshot
@@ -26,7 +27,7 @@ _M100_2024_MATERNIDAD_BINDINGS = {
 
 @cache
 def _authority() -> ValidatedRegistryAuthority:
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 def _snapshot(year: int) -> RegistrySnapshot:

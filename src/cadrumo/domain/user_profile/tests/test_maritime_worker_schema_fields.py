@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ..schema import ProfileSchemaDefinition
 from ._schema_loader_fixtures import function_scoped_schema  # noqa: F401
 
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_maritime_worker_fields_use_canonical_legal_refs(schema: ProfileSchemaDefinition) -> None:
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     legal_ids = set(catalogues.legal)
     expected = {
         "maritime_worker.worker_class": {

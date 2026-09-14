@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -21,7 +22,6 @@ from cadrumo.application.aggregation.renta_ledger import (
 )
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -44,7 +44,7 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref
 
 
 def _raw_transaction(

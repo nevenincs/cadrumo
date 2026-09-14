@@ -11,18 +11,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError, TerminalPreconditionErrorMixin
+from ...core.errors.hierarchy import CadrumoError, CoreError, TerminalPreconditionErrorMixin
 from ...core.i18n.translatable import Translatable as tr
 from ..operator_actions.models import PreconditionVerdict
 
 
-class AggregationConfigError(CoreError, ValueError):
+class AggregationConfigError(CoreError):
     """Raised when an aggregation service composition invariant is violated.
 
-    Inherits from ``ValueError`` so pydantic field and model validators
-    surface it through ``ValidationError`` without special handling.
-    Inherits from ``CoreError`` so it participates in the central error
-    registry and ``build_error_envelope``.
+    Its canonical registered ancestry is :class:`CoreError`, so it participates
+    in the central error registry and ``build_error_envelope``. Pydantic field
+    and model validators translate it to ``ValueError`` at their narrow
+    boundary.
     """
 
 
@@ -68,12 +68,12 @@ class AggregationCategoryCoverageError(AggregationError):
     """Raised when a business transaction lacks category or profile coverage."""
 
 
-class AggregationValidationError(AggregationError, CoreValidationError):
+class AggregationValidationError(AggregationError):
     """Raised on invalid aggregation payload or state.
 
-    Inherits from CoreValidationError (which itself inherits from CoreError
-    and ValueError) to participate in the shared CoreValidationError catch
-    surface and remain compatible with pydantic field validators.
+    Its canonical registered ancestry is :class:`AggregationError` under the
+    application error registry. Pydantic field validators translate this
+    registered failure to ``ValueError`` at their narrow boundary.
     """
 
 

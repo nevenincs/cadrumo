@@ -24,7 +24,6 @@ from cadrumo.core.result_disposition import (
     derive_result_disposition,
     result_disposition_casilla_ids,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import provider_member
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -122,7 +121,7 @@ _M303_REPERCUTIDO_REDUCIDO_BASE_CASILLA: CasillaId = validated_casilla_id("04")
 
 @lru_cache(maxsize=1)
 def _modelo_303_revision() -> ModeloRevision:
-    modelo = bundled_authority().modelo("303")
+    modelo = compiled_bundled_authority().modelo("303")
     return modelo.revisions["2022"]
 
 
@@ -283,12 +282,12 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    # Stays on ``bundled_authority()`` (unlike the M390 helper below):
+    # Stays on ``compiled_bundled_authority()`` (unlike the M390 helper below):
     # M303 snapshots include the compiled annual-Orden authority, and the
     # production access point is the only source of that cross-cutting
     # projection -- bypassing it via ``load_registry_tree`` would silently
     # produce a partial snapshot rather than a scoped one.
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         "modelo-303-autoconsumo-promotor-base": Decimal("0"),
@@ -330,7 +329,7 @@ def _calculate_390_from_observations_and_303_filings(
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
 ) -> RegistryCalculationResult:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         "390",
         filing_year=filing_year,
         period="0A",
@@ -353,7 +352,7 @@ def _calculate_390_from_observations_and_303_filings(
                 captured_at=_M303_APP_FILING_CAPTURED_AT,
                 source_kind="app_filing",
                 stamped_revision_id=str(
-                    bundled_authority()
+                    compiled_bundled_authority()
                     .snapshot(
                         "303",
                         filing_year=filing_year,
@@ -400,3 +399,6 @@ def _calculate_390_from_observations_and_303_filings(
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

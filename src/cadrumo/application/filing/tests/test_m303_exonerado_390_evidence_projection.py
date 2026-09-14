@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.filing_projection_ref import (
@@ -13,7 +14,6 @@ from ....core.filing_projection_ref import (
     M303Exonerado390OperacionesTercerosProjectionRef,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import SourceReference
@@ -90,7 +90,7 @@ def _evidence(
 
 
 def _snapshot(period: Period) -> RegistrySnapshot:
-    return bundled_authority().snapshot("303", filing_year=period.filing_year, period=period.code)
+    return compiled_bundled_authority().snapshot("303", filing_year=period.filing_year, period=period.code)
 
 
 def _record_design(registry_snapshot: RegistrySnapshot) -> SourceReference:

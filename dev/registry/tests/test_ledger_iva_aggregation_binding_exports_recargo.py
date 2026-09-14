@@ -12,7 +12,6 @@ from pydantic import ValidationError
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -39,14 +38,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _m303_revision(revision_id: str) -> ModeloRevision:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     modelo, _catalogues = authority.modelo("303"), authority.catalogues
     return modelo.revisions[revision_id]
 
 
 @cache
 def _m303_2022_2t_snapshot():
-    return bundled_authority().snapshot("303", filing_year=2022, period="2T")
+    return compiled_bundled_authority().snapshot("303", filing_year=2022, period="2T")
 
 
 def test_box_59_carries_substantive_intra_community_supply_grounding() -> None:
@@ -381,7 +380,7 @@ def _calculate_303_2009_from_observations(
     2022 revision declares only
     ``modelo-303-compensacion-pendiente-anteriores`` as a manual binding fact.
     """
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
@@ -457,3 +456,6 @@ def test_modelo_303_2009_revision_cuota_devengada_total_anti_tautology_recargo_c
     assert with_recargo.values[_CASILLA_RESULTADO_REGIMEN_GENERAL] - without_recargo.values[
         _CASILLA_RESULTADO_REGIMEN_GENERAL
     ] == Decimal("1248.00")
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

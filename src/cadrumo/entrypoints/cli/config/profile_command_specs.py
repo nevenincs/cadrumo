@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Final
+from dataclasses import replace
+from typing import TYPE_CHECKING, Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ..command_spec import (
@@ -47,16 +48,23 @@ from ._spec_policies import (
     STATE_FREE,
 )
 
+if TYPE_CHECKING:
+    from ....application.wizard.models import WizardFlow
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+
 _LANG = ValueContract(DeferredTarget("....core.external_constants", "OutputLanguage", __package__))
 _CAPABILITY = ValueContract(DeferredTarget("....core.capabilities", "ServiceCapability", __package__))
 _TOGGLE = ValueContract(
     DeferredTarget("builtins", "str"),
     choices=("on", "off"),
 )
-# Registry-backed choices are supplied by the operation-scoped wizard command
-# builder.  Metadata construction must stay import-pure so ``--help`` and
-# ``--version`` do not acquire an authority generation merely to describe the
-# command graph.
+# Registry-backed choices are supplied by the operation-scoped builder below.
+# Metadata construction must stay import-pure so ``--help`` and ``--version``
+# do not acquire an authority generation merely to describe the command graph.
+# The static graph is not the validation boundary: create/edit handlers run the
+# same flow-backed validators after acquiring their operation.  The explicit
+# builder lets an operation-scoped parser/projector materialize exact choices
+# when a caller needs the graph itself.
 _ENTITY_TYPE_CHOICES: tuple[str, ...] = ()
 _LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
@@ -253,7 +261,8 @@ _WIZARD_ENUM_FIELDS: dict[str, ValueContract] = {
     "irpf-estimation-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_ESTIMATION_REGIME_CHOICES),
     "irpf-special-regime": ValueContract(DeferredTarget("builtins", "str"), choices=_IRPF_SPECIAL_REGIME_CHOICES),
     "fiscal-residency": ValueContract(
-        DeferredTarget("....domain.contribuyente.renta_codes", "FiscalResidency", __package__)
+        DeferredTarget("....domain.contribuyente.renta_codes", "FiscalResidency", __package__),
+        choices=(),
     ),
 }
 
@@ -785,4 +794,45 @@ PROFILE_COMMAND_SPECS = (
     ),
 )
 
-__all__ = ["PROFILE_COMMAND_SPECS"]
+
+def profile_command_specs_for_flow(flow: WizardFlow) -> tuple[CommandSpec, ...]:
+    """Return profile command specs with choices projected from ``flow``.
+
+    ``PROFILE_COMMAND_SPECS`` remains import-pure for metadata invocations.  A
+    caller that already holds the operation-scoped setup flow can use this
+    function to build the parser contract from that exact generation; no
+    process-global catalogue or second authority read is introduced.
+    """
+    choices_by_parameter: dict[str, tuple[str, ...]] = {
+        question.id.replace("-", "_"): tuple(choice.value for choice in question.choices)
+        for section in flow.sections
+        for question in section.questions
+        if question.choices
+    }
+    projected: list[CommandSpec] = []
+    for spec in PROFILE_COMMAND_SPECS:
+        if spec.key not in {"config_profile_create", "config_profile_edit"}:
+            projected.append(spec)
+            continue
+        parameters: list[ArgumentSpec | OptionSpec] = []
+        for parameter in spec.parameters:
+            if not isinstance(parameter, OptionSpec):
+                parameters.append(parameter)
+                continue
+            choices = choices_by_parameter.get(parameter.name)
+            if choices is None:
+                parameters.append(parameter)
+                continue
+            parameters.append(replace(parameter, value=replace(parameter.value, choices=choices)))
+        projected.append(replace(spec, parameters=tuple(parameters)))
+    return tuple(projected)
+
+
+def build_profile_command_specs(operation: PinnedAuthorityOperation) -> tuple[CommandSpec, ...]:
+    """Build profile command specs from one caller-held authority operation."""
+    from ....application.wizard.catalogue import build_setup_flow
+
+    return profile_command_specs_for_flow(build_setup_flow(operation))
+
+
+__all__ = ["PROFILE_COMMAND_SPECS", "build_profile_command_specs", "profile_command_specs_for_flow"]

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..schema_input_kind import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_every_bound_casilla_references_bindings_in_its_revision() -> None:
     dangling: list[str] = []
     scanned = 0
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             binding_ids = {binding.id for binding in revision.bindings}
             for casilla in revision.casillas:

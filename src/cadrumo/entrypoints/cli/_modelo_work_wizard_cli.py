@@ -176,9 +176,12 @@ def _drive_wizard_calculation(
     actor: str | None,
 ) -> None:
     resolved_actor = deps.resolve_actor_option(actor)
-    from .state_projection_support import calculation_action_ports_factory
+    from .state_projection_support import authority_operation, calculation_action_ports_factory
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=wizard.unit.bucket_id)
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=wizard.unit.bucket_id,
+        operation=authority_operation(ctx),
+    )
     prompted = list(_run_wizard_steps(wizard, wizard.steps))
     for _attempt in range(_MAX_MISSING_INPUT_RETRIES):
         calculation_result = _run_wizard_calculation_attempt(

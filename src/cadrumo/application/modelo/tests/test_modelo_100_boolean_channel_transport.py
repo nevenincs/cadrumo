@@ -21,8 +21,8 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (
@@ -51,7 +51,7 @@ _BIRTH_DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 
 def _snapshot(year: int = 2025) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _binding(snapshot: RegistrySnapshot, binding_id: str) -> Any:
@@ -464,7 +464,7 @@ def test_every_declared_channel_agrees_with_its_consuming_formulas_registry_wide
         expression_date_binding_refs,
     )
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     conflicts: list[str] = []
     for modelo in authority.modelos:
         for revision_id, revision in modelo.revisions.items():

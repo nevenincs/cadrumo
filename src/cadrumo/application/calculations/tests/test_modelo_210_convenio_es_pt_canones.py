@@ -18,8 +18,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ._convenio_rate_support import resolve_convenio_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -35,7 +35,7 @@ def test_pt_canones_resolves_treaty_ceiling_of_5_percent() -> None:
 
 def test_pt_canones_treaty_and_legal_entry_are_grounded() -> None:
     """The PT cánones treaty row and its BOE-grounded legal entry are registered."""
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     assert "convenio-es-pt-1993:art-12" in catalogues.legal
     art12 = catalogues.legal["convenio-es-pt-1993:art-12"]
     assert art12.document_id == "BOE-A-1995-24001"

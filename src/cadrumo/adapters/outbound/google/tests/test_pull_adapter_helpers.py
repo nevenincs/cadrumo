@@ -19,10 +19,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....application.storage.calc_sheets.engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, registry_sha
 from .....core.decimal.coercion import coerce_decimal as _coerce_decimal
-from .....domain.calculations.registry.authority import bundled_authority
 from .....tests.google_credentials import unused_google_credentials
 from ...storage.errors import OutboundStorageConflictError, OutboundStorageValidationError
 from ..calc_sheets_pull import (
@@ -280,7 +280,7 @@ def test_prechange_exterior_workbook_layout_stamp_is_refused_before_pull_layout(
     before it calls ``plan_layout`` or requests any coordinate range.
     """
 
-    snapshot = bundled_authority().snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
+    snapshot = compiled_bundled_authority().snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
     exported_metadata = build_export_plan(snapshot).metadata
     prechange_pairs = {
         "cadrumo_modelo_id": exported_metadata.modelo_id,
@@ -311,7 +311,7 @@ def test_prechange_exterior_workbook_layout_stamp_is_refused_before_pull_layout(
 def test_current_exterior_workbook_layout_stamp_is_accepted_before_pull_layout() -> None:
     """The matching live M369 exterior export remains eligible for pull."""
 
-    snapshot = bundled_authority().snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
+    snapshot = compiled_bundled_authority().snapshot("369", filing_year=2026, period="EXT-1T", on=date(2026, 3, 31))
     exported_metadata = build_export_plan(snapshot).metadata
     current_pairs = {
         "cadrumo_modelo_id": exported_metadata.modelo_id,

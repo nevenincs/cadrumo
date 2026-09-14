@@ -34,12 +34,12 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.application.user_profile.projections import profile_fact_index
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.authority_artifact import AuthorityGenerationPin, ProfileCreateContext
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -74,7 +74,7 @@ _PROFILE_CREATE_CONTEXT = ProfileCreateContext(
 @pytest.fixture(scope="module")
 def m100_2025_snapshot() -> RegistrySnapshot:
     """Real bundled M100 2025 snapshot carrying the casilla-1039 semantic role."""
-    return bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
+    return compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_PERIOD)
 
 
 def _base_facts(**overrides: str) -> tuple[UserProfileFact, ...]:

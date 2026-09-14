@@ -18,6 +18,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import SecretStr
 from sqlalchemy.engine import Engine
 
@@ -63,7 +64,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
@@ -353,7 +353,7 @@ def _seed_local_filing_record(
 
 
 def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> None:
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     _, _, baseline = _seed_external_baseline(
         repos,
         modelo="303",

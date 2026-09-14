@@ -30,13 +30,13 @@ the real production path.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
 from .._modelo_bindings_invoice_iva import (
@@ -90,7 +90,7 @@ class _UnreadableInvoiceCatalogue:
 
 
 def _context() -> CalculationSourceContext:
-    revision = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
+    revision = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD_CODE).revision
     return CalculationSourceContext(
         bucket_id=_UnreadableInvoiceCatalogue.bucket_id,
         modelo="303",

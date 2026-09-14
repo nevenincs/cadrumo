@@ -3,9 +3,10 @@
 from collections.abc import Callable
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from .....domain.calculations.registry.ids import RevisionId
 from .....domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from ..schema import RegistrySnapshot
@@ -19,7 +20,7 @@ from .registry_tree import bundled_registry_tree
 @pytest.fixture(scope="session")
 def registry_authority() -> ValidatedRegistryAuthority:
     """Expose the committed authority artifact to registry-owned tests."""
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 @pytest.fixture(scope="session")

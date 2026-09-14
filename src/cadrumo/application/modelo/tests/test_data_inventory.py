@@ -17,9 +17,9 @@ invariant is a property of the record.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ..data_inventory import DataInventoryCasilla
 
@@ -106,7 +106,7 @@ def test_every_committed_casilla_can_ground_a_checklist_entry() -> None:
     a real ``modelo requires`` call rather than emitting a blank.
     """
     scanned = 0
-    for model in bundled_authority().modelos:
+    for model in compiled_bundled_authority().modelos:
         for revision in model.revisions.values():
             for casilla in revision.casillas:
                 scanned += 1

@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
@@ -27,7 +28,7 @@ def resolve_convenio_rate(*, tipo_renta: str, country_code: str, base: str) -> t
     hardcodes no per-country rate or treaty-specific branching. Every caller
     supplies its own grounded rate and legal citation for its own assertions.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period="EVENT-1")
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {_COUNTRY_BINDING: country_code}
     text_inputs = {validated_casilla_id("tipo_renta", surface=_SURFACE): tipo_renta}

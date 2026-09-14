@@ -7,6 +7,7 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
@@ -19,7 +20,6 @@ from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -75,7 +75,7 @@ class LedgerIvaAggregationSourceResolver(modelo_bindings.LedgerIvaAggregationSou
 
 @cache
 def _m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _recargo_invoice(invoice_number: str, *, issued_at: date, taxable_base: Decimal) -> Invoice:

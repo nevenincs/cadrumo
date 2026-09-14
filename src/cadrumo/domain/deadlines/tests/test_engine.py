@@ -6,10 +6,10 @@ from collections import Counter
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate, deadline_semantic_coordinate
 from ...calculations.registry.schedules import applicable_filing_schedules, evaluate_profile_conditions
 from ..engine import DeadlineEngine, applies_to, explain, next_deadline
@@ -262,7 +262,7 @@ class TestCompute:
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             ),
         )
-        authority = bundled_authority()
+        authority = compiled_bundled_authority()
         supported_years = authority.catalogues.supported_filing_years
         assert supported_years is not None
 

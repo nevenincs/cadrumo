@@ -21,11 +21,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import validated_casilla_id
-from ..authority import bundled_authority
 from ..binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ..schema import ModeloRevision
 from ..schema_references import PeriodSelector
@@ -145,7 +145,7 @@ def test_the_dual_transposes_the_forward_primitive_across_the_whole_corpus() -> 
     against registry-authoritative data rather than a fixture, so a predicate
     added to either direction alone reds here.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     checked_revisions = 0
     checked_pairs = 0
 
@@ -186,7 +186,7 @@ def test_no_ledger_iva_revision_declares_a_binding_on_a_non_bound_casilla() -> N
     revision declares fifty of them. An emptiness assertion would red here on
     its first run and the cheapest repair would be an M232 allowlist.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     offenders: list[str] = []
     ledger_iva_revisions = 0
 

@@ -19,11 +19,11 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
@@ -89,7 +89,7 @@ def test_public_retenciones_resolver_rejects_non_retenciones_modelos() -> None:
 
 @cache
 def _authority_snapshot(modelo: str, filing_year: int, period: str) -> RegistrySnapshot:
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
 
 
 def _observation(nif: str) -> RetencionObservation:

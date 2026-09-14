@@ -14,6 +14,13 @@ from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
+from cadrumo.domain.calculations.registry.iva_schema_vocabulary import (
+    m303_regime_composition_simplified_scope,
+)
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
@@ -29,6 +36,13 @@ from ..loader import load_registry_tree
 from ..m303_orden_manifest import load_m303_annual_orden_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _not_claimed_scope() -> M303RegimenSimplificadoScope:
+    return m303_regime_composition_simplified_scope(
+        "general",
+        authority=compiled_bundled_authority(),
+    )
 
 
 @pytest.fixture(scope="module")
@@ -94,11 +108,12 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
     _, catalogues = registry_tree
 
-    census = extract_m303_annual_orden_source(
-        ejercicio=ejercicio,
-        source=catalogues.sources[source_ref],
-        source_root=bundled_path(),
-    )
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        census = extract_m303_annual_orden_source(
+            ejercicio=ejercicio,
+            source=catalogues.sources[source_ref],
+            source_root=bundled_path(),
+        )
 
     assert len(census.activities) == 49
     assert {activity.annex_heading for activity in census.activities} == {"ANEXO II"}
@@ -346,7 +361,7 @@ def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> 
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     assert resolved.orden is not None
@@ -363,7 +378,7 @@ def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_mini
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     assert resolved.orden is not None
@@ -453,7 +468,7 @@ def test_2022_snapshot_carries_lorca_authority_and_crosswalk_refusal_with_exact_
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
 
@@ -485,7 +500,7 @@ def test_2022_snapshot_refuses_lorca_authority_with_a_drifted_source_reference()
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     payload = resolved.orden.model_dump(mode="python")
@@ -502,7 +517,7 @@ def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     payload = resolved.orden.model_dump(mode="python")
@@ -515,7 +530,7 @@ def test_2022_snapshot_refuses_a_stripped_lorca_authority_from_the_real_envelope
 def test_2025_snapshot_refuses_an_injected_lorca_authority_from_the_real_2022_envelope() -> None:
     """The one-year Lorca authority cannot be copied into another annual snapshot."""
     scope_decision = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=_not_claimed_scope(),
     )
     resolved_2022 = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=compiled_bundled_authority().snapshot("303", filing_year=2022, period="4T"),
@@ -540,7 +555,7 @@ def test_2022_snapshot_refuses_coordinated_lorca_parent_and_child_source_drift()
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     payload = resolved.model_dump(mode="python")
@@ -565,14 +580,14 @@ def test_2022_snapshot_refuses_coordinated_record_design_parent_and_child_drift(
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     other_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2023, period="4T")
     other_resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=other_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     payload = resolved.model_dump(mode="python")
@@ -592,7 +607,7 @@ def test_snapshot_refuses_cross_envelope_filing_year_and_record_design_drift() -
     resolved = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            scope=_not_claimed_scope(),
         ),
     )
     year_payload = resolved.model_dump(mode="python")

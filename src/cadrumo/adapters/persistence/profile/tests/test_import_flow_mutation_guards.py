@@ -6,6 +6,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -54,7 +55,6 @@ from cadrumo.application.modelo.work_lifecycle import (
 )
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -115,7 +115,7 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
 def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     period = Period.from_year_and_code(2026, "1T")
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
     work_unit = create_work_unit(
         bucket_id=_PROFILE_ID,
         modelo="303",

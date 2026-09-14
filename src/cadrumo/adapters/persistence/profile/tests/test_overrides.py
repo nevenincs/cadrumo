@@ -22,6 +22,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
@@ -32,7 +33,6 @@ from cadrumo.application.prorrata_register.service import ProrrataRegisterServic
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry
@@ -50,7 +50,7 @@ _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surf
 
 
 def _prior_revision_id() -> str:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("303").value,
         filing_year=_PRIOR_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -60,7 +60,7 @@ def _prior_revision_id() -> str:
 
 def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("303").value,
             filing_year=_PRIOR_YEAR,

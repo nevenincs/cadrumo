@@ -15,6 +15,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 from sqlalchemy import select
 
@@ -49,7 +50,6 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
@@ -122,7 +122,7 @@ def _inward_export_ports(*, work_unit: object, calculation: object, filing: obje
 
 def _summary_casilla_ids() -> tuple[CasillaId, ...]:
     requirement = m303_regimen_simplificado_annual_summary_requirement(
-        bundled_authority().snapshot("390", filing_year=_YEAR, period="0A").revision
+        compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A").revision
     )
     assert requirement is not None
     return tuple(requirement.binding_ids_by_summary_casilla_id)
@@ -159,7 +159,7 @@ def _store_ready_profile(secure_objects: SecureObjectRepository) -> None:
 
 def _non_agricultural_source_evidence(*, declared_quantity: Decimal = Decimal("1")) -> FilingInstanceEvidence:
     period = Period.from_year_and_code(_YEAR, "4T")
-    registry_snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    registry_snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
@@ -257,7 +257,7 @@ def _persist_presentado_source(
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     source_work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -440,7 +440,7 @@ def _calculate_m390_annual(
     calculations: CalculationRevisionCatalogueRepository,
     filings: ModeloRecordCatalogueRepository,
 ):
-    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="390",
@@ -503,7 +503,7 @@ def test_m390_persists_exact_ten_value_handoff_from_one_filed_current_m303_4t_re
     assert dict(handoff.values) == expected
     assert {casilla_id: result.revision.casilla_values[casilla_id] for casilla_id in expected} == expected
     assert not result.revision.relation_overrides
-    target_snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    target_snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
     requirement = m303_regimen_simplificado_annual_summary_requirement(target_snapshot.revision)
     assert requirement is not None
     assert {
@@ -792,7 +792,7 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
 
 def test_m390_registry_requires_all_ten_endpoints_and_rejects_the_retired_scalar_path() -> None:
     """The registry has one typed value-arrival family, never a box-79 bridge."""
-    snapshot = bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=_YEAR, period="0A")
     requirement = m303_regimen_simplificado_annual_summary_requirement(snapshot.revision)
     assert requirement is not None
     assert set(requirement.binding_ids_by_summary_casilla_id) == set(
@@ -819,7 +819,7 @@ def test_agricultural_rows_remain_an_evidence_bearing_refusal_while_empty_cohort
     empty = general_m303_filing_evidence(period, reference="test:s84:proven-empty")
     assert empty.m303.regimen_simplificado.calculation_result.activities == ()
 
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period="4T")
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )

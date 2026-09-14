@@ -7,10 +7,10 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
@@ -176,7 +176,7 @@ def test_modelo_111_supported_year_deadline_census_dates_sources_and_ownership(
     for filing_year in range(2022, 2027):
         expected_periods = (*tuple(f"{month:02d}" for month in range(1, 13)), "1T", "2T", "3T", "4T")
         assert {period for year, period in windows if year == filing_year} == set(expected_periods)
-        projected = bundled_authority().deadline_windows(filing_year, modelos=("111",))
+        projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("111",))
         assert len(projected) == 16
         assert {window.period.registry_token for _, _, window in projected} == set(expected_periods)
         assert {selected.id for _, selected, _ in projected} == {"2019-y-siguientes"}

@@ -20,6 +20,7 @@ from ...application.operator_surface.command_ports import (
     MachineSecretVariantConditionMetadata,
     ProfileAuthenticationContractMetadata,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import output_language, tr
 from ...core.type_guards import is_object_list_or_tuple
 from ._command_target import resolve_deferred_target
@@ -63,6 +64,8 @@ def machine_secret_payload_metadata(spec: CommandSpec) -> tuple[MachineSecretPay
 
 @dataclass(frozen=True, slots=True)
 class LiveNodeRegistrationMetadata:
+    """One executable CLI node projected without importing its handler."""
+
     path: tuple[str, ...]
     kind: CommandNodeKind
     loader_owner: str | None
@@ -73,6 +76,8 @@ class LiveNodeRegistrationMetadata:
 
 @dataclass(frozen=True, slots=True)
 class CommandRegistrationProjection:
+    """Complete command and node metadata projected from the canonical graph."""
+
     commands: tuple[CommandRegistrationMetadata, ...]
     nodes: tuple[LiveNodeRegistrationMetadata, ...]
     profile_authentication_contract: ProfileAuthenticationContractMetadata
@@ -110,7 +115,7 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
     target = parameter.value.click_type or parameter.value.annotation
     try:
         value = resolve_deferred_target(target)
-    except (ImportError, AttributeError, RuntimeError):
+    except (ImportError, AttributeError, InternalInvariantError):
         return ()
     if isinstance(value, type) and issubclass(value, Enum):
         return tuple(str(member.value) for member in value)
@@ -239,7 +244,7 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
 
     root_profile_secret = COMMAND_GRAPH.by_key()["root"].profile_secret
     if root_profile_secret is None:
-        raise RuntimeError("root command spec must declare profile-secret metadata authority")
+        raise InternalInvariantError("root command spec must declare profile-secret metadata authority")
 
     commands: list[CommandRegistrationMetadata] = []
     nodes: list[LiveNodeRegistrationMetadata] = []
@@ -276,11 +281,13 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
 
 
 def command_registration_metadata() -> tuple[CommandRegistrationMetadata, ...]:
+    """Return deterministic metadata for every executable command."""
     return command_registration_projection().commands
 
 
 @cache
 def command_registration_policy(command: str) -> CommandExecutionPolicy:
+    """Return the execution policy declared for ``command``."""
     from ._command_policy import CommandExecutionPolicy
     from .command_specs import COMMAND_GRAPH
 
@@ -299,6 +306,7 @@ def command_registration_policy(command: str) -> CommandExecutionPolicy:
 
 @cache
 def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
+    """Return registered result-schema references for executable commands."""
     from ...application.operator_surface.manifest import CommandSchemaRef
     from .command_specs import COMMAND_GRAPH
 

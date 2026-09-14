@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import m210_tipo_renta_code_projection
 
 from ..compiler import validate_revision_rules as rules
@@ -25,7 +24,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 def _m210_definition():
     """Return the loaded, validated M210 :class:`ModeloDefinition`."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return next(modelo for modelo in authority.modelos if modelo.id == "210")
 
 
@@ -63,6 +62,9 @@ def test_governed_fact_projected_code_not_declared_fails_build() -> None:
 
 def test_non_m210_modelo_is_a_noop() -> None:
     # A modelo carrying no m210-tipo-renta-code- parameter is never inspected.
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     m303 = next(modelo for modelo in authority.modelos if modelo.id == "303")
     assert rules.validate_m210_tipo_renta_code_projection_parity(m303) == []
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

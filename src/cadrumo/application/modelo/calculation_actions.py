@@ -457,7 +457,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
             Owns duplicate detection, work-unit pointer advancement, and event
             emission.
     """
-    ports.relation_override_migration.migrate(ports.calculation_repository)
+    ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     prepared = _prepare_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
@@ -465,6 +465,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         backend_casilla_inputs=backend_casilla_inputs,
         ledger_preflight_transaction_repository=ports.transaction_repository,
         usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+        operation=ports.operation,
         iva_compensation_decision=iva_compensation_decision,
         observation_repository=ports.observation_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
@@ -1358,7 +1359,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     previous-filing, relation-prefill, withholding, retenciones, and detail-row
     sources into the backend channels that feed the revision.
     """
-    ports.relation_override_migration.migrate(ports.calculation_repository)
+    ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     preparation = _prepare_bucket_aggregation_calculation(
         work_unit_id=work_unit_id,
         work_unit_repository=ports.work_unit_repository,
@@ -1370,7 +1371,6 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
     )
-    transaction_reads = MemoizedTransactionCatalogueRepository(ports.transaction_repository)
     source_resolution = _resolve_bucket_aggregation_source_resolution(
         preparation=preparation,
         ports=ports,
@@ -1855,7 +1855,7 @@ def list_calculation_revisions(
 
     Each element is a :class:`CalculationRevision`.
     """
-    ports.relation_override_migration.migrate(ports.calculation_repository)
+    ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     catalogue = ports.calculation_repository.load()
     revisions = tuple(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
@@ -1875,7 +1875,7 @@ def get_calculation_revision(
     Returns the :class:`CalculationRevision` matching
     ``calculation_revision_id``.
     """
-    ports.relation_override_migration.migrate(ports.calculation_repository)
+    ports.relation_override_migration.migrate(ports.calculation_repository, operation=ports.operation)
     revision, _ = _calculation_revision_in_repository_bucket(
         calculation_revision_id,
         catalogue=ports.calculation_repository.load(),

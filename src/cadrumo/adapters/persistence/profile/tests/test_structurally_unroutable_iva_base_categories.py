@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -16,7 +17,6 @@ from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.iva.schema import IvaCategory
@@ -62,7 +62,7 @@ def _catalogue_read_ports(
 
 
 def _m303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
 def _domestic_zero_sale() -> Transaction:

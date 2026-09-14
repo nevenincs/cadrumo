@@ -23,6 +23,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -36,7 +37,6 @@ from cadrumo.application.calculations.observations_repository import observation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -87,7 +87,7 @@ def _minimal_observation(modelo: str = _MODELO, year: int = _YEAR, period: str =
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PERIOD) -> str:
     """Return the law-determined revision id for (modelo, year, period) from the live registry."""
-    snapshot = bundled_authority().snapshot(modelo, filing_year=year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period)
     return str(snapshot.revision.id)
 
 
@@ -313,7 +313,7 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
             mutate=mutate,
         )
 
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             "303",
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,
@@ -353,7 +353,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
             )
         )
 
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             "303",
             filing_year=_M303_CARRY_YEAR,
             period=_M303_CARRY_TARGET_PERIOD,

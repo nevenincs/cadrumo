@@ -29,7 +29,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.schema import (
     ModeloApprovalBasis,
@@ -259,7 +258,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
         )
         work_unit_id = "9" * 64
         registry_snapshot_ref = (
-            bundled_authority()
+            compiled_bundled_authority()
             .snapshot(
                 "303",
                 filing_year=2025,
@@ -306,3 +305,6 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     assert loaded_revision.observations[0].operand_values == observation.operand_values
     assert loaded_revision.observations[0].legal_refs == observation.legal_refs
     assert loaded_revision.observations[0].source_refs == observation.source_refs
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

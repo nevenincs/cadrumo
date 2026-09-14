@@ -8,13 +8,13 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.source_profile import ProfileSourceResolver
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
@@ -34,7 +34,7 @@ def secure_profile_backend(tmp_path: Path) -> Iterator[None]:
 
 @cache
 def _modelo_100_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:

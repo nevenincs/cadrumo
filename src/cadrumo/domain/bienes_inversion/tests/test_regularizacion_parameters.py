@@ -17,8 +17,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from ...calculations.registry.authority import ValidatedRegistryAuthority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ..regularizacion_parameters import (
     BienesInversionParameterResolutionError,
@@ -36,7 +37,7 @@ def registry_authority() -> ValidatedRegistryAuthority:
     on this package's fixture path, and reaching across for it would couple
     two test packages through a file neither owns.
     """
-    return bundled_authority()
+    return compiled_bundled_authority()
 
 
 #: Every modelo 303 revision, with a filing-period date inside its own window.

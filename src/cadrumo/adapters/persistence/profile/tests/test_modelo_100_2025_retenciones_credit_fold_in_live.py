@@ -52,6 +52,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -80,7 +81,6 @@ from cadrumo.core.aggregation import (
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -317,7 +317,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     ``previous_filing`` (cross-period balance carry).  Both are zero here because
     this persona has no prior activity.
     """
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     # Sources the live mesh resolves automatically or that are bucket-locked.
     # Passing any of these in binding_values triggers ModeloAggregationBindingError.
     #
@@ -357,7 +357,7 @@ def _calculate_m100_annual(secure_objects: SecureObjectRepository) -> BucketAggr
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",
@@ -489,7 +489,7 @@ def _calculate_m111_administrador_quarter(
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)
-    snapshot = bundled_authority().snapshot("111", filing_year=_YEAR, period=period_code)
+    snapshot = compiled_bundled_authority().snapshot("111", filing_year=_YEAR, period=period_code)
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="111",

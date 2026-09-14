@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -61,7 +62,6 @@ from cadrumo.application.modelo.calculation_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -204,7 +204,9 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, period),
-        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=_YEAR, period=period).snapshot_ref,
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=_YEAR, period=period)
+        .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
@@ -261,7 +263,7 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         modelo="303",
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, period),
-        revision_id=bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
+        revision_id=compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period).revision.id,
         repository=wu_repo,
         clock=_T0,
     )

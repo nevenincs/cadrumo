@@ -28441,3 +28441,14 @@ semantic_role = "is_tributacion_conjunta_porcentaje_estado"
 semantic_role_cardinality = "intentional_singleton"
 semantic_role_cardinality_reason = "Tributación conjunta porcentaje de tributación a la Administración del Estado is the single cuota-chain Estado-share casilla; no sibling casilla shares this role within the modelo revision."
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+[[revisions."2025-y-siguientes".casillas]]
+id = "DP200018B:00588"
+continuidad_id = "incentive-deductions-detail-total-applied"
+continuidad_origin = "grounded"
+continuidad_evidence = "AEAT aeat-dr-200-2024 DP200018 campo172 y aeat-dr-200-2025 DP200018B campo22: Deducc. para incentivar determ.actividades - Total - Aplicado en esta liquidacion [00588], Num17 con dos decimales. El cierre del cuadro de deducciones se desplaza a la pagina18bis. Se conserva su identidad de total del detalle, distinta de la instancia de liquidacion DP200014B y de las celdas contables homonimas."
+number = "00588"
+segmento = "DP200018B"
+section = ["deducciones_incentivos", "DP200018B", "total_aplicado"]
+semantic_role = "is_liquidacion_iv_importe"
+legal_refs = ["ley-27-2014:art-39"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]

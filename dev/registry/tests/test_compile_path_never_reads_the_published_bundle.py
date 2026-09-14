@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REPO_ROOT: Final = Path(__file__).resolve().parents[3]
 _COMPILE_ENTRY: Final = _REPO_ROOT / "dev" / "registry" / "compiler" / "authority.py"
 
-# The forbidden name resolves the PUBLISHED artifact. ``compiled_bundled_authority``
+# The forbidden name resolves the PUBLISHED artifact. ``bundled_authority``
 # is a different function that compiles the bundled tree from source and is
 # legitimate on this path; matching by AST node rather than by text is what keeps
 # the two apart, and the detector proves it below.
@@ -231,7 +231,7 @@ def test_the_closure_reaches_the_module_that_once_held_the_defect() -> None:
 # wearing a disguise, and the cycle closed anyway.
 #
 # The read-shaped detector above cannot see this: the offending line calls a
-# local helper, not ``bundled_authority``. Different shape, same deadlock.
+# local helper, not ``compiled_bundled_authority``. Different shape, same deadlock.
 _DEFERRED_IMPORT_PACKAGES: Final = (
     "cadrumo.domain.calculations.registry",
     "registry.authority",

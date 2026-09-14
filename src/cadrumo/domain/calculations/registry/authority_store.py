@@ -24,7 +24,12 @@ from .authority_artifact import (
     authority_query_from_identity,
     decode_authority_component,
 )
-from .authority_cache import AccountedAuthorityCache, AuthorityCacheTelemetry, RetainedAuthorityValue
+from .authority_cache import (
+    AccountedAuthorityCache,
+    AuthorityCacheTelemetry,
+    RetainedAuthorityValue,
+    retained_object_size,
+)
 
 AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v1"
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
@@ -246,7 +251,7 @@ class SQLiteAuthorityReader:
             for dependency_kind, dependency_key in dependency_rows
         )
         decoded = decode_authority_component(query, payload, dependencies=dependencies)
-        return RetainedAuthorityValue(decoded, int(retained_weight))
+        return RetainedAuthorityValue(decoded, max(int(retained_weight), retained_object_size(decoded)))
 
     def _open_connection(self) -> sqlite3.Connection:
         uri = self._database_path.resolve().as_uri() + "?mode=ro"
@@ -284,6 +289,33 @@ class SQLiteAuthorityReader:
             count = connection.execute("SELECT COUNT(*) FROM components").fetchone()
             if count is None or count[0] != row[2]:
                 raise AuthorityStoreCorruptionError("authority database manifest component count is incomplete")
+            dependency_rows = connection.execute(
+                "SELECT component_kind, component_key, dependency_kind, dependency_key FROM dependencies"
+            ).fetchall()
+            self._require_acyclic_dependencies(dependency_rows)
+
+    @staticmethod
+    def _require_acyclic_dependencies(rows: list[tuple[str, str, str, str]]) -> None:
+        """Refuse a complete component dependency graph containing any cycle."""
+        graph: dict[tuple[str, str], list[tuple[str, str]]] = {}
+        for component_kind, component_key, dependency_kind, dependency_key in rows:
+            graph.setdefault((component_kind, component_key), []).append((dependency_kind, dependency_key))
+        visiting: set[tuple[str, str]] = set()
+        visited: set[tuple[str, str]] = set()
+
+        def visit(node: tuple[str, str]) -> None:
+            if node in visiting:
+                raise AuthorityStoreCorruptionError(f"authority database dependency cycle includes {node!r}")
+            if node in visited:
+                return
+            visiting.add(node)
+            for dependency in graph.get(node, ()):
+                visit(dependency)
+            visiting.remove(node)
+            visited.add(node)
+
+        for node in graph:
+            visit(node)
 
     def _read_database_identity(self) -> _DatabaseIdentity:
         try:

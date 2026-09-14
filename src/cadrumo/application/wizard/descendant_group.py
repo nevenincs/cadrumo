@@ -70,6 +70,8 @@ from .catalogue import FAMILIA_SECTION_ID as _FAMILIA_SECTION_ID
 if TYPE_CHECKING:
     from datetime import date
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 #: Repeating-group id; instance answers key as ``descendientes#<index>.<page>``.
 DESCENDANTS_GROUP_ID = "descendientes"
@@ -850,7 +852,11 @@ DESCENDANT_GROUP: FlowRepeatingGroup = FlowRepeatingGroup(
 )
 
 
-def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
+def attach_descendant_group(
+    definition: FlowDefinition,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> FlowDefinition:
     """Return ``definition`` with the descendant count page and group in familia.
 
     Appends the count-source page and the repeating group to the familia
@@ -862,6 +868,11 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
     absent -- a silent no-op would drop the whole descendant surface.
     Idempotent on the flow validator id: re-applying does not duplicate it.
     """
+    # The operation argument is carried by the production composition path.
+    # Dynamic relationship materialization is still pending the flow-validator
+    # API's context seam; retaining the explicit parameter prevents callers
+    # from silently opening a second authority while that seam is completed.
+    del operation
     sections: list[FlowSection] = []
     attached = False
     for section in definition.sections:

@@ -60,6 +60,7 @@ class CasillaEvolutionKind(StrEnum):
     UNCHANGED = "unchanged"
     LABEL_EVOLVED = "label_evolved"
     SECTION_EVOLVED = "section_evolved"
+    REPRESENTATION_EVOLVED = "representation_evolved"
     LEGAL_REFS_EVOLVED = "legal_refs_evolved"
     LABEL_AND_LEGAL_REFS_EVOLVED = "label_and_legal_refs_evolved"
     REPURPOSED = "repurposed"
@@ -72,6 +73,7 @@ class CasillaEvolutionKind(StrEnum):
             self.UNCHANGED: frozenset(),
             self.LABEL_EVOLVED: frozenset({"label"}),
             self.SECTION_EVOLVED: frozenset({"section"}),
+            self.REPRESENTATION_EVOLVED: frozenset({"data_type"}),
             self.LEGAL_REFS_EVOLVED: frozenset({"legal_refs"}),
             self.LABEL_AND_LEGAL_REFS_EVOLVED: frozenset({"label", "legal_refs"}),
             self.REPURPOSED: frozenset({"label", "section", "data_type", "semantic_role", "legal_refs"}),

@@ -5,10 +5,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -55,7 +55,7 @@ def _binding(operation: str, target: str) -> BindingDefinition:
 
 
 def _revision(*, declared: bool = True, alias: bool = False) -> ModeloRevision:
-    base = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    base = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     if not declared:
         # "Undeclared" has to be BUILT now. Modelo 100/2025 ships three real
         # inventory bindings, so returning the base revision unchanged asserted

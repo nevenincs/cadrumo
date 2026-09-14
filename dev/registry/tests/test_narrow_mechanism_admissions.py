@@ -40,12 +40,12 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_CONTENT,
     validate_auxiliary_envelope_header_contents,
 )
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.record_design import extract_record_design
 
@@ -73,7 +73,7 @@ def _range_start_sidecars() -> tuple[tuple[str, dict[str, object]], ...]:
 def _design_constant_bindings() -> tuple[tuple[str, str, str], ...]:
     """Return ``(modelo, revision, binding_id)`` for every design-constant binding."""
     declared: list[tuple[str, str, str]] = []
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             for binding in revision.bindings:
                 if binding.source is BindingSourceKind.DESIGN_CONSTANT:
@@ -152,7 +152,7 @@ def test_every_design_constant_carries_a_value_that_fills_its_run() -> None:
     """
     offenders: list[str] = []
     for modelo_id, revision_id, binding_id in _design_constant_bindings():
-        for modelo in bundled_authority().modelos:
+        for modelo in compiled_bundled_authority().modelos:
             if str(modelo.id) != modelo_id:
                 continue
             revision = modelo.revisions[revision_id]

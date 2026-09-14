@@ -21,8 +21,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ..record_renderer import record_render_rows
@@ -35,7 +35,7 @@ _REVISION = "2025"
 @pytest.fixture(scope="module")
 def pagina_siete() -> ExportRecordDefinition:
     """The real, binding-resolved Modelo 390 pagina 7 record."""
-    revision = bundled_authority().modelo("390").revisions[_REVISION]
+    revision = compiled_bundled_authority().modelo("390").revisions[_REVISION]
     record = next(
         candidate
         for layout in derive_export_layouts_from_bindings(revision)

@@ -19,7 +19,6 @@ should have been reentrant.
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -31,14 +30,10 @@ from ....iva.schema import (
     IvaLedgerObservationRole,
     IvaRateKind,
 )
-from ..authority_artifact import (
-    AuthorityArtifactUnavailableError,
-    _decoding_artifact,
-    read_shared_authority_artifact,
-)
 from ..errors import RegistryValidationError
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
 from ..governed_fact_scope import CandidateFactAuthority, governed_facts_in_scope, validating_governed_facts
+from ..iva_flow_catalogue import require_iva_flow_direction
 from ..iva_rate_kind_catalogue import require_registry_declared_iva_rate_kind
 from ..ledger_iva_bindings import LedgerIvaProvider
 
@@ -83,6 +78,38 @@ _SCOPED_CASH_ENTRIES = (
     {"key": "cash_accounting.supplier_regime.description", "value": "proveedor acogido al criterio de caja"},
 )
 
+_SCOPED_FLOW_ENTRIES = (
+    {"key": "flow_direction.order", "value": "repercutido,soportado,inversion_sujeto_pasivo,operacion_con_inversion"},
+    {"key": "flow_direction.issued_token", "value": "repercutido"},
+    {"key": "flow_direction.received_token", "value": "soportado"},
+    {"key": "flow_direction.recipient_reverse_charge_token", "value": "inversion_sujeto_pasivo"},
+    {"key": "flow_direction.supplier_reverse_charge_token", "value": "operacion_con_inversion"},
+    {"key": "flow_direction.repercutido.value", "value": "repercutido"},
+    {"key": "flow_direction.repercutido.description", "value": "output"},
+    {"key": "flow_direction.repercutido.legal_refs", "value": _LEGAL_ID},
+    {"key": "flow_direction.repercutido.settlement_sides", "value": "devengada"},
+    {"key": "flow_direction.soportado.value", "value": "soportado"},
+    {"key": "flow_direction.soportado.description", "value": "input"},
+    {"key": "flow_direction.soportado.legal_refs", "value": _LEGAL_ID},
+    {"key": "flow_direction.soportado.settlement_sides", "value": "deducible"},
+    {"key": "flow_direction.inversion_sujeto_pasivo.value", "value": "inversion_sujeto_pasivo"},
+    {"key": "flow_direction.inversion_sujeto_pasivo.description", "value": "recipient reverse charge"},
+    {"key": "flow_direction.inversion_sujeto_pasivo.legal_refs", "value": _LEGAL_ID},
+    {"key": "flow_direction.inversion_sujeto_pasivo.settlement_sides", "value": "devengada,deducible"},
+    {"key": "flow_direction.operacion_con_inversion.value", "value": "operacion_con_inversion"},
+    {"key": "flow_direction.operacion_con_inversion.description", "value": "supplier reverse charge"},
+    {"key": "flow_direction.operacion_con_inversion.legal_refs", "value": _LEGAL_ID},
+    {"key": "flow_direction.operacion_con_inversion.settlement_sides", "value": "none"},
+    {"key": "flow_direction.settlement_side_order", "value": "devengada,deducible"},
+    {"key": "flow_direction.no_settlement_token", "value": "none"},
+    {"key": "flow_direction.settlement_side.devengada.value", "value": "devengada"},
+    {"key": "flow_direction.settlement_side.devengada.description", "value": "output"},
+    {"key": "flow_direction.settlement_side.devengada.legal_refs", "value": _LEGAL_ID},
+    {"key": "flow_direction.settlement_side.deducible.value", "value": "deducible"},
+    {"key": "flow_direction.settlement_side.deducible.description", "value": "input"},
+    {"key": "flow_direction.settlement_side.deducible.legal_refs", "value": _LEGAL_ID},
+)
+
 
 def _mapping_fact(fact_id: str, *, date_axis: str, entries: tuple[dict[str, str], ...]) -> GovernedFact:
     return GovernedFact.model_validate(
@@ -114,18 +141,27 @@ def _scoped_facts() -> CandidateFactAuthority:
             date_axis="filing_period",
             entries=_SCOPED_CASH_ENTRIES,
         ),
+        _mapping_fact(
+            "iva-invoice-classification-catalogue",
+            date_axis="filing_period",
+            entries=_SCOPED_FLOW_ENTRIES,
+        ),
     )
     return CandidateFactAuthority(GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts}))
 
 
-def _provider_payload(rate_kinds: tuple[IvaRateKind, ...]) -> dict[str, object]:
+def _provider_payload(rate_kinds: tuple[IvaRateKind, ...], *, flow_direction: IvaFlowDirection) -> dict[str, object]:
     return {
         "categories": (IvaCategory("domestic_general"),),
         "rate_kinds": rate_kinds,
-        "flow_direction": IvaFlowDirection("repercutido"),
+        "flow_direction": flow_direction,
         "observation_roles": (IvaLedgerObservationRole("settlement"),),
         "cash_accounting_treatments": (IvaCashAccountingTreatment("none"),),
     }
+
+
+def _projected_flow() -> IvaFlowDirection:
+    return require_iva_flow_direction("repercutido", effective_date=_EFFECTIVE)
 
 
 def test_a_rate_kind_declared_by_the_scoped_facts_is_accepted() -> None:
@@ -148,49 +184,29 @@ def test_validation_outside_a_scope_refuses_instead_of_reading_the_published_aut
 def test_a_binding_validates_its_rate_tiers_against_the_scoped_facts() -> None:
     """The real provider model, not a stand-in, resolves through the scope."""
     with validating_governed_facts(_scoped_facts()):
-        provider = LedgerIvaProvider.model_validate(_provider_payload((IvaRateKind("general"),)))
+        provider = LedgerIvaProvider.model_validate(
+            _provider_payload((IvaRateKind("general"),), flow_direction=_projected_flow())
+        )
 
     assert provider.rate_kinds == (IvaRateKind("general"),)
 
 
 def test_a_binding_declaring_an_undeclared_rate_tier_is_refused() -> None:
     with validating_governed_facts(_scoped_facts()), pytest.raises(ValidationError) as refusal:
-        LedgerIvaProvider.model_validate(_provider_payload((IvaRateKind("super_reduced"),)))
+        LedgerIvaProvider.model_validate(
+            _provider_payload((IvaRateKind("super_reduced"),), flow_direction=_projected_flow())
+        )
 
     assert "not declared by the facts registry" in str(refusal.value)
 
 
 def test_a_binding_validated_outside_a_scope_never_reaches_the_bundle() -> None:
     """Absence of scoped facts is a refusal, which is what keeps the reader out of the loop."""
+    with validating_governed_facts(_scoped_facts()):
+        flow_direction = _projected_flow()
     with pytest.raises(ValidationError) as refusal:
-        LedgerIvaProvider.model_validate(_provider_payload((IvaRateKind("general"),)))
+        LedgerIvaProvider.model_validate(_provider_payload((IvaRateKind("general"),), flow_direction=flow_direction))
 
     message = str(refusal.value)
     assert "published authority artifact" in message
     assert "rate_kinds" in message
-
-
-def test_the_artifact_reader_refuses_a_read_taken_while_it_is_decoding(tmp_path: Path) -> None:
-    """Detector teeth: the re-entrant read that used to block now fails loudly.
-
-    The flag is the reader's own thread-local decode marker, set for the length
-    of one assertion and restored immediately, so no other test and no
-    contributor's tree observes it.
-    """
-    _decoding_artifact.in_progress = True
-    try:
-        with pytest.raises(RegistryValidationError, match="while it was being decoded"):
-            read_shared_authority_artifact(tmp_path / "authority.json")
-    finally:
-        _decoding_artifact.in_progress = False
-
-
-def test_the_reader_refuses_the_same_path_for_its_own_reason_outside_a_decode(tmp_path: Path) -> None:
-    """Anti-tautology: without the marker the identical call fails as a missing artifact.
-
-    A guard that refused every read would pass the test above while telling the
-    caller nothing, so the same path must still reach the reader's own refusal.
-    """
-    assert not getattr(_decoding_artifact, "in_progress", False)
-    with pytest.raises(AuthorityArtifactUnavailableError):
-        read_shared_authority_artifact(tmp_path / "authority.json")

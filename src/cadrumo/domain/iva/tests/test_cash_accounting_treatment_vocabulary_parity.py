@@ -26,8 +26,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.schema_base import DateAxis
 from ..schema import IvaCashAccountingTreatment
@@ -40,7 +40,7 @@ _VALUE_SUFFIX = ".value"
 
 
 def _vocabulary_entries() -> dict[str, str]:
-    resolved = bundled_authority().resolve_governed_fact(
+    resolved = compiled_bundled_authority().resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-statutory-schema-vocabulary",
             date_axis=DateAxis.FILING_PERIOD,

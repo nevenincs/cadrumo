@@ -29,7 +29,9 @@ def test_invalid_regex_raises_classification_rule_error() -> None:
     assert errors[0]["type"] == "value_error"
     assert "description_pattern is not a valid regex" in errors[0]["msg"]
     # The raw exception surfaced by Pydantic is the ClassificationRuleError itself.
-    assert isinstance(exc_info.value.errors()[0].get("ctx", {}).get("error"), ClassificationRuleError)
+    boundary_error = exc_info.value.errors()[0].get("ctx", {}).get("error")
+    assert isinstance(boundary_error, ValueError)
+    assert isinstance(boundary_error.__cause__, ClassificationRuleError)
 
 
 def test_valid_regex_does_not_raise() -> None:

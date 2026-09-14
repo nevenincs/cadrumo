@@ -30,8 +30,7 @@ from __future__ import annotations
 from typing import Final
 
 import pytest
-
-from ..authority import bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -69,7 +68,7 @@ _UNCONSUMED_ROW_BINDING_DEFECTS: Final[dict[tuple[str, str], str]] = {
 def _unconsumed_row_bindings() -> dict[tuple[str, str], int]:
     """Return every revision whose layout has records but reaches no row binding."""
     unconsumed: dict[tuple[str, str], int] = {}
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision_id, revision in modelo.revisions.items():
             row_bindings = [
                 binding
@@ -129,7 +128,7 @@ def test_both_consumption_shapes_are_present_in_the_corpus(modelo_id: str, revis
     revision at all. Modelo 347 consumes through repeat='binding_rows'; modelo
     232 consumes through explicit binding fields and declares no repeat.
     """
-    revision = bundled_authority().modelo(modelo_id).revisions[revision_id]
+    revision = compiled_bundled_authority().modelo(modelo_id).revisions[revision_id]
     row_bindings = [
         binding
         for binding in revision.bindings

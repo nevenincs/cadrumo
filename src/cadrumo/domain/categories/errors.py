@@ -9,9 +9,10 @@ class CategoryError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.domain.categories`."""
 
 
-class CategoryValidationError(CategoryError, ValueError):
+class CategoryValidationError(CategoryError):
     """Raised when category records or registries violate state or shape invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Its canonical registered ancestry is :class:`CategoryError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow boundary.
     """

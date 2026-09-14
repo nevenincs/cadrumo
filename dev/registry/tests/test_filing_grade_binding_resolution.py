@@ -21,7 +21,6 @@ from cadrumo.application.modelo.calculation_actions import assert_no_novel_sourc
 from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_provider_registration import (
     RouteOwnership,
     provider_model_for,
@@ -62,7 +61,7 @@ def _representative_scope(period_selector: PeriodSelector) -> tuple[int, str]:
 
 def _filing_grade_revisions() -> tuple[_FilingGradeRevision, ...]:
     """Select every filing-grade revision through the validated authority."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     records: list[_FilingGradeRevision] = []
     for modelo in authority.modelos:
         for declared_revision in modelo.revisions.values():
@@ -174,3 +173,6 @@ def test_filing_binding_provenance_is_copied_verbatim_from_validated_authority()
     with pytest.raises(ModeloBuilderError) as raised:
         binding_provenance(ungrounded)
     assert raised.value.translated_message == "application.filing.build_draft.errors.binding_provenance_missing"
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

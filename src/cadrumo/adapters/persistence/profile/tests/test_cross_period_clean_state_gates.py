@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
@@ -39,7 +40,6 @@ from cadrumo.application.modelo.verification_cross_period import cross_period_cl
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
@@ -203,7 +203,7 @@ def _seed_303_cross_period_sources(
     bucket_event_repository: BucketEventHistoryRepository,
     csv_periods: set[str],
 ) -> None:
-    snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
     source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
     for requirement in cross_period_dependency_requirements(snapshot):
         source_casilla_ids_by_period.setdefault(
@@ -218,7 +218,7 @@ def _seed_303_cross_period_sources(
             else ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
         )
         evidence_reference_id = f"AEAT-{period}"
-        source_snapshot = bundled_authority().snapshot("303", filing_year=2025, period=period)
+        source_snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period=period)
         if evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF:
             _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=2025)
         work_unit = create_work_unit(

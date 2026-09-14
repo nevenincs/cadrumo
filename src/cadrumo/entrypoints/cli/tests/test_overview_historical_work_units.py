@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
@@ -15,7 +16,6 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.period import Period
 from ....core.time.clock import now
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -29,7 +29,7 @@ _CURRENT_FILING_RECORD_ID = "b" * 64
 
 
 def _revision_for_target(*, modelo: str, year: int, period: str) -> str:
-    return str(bundled_authority().snapshot(modelo, filing_year=year, period=period).revision.id)
+    return str(compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period).revision.id)
 
 
 def _create_historical_work_unit(

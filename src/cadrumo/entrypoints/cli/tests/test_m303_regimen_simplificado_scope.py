@@ -9,13 +9,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -68,7 +68,7 @@ def _store_current_profile(
 
 
 def _m303_work_id() -> str:
-    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id
+    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision.id
     return create_modelo_work_unit_via_cli(
         modelo="303",
         filing_year=2026,
@@ -83,7 +83,7 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=bundled_authority()
+            target_registry_snapshot_ref=compiled_bundled_authority()
             .snapshot("303", filing_year=2026, period="1T")
             .snapshot_ref,
             source_registry_snapshot_refs=(),

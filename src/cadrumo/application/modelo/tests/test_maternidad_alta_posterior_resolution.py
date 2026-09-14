@@ -26,8 +26,8 @@ from datetime import UTC, date, datetime
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ....domain.contribuyente.descendant import DescendantInfo
@@ -47,7 +47,7 @@ _MELLIZO_BIRTH = date(2023, 1, 15)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _record(*descendientes: DescendantInfo) -> UserProfileRecord:

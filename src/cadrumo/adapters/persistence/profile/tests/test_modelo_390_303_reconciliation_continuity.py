@@ -48,6 +48,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
@@ -61,7 +62,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import derive_result_disposition, result_disposition_casilla_ids
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -196,7 +196,7 @@ def _calculate_303_quarter(
     supplies the R2 profile-gap workaround facts and a zero prior-period carry,
     resolves bound casilla inputs, then evaluates the engine.
     """
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = {
         _303_CARRY_BINDING: Decimal("0"),
         _303_AUTOCONSUMO_PROMOTOR_BASE_BINDING: Decimal("0"),
@@ -259,7 +259,7 @@ def _calculate_390_annual(
     describe the same ejercicio, so they must agree. Returns the result plus
     its produced-value count.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
     relation_values_map = {rv.relation: rv.value for rv in relation_vals.values if rv.value is not None}
     relation_binding_values = relation_prefill_values_as_binding_values(

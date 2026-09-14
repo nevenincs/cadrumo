@@ -6,9 +6,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .._formula_runtime_irnr import _irnr_resolve_tipo_gravamen_args, _m210_allows_art_24_6_expenses
-from ..authority import bundled_authority
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import (
@@ -30,7 +30,7 @@ _M210_TIPO_GRAVAMEN_CASILLA = "tipo_gravamen"
 
 
 def _current_m210_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
+    return compiled_bundled_authority().snapshot("210", filing_year=2025, period="EVENT-1")
 
 
 def _current_m210_rate_formula() -> FormulaDefinition:

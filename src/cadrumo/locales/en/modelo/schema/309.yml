@@ -334,7 +334,7 @@ modelo:
               help: Box 951-1300 of Modelo 309, tax years 2004-2015.
               label: Observations
           construct:
-            modelo-309-historical-no-periodica:
+            modelo-309-iva-no-periodica:
               field:
                 title: 'Historical Modelo 309: non-periodic self-assessment (2004-2015)'
           field:

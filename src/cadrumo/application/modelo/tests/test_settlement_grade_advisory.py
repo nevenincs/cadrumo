@@ -12,8 +12,8 @@ mocks. The structural complement to the value-level settlement predicate (#24-B/
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from .._settlement_grade_advisory import collect_settlement_not_computed_diagnostics
 from ..settlement_casilla import SETTLEMENT_SEMANTIC_ROLES
 
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _revision(modelo: str, year: int, period: str):
-    return bundled_authority().snapshot(modelo, filing_year=year, period=period).revision
+    return compiled_bundled_authority().snapshot(modelo, filing_year=year, period=period).revision
 
 
 @pytest.mark.parametrize("year", [2020, 2023])

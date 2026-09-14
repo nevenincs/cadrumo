@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 
@@ -44,5 +45,5 @@ def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> N
 
 
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = next(item for item in bundled_authority().modelos if item.id == modelo)
+    modelo_def = next(item for item in compiled_bundled_authority().modelos if item.id == modelo)
     return modelo_def.revisions[revision_id]

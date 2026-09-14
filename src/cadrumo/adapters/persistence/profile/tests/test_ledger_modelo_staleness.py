@@ -37,6 +37,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
@@ -48,7 +49,6 @@ from .....application.ledger.actions_manual import update_manual_transaction_fie
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.iva.schema import IvaCategory
 from .....domain.modelos.calculation_revision import (
@@ -123,7 +123,7 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     registry_snapshot_ref = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=_FILING_PERIOD.filing_year,

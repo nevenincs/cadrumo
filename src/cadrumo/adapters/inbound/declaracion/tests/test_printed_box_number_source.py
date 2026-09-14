@@ -39,9 +39,9 @@ See Also:
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import validated_casilla_id
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
 from ..errors import DeclaracionParseError
 from ..parser import _numeric_casilla_anchors
@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 
 def _revision(modelo: str, filing_year: int, period: str):
-    return bundled_authority().snapshot(modelo, filing_year=filing_year, period=period).revision
+    return compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period).revision
 
 
 def _numeric_profile(casilla_id: str) -> ExtractionProfileDefinition:

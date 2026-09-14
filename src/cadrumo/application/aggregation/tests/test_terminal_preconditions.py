@@ -11,11 +11,11 @@ from types import ModuleType
 from typing import override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     invoice_ledger_screen_binding_ids,
@@ -314,7 +314,7 @@ def test_invoice_ledger_refusals_have_exact_application_state_operator_decision_
         modelo="303",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
-        revision=bundled_authority().snapshot("303", filing_year=2025, period="1T").revision,
+        revision=compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision,
     )
     expected_facts: dict[str, str | int | bool | Decimal]
     if refusal == "uncovered_deduction":

@@ -72,6 +72,7 @@ from .iva_wallet_gate import (
 from .preconditions import build_modelo_precondition_failure
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..live.borrador_100 import Borrador100SnapshotRepository
 
 _apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
@@ -111,6 +112,7 @@ def prepare_calculation(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     ledger_preflight_transaction_repository: TransactionCatalogueRepositoryProtocol,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
     iva_compensation_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
     iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
@@ -162,6 +164,7 @@ def prepare_calculation(
         revision=snapshot.revision,
         transaction_repository=ledger_preflight_transaction_repository,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     _raise_if_m200_ledger_requires_accounting_result_input(
         work_unit=work_unit,
@@ -305,6 +308,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
     revision: ModeloRevision,
     transaction_repository: TransactionCatalogueRepositoryProtocol,
     usage_ratio_profile_loader: UsageRatioProfileLoader,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     """Refuse ledger-backed calculations whose period ledger readiness blocks."""
     ledger_preflight_sources = frozenset(
@@ -322,6 +326,7 @@ def _raise_if_ledger_preflight_blocks_calculation(
         period=work_unit.period,
         transaction_repository=transaction_repository,
         usage_ratio_profile_loader=usage_ratio_profile_loader,
+        operation=operation,
     )
     if report.ready:
         return

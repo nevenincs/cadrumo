@@ -135,6 +135,7 @@ from ._modelo_review_package_rendering import (
 )
 from .common import emit_envelope, filing_taxpayer_or_refuse
 from .state_projection_support import (
+    authority_operation,
     calculation_action_ports_factory,
     modelo_export_ports_factory,
     recipient_encryption_capability_factory,
@@ -165,6 +166,7 @@ def review_package_build(
         )
     calculation_ports = calculation_action_ports_factory(ctx)(
         bucket_id=resolve_explicit_or_active_bucket_id(operator_input.bucket_id),
+        operation=authority_operation(ctx),
     )
     selected_revision = resolve_exportable_revision_for_cli(
         revision=operator_input.revision,

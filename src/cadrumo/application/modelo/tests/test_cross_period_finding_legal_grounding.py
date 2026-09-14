@@ -16,11 +16,11 @@ import re
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ...calculations.cross_period_models import (
@@ -44,7 +44,7 @@ _DEFAULT_DEPENDENCY_SOURCE_REFS: tuple[SourceRefId, ...] = ("aeat-modelo-303-pro
 
 def _published_legal_refs_matching(*markers: str) -> tuple[LegalRefId, ...]:
     """Select legal references from the published authority by evidence text."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     matches = []
     for reference_id, reference in authority.catalogues.legal.items():
         evidence = " ".join((reference.notes or "", *reference.required_text)).casefold()
@@ -76,7 +76,7 @@ def _activity_start_legal_refs() -> tuple[LegalRefId, ...]:
 
 def _iva_compensation_carry_legal_ref() -> LegalRefId:
     """Read the first legal anchor on the published previous-filing carry binding."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for modelo in authority.modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
@@ -170,14 +170,14 @@ def _application_literal_legal_refs() -> frozenset[str]:
 
 def test_application_legal_refs_resolve_to_bundled_corpus() -> None:
     """Application-level literal legal refs must stay registry and corpus backed."""
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     ref_ids = _application_literal_legal_refs()
 
     missing = sorted(ref_ids - set(catalogues.legal))
     assert missing == [], f"application legal_refs absent from the registry: {missing}"
     references = {ref_id: catalogues.legal[ref_id] for ref_id in sorted(ref_ids)}
     for ref_id in sorted(references):
-        assert bundled_authority().legal_evidence_text(ref_id).strip(), (
+        assert compiled_bundled_authority().legal_evidence_text(ref_id).strip(), (
             f"published legal evidence is empty for {ref_id!r}"
         )
 

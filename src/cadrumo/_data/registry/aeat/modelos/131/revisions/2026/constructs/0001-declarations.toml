@@ -41,6 +41,7 @@ application_links = [
     "modelo-131-approval",
     "modelo-131-reconciliation",
     "modelo-131-extractor",
+    "modelo-131-declaracion-extractor",
     "modelo-131-portal-cross-reference",
     "modelo-131-filed-declarations-observation",
     "modelo-131-deadline",

@@ -48,17 +48,23 @@ class IvaRateOverlapError(IvaError):
     """
 
 
-class IvaValidationError(IvaError, ValueError):
-    """Raised on invalid IVA field values. Inherits from ValueError for Pydantic."""
+class IvaValidationError(IvaError):
+    """Raised on invalid IVA field values.
+
+    Its canonical registered ancestry is :class:`IvaError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow boundary.
+    """
 
 
 class ProrrataError(IvaError):
     """Base error for IVA prorrata calculation failures (LIVA arts. 101-103)."""
 
 
-class ProrrataInputError(ProrrataError, ValueError):
+class ProrrataInputError(ProrrataError):
     """Raised when prorrata inputs violate domain invariants.
 
-    Inherits from ``ValueError`` so pydantic surfaces it as a
-    ``ValidationError`` when raised from a model validator.
+    Its canonical registered ancestry is :class:`ProrrataError`. Pydantic
+    model validators translate this registered failure to ``ValueError`` at
+    their narrow boundary.
     """

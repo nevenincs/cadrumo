@@ -19,6 +19,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -46,7 +47,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.binding_targets import casillas_by_binding
 from cadrumo.domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -130,7 +130,7 @@ def _ledger_observation(
 
 
 def _m303_revision_id(*, filing_year: int, period: str) -> str:
-    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     return str(snapshot.revision.id)
 
 
@@ -222,7 +222,7 @@ def test_mixed_trader_in_year_missing_carry_is_visible_not_defaulted_to_100() ->
     assert "declared_sin_derecho_volume" in applicability.evidence_kinds
     assert diagnostic is not None
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -254,7 +254,7 @@ def test_advisory_fires_for_casilla_44_when_prorrata_applies_and_percentages_dif
     assert diagnostic is not None
     assert diagnostic.source_kind == BindingSourceKind.PRORRATA_REGULARIZACION.value
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -285,7 +285,7 @@ def test_projection_feeds_m303_casilla_44_from_declared_volume_definitive_percen
 
     assert projection.result.prorrata_definitiva_pct == declared_definitive_percentage
     assert projection.operaciones_sin_derecho_deduccion == Decimal("50000.00")
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         Modelo("303").value,
         filing_year=_SETTLEMENT_YEAR,
         period=_SETTLEMENT_PERIOD,
@@ -518,7 +518,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     One year per shipped revision window, so a newly-shipped revision cannot
     slip past this refusal by simply not being enumerated here.
     """
-    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
 
     assert str(snapshot.revision.id) == revision_id
     assert "61" not in declared_casilla_ids(snapshot.revision)

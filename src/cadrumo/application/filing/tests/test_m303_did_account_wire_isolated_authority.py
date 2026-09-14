@@ -7,6 +7,7 @@ from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
@@ -26,7 +27,6 @@ from ....domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ....domain.calculations.export_field_kind import CasillaFieldKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_base import CasillaDataType, ThresholdComparison
@@ -157,7 +157,7 @@ def _required_iae_epigrafe(value: str | None) -> str:
 
 def _m303_2026_snapshot() -> RegistrySnapshot:
     """Load the real 2026 revision from the published authority artifact."""
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="1T")
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2026, period="1T")
 
 
 #: Modelo 303 prints the shared envelope grammar in its thirteen-row spelling:
@@ -389,7 +389,7 @@ def _m303_filing_facts(
             rows=regimen_rows,
             regimen_snapshot=regimen_snapshot,
             dana_2024_eligibility=None,
-            authority=bundled_authority(),
+            authority=compiled_bundled_authority(),
         ),
     )
     return M303FilingFacts(

@@ -28,11 +28,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
@@ -107,7 +107,7 @@ def _work_unit(*, revision_id: str) -> WorkUnit:
 
 def test_prorrata_regularizacion_source_values_are_materialised_by_registry_engine() -> None:
     """The seam exposes manual volume seeds and computed values from one engine pass."""
-    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period="4T")
     assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 

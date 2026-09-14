@@ -33,9 +33,9 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.resources.bundled_data import bundled_path
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from ..lookup import lookup_rate
@@ -227,13 +227,14 @@ def test_liva_art_103_margin_is_registry_data_not_a_python_constant() -> None:
 
 def test_liva_art_103_pre_2015_ejercicio_is_refused_rather_than_guessed() -> None:
     """TEETH: the repealed redaction has no citable authority, so it is refused."""
-    from ...calculations.registry.authority import bundled_authority
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
     from ..prorrata_especial_parameters import (
         ProrrataEspecialMandatoryParameterError,
         resolve_prorrata_especial_mandatory_parameters,
     )
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     revision = authority.modelo("303").revisions["2025"]
     with pytest.raises(ProrrataEspecialMandatoryParameterError) as excinfo:
         resolve_prorrata_especial_mandatory_parameters(revision, modelo_id="303", ejercicio=2014)
@@ -363,7 +364,7 @@ def test_registry_tree_loader_recognises_all_rate_articles() -> None:
     that backs the IVA + IRPF rate substrate. If any article is missing
     from the catalogue, downstream modelo bindings can't reference it
     and validation fails — this test catches the regression upstream."""
-    catalogues = bundled_authority().catalogues
+    catalogues = compiled_bundled_authority().catalogues
     assert "ley-37-1992:art-90" in catalogues.legal
     assert "ley-37-1992:art-91" in catalogues.legal
     assert "ley-37-1992:art-161" in catalogues.legal

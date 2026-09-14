@@ -64,6 +64,7 @@ from .regime_contradiction import regime_contradiction_finding
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .invoice_draft_records import DraftDiscrepancyFinding, InvoiceDraft
 
 __all__ = ["DETERMINISTIC_CHECKS", "DeterministicCheck", "deterministic_check_names", "deterministic_findings"]
@@ -84,12 +85,16 @@ class DeterministicCheck(NamedTuple):
     """
 
     name: str
-    run: Callable[[InvoiceDraft, tuple[RegimeLegend, ...]], tuple[DraftDiscrepancyFinding, ...]]
+    run: Callable[
+        [InvoiceDraft, tuple[RegimeLegend, ...], PinnedAuthorityOperation],
+        tuple[DraftDiscrepancyFinding, ...],
+    ]
 
 
 def _closure_identities(
     draft: InvoiceDraft,
     _legends: tuple[RegimeLegend, ...],
+    _operation: PinnedAuthorityOperation,
 ) -> tuple[DraftDiscrepancyFinding, ...]:
     return closure_findings(draft)
 
@@ -97,6 +102,7 @@ def _closure_identities(
 def _regime_contradiction(
     draft: InvoiceDraft,
     legends: tuple[RegimeLegend, ...],
+    _operation: PinnedAuthorityOperation,
 ) -> tuple[DraftDiscrepancyFinding, ...]:
     """Adapt the single-or-nothing check onto the uniform check signature."""
     finding = regime_contradiction_finding(draft, legends=legends)
@@ -106,8 +112,9 @@ def _regime_contradiction(
 def _postal_code_shape(
     draft: InvoiceDraft,
     _legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[DraftDiscrepancyFinding, ...]:
-    return postal_shape_findings(draft)
+    return postal_shape_findings(draft, operation=operation)
 
 
 DETERMINISTIC_CHECKS: tuple[DeterministicCheck, ...] = (
@@ -141,6 +148,7 @@ def deterministic_findings(
     draft: InvoiceDraft,
     *,
     legends: tuple[RegimeLegend, ...],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[DraftDiscrepancyFinding, ...]:
     """Return every finding the draft's own contents raise, whatever read it.
 
@@ -156,6 +164,8 @@ def deterministic_findings(
             pinned authority operation. The same tuple is passed to the
             regime contradiction check rather than resolving an ambient
             vocabulary at check time.
+        operation: The caller-owned pinned authority operation used by checks
+            that read country and territory catalogues.
 
     Returns:
         The arithmetic findings in their established order, then the regime
@@ -164,5 +174,5 @@ def deterministic_findings(
     """
     findings: list[DraftDiscrepancyFinding] = []
     for check in DETERMINISTIC_CHECKS:
-        findings.extend(check.run(draft, legends))
+        findings.extend(check.run(draft, legends, operation))
     return tuple(findings)

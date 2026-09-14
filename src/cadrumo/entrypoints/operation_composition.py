@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import secrets
+from collections.abc import Callable
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
@@ -17,6 +19,7 @@ from ..adapters.persistence.operations.lease import OperationLeaseFilesystemRepo
 from ..adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ..adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
+from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ..application.auth.operation_definitions import (
     build_auth_operation_definitions,
     build_auth_operation_registrations,
@@ -45,6 +48,7 @@ from ..application.modelo.operation_definitions import (
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
 )
+from ..application.modelo.verification_repository_ports import VerificationRepositoryBundleFactory
 from ..application.modelo.work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from ..application.operations.composition import (
     OperationComposedServices,
@@ -67,6 +71,7 @@ from ..application.user_profile.operations import (
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
+from ..domain.calculations.registry.authority import bundled_indexed_authority
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
@@ -75,12 +80,16 @@ from .adapter_composition import (
     build_filing_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
+    build_verification_repository_bundle,
 )
 from .live_state_composition import compose_live_state, pull_filed_history_with_shared_composition
 
 _LEASE_DURATION = timedelta(minutes=10)
 _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
+
+if TYPE_CHECKING:
+    from ..domain.calculations.registry.authority import IndexedRegistryAuthority
 
 
 def _google_sheets_export_prepare_port(
@@ -152,6 +161,7 @@ def _google_sheets_export_prepare_port(
 
 def build_production_operation_registry(
     *,
+    authority_factory: Callable[[], IndexedRegistryAuthority] = bundled_indexed_authority,
     settings: Settings | None = None,
     auth_definitions: tuple[OperationDefinition, ...] | None = None,
     censal_definition: OperationDefinition | None = None,
@@ -162,21 +172,25 @@ def build_production_operation_registry(
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
-    operator_scope_ports: OperatorScopePorts,
+    verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
+    operator_scope_ports: OperatorScopePorts | None = None,
 ) -> OperationRegistry:
     """Build the sole immutable production inventory from the owner facades."""
     resolved_settings = settings or load_settings()
+    resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
+        authority_factory=authority_factory,
         certificate_secret_backend_factory=build_certificate_secret_backend,
-        operator_scope_ports=operator_scope_ports,
+        operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
         receipt_repository_factory=modelo_edit_receipt_repository_factory,
+        verification_repository_bundle_factory=verification_repository_bundle_factory,
     )
     resolved_google_export_definition = (
         google_export_definition
@@ -196,7 +210,7 @@ def build_production_operation_registry(
         else build_censal_operation_definition(
             certificate_secret_backend_factory=build_certificate_secret_backend,
             browser_session_factory=default_browser_session_factory,
-            operator_scope_ports=operator_scope_ports,
+            operator_scope_ports=resolved_operator_scope_ports,
             censal_fetch_port=build_censal_fetch_port(),
         )
     )
@@ -231,6 +245,7 @@ def build_production_operation_registry(
 
 def compose_operation_dependencies(
     *,
+    authority_factory: Callable[[], IndexedRegistryAuthority] = bundled_indexed_authority,
     settings: Settings | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
@@ -238,7 +253,8 @@ def compose_operation_dependencies(
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
     modelo_edit_receipt_repository_factory: ModeloEditReceiptRepositoryFactory = build_modelo_edit_receipt_repository,
-    operator_scope_ports: OperatorScopePorts,
+    verification_repository_bundle_factory: VerificationRepositoryBundleFactory = build_verification_repository_bundle,
+    operator_scope_ports: OperatorScopePorts | None = None,
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
@@ -248,8 +264,10 @@ def compose_operation_dependencies(
     post-login execution without retaining a stale profile repository.
     """
     resolved_settings = settings or load_settings()
+    resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     storage_root = effective_storage_root(settings=resolved_settings)
     registry = build_production_operation_registry(
+        authority_factory=authority_factory,
         settings=resolved_settings,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
@@ -257,7 +275,8 @@ def compose_operation_dependencies(
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
         modelo_edit_receipt_repository_factory=modelo_edit_receipt_repository_factory,
-        operator_scope_ports=operator_scope_ports,
+        verification_repository_bundle_factory=verification_repository_bundle_factory,
+        operator_scope_ports=resolved_operator_scope_ports,
     )
     journal = OperationJournalRepository(storage_root=storage_root)
     leases = OperationLeaseFilesystemRepository(storage_root=storage_root)

@@ -32,8 +32,8 @@ from functools import lru_cache
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ..profile_binding import inject_derived_minimo_descendientes_facts
@@ -53,7 +53,7 @@ _MADRID_FULL_DIVERGENCE_YEARS = (2022, 2023, 2024, 2025)
 
 @lru_cache
 def _snapshot(year: int) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _aggregate_key(year: int) -> str:

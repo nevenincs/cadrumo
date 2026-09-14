@@ -8,10 +8,10 @@ from pathlib import Path
 from typing import TypedDict
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import (
@@ -38,7 +38,7 @@ _Q4_2027 = Period.from_year_and_code(2027, "4T")
 
 
 def _revision_303():
-    return bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T").revision
 
 
 def _raw(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -504,7 +504,7 @@ def _m390_repercutido_values(transaction: Transaction) -> dict[str, Decimal]:
     # registry and rots on the next span split, and pinning a different year's
     # id would compute this period under another year's norms.
     revision = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "390",
             filing_year=annual.filing_year,

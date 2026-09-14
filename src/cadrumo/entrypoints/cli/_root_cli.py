@@ -59,7 +59,7 @@ def root_command(
     composed = ctx.with_resource(profile_adapter_composition())
     state["state_projection_read_ports"] = composed.state_projection_read_ports
     state["diagnostics_ports"] = composed.diagnostics_ports
-    state["certificate_secret_backend_factory"] = composed.certificate_secret_backend_factory
+    state["certificate_backend_factory"] = composed.certificate_secret_backend_factory
     state["operator_probe_ports"] = composed.operator_probe_ports
     state["operator_scope_ports"] = composed.operator_scope_ports
     state["bucket_storage"] = composed.bucket_storage

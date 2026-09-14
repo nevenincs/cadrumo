@@ -56,9 +56,10 @@ class NoDeadlineWindowsError(ScheduleComputationError):
     """
 
 
-class DeadlineValidationError(DeadlineError, ValueError):
+class DeadlineValidationError(DeadlineError):
     """Raised when deadline records violate state or shape invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Its canonical registered ancestry is :class:`DeadlineError`. Pydantic
+    validators translate this registered failure to ``ValueError`` at their
+    narrow boundary.
     """

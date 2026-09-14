@@ -13,8 +13,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..authority_artifact import ModeloRevisionComponentQuery
 from ..errors import RegistryValidationError
 from ..formula_runtime_ops import read_parameter, read_parameter_from_component
@@ -108,7 +108,7 @@ def test_read_parameter_raises_for_unknown_parameter_id() -> None:
 
 def test_read_parameter_from_component_uses_one_pinned_revision_query() -> None:
     """A component consumer addresses the selected revision without graph traversal."""
-    revision = bundled_authority().modelo("100").revisions["2025"]
+    revision = compiled_bundled_authority().modelo("100").revisions["2025"]
     assert isinstance(revision, ModeloRevision)
     reader = FakeAuthorityComponentReader({})
 

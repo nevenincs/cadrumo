@@ -9,6 +9,8 @@ from datetime import datetime as _datetime
 from decimal import Decimal as _Decimal
 from pathlib import Path as _Path
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from cadrumo.adapters.inbound.financial.providers.base import ParsedLedgerRow
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository as _BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import (
@@ -27,7 +29,6 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand as 
 from cadrumo.application.ledger.models import ManualLedgerTransactionResult as _ManualLedgerTransactionResult
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
@@ -194,7 +195,7 @@ def _persist_verified_revision_citing_transaction(
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
     registry_snapshot_ref = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=period.filing_year,

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -17,7 +18,6 @@ from ......core.casilla_id import CasillaId, validated_casilla_id, validated_cas
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.authority import bundled_authority
 from ......domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ......domain.calculations.registry.ids import BindingId, RelationId
 from ......domain.calculations.registry.relations import (
@@ -219,7 +219,7 @@ def _declaration_row(
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _modelo_130_snapshot():

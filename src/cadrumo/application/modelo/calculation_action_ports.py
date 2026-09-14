@@ -11,7 +11,7 @@ repository or resolve an implicit global store when a caller forgets a port.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -21,7 +21,6 @@ from ...domain.modelos.protocols import (
     ModeloRecordCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
@@ -31,12 +30,17 @@ from ..calculations.iva_compensation_history_ports import IvaCompensationHistory
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
+from ..live.borrador_100 import Borrador100SnapshotRepository
+from ..prorrata_register.ports import ProrrataRegisterServiceRepositoryProtocol
 from ..user_profile.profile_read_ports import ProfileReadPorts
 from .verification_repository_ports import (
     CalculationObservationRepositoryProtocol,
     IvaWalletDecisionRepositoryProtocol,
 )
 from .work_lifecycle_ports import WorkLifecyclePorts
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class CalculationTransactionRepositoryProtocol(TransactionCatalogueRepositoryProtocol, Protocol):
@@ -54,23 +58,16 @@ class CalculationTransactionRepositoryProtocol(TransactionCatalogueRepositoryPro
 class CalculationIvaWalletDecisionRepositoryProtocol(IvaWalletDecisionRepositoryProtocol, Protocol):
     """IVA-wallet read capability plus the calculation decision write."""
 
-    def save_decision(self, decision: object) -> None:
-        """Persist the selected reconciliation decision."""
-        ...
-
-
-class CalculationBorradorSnapshotRepositoryProtocol(Protocol):
-    """Read capability for a selected Modelo 100 draft snapshot."""
-
-    def load(self, snapshot_id: str) -> object:
-        """Return the addressed snapshot or raise its typed not-found error."""
-        ...
-
 
 class CalculationRevisionOverrideMigrationProtocol(Protocol):
     """Boundary capability for legacy relation-override migration."""
 
-    def migrate(self, repository: CalculationRevisionCatalogueRepositoryProtocol) -> None:
+    def migrate(
+        self,
+        repository: CalculationRevisionCatalogueRepositoryProtocol,
+        *,
+        operation: PinnedAuthorityOperation,
+    ) -> None:
         """Bring persisted calculation relation overrides to current keying."""
         ...
 
@@ -79,6 +76,7 @@ class CalculationRevisionOverrideMigrationProtocol(Protocol):
 class CalculationActionPorts:
     """Required persisted authorities for one Modelo calculation invocation."""
 
+    operation: PinnedAuthorityOperation
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
     work_lifecycle_ports: WorkLifecyclePorts
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
@@ -89,7 +87,7 @@ class CalculationActionPorts:
     invoice_repository: InvoiceCatalogueRepositoryProtocol
     invoice_catalogue_read_ports: InvoiceCatalogueReadPorts
     filing_repository: ModeloRecordCatalogueRepositoryProtocol
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol
     inventory_repository: InventoryLedgerRepositoryProtocol
     observation_repository: CalculationObservationRepositoryProtocol
@@ -97,7 +95,7 @@ class CalculationActionPorts:
     percepciones_observation_ports: PercepcionObservationPorts
     iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol
     iva_compensation_decision_repository: CalculationIvaWalletDecisionRepositoryProtocol
-    borrador_snapshot_repository: CalculationBorradorSnapshotRepositoryProtocol
+    borrador_snapshot_repository: Borrador100SnapshotRepository
     retencion_observation_ports: RetencionObservationPorts
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 
@@ -105,7 +103,7 @@ class CalculationActionPorts:
 class CalculationActionPortsFactory(Protocol):
     """Construct the calculation authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str) -> CalculationActionPorts:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> CalculationActionPorts:
         """Return the complete calculation bundle for ``bucket_id``."""
         ...
 
@@ -113,7 +111,6 @@ class CalculationActionPortsFactory(Protocol):
 __all__ = [
     "CalculationActionPorts",
     "CalculationActionPortsFactory",
-    "CalculationBorradorSnapshotRepositoryProtocol",
     "CalculationIvaWalletDecisionRepositoryProtocol",
     "CalculationRevisionOverrideMigrationProtocol",
     "CalculationTransactionRepositoryProtocol",

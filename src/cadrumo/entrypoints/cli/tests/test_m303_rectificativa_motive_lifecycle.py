@@ -8,6 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.justificante import JustificanteRepository
@@ -37,7 +38,6 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
@@ -86,7 +86,7 @@ _NOW = datetime(2026, 8, 14, 8, 0, 0, tzinfo=UTC)
 
 @lru_cache(maxsize=1)
 def _snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="1T")
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=2025, period="1T")
 
 
 @lru_cache(maxsize=1)
@@ -483,7 +483,7 @@ def test_motive_capability_is_selected_only_from_exact_registry_evidence(
     period: str,
     expected_revision_id: str | None,
 ) -> None:
-    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=filing_year, period=period)
     record_design = m303_rectificativa_record_design_from_snapshot(snapshot)
     if expected_revision_id is None:
         assert record_design is None

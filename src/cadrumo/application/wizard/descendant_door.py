@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
 
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileRecord
     from ..flows.review import ReviewProjection
 
@@ -127,7 +128,11 @@ def build_descendant_door_definition() -> FlowDefinition:
     )
 
 
-def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinition, FlowState]:
+def build_descendant_door(
+    record: UserProfileRecord | None,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[FlowDefinition, FlowState]:
     """Return the door definition and a MODIFY-mode state seeded from ``record``.
 
     Re-projects the record's ``renta_family.descendiente.{n}.*`` facts into the
@@ -145,24 +150,28 @@ def build_descendant_door(record: UserProfileRecord | None) -> tuple[FlowDefinit
             resumed flow state, or ``None`` for a childless record.
     """
     definition = build_descendant_door_definition()
-    seed = descendant_answers_from_record(record)
+    seed = descendant_answers_from_record(record, operation=operation)
     resume_state = resume_flow(definition, seed, mode=FlowMode.MODIFY)
     return definition, resume_state
 
 
-def load_active_descendant_record() -> UserProfileRecord:
+def load_active_descendant_record(*, operation: PinnedAuthorityOperation) -> UserProfileRecord:
     """Load the authoritative record that one descendant-door run will edit."""
     from ...core.bucket_pointer import require_active_bucket_id
     from ..user_profile.profile_record_repository import ProfileRecordRepository
 
     profile_id = require_active_bucket_id()
-    return ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    return ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=operation.profile_decode_context(),
+    ).load(profile_id)
 
 
 def persist_descendant_door_answers(
     answers: Mapping[str, str],
     *,
     baseline: UserProfileRecord,
+    operation: PinnedAuthorityOperation,
 ) -> UserProfileRecord:
     """Commit the door's submitted answers as the full descendant fact set.
 
@@ -183,8 +192,11 @@ def persist_descendant_door_answers(
     profile_id = require_active_bucket_id()
     if str(baseline.profile_id) != profile_id:
         raise ValueError("descendant door baseline does not belong to the active profile")
-    facts = tuple(UserProfileFact(path=path, value=value) for path, value in descendant_facts_from_answers(answers))
-    clearing = descendant_clearing_facts(baseline, answers)
+    facts = tuple(
+        UserProfileFact(path=path, value=value)
+        for path, value in descendant_facts_from_answers(answers, operation=operation)
+    )
+    clearing = descendant_clearing_facts(baseline, answers, operation=operation)
     return apply_profile_fact_changes(
         profile_id=profile_id,
         changes=(*facts, *clearing),
@@ -206,20 +218,25 @@ def run_descendant_door(
     which exercises the same production frontend and the same atomic profile
     writer without replacing either boundary with a test callback.
     """
+    from ...domain.calculations.registry.authority import bundled_indexed_authority
     from ..flows.line_frontend import LineFlowFrontend
 
-    baseline = load_active_descendant_record()
-    definition, resume_state = build_descendant_door(baseline)
-    state, projection = LineFlowFrontend(
-        definition,
-        input=input,
-        output=output,
-    ).run(
-        mode=FlowMode.MODIFY,
-        resume_state=resume_state,
-    )
-    persisted = persist_descendant_door_answers(state.answers, baseline=baseline)
-    return state, projection, persisted
+    # The operation spans loading, seeding, the interactive walk, and the
+    # compare-and-swap write.  No relationship or disability catalogue value
+    # can outlive the generation that admitted it.
+    with bundled_indexed_authority().operation() as operation:
+        baseline = load_active_descendant_record(operation=operation)
+        definition, resume_state = build_descendant_door(baseline, operation=operation)
+        state, projection = LineFlowFrontend(
+            definition,
+            input=input,
+            output=output,
+        ).run(
+            mode=FlowMode.MODIFY,
+            resume_state=resume_state,
+        )
+        persisted = persist_descendant_door_answers(state.answers, baseline=baseline, operation=operation)
+        return state, projection, persisted
 
 
 __all__ = [

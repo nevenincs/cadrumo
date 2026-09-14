@@ -57,10 +57,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
     ungrounded_ledger_renta_income_observations,
@@ -77,7 +77,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def modelo_130_revision():
     """Resolve the shipped Modelo 130 revision used by this runtime oracle."""
-    return bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
+    return compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision
 
 
 # The invoice, stated once from the document and the two cited rates.

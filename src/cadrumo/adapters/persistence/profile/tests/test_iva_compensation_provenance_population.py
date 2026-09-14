@@ -49,6 +49,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl
 
 from cadrumo.adapters.outbound.aeat.sede.schema import (
@@ -83,7 +84,6 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.modelos.calculation_revision import (
@@ -174,7 +174,7 @@ class _Population:
 
 def _registry_revision_id(*, filing_year: int, period: str) -> str:
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("303").value,
             filing_year=filing_year,
@@ -402,7 +402,7 @@ def _binding_prefill_census() -> _PathCensus:
             )
             continue
         projected = observation_from_iva_compensation_history(state)
-        snapshot = bundled_authority().snapshot(
+        snapshot = compiled_bundled_authority().snapshot(
             Modelo("303").value,
             filing_year=target_year,
             period=target_period,
@@ -453,7 +453,9 @@ def _carry_ingress_census() -> _PathCensus:
         reconstructed = period_state_from_303_envelope(payload)
         rows.append(reconstructed)
         partition = resolve_iva_compensation_annual_partition_binding_values(
-            bundled_authority().snapshot(Modelo("390").value, filing_year=period.filing_year, period="0A").revision,
+            compiled_bundled_authority()
+            .snapshot(Modelo("390").value, filing_year=period.filing_year, period="0A")
+            .revision,
             (payload,),
             filing_year=period.filing_year,
         )

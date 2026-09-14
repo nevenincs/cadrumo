@@ -28,8 +28,8 @@ refusing an empty one keeps the property under test rather than the fixture.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ..filed_data_capture import _filed_capture_unsupported_reason, _plan_filed_capture_queries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -49,7 +49,7 @@ def _modelos_declaring_no_read_surface() -> tuple[str, ...]:
     """
     derived = sorted(
         modelo_id
-        for modelo in bundled_authority().modelos
+        for modelo in compiled_bundled_authority().modelos
         if (reason := _filed_capture_unsupported_reason(modelo=(modelo_id := str(modelo.id)), year=2024)) is not None
         and "no revision" not in reason
     )

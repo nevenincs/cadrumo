@@ -72,7 +72,7 @@ from ._modelo_rendering import (
     verification_report_payload,
 )
 from .common import active_bucket_id_or_refuse, declared_tax_id, emit_envelope
-from .state_projection_support import calculation_action_ports_factory, filing_action_ports_factory
+from .state_projection_support import authority_operation, calculation_action_ports_factory, filing_action_ports_factory
 
 
 def _work_unit_id(raw: str) -> str:
@@ -150,9 +150,15 @@ def _import_record(
         from ...application.workflow.persistence import workflow_state_repository
 
         expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
-        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
+        calculation_ports = calculation_action_ports_factory(ctx)(
+            bucket_id=active_bucket_id_or_refuse(),
+            operation=authority_operation(ctx),
+        )
         work_unit = get_work_unit(work_unit_id, ports=calculation_ports.work_lifecycle_ports)
-        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=work_unit.bucket_id)
+        calculation_ports = calculation_action_ports_factory(ctx)(
+            bucket_id=work_unit.bucket_id,
+            operation=authority_operation(ctx),
+        )
         if file is not None:
             return import_external_filing_source(
                 ExternalFilingBaselineSource(
@@ -329,7 +335,10 @@ def _record_local_observation(
 ) -> ModeloLocalObservationResult:
     """Delegate the validated local observation to its application owner."""
     try:
-        calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=active_bucket_id_or_refuse())
+        calculation_ports = calculation_action_ports_factory(ctx)(
+            bucket_id=active_bucket_id_or_refuse(),
+            operation=authority_operation(ctx),
+        )
         return record_operator_local_observation(
             modelo=modelo,
             filing_year=year,

@@ -20,10 +20,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -54,7 +54,7 @@ _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
     revision_id = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "303",
             filing_year=2026,

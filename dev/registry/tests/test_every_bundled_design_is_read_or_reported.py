@@ -315,9 +315,8 @@ def _provenance_only_design_names() -> frozenset[str]:
     it. This is the same discipline the fixture-provenance gates follow: read the
     declaration, never hardcode a per-file exception.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-    sources = bundled_authority().catalogues.sources
+    sources = compiled_bundled_authority().catalogues.sources
     sources = getattr(sources, "entries", None) or sources
     if not hasattr(sources, "values"):
         sources = {entry.id: entry for entry in sources}
@@ -552,3 +551,6 @@ def test_every_provenance_only_design_still_refuses_and_is_a_promotion_candidate
         "they are layout authorities and set design_authority accordingly, rather than leaving "
         "them excluded from the worklist: " + ", ".join(promotable)
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

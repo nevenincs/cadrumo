@@ -5,8 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..verification_tolerance import verification_tolerance_or_exact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -20,7 +20,7 @@ def test_the_projection_uses_each_real_modelos_published_policy_or_exact_fallbac
     snapshots make a hardcoded tolerance or a permissive missing-policy fallback
     observably wrong.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     modelo_130 = authority.snapshot("130", filing_year=2026, period="1T")
     modelo_303 = authority.snapshot("303", filing_year=2025, period="1T")

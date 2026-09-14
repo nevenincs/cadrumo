@@ -8,10 +8,10 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.user_profile.registry_contract import profile_binding_selectors
@@ -94,7 +94,7 @@ _ROW_BINDINGS: Mapping[str, tuple[str, str]] = {
 
 
 def _snapshot_2024() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=2024, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A")
 
 
 def _full_profile() -> UserProfileRecord:

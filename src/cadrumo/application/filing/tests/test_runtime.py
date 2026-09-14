@@ -15,13 +15,13 @@ from collections.abc import Callable
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.tax_domain import TaxDomain
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import FormulaId
 from ....domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
@@ -48,14 +48,14 @@ _MISSING_INPUT_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MI
 def test_runtime_provider_exposes_no_application_layer_cache() -> None:
     source = inspect.getsource(build_runtime_schema_provider)
 
-    assert "bundled_authority()" in source
+    assert "compiled_bundled_authority()" in source
     for attribute in ("cache_clear", "cache_info", "__wrapped__"):
         assert not hasattr(build_runtime_schema_provider, attribute)
 
 
 def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: legal_refs} from the authoritative CasillaDefinition."""
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -65,7 +65,7 @@ def _source_casilla_refs() -> dict[CasillaId, tuple[str, ...]]:
 
 def _source_casilla_source_refs() -> dict[CasillaId, tuple[str, ...]]:
     """Return {casilla_id: source_refs} from the authoritative CasillaDefinition."""
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -105,7 +105,7 @@ def test_refs_survive_projection(
 
 def test_complete_constraints_survive_projection() -> None:
     """Filing schemas carry the registry's complete constraint contract verbatim."""
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -121,7 +121,7 @@ def test_complete_constraints_survive_projection() -> None:
 
 def test_subview_catalogue_ref_ids_survive_projection() -> None:
     """RegistryModeloSubview must carry the same catalogue refs as the source snapshot."""
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         _TEST_MODELO,
         filing_year=_TEST_YEAR,
         period=_TEST_PERIOD.registry_token,
@@ -440,7 +440,7 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
     filing grade must still REFUSE a filing-grade request, so admitting it here
     at its declared rung cannot be mistaken for a filing capability claim.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     expected: list[str] = []
     projected: list[str] = []
     offences: list[str] = []

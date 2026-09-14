@@ -28,3 +28,7 @@ class FakeAuthorityComponentReader:
             return self.components[query]
         except KeyError as exc:
             raise LookupError(f"authority component is unavailable for query {query!r}") from exc
+
+    def component_queries(self) -> tuple[AuthorityComponentQuery, ...]:
+        """Return the fake's deterministic component addresses."""
+        return tuple(self.components)

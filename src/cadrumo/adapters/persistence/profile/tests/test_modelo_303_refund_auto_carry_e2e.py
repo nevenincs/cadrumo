@@ -38,6 +38,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -62,7 +63,6 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -209,7 +209,7 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -298,7 +298,7 @@ def _next_period_carry_in(*, next_period: str = _NEXT_PERIOD) -> Decimal | None:
     scenarios pass ``_REDEME_NEXT_PERIOD`` (the monthly period following
     ``_REDEME_REFUND_PERIOD``).
     """
-    snapshot_next = bundled_authority().snapshot("303", filing_year=_YEAR, period=next_period)
+    snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=next_period)
     relation_values = resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),

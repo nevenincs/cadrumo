@@ -5,12 +5,12 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.modelo import Modelo
-from ..authority import bundled_authority
 from ..binding_temporal import TargetPeriodOffset
 from ..bindings_previous_filing import PreviousFilingProvider
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
@@ -30,11 +30,11 @@ _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA
 
 
 def _service() -> RegistryQueryService:
-    return RegistryQueryService(bundled_authority())
+    return RegistryQueryService(compiled_bundled_authority())
 
 
 def test_relation_prefill_bindings_preserve_real_registry_declaration_order() -> None:
-    snapshot = bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period="2P")
+    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period="2P")
 
     folds = relation_prefill_bindings_for_period(snapshot.revision, period="2P")
 
@@ -56,7 +56,7 @@ def test_relation_prefill_binding_carries_its_per_target_period_source_window(
     on the binding's own provider, so the window is asserted through the
     provider rather than through a relation identifier.
     """
-    snapshot = bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period=period)
+    snapshot = compiled_bundled_authority().snapshot(Modelo("202").value, filing_year=2025, period=period)
 
     providers = {
         binding.id: provider
@@ -100,7 +100,7 @@ def test_describe_lists_every_declared_revision_id() -> None:
     service = _service()
 
     described = service.describe_modelo_for_scope("303", filing_year=2026, period="1T")
-    expected = {str(item.id) for item in bundled_authority().modelo("303").revisions.values()}
+    expected = {str(item.id) for item in compiled_bundled_authority().modelo("303").revisions.values()}
 
     assert set(described.revision_ids) == expected
     # The resolved revision is always one of the listed ids.
@@ -320,7 +320,7 @@ def test_scoped_query_honours_the_as_of_validity_window() -> None:
     current view.
     """
     service = _service()
-    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
     within_window = snapshot.revision.valid_from
 
     # Baseline resolution and an as_of inside the window both resolve.
@@ -340,7 +340,7 @@ def _filing_year_covered_by(modelo: str, revision_id: str) -> int:
     authority rather than from the query service, so a parity assertion built on
     it cannot be satisfied by the code under test agreeing with itself.
     """
-    revision = bundled_authority().validate_modelo(modelo).revisions[revision_id]
+    revision = compiled_bundled_authority().validate_modelo(modelo).revisions[revision_id]
     return next(
         year
         for year in range(revision.valid_from.year, revision.valid_from.year + 20)
@@ -466,7 +466,7 @@ def test_resolved_query_context_is_frozen_and_rejects_unknown_fields() -> None:
     field on it, one report could alter what a later report sees, which is the
     failure the shared-context design has to exclude.
     """
-    definition = bundled_authority().validate_modelo("303")
+    definition = compiled_bundled_authority().validate_modelo("303")
     revision = definition.revisions[_service().describe_modelo("303", period="1T").revision]
 
     context = ResolvedRegistryQueryContext(definition=definition, revision=revision)

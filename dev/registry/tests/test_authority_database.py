@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing
 from datetime import date
 from pathlib import Path
@@ -37,9 +38,20 @@ from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.profile_schema import capture_profile_schema
+from ..pipeline import authority_publication
 from ..pipeline.authority_publication import install_validated_authority_database, promote_accepted_authority_database
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def test_admission_refuses_a_complete_dependency_cycle() -> None:
+    rows = [
+        ("modelo_revision", "100\x1frev", "governed_fact", "fact-a"),
+        ("governed_fact", "fact-a", "modelo_revision", "100\x1frev"),
+    ]
+
+    with pytest.raises(AuthorityStoreCorruptionError, match="dependency cycle"):
+        SQLiteAuthorityReader._require_acyclic_dependencies(rows)
 
 
 def _artifact() -> AuthorityArtifact:
@@ -199,6 +211,20 @@ def test_failed_currentness_check_preserves_the_previous_descriptor(tmp_path: Pa
         install_validated_authority_database(_artifact(), destination=tmp_path, require_current=refuse)
 
     assert descriptor_path.read_bytes() == b"previous descriptor bytes"
+    assert list(tmp_path.glob("authority-*.sqlite3")) == []
+
+
+def test_failed_database_flush_removes_the_partial_install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def refuse_flush(_file_descriptor: int) -> None:
+        raise OSError("simulated flush failure")
+
+    monkeypatch.setattr(authority_publication.os, "fsync", refuse_flush)
+
+    with pytest.raises(OSError, match="simulated flush failure"):
+        install_validated_authority_database(_artifact(), destination=tmp_path, require_current=lambda: None)
+
+    assert not (tmp_path / "authority.current.json").exists()
+    assert list(tmp_path.glob("authority-*.sqlite3")) == []
 
 
 def test_content_addressed_install_refuses_an_existing_collision(tmp_path: Path) -> None:
@@ -228,3 +254,32 @@ def test_promotion_copies_the_exact_accepted_bytes_without_recompiling(tmp_path:
 
     assert (destination / "authority.current.json").read_bytes() == candidate_descriptor.read_bytes()
     assert (destination / descriptor.database).read_bytes() == (candidate / descriptor.database).read_bytes()
+
+
+def test_public_installers_serialize_different_generations(tmp_path: Path) -> None:
+    first = _artifact()
+    second_build = AuthorityBuildIdentity.from_inputs("3" * 64, "4" * 64)
+    second = first.__class__(
+        modelos=first.modelos,
+        catalogues=first.catalogues,
+        identity_digest=second_build.identity_digest,
+        build_identity=second_build,
+        profile_schema=first.profile_schema,
+        evidence=first.evidence,
+    )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        descriptors = tuple(
+            executor.map(
+                lambda artifact: install_validated_authority_database(
+                    artifact,
+                    destination=tmp_path,
+                    require_current=lambda: None,
+                ),
+                (first, second),
+            )
+        )
+
+    selected = AuthorityDescriptor.read(tmp_path / "authority.current.json")
+    assert selected in descriptors
+    assert (tmp_path / selected.database).is_file()

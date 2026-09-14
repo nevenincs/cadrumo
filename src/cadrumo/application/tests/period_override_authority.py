@@ -15,7 +15,9 @@ from __future__ import annotations
 
 from typing import Final
 
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from dev.registry.compiler.authority import compiled_bundled_authority
+
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.schema_references import PeriodOverride, PeriodSelector
 
 OVERRIDE_MODELO: Final = "216"
@@ -48,7 +50,7 @@ def authority_with_period_override(
     authored one would be. The revision's declared years and flat tuple are
     carried over unchanged.
     """
-    base = bundled_authority()
+    base = compiled_bundled_authority()
     modelo = base.modelo(modelo_id)
     revision = modelo.revisions[revision_id]
     declared = revision.period_selector

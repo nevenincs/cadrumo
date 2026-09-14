@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests._export_test_support import (
     _M130_RESULT_CASILLA,
@@ -23,7 +24,6 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
 from cadrumo.core.refund_election import RefundElection
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.deadlines.models import (
@@ -48,7 +48,7 @@ _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
 def _result_disposition_work_unit(*, modelo: str, period: Period) -> WorkUnit:
-    snapshot = bundled_authority().snapshot(
+    snapshot = compiled_bundled_authority().snapshot(
         modelo,
         filing_year=period.filing_year,
         period=period.registry_token,

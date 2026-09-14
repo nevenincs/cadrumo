@@ -9,12 +9,12 @@ from functools import cache
 from pathlib import Path
 from typing import Literal
 
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.contribuyente.entity_type import EntityType
@@ -88,7 +88,9 @@ def observed_revision_id() -> str:
     that only wanted the shared taxpayer persona.
     """
     return str(
-        bundled_authority().inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token).revision_id,
+        compiled_bundled_authority()
+        .inspect_revision("303", filing_year=2025, period=PERIOD_2025_1T.registry_token)
+        .revision_id,
     )
 
 

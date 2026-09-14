@@ -19,6 +19,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -47,7 +48,6 @@ from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.secure_object_write import SecureObjectWrite
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.iva_compensation.filed_derivation import M303CompensationBasis
 from cadrumo.domain.iva_compensation.reconciliation import (
@@ -71,7 +71,7 @@ _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
 
 @cache
 def _revision_id(modelo: str, filing_year: int, period: str) -> str:
-    return bundled_authority().admitted_revision_id(modelo, filing_year=filing_year, period=period)
+    return compiled_bundled_authority().admitted_revision_id(modelo, filing_year=filing_year, period=period)
 
 
 def _populated_observation() -> RegistryModeloObservation:

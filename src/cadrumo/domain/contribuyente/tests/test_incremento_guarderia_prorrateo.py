@@ -21,8 +21,8 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
 from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
@@ -44,7 +44,7 @@ _CAP_ANUAL = Decimal("1000")
 @cache
 def _context(filing_year: int) -> FamilyFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
-    return FamilyFactResolutionContext(bundled_authority(), coordinate, coordinate)
+    return FamilyFactResolutionContext(compiled_bundled_authority(), coordinate, coordinate)
 
 
 def _child(

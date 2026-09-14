@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -34,7 +35,6 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
@@ -487,7 +487,7 @@ def test_grounding_index_lookup_stays_bounded_across_repeated_readiness_checks(t
 
     from cadrumo.domain.calculations.registry.profile_grounding import build_profile_grounding_index
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
 
     first_start = time.perf_counter()
     first_index = build_profile_grounding_index(authority)

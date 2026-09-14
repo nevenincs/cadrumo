@@ -9,9 +9,9 @@ committed M130 revision's real snapshot build passes it.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
-from ...calculations.registry.authority import bundled_authority
 from ..retenciones_routing_integrity import (
     check_m130_retenciones_output_casilla,
     resolve_m130_retenciones_route,
@@ -96,7 +96,7 @@ def test_modelo_130_revisions_declare_the_output_casilla() -> None:
     against.
     """
     output_casilla = resolve_m130_retenciones_route().output_casilla
-    modelo_130 = bundled_authority().modelo("130")
+    modelo_130 = compiled_bundled_authority().modelo("130")
 
     for revision_id, revision in modelo_130.revisions.items():
         casilla_ids = {casilla.id for casilla in revision.casillas}
@@ -112,7 +112,7 @@ def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:
     ``RegistryValidationError`` at snapshot build, not as a runtime redirect
     to a non-existent casilla.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     for period in ("1T", "2T", "3T", "4T"):
         snapshot = authority.snapshot(Modelo("130"), filing_year=2026, period=period)
         assert snapshot.revision.id == "2019-y-siguientes"

@@ -23,10 +23,10 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -40,7 +40,7 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:

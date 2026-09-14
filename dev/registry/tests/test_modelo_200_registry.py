@@ -18,12 +18,12 @@ from cadrumo.core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
 )
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -94,7 +94,7 @@ def _base_inputs(
 
 
 def _load_modelo_200():
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     return authority.modelo("200"), authority.catalogues
 
 
@@ -173,7 +173,7 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2024"]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
-    assert bundled_authority().legal_evidence_text(_M200_FORM_ORDER_REF)
+    assert compiled_bundled_authority().legal_evidence_text(_M200_FORM_ORDER_REF)
 
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs

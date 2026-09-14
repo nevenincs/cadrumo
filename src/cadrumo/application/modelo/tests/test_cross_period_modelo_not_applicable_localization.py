@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import LegalRefId, SourceRefId
 from ...calculations.cross_period_models import (
     CrossPeriodCleanStateVerdict,
@@ -24,7 +24,7 @@ _SOURCE_REF: SourceRefId = "aeat-modelo-303-procedure"
 
 def _cross_period_dependency_legal_refs() -> tuple[LegalRefId, ...]:
     """Return the published LGT anchors for declarations and self-assessments."""
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     refs = tuple(
         dict.fromkeys(
             reference_id

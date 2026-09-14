@@ -12,7 +12,7 @@ from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -22,6 +22,9 @@ from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from .snapshot_base import SnapshotRepository
+
+if TYPE_CHECKING:
+    from ..auth.session_types import AeatSession
 
 
 class ExpedientesDeclaration(BaseModel):
@@ -65,7 +68,7 @@ class ExpedientesDeclarationReaderProtocol(Protocol):
 
     def open_register(
         self,
-        session: object,
+        session: AeatSession,
         *,
         settings: Settings,
     ) -> AbstractAsyncContextManager[ExpedientesRegisterProtocol]:

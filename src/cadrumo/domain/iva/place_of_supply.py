@@ -48,7 +48,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -184,7 +184,7 @@ def _validate_grounded_row(rule: IvaPlaceOfSupplyRule) -> None:
 
 def load_place_of_supply_table(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[str, IvaPlaceOfSupplyRule]:
     """Adapt the published place-of-supply grounding table.
 
@@ -192,16 +192,17 @@ def load_place_of_supply_table(
         Rules keyed by rule id, each carrying the span it is asserted over.
 
     """
-    if operation is None:
-        raise IvaCatalogueError("place-of-supply table requires an explicit pinned authority operation")
     from ..calculations.registry.runtime_catalogues import PublishedIvaPlaceOfSupplyRule
 
     loaded = operation.runtime_catalogue("iva_place_of_supply")
-    if not isinstance(loaded, Mapping) or not all(
-        isinstance(value, PublishedIvaPlaceOfSupplyRule) for value in loaded.values()
+    if not isinstance(loaded, Mapping):
+        raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
+    published_values = cast(Mapping[str, PublishedIvaPlaceOfSupplyRule], loaded)
+    if not all(
+        isinstance(rule_id, str) and isinstance(published, PublishedIvaPlaceOfSupplyRule)
+        for rule_id, published in published_values.items()
     ):
         raise IvaCatalogueError("indexed authority place-of-supply component has an invalid shape")
-    published_values = loaded.items()
 
     return MappingProxyType(
         {
@@ -219,12 +220,12 @@ def load_place_of_supply_table(
                     "valid_to": published.valid_to,
                 }
             )
-            for rule_id, published in published_values
+            for rule_id, published in published_values.items()
         }
     )
 
 
-def place_of_supply_years(*, operation: PinnedAuthorityOperation | None = None) -> frozenset[int]:
+def place_of_supply_years(*, operation: PinnedAuthorityOperation) -> frozenset[int]:
     """Return every filing year the table can be resolved for.
 
     A year counts only when EVERY grounded rule is asserted over it. A rule whose
@@ -246,7 +247,7 @@ def place_of_supply_rule(  # noqa: D417
     rule_id: str,
     *,
     on: date,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     projected_year: int | None = None,
 ) -> IvaPlaceOfSupplyRule:
     """Return the grounding for ``rule_id`` in the filing year of ``on``.

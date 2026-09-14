@@ -5,8 +5,8 @@ from __future__ import annotations
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import bundled_authority
 from ..ids import BindingId
 from ..schema import BindingDefinition
 
@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 @cache
 def _modelo_100_bindings() -> dict[BindingId, BindingDefinition]:
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")
     return {binding.id: binding for binding in snapshot.revision.bindings}
 

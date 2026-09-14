@@ -27,6 +27,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.tests.advisory_profile_bucket_fixture import (
     advisory_profile_bucket,  # noqa: F401
@@ -37,7 +38,6 @@ from cadrumo.application.modelo.calculation_diagnostics import collect_bucket_ag
 from cadrumo.application.modelo.tests.advisory_diagnostic_assertions import operator_text as _operator_text
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -62,7 +62,7 @@ def bucket_id() -> str:
 
 
 def _revision() -> ModeloRevision:
-    return bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
+    return compiled_bundled_authority().snapshot("100", filing_year=_FILING_YEAR, period=_ANNUAL_PERIOD).revision
 
 
 def _write(*descendants: DescendantInfo) -> None:

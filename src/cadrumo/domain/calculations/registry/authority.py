@@ -26,9 +26,9 @@ from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ....core.tax_domain import TaxDomain
 from ...user_profile.schema import ProfileSchemaDefinition
 from .authority_artifact import (
-    AuthorityArtifact,
     AuthorityComponentKind,
     AuthorityComponentQuery,
+    AuthorityComponentReader,
     AuthorityEvidenceProjection,
     AuthorityGenerationPin,
     EvidenceComponentQuery,
@@ -44,7 +44,6 @@ from .authority_artifact import (
     ReferenceComponentQuery,
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
-    read_shared_authority_artifact,
 )
 from .authority_store import SQLiteAuthorityReader
 from .errors import RegistrySnapshotError, RegistryValidationError
@@ -68,6 +67,7 @@ from .schema import (
 )
 from .schema_base import DateAxis
 from .schema_deadlines import DeadlineWindowDefinition
+from .schema_exports import ExportLayoutDefinition
 from .schema_references import LegalReference, SourceReference
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
@@ -199,6 +199,16 @@ class ValidatedRegistryAuthority:
         if self._profile_schema is None:
             raise RegistryValidationError("published authority generation contains no profile schema component")
         return self._profile_schema
+
+    def profile_create_context(self) -> ProfileCreateContext:
+        """Bind development profile creation to this immutable compiled generation."""
+        generation = AuthorityGenerationPin(self._identity_digest, self._identity_digest)
+        return ProfileCreateContext(self.profile_schema(), generation)
+
+    def profile_decode_context(self) -> ProfileDecodeContext:
+        """Bind development secure decode to this immutable compiled generation."""
+        generation = AuthorityGenerationPin(self._identity_digest, self._identity_digest)
+        return ProfileDecodeContext(self.profile_schema(), generation)
 
     def _bind_published_artifact_incarnation(self) -> None:
         """Bind a fresh artifact graph to this process without a mutable root slot."""
@@ -615,7 +625,7 @@ def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tup
 class PinnedAuthorityOperation:
     """Typed component access confined to one leased authority generation."""
 
-    _reader: SQLiteAuthorityReader
+    _reader: AuthorityComponentReader
     generation: AuthorityGenerationPin
 
     def pin(self) -> AuthorityGenerationPin:
@@ -651,12 +661,25 @@ class PinnedAuthorityOperation:
         return ProfileDecodeContext(self.profile_schema(), self.generation)
 
     def revision(self, modelo_id: str | Modelo, revision_id: str) -> ModeloRevision:
-        """Load one complete typed revision by canonical identity."""
+        """Load one typed base revision without separately addressed export layouts."""
         normalized = Modelo(modelo_id).value
         value = self._reader.load(ModeloRevisionComponentQuery(normalized, revision_id), pin=self.generation)
         if not isinstance(value, ModeloRevision):
             raise RegistryValidationError("modelo revision component decoded to an unexpected type")
         return value
+
+    def revision_with_export_layouts(self, modelo_id: str | Modelo, revision_id: str) -> ModeloRevision:
+        """Compose one revision with only its separately addressed export layouts."""
+        normalized = Modelo(modelo_id).value
+        revision = self.revision(normalized, revision_id)
+        layouts = tuple(
+            self.export_layout(normalized, revision_id, query.layout_id)
+            for query in self._reader.component_queries()
+            if isinstance(query, ExportLayoutComponentQuery)
+            and query.modelo_id == normalized
+            and query.revision_id == revision_id
+        )
+        return revision.model_copy(update={"export_layouts": layouts})
 
     def modelo_directory(self, modelo_id: str | Modelo) -> ModeloRevisionDirectory:
         """Load the small selector-complete directory for one modelo."""
@@ -722,7 +745,7 @@ class PinnedAuthorityOperation:
             on=on,
             revision_id=revision_id,
         )
-        revision = self.revision(normalized, str(selected.id))
+        revision = self.revision_with_export_layouts(normalized, str(selected.id))
         modelo = directory.modelo.materialize(revision)
         legal_ids, source_ids = collect_snapshot_ref_ids(modelo, revision)
         globals_value = self.load(SnapshotGlobalsComponentQuery(), pin=self.generation)
@@ -778,12 +801,20 @@ class PinnedAuthorityOperation:
             raise RegistryValidationError("source reference component decoded to an unexpected type")
         return value
 
-    def export_layout(self, modelo_id: str | Modelo, revision_id: str, layout_id: str) -> object:
+    def export_layout(
+        self,
+        modelo_id: str | Modelo,
+        revision_id: str,
+        layout_id: str,
+    ) -> ExportLayoutDefinition:
         """Load one separately addressable export layout."""
-        return self._reader.load(
+        value = self._reader.load(
             ExportLayoutComponentQuery(Modelo(modelo_id).value, revision_id, layout_id),
             pin=self.generation,
         )
+        if not isinstance(value, ExportLayoutDefinition):
+            raise RegistryValidationError("export layout component decoded to an unexpected type")
+        return value
 
     def legal_evidence(self, legal_reference_id: str) -> PublishedLegalEvidence:
         """Load one publisher-captured legal evidence projection."""
@@ -861,86 +892,20 @@ class IndexedRegistryAuthority:
             self._retired_readers = still_leased
 
 
-_BUNDLED_AUTHORITY_ARTIFACT_PARTS = ("registry", "authority", "authority.json")
 _BUNDLED_AUTHORITY_DESCRIPTOR_PARTS = ("registry", "authority", "authority.current.json")
-_published_authorities_lock = RLock()
-_published_authorities: dict[str, tuple[AuthorityArtifact, ValidatedRegistryAuthority]] = {}
+_bundled_indexed_authority_lock = RLock()
 _bundled_indexed_authority: IndexedRegistryAuthority | None = None
-
-
-def bundled_authority() -> ValidatedRegistryAuthority:
-    """Return the development-only eager comparison authority.
-
-    Release packages exclude this JSON input and production consumers must use
-    :func:`bundled_indexed_authority`.  The eager path remains only for compiler
-    validation, repository fixtures, and the paired release benchmark.
-    """
-    return published_authority(bundled_authority_artifact_path())
 
 
 def bundled_indexed_authority() -> IndexedRegistryAuthority:
     """Return the process-shared descriptor-following indexed authority owner."""
     global _bundled_indexed_authority
-    with _published_authorities_lock:
+    with _bundled_indexed_authority_lock:
         if _bundled_indexed_authority is None:
             _bundled_indexed_authority = IndexedRegistryAuthority(bundled_authority_descriptor_path())
         return _bundled_indexed_authority
 
 
-def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
-    """Return a shared eager authority for development validation and comparison.
-
-    Publication validates authoring inputs before producing the comparison
-    artifact. A missing, corrupt, or unsupported-version artifact is refused;
-    this helper is not an installed-product fallback for the indexed authority.
-
-    The verified model graph and its authority-private snapshot cache are
-    shared for one artifact file identity.  A republished artifact is detected
-    by the artifact reader and receives a fresh authority, so no filing-layer
-    cache can outlive the semantic authority inputs that selected a snapshot.
-    """
-    key = str(artifact_path.resolve())
-    with _published_authorities_lock:
-        artifact = read_shared_authority_artifact(artifact_path)
-        cached = _published_authorities.get(key)
-        if cached is not None and cached[0] is artifact:
-            return cached[1]
-        authority = _authority_from_published_artifact(artifact, artifact_path=artifact_path)
-        if len(_published_authorities) >= 32:
-            _published_authorities.pop(next(iter(_published_authorities)))
-        _published_authorities[key] = (artifact, authority)
-        return authority
-
-
-def bundled_authority_artifact_path() -> Path:
-    """Resolve the one package resource that constitutes runtime authority.
-
-    Development publication writes here and its currency check reads here, so
-    the product and its tooling cannot disagree about where the artifact lives.
-    """
-    return _bundled_path(*_BUNDLED_AUTHORITY_ARTIFACT_PARTS)
-
-
 def bundled_authority_descriptor_path() -> Path:
     """Return the installed selector for the content-addressed SQLite generation."""
     return _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
-
-
-def _authority_from_published_artifact(
-    artifact: AuthorityArtifact,
-    *,
-    artifact_path: Path,
-) -> ValidatedRegistryAuthority:
-    """Build an already-validated runtime authority without authoring inputs.
-
-    The published artifact is the validation receipt. The marked-valid state
-    ensures no source evidence, compiler, repair, or conformance path is
-    reached by a product authority.
-    """
-    return ValidatedRegistryAuthority.from_validated_components(
-        modelos=artifact.modelos,
-        catalogues=artifact.catalogues,
-        identity_digest=artifact.identity_digest,
-        evidence=artifact.evidence,
-        profile_schema=artifact.profile_schema,
-    )

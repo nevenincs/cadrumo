@@ -48,11 +48,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
@@ -121,7 +121,7 @@ def _calculate_193(
     retencion_observations: tuple[RetencionObservation, ...],
 ):
     """Run the REAL 193 annual calculation from relations + the per-perceptor retención store."""
-    snapshot = bundled_authority().snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
+    snapshot = compiled_bundled_authority().snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
     aggregation = aggregate_retenciones_193(
         retencion_observations,
@@ -233,7 +233,10 @@ def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
     default was a hardcoded cent that would have masked exactly this gap.
     """
     published = (
-        bundled_authority().snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A").verification_policy().tolerance
+        compiled_bundled_authority()
+        .snapshot(_MODELO_193, filing_year=_FILING_YEAR, period="0A")
+        .verification_policy()
+        .tolerance
     )
     assert published == Decimal("0"), "test precondition: modelo 193 2025 must publish exact equality"
 

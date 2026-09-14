@@ -9,7 +9,6 @@ import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     format_noncanonical_casilla_reference,
@@ -41,12 +40,14 @@ _M303_PREVIOUS_COMPENSATION_BINDING = "modelo-303-compensacion-pendiente-anterio
 
 @pytest.fixture(scope="module")
 def _m303_2025_1t_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("303", filing_year=2025, period="1T")
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
 
 
 @pytest.fixture(scope="module")
 def _m200_2024_snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION)
+    return compiled_bundled_authority().snapshot(
+        "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.CALCULATION
+    )
 
 
 def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_snapshot: RegistrySnapshot) -> None:
@@ -119,3 +120,6 @@ def test_noncanonical_reference_targets_expose_ambiguous_reused_printed_number(
         f"{ecpn_casilla.number!r} is ambiguous; candidate casilla.id values: "
         f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

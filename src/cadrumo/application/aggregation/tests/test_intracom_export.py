@@ -30,9 +30,9 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ....domain.iva.schema import EUMemberState, IvaCategory
@@ -59,7 +59,7 @@ _CASILLA_BASE_BINDING: dict[CasillaId, BindingId] = {
 
 @cache
 def _modelo_303_revision():
-    return bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision
 
 
 def _casilla_base(aggregation: IvaLedgerAggregation, casilla_id: CasillaId) -> Decimal:

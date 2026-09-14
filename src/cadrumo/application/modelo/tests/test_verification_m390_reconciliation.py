@@ -7,11 +7,11 @@ from decimal import Decimal
 from functools import lru_cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo.tests.verification_substance_fixtures import workflow_profile
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ..verification_predicates import evaluate_verification_predicates
@@ -100,7 +100,7 @@ def _predicate(predicate_id: str, expression: str) -> VerificationPredicateDefin
     # helper died on a KeyError before evaluating a predicate. These cases
     # assert the shipped definition and carry no ejercicio of their own, so the
     # latest window is the honest target and a future revision moves it along.
-    modelo = bundled_authority().validate_modelo("390")
+    modelo = compiled_bundled_authority().validate_modelo("390")
     revision = max(modelo.revisions.values(), key=lambda item: item.valid_from)
     predicate = next(
         (item for item in revision.verification_predicates if item.predicate_id == predicate_id),

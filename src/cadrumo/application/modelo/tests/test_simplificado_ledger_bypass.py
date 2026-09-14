@@ -26,12 +26,12 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.application.modelo import _calculation_preparation
 from cadrumo.application.modelo._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
@@ -196,7 +196,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     _set_iva_regime(monkeypatch, IVARegime.SIMPLIFICADO)
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
     # Must not raise for SIMPLIFICADO even with a blocking transaction.
     _raise_if_ledger_preflight_blocks_calculation(
@@ -219,7 +219,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     _set_iva_regime(monkeypatch, IVARegime.GENERAL)
     tx_repo = _seed_blocking_transaction(bucket_id)
     work_unit = _build_work_unit(bucket_id)
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T")
 
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
         _raise_if_ledger_preflight_blocks_calculation(

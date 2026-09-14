@@ -54,6 +54,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -69,7 +70,6 @@ from cadrumo.application.foreign_asset_thresholds import foreign_asset_declarati
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -572,7 +572,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
         report = resolve_bindings_from_local_store(
             snapshot_n1,
             repository=repo,
@@ -627,7 +627,7 @@ def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path)
     primary calculation input.
     """
     prior_observation = _year_n_observation_with_explicit_inmuebles_zero()
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
     expected_bindings = {
         _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
         _VALORES_BASELINE_BINDING: _VALORES_N,
@@ -697,7 +697,7 @@ def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path
                 stamped_revision_id=revision_id_for_observation(obs_n),
             )
         )
-        snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+        snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
 
         with pytest.raises(RegistryValidationError, match="inmuebles\\.valoracion"):
             resolve_bindings_from_local_store(

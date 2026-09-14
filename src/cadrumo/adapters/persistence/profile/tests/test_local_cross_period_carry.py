@@ -36,6 +36,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -71,7 +72,6 @@ from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconcilia
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.iva_wallet_carry_targets import (
     MODELO_303_IVA_COMPENSATION_BINDING_ID,
@@ -527,7 +527,7 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
     context = CalculationSourceContext(
         bucket_id=work_unit_303.bucket_id,
         modelo="303",
@@ -593,7 +593,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
     )
     _persist_prior_303(CalculationObservationRepository())
 
-    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="2T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=2026, period="2T")
     resolution = resolve_bucket_source_mesh(
         snapshot,
         work_unit_303,
@@ -611,7 +611,7 @@ def test_source_mesh_excludes_303_iva_compensation_relation_binding(repos: _Repo
 def test_source_resolution_keeps_reused_wallet_binding_outside_m303_coordinate() -> None:
     """The wallet carve-out is scoped to the exact M303 revision coordinate."""
 
-    snapshot = bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
     reused_binding_id = MODELO_303_IVA_COMPENSATION_BINDING_ID
     assert (
         iva_wallet_owned_binding_ids_for_revision(

@@ -31,13 +31,17 @@ from pathlib import Path, PurePosixPath
 from typing import Any
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifactError
+from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityComponentKind,
+    GovernedFactComponentQuery,
+)
+from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError, SQLiteAuthorityReader
 from dev._paths import REPO_ROOT
 from dev.registry.analysis.governed_literal_discovery import (
     GovernedLiteralCandidate,
     discover_governed_literal_candidates,
 )
-from dev.registry.authority_json import read_authority_artifact
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 SOURCE_ROOT = (REPO_ROOT / "src" / "cadrumo").resolve()
@@ -47,7 +51,7 @@ DEFAULT_MANIFEST = CAMPAIGN_DIR / "fact_relocation_signal_manifest.json"
 DEFAULT_ENRICHMENT = CAMPAIGN_DIR / "signal-symbol-enrichment.json"
 DEFAULT_TODO_BASELINE = CAMPAIGN_DIR / "fact_relocation_todo_baseline.json"
 DEFAULT_CONSUMER_REQUIREMENTS = CAMPAIGN_DIR / "consumer_fact_requirements.json"
-BUNDLED_AUTHORITY_ARTIFACT = SOURCE_ROOT / "_data" / "registry" / "authority" / "authority.json"
+BUNDLED_AUTHORITY_DESCRIPTOR = bundled_authority_descriptor_path()
 SCHEMA_VERSION = 1
 CONTRACT_VERSION = 2
 ACTIONABLE_STATUS = "open"
@@ -2065,7 +2069,7 @@ def _registry_mapping_candidates(mapping_fact_id: str, key: str) -> tuple[str, .
     if cache_key in _MAPPING_CANDIDATE_CACHE:
         return _MAPPING_CANDIDATE_CACHE[cache_key]
     try:
-        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+        artifact_payload, artifact_status, _metadata = _load_indexed_fact_authority(BUNDLED_AUTHORITY_DESCRIPTOR)
         compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
     except (NameError, OSError, UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError):
         compiled = {}
@@ -3470,8 +3474,11 @@ def _canonical_fact_wire_digest(fact: Any) -> str:
     return sha256_hex(canonical_json_bytes(normalized))
 
 
-def _authored_bundled_payload_staleness(artifact_status: str) -> dict[str, Any]:
-    """Compare shared authored facts with the typed bundled authority payload."""
+def _authored_indexed_payload_staleness(
+    artifact_status: str,
+    indexed_facts: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Compare shared authored facts with the typed indexed authority payload."""
     result: dict[str, Any] = {
         "status": "ok",
         "shared_fact_count": 0,
@@ -3491,13 +3498,11 @@ def _authored_bundled_payload_staleness(artifact_status: str) -> dict[str, Any]:
         )
 
         authored_catalogue = compile_authored_fact_catalogue(AUTHORED_DATA_ROOT / "registry" / "aeat")
-        bundled_artifact = read_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
         authored_facts = authored_catalogue.facts
-        bundled_facts = bundled_artifact.catalogues.facts.facts
-        shared_ids = sorted(set(authored_facts) & set(bundled_facts))
+        shared_ids = sorted(set(authored_facts) & set(indexed_facts))
         provider_only_ids = {
             fact_id
-            for fact_id, fact in bundled_facts.items()
+            for fact_id, fact in indexed_facts.items()
             if (
                 fact_id not in authored_facts
                 and fact.provider_id is not None
@@ -3510,7 +3515,7 @@ def _authored_bundled_payload_staleness(artifact_status: str) -> dict[str, Any]:
         stale: list[dict[str, Any]] = []
         for fact_id in shared_ids:
             authored_digest = _canonical_fact_wire_digest(authored_facts[fact_id])
-            bundled_digest = _canonical_fact_wire_digest(bundled_facts[fact_id])
+            bundled_digest = _canonical_fact_wire_digest(indexed_facts[fact_id])
             result["compared_fact_count"] += 1
             if authored_digest == bundled_digest:
                 continue
@@ -3566,7 +3571,7 @@ def _consumer_fact_scan(
     if source_paths is None:
         source_paths = list((universe_scan or {}).get("paths", []))
     if authority_probe is None:
-        artifact_payload, artifact_status = _load_authority_artifact(BUNDLED_AUTHORITY_ARTIFACT)
+        artifact_payload, artifact_status, _metadata = _load_indexed_fact_authority(BUNDLED_AUTHORITY_DESCRIPTOR)
     else:
         artifact_payload, artifact_status = authority_probe
     compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
@@ -3775,7 +3780,7 @@ def _consumer_fact_scan(
             "bundled_authority_presence": compiled_fact is not None,
             "compiled_provider_id": compiled_provider_id,
             "provider_owned_compiled": provider_owned_compiled,
-            "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
+            "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_DESCRIPTOR),
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": sorted(compiled_axes),
             "compiled_family": compiled_family,
@@ -3815,7 +3820,7 @@ def _consumer_fact_scan(
             "bundled_authority_presence": False,
             "compiled_provider_id": None,
             "provider_owned_compiled": False,
-            "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_ARTIFACT),
+            "bundled_authority_artifact": _display_path(BUNDLED_AUTHORITY_DESCRIPTOR),
             "bundled_authority_artifact_status": artifact_status,
             "compiled_variant_date_axes": [],
             "requested_query_date_axes": [],
@@ -3861,41 +3866,23 @@ def _consumer_fact_scan(
     }
 
 
-def _bundled_fact_authority_probe() -> dict[str, Any]:
-    """Require the same bundled authority loader used by production consumers."""
-    try:
-        from cadrumo.domain.calculations.registry.authority import bundled_authority
-
-        authority = bundled_authority()
-        facts = authority.catalogues.facts.facts
-        return {
-            "status": "ok",
-            "fact_count": len(facts),
-            "identity_digest": authority._identity_digest,
-            "error": None,
-        }
-    except Exception as exc:
-        return {
-            "status": f"load-error:{type(exc).__name__}",
-            "fact_count": 0,
-            "identity_digest": None,
-            "error": str(exc),
-        }
-
-
 def _facts_only_signal() -> dict[str, Any]:
     """Measure authored-to-consumer fact publication without the full campaign scan."""
     source_inventory = _consumer_source_paths()
     source_paths = source_inventory["paths"]
-    artifact_payload, artifact_status, artifact_metadata = _load_verified_fact_authority_artifact(
-        BUNDLED_AUTHORITY_ARTIFACT
-    )
+    artifact_payload, artifact_status, artifact_metadata = _load_indexed_fact_authority(BUNDLED_AUTHORITY_DESCRIPTOR)
     consumer_scan = _consumer_fact_scan(
         {},
         source_paths=source_paths,
         authority_probe=(artifact_payload, artifact_status),
     )
-    bundled_probe = _bundled_fact_authority_probe()
+    indexed_facts = artifact_payload.get("facts", {}) if isinstance(artifact_payload, dict) else {}
+    bundled_probe = {
+        "status": artifact_status,
+        "fact_count": len(indexed_facts),
+        "identity_digest": artifact_metadata["identity_digest"],
+        "error": artifact_metadata.get("error"),
+    }
     if bundled_probe["status"] != "ok":
         for observation in consumer_scan["observations"]:
             if "bundled_authority_load_error" not in observation["blockers"]:
@@ -3909,7 +3896,7 @@ def _facts_only_signal() -> dict[str, Any]:
 
     authored, authored_errors = _authored_fact_index()
     compiled = _compiled_fact_index(artifact_payload) if artifact_status == "ok" else {}
-    payload_staleness = _authored_bundled_payload_staleness(artifact_status)
+    payload_staleness = _authored_indexed_payload_staleness(artifact_status, indexed_facts)
     required_ids = sorted({item["fact_id"] for item in consumer_scan["observations"]})
     authored_ids = sorted(authored)
     compiled_ids = sorted(compiled)
@@ -4056,9 +4043,7 @@ def _facts_only_signal() -> dict[str, Any]:
         },
         "counts": counts,
         "authority_digest_status": {
-            "artifact_file_sha256": artifact_metadata["file_sha256"],
-            "recorded_payload_sha256": artifact_metadata["recorded_payload_sha256"],
-            "computed_payload_sha256": artifact_metadata["computed_payload_sha256"],
+            "descriptor_sha256": artifact_metadata["descriptor_sha256"],
             "digest_verified": artifact_status == "ok",
             "bundled_loader_status": bundled_probe["status"],
             "identity_digest": bundled_probe["identity_digest"],
@@ -4994,126 +4979,49 @@ def _payload_has_status(value: Any, statuses: frozenset[str]) -> bool:
     return False
 
 
-def _load_authority_artifact(path: Path) -> tuple[Any, str]:
-    """Parse a published artifact using only deterministic stdlib parsers."""
-    try:
-        data = path.read_bytes()
-    except OSError as exc:
-        return None, f"read-error:{type(exc).__name__}"
-    suffix = path.suffix.casefold()
-    try:
-        if suffix == ".toml":
-            import tomllib
-
-            return tomllib.loads(data.decode("utf-8")), "ok"
-        return json.loads(data.decode("utf-8")), "ok"
-    except (UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError) as exc:
-        return None, f"parse-error:{type(exc).__name__}"
-
-
-def _load_verified_fact_authority_artifact(path: Path) -> tuple[Any, str, dict[str, Any]]:
-    """Read facts through the canonical authority artifact codec."""
+def _load_indexed_fact_authority(path: Path) -> tuple[dict[str, Any] | None, str, dict[str, Any]]:
+    """Load the governed-fact directory through the admitted typed SQLite reader."""
     metadata: dict[str, Any] = {
         "artifact": _display_path(path),
-        "file_sha256": None,
-        "recorded_payload_sha256": None,
-        "computed_payload_sha256": None,
-        "status": "missing",
-    }
-    try:
-        data = path.read_bytes()
-    except OSError as exc:
-        metadata["status"] = f"read-error:{type(exc).__name__}"
-        return None, metadata["status"], metadata
-    metadata["file_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
-    try:
-        read_authority_artifact(path)
-        frame = json.loads(data)
-    except (
-        AuthorityArtifactError,
-        ImportError,
-        TypeError,
-        UnicodeDecodeError,
-        ValueError,
-        json.JSONDecodeError,
-    ) as exc:
-        metadata["status"] = f"invalid-authority:{type(exc).__name__}"
-        return None, metadata["status"], metadata
-    payload = frame["payload"]
-    recorded = frame["payload_sha256"]
-    metadata["recorded_payload_sha256"] = recorded
-    computed = sha256_hex(canonical_json_bytes(payload))
-    metadata["computed_payload_sha256"] = computed
-    metadata["status"] = "ok"
-    return {"payload": payload, "payload_sha256": recorded}, "ok", metadata
-
-
-def _load_v4_authority_frame(path: Path) -> tuple[dict[str, Any] | None, str, dict[str, Any]]:
-    """Load one v4 frame through the production authority decoder.
-
-    The legacy campaign closure fields describe an authority publication, but
-    they are not the authority.  The only trusted proof comes from the typed
-    ``read_authority_artifact`` decoder, the frame's canonical payload digest,
-    its registry identity digest, and the typed fact catalogue reconstructed by
-    that decoder.  Keep the raw payload only to recompute the wire digest and
-    to make the exact fact declaration visible in the signal.
-    """
-    metadata: dict[str, Any] = {
-        "artifact": _display_path(path),
-        "file_sha256": None,
-        "recorded_payload_sha256": None,
-        "computed_payload_sha256": None,
+        "descriptor_sha256": None,
         "identity_digest": None,
         "fact_count": 0,
         "status": "missing",
+        "error": None,
     }
     try:
         data = path.read_bytes()
     except OSError as exc:
         metadata["status"] = f"read-error:{type(exc).__name__}"
+        metadata["error"] = str(exc)
         return None, metadata["status"], metadata
-    metadata["file_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
+    metadata["descriptor_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
+    reader: SQLiteAuthorityReader | None = None
     try:
-        artifact = read_authority_artifact(path)
-        frame = json.loads(data)
-        payload = frame["payload"]
-        recorded = frame["payload_sha256"]
-        computed = sha256_hex(canonical_json_bytes(payload))
-        facts = artifact.catalogues.facts.facts
-        raw_facts = (
-            payload.get("catalogues", {}).get("facts", {}).get("facts")
-            if isinstance(payload, dict) and isinstance(payload.get("catalogues"), dict)
-            else None
+        reader = SQLiteAuthorityReader(path)
+        pin = reader.pin()
+        queries = tuple(
+            query for query in reader.component_queries() if query.kind is AuthorityComponentKind.GOVERNED_FACT
         )
-        identity_digest = artifact.identity_digest
-    except (
-        AuthorityArtifactError,
-        ImportError,
-        AttributeError,
-        KeyError,
-        TypeError,
-        UnicodeDecodeError,
-        ValueError,
-        json.JSONDecodeError,
-    ) as exc:
+        facts = {
+            query.fact_id: reader.load(query, pin=pin)
+            for query in queries
+            if isinstance(query, GovernedFactComponentQuery)
+        }
+        raw_facts = {fact_id: fact.model_dump(mode="json") for fact_id, fact in facts.items()}
+        identity_digest = pin.logical_generation
+    except (AuthorityStoreError, AttributeError, OSError, TypeError, ValueError) as exc:
         metadata["status"] = f"invalid-authority:{type(exc).__name__}"
+        metadata["error"] = str(exc)
         return None, metadata["status"], metadata
-    metadata["recorded_payload_sha256"] = recorded
-    metadata["computed_payload_sha256"] = computed
+    finally:
+        if reader is not None:
+            reader.close()
     metadata["identity_digest"] = identity_digest
     metadata["fact_count"] = len(facts)
-    if not isinstance(raw_facts, dict):
-        metadata["status"] = "invalid-authority:fact-catalogue"
-        return None, metadata["status"], metadata
-    if not isinstance(recorded, str) or recorded != computed:
-        metadata["status"] = "invalid-authority:payload-digest"
-        return None, metadata["status"], metadata
     metadata["status"] = "ok"
     return (
         {
-            "artifact": artifact,
-            "payload": payload,
-            "payload_sha256": recorded,
             "identity_digest": identity_digest,
             "facts": facts,
             "raw_facts": raw_facts,
@@ -5877,7 +5785,7 @@ def _facts_publication_scan(
         label="placement publication.facts.artifact",
     )
     result["artifact"] = artifact_relative
-    frame, artifact_status, metadata = _load_v4_authority_frame(artifact_path)
+    frame, artifact_status, metadata = _load_indexed_fact_authority(artifact_path)
     result["authority_status"] = artifact_status
     result["authority_fact_count"] = metadata.get("fact_count", 0)
 
@@ -5905,7 +5813,7 @@ def _facts_publication_scan(
         if not isinstance(raw_facts, dict) or not isinstance(raw_facts.get(declaration_id), dict)
     ]
     reasons: list[str] = []
-    if artifact_path.resolve() != BUNDLED_AUTHORITY_ARTIFACT.resolve():
+    if artifact_path.resolve() != BUNDLED_AUTHORITY_DESCRIPTOR.resolve():
         reasons.append("facts_publication_artifact_is_not_current_bundled_authority")
     if artifact_status != "ok":
         reasons.append("facts_publication_authority_unreadable_or_invalid")
@@ -6181,12 +6089,10 @@ def _authority_scan(
 ) -> dict[str, Any]:
     """Verify claimed migrated/bridge destinations mechanically.
 
-    v4 authority is proven by the typed frame reader, its canonical payload
-    digest, its content identity, and the exact governed fact declaration in
-    ``payload.catalogues.facts.facts``. Legacy closure fields remain visible
-    as metadata, but compiled/published flags, prefixed manifest digests, and
-    flattened string matches cannot manufacture proof. Placement closures use
-    the same byte-level discipline while explicitly recording publication is
+    Indexed authority is proven by the descriptor-admitted SQLite reader, its
+    logical generation identity, and the exact typed governed-fact component.
+    Legacy closure metadata cannot manufacture proof. Placement closures use
+    the same declaration discipline while explicitly recording publication is
     false.
     """
     observations: list[dict[str, Any]] = []
@@ -6222,18 +6128,11 @@ def _authority_scan(
 
         cache_key = artifact_path.as_posix()
         if cache_key not in frame_cache:
-            frame_cache[cache_key] = _load_v4_authority_frame(artifact_path)
+            frame_cache[cache_key] = _load_indexed_fact_authority(artifact_path)
         frame, artifact_status, artifact_metadata = frame_cache[cache_key]
         artifact_exists = artifact_path.is_file()
-        artifact_actual_digest = artifact_metadata.get("file_sha256")
-        recorded_payload_sha256 = artifact_metadata.get("recorded_payload_sha256")
-        computed_payload_sha256 = artifact_metadata.get("computed_payload_sha256")
+        artifact_actual_digest = artifact_metadata.get("descriptor_sha256")
         identity_digest = artifact_metadata.get("identity_digest")
-        payload_digest_proof = bool(
-            artifact_status == "ok"
-            and isinstance(recorded_payload_sha256, str)
-            and recorded_payload_sha256 == computed_payload_sha256
-        )
         identity_digest_proof = bool(
             artifact_status == "ok"
             and isinstance(identity_digest, str)
@@ -6264,7 +6163,6 @@ def _authority_scan(
                 authoring_fact_proof,
                 artifact_exists,
                 artifact_status == "ok",
-                payload_digest_proof,
                 identity_digest_proof,
                 governed_fact["present"],
                 authority["parity"] in {"exact", "semantic"},
@@ -6281,9 +6179,6 @@ def _authority_scan(
             "declared_digest": declared_digest,
             "observed_digest": artifact_actual_digest,
             "artifact_status": artifact_status,
-            "artifact_payload_sha256": recorded_payload_sha256,
-            "artifact_payload_sha256_recomputed": computed_payload_sha256,
-            "payload_digest_proof": payload_digest_proof,
             "identity_digest": identity_digest,
             "identity_digest_proof": identity_digest_proof,
             "authoring": authoring_observations,

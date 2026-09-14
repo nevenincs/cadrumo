@@ -48,9 +48,9 @@ from decimal import Decimal
 from functools import cache
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.fixed_width_codec import parse_fixed_width_export_field
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
 from .._record_field_renderer import format_field
@@ -70,7 +70,7 @@ _INDICE_CORRECTOR_TEMPORADA = "m303-2025.dp30302.f040"  # longitud 3, "1 entero 
 
 @cache
 def _shipped_export_fields() -> dict[str, ExportFieldDefinition]:
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=_PERIOD)
     assert snapshot.revision.export_layouts, (
         f"modelo {_MODELO} revision {snapshot.revision.id} ships no export layout, "
         "so it cannot ground an export-slot rendering contract"

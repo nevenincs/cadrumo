@@ -5,12 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.compiler.profile_schema import capture_profile_schema
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 from pydantic import ValidationError
 
 from ....core.classification.policies import SensitivityClass
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ..errors import UserProfileNotFoundError
 from ..schema import (
@@ -110,7 +110,7 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
 
 def test_committed_user_profile_schema_legal_refs_resolve_against_catalogue_and_corpus() -> None:
     schema = load_user_profile_schema()
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     catalogues = authority.catalogues
     refs_by_field = {
         f"{section.key}.{field.key}": field.legal_refs
@@ -144,7 +144,7 @@ def test_no_grounded_profile_key_regresses_to_a_schema_field_with_no_legal_refs(
     """
     from ...calculations.registry.profile_grounding import build_profile_grounding_index
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     index = build_profile_grounding_index(authority)
     schema = load_user_profile_schema()
 

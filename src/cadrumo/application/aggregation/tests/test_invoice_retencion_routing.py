@@ -21,11 +21,11 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
@@ -375,7 +375,7 @@ def _modelo_111_revision() -> ModeloRevision:
     snapshot could agree with this test and disagree with the filing.
     """
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             Modelo("111").value,
             filing_year=2026,

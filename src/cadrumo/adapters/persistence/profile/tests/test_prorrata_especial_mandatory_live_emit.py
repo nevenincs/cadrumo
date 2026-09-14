@@ -38,6 +38,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -55,7 +56,6 @@ from cadrumo.core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.prorrata import InputClassification
 from cadrumo.domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
@@ -73,11 +73,11 @@ _MID_YEAR_PERIOD = "1T"
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _revision():
-    snapshot = bundled_authority().snapshot(Modelo("303").value, filing_year=_EJERCICIO, period="4T")
+    snapshot = compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=_EJERCICIO, period="4T")
     return snapshot.revision
 
 

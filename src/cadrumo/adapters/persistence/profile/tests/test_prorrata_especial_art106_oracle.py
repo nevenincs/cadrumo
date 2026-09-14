@@ -37,6 +37,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -51,7 +52,6 @@ from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDe
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema_base import ThresholdComparison
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -75,7 +75,7 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
 
 
 def _prior_m303_snapshot_ref():
-    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
 def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
@@ -166,7 +166,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
 def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = bundled_authority().modelo("303").revisions["2022"]
+    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(_txns()))
     aggregation = aggregate_iva_ledger_observations_from_repositories(
@@ -230,7 +230,7 @@ def test_each_art106_regla_isolated(
     """Each art. 106.Uno regla, isolated, deducts at its lawful rate (100 / 0 / general)."""
     from cadrumo.domain.transactions.models import TransactionCatalogue
 
-    revision = bundled_authority().modelo("303").revisions["2022"]
+    revision = compiled_bundled_authority().modelo("303").revisions["2022"]
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         objects = profile.repository
         _seed_register(objects, ProrrataRegisterRegime.ESPECIAL)

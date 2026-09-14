@@ -22599,6 +22599,12 @@ modelo:
             label: Modelo 200 exercicis 2024 i següents (DR200e25.xls)
         2025-y-siguientes:
           casilla:
+            x-8h834c1g60ojgghq60o3ae1o:
+              help: Indiqueu o reviseu «Deduccions per incentivar determinades activitats
+                - total - aplicat en aquesta liquidació [00588]» per completar aquesta
+                autoliquidació.
+              label: Deduccions per incentivar determinades activitats - total - aplicat
+                en aquesta liquidació [00588]
             '00001':
               help: Indicador de si l'entitat és sense ànim de lucre i està acollida
                 al règim del Títol II de la Llei 49/2002 [00001].

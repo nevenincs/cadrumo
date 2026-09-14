@@ -342,7 +342,7 @@ modelo:
               help: Casilla 951-1300 del modelo 309, ejercicio 2004-2015.
               label: Observaciones
           construct:
-            modelo-309-historical-no-periodica:
+            modelo-309-iva-no-periodica:
               field:
                 title: 'Modelo 309 histórico: declaración-liquidación no periódica
                   (2004-2015)'

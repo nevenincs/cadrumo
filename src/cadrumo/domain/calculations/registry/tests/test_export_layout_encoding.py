@@ -10,11 +10,11 @@ declares the canonical spelling and an alias is refused at the field.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from .....core.export_layout_format import ExportLayoutFormat
 from ...export_field_kind import CasillaFieldKind
-from ..authority import bundled_authority
 from ..fixed_width_codec import ExportEncoding
 from ..schema_base import CasillaDataType
 from ..schema_exports import ExportFieldDefinition, ExportLayoutDefinition, ExportRecordDefinition
@@ -171,7 +171,7 @@ def test_the_bundled_registry_hydrates_every_layout_format_to_a_member() -> None
     The member coverage is asserted too, so this cannot pass by examining a tree
     with no layouts, or one that happens to declare only one shape.
     """
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     formats = [
         layout.format
         for modelo in authority.modelos

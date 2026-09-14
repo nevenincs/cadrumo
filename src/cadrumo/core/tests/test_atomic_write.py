@@ -47,6 +47,7 @@ from ..atomic_write import (
     hardened_staged_publication,
 )
 from ..directory_scan import DirectoryEntryKind, scan_directory
+from ..errors.hierarchy import InternalInvariantError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -761,7 +762,7 @@ def test_staged_publication_refuses_a_second_publish(tmp_path: Path) -> None:
     with hardened_staged_publication(target) as staged:
         staged.path.write_bytes(b"PAYLOAD")
         staged.publish()
-        with pytest.raises(RuntimeError):
+        with pytest.raises(InternalInvariantError):
             staged.publish()
 
     assert target.read_bytes() == b"PAYLOAD"

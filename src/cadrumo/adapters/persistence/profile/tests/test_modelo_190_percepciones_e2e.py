@@ -15,6 +15,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
@@ -26,7 +27,6 @@ from .....application.aggregation.withholding_source import WithholdingSourceRes
 from .....core.aggregation import RetencionClave
 from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from .....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..percepciones_observations import PercepcionObservationRepositoryAdapter
@@ -65,7 +65,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 _obs("22222222J", RetencionClave.A),
             ],
         )
-        snapshot = bundled_authority().snapshot("190", filing_year=2024, period="0A")
+        snapshot = compiled_bundled_authority().snapshot("190", filing_year=2024, period="0A")
         resolution = WithholdingSourceResolver(ports=ports).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,

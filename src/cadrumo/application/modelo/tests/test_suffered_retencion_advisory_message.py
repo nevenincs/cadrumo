@@ -25,9 +25,9 @@ behalf.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.i18n.render import tr
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ..verification_predicates import _advisory_predicate_finding
 
@@ -48,7 +48,7 @@ def _capital_mobiliario_predicate_id(year: int) -> str:
 
 
 def _predicate(year: int, predicate_id: str) -> VerificationPredicateDefinition:
-    revision = bundled_authority().snapshot("100", filing_year=year, period="0A").revision
+    revision = compiled_bundled_authority().snapshot("100", filing_year=year, period="0A").revision
     for predicate in revision.verification_predicates or ():
         if predicate.predicate_id == predicate_id:
             return predicate

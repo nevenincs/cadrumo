@@ -13,11 +13,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId
@@ -94,7 +94,7 @@ _SOURCE_BOUND_BINDING: BindingId = "ledger_iva_base"
 _M100_ACTIVIDAD_ECONOMICA_INCOME_CASILLA: CasillaId = validated_casilla_id("0171")
 _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: CasillaId = validated_casilla_id("0224")
 _MODELO_FACT_CONTEXT = ModeloFactResolutionContext(
-    authority=bundled_authority(),
+    authority=compiled_bundled_authority(),
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )
@@ -262,7 +262,9 @@ def _blocked_wallet_decision(
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
-        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=2026, period="1T")
+        .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="missing",
         selected_amount=None,
@@ -275,7 +277,7 @@ def _blocked_wallet_decision(
 
 
 def _m130_casilla_definition(casilla_id: CasillaId) -> CasillaDefinition:
-    snapshot = bundled_authority().snapshot("130", filing_year=2026, period="1T")
+    snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T")
     return next(item for item in snapshot.revision.casillas if item.id == casilla_id)
 
 
@@ -881,7 +883,7 @@ class TestWorkflowInputMismatchError:
 def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() -> None:
     """Verify-time draft replay must not feed M100 0224 back as an operator input."""
     work_unit = _minimal_work_unit(modelo="100", period="0A", filing_year=2024, revision_id="2024")
-    snapshot = bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
+    snapshot = compiled_bundled_authority().snapshot("100", filing_year=2024, period="0A", revision_id="2024")
     binding_values: dict[BindingId, Decimal] = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-modelo-111-retenciones-periodicas": Decimal("0"),

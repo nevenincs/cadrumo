@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -18,7 +19,6 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core.config import load_settings
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_repository import upsert_filing_record
@@ -42,7 +42,7 @@ _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 def _registry_snapshot_ref(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshotRef:
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             modelo,
             filing_year=filing_year,
@@ -66,7 +66,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 observation,
                 source_kind="aeat_sede_justificante",
                 captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-                stamped_revision_id=str(bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id),
+                stamped_revision_id=str(
+                    compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
+                ),
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "12345678901234567890",

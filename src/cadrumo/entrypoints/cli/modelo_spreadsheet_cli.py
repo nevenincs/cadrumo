@@ -23,6 +23,7 @@ from ...adapters.outbound.storage.factory import build_google_credentials, resol
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.config import load_settings
 from ...core.decimal.coercion import coerce_decimal
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...core.type_guards import is_object_dict
 from ...domain.calculations.registry.authority import (
@@ -236,11 +237,12 @@ def modelo_spreadsheet_push(
 def google_operation_error(code: str, *, diagnostic_ref: str | None) -> Exception:
     """Project a supervised failure solely through canonical ErrorCode metadata."""
     from ...core.errors.error_codes import ErrorCategory, get_registered_error_code_by_code
+    from ...core.errors.hierarchy import InternalInvariantError
 
     error_code = get_registered_error_code_by_code(code)
     if error_code.category not in {ErrorCategory.ERROR, ErrorCategory.INTERNAL}:
         return CliRefusedBoundaryError(translated_message=error_code.message_key)
-    return RuntimeError(f"supervised Google Sheets export failed ({diagnostic_ref or 'no diagnostic'})")
+    return InternalInvariantError(f"supervised Google Sheets export failed ({diagnostic_ref or 'no diagnostic'})")
 
 
 def execute_google_sheets_export(
@@ -301,18 +303,18 @@ def execute_google_sheets_export(
                 )
             )
             if not isinstance(observed, OperationObservationSuccessV1):
-                raise RuntimeError("supervised Google Sheets export observation is unavailable")
+                raise InternalInvariantError("supervised Google Sheets export observation is unavailable")
             projection = observed.projection
             code = projection.refusal_ref or projection.failure_error_code
             if code is not None:
                 raise google_operation_error(code, diagnostic_ref=projection.diagnostic_ref)
             if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-                raise RuntimeError(
+                raise InternalInvariantError(
                     f"supervised Google Sheets export failed ({projection.diagnostic_ref or 'no diagnostic'})"
                 )
             result_schema = projection.definition_contract.result_schema
             if result_schema is None:
-                raise RuntimeError("supervised Google Sheets export has no public result schema")
+                raise InternalInvariantError("supervised Google Sheets export has no public result schema")
             resolved: (
                 OperationResultProjectionSuccessV1[GoogleSheetsExportPublicResultV1]
                 | OperationResultProjectionRefusalV1
@@ -327,7 +329,7 @@ def execute_google_sheets_export(
             if not isinstance(resolved, OperationResultProjectionSuccessV1) or not isinstance(
                 resolved.projection, GoogleSheetsExportPublicResultV1
             ):
-                raise RuntimeError("supervised Google Sheets export result is unavailable")
+                raise InternalInvariantError("supervised Google Sheets export result is unavailable")
             return resolved.projection
         finally:
             await services.shutdown()

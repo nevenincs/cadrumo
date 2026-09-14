@@ -96,6 +96,7 @@ from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
 from .common import activate_subcommand_output_language, emit_envelope
 from .state_projection_support import (
     amendment_action_ports_factory,
+    authority_operation,
     calculation_action_ports_factory,
     filing_action_ports_factory,
 )
@@ -225,7 +226,10 @@ def run_modelo_work_amend_wizard(
         raise deps.bad_parameter_from_error(exc) from exc
     baseline_revision: CalculationRevision = get_calculation_revision(
         baseline.calculation_revision_id,
-        ports=calculation_action_ports_factory(ctx)(bucket_id=unit.bucket_id),
+        ports=calculation_action_ports_factory(ctx)(
+            bucket_id=unit.bucket_id,
+            operation=authority_operation(ctx),
+        ),
     )
     amendable = _amendable_rows(casilla_rows, baseline_revision)
     if not amendable:

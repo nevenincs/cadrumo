@@ -31,6 +31,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
@@ -40,7 +41,6 @@ from ....domain.calculations.registry.applicability import (
     taxpayer_model_is_declared,
 )
 from ....domain.calculations.registry.applicability_routes import TaxRoute
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IrpfEstimationRegime,
@@ -222,7 +222,7 @@ def _an_unruled_modelo() -> str:
     the engine actually reports and cannot go stale the same way.
     """
     ruled = {rule.modelo for rule in iter_modelo_applicability_rules()}
-    unruled = sorted(definition.id for definition in bundled_authority().modelos if definition.id not in ruled)
+    unruled = sorted(definition.id for definition in compiled_bundled_authority().modelos if definition.id not in ruled)
     assert unruled, (
         "every modelo now carries an applicability rule, so the un-ruled rationale is "
         "unreachable and these two tests should be retired along with it"
@@ -693,7 +693,7 @@ def test_seed_legal_refs_resolve_against_the_registry() -> None:
     law-only slug would fail loudly here.
     """
 
-    authority = bundled_authority()
+    authority = compiled_bundled_authority()
     registered_legal_ids = set(authority.catalogues.legal)
     assert registered_legal_ids, "registry legal catalogue is empty"
 

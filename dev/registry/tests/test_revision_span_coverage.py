@@ -44,7 +44,7 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     claims at all.
 
     Modelo 390 is why a PAIRWISE abutment check would have been wrong here.
-    Measured 2026-08-14 via the raw loader (``bundled_authority()`` itself
+    Measured 2026-08-14 via the development compiler (``compiled_bundled_authority()`` itself
     refuses to build, over an unrelated export-layout-completeness gate, so
     this reads the same tier the relayout gate does), every revision is
     closed-ended --

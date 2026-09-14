@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import get_args
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ....core.aggregation import (
@@ -22,7 +23,6 @@ from ....core.aggregation import (
     CalculationSourceLineageRole,
 )
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ....domain.calculations.registry.inventory_bindings import InventoryProjectionOperation, InventoryProvider
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
@@ -210,7 +210,7 @@ def _binding(operation: InventoryProjectionOperation, target: str) -> BindingDef
 
 
 def _revision(*, inventory: bool) -> ModeloRevision:
-    base = bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
+    base = compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A").revision
     bindings = (
         (
             _binding("complete_acquisition_cost", "0181"),

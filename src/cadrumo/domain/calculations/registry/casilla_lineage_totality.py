@@ -79,6 +79,7 @@ from __future__ import annotations
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass
 
+from .casilla_structural_succession import validated_structural_targets
 from .revision_contracts import DeclaredPredecessor, NoPredecessor
 from .revision_order import ordered_revisions
 from .schema import ModeloDefinition, ModeloRevision
@@ -123,7 +124,10 @@ def unresolved_successor_rows(modelo: ModeloDefinition) -> tuple[CasillaRowKey, 
         if predecessor is None:
             continue
         carried = _carried_chains(predecessor)
+        structural_targets = validated_structural_targets(modelo, revision.id)
         for casilla in revision.casillas:
+            if casilla.continuidad_id in structural_targets:
+                continue
             if casilla.continuidad_origin is not None:
                 continue
             if casilla.continuidad_id is not None and casilla.continuidad_id in carried:

@@ -6,10 +6,13 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from decimal import Decimal
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.usage_ratios.model import UsageRatioProfile
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 class UsageRatioCensoGuardLoader(Protocol):
@@ -21,6 +24,7 @@ class UsageRatioCensoGuardLoader(Protocol):
         bucket_id: str,
         raw_afectacion_ratio: Decimal | None,
         year: int,
+        operation: PinnedAuthorityOperation,
     ) -> UsageRatioProfile:
         """Return the guarded ratio profile for ``bucket_id`` under ``year``'s rules."""
         ...
@@ -29,7 +33,7 @@ class UsageRatioCensoGuardLoader(Protocol):
 class UsageRatioProfileLoader(Protocol):
     """Load one profile's persisted usage ratios."""
 
-    def __call__(self, *, bucket_id: str) -> UsageRatioProfile:
+    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
         """Return the persisted ratio profile for ``bucket_id``."""
         ...
 
@@ -81,6 +85,7 @@ def usage_ratio_profile_with_censo_guard(
     bucket_id: str,
     raw_afectacion_ratio: Decimal | None,
     year: int,
+    operation: PinnedAuthorityOperation,
 ) -> UsageRatioProfile:
     """Resolve and invoke the composed censo-guarded ratio loader for ``year``."""
     try:
@@ -91,16 +96,17 @@ def usage_ratio_profile_with_censo_guard(
         bucket_id=bucket_id,
         raw_afectacion_ratio=raw_afectacion_ratio,
         year=year,
+        operation=operation,
     )
 
 
-def load_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
+def load_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
     """Load the usage-ratio profile through the explicitly composed authority."""
     try:
         loader, _saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
     except LookupError as error:
         raise InternalInvariantError("usage-ratio persistence has not been composed") from error
-    return loader(bucket_id=bucket_id)
+    return loader(bucket_id=bucket_id, operation=operation)
 
 
 def save_usage_ratio_profile(profile: UsageRatioProfile, *, bucket_id: str) -> None:

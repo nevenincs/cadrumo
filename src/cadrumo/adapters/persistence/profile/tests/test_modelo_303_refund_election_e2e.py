@@ -37,6 +37,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import SecretStr
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -65,7 +66,6 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.deadlines.models import (
     IVARegime,
@@ -241,7 +241,7 @@ def _calculate_negative_period(
     filing_repo = ModeloRecordCatalogueRepository()
     event_repo = BucketEventHistoryRepository()
 
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=period_token)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=period_token)
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAX_ID,
@@ -361,7 +361,7 @@ def _file_period(
 
 def _next_period_carry_in(*, next_year: int, next_period: str) -> Decimal | None:
     """Resolve the next period's casilla-110 carry-in from whatever carry the filing persisted."""
-    snapshot_next = bundled_authority().snapshot("303", filing_year=next_year, period=next_period)
+    snapshot_next = compiled_bundled_authority().snapshot("303", filing_year=next_year, period=next_period)
     relation_values = resolve_relations_from_local_store(
         snapshot_next,
         repository=CalculationObservationRepository(),

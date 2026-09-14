@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
@@ -26,7 +27,6 @@ from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
@@ -242,7 +242,9 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
-        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period=period).snapshot_ref,
+        target_registry_snapshot_ref=compiled_bundled_authority()
+        .snapshot("303", filing_year=2026, period=period)
+        .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=selected_amount,

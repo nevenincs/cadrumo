@@ -18,8 +18,8 @@ from decimal import Decimal
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
@@ -37,7 +37,7 @@ _KEY = f"renta_family.incremento_guarderia_{_YEAR}"
 
 
 def _snapshot(year: int = _YEAR) -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=year, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=year, period="0A")
 
 
 def _facts(child: DescendantInfo) -> dict[str, Any]:

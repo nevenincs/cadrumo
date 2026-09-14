@@ -13,9 +13,9 @@ from __future__ import annotations
 from itertools import pairwise
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.schema import BindingDefinition
 from ..engine import collect_row_sets
@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _modelo_349_revision():
-    return bundled_authority().modelo("349").revisions["2020-y-siguientes"]
+    return compiled_bundled_authority().modelo("349").revisions["2020-y-siguientes"]
 
 
 def test_collect_row_sets_groups_modelo_349_bindings_by_grouping() -> None:
@@ -89,13 +89,13 @@ def test_collect_row_sets_returns_empty_for_revision_without_row_producers() -> 
     """Modelos without any `aggregation.op = "rows"` bindings emit no row-sets."""
 
     # Modelo 130 (IRPF pago fraccionado) has no row-producer bindings.
-    revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
 
     assert collect_row_sets(revision) == ()
 
 
 def test_collect_row_sets_rejects_rows_binding_without_row_set_projection() -> None:
-    revision = bundled_authority().modelo("130").revisions["2019-y-siguientes"]
+    revision = compiled_bundled_authority().modelo("130").revisions["2019-y-siguientes"]
     malformed_row_binding = BindingDefinition(
         id="synthetic-row-without-grouping",
         provider={"kind": "collectible_invoice", **{"fact": "row_field", "row_field": "country_code"}},

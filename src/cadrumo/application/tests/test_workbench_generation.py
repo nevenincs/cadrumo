@@ -8,11 +8,11 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from pydantic import ValidationError
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -226,7 +226,7 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
 def test_secure_profile_provider_contains_rejected_declarations_projection() -> None:
     """A contradictory declaration catalogue refuses only its workspace source."""
     period = Period.from_year_and_code(2026, "1T")
-    revision_id = bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
+    revision_id = compiled_bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
     unit = WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_PROFILE_ID,
@@ -929,7 +929,8 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
     has nothing outstanding -- offering either as blocked work would send the
     operator at something nothing is waiting on.
     """
-    from ...domain.calculations.registry.authority import bundled_authority
+    from dev.registry.compiler.authority import compiled_bundled_authority
+
     from ...domain.modelos.verification_report import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
@@ -965,7 +966,9 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
                 verified_by="operator",
             ),
             calculation_revision_id="b" * 64,
-            registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+            registry_snapshot_ref=compiled_bundled_authority()
+            .snapshot("303", filing_year=2026, period="1T")
+            .snapshot_ref,
             completeness_status=status,
             findings=findings,
             run_at=datetime(2026, 9, 4, tzinfo=UTC),

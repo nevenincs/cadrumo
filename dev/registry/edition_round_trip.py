@@ -190,17 +190,16 @@ class RoundTripReport:
 class EditionExportScenario:
     """The filing inputs one edition's export bytes are rendered from on both sides.
 
-    ``prior_domiciliation_election`` and ``product_software_identity`` are
-    carried only where the modelo's export path requires them: Modelo 303's
-    layout renders an envelope prefix and a Nota-3 DID predicate, and refuses
-    to run without both, while every other modelo carries neither.
+    ``prior_domiciliation_election`` and ``product_software_identity_factory`` are
+    carried where the modelo's export path requires them. Software identities
+    are constructed inside the selected authority's governed-fact scope.
     """
 
     period: Period
     inputs: ModeloInputs
     producer_snapshot: Callable[[], FilingProducerSnapshot]
     prior_domiciliation_election: PriorDomiciliationElection | None = None
-    product_software_identity: AeatProductSoftwareIdentity | None = None
+    product_software_identity_factory: Callable[[], AeatProductSoftwareIdentity] | None = None
 
 
 class ReferenceUnavailableError(RuntimeError):
@@ -752,7 +751,11 @@ def _export_bytes_finding(
                     payload_consumer=sink,
                     producer_snapshot=scenario.producer_snapshot(),
                     prior_domiciliation_election=scenario.prior_domiciliation_election,
-                    product_software_identity=scenario.product_software_identity,
+                    product_software_identity=(
+                        None
+                        if scenario.product_software_identity_factory is None
+                        else scenario.product_software_identity_factory()
+                    ),
                     schema_provider=provider,
                 )
         except (CadrumoError, ValueError) as exc:

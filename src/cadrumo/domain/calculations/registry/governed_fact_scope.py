@@ -2,13 +2,10 @@
 
 Runtime resolves a governed fact through the published authority artifact. A
 registry *validation* runs before that artifact is available to it: compiling a
-candidate revision produces the artifact, and decoding the published artifact is
-how the artifact becomes an authority in the first place. A validator that
-reaches for the bundle from inside either path deadlocks the reader --
-:func:`~cadrumo.domain.calculations.registry.authority_artifact.read_shared_authority_artifact`
-holds the shared-artifact lock while it validates the decoded document, so a
-validator calling ``bundled_authority`` asks a non-reentrant lock for the very
-artifact it is in the middle of producing.
+candidate revision produces the indexed generation, and decoding its addressed
+components is how that generation becomes usable. A validator that reaches for
+ambient authority from inside either path would cross the candidate or pinned
+generation it is meant to validate.
 
 So a validation scopes the facts it is validating against, the same way a
 compilation scopes its legal and source catalogues. Outside that scope nothing

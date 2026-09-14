@@ -5,8 +5,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_base import DateAxis
 from ..family_fact_context import FamilyFactResolutionContext
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _context() -> FamilyFactResolutionContext:
     coordinate = date(2024, 12, 31)
     return FamilyFactResolutionContext(
-        authority=bundled_authority(),
+        authority=compiled_bundled_authority(),
         filing_period=coordinate,
         devengo_date=coordinate,
     )

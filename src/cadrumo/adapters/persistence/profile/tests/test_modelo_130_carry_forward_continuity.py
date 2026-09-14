@@ -36,6 +36,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -59,7 +60,6 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -259,7 +259,7 @@ def _import_official_filing_evidence(
     casilla_values: Mapping[CasillaId, Decimal],
 ) -> tuple[str, dict[str, str]]:
     wu_repo, cr_repo, bv_repo, _obs_repo, _vr_repo, filing_repo = repos
-    source_snapshot = bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
+    source_snapshot = compiled_bundled_authority().snapshot(modelo, filing_year=filing_year, period=period)
     source_work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo=modelo,
@@ -374,7 +374,7 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
         stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
     report = resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     )
@@ -409,7 +409,7 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
         stamped_revision_id=revision_id_for_coordinates(modelo="100", filing_year=2025, period="0A"),
     )
 
-    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
     resolved = resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
@@ -493,7 +493,7 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(repos: _Repos)
         source_metadata=m100_source_metadata,
     )
 
-    q2_snapshot = bundled_authority().snapshot("130", filing_year=2026, period="2T")
+    q2_snapshot = compiled_bundled_authority().snapshot("130", filing_year=2026, period="2T")
     resolved = resolve_bindings_from_local_store(
         q2_snapshot, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values
@@ -627,7 +627,7 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
         )
     )
 
-    snapshot_3t = bundled_authority().snapshot("130", filing_year=2026, period="3T")
+    snapshot_3t = compiled_bundled_authority().snapshot("130", filing_year=2026, period="3T")
     resolved = resolve_bindings_from_local_store(
         snapshot_3t, repository=obs_repo, iva_history_repository=IvaCompensationHistoryRepository()
     ).binding_values

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -57,7 +58,6 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
@@ -342,7 +342,7 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     assert wire[10:12] == expected_wire_period
     assert period_token.encode("ascii") not in wire
     layout = (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot("369", filing_year=_M369_YEAR, period=period_token, revision_id="esquema-exterior")
         .revision.export_layouts[0]
     )

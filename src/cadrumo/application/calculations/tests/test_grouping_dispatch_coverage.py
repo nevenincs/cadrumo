@@ -20,9 +20,9 @@ invocation.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...aggregation.inventory import InventorySourceResolver
 from ...modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
@@ -48,7 +48,7 @@ _MESH_RESOLVED_GROUPINGS: dict[str, BindingSourceKind] = {
 
 def _all_row_producer_groupings() -> set[str]:
     groupings: set[str] = set()
-    for modelo in bundled_authority().modelos:
+    for modelo in compiled_bundled_authority().modelos:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 if binding.aggregation is None or binding.aggregation.op != "rows":

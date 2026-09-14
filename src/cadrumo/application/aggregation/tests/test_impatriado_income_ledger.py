@@ -42,9 +42,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.ledger_impatriado_bindings import (
@@ -80,7 +80,7 @@ def _m151_revision_for(period: Period) -> ModeloRevision:
     resolving. Resolution survives the next split; an id literal does not.
     """
     return (
-        bundled_authority()
+        compiled_bundled_authority()
         .snapshot(
             "151",
             filing_year=period.filing_year,

@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections import defaultdict
 from itertools import combinations, pairwise
 
+from cadrumo.domain.calculations.registry.casilla_structural_succession import structural_succession_failures
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -22,6 +23,7 @@ from ._validate_cross_revision_contiguity import strict_continuity_chain_contigu
 def strict_continuity_evolution_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
     """Return declaration-side strict-continuity failures for ``modelo``."""
     return (
+        *structural_succession_failures(modelo),
         *_validate_strict_continuity_evolution_references(modelo),
         *_validate_strict_retired_continuity_surfaces(modelo),
         *strict_continuity_chain_contiguity_failures(modelo),
@@ -282,7 +284,13 @@ def _has_retired_evolution(
     right_revision_id: RevisionId,
     continuidad_id: str,
 ) -> bool:
-    return any(
+    structural = not structural_succession_failures(modelo) and any(
+        relation.from_revision == left_revision_id
+        and relation.to_revision == right_revision_id
+        and continuidad_id in relation.source_lineages
+        for relation in modelo.revisions[right_revision_id].casilla_structural_successions
+    )
+    return structural or any(
         evolution.continuidad_id == continuidad_id
         and evolution.from_revision == left_revision_id
         and evolution.to_revision == right_revision_id

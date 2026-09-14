@@ -6,9 +6,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.resources.bundled_data import bundled_path
-from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_input_kind import InputKind
@@ -136,7 +136,7 @@ def test_modelo_115_supported_year_deadline_census_dates_sources_and_ownership()
     for filing_year, expected_year in _SUPPORTED_DEADLINES.items():
         expected_periods = {"1T", "2T", "3T", "4T"}
         assert {period for year, period in windows if year == filing_year} == expected_periods
-        projected = bundled_authority().deadline_windows(filing_year, modelos=("115",))
+        projected = compiled_bundled_authority().deadline_windows(filing_year, modelos=("115",))
         assert len(projected) == 4
         assert {window.period.registry_token for _, _, window in projected} == expected_periods
         assert {selected.id for _, selected, _ in projected} == {"2019-y-siguientes"}

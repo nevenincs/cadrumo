@@ -9,8 +9,9 @@ under-declaration would pass silently because the shorter tuple is still valid.
 from __future__ import annotations
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..authority import ValidatedRegistryAuthority, bundled_authority
+from ..authority import ValidatedRegistryAuthority
 from ..censo_modelos import CENSO_MODELO_EVENT_KINDS, _active_036_ownership_from_registry
 from ..errors import RegistryValidationError
 from ..schema import ModeloRevision
@@ -30,7 +31,7 @@ def _latest_revision(authority: ValidatedRegistryAuthority) -> ModeloRevision:
 
 def _authority_with_036_override(periods: tuple[str, ...]) -> ValidatedRegistryAuthority:
     """The bundled authority with modelo 036's latest revision overriding one year."""
-    base = bundled_authority()
+    base = compiled_bundled_authority()
     modelo = base.modelo(_CENSO_MODELO)
     revision_id = max(modelo.revisions, key=lambda item: (modelo.revisions[item].valid_from, item))
     revision = modelo.revisions[revision_id]

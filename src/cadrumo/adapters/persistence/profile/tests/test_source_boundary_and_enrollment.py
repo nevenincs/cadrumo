@@ -27,6 +27,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
@@ -55,7 +56,6 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
 from cadrumo.core.aggregation import BindingSourceKind, ForeignAssetClass
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.modelos.row_models import Modelo184MemberRow
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -221,7 +221,7 @@ def test_s26_assert_no_novel_source_kinds_accepts_enrolled_revision() -> None:
     """A revision whose bindings use only enrolled/deferred sources passes the gate."""
     # M303 uses ledger_iva_aggregation, borrador, previous_filing, profile, manual_input —
     # all enrolled.  Gate must not raise.
-    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
+    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
     assert_no_novel_source_kinds(revision)  # no exception
 
 
@@ -239,7 +239,7 @@ def test_s26_assert_no_novel_source_kinds_rejects_synthetic_novel_source() -> No
     # is not in the accepted set — exactly what the gate should detect and reject.
     from cadrumo.domain.calculations.registry.schema import BindingDefinition
 
-    revision = bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
+    revision = compiled_bundled_authority().snapshot("303", filing_year=2026, period="1T").revision
     # Build a synthetic binding with a novel source kind via model_construct (no validators).
     synthetic_binding = BindingDefinition.model_construct(
         id="synthetic-test-binding",
@@ -673,5 +673,5 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
 
 @cache
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
-    modelo_def = bundled_authority().modelo(modelo)
+    modelo_def = compiled_bundled_authority().modelo(modelo)
     return modelo_def.revisions[revision_id]

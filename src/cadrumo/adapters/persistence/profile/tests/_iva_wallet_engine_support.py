@@ -9,6 +9,8 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
+from dev.registry.compiler.authority import compiled_bundled_authority
+
 from cadrumo.adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -25,7 +27,6 @@ from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI, load_external_constants
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -76,7 +77,7 @@ def _filing_instance_evidence(period: Period) -> FilingInstanceEvidence:
 
 @cache
 def _snapshot_303(*, filing_year: int = _TARGET_YEAR, period: str = _TARGET_PERIOD) -> RegistrySnapshot:
-    return bundled_authority().snapshot("303", filing_year=filing_year, period=period)
+    return compiled_bundled_authority().snapshot("303", filing_year=filing_year, period=period)
 
 
 @contextmanager

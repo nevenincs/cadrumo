@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
-from ...application.ledger.actions_manual import ledger_transaction_payload, list_manual_transactions
+from ...application.ledger.actions_manual import ledger_transaction_payload
 from ...application.ledger.id_resolution import resolve_transaction_id
 from ...application.ledger.review_projection import ledger_transaction_review_status
 from ...application.ledger.source_jurisdiction import (
@@ -37,7 +37,7 @@ from ...domain.contribuyente.renta_codes import FiscalResidency
 from ...domain.deadlines.models import IrpfSpecialRegime
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.transactions.errors import TransactionIdPrefixError, TransactionValidationError
-from ...domain.transactions.models import Transaction
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ._decimal_parsing import parse_decimal_amount, parse_optional_decimal_amount
 from .common import attach_cli_policy_verdict, bad, emit_envelope
 
@@ -47,6 +47,10 @@ class TransactionRepo(Protocol):
 
     @property
     def bucket_id(self) -> str: ...
+
+    def load(self) -> TransactionCatalogue:
+        """Return the repository's current transaction catalogue."""
+        ...
 
 
 def emit_update_result(
@@ -107,11 +111,7 @@ def emit_update_result(
 
 def _bucket_transaction_ids(transaction_repository: TransactionRepo) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
-    bucket_id = transaction_repository.bucket_id
-    from ..ledger_action_composition import compose_ledger_action_ports
-
-    results = list_manual_transactions(bucket_id=bucket_id, ports=compose_ledger_action_ports(bucket_id=bucket_id))
-    return tuple(result.transaction.transaction_id for result in results)
+    return tuple(sorted(transaction_repository.load()))
 
 
 def ledger_cli_no_recovery[ErrorT: CadrumoError](

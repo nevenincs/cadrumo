@@ -126,9 +126,12 @@ def _run_work_calculate(
     unit = deps.resolve_work_unit_for_cli(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
-    from .state_projection_support import calculation_action_ports_factory
+    from .state_projection_support import authority_operation, calculation_action_ports_factory
 
-    calculation_ports = calculation_action_ports_factory(ctx)(bucket_id=unit.bucket_id)
+    calculation_ports = calculation_action_ports_factory(ctx)(
+        bucket_id=unit.bucket_id,
+        operation=authority_operation(ctx),
+    )
     resolved_work_unit_id = unit.work_unit_id
     filing_instance_evidence = m303_filing_instance_evidence_from_cli(
         modelo=str(unit.modelo), period=unit.period, evidence_file=m303_filing_evidence

@@ -36,6 +36,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.catalogue_reads import InvoiceCatalogueReadAdapter
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -49,7 +50,6 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
@@ -102,7 +102,7 @@ def _persist_contradicted_supply(secure_objects: SecureObjectRepository) -> str:
 
 def _screen(secure_objects: SecureObjectRepository) -> CalculationSourceResolution:
     """Run the public IVA resolver and return its diagnostic-bearing resolution."""
-    snapshot = bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_YEAR, period=_PERIOD)
     context = CalculationSourceContext(
         bucket_id=_BUCKET_ID,
         modelo="303",

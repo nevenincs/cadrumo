@@ -15,8 +15,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.queries import RegistryQueryService
 from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import (
@@ -39,7 +39,9 @@ _REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 
 
 def _registry_target_for(observation) -> str:
-    rows = RegistryQueryService(bundled_authority()).formulas_for_scope("100", filing_year=2025, period="0A").rows
+    rows = (
+        RegistryQueryService(compiled_bundled_authority()).formulas_for_scope("100", filing_year=2025, period="0A").rows
+    )
     targets = {
         row.target_casilla_id
         for row in rows

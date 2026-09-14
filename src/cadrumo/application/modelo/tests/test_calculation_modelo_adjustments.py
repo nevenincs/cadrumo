@@ -7,10 +7,10 @@ from decimal import Decimal
 from typing import Literal, get_args
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
@@ -32,7 +32,7 @@ _RELATION = "modelo-390-prev-303-cuota-devengada-total"
 
 def test_m390_reconciliation_target_reaches_a_binding_declared_only_as_an_alternate() -> None:
     """The adjustment consumes the canonical reverse join, including alternates."""
-    snapshot = bundled_authority().snapshot(Modelo("390").value, filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot(Modelo("390").value, filing_year=2025, period="0A")
     revised_casillas = tuple(
         CasillaDefinition.model_validate(
             {

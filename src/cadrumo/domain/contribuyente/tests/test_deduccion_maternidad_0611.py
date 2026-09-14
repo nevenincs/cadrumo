@@ -33,9 +33,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.descendant_relacion import DescendantRelacion
-from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.descendant_relacion_catalogue import descendant_relacion_entitling_tokens
 from ..descendant import DescendantInfo
 from ..descendant_facts import (
@@ -55,7 +55,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: retyped, so a revision that moves either cannot leave this module asserting
 #: against a stale figure while the engine uses the new one.
 _THRESHOLDS = registry_thresholds(2024)
-_FACT_CONTEXT = FamilyFactResolutionContext(bundled_authority(), date(2024, 12, 31), date(2024, 12, 31))
+_FACT_CONTEXT = FamilyFactResolutionContext(compiled_bundled_authority(), date(2024, 12, 31), date(2024, 12, 31))
 _ART_81_1_MATERNITY_RELATIONS = art_81_1_maternity_relations(context=_FACT_CONTEXT)
 
 # ---------------------------------------------------------------------------

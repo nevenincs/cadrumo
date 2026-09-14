@@ -43,10 +43,10 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
-from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
@@ -114,7 +114,7 @@ def _domain_percentage(con_derecho: Decimal, total: Decimal) -> Decimal:
 
 def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal) -> Decimal:
     """The same legal quantity via the real registry snapshot and formula runtime."""
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     declared = {binding.id for binding in snapshot.revision.bindings}
     binding_values: dict[str, Decimal] = {
         binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
@@ -188,7 +188,7 @@ def test_selected_ratios_discriminate_between_the_two_roundings() -> None:
 @pytest.mark.parametrize("filing_year", _LIVE_FILING_YEARS)
 def test_both_live_m303_revisions_declare_the_round_up_code(filing_year: int) -> None:
     """Both live revisions must carry ``integer-ceiling`` on the prorrata percentage."""
-    snapshot = bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=filing_year, period="4T")
     formula = next(entry for entry in snapshot.revision.formulas if entry.id == _FORMULA_ID)
 
     assert formula.rounding == RegistryRoundingCode.INTEGER_CEILING, (

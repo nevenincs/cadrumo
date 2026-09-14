@@ -152,7 +152,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
@@ -355,7 +355,7 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
 
 
 def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
-    snapshot = bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
+    snapshot = compiled_bundled_authority().snapshot("303", filing_year=_FILING_YEAR, period=_PERIOD)
     binding_values = {
         # "Cuota a compensar de periodos anteriores: 3.000 euros" (pag. 294).
         "modelo-303-compensacion-pendiente-anteriores": Decimal("3000.00"),
@@ -478,3 +478,6 @@ def test_m303_2024_manual_grounding_is_enrolled_and_raises_independently_grounde
 
     assert _CASILLA_71 in externally_grounded
     assert independently_grounded_fraction > 0.0
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.handoffs import relation_consumption_channels, relation_consumption_index
 from cadrumo.domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -47,7 +46,7 @@ _EVIDENCE_ROLE = "factual_evidence"
 
 
 def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
-    snapshot = bundled_authority().snapshot("390", filing_year=2025, period="0A")
+    snapshot = compiled_bundled_authority().snapshot("390", filing_year=2025, period="0A")
     binding = next(
         item
         for item, _provider in relation_prefill_bindings_for_period(snapshot.revision)
@@ -130,3 +129,6 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
         f"Unconsumed relations carry unexpected roles {unconsumed_roles - {_EVIDENCE_ROLE}!r}; "
         f"only {_EVIDENCE_ROLE!r} cross-checks may stand unconsumed."
     )
+
+
+from dev.registry.compiler.authority import compiled_bundled_authority

@@ -20,6 +20,7 @@ from enum import StrEnum
 from typing import override
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.filing_projection_ref import (
     M296AnexoCertificadoField,
@@ -36,7 +37,6 @@ from ....core.payment_election import PaymentElection
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
-from ....domain.calculations.registry.authority import bundled_authority
 from .._m296_projection import build_m296_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
@@ -130,7 +130,7 @@ def _snapshot_and_layout():
     Resolved from (modelo, filing_year, period), never from a stored revision id: which
     revision applies is a derived fact, and the id is only asserted equal to it.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=2024, period="0A", on=None)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=2024, period="0A", on=None)
     assert str(snapshot.revision.id) == _REVISION, (
         f"the law-determined revision for 296/2024/0A is {snapshot.revision.id}, not {_REVISION}"
     )

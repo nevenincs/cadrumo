@@ -49,6 +49,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
@@ -56,7 +57,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.calculations.binding_prefill import resolve_bindings_from_local_store
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
@@ -160,7 +160,7 @@ def _member_ledger(*, member_nif: str, filing_year: int, period: str) -> tuple[I
 
 def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> RegistryCalculationResult:
     """Run the REAL 322 monthly calculation for one grupo member."""
-    snapshot = bundled_authority().snapshot("322", filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot("322", filing_year=filing_year, period=period)
     binding_values = resolve_ledger_iva_aggregation_binding_values(
         snapshot.revision,
         _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period),
@@ -226,7 +226,7 @@ def _resolve_353_aggregate(
     point as 390's prev-303 bindings — enumerating and summing every member's
     322 for ``(322, filing_year, period)``.
     """
-    snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
+    snapshot = compiled_bundled_authority().snapshot(_MODELO, filing_year=filing_year, period=period)
     prefill = resolve_bindings_from_local_store(
         snapshot, repository=repository, iva_history_repository=IvaCompensationHistoryRepository()
     )

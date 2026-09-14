@@ -16,6 +16,7 @@ from ...domain.transactions.enums import BusinessClassification
 from ._ledger_support import validate_category_id
 from .common import active_bucket_id_or_refuse as _rule_bucket_id
 from .common import bad, emit_envelope
+from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
     from ...application.ledger.action_ports import LedgerActionPorts
@@ -187,7 +188,7 @@ def rule_apply(
     resolved_actor = actor or resolve_active_bucket_id() or "operator"
     from ..ledger_action_composition import compose_ledger_action_ports
 
-    ports = compose_ledger_action_ports(bucket_id=bucket_id)
+    ports = compose_ledger_action_ports(bucket_id=bucket_id, operation=authority_operation(ctx))
 
     if dry_run:
         _emit_rule_apply_dry_run(ctx, bucket_id=bucket_id, reaffirm=reaffirm, ports=ports)

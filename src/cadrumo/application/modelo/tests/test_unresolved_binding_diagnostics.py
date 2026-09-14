@@ -28,9 +28,9 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ....core.aggregation import BindingSourceKind
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime import (
     evaluate_expression,
@@ -48,7 +48,7 @@ _LEDGER_IVA = BindingSourceKind.LEDGER_IVA_AGGREGATION
 
 
 def _modelo_303_revision() -> ModeloRevision:
-    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def test_expected_but_missing_fires_when_present_source_resolved_no_value() -> None:

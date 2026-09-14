@@ -20,8 +20,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ...modelos.dt12_reduccion import (
     Dt12WindowBranch,
     dt12_regime_window_eligibility,
@@ -31,7 +31,7 @@ from ...modelos.modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CONTEXT = ModeloFactResolutionContext(
-    authority=bundled_authority(),
+    authority=compiled_bundled_authority(),
     filing_period=date(2025, 12, 31),
     devengo_date=date(2025, 12, 31),
 )

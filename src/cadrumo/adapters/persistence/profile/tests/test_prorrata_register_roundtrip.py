@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pydantic
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
@@ -47,7 +48,6 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from .....domain.prorrata_register.register import (
@@ -67,7 +67,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
-    return bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
+    return compiled_bundled_authority().snapshot(Modelo("303").value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def test_repository_satisfies_the_revisioned_prorrata_port(tmp_path: Path) -> None:

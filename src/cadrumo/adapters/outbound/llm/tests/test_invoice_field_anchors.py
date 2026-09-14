@@ -41,13 +41,13 @@ from decimal import Decimal
 from typing import ClassVar
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from .....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
 from .....core.field_grounding import FieldGroundingOutcome
 from .....core.field_origin import FieldOrigin
 from .....core.period import Period
-from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.iva.rates import load_iva_rate_table
 from .....domain.iva.schema import EUMemberState
 from ..invoice_extraction_prompt import (
@@ -495,7 +495,7 @@ class TestTheTwoRateAuthoritiesAgreeForSpain:
         ledger row carries a fraction; scaled here because a printed invoice --
         and the prompt -- states a percentage.
         """
-        snapshot = bundled_authority().snapshot("390", filing_year=period.filing_year, period=str(period.code))
+        snapshot = compiled_bundled_authority().snapshot("390", filing_year=period.filing_year, period=str(period.code))
         rates: set[Decimal] = set()
         for binding in snapshot.revision.bindings:
             applied = getattr(getattr(binding, "selector", None), "applied_rates", None)

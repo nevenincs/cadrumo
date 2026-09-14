@@ -46,6 +46,7 @@ from dataclasses import dataclass
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.casilla_lineage_totality import judging_predecessor
+from cadrumo.domain.calculations.registry.casilla_structural_succession import structural_succession_failures
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
@@ -68,7 +69,7 @@ class _ResolvedPredecessor:
 def lineage_origin_continuity_failures(modelo: ModeloDefinition) -> tuple[str, ...]:
     """Refuse a continuation whose predecessor or seeding predicate does not hold."""
     revisions = ordered_revisions(modelo)
-    failures: list[str] = []
+    failures: list[str] = list(structural_succession_failures(modelo))
     for index, revision in enumerate(revisions):
         predecessor_revision = judging_predecessor(modelo, revisions, index)
         for casilla in revision.casillas:

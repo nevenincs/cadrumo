@@ -20,6 +20,7 @@ from ..ledger_action_composition import compose_ledger_action_ports
 from ._ledger_read_cli import resolve_ledger_transaction_id
 from ._ledger_support import ledger_cli_no_recovery
 from .common import ResolveTransactionId, current_workflow_state, emit_envelope, transaction_catalogue_repo
+from .state_projection_support import authority_operation
 
 
 def ledger_review(
@@ -32,7 +33,10 @@ def ledger_review(
         _ledger_review_query(
             transaction_repository, spec=spec, record_id=record_id, resolve_transaction_id=resolve_ledger_transaction_id
         ),
-        ports=compose_ledger_action_ports(bucket_id=transaction_repository.bucket_id),
+        ports=compose_ledger_action_ports(
+            bucket_id=transaction_repository.bucket_id,
+            operation=authority_operation(ctx),
+        ),
     )
     _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
 

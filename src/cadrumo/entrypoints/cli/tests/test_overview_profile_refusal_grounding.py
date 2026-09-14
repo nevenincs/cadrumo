@@ -18,6 +18,7 @@ from collections.abc import Sequence
 
 import pytest
 from click.testing import Result
+from dev.registry.compiler.authority import compiled_bundled_authority
 from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from ....application.user_profile.preflight import (
@@ -25,7 +26,6 @@ from ....application.user_profile.preflight import (
     format_profile_preflight_requirement,
     format_profile_selector_requirements,
 )
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from .._overview import (
     _ENTITY_TYPE_SELECTOR,
@@ -53,7 +53,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _grounding_index():
-    return build_profile_grounding_index(bundled_authority())
+    return build_profile_grounding_index(compiled_bundled_authority())
 
 
 def test_the_gating_field_label_differs_from_its_selector_token() -> None:

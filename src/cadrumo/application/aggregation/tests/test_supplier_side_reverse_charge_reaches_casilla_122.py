@@ -28,8 +28,8 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.classification import InvoiceKind
@@ -78,7 +78,7 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
 
 
 def _revision():
-    return bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
+    return compiled_bundled_authority().snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:

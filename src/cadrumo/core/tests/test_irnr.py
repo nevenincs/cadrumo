@@ -10,8 +10,8 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.convenio import resolve_convenio_override
 from ...domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from ...domain.transactions.m210_income_classification import resolve_m210_payer_mode
@@ -39,7 +39,7 @@ def test_payer_mode_is_projected_by_the_selected_detail_catalogue() -> None:
 
 
 def test_convenio_kind_is_projected_by_the_validated_fact_authority() -> None:
-    convenio = bundled_authority().catalogues.convenio
+    convenio = compiled_bundled_authority().catalogues.convenio
     treaty = next(iter(convenio.treaties.values()))
     row = treaty.overrides[0]
     override = resolve_convenio_override(

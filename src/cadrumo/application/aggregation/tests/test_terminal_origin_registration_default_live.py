@@ -26,8 +26,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from ....domain.calculations.registry.binding_terminal_audit import (
     effective_terminal_origins,
@@ -45,7 +45,7 @@ _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
 
 
 def _snapshot() -> RegistrySnapshot:
-    return bundled_authority().snapshot("100", filing_year=2025, period="0A")
+    return compiled_bundled_authority().snapshot("100", filing_year=2025, period="0A")
 
 
 def _profile_record() -> UserProfileRecord:

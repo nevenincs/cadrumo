@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from dev.registry.compiler.authority import compiled_bundled_authority
 from sqlalchemy import text
 
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
@@ -28,7 +29,6 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -43,7 +43,7 @@ runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID, autouse=Fals
 
 
 def _revision() -> ModeloRevision:
-    return bundled_authority().modelo("303").revisions["2022"]
+    return compiled_bundled_authority().modelo("303").revisions["2022"]
 
 
 def _transaction(provider_id: str) -> Transaction:
