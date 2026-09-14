@@ -42,12 +42,15 @@ from ....application.ledger.document_transcription import DocumentTranscription,
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.grounded_reading import ground_draft_against_transcription
 from ....application.ledger.invoice_draft_records import FieldProvenance, InvoiceDraft
+from ....application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings
 from ....core.confirmation_gate import ReviewAdvisoryKind
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ....domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from .ledger_ux_support import _invoke, open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -80,7 +83,7 @@ def _reader_envelope(field: str, anchor: str) -> FieldProvenance:
     )
 
 
-def _attribution_draft() -> InvoiceDraft:
+def _attribution_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return a draft whose address values carry unverified attribution.
 
     Put through :func:`~application.ledger.grounded_reading.ground_draft_against_transcription`,
@@ -119,10 +122,12 @@ def _attribution_draft() -> InvoiceDraft:
                 revision="1",
             ),
         ),
+        legends=legends,
+        operation=operation,
     )
 
 
-def _country_draft() -> InvoiceDraft:
+def _country_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return a draft whose billed party states a code no country holds.
 
     ``XX`` is one ISO 3166-1 permanently reserves against allocation, so the
@@ -140,30 +145,32 @@ def _country_draft() -> InvoiceDraft:
     # Stamped through the real check list exactly as a reading path hands a draft
     # on: seeding an empty tuple would make the no-blocker assertion true of the
     # fixture rather than of the product.
-    return read.model_copy(update={"discrepancies": deterministic_findings(read)})
+    return read.model_copy(update={"discrepancies": deterministic_findings(read, legends=legends, operation=operation)})
 
 
-def _clean_draft() -> InvoiceDraft:
+def _clean_draft(*, legends: tuple[RegimeLegend, ...], operation: PinnedAuthorityOperation) -> InvoiceDraft:
     """Return a draft carrying nothing advisory: the control every filter needs."""
     read = InvoiceDraft(
         supplier_tax_id="B12345674",
         supplier_name="Acme Suministros SL",
         taxable_base=Decimal("100.00"),
     )
-    return read.model_copy(update={"discrepancies": deterministic_findings(read)})
+    return read.model_copy(update={"discrepancies": deterministic_findings(read, legends=legends, operation=operation)})
 
 
 @pytest.fixture
 def seeded_queue(tmp_path: Path) -> Iterator[None]:
     """A live bucket carrying one draft per advisory kind plus one carrying none."""
-    with open_ledger_ux_session(tmp_path):
+    with open_ledger_ux_session(tmp_path), bundled_indexed_authority().operation() as operation:
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None
         settings = load_settings()
+        period = default_invoice_extraction_period()
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
         for reference, draft in (
-            (_ATTRIBUTION_REFERENCE, _attribution_draft()),
-            (_COUNTRY_REFERENCE, _country_draft()),
-            (_CLEAN_REFERENCE, _clean_draft()),
+            (_ATTRIBUTION_REFERENCE, _attribution_draft(legends=legends, operation=operation)),
+            (_COUNTRY_REFERENCE, _country_draft(legends=legends, operation=operation)),
+            (_CLEAN_REFERENCE, _clean_draft(legends=legends, operation=operation)),
         ):
             write_extraction_draft(
                 bucket_id=bucket_id,

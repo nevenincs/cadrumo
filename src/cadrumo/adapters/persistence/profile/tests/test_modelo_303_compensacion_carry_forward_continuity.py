@@ -68,6 +68,7 @@ from cadrumo.domain.calculations.registry.bindings import (
     RegistryModeloObservation,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import RelationId
 from cadrumo.domain.calculations.registry.relations import relation_prefill_values_as_binding_values
@@ -278,7 +279,9 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
     deductible less 21.00 accrued VAT yields the asserted 42.00 carry; the
     calculation engine is not used as the expected-value oracle.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
+        tmp_path=tmp_path
+    ):
         observation_repository = CalculationObservationRepository()
         source_snapshot = compiled_bundled_authority().snapshot(
             _MODELO,
@@ -313,7 +316,11 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
             period=_LATE_2024_PERIOD,
         )
         assert target_snapshot.revision.id == _LATE_2024_REVISION
-        relation_values = resolve_relations_from_local_store(target_snapshot, repository=observation_repository)
+        relation_values = resolve_relations_from_local_store(
+            target_snapshot,
+            repository=observation_repository,
+            operation=_authority_operation_for_test,
+        )
         carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
         resolved = {item.relation: item.value for item in relation_values.values if item.value is not None}
         target_binding_values = relation_prefill_values_as_binding_values(
@@ -338,7 +345,9 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
 def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
     """A persisted 2T observation cannot carry when its design stamp is wrong."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
+        tmp_path=tmp_path
+    ) as profile:
         observation_repository = CalculationObservationRepository()
         source_result, _ = _calculate_303(
             filing_year=_YEAR_2024,
@@ -382,7 +391,11 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
             filing_year=_YEAR_2024,
             period=_LATE_2024_PERIOD,
         )
-        relation_values = resolve_relations_from_local_store(target_snapshot, repository=observation_repository)
+        relation_values = resolve_relations_from_local_store(
+            target_snapshot,
+            repository=observation_repository,
+            operation=_authority_operation_for_test,
+        )
 
     carry_relation = next(item for item in relation_values.values if item.relation == _CARRY_RELATION)
     assert carry_relation.value is None
@@ -418,7 +431,9 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
     ``iva.compensacion-disponible-fin-periodo`` — the operator does not re-key
     the prior-year credit by hand.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
+        tmp_path=tmp_path
+    ):
         obs_repo = CalculationObservationRepository()
         result_n, _ = _calculate_303(
             filing_year=_YEAR_N,
@@ -439,7 +454,11 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
         )
 
         snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
+        relation_values = resolve_relations_from_local_store(
+            snapshot_n1,
+            repository=obs_repo,
+            operation=_authority_operation_for_test,
+        )
         resolved: dict[RelationId, Decimal] = {
             item.relation: item.value for item in relation_values.values if item.value is not None
         }
@@ -458,7 +477,9 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     assertion is that year N+1's 1T casilla 110 equals year N's 4T persisted
     saldo — the prior-year credit carried forward with no manual re-entry.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test, isolated_runtime_profile(
+        tmp_path=tmp_path
+    ):
         obs_repo = CalculationObservationRepository()
 
         # Year N — 4T: real calculation produces the carry saldo.
@@ -483,7 +504,11 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta
         # wrap), lands in casilla 110, and a real calculation runs with it.
         snapshot_n1 = compiled_bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
-        relation_values = resolve_relations_from_local_store(snapshot_n1, repository=obs_repo)
+        relation_values = resolve_relations_from_local_store(
+            snapshot_n1,
+            repository=obs_repo,
+            operation=_authority_operation_for_test,
+        )
         resolved: dict[RelationId, Decimal] = {
             item.relation: item.value for item in relation_values.values if item.value is not None
         }
