@@ -40,8 +40,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 
 [[revisions."2016-2017".casillas]]
 id = "decl.tipo-declaracion"
-continuidad_id = "declaracion-tipo-309"
 continuidad_origin = "predecessor_edition_silent"
+continuidad_id = "declaracion-tipo-309"
 continuidad_evidence = "THE PREDECESSOR DESIGN PRINTS IT; THE PREDECESSOR EDITION DOES NOT DECLARE IT. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 6, position 13, length 1, 'Tipo de declaracion' (nota 1: 'I (ingreso)'). the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints the same field as campo 3, position 5, length 1, 'tipo declaracion constante I a ingresar' - the one and only occurrence of the phrase 'tipo declaracion' in that design. The 2004-2015 revision declares no casilla for it: its rows cover positions 15, 25, 34, 74, 88-99 and 100-561 plus boxes [01]-[24], and none carries this field. The gap is in the corpus's predecessor declaration, not on the official form."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
@@ -105,8 +105,8 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.transmitente-pais"
 continuidad_id = "transmitente-pais"
-# Modern chain starts here; no predecessor link is asserted to the 2004
-# combined-name, country-description or separate category-flag surfaces.
+continuidad_origin = "grounded"
+continuidad_evidence = "aeat-dr-309-2004 campo 10, pais del transmitente como descripcion alfabetica de 14 caracteres, y aeat-dr-309-2016 M30901 campo 15, pais del mismo transmitente como codigo de dos caracteres: misma jurisdiccion de la misma parte de la operacion no periodica. Cambia la representacion texto/codigo, declarada mediante representation_evolved; no se retira el concepto pais."
 number = "198-199"
 section = ["declarante", "liquidacion"]
 data_type = "country_code"
@@ -117,8 +117,6 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.situacion-tributaria"
 continuidad_id = "situacion-tributaria"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 16, position 200, length 1, numeric, 'Situacion tributaria:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six situations as six separate one-character X-or-blank boxes at positions 88, 89, 90, 91, 92 and 93 - the phrase 'situacion tributaria - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "200"
@@ -131,8 +129,6 @@ legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-ha
 [[revisions."2016-2017".casillas]]
 id = "decl.hecho-imponible"
 continuidad_id = "hecho-imponible"
-continuidad_origin = "predecessor_edition_silent"
-continuidad_evidence = "A COLLAPSED REPETITION, NOT A NEW BOX. the 2016-2017 record design (aeat-dr-309-2016, corpus/.../modelo_309/files/03-309-...-2016-y-2017.xls.extracted.md, sha256 1bb317f154d6) prints campo 17, position 201, length 1, numeric, 'Hecho imponible:' enumerating six values 1-6. the 2004-2015 record design (aeat-dr-309-2004, corpus/.../modelo_309/files/02-309-orden-eha-3212-2004-ejercicios-hasta-2015.pdf, sha256 7a855ce41e9b) prints those SAME six hechos imponibles as six separate one-character X-or-blank boxes at positions 94, 95, 96, 97, 98 and 99 - the phrase 'hecho imponible - ' occurs there exactly six times - and the 2004-2015 revision declares all six as rows of its own. The field existed on the predecessor form; the predecessor edition simply declares no row under this chain, because the six boxes were collapsed into one coded box."
 # Modern chain starts here; no predecessor link is asserted to the 2004
 # combined-name, country-description or separate category-flag surfaces.
 number = "201"

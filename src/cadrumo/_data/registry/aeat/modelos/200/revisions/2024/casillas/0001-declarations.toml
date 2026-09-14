@@ -522,6 +522,8 @@ semantic_role = "is_identificacion_regimen_flag"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00067'
+continuidad_id = "aieg-ute-canary-investment-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 69: importe de la bonificacion o deduccion individual canary-investment-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 50; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '00067'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -728,6 +730,8 @@ semantic_role = "is_naviera_base_imponible_negativa"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00093'
+continuidad_id = "energy-temporary-levy-correction"
+# AEAT aeat-dr-200-2024 DP200012 : 13 | 132 | 17 | Num | Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Corrección por Gravamen temporal energético (Art. 1 Ley 38/2022) - Aumentos [00093]. Comparado con aeat-dr-200-2025: 2025DP200012 suprime las correcciones especificas de los gravamenes temporales de los arts.1/2 Ley38/2022; la nueva correccion del impuesto sobre margen bancario DF9 Ley7/2024 es otro tributo, no continuidad de esta celda.
 number = '00093'
 semantic_role = 'is_correcciones_aumentos'
 section = [
@@ -5783,6 +5787,8 @@ semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions.2024.casillas]]
 id = '00820'
+continuidad_id = "ordinary-recurrent-donation-2015-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 13 | 132 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2015 - Con reiteración de donaciones a una misma entidad -Pendiente de aplicación en periodos futuros [00820]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00820'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -6679,6 +6685,8 @@ semantic_role = "is_deduccion_reversion_medidas_dt1_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00902'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 69: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00902'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -6698,6 +6706,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00906'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 70: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00906'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -6815,6 +6825,8 @@ semantic_role = "is_deduccion_di_internacional_rdleg_tipo_gravamen"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00922'
+continuidad_id = "ric-2019-opening"
+# AEAT aeat-dr-200-2024 DP200022 : 6 | 13 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Pendiente de materializar RIC a principio de período [00922]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00922'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -6834,6 +6846,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00923'
+continuidad_id = "ric-2019-materialization-a-b"
+# AEAT aeat-dr-200-2024 DP200022 : 7 | 30 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [00923]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00923'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -6853,6 +6867,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00924'
+continuidad_id = "ric-2019-materialization-bbis-c-d"
+# AEAT aeat-dr-200-2024 DP200022 : 8 | 47 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [00924]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00924'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -6907,6 +6923,8 @@ semantic_role = "is_deduccion_reversion_medidas_periodo"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00930'
+continuidad_id = "priority-donation-2014-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 85 | 1356 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2014 - Deducción pendiente/generada [00930]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00930'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -6926,6 +6944,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00931'
+continuidad_id = "priority-donation-2014-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 86 | 1373 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2014 - Aplicado en esta liquidación [00931]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00931'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -6994,6 +7014,8 @@ semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions.2024.casillas]]
 id = '00939'
+continuidad_id = "canary-investment-2006-generated"
+# AEAT aeat-dr-200-2024 DP200016B : 78 | 1237 | 17 | Num | Deducciones inversión Canarias - Inversiones Canarias 2006 - Deducción pendiente/generada [00939]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '00939'
 semantic_role = 'is_balance_activo_importe'
 section = [
@@ -7013,6 +7035,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00940'
+continuidad_id = "canary-investment-2006-applied"
+# AEAT aeat-dr-200-2024 DP200016B : 79 | 1254 | 17 | Num | Deducciones inversión Canarias - Inversiones Canarias 2006 - Aplicado en esta liquidación [00940]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '00940'
 semantic_role = 'is_balance_activo_importe'
 section = [
@@ -7039,6 +7063,8 @@ semantic_role = "is_correccion_reversion_deterioro_valores_saldo_inicial"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00942'
+continuidad_id = "priority-nonrecurrent-donation-2015-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 89 | 1424 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2015 Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [00942]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00942'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -7090,6 +7116,8 @@ semantic_role = "is_deduccion_idi_suma_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '00948'
+continuidad_id = "priority-recurrent-donation-2015-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 92 | 1475 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2015 - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [00948]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00948'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -7165,6 +7193,8 @@ semantic_role = "is_deduccion_donativos_prioritarias"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions.2024.casillas]]
 id = '00955'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 73: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00955'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -7184,6 +7214,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00956'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 74: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00956'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -7203,6 +7235,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00957'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 75: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '00957'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -7474,6 +7508,8 @@ semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions.2024.casillas]]
 id = '00996'
+continuidad_id = "ric-2020-remaining"
+# AEAT aeat-dr-200-2024 DP200022 : 14 | 149 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Pendiente de materializar RIC al final de período [00996]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '00996'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -7493,6 +7529,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00997'
+continuidad_id = "ordinary-donation-2014-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 6 | 13 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2014 - Deducción pendiente/generada [00997]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00997'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -7512,6 +7550,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '00998'
+continuidad_id = "ordinary-donation-2014-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 7 | 30 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2014 - Aplicado en esta liquidación [00998]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '00998'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -8499,6 +8539,8 @@ semantic_role = "is_deduccion_reversion_medidas_dt2_base"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01087'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 76: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01087'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -8518,6 +8560,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01088'
+continuidad_id = "public-interest-paris-olympic-preparation-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 77: fila del acontecimiento paris-olympic-preparation, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01088'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -8537,6 +8581,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01089'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 78: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01089'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -8668,6 +8714,8 @@ semantic_role = "is_correccion_limite_beneficio_operativo_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01106'
+continuidad_id = "capitalization-reserve-2022-generated"
+# AEAT aeat-dr-200-2024 DP200020B : 18 | 217 | 17 | Num | Reserva Capitalización - 2022 - Derecho reducir B.I. generado periodo/pendiente aplicar inicio periodo [01106]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
 number = '01106'
 semantic_role = 'is_reserva_capitalizacion_importe'
 section = [
@@ -8687,6 +8735,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01107'
+continuidad_id = "capitalization-reserve-2022-applied"
+# AEAT aeat-dr-200-2024 DP200020B : 19 | 234 | 17 | Num | Reserva Capitalización - 2022 - Reducción B.I. aplicada [01107]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
 number = '01107'
 semantic_role = 'is_reserva_capitalizacion_importe'
 section = [
@@ -8720,6 +8770,8 @@ semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions.2024.casillas]]
 id = '01110'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 79: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01110'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -8893,6 +8945,8 @@ semantic_role = "is_conversion_aid_art130_importe"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions.2024.casillas]]
 id = '01134'
+continuidad_id = "deferred-tax-excess-quota-2022-opening"
+# AEAT aeat-dr-200-2024 DP200020C : 138 | 2257 | 17 | Num | Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva pendiente a principio periodo [01134]. Comparado con aeat-dr-200-2025: 2025DP200020C inicia exceso de cuota positiva en2023 sin saldo futuro2023. El cuadro distinto de AID mantiene otras celdas2022; no se confunden el exceso de cuota y los activos.
 number = '01134'
 semantic_role = 'is_conversion_aid_exceso_cuota_importe'
 section = [
@@ -8908,6 +8962,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01135'
+continuidad_id = "deferred-tax-excess-quota-2022-applied-2008-2015"
+# AEAT aeat-dr-200-2024 DP200020C : 139 | 2274 | 17 | Num | Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva aplicado periodos impositivos 2008 a 2015 [01135]. Comparado con aeat-dr-200-2025: 2025DP200020C inicia exceso de cuota positiva en2023 sin saldo futuro2023. El cuadro distinto de AID mantiene otras celdas2022; no se confunden el exceso de cuota y los activos.
 number = '01135'
 semantic_role = 'is_conversion_aid_exceso_cuota_importe'
 section = [
@@ -8923,6 +8979,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01136'
+continuidad_id = "deferred-tax-excess-quota-2022-applied-since-2016"
+# AEAT aeat-dr-200-2024 DP200020C : 140 | 2291 | 17 | Num | Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2022 - Exceso cuota líquida positiva aplicado periodos impositivos iniciados a partir 2016 [01136]. Comparado con aeat-dr-200-2025: 2025DP200020C inicia exceso de cuota positiva en2023 sin saldo futuro2023. El cuadro distinto de AID mantiene otras celdas2022; no se confunden el exceso de cuota y los activos.
 number = '01136'
 semantic_role = 'is_conversion_aid_exceso_cuota_importe'
 section = [
@@ -8959,6 +9017,8 @@ semantic_role = "is_reserva_capitalizacion_importe"
 legal_refs = ["ley-27-2014:art-25"]
 [[revisions.2024.casillas]]
 id = '01141'
+continuidad_id = "public-interest-joaquin-sorolla-centenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 80: fila del acontecimiento joaquin-sorolla-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01141'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -8978,6 +9038,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01142'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 81: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01142'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9004,6 +9066,8 @@ semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_inicial_cumpl
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01144'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 82: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01144'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9023,6 +9087,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01145'
+continuidad_id = "public-interest-primavera-sound-anniversary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 83: fila del acontecimiento primavera-sound-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01145'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9042,6 +9108,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01146'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 84: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01146'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9082,6 +9150,8 @@ semantic_role = "is_reserva_nivelacion_adicion_pendiente"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions.2024.casillas]]
 id = '01150'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 85: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01150'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9101,6 +9171,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01151'
+continuidad_id = "public-interest-victoria-angeles-centenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 86: fila del acontecimiento victoria-angeles-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01151'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9120,6 +9192,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01152'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 87: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01152'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9139,6 +9213,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01153'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 88: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01153'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9158,6 +9234,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01154'
+continuidad_id = "public-interest-picasso-death-anniversary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 89: fila del acontecimiento picasso-death-anniversary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01154'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9177,6 +9255,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01155'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 90: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01155'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9196,6 +9276,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01156'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 91: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01156'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9215,6 +9297,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01157'
+continuidad_id = "public-interest-todos-contra-cancer-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 92: fila del acontecimiento todos-contra-cancer, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01157'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9619,6 +9703,8 @@ semantic_role = "is_correccion_dotaciones_deterioro_creditos_saldo_final_cumplid
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01220'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 99: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01220'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9638,6 +9724,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01221'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 100: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01221'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9657,6 +9745,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01222'
+continuidad_id = "public-interest-wine-tourism-conference-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 101: fila del acontecimiento wine-tourism-conference, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01222'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9711,6 +9801,8 @@ semantic_role = "is_correcciones_impuesto_grupo_fiscal_disminucion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01233'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 105: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01233'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9737,6 +9829,8 @@ semantic_role = "is_liquidacion_iv_resultado_misc"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01235'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 106: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01235'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9756,6 +9850,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01236'
+continuidad_id = "public-interest-ateneo-madrid-bicentenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 107: fila del acontecimiento ateneo-madrid-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01236'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9775,6 +9871,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01237'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 108: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01237'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9794,6 +9892,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01238'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 109: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01238'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9813,6 +9913,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01239'
+continuidad_id = "public-interest-barcelona-equestrian-challenge-four-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 110: fila del acontecimiento barcelona-equestrian-challenge-four, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01239'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9979,6 +10081,8 @@ semantic_role = "is_gastos_financieros_limite_art16_calculo"
 legal_refs = ["ley-27-2014:art-16"]
 [[revisions.2024.casillas]]
 id = '01261'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 111: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01261'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -9998,6 +10102,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01262'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 112: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01262'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10017,6 +10123,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01263'
+continuidad_id = "public-interest-passeig-gracia-bicentenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 113: fila del acontecimiento passeig-gracia-bicentenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01263'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10036,6 +10144,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01264'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 114: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01264'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10055,6 +10165,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01265'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 115: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01265'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10074,6 +10186,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01266'
+continuidad_id = "public-interest-club-natacio-barcelona-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 116: fila del acontecimiento club-natacio-barcelona, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01266'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10093,6 +10207,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01267'
+continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 117: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01267'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10112,6 +10228,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01268'
+continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 118: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01268'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10131,6 +10249,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01269'
+continuidad_id = "public-interest-alimentaria-hostelco-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 119: fila del acontecimiento alimentaria-hostelco, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01269'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10165,6 +10285,8 @@ semantic_role = "is_deduccion_di_interna_tipo_gravamen"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions.2024.casillas]]
 id = '01272'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 120: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01272'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10184,6 +10306,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01273'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 121: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01273'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10203,6 +10327,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01274'
+continuidad_id = "public-interest-barcelona-music-lab-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 122: fila del acontecimiento barcelona-music-lab, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01274'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10244,6 +10370,8 @@ semantic_role = "is_liquidacion_iii_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01281'
+continuidad_id = "public-interest-south-summit-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 123: fila del acontecimiento south-summit, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01281'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10263,6 +10391,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01282'
+continuidad_id = "public-interest-south-summit-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 124: fila del acontecimiento south-summit, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01282'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10282,6 +10412,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01283'
+continuidad_id = "public-interest-south-summit-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 125: fila del acontecimiento south-summit, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01283'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -10800,6 +10932,8 @@ semantic_role = "is_deduccion_dt24a7_pendiente"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions.2024.casillas]]
 id = '01356'
+continuidad_id = "canary-fixed-assets-2010-remaining"
+# AEAT aeat-dr-200-2024 DP200016B : 8 | 47 | 17 | Num | Deducciones inversión Canarias - Activos fijos 2010 - Pendiente de aplicación en periodos futuros [01356]. Comparado con aeat-dr-200-2025: 2025DP200016B retira la cohorte Canarias2006 y ya no imprime saldo futuro para activos fijos2010, aunque conserva generado/aplicado2010. Se retira exactamente la cohorte o etapa indicada, no todo el incentivo.
 number = '01356'
 semantic_role = 'is_balance_activo_importe'
 section = [
@@ -11121,6 +11255,8 @@ semantic_role = "is_reserva_capitalizacion_importe"
 legal_refs = ["ley-27-2014:art-25"]
 [[revisions.2024.casillas]]
 id = '01403'
+continuidad_id = "capitalization-reserve-2023-remaining"
+# AEAT aeat-dr-200-2024 DP200020B : 22 | 285 | 17 | Num | Reserva Capitalización - 2023 - Reducción B.I. pdte. De aplicar en períodos futuros [01403]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia derechos de reserva de capitalizacion en2023, con generado/aplicado pero sin saldo futuro2023. No se confunde con la propia reserva patrimonial ni con derechos2024.
 number = '01403'
 semantic_role = 'is_reserva_capitalizacion_importe'
 section = [
@@ -11539,6 +11675,8 @@ semantic_role = "is_gastos_financieros_pendiente_deducir"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01469'
+continuidad_id = "deferred-tax-excess-quota-2023-remaining"
+# AEAT aeat-dr-200-2024 DP200020C : 144 | 2359 | 17 | Num | Conversión activos impuesto diferido crédito exigible frente Admón.tributaria - Exceso cuota líquida positiva - Ejercicio generación - 2023 - Exceso cuota líquida positiva pendiente aplicación periodos futuros [01469]. Comparado con aeat-dr-200-2025: 2025DP200020C inicia exceso de cuota positiva en2023 sin saldo futuro2023. El cuadro distinto de AID mantiene otras celdas2022; no se confunden el exceso de cuota y los activos.
 number = '01469'
 semantic_role = 'is_conversion_aid_exceso_cuota_importe'
 section = [
@@ -12424,6 +12562,8 @@ semantic_role = "is_correccion_deterioro_participaciones_dt16_all_temporaria_eje
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01603'
+continuidad_id = "levelling-reserve-2019-noncompliance"
+# AEAT aeat-dr-200-2024 DP200020B : 35 | 506 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe integrado en la declaración por incumplimiento de requisitos [01603]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '01603'
 semantic_role = 'is_reserva_nivelacion_incumplimiento'
 section = [
@@ -13052,6 +13192,8 @@ semantic_role = "is_correccion_operaciones_art19_otras_saldo_final"
 legal_refs = ["ley-27-2014:art-19"]
 [[revisions.2024.casillas]]
 id = '01689'
+continuidad_id = "ordinary-donation-2014-subtotal-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 74 | 1169 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2014 - Deducción pendiente/generada [01689]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '01689'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -13071,6 +13213,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01690'
+continuidad_id = "ordinary-donation-2014-subtotal-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 75 | 1186 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - Subtotal donaciones 2014 - Aplicado en esta liquidación [01690]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '01690'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -13153,6 +13297,8 @@ semantic_role = "is_deduccion_donativos_general"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions.2024.casillas]]
 id = '01701'
+continuidad_id = "priority-donation-2014-subtotal-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 153 | 2512 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2014 - Deducción pendiente/generada [01701]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '01701'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -13172,6 +13318,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01702'
+continuidad_id = "priority-donation-2014-subtotal-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 154 | 2529 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - Subtotal donaciones 2014 - Aplicado en esta liquidación [01702]. Comparado con aeat-dr-200-2025: 2025DP200018C inicia las donaciones en2015, sin filas ni subtotales2014; para2015 conserva generado/aplicado pero no el saldo futuro. Se retira solo esta cohorte/etapa, sin trasladarla por similitud a2016.
 number = '01702'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -13219,6 +13367,8 @@ semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01708'
+continuidad_id = "riib-2024-current-advance-materialization"
+# AEAT aeat-dr-200-2024 DP200022B : 11 | 98 | 17 | Num | Rég. especial reserva inversiones Illes Balears - RIIB 2024 - Aplicado/materializado en esta liquidación - Inversiones anticipadas consideradas materialización de la RIIB en esta liquidación [01708]. Comparado con aeat-dr-200-2025: 2025DP200022/DP200022B conserva el saldo de la cohorte2024 y pasa su dotacion/inversion a detalle historico. Ya no imprime esta columna especifica de operacion corriente2024. Los destinos de materializacion historica y los saldos de inversiones anticipadas son magnitudes distintas; no se declara identidad ni conversion entre ellas.
 number = '01708'
 semantic_role = 'is_reserva_inversiones_illes_balears_importe'
 section = [
@@ -14221,6 +14371,8 @@ semantic_role = "is_correccion_deterioro_participaciones_dt16_saldo_final"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01870'
+continuidad_id = "public-interest-plan-2030-base-sport-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 71: fila del acontecimiento plan-2030-base-sport, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01870'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -14436,6 +14588,8 @@ semantic_role = "is_deduccion_inversiones_africa_canarias_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01903'
+continuidad_id = "public-interest-hockey-centenary-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 129: fila del acontecimiento hockey-centenary, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01903'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -14455,6 +14609,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01904'
+continuidad_id = "public-interest-hockey-centenary-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 130: fila del acontecimiento hockey-centenary, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01904'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -14495,6 +14651,8 @@ semantic_role = "is_deduccion_inversion_canarias_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01914'
+continuidad_id = "public-interest-universo-mujer-three-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 72: fila del acontecimiento universo-mujer-three, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01914'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -14856,6 +15014,8 @@ semantic_role = "is_correccion_libertad_amortizacion_vehiculos_permanente_dismin
 legal_refs = ["ley-27-2014:da-18"]
 [[revisions.2024.casillas]]
 id = '01963'
+continuidad_id = "ric-2019-noncompliance"
+# AEAT aeat-dr-200-2024 DP200022 : 9 | 64 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2019 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [01963]. Comparado con aeat-dr-200-2025: 2025DP200022 inicia RIC en2020 con apertura/materializacion/incumplimiento pero sin saldo final2020. No mantiene las celdasRIC2019; no se afirma que desaparezca todo el regimen.
 number = '01963'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -14875,6 +15035,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01964'
+continuidad_id = "levelling-reserve-2019-allocation-required"
+# AEAT aeat-dr-200-2024 DP200020B : 62 | 965 | 17 | Num | Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva a dotar [01964]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '01964'
 semantic_role = 'is_reserva_nivelacion_dotacion'
 section = [
@@ -14890,6 +15052,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01965'
+continuidad_id = "levelling-reserve-2019-allocated"
+# AEAT aeat-dr-200-2024 DP200020B : 63 | 982 | 17 | Num | Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva dotada [01965]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '01965'
 semantic_role = 'is_reserva_nivelacion_dotacion'
 section = [
@@ -14905,6 +15069,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01966'
+continuidad_id = "levelling-reserve-2019-allocation-remaining"
+# AEAT aeat-dr-200-2024 DP200020B : 64 | 999 | 17 | Num | Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Importe reserva pendiente dotación [01966]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '01966'
 semantic_role = 'is_reserva_nivelacion_dotacion_pendiente'
 section = [
@@ -14920,6 +15086,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01967'
+continuidad_id = "levelling-reserve-2019-disposed"
+# AEAT aeat-dr-200-2024 DP200020B : 65 | 1016 | 17 | Num | Reserva de nivelación - Dotación de la reserva - Ejercicio generación 2019 - Reserva dispuesta [01967]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '01967'
 semantic_role = 'is_reserva_nivelacion_dotacion_dispuesta'
 section = [
@@ -14991,6 +15159,8 @@ semantic_role = "is_deduccion_idi_excluida_limite_innovacion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01976'
+continuidad_id = "public-interest-hockey-centenary-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 131: fila del acontecimiento hockey-centenary, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '01976'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -15045,6 +15215,8 @@ semantic_role = "is_gastos_financieros_pendiente_deducir"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '01982'
+continuidad_id = "unused-operating-profit-2019-opening"
+# AEAT aeat-dr-200-2024 DP200020 : 96 | 1543 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Pendiente aplicación a principio del período [01982]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '01982'
 semantic_role = 'is_gastos_financieros_pendiente_deducir'
 section = [
@@ -15064,6 +15236,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '01983'
+continuidad_id = "unused-operating-profit-2019-applied"
+# AEAT aeat-dr-200-2024 DP200020 : 97 | 1560 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2019 - Aplicado en esta liquidación [01983]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '01983'
 semantic_role = 'is_gastos_financieros_pendiente_deducir'
 section = [
@@ -16336,6 +16510,8 @@ semantic_role = "is_deduccion_reversion_medidas_dt2_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02238'
+continuidad_id = "levelling-reserve-2019-reduction-opening"
+# AEAT aeat-dr-200-2024 DP200020B : 33 | 472 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo [02238]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '02238'
 semantic_role = 'is_reserva_capitalizacion_importe'
 section = [
@@ -16355,6 +16531,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02239'
+continuidad_id = "levelling-reserve-2019-added"
+# AEAT aeat-dr-200-2024 DP200020B : 34 | 489 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2019 - Importe adicionado base imponible en periodo [02239]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '02239'
 semantic_role = 'is_reserva_nivelacion_adicion_realizada'
 section = [
@@ -16510,6 +16688,8 @@ semantic_role = "is_correccion_limite_beneficio_operativo_pendiente_adicion_apli
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02260'
+continuidad_id = "unused-operating-profit-2020-remaining"
+# AEAT aeat-dr-200-2024 DP200020 : 100 | 1611 | 17 | Num | Pendiente adición por límite beneficio operativo no aplicado - Ejercicio generación 2020 - Pendiente aplicación períodos futuros [02260]. Comparado con aeat-dr-200-2025: 2025DP200020 inicia este cuadro de limite de beneficio operativo en2020, sin saldo futuro2020. La reserva de limite2019 y la etapa futura2020 ya no se solicitan; los gastos financieros pendientes son otro cuadro.
 number = '02260'
 semantic_role = 'is_gastos_financieros_pendiente_deducir'
 section = [
@@ -16683,6 +16863,8 @@ semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02284'
+continuidad_id = "public-interest-manifesta-fifteen-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 159: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02284'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -16702,6 +16884,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02285'
+continuidad_id = "public-interest-manifesta-fifteen-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 160: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02285'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -16721,6 +16905,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02286'
+continuidad_id = "public-interest-manifesta-fifteen-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 161: fila del acontecimiento manifesta-fifteen, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02286'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17302,6 +17488,8 @@ semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02363'
+continuidad_id = "riib-2024-advance-investment-a-b"
+# AEAT aeat-dr-200-2024 DP200022B : 16 | 183 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2024 - Inversiones previstas letras A y B, DA 70.4 Ley 31/2022 [02363]. Comparado con aeat-dr-200-2025: 2025DP200022/DP200022B conserva el saldo de la cohorte2024 y pasa su dotacion/inversion a detalle historico. Ya no imprime esta columna especifica de operacion corriente2024. Los destinos de materializacion historica y los saldos de inversiones anticipadas son magnitudes distintas; no se declara identidad ni conversion entre ellas.
 number = '02363'
 semantic_role = 'is_reserva_inversiones_illes_balears_importe'
 section = [
@@ -17317,6 +17505,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02364'
+continuidad_id = "riib-2024-advance-investment-c"
+# AEAT aeat-dr-200-2024 DP200022B : 17 | 200 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2024 - Inversiones previstas letra C DA 70.4 Ley 31/2022 [02364]. Comparado con aeat-dr-200-2025: 2025DP200022/DP200022B conserva el saldo de la cohorte2024 y pasa su dotacion/inversion a detalle historico. Ya no imprime esta columna especifica de operacion corriente2024. Los destinos de materializacion historica y los saldos de inversiones anticipadas son magnitudes distintas; no se declara identidad ni conversion entre ellas.
 number = '02364'
 semantic_role = 'is_reserva_inversiones_illes_balears_importe'
 section = [
@@ -17332,6 +17522,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02365'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 45: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02365'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17351,6 +17543,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02366'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 46: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02366'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17370,6 +17564,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02367'
+continuidad_id = "public-interest-alicante-sailing-departure-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 47: fila del acontecimiento alicante-sailing-departure, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02367'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17662,6 +17858,8 @@ semantic_role = "is_reserva_nivelacion_adicion_realizada"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions.2024.casillas]]
 id = '02412'
+continuidad_id = "levelling-reserve-2020-addition-remaining"
+# AEAT aeat-dr-200-2024 DP200020B : 39 | 574 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe pendiente adicionar en periodos futuros [02412]. Comparado con aeat-dr-200-2025: 2025DP200020B inicia los cuadros de reduccion/dotacion en2020; conserva adicion y regularizacion2020 pero no saldo futuro2020. Se retira la celda2019 o etapa futura2020 concreta.
 number = '02412'
 semantic_role = 'is_reserva_nivelacion_adicion_pendiente'
 section = [
@@ -17915,6 +18113,8 @@ semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02458'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-generated"
+# AEAT aeat-dr-200-2024 DP200018 campo 63: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna pendiente/generada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02458'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17934,6 +18134,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02459'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-applied"
+# AEAT aeat-dr-200-2024 DP200018 campo 64: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna aplicada. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02459'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -17953,6 +18155,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02460'
+continuidad_id = "public-interest-andalucia-valderrama-masters-credit-2024-remaining"
+# AEAT aeat-dr-200-2024 DP200018 campo 65: fila del acontecimiento andalucia-valderrama-masters, ejercicio 2024, columna pendiente futura. aeat-dr-200-2025 DP200018 no solicita esta fila anual; DP200017 detalla saldos historicos agregados 2024. Se retira la celda individual, sin extinguir el derecho pendiente ni equipararlo con la suma; cualquier fila 2025 del acontecimiento es otra cohorte.
 number = '02460'
 semantic_role = 'is_deduccion_idi_innovacion_tecnologica'
 section = [
@@ -18021,6 +18225,8 @@ semantic_role = "is_correcciones_disminuciones"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02471'
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 62 | 965 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02471]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02471'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -18802,6 +19008,8 @@ semantic_role = "is_correccion_asimetrias_hibridas_art15bis_saldo_final"
 legal_refs = ["ley-27-2014:art-15-bis"]
 [[revisions.2024.casillas]]
 id = '02576'
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 63 | 982 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02576]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02576'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -18817,6 +19025,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02577'
+continuidad_id = "ordinary-nonrecurrent-donation-2024-subperiod-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 64 | 999 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02577]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02577'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -19647,6 +19857,8 @@ semantic_role = "is_correccion_deterioro_valores_participaciones_art13_2b_saldo_
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02691'
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 65 | 1016 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad- Deducción pendiente/generada [02691]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02691'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -19662,6 +19874,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02692'
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 66 | 1033 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02692]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02692'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -19677,6 +19891,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02693'
+continuidad_id = "ordinary-recurrent-donation-2024-subperiod-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 67 | 1050 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones de carácter general - 2024(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02693]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02693'
 semantic_role = 'is_deduccion_donativos_general'
 section = [
@@ -19692,6 +19908,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02694'
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 141 | 2308 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02694]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02694'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -19708,6 +19926,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02695'
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 142 | 2325 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02695]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02695'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -19724,6 +19944,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02696'
+continuidad_id = "priority-nonrecurrent-donation-2024-subperiod-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 143 | 2342 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Sin reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02696]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02696'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -19740,6 +19962,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02697'
+continuidad_id = "priority-recurrent-donation-2024-subperiod-generated"
+# AEAT aeat-dr-200-2024 DP200018C : 144 | 2359 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad - Deducción pendiente/generada [02697]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02697'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -19756,6 +19980,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02698'
+continuidad_id = "priority-recurrent-donation-2024-subperiod-applied"
+# AEAT aeat-dr-200-2024 DP200018C : 145 | 2376 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad - Aplicado en esta liquidación [02698]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02698'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -19779,6 +20005,8 @@ semantic_role = "is_correccion_disminucion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02700'
+continuidad_id = "priority-recurrent-donation-2024-subperiod-remaining"
+# AEAT aeat-dr-200-2024 DP200018C : 146 | 2393 | 17 | Num | Deducción donativos entidades sin fines lucro - Donaciones para actividades prioritarias de mecenazgo y otras con derecho a deducción incrementada - 2024(*) - Con reiteración de donaciones a una misma entidad - Pendiente de aplicación en periodos futuros [02700]. aeat-dr-200-2025 DP200018C retira el subdetalle2024(*) y conserva la fila2024 de la misma clase, ya existente en2024, con sus identificadores00369/00395/00401,00405/00422/00423,00424/00430/00431 o00432/00439/00440. No nace una identidad agregada nueva: se retira el subdetalle de periodos2024(*) sin extinguir el credito ni inventar una fusion.
 number = '02700'
 semantic_role = 'is_deduccion_donativos_prioritarias'
 section = [
@@ -21447,6 +21675,8 @@ semantic_role = "is_reserva_inversiones_illes_balears_importe"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02943'
+continuidad_id = "aieg-ute-canary-goods-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 33: importe de la bonificacion o deduccion individual canary-goods-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 32; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02943'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21466,6 +21696,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02945'
+continuidad_id = "aieg-ute-balearic-goods-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 35: importe de la bonificacion o deduccion individual balearic-goods-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 33; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02945'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21485,6 +21717,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02947'
+continuidad_id = "aieg-ute-cooperative-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 37: importe de la bonificacion o deduccion individual cooperative-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 34; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02947'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21504,6 +21738,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02949'
+continuidad_id = "aieg-ute-housing-rental-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 39: importe de la bonificacion o deduccion individual housing-rental-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 35; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02949'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21593,6 +21829,8 @@ semantic_role = "is_correccion_efectos_valoracion_contable_diferente_fiscal_sald
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02961'
+continuidad_id = "aieg-ute-canary-shipping-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 41: importe de la bonificacion o deduccion individual canary-shipping-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 36; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02961'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21612,6 +21850,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02963'
+continuidad_id = "aieg-ute-other-bonus-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 43: importe de la bonificacion o deduccion individual other-bonus. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 37; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02963'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21631,6 +21871,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02965'
+continuidad_id = "aieg-ute-research-development-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 45: importe de la bonificacion o deduccion individual research-development-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 38; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02965'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21657,6 +21899,8 @@ semantic_role = "is_correccion_disminucion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02968'
+continuidad_id = "aieg-ute-technological-innovation-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 47: importe de la bonificacion o deduccion individual technological-innovation-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 39; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02968'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21676,6 +21920,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02970'
+continuidad_id = "aieg-ute-spanish-film-producer-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 49: importe de la bonificacion o deduccion individual spanish-film-producer-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 40; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02970'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21695,6 +21941,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '02971'
+continuidad_id = "credit-institution-temporary-levy-correction"
+# AEAT aeat-dr-200-2024 DP200012 : 14 | 149 | 17 | Num | Liquidación I - Detalle correcciones resultado cta. pérdidas y ganancias - Corrección por Gravamen temporal de entidades de crédito y establecimientos financieros de crédito (Art. 2 Ley 38/2022) - Aumentos [02971]. Comparado con aeat-dr-200-2025: 2025DP200012 suprime las correcciones especificas de los gravamenes temporales de los arts.1/2 Ley38/2022; la nueva correccion del impuesto sobre margen bancario DF9 Ley7/2024 es otro tributo, no continuidad de esta celda.
 number = '02971'
 semantic_role = 'is_correcciones_aumentos'
 section = [
@@ -21721,6 +21969,8 @@ semantic_role = "is_correccion_limite_beneficio_operativo_pendiente"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '02974'
+continuidad_id = "aieg-ute-live-performance-producer-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 51: importe de la bonificacion o deduccion individual live-performance-producer-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 41; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02974'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -21761,6 +22011,8 @@ semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions.2024.casillas]]
 id = '02979'
+continuidad_id = "aieg-ute-disabled-worker-employment-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 53: importe de la bonificacion o deduccion individual disabled-worker-employment-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 42; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '02979'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -22347,6 +22599,8 @@ semantic_role = "is_correccion_impuesto_extranjero_art32_1_permanente_aumento"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '03062'
+continuidad_id = "aieg-ute-employee-pension-contribution-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 55: importe de la bonificacion o deduccion individual employee-pension-contribution-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 43; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03062'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -22366,6 +22620,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03064'
+continuidad_id = "aieg-ute-profit-investment-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 57: importe de la bonificacion o deduccion individual profit-investment-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 44; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03064'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -22385,6 +22641,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03066'
+continuidad_id = "aieg-ute-forestry-investment-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 59: importe de la bonificacion o deduccion individual forestry-investment-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 45; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03066'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -22404,6 +22662,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03068'
+continuidad_id = "aieg-ute-west-africa-investment-advertising-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 61: importe de la bonificacion o deduccion individual west-africa-investment-advertising-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 46; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03068'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -22423,6 +22683,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03070'
+continuidad_id = "aieg-ute-public-interest-event-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 63: importe de la bonificacion o deduccion individual public-interest-event-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 47; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03070'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23674,6 +23936,8 @@ semantic_role = "is_correccion_montes_vecinales_cap_xv_permanente_disminucion"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '03248'
+continuidad_id = "aieg-ute-foreign-film-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 73: importe de la bonificacion o deduccion individual foreign-film-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 52; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03248'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23693,6 +23957,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03250'
+continuidad_id = "aieg-ute-canary-foreign-film-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 75: importe de la bonificacion o deduccion individual canary-foreign-film-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 53; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03250'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23922,6 +24188,8 @@ semantic_role = "is_entidad_sin_fines_lucrativos_disminucion"
 legal_refs = ["ley-49-2002:art-6", "ley-49-2002:art-7", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '03282'
+continuidad_id = "aieg-ute-port-authority-investment-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 77: importe de la bonificacion o deduccion individual port-authority-investment-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 54; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03282'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23941,6 +24209,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03284'
+continuidad_id = "aieg-ute-nonprofit-donation-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 79: importe de la bonificacion o deduccion individual nonprofit-donation-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 55; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03284'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23967,6 +24237,8 @@ semantic_role = "is_correccion_cooperativas_fondo_reserva_obligatorio_permanente
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '03287'
+continuidad_id = "aieg-ute-canary-research-development-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 85: importe de la bonificacion o deduccion individual canary-research-development-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 58; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03287'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -23986,6 +24258,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03289'
+continuidad_id = "aieg-ute-canary-technological-innovation-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 87: importe de la bonificacion o deduccion individual canary-technological-innovation-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 59; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03289'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -24145,6 +24419,8 @@ semantic_role = "is_exencion_transmision_saldo_fin"
 legal_refs = ["ley-27-2014:da-6"]
 [[revisions.2024.casillas]]
 id = '03311'
+continuidad_id = "aieg-ute-canary-spanish-film-producer-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 89: importe de la bonificacion o deduccion individual canary-spanish-film-producer-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 60; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03311'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -24164,6 +24440,8 @@ source_refs = [
 ]
 [[revisions.2024.casillas]]
 id = '03312'
+continuidad_id = "ric-2024-current-advance-materialization"
+# AEAT aeat-dr-200-2024 DP200022 : 30 | 421 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones anticipadas consideradas materialización de la RIC en esta liquidación [03312]. Comparado con aeat-dr-200-2025: 2025DP200022/DP200022B conserva el saldo de la cohorte2024 y pasa su dotacion/inversion a detalle historico. Ya no imprime esta columna especifica de operacion corriente2024. Los destinos de materializacion historica y los saldos de inversiones anticipadas son magnitudes distintas; no se declara identidad ni conversion entre ellas.
 number = '03312'
 semantic_role = 'is_cooperativa_base_imponible'
 section = [
@@ -24190,6 +24468,8 @@ semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions.2024.casillas]]
 id = '03315'
+continuidad_id = "aieg-ute-canary-live-performance-producer-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 91: importe de la bonificacion o deduccion individual canary-live-performance-producer-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 61; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03315'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -24473,6 +24753,8 @@ semantic_role = "is_reserva_inversiones_canarias_importe"
 legal_refs = ["ley-19-1994:art-27"]
 [[revisions.2024.casillas]]
 id = '03356'
+continuidad_id = "aieg-ute-foral-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 81: importe de la bonificacion o deduccion individual foral-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 56; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03356'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -24506,6 +24788,8 @@ semantic_role = "is_cooperativa_compensacion_cuotas"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = '03360'
+continuidad_id = "aieg-ute-other-credit-amount"
+# AEAT aeat-dr-200-2024 DP200024 campo 83: importe de la bonificacion o deduccion individual other-credit. Es el importe, no su base. aeat-dr-200-2025 DP200024 conserva solamente la base de este incentivo en campo 57; suprime la columna de importe de los apartados 7 y 8. Retirada de celda informativa, no derogacion del incentivo ni conversion del importe en base.
 number = '03360'
 semantic_role = 'is_agrupacion_interes_econo_6_deduc_evitar_doble_imposicion_base_de_la_deduc'
 section = [
@@ -25576,11 +25860,14 @@ semantic_role = "is_retenciones_ingresos_a_cuenta"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions.2024.casillas]]
 id = 'DP200018:00588'
-number = 'DP200018:00588'
+continuidad_id = "incentive-deductions-detail-total-applied"
+number = "00588"
+segmento = "DP200018"
 semantic_role = 'is_liquidacion_iv_importe'
 section = [
-    'liquidacion_iv',
-    'otras_deducciones',
+    'deducciones_incentivos',
+    'DP200018',
+    'total_aplicado',
 ]
 legal_refs = [
     'ley-27-2014:art-41',

@@ -293,8 +293,6 @@ exclude = [
   # not shipped as a second loader-readable TOML source.
   "src/cadrumo/_data/registry/cadrumo",
   "src/cadrumo/_data/registry/cadrumo/**",
-  "src/cadrumo/_data/registry/authority/authority.json",
-  "src/cadrumo/_data/registry/authority/authority.json.lock",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -324,12 +322,10 @@ exclude = [
   # a release promoted -- which is exactly what an acquisition proof compares.
   "src/cadrumo/_data/registry/aeat-registry-identity.json",
   "src/cadrumo/_data/registry/aeat-validation-verdict.json",
-  # Captured profile declarations and the legacy eager frame are authoring
-  # inputs/fallbacks, never installed runtime resources.
+  # Captured profile declarations are authoring inputs, never installed
+  # runtime resources.
   "src/cadrumo/_data/registry/cadrumo",
   "src/cadrumo/_data/registry/cadrumo/**",
-  "src/cadrumo/_data/registry/authority/authority.json",
-  "src/cadrumo/_data/registry/authority/authority.json.lock",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.

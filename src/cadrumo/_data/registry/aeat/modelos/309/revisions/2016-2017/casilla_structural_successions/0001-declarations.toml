@@ -1,0 +1,35 @@
+[[revisions."2016-2017".casilla_structural_successions]]
+id = "transmitente-nombre-desglosado"
+kind = "split"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+source_lineages = ["transmitente-apellidos-nombre-razon-social"]
+target_lineages = ["transmitente-apellidos","transmitente-nombre"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+from_source_refs = ["aeat-dr-309-2004"]
+to_source_refs = ["aeat-dr-309-2016"]
+evidence = "PDF campo 9 posicion 34 longitud 40 combina apellidos, nombre o razon social. XLS M30901 campos 13 y 14 separan apellidos/denominacion social (118,60) y nombre (178,20). Las identidades nuevas suceden a la superficie conjunta; no hay conversion automatica ni herencia de valores o etiquetas."
+
+[[revisions."2016-2017".casilla_structural_successions]]
+id = "situacion-tributaria-codificada"
+kind = "merge"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+source_lineages = ["situacion-tributaria-agricola","situacion-tributaria-recargo-equivalencia","situacion-tributaria-sin-derecho-deduccion","situacion-tributaria-persona-juridica-no-empresario","situacion-tributaria-persona-fisica-no-empresario","situacion-tributaria-otras"]
+target_lineages = ["situacion-tributaria"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+from_source_refs = ["aeat-dr-309-2004"]
+to_source_refs = ["aeat-dr-309-2016"]
+evidence = "PDF campos 11-16 posiciones 88-93 son seis marcas X/blanco para las situaciones tributarias enumeradas. XLS M30901 campo 16 posicion 200 es un selector numerico de las mismas seis categorias 1-6. La nueva superficie sucede al conjunto, sin afirmar que cualquier combinacion historica pueda convertirse ni heredar valores."
+
+[[revisions."2016-2017".casilla_structural_successions]]
+id = "hecho-imponible-codificado"
+kind = "merge"
+from_revision = "2004-2015"
+to_revision = "2016-2017"
+source_lineages = ["hecho-imponible-adquisicion-intracomunitaria","hecho-imponible-medios-transporte-nuevos","hecho-imponible-inversion-sujeto-pasivo","hecho-imponible-entrega-inversion-inmobiliaria","hecho-imponible-procedimiento-administrativo-judicial","hecho-imponible-otros"]
+target_lineages = ["hecho-imponible"]
+legal_refs = ["orden-hac-3625-2003:apartado-1"]
+from_source_refs = ["aeat-dr-309-2004"]
+to_source_refs = ["aeat-dr-309-2016"]
+evidence = "PDF campos 17-22 posiciones 94-99 son seis marcas X/blanco para los hechos imponibles enumerados. XLS M30901 campo 17 posicion 201 es un selector numerico de los mismos seis hechos 1-6. La nueva superficie sucede al conjunto, sin conversion automatica ni afirmacion de reversibilidad."

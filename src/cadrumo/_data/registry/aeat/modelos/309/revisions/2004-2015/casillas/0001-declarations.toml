@@ -55,11 +55,12 @@ number = "74"
 section = ["declarante","liquidacion"]
 data_type = "text"
 # The 2004 source gives this as a fourteen-character country description.
-# Later designs carry a two-character country code, so it is not the same
-# typed semantic role despite the shared display label.
-continuidad_id = "transmitente-pais-texto-historico"
-semantic_role = "transmitente_pais_texto_historico"
-constraints = { max_length = 14, legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"] }
+# Later designs encode the same transmitente country as a two-character code;
+# the value representation evolves, not the country role or its population.
+continuidad_id = "transmitente-pais"
+semantic_role = "transmitente_pais"
+# The fourteen-character width belongs to the historical export field;
+# it is not a fiscal-domain limit on the country concept.
 legal_refs = ["ley-37-1992:art-161", "orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 [[revisions."2004-2015".casillas]]
 id = "decl.situacion-tributaria-agricola"
