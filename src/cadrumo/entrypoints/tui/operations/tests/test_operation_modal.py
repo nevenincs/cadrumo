@@ -24,6 +24,9 @@ from textual.pilot import Pilot
 from textual.widgets import Button, Static
 
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 
 from .....adapters.persistence.operations.journal import OperationJournalRepository
 from .....adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
@@ -117,6 +120,7 @@ def _runtime(
     before_irreversible_section: Callable[[], Awaitable[None]] | None = None,
 ) -> Generator[tuple[OperationComposedServices, OperationRegistry, UUID]]:
     """One real production-shaped registry, journal, lease, and custody set."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     async def acquire_censo() -> CensalOperationAcquisition:
         return CensalOperationAcquisition(observation=_observation())
@@ -127,9 +131,15 @@ def _runtime(
             passphrase=_PASSPHRASE,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         profile_id = UUID(enrolled.profile_id)
-        initial_login = login_profile(name=enrolled.profile_id, passphrase_callback=lambda: _PASSPHRASE)
+        initial_login = login_profile(
+            name=enrolled.profile_id,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         auth_definitions = build_auth_operation_definitions(profile_login=lambda **_kwargs: initial_login)
         auth_registrations = build_auth_operation_registrations(auth_definitions)
         censal_definition = build_censal_operation_definition(

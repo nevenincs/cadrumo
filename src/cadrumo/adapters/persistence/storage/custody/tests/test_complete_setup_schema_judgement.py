@@ -35,6 +35,9 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.application.user_profile.profile_record_repository import (
@@ -58,16 +61,21 @@ _PASSPHRASE = "complete-setup-schema-judgement-passphrase"  # noqa: S105 - synth
 @contextmanager
 def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Generator[tuple[Path, str]]:
     """Register a real INCOMPLETE capsule carrying ``facts`` and bind its session."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Promotion subject",
             passphrase=_PASSPHRASE,
             facts=facts,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
         unlocked = unlock_profile_custody(material.envelope, _PASSPHRASE, sentinel=material.sentinel)
-        session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=unlocked.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             with bound_profile_record_session(session):
                 yield storage_root, outcome.profile_id
@@ -77,7 +85,10 @@ def _setup_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...]) -> Gen
 
 def _promote(profile_id: str, storage_root: Path):
     """Attempt the promotion using the record's own current CAS coordinates."""
-    repository = ProfileRecordRepository.for_current_session(profile_id, root=storage_root)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+    )
     current = repository.load(profile_id)
     return repository.complete_setup(
         profile_id,
@@ -88,6 +99,7 @@ def _promote(profile_id: str, storage_root: Path):
 
 def test_complete_setup_refuses_a_record_missing_an_unconditional_required_field(tmp_path: Path) -> None:
     """The literal defect: a record short of required answers became COMPLETE."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _setup_subject(
         tmp_path,
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
@@ -103,7 +115,9 @@ def test_complete_setup_refuses_a_record_missing_an_unconditional_required_field
         assert REQUIRED_FIELD_MISSING_CODE in issue_codes
         assert "tax_residence.jurisdiction_scope" in issue_paths
 
-        record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
+        record = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         assert record.setup_state is ProfileSetupState.INCOMPLETE, (
             "a refused promotion must leave the record honestly incomplete"
         )
@@ -142,11 +156,14 @@ def test_complete_setup_promotes_a_record_that_satisfies_the_contract(tmp_path: 
     Without this the refusals above are satisfied by a door that refuses
     everything, which would strand every operator at the end of setup.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _setup_subject(tmp_path, facts=complete_profile_facts(load_user_profile_schema())) as (
         storage_root,
         profile_id,
     ):
-        repository = ProfileRecordRepository.for_current_session(profile_id, root=storage_root)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         assert before.setup_state is ProfileSetupState.INCOMPLETE
 
@@ -154,7 +171,9 @@ def test_complete_setup_promotes_a_record_that_satisfies_the_contract(tmp_path: 
 
         assert promoted.setup_state is ProfileSetupState.COMPLETE
         assert promoted.record_revision == before.record_revision + 1
-        reloaded = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
+        reloaded = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         assert reloaded.setup_state is ProfileSetupState.COMPLETE
 
 

@@ -16,6 +16,9 @@ from cadrumo.adapters.persistence.storage.custody.records import (
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from cadrumo.adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordIntegrityError,
@@ -63,9 +66,12 @@ def _envelope(
 def _create_capsule(
     root: Path,
 ) -> tuple[ProfileCapsuleLifecycle, ProfileCustodyEnvelope, ProfileCustodySentinelRecord, ProfileRecordSession]:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     envelope = _envelope()
     sentinel = create_profile_custody_sentinel(envelope=envelope, dek=_DEK)
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     lifecycle = ProfileCapsuleLifecycle(root=root)
     lifecycle.create(
         label="Lineage operator",
@@ -114,16 +120,22 @@ def test_record_refuses_a_row_whose_envelope_bound_provenance_was_tampered(tmp_p
 
 
 def test_record_refuses_a_different_current_custody_envelope(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path)
-    changed_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
+    changed_session = ProfileRecordSession.from_envelope(
+        envelope=_envelope(password_generation=8), dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
 
     with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
         ProfileRecordStore(session=changed_session, root=tmp_path).load()
 
 
 def test_record_refuses_a_changed_custody_dek_epoch(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path)
-    changed_session = ProfileRecordSession.from_envelope(envelope=_envelope(dek_epoch=b"z" * 16), dek=_DEK)
+    changed_session = ProfileRecordSession.from_envelope(
+        envelope=_envelope(dek_epoch=b"z" * 16), dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
 
     with pytest.raises(ProfileRecordIntegrityError, match="provenance"):
         ProfileRecordStore(session=changed_session, root=tmp_path).load()
@@ -166,6 +178,7 @@ def test_restore_refuses_missing_arbitrary_and_malformed_current_database(tmp_pa
 
 
 def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     _lifecycle, envelope, sentinel, session = _create_capsule(tmp_path / "source")
     duplicate_database = tmp_path / "duplicate.db"
     duplicate_database.write_bytes(_database(tmp_path / "source").read_bytes())
@@ -218,7 +231,9 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
     # proved directly against the store in this module -- but the earlier
     # refusal is the better one: nothing is written and the message names the
     # material that disagreed rather than the symptom two layers down.
-    mismatched_session = ProfileRecordSession.from_envelope(envelope=_envelope(password_generation=8), dek=_DEK)
+    mismatched_session = ProfileRecordSession.from_envelope(
+        envelope=_envelope(password_generation=8), dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     with pytest.raises(ValueError, match="was not minted from this password envelope"):
         ProfileCapsuleLifecycle(root=tmp_path / "mismatch").restore(
             label="Restore target",
@@ -232,10 +247,13 @@ def test_restore_refuses_duplicate_or_mismatched_current_record_lineage(tmp_path
 
 
 def test_restore_refuses_a_database_bound_to_a_different_profile_uuid(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     _lifecycle, _envelope_value, _sentinel, _session = _create_capsule(tmp_path / "source")
     other_profile_id = UUID("d9173bfc-8420-4715-a570-29c8f2b59a4e")
     other_envelope = _envelope(profile_id=other_profile_id)
-    other_session = ProfileRecordSession.from_envelope(envelope=other_envelope, dek=_DEK)
+    other_session = ProfileRecordSession.from_envelope(
+        envelope=other_envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
 
     with pytest.raises(ProfileRecordIntegrityError, match="authenticated current-record validation") as refusal:
         ProfileCapsuleLifecycle(root=tmp_path / "uuid-mismatch").restore(

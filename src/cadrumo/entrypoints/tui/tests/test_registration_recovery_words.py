@@ -17,6 +17,10 @@ import pytest
 from textual.widgets import Button, Input
 from textual.worker import WorkerCancelled
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.profile_repository import CommittedProfileRepository
 from ....application.user_profile.registration import ProfileRegistrationError, register_profile_with_credentials
@@ -51,12 +55,15 @@ def _attempt_registration(
     recovery_handover,
 ) -> RegistrationAttempt:
     """Drive the public registration door through the adapter's injected contract."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     try:
         outcome = register_profile_with_credentials(
             label=label,
             passphrase=passphrase,
             facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=output_language),),
             recovery_handover=recovery_handover,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
     except RecoveryHandoverCancelledError:
         return RegistrationAttempt(

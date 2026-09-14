@@ -33,6 +33,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.login_session import login_profile
 from ......application.user_profile.registration import register_profile_with_credentials
@@ -57,13 +61,22 @@ _NOT_READY = "errors.storage.runtime.not_ready"
 
 def test_bucket_created_through_the_sanctioned_door_can_read_records(tmp_path: Path) -> None:
     """Create, authenticate, then decrypt the profile rows written at creation."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         assert outcome.setup_state is ProfileSetupState.INCOMPLETE
 
-        login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=_LABEL,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
         repository = secure_object_repository_for_active_bucket()
         assert _PROFILE_VALUE_NAMESPACE in set(repository.list_namespaces())
@@ -87,9 +100,14 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
     ``not_ready`` key is what shows the pre-login observation was a routine
     lock rather than evidence about key material.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         with pytest.raises(StorageValidationError, match=_NOT_READY):
@@ -109,9 +127,14 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
     operator their key, so a login that still succeeded afterwards would mean
     the wrap is not the thing gating access.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         envelope = storage_root / "buckets" / outcome.bucket_id / "custody" / "envelope.v1.json"
@@ -122,4 +145,8 @@ def test_readback_depends_on_the_on_disk_custody_envelope(tmp_path: Path) -> Non
         # older one: a custody envelope that does not parse as the current
         # record is corruption now, not a shape to tolerate.
         with pytest.raises(ProfileCustodyRecordError, match="current-format record"):
-            login_profile(name=_LABEL, passphrase_callback=lambda: _PASSPHRASE)
+            login_profile(
+                name=_LABEL,
+                passphrase_callback=lambda: _PASSPHRASE,
+                profile_decode_context=_profile_decode_context_for_test,
+            )

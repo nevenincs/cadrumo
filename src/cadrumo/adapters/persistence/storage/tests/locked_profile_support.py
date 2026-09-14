@@ -17,6 +17,9 @@ from base64 import b64encode
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 from .....core.bucket_pointer import BucketPointer, write_pointer
@@ -78,11 +81,14 @@ def build_envelope() -> ProfileCustodyEnvelope:
 
 def publish_capsule_and_pointer(root: Path) -> None:
     """Publish one complete capsule at *root* and point the active selector at it."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from .....application.user_profile.capsule_record import ProfileRecordSession
     from .....application.user_profile.lifecycle import ProfileCapsuleLifecycle
 
     envelope = build_envelope()
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     try:
         ProfileCapsuleLifecycle(root=root).create(
             label=PROFILE_LABEL,

@@ -38,6 +38,9 @@ from cadrumo.adapters.persistence.storage.bucket.tests.bucket_layout import prov
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.auth.operator import inspect_operator_auth
 from cadrumo.application.auth.operator import test_operator_auth as probe_operator_auth
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -145,6 +148,7 @@ def state_projection_dependencies() -> tuple[InMemoryCertificateSecretBackendFac
 
 def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> str:
     """Create one current capsule, then bind its authenticated live session."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     global _ACTIVE_PROFILE_ID, _PROFILE_SPAN_OPEN
 
@@ -170,6 +174,8 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label="state projection operator",
         passphrase=_OPERATOR_PASSPHRASE,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     storage_root = Settings().cadrumo_local_storage_root
     material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)

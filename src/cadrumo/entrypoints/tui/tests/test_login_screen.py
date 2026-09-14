@@ -20,6 +20,10 @@ import asyncio
 import pytest
 from textual.widgets import Button, Input, Select
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_interaction import ProfileLoginChoice, attempt_profile_login
 from ....application.user_profile.login_session import login_profile, logout_active_profile
@@ -53,10 +57,13 @@ actually meet would prove something weaker."""
 
 def _register(label: str) -> str:
     """Create one real profile through the real door and return its id."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=_PASSWORD,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     # Registration leaves the new profile unlocked. The screen under test
     # exists for a LOCKED machine, so the session is closed again here;

@@ -28,6 +28,9 @@ from cadrumo.adapters.persistence.storage.master_key.login_handover_journal impo
     load_handover_journal,
     save_handover_journal,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_handover import HandoverPhase, ProfileLoginHandoverJournal
 from cadrumo.application.user_profile.login_session import login_profile
@@ -52,8 +55,13 @@ _PASSWORD_SECOND = "sequential-registration-password-two"  # noqa: S105 - real t
 
 def _register(label: str, password: str) -> str:
     """Create one profile through the production credential door."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     return register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=label, passphrase=password
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=label,
+        passphrase=password,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     ).profile_id
 
 
@@ -98,10 +106,15 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
     predecessor. It records a handover that RAN TO COMPLETION, which is why the
     pointer it happened to leave behind is no longer the pointer's business.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Sequential One", _PASSWORD_FIRST)
         try:
-            login_profile(name=first, passphrase_callback=lambda: _PASSWORD_FIRST)
+            login_profile(
+                name=first,
+                passphrase_callback=lambda: _PASSWORD_FIRST,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
             terminal = load_handover_journal(storage_root=storage_root)
             assert terminal is not None
@@ -114,7 +127,11 @@ def test_registering_a_second_profile_does_not_make_the_next_login_an_interrupte
             assert moved != terminal.pointer_before
             assert moved != terminal.pointer_after
 
-            outcome = login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+            outcome = login_profile(
+                name=second,
+                passphrase_callback=lambda: _PASSWORD_SECOND,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
             assert outcome.bucket_id == second
             assert outcome.already_authenticated is False
@@ -132,13 +149,22 @@ def test_a_completed_handover_receipt_is_retired_by_the_next_login_after_a_point
     boundary. A login that classified it and then left it on disk would hand
     the same stale witness to every subsequent login.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Retire One", _PASSWORD_FIRST)
         try:
-            login_profile(name=first, passphrase_callback=lambda: _PASSWORD_FIRST)
+            login_profile(
+                name=first,
+                passphrase_callback=lambda: _PASSWORD_FIRST,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             second = _register("Retire Two", _PASSWORD_SECOND)
 
-            login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+            login_profile(
+                name=second,
+                passphrase_callback=lambda: _PASSWORD_SECOND,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
             surviving = load_handover_journal(storage_root=storage_root)
             assert surviving is not None, "the second login must leave its own terminal receipt"
@@ -209,11 +235,16 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
     is real outstanding work recorded against a pointer state that cannot be
     reconciled, and refusing is the only safe answer.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Interrupted One", _PASSWORD_FIRST)
         second = _register("Interrupted Two", _PASSWORD_SECOND)
         try:
-            login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+            login_profile(
+                name=second,
+                passphrase_callback=lambda: _PASSWORD_SECOND,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             terminal = load_handover_journal(storage_root=storage_root)
             assert terminal is not None
             clear_handover_journal(storage_root=storage_root, journal=terminal)
@@ -226,7 +257,11 @@ def test_a_genuinely_interrupted_handover_still_refuses_when_the_pointer_matches
             )
 
             with pytest.raises(ActiveProfilePointerTransactionError) as refusal:
-                login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+                login_profile(
+                    name=second,
+                    passphrase_callback=lambda: _PASSWORD_SECOND,
+                    profile_decode_context=_profile_decode_context_for_test,
+                )
 
             context = refusal.value.context
             assert context is not None
@@ -250,20 +285,33 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
     replaying it is idempotent, and running it is what keeps the classification
     fail-closed rather than merely permissive.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         first = _register("Revoked One", _PASSWORD_FIRST)
         second = _register("Revoked Two", _PASSWORD_SECOND)
         try:
-            login_profile(name=first, passphrase_callback=lambda: _PASSWORD_FIRST)
+            login_profile(
+                name=first,
+                passphrase_callback=lambda: _PASSWORD_FIRST,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             _close_live_login()
-            login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+            login_profile(
+                name=second,
+                passphrase_callback=lambda: _PASSWORD_SECOND,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             _close_live_login()
 
             # The second login retired the first profile and left the terminal
             # receipt naming it. Re-mint that profile's receipt behind the
             # journal's back so the classification has something real to revoke.
-            login_profile(name=first, passphrase_callback=lambda: _PASSWORD_FIRST)
+            login_profile(
+                name=first,
+                passphrase_callback=lambda: _PASSWORD_FIRST,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
             _close_live_login()
             assert _probe_resumable_session(storage_root, first)["dek_length"] == 32
 
@@ -288,7 +336,11 @@ def test_a_completed_receipt_over_an_unrecognisable_pointer_still_revokes_its_re
                 witness = witness.at_phase(step)
                 save_handover_journal(storage_root=storage_root, journal=witness)
 
-            login_profile(name=second, passphrase_callback=lambda: _PASSWORD_SECOND)
+            login_profile(
+                name=second,
+                passphrase_callback=lambda: _PASSWORD_SECOND,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
             assert _probe_resumable_session(storage_root, first)["dek_length"] == 0
         finally:

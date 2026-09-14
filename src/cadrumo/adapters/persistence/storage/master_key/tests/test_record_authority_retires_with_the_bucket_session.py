@@ -22,6 +22,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.profile_record_repository import (
@@ -42,22 +45,45 @@ _PASSPHRASE = "record-authority-retires-with-session-operator-secret"  # noqa: S
 
 def test_closing_the_bucket_session_leaves_no_readable_record_authority(tmp_path: Path) -> None:
     """One close, one state: no session means no authority and no facts."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
         # Precondition, not decoration: the authority has to be live and
         # latched for its survival to be the thing under test.
-        assert profile_record_session_if_authenticated(outcome.profile_id) is not None
-        ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id)
+        assert (
+            profile_record_session_if_authenticated(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
+            is not None
+        )
+        ProfileRecordRepository.for_current_session(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(outcome.profile_id)
 
         close_active_bucket_session()
 
-        assert profile_record_session_if_authenticated(outcome.profile_id) is None
+        assert (
+            profile_record_session_if_authenticated(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
+            is None
+        )
         with pytest.raises(ProfileNotFoundError):
-            ProfileRecordRepository.for_current_session(outcome.profile_id)
+            ProfileRecordRepository.for_current_session(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
 
 
 def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: Path) -> None:
@@ -69,13 +95,27 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
     key is already zeroised. Serving a record authority on that basis hands the
     caller a decryptable-looking route over a session that cannot decrypt.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
-        assert profile_record_session_if_authenticated(outcome.profile_id) is not None
+        assert (
+            profile_record_session_if_authenticated(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
+            is not None
+        )
 
         live = current_active_bucket_session()
         assert live is not None
@@ -85,9 +125,16 @@ def test_a_sealed_but_still_bound_session_serves_no_record_authority(tmp_path: P
         live.close()
 
         assert live.sealed is True
-        assert profile_record_session_if_authenticated(outcome.profile_id) is None
+        assert (
+            profile_record_session_if_authenticated(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
+            is None
+        )
         with pytest.raises(ProfileNotFoundError):
-            ProfileRecordRepository.for_current_session(outcome.profile_id)
+            ProfileRecordRepository.for_current_session(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            )
 
 
 def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path) -> None:
@@ -96,15 +143,33 @@ def test_an_open_bucket_session_still_serves_its_record_authority(tmp_path: Path
     Without this, refusing unconditionally would satisfy the sibling test and
     lock every logged-in operator out of their own facts.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         outcome = register_profile_with_credentials(
-            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSPHRASE
+            recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            label=_LABEL,
+            passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=lambda: _PASSPHRASE)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=lambda: _PASSPHRASE,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
 
-        first = profile_record_session_if_authenticated(outcome.profile_id)
-        second = profile_record_session_if_authenticated(outcome.profile_id)
+        first = profile_record_session_if_authenticated(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
+        second = profile_record_session_if_authenticated(
+            outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
 
         assert first is not None
         assert second is not None
-        assert ProfileRecordRepository.for_current_session(outcome.profile_id).load(outcome.profile_id) is not None
+        assert (
+            ProfileRecordRepository.for_current_session(
+                outcome.profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(outcome.profile_id)
+            is not None
+        )

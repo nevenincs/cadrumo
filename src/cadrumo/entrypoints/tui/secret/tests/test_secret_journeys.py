@@ -19,6 +19,10 @@ import pytest
 from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
 from .....application.user_profile.login_session import login_profile
@@ -45,11 +49,14 @@ _NEW_PASSPHRASE = "secret-journey-replacement-passphrase"  # noqa: S105 - isolat
 
 def _enroll() -> UUID:
     """Enroll one profile. Caller must already hold an isolated storage root."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     enrolled = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_CURRENT_PASSPHRASE,
         facts=(),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     return UUID(enrolled.profile_id)
 
@@ -61,12 +68,14 @@ def _rotate(profile_id: UUID, current: str, new: str, confirm: str) -> Passphras
     registration: a refusal arrives as typed presentation data, never as an
     exception the screen has to recognise.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     try:
         outcome = rotate_profile_passphrase(
             profile_id=profile_id,
             current_passphrase=current,
             new_passphrase=new,
             new_passphrase_confirmation=confirm,
+            profile_decode_context=_profile_decode_context_for_test,
         )
     except ProfilePassphraseRotationError as refusal:
         if refusal.translated_message is None:

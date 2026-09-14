@@ -40,6 +40,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
@@ -85,8 +88,13 @@ def _register_with_a_live_process_secret(storage_root: Path) -> tuple[UUID, Buck
     a process holding the target's DEK -- without entangling this proof with
     the inventory's treatment of transient database sidecars.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=_LABEL,
+        passphrase=_PASSWORD,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     profile_id = UUID(outcome.profile_id)
     session = BucketSession.open(
@@ -136,12 +144,15 @@ def test_destroying_a_profile_clears_its_durable_failed_login_backoff(tmp_path: 
     the identity for attempts made against a profile that no longer exists,
     and no surface would ever explain the wait.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             outcome = register_profile_with_credentials(
                 recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
                 label=_LABEL,
                 passphrase=_PASSWORD,
+                profile_create_context=_profile_create_context_for_test,
+                profile_decode_context=_profile_decode_context_for_test,
             )
             profile_id = UUID(outcome.profile_id)
             _authorise_clear_hold(storage_root, profile_id)

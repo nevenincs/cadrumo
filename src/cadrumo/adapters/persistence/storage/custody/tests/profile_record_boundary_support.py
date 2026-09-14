@@ -29,6 +29,9 @@ from cadrumo.adapters.persistence.storage.custody.records import (
     ProfileCustodyWrappedDek,
 )
 from cadrumo.adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.domain.buckets.event import BucketEventType
@@ -133,7 +136,10 @@ def initial_record() -> UserProfileRecord:
 
 def open_record_session() -> ProfileRecordSession:
     """Return the record authority bound to the shared envelope and DEK."""
-    return ProfileRecordSession.from_envelope(envelope=build_envelope(), dek=DEK)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    return ProfileRecordSession.from_envelope(
+        envelope=build_envelope(), dek=DEK, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def publish_capsule(root: Path) -> UserProfileRecord:

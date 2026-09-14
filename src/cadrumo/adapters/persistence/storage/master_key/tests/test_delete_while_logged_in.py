@@ -32,6 +32,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.evidence.profile_legal_hold import LegalHoldCaseAuthority
 from cadrumo.application.filing.retention import FilingRetentionAuthority
@@ -67,10 +70,19 @@ def _register_and_sign_in(root: Path) -> UUID:
     than a contrived one: it opens the capsule's own database connection, which
     is the thing whose sidecars land inside the inventoried tree.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=_LABEL,
+        passphrase=_PASSWORD,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
-    login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
+    login_profile(
+        name=outcome.profile_id,
+        passphrase_callback=lambda: _PASSWORD,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
     assert current_active_bucket_session() is not None, (
         "the login must be live, or nothing here reproduces the logged-in case"
     )

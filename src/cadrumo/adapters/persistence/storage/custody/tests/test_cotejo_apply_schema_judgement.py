@@ -40,6 +40,9 @@ from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession
 from cadrumo.application.user_profile.cotejo_apply import CensoDivergence, apply_cotejo
@@ -66,16 +69,21 @@ _TYPED_CENSO_PATH = "censo.activity_start_date"
 @contextmanager
 def _cotejo_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...] | None = None) -> Generator[tuple[Path, str]]:
     """Register a real capsule, bind its record session, and route the active profile."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Cotejo apply subject",
             passphrase=_PASSPHRASE,
             facts=facts if facts is not None else (UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=storage_root)
         unlocked = unlock_profile_custody(material.envelope, _PASSPHRASE, sentinel=material.sentinel)
-        session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=unlocked.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             with bound_profile_record_session(session), override_settings(cadrumo_active_profile=outcome.profile_id):
                 yield storage_root, outcome.profile_id
@@ -84,7 +92,14 @@ def _cotejo_subject(tmp_path: Path, *, facts: tuple[UserProfileFact, ...] | None
 
 
 def _record_revision(profile_id: str, storage_root: Path) -> int:
-    return ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id).record_revision
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    return (
+        ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        )
+        .load(profile_id)
+        .record_revision
+    )
 
 
 def test_apply_cotejo_refuses_an_adopted_value_at_a_path_the_schema_never_declared(tmp_path: Path) -> None:
@@ -155,6 +170,7 @@ def test_apply_cotejo_still_commits_a_valid_reconciliation_on_an_incomplete_prof
     refuse this while passing every refusal test above, which is why this case
     decides whether the hardening is correct rather than merely strict.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _cotejo_subject(tmp_path) as (storage_root, profile_id):
         before = _record_revision(profile_id, storage_root)
 
@@ -172,7 +188,9 @@ def test_apply_cotejo_still_commits_a_valid_reconciliation_on_an_incomplete_prof
             ),
         )
 
-        record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
+        record = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         assert record.record_revision == before + 1
         values = {fact.path: fact.value for fact in record.facts}
         assert str(values[_TYPED_CENSO_PATH]) == "2024-03-01"
@@ -198,11 +216,14 @@ def test_apply_cotejo_records_divergences_on_a_profile_past_setup(tmp_path: Path
     setup can produce, and would fail for the promotion door's reasons rather
     than this one's.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _cotejo_subject(tmp_path, facts=complete_profile_facts(load_user_profile_schema())) as (
         storage_root,
         profile_id,
     ):
-        repository = ProfileRecordRepository.for_current_session(profile_id, root=storage_root)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        )
         seeded = repository.load(profile_id)
         completed = repository.complete_setup(
             profile_id,
@@ -217,7 +238,9 @@ def test_apply_cotejo_records_divergences_on_a_profile_past_setup(tmp_path: Path
             divergences=(CensoDivergence(axis="activities.description", artefact_value="Consultoria informatica"),),
         )
 
-        record = ProfileRecordRepository.for_current_session(profile_id, root=storage_root).load(profile_id)
+        record = ProfileRecordRepository.for_current_session(
+            profile_id, root=storage_root, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         assert record.setup_state is ProfileSetupState.COMPLETE
         values = {fact.path: fact.value for fact in record.facts}
         assert values["censo.divergencia.0.axis"] == "activities.description"

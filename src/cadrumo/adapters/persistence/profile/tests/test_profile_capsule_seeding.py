@@ -24,6 +24,9 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 
@@ -37,7 +40,10 @@ _BUCKET_ID = "6f1f7d4e-9d64-4a1a-9a2f-2c0d4e5b7a10"
 
 
 def _loaded(bucket_id: str) -> UserProfileRecord:
-    return ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    return ProfileRecordRepository.for_current_session(
+        bucket_id, profile_decode_context=_profile_decode_context_for_test
+    ).load(bucket_id)
 
 
 def test_a_profile_seeded_complete_loads_back_complete(tmp_path: Path) -> None:

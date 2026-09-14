@@ -14,6 +14,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import login_profile
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
@@ -32,6 +35,7 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
     value; storage isolation plus the profile-create span gives the locale
     resolver a real backing store to read from.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
 
     test_value = f"output-language-resolver-{tmp_path.name}"
     with (
@@ -42,8 +46,14 @@ def isolated_language_state(tmp_path: Path) -> Iterator[str]:
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Output language resolver",
             passphrase=test_value,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
-        login_profile(name=outcome.label, passphrase_callback=test_value.__str__)
+        login_profile(
+            name=outcome.label,
+            passphrase_callback=test_value.__str__,
+            profile_decode_context=_profile_decode_context_for_test,
+        )
         yield outcome.profile_id
 
 
@@ -99,6 +109,7 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
     always found nothing and a chosen language silently reverted to the
     settings default on every pre-login surface.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -113,6 +124,7 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
         profile_id=isolated_language_state,
         changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     assert resolve_profile_output_language_hint(bucket_id) == "ca"
@@ -120,6 +132,7 @@ def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: 
 
 def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str) -> None:
     """The control: the two must not disagree about an absence."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from cadrumo.application.user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
     from cadrumo.application.user_profile.language_resolver import resolve_profile_output_language_hint
     from cadrumo.core.bucket_pointer import resolve_active_bucket_id
@@ -134,6 +147,7 @@ def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str
         profile_id=isolated_language_state,
         changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     assert resolve_profile_output_language_hint(bucket_id) == "ca"
 
@@ -141,6 +155,7 @@ def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str
         profile_id=isolated_language_state,
         changes=(UserProfileFact(path=_LANGUAGE_PATH, value=None),),
         door=ProfileFactWriteDoor.MANAGER_FIELD,
+        profile_decode_context=_profile_decode_context_for_test,
     )
 
     assert resolve_profile_output_language_hint(bucket_id) is None

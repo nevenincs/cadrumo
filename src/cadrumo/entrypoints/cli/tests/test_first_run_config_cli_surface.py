@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_password, isolated_profile_storage_root
 from ....application.user_profile.registration import register_profile_with_credentials
@@ -70,12 +73,15 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     original roundtrip is the part that still has a subject -- a profile that
     exists is reported by the listing verb, under the label it was given.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     label = "operator"
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label=label,
             passphrase=dev_test_database_password(),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         show = invoke_cached_cli(["--format", "json", "config", "profile", "list"])

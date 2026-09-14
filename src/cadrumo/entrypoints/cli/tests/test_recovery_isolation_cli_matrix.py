@@ -17,6 +17,10 @@ from pathlib import Path
 import pytest
 from click.testing import Result
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
@@ -54,12 +58,17 @@ def _register_and_login(*, label: str, passphrase: str) -> None:
     LOCKED and the archive export door refuses it.  The export under test is
     the operator's real backup path, which is only reachable logged in.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     register_profile_with_credentials(
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
         label=label,
         passphrase=passphrase,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
-    login_profile(name=label, passphrase_callback=lambda: passphrase)
+    login_profile(
+        name=label, passphrase_callback=lambda: passphrase, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def test_a_foreign_archive_restores_its_own_profile_without_touching_the_active_one(

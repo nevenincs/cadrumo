@@ -8,6 +8,9 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 from .....adapters.persistence.storage.custody.errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
@@ -35,6 +38,7 @@ _PROFILE_DEK = bytes(range(32))
 
 def _current_profile_session(profile_id: str, *, root: Path, label: str) -> ProfileRecordSession:
     """Create one real committed current capsule and return its live record session."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     identity = UUID(profile_id)
     seed = identity.bytes + identity.bytes
     envelope = ProfileCustodyEnvelope.create(
@@ -56,7 +60,9 @@ def _current_profile_session(profile_id: str, *, root: Path, label: str) -> Prof
             tag_b64=b64encode(seed[:16]).decode("ascii"),
         ),
     )
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_PROFILE_DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_PROFILE_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=root).create(
         label=label,
         profile_id=identity,

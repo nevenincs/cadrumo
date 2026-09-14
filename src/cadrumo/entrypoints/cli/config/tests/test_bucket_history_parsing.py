@@ -8,6 +8,10 @@ import pytest
 import typer
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from .....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType, derive_bucket_event_id
 from ..._config_bucket_history_payloads import BucketHistoryEventPayload
 from .._bucket_history import (
@@ -129,6 +133,7 @@ def test_bucket_history_event_payload_requires_payload_version() -> None:
 
 def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> None:
     """The omitted subject is the real active profile, not a copied default."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from .....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from .....application.user_profile.registration import register_profile_with_credentials
     from .....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -140,6 +145,8 @@ def test_profile_history_without_name_resolves_the_active_profile(tmp_path) -> N
             passphrase="history-subject-operator-secret",  # noqa: S106 - synthetic fixture
             facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="en"),),
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert _resolve_profile_history_target(None) == (

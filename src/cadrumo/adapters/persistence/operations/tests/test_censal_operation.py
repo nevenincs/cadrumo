@@ -11,6 +11,9 @@ import pytest
 from cadrumo.adapters.outbound.aeat.sede.censal_datos import parse_censal_datos
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.operations.interactions import (
     OperationApplyResponse,
@@ -199,10 +202,13 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
     tmp_path: Path,
     adopted_paths: frozenset[str],
 ) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     acquisition = _LocalHttpCensalAcquisition()
     with _subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "operations"
-        before = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
         executor = CensalOperationExecutor(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
@@ -258,7 +264,9 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
             assert observed.current is None
 
         asyncio.run(run())
-        after = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        after = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         values = record_to_path_values(after)
         assert after.record_revision == before.record_revision + 1
         assert {path: values[path] for path in adopted_paths} == {path: _VALUES[path] for path in adopted_paths}
@@ -282,9 +290,12 @@ def test_censal_operation_exact_apply_matrix_detaches_resumes_and_cleans_up(
 
 
 def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     acquisition = _LocalHttpCensalAcquisition()
     with _subject(tmp_path) as (profile_id, objects, session):
-        before = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
 
         async def reject_run() -> None:
@@ -330,7 +341,12 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
             assert terminal.effect is OperationEffect.NONE
 
         asyncio.run(reject_run())
-        assert ProfileRecordRepository.for_current_session(profile_id).load(profile_id) == before
+        assert (
+            ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
+            == before
+        )
         assert ProfileRecordStore(session=session).history() == history_before
 
         def competing_commit(operand) -> None:
@@ -359,7 +375,9 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
             assert terminal.effect is OperationEffect.NONE
 
         asyncio.run(stale_run())
-        after = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        after = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         assert after.record_revision == before.record_revision + 1
         assert not any(path in {fact.path for fact in after.facts} for path in _PATHS)
         assert len(ProfileRecordStore(session=session).history()) == len(history_before) + 1
@@ -367,6 +385,7 @@ def test_censal_operation_reject_and_stale_paths_never_apply_reviewed_effects(tm
 
 
 def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     acquisition = _LocalHttpCensalAcquisition()
     with _subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "restart"
@@ -435,7 +454,9 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
             assert observed.current is None
 
         asyncio.run(run())
-        after = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        after = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         values = record_to_path_values(after)
         assert {path: values[path] for path in _PATHS} == _VALUES
         history_after = ProfileRecordStore(session=session).history()
@@ -448,11 +469,14 @@ def test_censal_operation_detach_takeover_reuses_operand_and_releases_each_owner
 
 
 def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_without_effect(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     acquisition = _LocalHttpCensalAcquisition()
     boundary = _PreEntryBoundary()
     with _subject(tmp_path) as (profile_id, objects, session):
         durable_root = tmp_path / "cancel"
-        before = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+        before = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        ).load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
         supervisor = _supervisor(
             root=durable_root,
@@ -507,6 +531,11 @@ def test_censal_operation_cancellation_before_irreversible_entry_cleans_up_witho
             assert observed.current is None
 
         asyncio.run(run())
-        assert ProfileRecordRepository.for_current_session(profile_id).load(profile_id) == before
+        assert (
+            ProfileRecordRepository.for_current_session(
+                profile_id, profile_decode_context=_profile_decode_context_for_test
+            ).load(profile_id)
+            == before
+        )
         assert ProfileRecordStore(session=session).history() == history_before
         assert all(resource.closed for resource in acquisition.resources)

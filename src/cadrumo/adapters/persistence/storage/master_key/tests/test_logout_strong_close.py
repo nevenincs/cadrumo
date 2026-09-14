@@ -35,6 +35,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     current_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path, record_login_failure
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.login_session import (
     bind_resumed_profile_session,
@@ -62,10 +65,19 @@ def _close_live_login() -> None:
 
 def _register_and_login(storage_root: Path) -> str:
     """Register one real profile and leave it authenticated in this process."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
-        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic, label=_LABEL, passphrase=_PASSWORD
+        recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        label=_LABEL,
+        passphrase=_PASSWORD,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
-    login_profile(name=outcome.profile_id, passphrase_callback=lambda: _PASSWORD)
+    login_profile(
+        name=outcome.profile_id,
+        passphrase_callback=lambda: _PASSWORD,
+        profile_decode_context=_profile_decode_context_for_test,
+    )
     assert current_active_bucket_session() is not None
     assert read_pointer(storage_root).bucket_id is not None
     return outcome.profile_id
@@ -82,6 +94,7 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
     decided before the resume path reaches the credential store, which is
     why this case needs no keychain precondition.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
@@ -93,7 +106,12 @@ def test_logout_clears_the_live_session_the_pointer_and_the_persisted_accelerati
             assert current_active_bucket_session() is None
             assert not session_path.exists()
             assert read_pointer(storage_root).bucket_id is None
-            assert bind_resumed_profile_session(bucket_id=profile_id) is ProfileSessionRefusalReason.ABSENT
+            assert (
+                bind_resumed_profile_session(
+                    bucket_id=profile_id, profile_decode_context=_profile_decode_context_for_test
+                )
+                is ProfileSessionRefusalReason.ABSENT
+            )
             assert current_active_bucket_session() is None
         finally:
             _close_live_login()
@@ -183,6 +201,7 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
     assertion that the strong close actually reached the resume path, not
     merely the process binding.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         try:
             profile_id = _register_and_login(storage_root)
@@ -190,7 +209,11 @@ def test_login_after_logout_is_a_fresh_authentication_not_a_resume(tmp_path: Pat
             assert first is not None
             logout_active_profile()
 
-            outcome = login_profile(name=profile_id, passphrase_callback=lambda: _PASSWORD)
+            outcome = login_profile(
+                name=profile_id,
+                passphrase_callback=lambda: _PASSWORD,
+                profile_decode_context=_profile_decode_context_for_test,
+            )
 
             assert outcome.already_authenticated is False
             assert outcome.bucket_id == profile_id

@@ -11,6 +11,9 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import mint_test_profile_recovery_envelope
 
 from .....adapters.persistence.storage.custody.records import (
@@ -59,6 +62,7 @@ _READY_FACTS: tuple[UserProfileFact, ...] = (
 
 def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = _READY_FACTS) -> ProfileRecordSession:
     """Publish one real capsule through the production lifecycle owner."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     identity = UUID(_PROFILE_ID)
     seed = identity.bytes + identity.bytes
     envelope = ProfileCustodyEnvelope.create(
@@ -80,7 +84,9 @@ def _create_current_profile(*, root: Path, facts: tuple[UserProfileFact, ...] = 
             tag_b64=b64encode(seed[:16]).decode("ascii"),
         ),
     )
-    session = ProfileRecordSession.from_envelope(envelope=envelope, dek=_DEK)
+    session = ProfileRecordSession.from_envelope(
+        envelope=envelope, dek=_DEK, profile_decode_context=_profile_decode_context_for_test
+    )
     ProfileCapsuleLifecycle(root=root).create(
         label=_PROFILE_LABEL,
         profile_id=identity,

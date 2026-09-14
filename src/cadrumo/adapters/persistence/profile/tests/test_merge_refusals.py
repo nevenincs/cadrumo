@@ -14,6 +14,7 @@ from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, Sp
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from ._merge_test_support import _BUCKET_ID, _repositories, _split_setup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -33,8 +34,11 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
     )
     parent = create_manual_transaction(
         parent_command,
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
     split = split_transaction(
@@ -46,8 +50,11 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
             SplitChildCommand(amount=Decimal("40.00"), description="slice-c"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
     )
 
     with pytest.raises(TransactionValidationError, match="cohort is incomplete"):
@@ -55,8 +62,11 @@ def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) ->
             bucket_id=_BUCKET_ID,
             child_transaction_ids=split.child_transaction_ids[:2],
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -70,8 +80,11 @@ def test_merge_refuses_duplicate_child_ids(secure_objects: SecureObjectRepositor
             bucket_id=_BUCKET_ID,
             child_transaction_ids=duplicate,
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -88,8 +101,11 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
             description="other materials",
             actor="operator-A",
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 9, 9, 30, tzinfo=UTC),
     )
     split_b = split_transaction(
@@ -100,16 +116,22 @@ def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> No
             SplitChildCommand(amount=Decimal("80.00"), description="b2"),
         ),
         actor="operator-A",
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
     )
     with pytest.raises(TransactionValidationError, match="one split_group_id"):
         merge_transactions(
             bucket_id=_BUCKET_ID,
             child_transaction_ids=(split_a.child_transaction_ids[0], split_b.child_transaction_ids[0]),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )
 
 
@@ -121,6 +143,9 @@ def test_merge_refuses_single_child(secure_objects: SecureObjectRepository) -> N
             bucket_id=_BUCKET_ID,
             child_transaction_ids=(split.child_transaction_ids[0],),
             actor="operator-A",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
+            ports=ledger_ports_for_test(
+                bucket_id=_BUCKET_ID,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+            ),
         )

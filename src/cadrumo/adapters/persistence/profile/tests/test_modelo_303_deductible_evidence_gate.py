@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 from unittest.mock import Mock
 
 import pytest
@@ -12,6 +14,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
+from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -19,6 +22,10 @@ from cadrumo.adapters.persistence.profile.modelos_verification_reports import Ve
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
+)
+from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
+from cadrumo.adapters.persistence.profile.tests.verification_repository_support import (
+    build_test_certificate_secret_backend_factory,
 )
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -30,6 +37,7 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
 )
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_manual import (
     attach_manual_transaction_evidence,
     link_manual_transaction_invoice,
@@ -44,12 +52,14 @@ from cadrumo.application.modelo.export import (
     export_modelo_revision,
 )
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
+from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
 from cadrumo.application.modelo.verification_actions import (
     missing_evidence_findings,
     verify_modelo_revision,
     verify_modelo_revision_with_preconditions,
 )
+from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -78,7 +88,13 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.entrypoints.adapter_composition import (
+    build_calculation_action_ports,
+    build_filing_action_ports,
+    build_ledger_evidence_ports,
+    build_verification_repository_bundle,
+)
 from cadrumo.tests.env_scope import ready_clave_settings
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -94,7 +110,7 @@ _CALCULATED_AT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
 _VERIFIED_AT = datetime(2026, 4, 6, 10, 0, tzinfo=UTC)
 
 
-def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
+def _inward_export_ports(*, calculation: CalculationRevisionCatalogueRepository) -> ModeloExportPorts:
     """Provide application-owned fakes for authorities unused by this gate."""
     authority = Mock()
     return ModeloExportPorts(
@@ -109,6 +125,65 @@ def _inward_export_ports(*, calculation: object) -> ModeloExportPorts:
         prorrata_register=authority,
         bienes_inversion=authority,
         transaction=authority,
+        draft_review_ports=authority,
+    )
+
+
+def _verification_ports(
+    *,
+    wu_repo: WorkUnitCatalogueRepository,
+    cr_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    vr_repo: VerificationReportCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+    tx_repo: TransactionCatalogueRepository,
+) -> VerificationRepositoryBundle:
+    """Compose the complete verification bundle over the isolated repositories."""
+    return replace(
+        build_verification_repository_bundle(_BUCKET_ID),
+        work_unit=wu_repo,
+        calculation=cr_repo,
+        filing=filing_repo,
+        verification=vr_repo,
+        bucket_event=event_repo,
+        transaction=tx_repo,
+    )
+
+
+def _filing_ports(
+    *,
+    wu_repo: WorkUnitCatalogueRepository,
+    cr_repo: CalculationRevisionCatalogueRepository,
+    filing_repo: ModeloRecordCatalogueRepository,
+    vr_repo: VerificationReportCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+) -> FilingActionPorts:
+    """Compose the complete filing bundle over the isolated repositories."""
+    return replace(
+        build_filing_action_ports(bucket_id=_BUCKET_ID),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=filing_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=event_repo,
+    )
+
+
+def _ledger_ports(
+    *,
+    tx_repo: TransactionCatalogueRepository,
+    event_repo: BucketEventHistoryRepository,
+    invoice_repo: InvoiceCatalogueRepository | None = None,
+) -> LedgerActionPorts:
+    """Compose canonical ledger ports while retaining isolated test stores."""
+    return cast(
+        LedgerActionPorts,
+        ledger_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            transaction_repository=tx_repo,
+            bucket_event_repository=event_repo,
+            invoice_repository=invoice_repo,
+        ),
     )
 
 
@@ -323,7 +398,7 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    with compiled_bundled_authority().operation() as operation:
+    with bundled_indexed_authority().operation() as operation:
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
@@ -401,20 +476,25 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     assert purchase.iva_amount is not None
     assert revision.casilla_values[_RESULTADO] == sale.iva_amount - purchase.iva_amount
 
-    verification = verify_modelo_revision_with_preconditions(
-        revision.calculation_revision_id,
-        actor="operator",
-        workflow_profile=workflow_profile(),
-        settings=ready_clave_settings(_TAX_ID),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        filing_repository=filing_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=event_repo,
-        transaction_repository=tx_repo,
-        clock=_VERIFIED_AT,
-        operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        verification = verify_modelo_revision_with_preconditions(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            verification_repositories=_verification_ports(
+                wu_repo=wu_repo,
+                cr_repo=cr_repo,
+                filing_repo=filing_repo,
+                vr_repo=vr_repo,
+                event_repo=event_repo,
+                tx_repo=tx_repo,
+            ),
+            clock=_VERIFIED_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
     report = verification.report
 
     assert report.granted_verificado_completo is False
@@ -483,8 +563,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         invoice = tmp_path / "supplier-invoice.pdf"
         invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
         evidence = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=event_repo,
+            ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
 
         attached = attach_manual_transaction_evidence(
@@ -492,8 +571,7 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
             transaction_id=purchase.transaction_id,
             purchase_invoice_evidence_id=evidence.record.evidence_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo),
             occurred_at=_VERIFIED_AT,
         )
 
@@ -502,20 +580,25 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         assert reloaded is not None
         assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
 
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            settings=ready_clave_settings(_TAX_ID),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            clock=_VERIFIED_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                settings=ready_clave_settings(_TAX_ID),
+                verification_repositories=_verification_ports(
+                    wu_repo=wu_repo,
+                    cr_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    vr_repo=vr_repo,
+                    event_repo=event_repo,
+                    tx_repo=tx_repo,
+                ),
+                clock=_VERIFIED_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -575,8 +658,9 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         )
 
         invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
-        created = create_catalogue_invoice(
-            invoice=build_catalogue_invoice(
+        catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+        with bundled_indexed_authority().operation() as operation:
+            invoice = build_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,
                 counterparty_name="Proveedor Ejemplo SL",
@@ -587,8 +671,12 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
                 taxable_base=Decimal("200.00"),
                 iva_rate=Decimal("21"),
                 currency="EUR",
-            ),
-            repository=invoice_repo,
+                rate_provider=catalogue_ports.rate_provider,
+                operation=operation,
+            )
+        created = create_catalogue_invoice(
+            invoice=invoice,
+            ports=catalogue_ports,
         )
 
         linked = link_manual_transaction_invoice(
@@ -596,9 +684,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
             transaction_id=purchase.transaction_id,
             invoice_id=created.invoice.invoice_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            invoice_repository=invoice_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo, invoice_repo=invoice_repo),
             occurred_at=_VERIFIED_AT,
         )
 
@@ -610,20 +696,25 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert reloaded is not None
         assert reloaded.invoice_id == created.invoice.invoice_id
 
-        report = verify_modelo_revision(
-            revision.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            settings=ready_clave_settings(_TAX_ID),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            clock=_VERIFIED_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            report = verify_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                settings=ready_clave_settings(_TAX_ID),
+                verification_repositories=_verification_ports(
+                    wu_repo=wu_repo,
+                    cr_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    vr_repo=vr_repo,
+                    event_repo=event_repo,
+                    tx_repo=tx_repo,
+                ),
+                clock=_VERIFIED_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
         assert report.granted_verificado_completo is True
         assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
@@ -647,18 +738,23 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         # NOT dead-end. Before the LedgerEvidenceRow.invoice_id fix, this
         # raised ModeloFilingEvidenceMissingError even though verify had just
         # granted the same revision.
-        filed = file_modelo_revision(
-            revision.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=event_repo,
-            clock=_VERIFIED_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            filed = file_modelo_revision(
+                revision.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                ports=_filing_ports(
+                    wu_repo=wu_repo,
+                    cr_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    vr_repo=vr_repo,
+                    event_repo=event_repo,
+                ),
+                clock=_VERIFIED_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
         assert filed is not None
         assert tuple(filing_repo.load().values()) != ()
 
@@ -685,20 +781,25 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
         )
 
         def _verify() -> VerificationReport:
-            return verify_modelo_revision(
-                revision.calculation_revision_id,
-                actor="operator",
-                workflow_profile=workflow_profile(),
-                settings=ready_clave_settings(_TAX_ID),
-                work_unit_repository=wu_repo,
-                calculation_repository=cr_repo,
-                filing_repository=filing_repo,
-                verification_repository=vr_repo,
-                bucket_event_repository=event_repo,
-                transaction_repository=tx_repo,
-                clock=_VERIFIED_AT,
-                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            )
+            with bundled_indexed_authority().operation() as operation:
+                return verify_modelo_revision(
+                    revision.calculation_revision_id,
+                    certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                    actor="operator",
+                    workflow_profile=workflow_profile(),
+                    settings=ready_clave_settings(_TAX_ID),
+                    verification_repositories=_verification_ports(
+                        wu_repo=wu_repo,
+                        cr_repo=cr_repo,
+                        filing_repo=filing_repo,
+                        vr_repo=vr_repo,
+                        event_repo=event_repo,
+                        tx_repo=tx_repo,
+                    ),
+                    clock=_VERIFIED_AT,
+                    operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                    operation=operation,
+                )
 
         blocked = _verify()
         assert blocked.granted_verificado_completo is False
@@ -711,16 +812,14 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
         invoice = tmp_path / "supplier-invoice.pdf"
         invoice.write_bytes(b"%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n")
         evidence = PurchaseInvoiceEvidenceService(
-            settings=profile.settings,
-            bucket_event_repository=event_repo,
+            ports=build_ledger_evidence_ports(bucket_id=_BUCKET_ID),
         ).add(bucket_id=_BUCKET_ID, source_path=invoice)
         attach_manual_transaction_evidence(
             bucket_id=_BUCKET_ID,
             transaction_id=purchase.transaction_id,
             purchase_invoice_evidence_id=evidence.record.evidence_id,
             actor="operator",
-            transaction_repository=tx_repo,
-            bucket_event_repository=event_repo,
+            ports=_ledger_ports(tx_repo=tx_repo, event_repo=event_repo),
             occurred_at=_VERIFIED_AT,
         )
 
@@ -830,15 +929,17 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_eviden
     output_path = tmp_path / "modelo-303.txt"
 
     with pytest.raises(ModeloExportEvidenceMissingError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=legacy.calculation_revision_id,
-                output_path=output_path,
-                actor="operator",
-            ),
-            workflow_profile=workflow_profile(),
-            export_ports=_inward_export_ports(calculation=cr_repo),
-        )
+        with bundled_indexed_authority().operation() as operation:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=legacy.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                ),
+                workflow_profile=workflow_profile(),
+                export_ports=_inward_export_ports(calculation=cr_repo),
+                operation=operation,
+            )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"
@@ -863,18 +964,23 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing
     legacy = _persist_legacy_verified_revision(revision, cr_repo=cr_repo, tx_repo=tx_repo)
 
     with pytest.raises(ModeloFilingEvidenceMissingError) as exc_info:
-        file_modelo_revision(
-            legacy.calculation_revision_id,
-            actor="operator",
-            workflow_profile=workflow_profile(),
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=filing_repo,
-            verification_repository=vr_repo,
-            bucket_event_repository=event_repo,
-            clock=_VERIFIED_AT,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
+        with bundled_indexed_authority().operation() as operation:
+            file_modelo_revision(
+                legacy.calculation_revision_id,
+                certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+                actor="operator",
+                workflow_profile=workflow_profile(),
+                ports=_filing_ports(
+                    wu_repo=wu_repo,
+                    cr_repo=cr_repo,
+                    filing_repo=filing_repo,
+                    vr_repo=vr_repo,
+                    event_repo=event_repo,
+                ),
+                clock=_VERIFIED_AT,
+                operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+                operation=operation,
+            )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"

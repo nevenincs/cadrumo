@@ -20,6 +20,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....application.user_profile.login_session import logout_active_profile
 from ....core.config import load_settings
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
@@ -93,6 +97,7 @@ def ensure_profile() -> str:
     again before returning so the login surface meets the locked machine
     it exists for. Caller must already be inside :func:`harness_storage`.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.workflow.profile_bucket_scan import list_profile_buckets
 
     existing = list_profile_buckets()
@@ -107,6 +112,8 @@ def ensure_profile() -> str:
         passphrase=passphrase(),
         facts=(UserProfileFact(path=PROFILE_OUTPUT_LANGUAGE_PATH, value="es"),),
         recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     logout_active_profile()
     return outcome.bucket_id
@@ -143,10 +150,13 @@ def ensure_session() -> str:
     a surface rendered over a stand-in session would be a reading about
     the stand-in.
     """
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....application.user_profile.login_session import login_profile
 
     bucket_id = ensure_profile()
-    login_profile(name=bucket_id, passphrase_callback=passphrase)
+    login_profile(
+        name=bucket_id, passphrase_callback=passphrase, profile_decode_context=_profile_decode_context_for_test
+    )
     return bucket_id
 
 

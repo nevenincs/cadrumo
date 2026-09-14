@@ -14,6 +14,9 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.kdf_supervision import unlock_profile_custody
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_record import (
     ProfileRecordConflictError,
@@ -51,16 +54,21 @@ _NOW = datetime(2026, 8, 24, 16, tzinfo=UTC)
 
 @contextmanager
 def _subject(tmp_path: Path) -> Generator[tuple[str, ProfileRecordSession]]:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
         outcome = register_profile_with_credentials(
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="Reviewed censal apply",
             passphrase=_PASSPHRASE,
             facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         material = load_committed_profile_password_material(UUID(outcome.profile_id), root=root)
         unlocked = unlock_profile_custody(material.envelope, _PASSPHRASE, sentinel=material.sentinel)
-        session = ProfileRecordSession.from_envelope(envelope=material.envelope, dek=unlocked.dek)
+        session = ProfileRecordSession.from_envelope(
+            envelope=material.envelope, dek=unlocked.dek, profile_decode_context=_profile_decode_context_for_test
+        )
         try:
             with bound_profile_record_session(session), override_settings(cadrumo_active_profile=outcome.profile_id):
                 yield outcome.profile_id, session
@@ -99,8 +107,11 @@ def _proposal(record: object) -> CensalReviewedOperand:
 
 
 def test_reviewed_proposal_applies_exact_effects_and_one_event(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
 
@@ -121,8 +132,11 @@ def test_reviewed_proposal_applies_exact_effects_and_one_event(tmp_path: Path) -
 
 @pytest.mark.parametrize("stale_axis", ["revision", "digest"])
 def test_reviewed_proposal_refuses_stale_baseline_without_effect(tmp_path: Path, stale_axis: str) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         proposal = _proposal(before)
         baseline_update = (
@@ -144,8 +158,11 @@ def test_reviewed_proposal_refuses_stale_baseline_without_effect(tmp_path: Path,
 
 
 def test_reviewed_proposal_refuses_tampered_intent_before_effect(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         proposal = _proposal(before)
         tampered = proposal.model_copy(
@@ -166,8 +183,11 @@ def test_reviewed_proposal_refuses_tampered_intent_before_effect(tmp_path: Path)
 
 
 def test_reviewed_proposal_refuses_foreign_profile_baseline_without_effect(tmp_path: Path) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         proposal = _proposal(before)
         payload = proposal.model_dump(mode="python")
@@ -198,8 +218,11 @@ def test_incomplete_direct_mode_refuses_before_publication(
     missing_effect: Literal["adopted", "divergences", "none"],
     message: str,
 ) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
 
@@ -220,8 +243,11 @@ def test_reviewed_and_direct_mixed_mode_refuses_before_publication(
     tmp_path: Path,
     direct_effect: Literal["adopted", "divergences"],
 ) -> None:
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with _subject(tmp_path) as (profile_id, session):
-        repository = ProfileRecordRepository.for_current_session(profile_id)
+        repository = ProfileRecordRepository.for_current_session(
+            profile_id, profile_decode_context=_profile_decode_context_for_test
+        )
         before = repository.load(profile_id)
         history_before = ProfileRecordStore(session=session).history()
         proposal = _proposal(before)

@@ -19,6 +19,7 @@ from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
     _BUCKET_ID,
     _OTHER_BUCKET_ID,
@@ -42,8 +43,10 @@ def _seed_evidence_free_transaction(secure_objects: SecureObjectRepository, *, i
             description="material oficina",
             idempotency_key=idempotency_key,
         ),
-        transaction_repository=transaction_repository,
-        bucket_event_repository=event_repository,
+        ports=ledger_ports_for_test(
+            transaction_repository=transaction_repository,
+            bucket_event_repository=event_repository,
+        ),
         occurred_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
     )
     return created.ref.transaction_id
@@ -64,9 +67,11 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_obje
                 description="material oficina",
                 purchase_invoice_evidence_id="missing-purchase-evidence",
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -88,9 +93,11 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_ob
                 description="material oficina",
                 attachment_ids=("a" * 64,),
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=AttachmentStore(objects=objects),
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                attachment_store=AttachmentStore(objects=objects),
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -116,9 +123,11 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
                 description="material oficina",
                 purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -158,9 +167,11 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_o
                 description="material oficina",
                 attachment_ids=(attachment_id,),
             ),
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=store,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                attachment_store=store,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -188,9 +199,11 @@ def test_attach_rejects_missing_purchase_evidence(secure_objects: SecureObjectRe
             transaction_id=transaction_id,
             purchase_invoice_evidence_id="missing-purchase-evidence",
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -212,9 +225,11 @@ def test_attach_rejects_purchase_evidence_from_other_bucket(secure_objects: Secu
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=other_bucket_invoice.invoice_id,
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            invoice_repository=invoice_repository,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                invoice_repository=invoice_repository,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -233,9 +248,11 @@ def test_attach_rejects_missing_attachment_manifest(secure_objects: SecureObject
             transaction_id=transaction_id,
             attachment_ids=("a" * 64,),
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=AttachmentStore(objects=secure_objects),
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                attachment_store=AttachmentStore(objects=secure_objects),
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 
@@ -272,9 +289,11 @@ def test_attach_rejects_attachment_from_other_bucket(secure_objects: SecureObjec
             transaction_id=transaction_id,
             attachment_ids=(attachment_id,),
             actor="operator-B",
-            transaction_repository=transaction_repository,
-            bucket_event_repository=event_repository,
-            attachment_store=store,
+            ports=ledger_ports_for_test(
+                transaction_repository=transaction_repository,
+                bucket_event_repository=event_repository,
+                attachment_store=store,
+            ),
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
 

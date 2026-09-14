@@ -21,6 +21,9 @@ from __future__ import annotations
 import pytest
 from textual.widgets import Label, OptionList, Static
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import load_test_profile_record
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -64,7 +67,10 @@ def _ensure_logged_in() -> None:
     profile authority, so every read or write door below needs an authenticated
     session. Logging in derives the same DEK the capsule was sealed under.
     """
-    login_profile(name=_LABEL, passphrase_callback=lambda: _PASSWORD)
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    login_profile(
+        name=_LABEL, passphrase_callback=lambda: _PASSWORD, profile_decode_context=_profile_decode_context_for_test
+    )
 
 
 def _live_overview():
@@ -75,11 +81,13 @@ def _live_overview():
 
 def _persist(path: str, value: str):
     """The production write door, so an edit here travels the real path."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     _ensure_logged_in()
     record = apply_manager_profile_field_mutation(
         profile_id=require_active_bucket_id(),
         path=path,
         value=value,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     return build_profile_overview(record, label=_LABEL)
 

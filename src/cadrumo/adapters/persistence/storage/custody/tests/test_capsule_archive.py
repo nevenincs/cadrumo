@@ -14,6 +14,9 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.capsule_archive import (
     RECOVERY_SLOT_BYTES,
@@ -42,6 +45,7 @@ _SURNAMES = "Iriarte Zubizarreta"
 
 def _register(handed: list[str] | None = None) -> str:
     """Register the subject profile carrying identifying facts."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     outcome = register_profile_with_credentials(
         label=_LABEL,
         passphrase=_PASSPHRASE,
@@ -54,12 +58,15 @@ def _register(handed: list[str] | None = None) -> str:
             (handed.append(enrollment.recovery_key.mnemonic) if handed is not None else None)
             or enrollment.recovery_key.mnemonic
         ),
+        profile_create_context=_profile_create_context_for_test,
+        profile_decode_context=_profile_decode_context_for_test,
     )
     return outcome.profile_id
 
 
 def test_a_profile_survives_an_archive_and_a_restore_on_a_fresh_root(tmp_path: Path) -> None:
     """The acceptance claim end to end: back up, restore elsewhere, no data loss."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         archive = tmp_path / "backup.cadrumo-bucket.tar.gz"
@@ -74,6 +81,7 @@ def test_a_profile_survives_an_archive_and_a_restore_on_a_fresh_root(tmp_path: P
             capsule=read_profile_capsule_archive(archive),
             password=_PASSPHRASE,
             root=tmp_path / "fresh-machine",
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         # Identity verbatim: an import that minted a new UUID would have
@@ -121,6 +129,7 @@ def test_discarding_words_does_not_create_a_password_only_source_profile(tmp_pat
 
 def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path) -> None:
     """Normal backup transport never carries or installs recovery material."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     handed: list[str] = []
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -139,6 +148,7 @@ def test_the_recovery_wrapper_is_excluded_from_archive_and_import(tmp_path: Path
             capsule=archive_source,
             password=_PASSPHRASE,
             root=destination,
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert restored.recovery_enrolled is False
@@ -204,6 +214,7 @@ def test_a_capsule_that_is_not_published_cannot_be_archived(tmp_path: Path) -> N
 
 def test_an_archived_profile_keeps_its_setup_state_and_facts(tmp_path: Path) -> None:
     """No data loss is the claim, so the record itself is compared."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
         profile_id = _register()
         archive = tmp_path / "facts.cadrumo-bucket.tar.gz"
@@ -220,6 +231,7 @@ def test_an_archived_profile_keeps_its_setup_state_and_facts(tmp_path: Path) -> 
             capsule=source,
             password=_PASSPHRASE,
             root=tmp_path / "facts-restored",
+            profile_decode_context=_profile_decode_context_for_test,
         )
 
         assert restored.profile_id == profile_id

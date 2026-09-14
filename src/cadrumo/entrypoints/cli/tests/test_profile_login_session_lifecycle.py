@@ -29,6 +29,10 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    _profile_authority_contexts as _profile_contexts_for_test,
+)
+
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
 from .subprocess_cli import run_cadrumo_subprocess
@@ -105,6 +109,7 @@ def _envelope(result: subprocess.CompletedProcess[str]) -> dict[str, Any]:
 
 def _create_profile(storage_root: Path) -> str:
     """Register one capsule through the current credential-only creation door."""
+    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
     from ....application.user_profile.registration import register_profile_with_credentials
     from ....core.config import override_settings
@@ -114,6 +119,8 @@ def _create_profile(storage_root: Path) -> str:
             recovery_handover=lambda enrollment: enrollment.recovery_key.mnemonic,
             label="session-operator",
             passphrase=_PASSPHRASE,
+            profile_create_context=_profile_create_context_for_test,
+            profile_decode_context=_profile_decode_context_for_test,
         )
         close_active_bucket_session()
     return outcome.bucket_id
