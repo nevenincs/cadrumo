@@ -672,7 +672,7 @@ registry-republish-target MODELO REVISION SOURCE_REF FILING_YEAR PERIOD EXPECTED
 [group('maintenance')]
 registry-modelo-scaffold MODELO REVISION:
     @uv run --no-sync python -m dev.registry.newmodelo scaffold {{MODELO}} {{REVISION}}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
 
 [doc('Check one modelo revision scaffold without writing any skeleton files.')]
 [group('check')]
@@ -688,68 +688,24 @@ registry-modelo-checklist:
 [group('maintenance')]
 registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
     @uv run --no-sync python -m dev.registry.conformance stamp {{MODELO}} {{REVISION}} --registry-root {{quote(REGISTRY_ROOT)}}{{ if ENGINEERED_BY == "" { "" } else { " --engineered-by " + quote(ENGINEERED_BY) } }}{{ if CLEAR_ENGINEERED_BY == "true" { " --clear-engineered-by" } else { "" } }}{{ if REVIEW_STATUS == "" { "" } else { " --review-status " + quote(REVIEW_STATUS) } }}{{ if REVIEWED_BY == "" { "" } else { " --reviewed-by " + quote(REVIEWED_BY) } }}{{ if REVIEWED_AT == "" { "" } else { " --reviewed-at " + quote(REVIEWED_AT) } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
 
 [doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and evidence under .logs.')]
 [group('maintenance')]
 registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
 
 [doc('Stage one modelo edition migration under WORK_DIR and persist its report under .logs; never apply it to the registry.')]
 [group('report')]
 report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR DECLARE_BLOCKED_ROOTS="false":
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} {{ if DECLARE_BLOCKED_ROOTS == "true" { "--declare-blocked-roots" } else { "" } }}
 
-[doc('Rename registry formula and binding identifiers through the owning CLI.')]
-[group('maintenance')]
-registry-binding-rename:
-    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --apply
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc('Convert authored registry binding rows to the provider shape through the owning CLI.')]
-[group('maintenance')]
-registry-binding-convert MODELO="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.convert_binding_provider_shape {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc('Report registry binding provider-shape conversion without writing any file.')]
-[group('report')]
-report-registry-binding-convert MODELO="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.convert_binding_provider_shape --dry-run {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-
-[doc('Normalise row-producing registry binding value contracts onto the row_set shape.')]
-[group('maintenance')]
-registry-binding-row-set-fix MODELO="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.fix_binding_row_set_contracts {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc('Report row-producing registry binding value-contract normalisation without writing any file.')]
-[group('report')]
-report-registry-binding-row-set-fix MODELO="--all" REPORT="":
-    @uv run --no-sync python -m dev.registry.fix_binding_row_set_contracts --dry-run {{ if MODELO == "--all" { "--all" } else { "--modelo " + MODELO } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-
-[doc('Report registry formula and binding identifier rename measurements without applying them.')]
-[group('report')]
-report-registry-binding-renames:
-    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers
-
-[doc('Collapse one modelo edition-keyed identifier year through the owning CLI.')]
-[group('maintenance')]
-registry-binding-rename-modelo MODELO REPORT="":
-    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --apply --modelo {{MODELO}} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc('Report one modelo edition-keyed identifier collapse and its refusals without writing any file.')]
-[group('report')]
-report-registry-binding-rename-modelo MODELO REPORT="":
-    @uv run --no-sync python -m dev.registry.rename_formula_binding_identifiers --modelo {{MODELO}} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-
 [doc("Lift each edition family's shared source_refs onto its revision manifest through the owning CLI; pass a modelo id to scope it, or --all for the whole corpus.")]
 [group('maintenance')]
 registry-family-source-defaults-lift SCOPE="--all" REPORT="":
     @uv run --no-sync python -m dev.registry.lift_family_source_defaults --apply {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
+    @echo "next_currentness=check-registry next_publication=registry-publish-authority-then-registry-publish-target"
 
 [doc("Report the edition family source_refs lift and its refusals without writing any file; pass a modelo id to scope it, or --all for the whole corpus.")]
 [group('report')]
@@ -760,17 +716,6 @@ report-registry-family-source-defaults-lift SCOPE="--all" REPORT="":
 [group('report')]
 report-registry-restated-bindings SCOPE="--all" REPORT="":
     @uv run --no-sync python -m dev.registry.strip_restated_bindings --dry-run {{ if SCOPE == "--all" { "--all" } else { "--modelo " + SCOPE } }} {{ if REPORT == "" { "" } else { "--report " + quote(REPORT) } }}
-
-[doc('Generate registry result-disposition fragments through the owning CLI.')]
-[group('maintenance')]
-registry-result-fragments-generate:
-    @uv run --no-sync python -m dev.registry.result_disposition_fragment_generator --apply
-    @echo "next_currentness=check-registry-valid-and-report-registry-status next_publication=registry-publish-authority-then-registry-publish-target"
-
-[doc('Report registry result-disposition fragments that would be generated without writing them.')]
-[group('report')]
-report-registry-result-fragments:
-    @uv run --no-sync python -m dev.registry.result_disposition_fragment_generator
 
 # The dev.tui command family is limited to visual-review artefacts: inventory,
 # render, snapshot, rasterise, and diff. It has no service-control or test
@@ -1046,7 +991,6 @@ test-tui-render:
     uv run --no-sync python -m dev.tui render
     uv run --no-sync pytest -v -n0 -m tui_render dev/tui/tests
 
-
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('test')]
 test-os-keychain:
@@ -1187,32 +1131,6 @@ report-registry-closure:
 [group('report')]
 report-registry-aeip:
     @uv run --no-sync python -m dev.registry.aeip inventory
-
-# How far each modelo has moved from full-copy editions to delta authoring, and
-# what still restates the edition its own directory names. Reads the authored
-# corpus rather than the compiled authority, because a restated reference and an
-# inherited one materialise identically and the authority cannot see the
-# difference. Sibling to `delta_minimality`, which owns the separate question of
-# whether a stated row equals the row it would inherit.
-[doc('Report the edition union status per family and modelo as a grouped readable report; pass --lines for the diffable record form, --json for the payload; always exits zero.')]
-[group('report')]
-report-registry-edition-delta-status *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-status -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status {{ARGS}}
-
-[doc('Report whether every casilla continuity chain runs down its modelo edition sequence without a hole, and whether each evolution states one step; pass --findings for the located rows, --lines for the diffable record form, --json for the payload; always exits zero.')]
-[group('report')]
-report-registry-chain-contiguity *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-chain-contiguity -- uv run --no-sync python -m dev.registry.analysis.chain_contiguity {{ARGS}}
-
-[doc('Report only the corpus-wide edition delta-authoring totals, without the per-modelo worklist; always exits zero.')]
-[group('report')]
-report-registry-edition-delta-totals:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-edition-delta-totals -- uv run --no-sync python -m dev.registry.analysis.edition_delta_status --totals-only
-
-[doc('Report which fields exist on disk per declaration family: presence, schema class, convergence and intra-modelo divergence; always exits zero.')]
-[group('report')]
-report-registry-field-census *ARGS:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label report-registry-field-census -- uv run --no-sync python -m dev.registry.analysis.edition_field_census {{ARGS}}
 
 # ── Documentation ────────────────────────────────────────────────────────────
 
