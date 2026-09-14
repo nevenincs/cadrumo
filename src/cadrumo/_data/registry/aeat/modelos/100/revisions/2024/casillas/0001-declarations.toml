@@ -4652,8 +4652,6 @@ additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024
 [[revisions."2024".casillas]]
 id = "0568"
 continuidad_id = "irpf-incremento-perdida-incentivo-fiscal-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT dictionaries establish the same state incentive-loss field in both exercises: aeat-dr-100-2024-dictionary:909 and aeat-dr-100-2025-dictionary:935 map DED33E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED33E [P102] to box 0568, with the same description for loss of the incentive regulated by article 33.3(c) of the Income Tax Law. The 2024 and 2025 Renta Parte 1 manuals discuss the article 33.3 incentive and the Chapter 18 rule that amounts improperly deducted after loss of entitlement are added to the liquid quota. The state section, semantic_role, legal_refs, box number, and representation are stable; there is no renumbering or repurpose. Continuity is grounded in the official field path, legal concept, and cross-year design, not the number alone."
 number = "0568"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_incremento_perdida_incentivo_fiscal_estatal"
@@ -4662,8 +4660,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0569"
 continuidad_id = "irpf-incremento-perdida-incentivo-fiscal-autonomico"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT dictionaries establish the same autonomous incentive-loss field in both exercises: aeat-dr-100-2024-dictionary:910 and aeat-dr-100-2025-dictionary:936 map DED33A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED33A [P102] to box 0569, with the same description for loss of the incentive regulated by article 33.3(c) of the Income Tax Law. The 2024 and 2025 Renta Parte 1 manuals discuss the article 33.3 incentive and the Chapter 18 rule that amounts improperly deducted after loss of entitlement are added to the liquid quota. The autonomous section, semantic_role, box number, and representation are stable; the 2025 legal reference addition is recorded as an evolution, with no renumbering or repurpose. Continuity is grounded in the official field path, legal concept, and cross-year design, not the number alone."
 number = "0569"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_incremento_perdida_incentivo_fiscal_autonomico"
@@ -4672,8 +4668,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0570"
 continuidad_id = "irpf-cuota-liquida-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT dictionaries establish the same computed state-liquid-quota field in both exercises: aeat-dr-100-2024-dictionary:907 and aeat-dr-100-2025-dictionary:933 map CLIQEST at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/CLIQEST [P102] to box 0570 as 'Cuota líquida estatal'. The official IRPF authority for article 67 defines this state liquid quota, and the 2024 and 2025 Renta Parte 1 manuals place the field in Chapter 18's Cuota líquida calculation alongside the subsequent loss-of-deduction increments. Section, semantic_role, input_kind, formula, box number, and representation are stable; the 2025 legal reference addition is recorded as an evolution, with no renumbering or repurpose. Continuity is grounded in the official field path, legal authority, and identical computation, not the number alone."
 number = "0570"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_liquida_estatal"
@@ -4684,8 +4678,6 @@ additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024
 [[revisions."2024".casillas]]
 id = "0571"
 continuidad_id = "irpf-cuota-liquida-autonomica"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT dictionaries establish the same computed autonomous-liquid-quota field in both exercises: aeat-dr-100-2024-dictionary:908 and aeat-dr-100-2025-dictionary:934 map CLIQAUT at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/CLIQAUT [P102] to box 0571 as 'Cuota líquida autonómica'. The official IRPF authority for article 77 defines this autonomous liquid quota, and the 2024 and 2025 Renta Parte 1 manuals place the field in Chapter 18's Cuota líquida calculation alongside the subsequent loss-of-deduction increments. Section, semantic_role, input_kind, formula, box number, and representation are stable; the 2025 legal reference addition is recorded as an evolution, with no renumbering or repurpose. Continuity is grounded in the official field path, legal authority, and identical computation, not the number alone."
 number = "0571"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_cuota_liquida_autonomica"
@@ -4696,8 +4688,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0572"
 continuidad_id = "irpf-perdida-derecho-deduccion-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization concept in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), explains that wrongly deducted amounts and the corresponding interest are added when entitlement is lost; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same rule for deductions lost in 2025. AEAT dictionaries aeat-dr-100-2024-dictionary:913 and aeat-dr-100-2025-dictionary:939 map DED96 at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED96 [P102] to box 0572 in both revisions as the state amount. The exercise year is the only label change; section, semantic_role, legal_refs, box number, and representation remain stable, with no renumbering or repurpose. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0572"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_estatal"
@@ -4706,8 +4696,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0573"
 continuidad_id = "irpf-intereses-demora-perdida-deduccion-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization concept in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), requires the corresponding delay interest when deduction entitlement is lost; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same interest rule for 2025 regularizations. AEAT dictionaries aeat-dr-100-2024-dictionary:914 and aeat-dr-100-2025-dictionary:940 map INT96E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT96E [P102] to box 0573 in both revisions as the state delay-interest amount. The label, section, semantic_role, legal_refs, box number, and representation remain stable, with no renumbering or repurpose. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0573"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_deduccion_estatal"
@@ -4716,8 +4704,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0574"
 continuidad_id = "irpf-perdida-derecho-deduccion-transitoria-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization field in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), identifies box 0574 for deductions lost in 2024 and box 0576 for their interest; the 2025 Parte 1 manual, same chapter and section (p. 1354), identifies box 0574 for deductions lost in 2025 and box 0576 for their interest. AEAT dictionaries aeat-dr-100-2024-dictionary:915 and aeat-dr-100-2025-dictionary:941 map DED97E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97E [P102] to box 0574 in both revisions. The exercise year is the only label change; section, semantic_role, legal_refs, and box number remain stable, with no representation or renumbering change. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0574"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_transitoria_estatal"
@@ -4734,8 +4720,6 @@ additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024
 [[revisions."2024".casillas]]
 id = "0576"
 continuidad_id = "irpf-intereses-demora-perdida-transitoria-estatal"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same Chapter 18 regularization field in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), identifies box 0576 for interest on deductions lost in 2024 and box 0574 for the deduction amount; the 2025 Parte 1 manual, same chapter and section (p. 1354), identifies box 0576 for interest on deductions lost in 2025 and box 0574 for the deduction amount. AEAT dictionaries aeat-dr-100-2024-dictionary:917 and aeat-dr-100-2025-dictionary:943 map INT97E at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT97E [P102] to box 0576 in both revisions. The label, section, semantic_role, legal_refs, and box number remain stable, with no representation or renumbering change. Continuity is grounded in the official field and manual context, not the number alone."
 number = "0576"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_transitoria_estatal"
@@ -4743,9 +4727,7 @@ legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77", "rd-439-2007:art-59", 
 additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]
 [[revisions."2024".casillas]]
 id = "0577"
-continuidad_id = "irpf-perdida-derecho-deduccion-general-autonomica"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same autonomous regularization bucket in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), states that improper autonomous deductions and their delay interest increase the autonomous liquid quota; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same treatment for deductions lost in 2025. AEAT dictionaries aeat-dr-100-2024-dictionary:916 and aeat-dr-100-2025-dictionary:942 map DED97A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED97A [P102] to box 0577 in both revisions as the autonomous part. The exercise year is the only label change; section, semantic_role, legal_refs, box number, and representation remain stable, with the 2025 legal reference addition recorded as an evolution. Continuity is grounded in the official field and manual context, not the number alone."
+continuidad_id = "irpf-perdida-derecho-deduccion-autonomica"
 number = "0577"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_autonomica"
@@ -4754,8 +4736,6 @@ additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input
 [[revisions."2024".casillas]]
 id = "0578"
 continuidad_id = "irpf-intereses-demora-perdida-deduccion-general-autonomica"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same autonomous delay-interest bucket in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), requires the corresponding delay interest and assigns the autonomous component to the autonomous liquid quota; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same rule for 2025 regularizations. AEAT dictionaries aeat-dr-100-2024-dictionary:917 and aeat-dr-100-2025-dictionary:943 map INT97A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT97A [P102] to box 0578 in both revisions. The label, section, semantic_role, legal_refs, box number, and representation remain stable, with the 2025 legal reference addition recorded as an evolution. This INT97A field is kept distinct from INT98A/box 0581, which belongs to the separate autonomous-deduction bucket."
 number = "0578"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_deduccion_autonomica"
@@ -4763,9 +4743,7 @@ legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", 
 additional_source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1"]
 [[revisions."2024".casillas]]
 id = "0579"
-continuidad_id = "irpf-perdida-derecho-deducciones-autonomicas"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same autonomous-deduction regularization bucket in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), states that improper autonomous deductions and their delay interest increase the autonomous liquid quota; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same treatment for deductions lost in 2025. AEAT dictionaries aeat-dr-100-2024-dictionary:918 and aeat-dr-100-2025-dictionary:944 map DED98A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/DED98A [P102] to box 0579 in both revisions. The exercise year is the only label change; section, semantic_role, legal_refs, box number, and representation remain stable, with the 2025 legal reference addition recorded as an evolution. Continuity is grounded in the official field and manual context, not the number alone."
+continuidad_id = "irpf-perdida-derecho-deduccion-autonomicas-suma"
 number = "0579"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_perdida_derecho_deduccion_autonomicas_suma"
@@ -4782,8 +4760,6 @@ additional_source_refs = ["aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024
 [[revisions."2024".casillas]]
 id = "0581"
 continuidad_id = "irpf-intereses-demora-perdida-deducciones-autonomicas"
-continuidad_origin = "grounded"
-continuidad_evidence = "Official AEAT Renta manuals ground the same autonomous-deduction delay-interest bucket in both exercises: Manual práctico de Renta 2024, Parte 1, chapter 18, section 'Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores' (p. 1465), requires the corresponding delay interest and assigns the autonomous component to the autonomous liquid quota; the 2025 Parte 1 manual, same chapter and section (p. 1354), applies the same rule for 2025 regularizations. AEAT dictionaries aeat-dr-100-2024-dictionary:920 and aeat-dr-100-2025-dictionary:946 map INT98A at /DatosEconomicos/Resultados/CalculoImpuestoRes/GravamenesRes/INT98A [P102] to box 0581 in both revisions. The label, section, semantic_role, legal_refs, box number, and representation remain stable, with the 2025 legal reference addition recorded as an evolution. This INT98A field is kept distinct from INT97A/box 0578, which belongs to the separate general-deduction autonomous-part bucket."
 number = "0581"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 semantic_role = "irpf_intereses_demora_perdida_deduccion_autonomica"

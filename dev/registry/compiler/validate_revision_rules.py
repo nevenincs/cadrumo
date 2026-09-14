@@ -279,11 +279,13 @@ def validate_m210_tipo_renta_code_projection_parity(
             the shipped registry projection is resolved at the point of use.
     """
     failures: list[str] = []
-    projected = set(m210_tipo_renta_code_projection() if projected_codes is None else projected_codes)
+    projected = set(projected_codes) if projected_codes is not None else None
     for revision in modelo.revisions.values():
         for parameter in revision.parameters:
             if not parameter.id.startswith(_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX):
                 continue
+            if projected is None:
+                projected = set(m210_tipo_renta_code_projection())
             declared = {row.key for row in parameter.keyed_brackets}
             prefix = f"modelo {modelo.id} revision {revision.id} parameter {parameter.id!r}"
             for code in sorted(declared - projected):
@@ -302,6 +304,7 @@ def validate_m210_tipo_renta_code_projection_parity(
 
 
 def validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) -> list[str]:
+    """Require one declared casilla owner per reconciliation total."""
     failures: list[str] = []
     declared: dict[str, str] = {}
     for expectation in revision.verification_expectations:

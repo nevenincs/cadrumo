@@ -86,6 +86,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
@@ -167,6 +168,7 @@ def deadline_window_content_failures(
     *,
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    legal_clause_texts: tuple[str, ...] = (),
 ) -> list[str]:
     """Return a failure when none of a deadline window's own sources say WHEN.
 
@@ -185,6 +187,7 @@ def deadline_window_content_failures(
             in ``_validate_surfaces.py``).
         window: The deadline window being checked.
         source_refs: The registry source catalogue, keyed by source ID.
+        legal_clause_texts: Verified quotations from matching in-window BOE clauses.
         evidence: The revision's :class:`EvidenceValidator`, reused for its
             cached, PDF-sidecar-aware text resolution rather than
             duplicating it here.
@@ -201,6 +204,10 @@ def deadline_window_content_failures(
         if (source := source_refs.get(ref)) is not None and source.evidence_tier == "official_source_guidance"
     ]
     if not osg_refs:
+        if legal_clause_texts and not any(
+            _carries_deadline_content(normalise_corpus_text(text)) for text in legal_clause_texts
+        ):
+            return [f"{prefix}: deadline window {window.id!r} cites BOE clauses without filing deadline text"]
         return []
     any_reachable = False
     for ref in osg_refs:

@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from itertools import combinations
 
 from cadrumo.core.casilla_id import CasillaId
+from cadrumo.core.i18n.render import MissingTranslationError
 from cadrumo.domain.calculations.registry.cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
     iter_cross_revision_casilla_divergences,
@@ -38,6 +39,10 @@ __all__ = [
 ]
 
 type _ContinuityOccurrence = tuple[ModeloRevision, CasillaDefinition]
+type _CoverageNode = tuple[RevisionId, CasillaId]
+type _CoverageKey = tuple[str, str]
+
+_UNRESOLVED_LOCALIZATION = "<unresolved-localization>"
 
 
 def declared_cross_revision_continuity_semantic_linkage_failures(
@@ -203,6 +208,7 @@ def strict_cross_revision_casilla_continuity_failures(
     failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     semantic_failures: list[str] = []
     for modelo in modelos:
+        transitive_coverage: dict[_CoverageKey, dict[_CoverageNode, int]] = {}
         semantic_failures.extend(strict_continuity_evolution_failures(modelo))
         for divergence in iter_cross_revision_casilla_divergences((modelo,)):
             left_revision = modelo.revisions[divergence.left_revision_id]
@@ -213,7 +219,11 @@ def strict_cross_revision_casilla_continuity_failures(
                 continue
             if not _has_declared_continuity_surface(divergence):
                 continue
-            if divergence.evolution_covers_field:
+            if divergence.evolution_covers_field or _transitive_evolution_covers_field(
+                modelo,
+                divergence,
+                cache=transitive_coverage,
+            ):
                 continue
             key = (
                 divergence.modelo_id,
@@ -234,13 +244,120 @@ def strict_cross_revision_casilla_continuity_failures(
     return (*semantic_failures, *drift_failures)
 
 
+def _transitive_evolution_covers_field(
+    modelo: ModeloDefinition,
+    divergence: CrossRevisionCasillaDivergence,
+    *,
+    cache: dict[_CoverageKey, dict[_CoverageNode, int]],
+) -> bool:
+    """Return whether an evolution path proves a non-adjacent field change.
+
+    An adjacent evolution is evidence for every earlier occurrence whose field
+    value reaches that boundary unchanged.  Requiring an otherwise redundant
+    declaration for every pair of revisions makes the all-pairs drift detector
+    disagree with the edge-local evolution and edition-inheritance contracts.
+    The path remains field-specific: equal values form implicit edges, while a
+    changed value forms an edge only when an authored evolution covers it.
+    """
+    continuidad_id = divergence.left_continuidad_id
+    if continuidad_id is None or divergence.right_continuidad_id != continuidad_id:
+        return False
+    key = (continuidad_id, divergence.field)
+    components = cache.get(key)
+    if components is None:
+        components = _field_coverage_components(modelo, continuidad_id, divergence.field)
+        cache[key] = components
+    left = (divergence.left_revision_id, divergence.casilla_id)
+    right = (divergence.right_revision_id, divergence.casilla_id)
+    return left in components and right in components and components[left] == components[right]
+
+
+def _field_coverage_components(
+    modelo: ModeloDefinition,
+    continuidad_id: str,
+    field: str,
+) -> dict[_CoverageNode, int]:
+    occurrences = tuple(
+        ((revision.id, casilla.id), casilla)
+        for revision in modelo.revisions.values()
+        for casilla in revision.casillas
+        if casilla.continuidad_id == continuidad_id
+    )
+    neighbours: dict[_CoverageNode, set[_CoverageNode]] = {node: set() for node, _casilla in occurrences}
+    for index, (left_node, left_casilla) in enumerate(occurrences[:-1]):
+        left_value = _continuity_field_value(left_casilla, field)
+        for right_node, right_casilla in occurrences[index + 1 :]:
+            if left_value == _continuity_field_value(right_casilla, field):
+                _connect_coverage_nodes(neighbours, left_node, right_node)
+
+    nodes_by_revision: dict[RevisionId, tuple[_CoverageNode, ...]] = defaultdict(tuple)
+    for node, _casilla in occurrences:
+        nodes_by_revision[node[0]] = (*nodes_by_revision[node[0]], node)
+    for revision in modelo.revisions.values():
+        for evolution in revision.casilla_continuidad_evolutions:
+            if evolution.continuidad_id != continuidad_id or not _evolution_covers_field(
+                evolution.evolution_kind,
+                field,
+            ):
+                continue
+            for left_node in nodes_by_revision[evolution.from_revision]:
+                for right_node in nodes_by_revision[evolution.to_revision]:
+                    _connect_coverage_nodes(neighbours, left_node, right_node)
+    return _connected_component_index(neighbours)
+
+
+def _continuity_field_value(casilla: CasillaDefinition, field: str) -> object:
+    try:
+        return getattr(casilla, field)
+    except MissingTranslationError:
+        return _UNRESOLVED_LOCALIZATION
+
+
+def _evolution_covers_field(evolution_kind: str, field: str) -> bool:
+    if evolution_kind == "label_evolved":
+        return field == "label"
+    if evolution_kind == "legal_refs_evolved":
+        return field == "legal_refs"
+    if evolution_kind == "label_and_legal_refs_evolved":
+        return field in {"label", "legal_refs"}
+    return evolution_kind == "repurposed"
+
+
+def _connect_coverage_nodes(
+    neighbours: dict[_CoverageNode, set[_CoverageNode]],
+    left: _CoverageNode,
+    right: _CoverageNode,
+) -> None:
+    neighbours[left].add(right)
+    neighbours[right].add(left)
+
+
+def _connected_component_index(neighbours: dict[_CoverageNode, set[_CoverageNode]]) -> dict[_CoverageNode, int]:
+    components: dict[_CoverageNode, int] = {}
+    for node in neighbours:
+        if node in components:
+            continue
+        component = len(components)
+        pending = [node]
+        while pending:
+            candidate = pending.pop()
+            if candidate in components:
+                continue
+            components[candidate] = component
+            pending.extend(neighbours[candidate] - components.keys())
+    return components
+
+
 def _has_declared_continuity_surface(divergence: CrossRevisionCasillaDivergence) -> bool:
     # Strict continuity is intentionally scoped to authored surfaces.
-    # Do not infer continuity from repeated numeric casilla ids alone.
-    return (
-        divergence.left_continuidad_id is not None
-        or divergence.right_continuidad_id is not None
-        or divergence.evolution_kind is not None
+    # One annotated endpoint starts or ends a chain; it does not prove that an
+    # unannotated row with the same numeric casilla id belongs to that chain.
+    # An evolution concerns the continuity id wherever it occurs in each
+    # revision, which may be a renumbered row; it cannot turn an unrelated reuse
+    # of the old numeric id into a continuity surface. Only the shared chain id
+    # establishes that the two compared rows are the same declared concept.
+    return divergence.left_continuidad_id is not None and (
+        divergence.left_continuidad_id == divergence.right_continuidad_id
     )
 
 

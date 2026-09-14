@@ -281,6 +281,107 @@ class TestValidateSemanticRoleConsistency:
 
         assert any("constraints incompatible" in failure for failure in failures)
 
+    def test_record_design_enum_widening_preserves_a_stable_role(self) -> None:
+        legal = ("orden-eha-3434-2007:art-1",)
+        historical = _casilla(
+            cid=validated_casilla_id("historical-flag", surface="semantic-role-enum-test"),
+            semantic_role="m322_identificacion_volumen_anual_no_cero",
+            data_type="text",
+            constraints=CasillaConstraints(
+                max_length=1, enum=("1", "2"), legal_refs=legal, source_refs=("aeat-dr-322-2022",)
+            ),
+        )
+        widened = _casilla(
+            cid=validated_casilla_id("widened-flag", surface="semantic-role-enum-test"),
+            semantic_role="m322_identificacion_volumen_anual_no_cero",
+            data_type="text",
+            constraints=CasillaConstraints(
+                max_length=1, enum=("0", "1", "2"), legal_refs=legal, source_refs=("aeat-dr-322-2026",)
+            ),
+        )
+
+        assert semantic_role_consistency_failures(
+            [_registry_modelo("322", "2022", [historical]), _registry_modelo("322", "2026", [widened])]
+        ) == ()
+
+    @pytest.mark.parametrize("scope", ["same_revision", "cross_model"])
+    def test_differing_enums_outside_revision_widening_are_rejected(self, scope: str) -> None:
+        legal = ("ley-58-2003:art-29",)
+        first = _casilla(
+            cid="first-enum",
+            semantic_role="enum_scope_guard",
+            constraints=CasillaConstraints(enum=("1",), legal_refs=legal, source_refs=("aeat-manual",)),
+        )
+        second = _casilla(
+            cid="second-enum",
+            semantic_role="enum_scope_guard",
+            constraints=CasillaConstraints(enum=("1", "2"), legal_refs=legal, source_refs=("aeat-manual",)),
+        )
+        modelos = (
+            [_registry_modelo("180", "2023", [first, second])]
+            if scope == "same_revision"
+            else [_registry_modelo("180", "2023", [first]), _registry_modelo("184", "2024", [second])]
+        )
+
+        assert any("constraints incompatible" in failure for failure in semantic_role_consistency_failures(modelos))
+
+    def test_partially_overlapping_enum_recoding_across_revisions_is_rejected(self) -> None:
+        legal = ("ley-58-2003:art-29",)
+        historical = _casilla(
+            cid="historical-recoding",
+            semantic_role="enum_recoding_guard",
+            constraints=CasillaConstraints(enum=("1", "2"), legal_refs=legal, source_refs=("aeat-manual",)),
+        )
+        recoded = _casilla(
+            cid="recoded",
+            semantic_role="enum_recoding_guard",
+            constraints=CasillaConstraints(enum=("2", "3"), legal_refs=legal, source_refs=("aeat-manual",)),
+        )
+
+        failures = semantic_role_consistency_failures(
+            [_registry_modelo("180", "2023", [historical]), _registry_modelo("180", "2024", [recoded])]
+        )
+        assert any("constraints incompatible" in failure for failure in failures)
+
+    def test_enum_widening_does_not_mask_non_enum_constraint_changes(self) -> None:
+        legal = ("ley-58-2003:art-29",)
+        historical = _casilla(
+            cid="historical-width",
+            semantic_role="enum_non_enum_guard",
+            constraints=CasillaConstraints(
+                max_length=1, enum=("1",), legal_refs=legal, source_refs=("aeat-manual",)
+            ),
+        )
+        widened_and_reshaped = _casilla(
+            cid="reshaped",
+            semantic_role="enum_non_enum_guard",
+            constraints=CasillaConstraints(
+                max_length=2, enum=("1", "2"), legal_refs=legal, source_refs=("aeat-manual",)
+            ),
+        )
+
+        failures = semantic_role_consistency_failures(
+            [_registry_modelo("180", "2023", [historical]), _registry_modelo("180", "2024", [widened_and_reshaped])]
+        )
+        assert any("constraints incompatible" in failure for failure in failures)
+
+    def test_independent_enum_supersets_across_revisions_are_rejected(self) -> None:
+        legal = ("ley-58-2003:art-29",)
+        observations = [
+            _casilla(
+                cid=f"enum-observation-{year}",
+                semantic_role="enum_branch_guard",
+                constraints=CasillaConstraints(enum=values, legal_refs=legal, source_refs=("aeat-manual",)),
+            )
+            for year, values in ((2022, ("1",)), (2023, ("1", "2")), (2024, ("1", "3")))
+        ]
+        modelos = [
+            _registry_modelo("180", str(year), [observation])
+            for year, observation in zip((2022, 2023, 2024), observations, strict=True)
+        ]
+
+        assert any("constraints incompatible" in failure for failure in semantic_role_consistency_failures(modelos))
+
 
 class TestValidateSemanticRoleCardinality:
     def test_intentional_singleton_role_with_single_occurrence_passes(self) -> None:

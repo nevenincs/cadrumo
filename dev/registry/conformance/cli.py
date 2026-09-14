@@ -85,7 +85,7 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..compiler.authority import compile_validated_authority
-from ..compiler.legal_grounding import verify_legal_catalogue
+from ..compiler.legal_grounding import verify_legal_catalogue_grounding
 from ..compiler.loader import load_registry_tree
 from ..pipeline.authority_publication import AuthorityArtifactCurrency, authority_artifact_currency
 from .edition import RegistryEditionView, read_registry_edition, render_registry_edition
@@ -119,7 +119,7 @@ def validate_registry(
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
     authority = compile_validated_authority(resolved_registry_root, resolved_source_root)
-    verify_legal_catalogue(authority.catalogues.legal, source_root=resolved_source_root)
+    verify_legal_catalogue_grounding(authority.catalogues.legal, source_root=resolved_source_root)
     return authority
 
 

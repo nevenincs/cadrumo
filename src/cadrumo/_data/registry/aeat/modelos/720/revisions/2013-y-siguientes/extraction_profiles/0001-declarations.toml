@@ -8,11 +8,10 @@ target_casillas = [
     {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "text", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+informaci[oó]n'},
 ]
 # decl.ejercicio label_pattern grounded against:
-# (1) AEAT-published diseño de registro (modelo_720.pdf), downloaded 2026-05-27 from
+# (1) AEAT-published diseño de registro (modelo_720.pdf), available from
 #     https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
 #       DR_Resto_Mod/archivos/modelo_720.pdf
-#     saved at src/cadrumo/_data/corpus/aeat_official/instructions/modelo_720/files/
-#       modelo-720-aeat-dr.pdf
+#     corpus source aeat-dr-720, pinned in legal/foreign-assets.toml.
 #     Record-type-1 positions 5-8: EJERCICIO.
 # (2) Orden HAP/72/2013 Art. 7: "al que se refiera la información a suministrar" —
 #     M720 is a declaración informativa and consistently uses "información", not

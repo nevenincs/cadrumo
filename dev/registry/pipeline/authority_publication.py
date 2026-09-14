@@ -10,16 +10,15 @@ The artifact records the candidate identity it was compiled from, and
 the inputs as they stand now. The identity is content-addressed and
 checkout-independent: it folds every registry and source-evidence file's
 root-relative path and content digest, never an absolute path, a size, or a
-modification time, so a fresh clone on any platform derives the identity the
-publisher recorded. Registry files are digested with CRLF line endings folded
+modification time. A fresh clone with the same compiler and declared runtime
+environment derives the recorded identity. Registry files use CRLF endings folded
 to LF, because the repository normalises the registry tree to LF while a
 Windows working copy may still hold CRLF; source evidence is byte-exact legal
 evidence and is digested raw.
 
-Where the currency check stops: it covers the compiler's INPUTS. A change to
-the compiler's own code that alters its output without touching any input
-leaves the recorded identity current; the full-registry publication round trip
-is the gate that exercises the compiler itself.
+Currency includes the compiler and domain source identity as well as the data
+inputs. The source receipt and compiler receipt are distinct, and their combined
+digest identifies the build; the artifact frame separately hashes its output.
 """
 
 from __future__ import annotations
@@ -27,6 +26,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import partial
 from pathlib import Path, PurePosixPath
 from typing import Final
 
@@ -36,28 +36,19 @@ from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactError,
+    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
-    FactsAuthorityMergeBase,
     PublishedLegalEvidence,
     PublishedSourceEvidence,
     read_authority_artifact,
-    read_facts_authority_merge_base,
     write_authority_artifact,
-    write_facts_authority_artifact,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.schema import FactOwnership, GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 
 from ..compiler.authority_state import canonical_authoring_root_pair
+from ..compiler.build_identity import authority_compiler_identity
 from ..compiler.corpus_provenance import classify_normative_corpus_provenance
-from ..compiler.fact_providers import (
-    AUTHORED_FACT_PROVIDER_ID,
-    collect_registered_fact_provider_fingerprints,
-    compile_authored_fact_catalogue,
-    fact_catalogue_digest,
-    serialize_fact_catalogue,
-)
 from ..compiler.identity import resolve_registry_identity
 from ..compiler.legal_grounding import published_legal_evidence_text
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
@@ -73,21 +64,15 @@ __all__ = [
     "AuthorityArtifactCurrency",
     "AuthorityArtifactCurrencyStatus",
     "AuthorityPublicationReceipt",
-    "FactsAuthorityCandidate",
-    "FactsAuthorityPublicationReceipt",
     "ValidatedAuthorityCandidate",
     "authority_artifact_currency",
     "authority_candidate_identity",
-    "facts_authority_artifact_currency",
-    "facts_authority_candidate_identity",
     "publish_authority_candidate",
-    "publish_facts_authority_candidate",
     "publish_validated_authority_candidate",
     "validate_authority_candidate",
-    "validate_facts_authority_candidate",
 ]
 
-_CANDIDATE_IDENTITY_SCHEMA: Final = "cadrumo-authority-candidate-identity/v1"
+_CANDIDATE_IDENTITY_SCHEMA: Final = "cadrumo-authority-candidate-identity/v2"
 _UNTRACKED_DIRECTORY_NAMES: Final = frozenset({"__pycache__"})
 _UNTRACKED_FILE_SUFFIXES: Final = frozenset({".lock", ".pyc"})
 """Working-tree byproducts -- lock sidecars and bytecode -- that no checkout carries.
@@ -118,6 +103,8 @@ class AuthorityArtifactCurrency:
     status: AuthorityArtifactCurrencyStatus
     candidate_identity_digest: str
     recorded_identity_digest: str | None
+    candidate_build_identity: AuthorityBuildIdentity
+    recorded_build_identity: AuthorityBuildIdentity | None
     detail: str
 
     @property
@@ -133,6 +120,9 @@ class AuthorityPublicationReceipt:
     registry_identity_digest: str
     source_evidence_fingerprints: SourceEvidenceFingerprint
     source_evidence_content_digests: tuple[tuple[str, str], ...]
+    source_identity_digest: str
+    compiler_identity_digest: str
+    component_dependency_digest: str
     identity_digest: str
     """Content-addressed candidate identity; recorded in the artifact it publishes."""
 
@@ -145,42 +135,6 @@ class ValidatedAuthorityCandidate:
     source_root: Path
     receipt: AuthorityPublicationReceipt
     artifact: AuthorityArtifact
-
-
-@dataclass(frozen=True, slots=True)
-class FactsAuthorityPublicationReceipt:
-    """Mutable inputs consumed by the facts-only publication boundary.
-
-    The receipt fingerprints authored fact declarations and the validated
-    authority artifact used as the provider-fact merge base.  Existing
-    provider outputs are retained from that typed artifact; this boundary does
-    not refresh or recompile their Modelo inputs.
-    """
-
-    fact_source_fingerprints: tuple[tuple[str, int, int, str], ...]
-    base_artifact_sha256: str
-    facts_digest: str
-
-
-@dataclass(frozen=True, slots=True)
-class FactsAuthorityCandidate:
-    """A typed authority candidate with only its facts section replaced."""
-
-    registry_root: Path
-    artifact_path: Path
-    receipt: FactsAuthorityPublicationReceipt
-    facts: GovernedFactCatalogue
-    merge_base: FactsAuthorityMergeBase
-    provider_counts: tuple[tuple[str, int], ...]
-
-
-@dataclass(frozen=True, slots=True)
-class _CompiledFacts:
-    """One authored-plus-retained-provider facts merge and its accounting proof."""
-
-    facts: GovernedFactCatalogue
-    provider_counts: tuple[tuple[str, int], ...]
-    duplicate_resolutions: tuple[tuple[str, tuple[str, ...], bool, str | None], ...]
 
 
 def publish_authority_candidate(
@@ -207,18 +161,16 @@ def publish_authority_candidate(
 
 def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> ValidatedAuthorityCandidate:
     """Compile and validate a candidate, refusing inputs that change mid-validation."""
-    # The full registry compiler imports Modelo validation and runtime
-    # projections.  Keep it out of the facts-only publication import path;
-    # this function is reached only by full ``publish-authority`` workflows.
-    from ..compiler.authority import compile_structural_authority
+    # Import at the compile boundary so tooling discovery does not load validators.
+    from ..compiler.authority import compile_validated_authority
 
     resolved_registry_root, resolved_source_root = canonical_authoring_root_pair(registry_root, source_root)
     receipt_before = _capture_receipt(resolved_registry_root, resolved_source_root)
     identity = resolve_registry_identity(
         resolved_registry_root,
-        collect_fingerprints=collect_registry_tree_fingerprints,
+        collect_fingerprints=partial(collect_registry_tree_fingerprints, use_cache=False),
     )
-    authority = compile_structural_authority(
+    authority = compile_validated_authority(
         resolved_registry_root,
         resolved_source_root,
         identity=identity,
@@ -232,6 +184,11 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         modelos=authority.modelos,
         catalogues=authority.catalogues,
         identity_digest=receipt_after.identity_digest,
+        build_identity=AuthorityBuildIdentity(
+            receipt_after.source_identity_digest,
+            receipt_after.compiler_identity_digest,
+            receipt_after.component_dependency_digest,
+        ),
         evidence=_project_evidence(
             authority.catalogues.legal,
             authority.catalogues.sources,
@@ -244,286 +201,6 @@ def validate_authority_candidate(*, registry_root: Path, source_root: Path) -> V
         receipt=receipt_after,
         artifact=artifact,
     )
-
-
-def publish_facts_authority_candidate(
-    *,
-    registry_root: Path,
-    artifact_path: Path,
-) -> AuthorityArtifact:
-    """Publish authored facts into the current typed authority atomically.
-
-    This is the facts-only publication owner.  It compiles authored facts and
-    merges them with the existing provider-owned generated facts in an already
-    published, digest-checked authority.  The existing model graph, legal and
-    source catalogues, runtime projections, evidence, and non-colliding
-    provider facts are retained exactly.  No Modelo loader or provider refresh
-    is reachable from this path.
-
-    A missing or corrupt base artifact is refused because a raw JSON
-    merge cannot prove the unrelated sections remain typed and valid.  The
-    caller must first provide a current authority publication through the
-    canonical authority writer.
-    """
-    with exclusive_file_lock(
-        artifact_path,
-        timeout=_PUBLICATION_LOCK_TIMEOUT,
-        retry_backoff=_PUBLICATION_LOCK_RETRY_BACKOFF,
-    ):
-        candidate = validate_facts_authority_candidate(
-            registry_root=registry_root,
-            artifact_path=artifact_path,
-        )
-        return _publish_facts_candidate(candidate, artifact_path=artifact_path)
-
-
-def validate_facts_authority_candidate(
-    *,
-    registry_root: Path,
-    artifact_path: Path,
-) -> FactsAuthorityCandidate:
-    """Build an authored-plus-retained-provider facts-only candidate.
-
-    The existing typed authority is the provider-fact merge base.  This path
-    deliberately does not load or validate Modelo revisions and replaces only
-    the facts catalogue.
-    """
-    resolved_registry_root = _canonical_facts_registry_root(registry_root)
-    resolved_artifact_path = artifact_path.expanduser().resolve()
-    facts_fingerprints_before = _fact_source_fingerprints(resolved_registry_root)
-    base_artifact_sha256_before = _artifact_sha256(resolved_artifact_path)
-    base_artifact = _read_facts_merge_base(resolved_artifact_path)
-    compiled = _compile_merged_facts(resolved_registry_root, base_artifact.facts)
-    facts = compiled.facts
-    facts_digest = fact_catalogue_digest(facts)
-    facts_fingerprints_after = _fact_source_fingerprints(resolved_registry_root)
-    base_artifact_sha256_after = _artifact_sha256(resolved_artifact_path)
-    if facts_fingerprints_after != facts_fingerprints_before:
-        raise RegistryValidationError(
-            "authored facts changed while they were being compiled; facts authority publication is refused",
-        )
-    if base_artifact_sha256_after != base_artifact_sha256_before:
-        raise RegistryValidationError(
-            "authority artifact changed while facts were being compiled; facts authority publication is refused",
-        )
-    receipt = FactsAuthorityPublicationReceipt(
-        fact_source_fingerprints=facts_fingerprints_after,
-        base_artifact_sha256=base_artifact_sha256_after,
-        facts_digest=facts_digest,
-    )
-    return FactsAuthorityCandidate(
-        registry_root=resolved_registry_root,
-        artifact_path=resolved_artifact_path,
-        receipt=receipt,
-        facts=facts,
-        merge_base=base_artifact,
-        provider_counts=compiled.provider_counts,
-    )
-
-
-def facts_authority_candidate_identity(*, registry_root: Path, artifact_path: Path | None = None) -> str:
-    """Return the digest a fresh authored-plus-retained-provider merge would publish."""
-    if artifact_path is None:
-        raise RegistryValidationError(
-            "facts authority candidate identity requires the validated artifact merge base; "
-            "pass artifact_path explicitly",
-        )
-    base_artifact = _read_facts_merge_base(artifact_path.expanduser().resolve())
-    return fact_catalogue_digest(
-        _compile_merged_facts(
-            _canonical_facts_registry_root(registry_root),
-            base_artifact.facts,
-        ).facts,
-    )
-
-
-def facts_authority_artifact_currency(
-    artifact_path: Path,
-    *,
-    registry_root: Path,
-) -> AuthorityArtifactCurrency:
-    """Compare the bundled facts index and identity with a fresh compilation."""
-    try:
-        artifact = read_authority_artifact(artifact_path)
-    except AuthorityArtifactError as exc:
-        return AuthorityArtifactCurrency(
-            artifact_path=artifact_path,
-            status=AuthorityArtifactCurrencyStatus.UNREADABLE,
-            candidate_identity_digest="unavailable-without-a-readable-merge-base",
-            recorded_identity_digest=None,
-            detail=f"{type(exc).__name__}: {exc}",
-        )
-    candidate_identity = facts_authority_candidate_identity(
-        registry_root=registry_root,
-        artifact_path=artifact_path,
-    )
-    published_facts_digest = fact_catalogue_digest(artifact.catalogues.facts)
-    if artifact.identity_digest != candidate_identity or published_facts_digest != candidate_identity:
-        return AuthorityArtifactCurrency(
-            artifact_path=artifact_path,
-            status=AuthorityArtifactCurrencyStatus.STALE,
-            candidate_identity_digest=candidate_identity,
-            recorded_identity_digest=artifact.identity_digest,
-            detail=(
-                "the published authority facts index or its identity digest differs from the fresh "
-                "authored-plus-retained-provider facts compilation"
-            ),
-        )
-    return AuthorityArtifactCurrency(
-        artifact_path=artifact_path,
-        status=AuthorityArtifactCurrencyStatus.CURRENT,
-        candidate_identity_digest=candidate_identity,
-        recorded_identity_digest=artifact.identity_digest,
-        detail="the published authority carries the fresh authored-plus-retained-provider facts compilation",
-    )
-
-
-def _publish_facts_candidate(
-    candidate: FactsAuthorityCandidate,
-    *,
-    artifact_path: Path,
-) -> AuthorityArtifact:
-    """Recheck the facts/base receipt, write through the canonical writer, and reread it."""
-    resolved_artifact_path = artifact_path.expanduser().resolve()
-    if resolved_artifact_path != candidate.artifact_path:
-        raise RegistryValidationError("facts authority candidate target differs from its reviewed artifact target")
-    if _fact_source_fingerprints(candidate.registry_root) != candidate.receipt.fact_source_fingerprints:
-        raise RegistryValidationError(
-            "authored facts changed after facts compilation; facts authority publication is refused",
-        )
-    if _artifact_sha256(resolved_artifact_path) != candidate.receipt.base_artifact_sha256:
-        raise RegistryValidationError(
-            "authority artifact changed after facts compilation; facts authority publication is refused",
-        )
-    write_facts_authority_artifact(
-        resolved_artifact_path,
-        candidate.merge_base,
-        candidate.facts,
-        identity_digest=candidate.receipt.facts_digest,
-    )
-    try:
-        published = read_authority_artifact(resolved_artifact_path)
-    except AuthorityArtifactError as exc:
-        raise RegistryValidationError(
-            "canonical authority writer produced an unreadable facts publication",
-        ) from exc
-    if published.identity_digest != candidate.receipt.facts_digest:
-        raise RegistryValidationError(
-            "canonical authority writer changed the facts candidate identity digest",
-        )
-    if fact_catalogue_digest(published.catalogues.facts) != candidate.receipt.facts_digest:
-        raise RegistryValidationError(
-            "canonical authority writer changed the facts candidate payload",
-        )
-    return published
-
-
-def _canonical_facts_registry_root(registry_root: Path) -> Path:
-    """Resolve one existing registry root without touching unrelated Modelo data."""
-    try:
-        resolved = registry_root.expanduser().resolve(strict=True)
-    except (OSError, RuntimeError) as exc:
-        raise RegistryValidationError("facts authority registry root must resolve to an existing directory") from exc
-    if not resolved.is_dir():
-        raise RegistryValidationError("facts authority registry root must resolve to a directory")
-    return resolved
-
-
-def _fact_source_fingerprints(registry_root: Path) -> tuple[tuple[str, int, int, str], ...]:
-    """Capture only registered authored-fact source files for race detection."""
-    return tuple(collect_registered_fact_provider_fingerprints(registry_root))
-
-
-def _compile_merged_facts(
-    registry_root: Path,
-    base_facts: GovernedFactCatalogue,
-) -> _CompiledFacts:
-    """Compile authored facts and retain provider facts from the merge base.
-
-    The authority artifact is the only trusted provider output available to
-    this facts-only boundary.  Recompiling provider projections would require
-    loading the complete Modelo tree, so non-colliding generated facts remain
-    byte-for-byte typed values from the validated artifact.
-    """
-    authored = compile_authored_fact_catalogue(registry_root)
-    selected: dict[str, GovernedFact] = dict(authored.facts)
-    duplicate_resolutions: list[tuple[str, tuple[str, ...], bool, str | None]] = []
-
-    for fact_id, base_fact in base_facts.facts.items():
-        authored_fact = authored.facts.get(fact_id)
-        if authored_fact is not None:
-            if base_fact.provider_id is not None and str(base_fact.provider_id) != AUTHORED_FACT_PROVIDER_ID:
-                base_provider_id = str(base_fact.provider_id)
-                equal_payload = _canonical_fact_wire_payload(authored_fact) == _canonical_fact_wire_payload(base_fact)
-                if not equal_payload:
-                    raise RegistryValidationError(
-                        f"fact {fact_id!r} has unequal authored/provider canonical authority-wire payloads: "
-                        f"providers={AUTHORED_FACT_PROVIDER_ID!r},{base_provider_id!r}; authored precedence is refused",
-                    )
-                duplicate_resolutions.append(
-                    (fact_id, (AUTHORED_FACT_PROVIDER_ID, base_provider_id), True, AUTHORED_FACT_PROVIDER_ID),
-                )
-            continue
-        if not _is_provider_owned_generated(base_fact):
-            raise RegistryValidationError(
-                f"published fact {fact_id!r} is absent from authored facts and is not a retained "
-                "provider-owned generated fact; the signal-owned required-consumer inventory is not "
-                "consulted at this boundary, so facts authority publication refuses the unaccounted loss",
-            )
-        selected[fact_id] = base_fact
-
-    facts = GovernedFactCatalogue(facts=selected)
-    provider_counts: dict[str, int] = {}
-    for fact in facts.facts.values():
-        if fact.provider_id is None:
-            raise RegistryValidationError(
-                f"candidate governed fact {fact.fact_id!r} has no provider identity",
-            )
-        provider_id = str(fact.provider_id)
-        provider_counts[provider_id] = provider_counts.get(provider_id, 0) + 1
-    return _CompiledFacts(
-        facts=facts,
-        provider_counts=tuple(sorted(provider_counts.items())),
-        duplicate_resolutions=tuple(duplicate_resolutions),
-    )
-
-
-def _is_provider_owned_generated(fact: GovernedFact) -> bool:
-    """Return whether an artifact fact can be retained as provider output."""
-    return (
-        fact.provider_id is not None
-        and str(fact.provider_id) != AUTHORED_FACT_PROVIDER_ID
-        and all(variant.ownership is FactOwnership.GENERATED for variant in fact.variants)
-    )
-
-
-def _canonical_fact_wire_payload(fact: GovernedFact) -> bytes:
-    """Serialize one fact canonically while excluding compiler provider provenance."""
-    provenance_neutral = fact.model_copy(update={"provider_id": None})
-    return serialize_fact_catalogue(
-        GovernedFactCatalogue(facts={fact.fact_id: provenance_neutral}),
-    )
-
-
-def _artifact_sha256(artifact_path: Path) -> str:
-    """Hash the existing publication, refusing a missing merge base."""
-    try:
-        return hash_file(artifact_path)[0]
-    except OSError as exc:
-        raise RegistryValidationError(
-            f"facts authority publication requires an existing typed authority artifact: {artifact_path}",
-        ) from exc
-
-
-def _read_facts_merge_base(artifact_path: Path) -> FactsAuthorityMergeBase:
-    """Read only the authenticated facts merge base, not unrelated Modelo data."""
-    try:
-        return read_facts_authority_merge_base(artifact_path)
-    except AuthorityArtifactError as exc:
-        raise RegistryValidationError(
-            "facts authority publication requires a readable current authority facts merge base; "
-            "frame, payload digest, identity, and typed facts provenance must all validate",
-        ) from exc
 
 
 def _project_evidence(
@@ -610,15 +287,25 @@ def authority_artifact_currency(
     uses, so an artifact that is missing, corrupt, or of an earlier format is
     reported ``unreadable`` rather than judged on a field it cannot vouch for.
     """
-    candidate_identity = authority_candidate_identity(registry_root=registry_root, source_root=source_root)
+    roots = canonical_authoring_root_pair(registry_root, source_root)
+    receipt = _capture_receipt(*roots)
+    candidate_identity = receipt.identity_digest
+    candidate_build = AuthorityBuildIdentity(
+        receipt.source_identity_digest,
+        receipt.compiler_identity_digest,
+        receipt.component_dependency_digest,
+    )
     try:
-        recorded_identity = read_authority_artifact(artifact_path).identity_digest
+        artifact = read_authority_artifact(artifact_path)
+        recorded_identity = artifact.identity_digest
     except AuthorityArtifactError as exc:
         return AuthorityArtifactCurrency(
             artifact_path=artifact_path,
             status=AuthorityArtifactCurrencyStatus.UNREADABLE,
             candidate_identity_digest=candidate_identity,
             recorded_identity_digest=None,
+            candidate_build_identity=candidate_build,
+            recorded_build_identity=None,
             detail=f"{type(exc).__name__}: {exc}",
         )
     if recorded_identity != candidate_identity:
@@ -627,14 +314,37 @@ def authority_artifact_currency(
             status=AuthorityArtifactCurrencyStatus.STALE,
             candidate_identity_digest=candidate_identity,
             recorded_identity_digest=recorded_identity,
-            detail="the registry or source evidence changed since this artifact was published",
+            candidate_build_identity=candidate_build,
+            recorded_build_identity=artifact.build_identity,
+            detail="changed authority inputs: "
+            + ", ".join(
+                name
+                for name, changed in (
+                    (
+                        "source manifest",
+                        candidate_build.source_identity_digest != artifact.build_identity.source_identity_digest,
+                    ),
+                    (
+                        "compiler/schema build",
+                        candidate_build.compiler_identity_digest != artifact.build_identity.compiler_identity_digest,
+                    ),
+                    (
+                        "component dependencies",
+                        candidate_build.component_dependency_digest
+                        != artifact.build_identity.component_dependency_digest,
+                    ),
+                )
+                if changed
+            ),
         )
     return AuthorityArtifactCurrency(
         artifact_path=artifact_path,
         status=AuthorityArtifactCurrencyStatus.CURRENT,
         candidate_identity_digest=candidate_identity,
         recorded_identity_digest=recorded_identity,
-        detail="the artifact was published from the live registry and source evidence",
+        candidate_build_identity=candidate_build,
+        recorded_build_identity=artifact.build_identity,
+        detail="the artifact matches the live source manifest, compiler build, and component dependencies",
     )
 
 
@@ -643,11 +353,14 @@ def _publish_candidate(
     *,
     artifact_path: Path,
 ) -> AuthorityArtifact:
-    if _capture_receipt(candidate.registry_root, candidate.source_root) != candidate.receipt:
-        raise RegistryValidationError(
-            "registry candidate or source evidence changed after validation; authority publication is refused",
-        )
-    write_authority_artifact(artifact_path, candidate.artifact)
+    def require_current_candidate() -> None:
+        if _capture_receipt(candidate.registry_root, candidate.source_root) != candidate.receipt:
+            raise RegistryValidationError(
+                "registry candidate or source evidence changed after validation; authority publication is refused",
+            )
+
+    require_current_candidate()
+    write_authority_artifact(artifact_path, candidate.artifact, before_replace=require_current_candidate)
     return candidate.artifact
 
 
@@ -655,13 +368,13 @@ def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublica
     """Capture every mutable input the authority compiler uses for this candidate."""
     registry_identity = resolve_registry_identity(
         registry_root,
-        collect_fingerprints=collect_registry_tree_fingerprints,
+        collect_fingerprints=partial(collect_registry_tree_fingerprints, use_cache=False),
     )
-    source_evidence = collect_source_evidence_fingerprints(source_root)
+    source_evidence = collect_source_evidence_fingerprints(source_root, use_cache=False)
     source_evidence_content_digests = tuple(
         (path, hash_file(Path(path))[0]) for path, _byte_count, _modified_ns in source_evidence
     )
-    identity_digest = content_hash_hex(
+    source_identity_digest = content_hash_hex(
         {
             "schema": _CANDIDATE_IDENTITY_SCHEMA,
             "registry": _registry_content_digests(registry_root),
@@ -672,11 +385,16 @@ def _capture_receipt(registry_root: Path, source_root: Path) -> AuthorityPublica
             ),
         }
     )
+    compiler_identity_digest = authority_compiler_identity()
+    build_identity = AuthorityBuildIdentity.from_inputs(source_identity_digest, compiler_identity_digest)
     return AuthorityPublicationReceipt(
         registry_identity_digest=registry_identity.digest,
         source_evidence_fingerprints=source_evidence,
         source_evidence_content_digests=source_evidence_content_digests,
-        identity_digest=identity_digest,
+        source_identity_digest=source_identity_digest,
+        compiler_identity_digest=compiler_identity_digest,
+        component_dependency_digest=build_identity.component_dependency_digest,
+        identity_digest=build_identity.identity_digest,
     )
 
 

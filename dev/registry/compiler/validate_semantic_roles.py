@@ -107,6 +107,23 @@ def _constraints_signature(constraints: object) -> tuple[object, ...]:
     return tuple(getattr(constraints, name) for name in fields)
 
 
+def _compatible_constraints(left: _RoleObservation, right: _RoleObservation) -> bool:
+    """Allow nested enum domains only between exclusive editions of one modelo."""
+    lhs = _constraints_signature(left.constraints)
+    rhs = _constraints_signature(right.constraints)
+    if lhs == rhs:
+        return True
+    if left.modelo_id != right.modelo_id or left.revision_id == right.revision_id:
+        return False
+    if not lhs or not rhs or lhs[:-1] != rhs[:-1]:
+        return False
+    left_enum = getattr(left.constraints, "enum", None)
+    right_enum = getattr(right.constraints, "enum", None)
+    if not left_enum or not right_enum:
+        return False
+    return set(left_enum).issubset(right_enum) or set(right_enum).issubset(left_enum)
+
+
 def semantic_role_consistency_failures(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
@@ -114,15 +131,14 @@ def semantic_role_consistency_failures(
 
     All casillas sharing a ``semantic_role`` must declare the same
     ``data_type`` and structurally compatible ``constraints``. The
-    canonical signature is the one declared by the first casilla in
-    document order; subsequent divergences are reported as
-    validation failures.
+    enum domain may expand or narrow across exclusive revisions of one modelo.
+    All observation pairs must remain compatible; a common subset cannot hide
+    contradictory changes in later editions.
     """
     failures: list[str] = []
     for role, observations in _collect_role_observations(modelos).items():
         canonical = observations[0]
-        canonical_constraints_sig = _constraints_signature(canonical.constraints)
-        for obs in observations[1:]:
+        for index, obs in enumerate(observations[1:], start=1):
             if obs.data_type != canonical.data_type:
                 failures.append(
                     f"semantic_role {role!r}: casilla "
@@ -131,13 +147,16 @@ def semantic_role_consistency_failures(
                     f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id} "
                     f"declares data_type {canonical.data_type!r}",
                 )
-            obs_sig = _constraints_signature(obs.constraints)
-            if obs_sig != canonical_constraints_sig:
+            incompatible = next(
+                (prior for prior in observations[:index] if not _compatible_constraints(prior, obs)),
+                None,
+            )
+            if incompatible is not None:
                 failures.append(
                     f"semantic_role {role!r}: casilla "
                     f"{obs.modelo_id}.{obs.revision_id}.{obs.casilla_id} declares "
-                    f"constraints incompatible with role canonical "
-                    f"{canonical.modelo_id}.{canonical.revision_id}.{canonical.casilla_id}",
+                    f"constraints incompatible with role observation "
+                    f"{incompatible.modelo_id}.{incompatible.revision_id}.{incompatible.casilla_id}",
                 )
     return tuple(failures)
 

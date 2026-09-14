@@ -428,6 +428,30 @@ class TestCrossRevisionConsistency:
 
         assert validate_registry_scope([m]) == ()
 
+    def test_strict_continuity_chain_start_does_not_claim_an_unannotated_prior_row(self) -> None:
+        prior = _casilla(cid="0700", label="Earlier use")
+        chain_start = _casilla(cid="0700", label="Current concept", continuidad_id="current-concept")
+        modelo = _annual_modelo(prior, chain_start, continuidad_validation={"2025": "strict"})
+
+        assert validate_registry_scope([modelo]) == ()
+
+    def test_retired_chain_does_not_claim_an_unannotated_reuse_of_its_numeric_id(self) -> None:
+        retired = _casilla(cid="0700", label="Retired concept", continuidad_id="retired-concept")
+        replacement = _casilla(cid="0700", label="Replacement concept")
+        modelo = _annual_modelo(
+            retired,
+            replacement,
+            evolutions=_evolutions(
+                _continuity_evolution(
+                    continuidad_id="retired-concept",
+                    evolution_kind="retired",
+                ),
+            ),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([modelo]) == ()
+
     def test_strict_continuity_validation_accepts_covered_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old", continuidad_id="base")
         b = _casilla(cid="0700", label="New", continuidad_id="base")
@@ -439,6 +463,51 @@ class TestCrossRevisionConsistency:
         )
 
         assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_accepts_nonadjacent_change_proved_by_adjacent_evolution(self) -> None:
+        prior = _casilla(cid="0700", continuidad_id="base")
+        predecessor = _casilla(cid="0700", continuidad_id="base")
+        successor = _casilla(
+            cid="0700",
+            continuidad_id="base",
+            legal_refs=("ley-58-2003:art-30",),
+        )
+        modelo = _three_year_modelo(
+            [prior],
+            [predecessor],
+            [successor],
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="legal_refs_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([modelo]) == ()
+
+    def test_strict_continuity_keeps_uncovered_intermediate_change_visible(self) -> None:
+        prior = _casilla(
+            cid="0700",
+            continuidad_id="base",
+            legal_refs=("ley-58-2003:art-28",),
+        )
+        predecessor = _casilla(cid="0700", continuidad_id="base")
+        successor = _casilla(
+            cid="0700",
+            continuidad_id="base",
+            legal_refs=("ley-58-2003:art-30",),
+        )
+        modelo = _three_year_modelo(
+            [prior],
+            [predecessor],
+            [successor],
+            evolutions=_evolutions(_continuity_evolution(evolution_kind="legal_refs_evolved")),
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([modelo])
+
+        assert len(failures) == 1
+        assert "strict continuity drift" in failures[0]
+        assert "2023" in failures[0]
+        assert "2025" in failures[0]
 
     def test_strict_continuity_validation_accepts_repurposed_decision(self) -> None:
         a = _casilla(

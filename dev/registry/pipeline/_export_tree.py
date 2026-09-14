@@ -1652,7 +1652,7 @@ def _render_tree_files(
     layout_payload = layout.model_dump(mode="json", exclude_none=True)
     records = tuple(layout_payload.pop("records"))
     metadata_payload = {"revisions": {str(revision_id): {"export_layouts": [layout_payload]}}}
-    metadata_bytes = _render_toml_bytes("0000-export-layout.toml", metadata_payload)
+    metadata_bytes = render_toml_bytes("0000-export-layout.toml", metadata_payload)
     _require_reviewable_fragment("0000-export-layout.toml", metadata_bytes)
     rendered_files = [("0000-export-layout.toml", metadata_bytes)]
     planned_paths = {"0000-export-layout.toml"}
@@ -1744,7 +1744,7 @@ def _render_record_fragment(
     layout_id: object,
     record: Mapping[str, object],
 ) -> bytes:
-    return _render_toml_bytes(
+    return render_toml_bytes(
         str(record.get("id", "record")),
         {
             "revisions": {
@@ -1761,7 +1761,7 @@ def _render_record_fragment(
     )
 
 
-def _render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> bytes:
+def render_toml_bytes(relative_path: str, payload: Mapping[str, object]) -> bytes:
     try:
         rendered = rtoml.dumps(_order_toml_values_before_tables(payload), pretty=True, none_value=None)
     except (TypeError, ValueError) as exc:

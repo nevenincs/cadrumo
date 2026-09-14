@@ -8,9 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.core.iva_deduction_fact import IvaDeductionFactKind
-from cadrumo.domain.iva.flow import IvaFlowDirection
-from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
 from .ledger_iva_aggregation_support import (
     _M303_COMPENSACION_GENERADA_PERIODO_CASILLA,
@@ -25,7 +22,11 @@ from .ledger_iva_aggregation_support import (
     _M390_RESULTADO_REGIMEN_GENERAL_CASILLA,
     _calculate_303_from_observations,
     _calculate_390_from_observations_and_303_filings,
+    _category,
+    _deduction_kind,
+    _flow,
     _observation,
+    _rate_kind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,9 +51,9 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 applied_rate=Decimal("0.21"),
                 ledger_id="q1-input",
                 txn_date=date(2025, 3, 1),
-                flow=IvaFlowDirection.SOPORTADO,
+                flow=_flow("soportado"),
                 iva=Decimal("42.00"),
-                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+                deduction_fact_kind=_deduction_kind("domestic_current"),
             ),
         ),
         "2T": (
@@ -63,9 +64,9 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 applied_rate=Decimal("0.21"),
                 ledger_id="q2-input",
                 txn_date=date(2025, 6, 20),
-                flow=IvaFlowDirection.SOPORTADO,
+                flow=_flow("soportado"),
                 iva=Decimal("30.00"),
-                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+                deduction_fact_kind=_deduction_kind("domestic_current"),
             ),
         ),
         "3T": (
@@ -73,8 +74,8 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 applied_rate=Decimal("0.10"),
                 ledger_id="q3-output-reduced",
                 txn_date=date(2025, 8, 12),
-                category=IvaCategory.DOMESTIC_REDUCED,
-                rate_kind=IvaRateKind.REDUCED,
+                category=_category("domestic_reduced"),
+                rate_kind=_rate_kind("reduced"),
                 iva=Decimal("50.00"),
             ),
         ),
@@ -89,9 +90,9 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 applied_rate=Decimal("0.21"),
                 ledger_id="q4-input",
                 txn_date=date(2025, 12, 12),
-                flow=IvaFlowDirection.SOPORTADO,
+                flow=_flow("soportado"),
                 iva=Decimal("45.00"),
-                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+                deduction_fact_kind=_deduction_kind("domestic_current"),
             ),
         ),
     }
@@ -165,11 +166,11 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-goods",
                 txn_date=date(2025, 3, 1),
-                category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-                rate_kind=IvaRateKind.GENERAL,
+                category=_category("intra_community_acquisition_reverse_charge"),
+                flow=_flow("inversion_sujeto_pasivo"),
+                rate_kind=_rate_kind("general"),
                 iva=goods_cuota,
-                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+                deduction_fact_kind=_deduction_kind("intra_eu_current"),
             ),
         ),
         "2T": (
@@ -180,11 +181,11 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
                 applied_rate=Decimal("0.21"),
                 ledger_id="eu-service",
                 txn_date=date(2025, 6, 1),
-                category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-                flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-                rate_kind=IvaRateKind.GENERAL,
+                category=_category("intra_community_service_acquisition_reverse_charge"),
+                flow=_flow("inversion_sujeto_pasivo"),
+                rate_kind=_rate_kind("general"),
                 iva=services_cuota,
-                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+                deduction_fact_kind=_deduction_kind("intra_eu_current"),
             ),
         ),
         "3T": (

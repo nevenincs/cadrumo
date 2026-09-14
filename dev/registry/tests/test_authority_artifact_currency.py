@@ -10,13 +10,34 @@ from __future__ import annotations
 import json
 import os
 import shutil
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact, write_authority_artifact
+from cadrumo.core.hashing import sha256_hex
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.domain.calculations.registry.authority_artifact import (
+    AuthorityArtifact,
+    AuthorityBuildIdentity,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
+    write_authority_artifact,
+)
+from cadrumo.domain.calculations.registry.runtime_catalogues import (
+    ApoderamientoScopeRecord,
+    CountryVocabularyRecord,
+    PublishedIvaPlaceOfSupplyRule,
+    PublishedIvaRegulation,
+    PublishedRecargoBand,
+    RuntimeRegistryCatalogues,
+    SpanishPostalTerritory,
+    TerritoryCarveOut,
+)
+from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 
+from ..compiler.build_identity import authority_compiler_identity
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
     AuthorityArtifactCurrencyStatus,
@@ -32,6 +53,92 @@ from ._referential_integrity_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REVISION_TOML = 'id = "2025"\nvalid_from = 2025-01-01\n'
+_LEGAL_ID = "ley-35-2006:art-1"
+_LEGAL_TEXT = "art-1 fixture authority text"
+_STALE_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
+    source_identity_digest=sha256_hex(b"stale fixture authority sources"),
+    compiler_identity_digest=sha256_hex(b"stale fixture authority compiler"),
+)
+
+
+def _publication_catalogues() -> RegistryCatalogues:
+    """Build the smallest complete typed catalogue set accepted by the artifact boundary."""
+    catalogues = minimal_catalogues()
+    runtime = RuntimeRegistryCatalogues(
+        iva_regulations={
+            "fixture-exempt": PublishedIvaRegulation(
+                category="fixture-exempt",
+                requires_reverse_charge=False,
+                requires_supplier_iva_id=False,
+                manual_references=(),
+                citations=(),
+                notes="No legal treatment is asserted by this fixture row.",
+                legal_basis_exempt=True,
+            )
+        },
+        iva_place_of_supply={
+            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
+                rule_id="fixture-exempt",
+                notes="No placement is asserted by this fixture row.",
+                legal_basis_exempt=True,
+            )
+        },
+        countries={"ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",))},
+        spanish_postal_territories={
+            "28": SpanishPostalTerritory(
+                postal_prefixes=("28",),
+                scope="peninsula_baleares",
+                name="Madrid",
+                legal_refs=(_LEGAL_ID,),
+            )
+        },
+        territory_carve_outs={
+            "ES": TerritoryCarveOut(
+                code="ES",
+                name="Espana",
+                establishes_nothing=True,
+                legal_refs=(_LEGAL_ID,),
+            )
+        },
+        recargo_bands={
+            "all": PublishedRecargoBand(
+                id="all",
+                min_completed_months=0,
+                surcharge_pct=Decimal("1"),
+                legal_ref=_LEGAL_ID,
+            )
+        },
+        apoderamientos_version="fixture-v1",
+        apoderamientos_scopes={
+            "GENERAL": ApoderamientoScopeRecord(
+                code="GENERAL",
+                name_es="General",
+                name_en="General",
+                name_ca="General",
+                name_hu="Altalanos",
+            )
+        },
+    ).require_complete()
+    published_facts = bundled_authority().catalogues.facts
+    tax_id_fact = published_facts.facts["spanish-tax-identifier-format"]
+    return catalogues.model_copy(
+        update={
+            "runtime": runtime,
+            "facts": published_facts.model_copy(update={"facts": {tax_id_fact.fact_id: tax_id_fact}}),
+        }
+    )
+
+
+def _publication_evidence() -> AuthorityEvidenceProjection:
+    return AuthorityEvidenceProjection(
+        legal=(
+            PublishedLegalEvidence(
+                legal_reference_id=_LEGAL_ID,
+                anchored_text=_LEGAL_TEXT,
+                text_sha256=sha256_hex(_LEGAL_TEXT.encode("utf-8")),
+            ),
+        )
+    )
 
 
 def _stage_inputs(root: Path) -> tuple[Path, Path]:
@@ -47,14 +154,16 @@ def _stage_inputs(root: Path) -> tuple[Path, Path]:
     return registry_root, root
 
 
-def _publish(artifact_path: Path, identity_digest: str) -> None:
-    """Write an artifact recording ``identity_digest`` through the real writer."""
+def _publish(artifact_path: Path, build_identity: AuthorityBuildIdentity) -> None:
+    """Write an artifact recording ``build_identity`` through the real writer."""
     write_authority_artifact(
         artifact_path,
         AuthorityArtifact(
             modelos=(minimal_modelo(minimal_revision()),),
-            catalogues=minimal_catalogues(),
-            identity_digest=identity_digest,
+            catalogues=_publication_catalogues(),
+            build_identity=build_identity,
+            identity_digest=build_identity.identity_digest,
+            evidence=_publication_evidence(),
         ),
     )
 
@@ -64,7 +173,12 @@ def _fresh_publication(tmp_path: Path) -> tuple[Path, Path, Path]:
     registry_root, source_root = _stage_inputs(tmp_path / "candidate")
     artifact_path = tmp_path / "published" / "authority.json"
     artifact_path.parent.mkdir()
-    _publish(artifact_path, authority_candidate_identity(registry_root=registry_root, source_root=source_root))
+    candidate = authority_artifact_currency(
+        artifact_path,
+        registry_root=registry_root,
+        source_root=source_root,
+    ).candidate_build_identity
+    _publish(artifact_path, candidate)
     return registry_root, source_root, artifact_path
 
 
@@ -79,6 +193,35 @@ def test_an_artifact_published_from_the_live_inputs_is_current(tmp_path: Path) -
 
     assert currency.is_current
     assert currency.recorded_identity_digest == currency.candidate_identity_digest
+
+
+def test_unchanged_inputs_reproduce_the_same_candidate_identity(tmp_path: Path) -> None:
+    """A no-op build derives the same whole-candidate identity twice."""
+    registry_root, source_root = _stage_inputs(tmp_path / "candidate")
+
+    first = authority_candidate_identity(registry_root=registry_root, source_root=source_root)
+    second = authority_candidate_identity(registry_root=registry_root, source_root=source_root)
+
+    assert second == first
+
+
+def test_compiler_source_change_updates_portable_compiler_identity(tmp_path: Path) -> None:
+    """Compiler identity is path-independent but changes with production source semantics."""
+    original = tmp_path / "original"
+    source_roots = {"domain": original / "domain", "compiler": original / "compiler"}
+    for root in source_roots.values():
+        root.mkdir(parents=True)
+        (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    first = authority_compiler_identity(source_roots=source_roots)
+
+    relocated = tmp_path / "relocated"
+    shutil.copytree(original, relocated)
+    relocated_roots = {name: relocated / name for name in source_roots}
+    assert authority_compiler_identity(source_roots=relocated_roots) == first
+
+    (relocated_roots["compiler"] / "module.py").write_text("VALUE = 2\n", encoding="utf-8")
+
+    assert authority_compiler_identity(source_roots=relocated_roots) != first
 
 
 def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Path) -> None:
@@ -108,12 +251,42 @@ def test_a_source_evidence_edit_after_publication_makes_the_artifact_stale(tmp_p
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
     (source_root / "corpus" / "test" / "ley.html").write_bytes(b"<html>amended provision</html>\r\n")
 
-    assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
+    currency = authority_artifact_currency(
+        artifact_path,
+        registry_root=registry_root,
+        source_root=source_root,
+    )
+    assert currency.status is AuthorityArtifactCurrencyStatus.STALE
+    assert "source manifest" in currency.detail
+    assert "compiler/schema build" not in currency.detail
+
+
+def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Path) -> None:
+    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    current = authority_artifact_currency(
+        artifact_path,
+        registry_root=registry_root,
+        source_root=source_root,
+    ).candidate_build_identity
+    compiler_changed = AuthorityBuildIdentity.from_inputs(
+        source_identity_digest=current.source_identity_digest,
+        compiler_identity_digest=sha256_hex(b"changed compiler fixture"),
+    )
+    _publish(artifact_path, compiler_changed)
+
+    currency = authority_artifact_currency(
+        artifact_path,
+        registry_root=registry_root,
+        source_root=source_root,
+    )
+    assert currency.status is AuthorityArtifactCurrencyStatus.STALE
+    assert "compiler/schema build" in currency.detail
+    assert "source manifest" not in currency.detail
 
 
 def test_a_planted_artifact_recording_another_candidate_is_stale(tmp_path: Path) -> None:
     registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
-    _publish(artifact_path, "0" * 64)
+    _publish(artifact_path, _STALE_BUILD_IDENTITY)
 
     assert _status(artifact_path, registry_root, source_root) is AuthorityArtifactCurrencyStatus.STALE
 
@@ -168,7 +341,7 @@ def test_the_integrity_gate_refuses_a_stale_artifact_on_stderr_before_compiling(
     """The planted stale copy fails the owning gate with exit 1; the registry is never compiled."""
     registry_root, source_root, _artifact_path = _fresh_publication(tmp_path)
     stale = tmp_path / "published" / "stale-authority.json"
-    _publish(stale, "0" * 64)
+    _publish(stale, _STALE_BUILD_IDENTITY)
 
     result = CliRunner().invoke(
         conformance_app,
@@ -189,7 +362,7 @@ def test_the_integrity_gate_refuses_a_stale_artifact_on_stderr_before_compiling(
     refusal = json.loads(result.stderr)
     assert refusal["status"] == "refused"
     assert refusal["currency"] == "stale"
-    assert refusal["recorded_identity_digest"] == "0" * 64
+    assert refusal["recorded_identity_digest"] == _STALE_BUILD_IDENTITY.identity_digest
     assert refusal["candidate_identity_digest"] == authority_candidate_identity(
         registry_root=registry_root, source_root=source_root
     )

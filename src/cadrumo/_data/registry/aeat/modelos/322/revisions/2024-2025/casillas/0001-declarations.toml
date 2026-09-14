@@ -1973,6 +1973,7 @@ number = "volumen-anual-no-cero"
 section = ["identificacion"]
 semantic_role = "m322_identificacion_volumen_anual_no_cero"
 data_type = "text"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-121"]
 [[revisions."2024-2025".casillas]]
 id = "decl.ejercicio"

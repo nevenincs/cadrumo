@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPred
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
-from ._export_tree import _render_toml_bytes
+from ._export_tree import render_toml_bytes
 
 __all__ = [
     "GeneratedExportBootstrapTarget",
@@ -196,7 +196,7 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
     revisions_root = metadata_modelo_root / "revisions" / revision
     revisions_root.mkdir(parents=True, exist_ok=True)
     (revisions_root / "revision.toml").write_bytes(
-        _render_toml_bytes("revision.toml", {"revisions": {revision: manifest_table}}),
+        render_toml_bytes("revision.toml", {"revisions": {revision: manifest_table}}),
     )
     for section in _CONTINUITY_SECTIONS:
         value = edition.table.get(section)
@@ -205,7 +205,7 @@ def _stage_complete_sibling(source_modelo_root: Path, metadata_modelo_root: Path
         section_root = revisions_root / section
         section_root.mkdir()
         (section_root / "complete-edition.toml").write_bytes(
-            _render_toml_bytes(
+            render_toml_bytes(
                 f"{section}/complete-edition.toml",
                 {"revisions": {revision: {section: value}}},
             ),
@@ -317,7 +317,7 @@ def _write_complete_candidate_edition(revision_root: Path, edition: Materialised
         raise ValueError(f"edition {edition.modelo_id}/{edition.revision_id} resolved no casilla rows")
     staged_rows = [dict(row) for row in rows]
     (revision_root / "revision.toml").write_bytes(
-        _render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
+        render_toml_bytes("revision.toml", {"revisions": {edition.revision_id: revision_table}}),
     )
     _write_complete_edition_section(revision_root, edition, _CASILLA_SECTION, staged_rows)
     for member, value in edition.table.items():
@@ -367,7 +367,7 @@ def _write_complete_edition_section(
         _COMPLETE_EDITION_FRAGMENT if member in _SOURCE_NATIVE_SECTIONS else f"0001-{_COMPLETE_EDITION_FRAGMENT}"
     )
     (member_root / fragment_name).write_bytes(
-        _render_toml_bytes(
+        render_toml_bytes(
             f"{member}/{fragment_name}",
             {"revisions": {edition.revision_id: {member: value}}},
         ),

@@ -126,7 +126,16 @@ def validate_filing_schedule_section(
         owner = f"filing schedule {schedule.id}"
         failures.extend(missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
         failures.extend(missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
-        failures.extend(evidence.require_source_tier(prefix, owner, schedule.source_refs, "official_source_guidance"))
+        failures.extend(
+            evidence.require_procedural_evidence(
+                prefix,
+                owner,
+                schedule.source_refs,
+                schedule.legal_refs,
+                valid_from=revision.valid_from,
+                valid_to=revision.valid_to,
+            )
+        )
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
             failures.append(

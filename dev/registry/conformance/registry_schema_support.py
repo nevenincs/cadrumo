@@ -65,6 +65,8 @@ def committed_snapshot(
     filing_year: int,
     period: str,
     grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
+    *,
+    on: date | None = None,
 ) -> RegistrySnapshot:
     """Build the committed snapshot for one modelo, at the requested authority grade.
 
@@ -81,7 +83,7 @@ def committed_snapshot(
         # -- one per revision, all six -- so the rung costs it nothing; the
         # reason it cannot take a lower one is that this branch goes through
         # the authority accessor for the annual-Orden projection.
-        return compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+        return compiled_bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period, on=on)
     modelo, catalogues = committed_modelo(modelo_id)
     return build_snapshot(
         modelo,
@@ -89,6 +91,7 @@ def committed_snapshot(
         source_root=bundled_path(),
         filing_year=filing_year,
         period=period,
+        on=on,
         grade=grade,
     )
 
