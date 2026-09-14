@@ -647,4 +647,3 @@ move in the same change.
 This decision reduces what is authored, not what is proven. Completeness coverage is unchanged —
 the modelo with the largest declared surface sits at under two percent manifest coverage before
 and after — and this must not be described as a correctness improvement.
-

@@ -5,18 +5,13 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:9538542a4148b82cceba082f35139ca12c2148dfa0d97944d20740b8f209db77'
+body_hash: 'sha256:e31c73577a177906d7b124248f7dba9323e4e9ad19cade689e6f2a9fe6a73435'
 step_id: 'S24'
 related:
   - '[[2026-09-10-registry-authority-artifact-boundary-plan]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-remediation-result-reference]]'
   - '[[2026-09-14-registry-authority-artifact-boundary-authority-backend-final-review-audit]]'
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Share deeply immutable typed definitions, index evidence, and bound generation, context-projection, and snapshot caches without requiring eager revision or layout precomputation
 

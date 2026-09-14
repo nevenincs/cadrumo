@@ -5,30 +5,11 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee2e31f5ad60c559bba47cdeb115ff9b6743f629bf584fda006ebff430793744'
+body_hash: 'sha256:c9b477c53bae07a24c9508d78efb18db5d25392ab77f33a9e424ebcb433ba0a4'
 related:
   - "[[2026-09-14-canonical-exception-remediation-plan]]"
   - "[[2026-09-14-canonical-exception-remediation-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace canonical-exception-remediation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `canonical-exception-remediation` audit: `Canonical exception remediation final review`
 

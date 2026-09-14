@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2f6d0daeb31f11733200d95e44101600a48170755af196f5cf49c414f640abb'
+body_hash: 'sha256:063701f89c75d7a7ea75ebc0544c837d39629a2708c9b34aef43c7b6ce2d7679'
 related:
   - '[[2026-09-14-registry-corpus-pruning-ownership-reference]]'
 ---
@@ -58,8 +58,6 @@ Retain the formula-bearing, currently unattested Modelo 200 XLSX until its deriv
 First define distinct source, derivative, annotation, semantic-structure and test-fixture roles using the existing artifact catalogue where appropriate. Then correct XML/media routing and attribution, make discovery failures visible and invalidate runtime search on corpus changes. Decouple manual-source evidence from optional structured-manual coverage. Only then consolidate duplicate representations and retire obsolete tools with their consumers updated.
 
 Acceptance must compare canonical source hashes, anchored/versioned text, exact citations and indexed population before and after; it must report lost or newly excluded evidence. A directory census, zero dangling paths or matching hashes alone is not an evidence-quality completion signal. The independent consumer audit and direct probes support the findings above; no live index contents, external legal freshness or whole-authority recompilation were claimed.
-
-
 
 ### Follow-up: separate manual source identity from authored structure
 

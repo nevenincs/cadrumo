@@ -6,21 +6,11 @@ date: '2026-09-14'
 tier: L3
 related:
   - '[[2026-09-14-canonical-exception-remediation-adr]]'
+  - '[[2026-09-14-canonical-exception-remediation-migration-taxonomy-research]]'
 modified: '2026-09-14'
 body_schema: body-v2
-body_hash: 'sha256:0d6995506423b2417d0e15d737dbe076e92a450d982921d2f43713f6cc7ed58f'
+body_hash: 'sha256:f365be8bed8fcf6691aff6a6c79f5c1e96af336fe372214cd52ad7f987853f17'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 <!-- RETIRED: P03, P05, S05, S06, S07, S08, S09 -->
 
 # `canonical-exception-remediation` plan

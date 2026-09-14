@@ -6,6 +6,7 @@ date: '2026-09-10'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-research]]"
   - "[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]"
+  - '[[2026-09-14-registry-authority-artifact-boundary-storage-loaders-and-facts-scratch-research]]'
 superseded_by: '2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr'
 modified: '2026-09-14'
 body_schema: 'body-v2'
