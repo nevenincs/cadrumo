@@ -19,7 +19,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.validator import RegistryValidator
 from ..conformance.registry_schema_support import (
@@ -588,8 +589,6 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(r
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from cadrumo.domain.iva.flow import IvaFlowDirection
-    from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions[revision_id]
@@ -599,9 +598,9 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations(r
         IvaLedgerObservation(
             ledger_id=f"q{idx}-rep",
             transaction_date=date(2025, idx * 3, 15),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("1000") * idx,
             iva_amount=amount,
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

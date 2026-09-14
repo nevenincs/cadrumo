@@ -830,15 +830,10 @@ def plan_migration(
 def _delta_authored(manifest: Mapping[str, object]) -> bool:
     """Whether a manifest states an edition in delta form rather than full copy.
 
-    A lifted default (``casilla_source_refs``) or a named ``predecessor`` both
-    mean rows may now be inherited, so the edition no longer carries its own
-    full-copy form.  A ``predecessor`` that is a ``none`` root declares the
-    opposite -- that this edition inherits from nothing -- so every row is still
-    stated in full and the edition can be lifted and proven against its own
-    materialisation like any first edition.
+    Only a named predecessor introduces inherited members. Reference defaults
+    compress fields within an edition; they do not turn its full member list
+    into a delta. An explicit root likewise inherits no members.
     """
-    if "casilla_source_refs" in manifest:
-        return True
     return isinstance(manifest.get("predecessor"), str)
 
 
@@ -1214,7 +1209,10 @@ def _lifted_inline(line: str, lift: _TableLift) -> str:
     kept: list[str] = []
     for item in (item.strip() for item in _top_level_items(body[1:-1])):
         name = item.partition("=")[0].strip()
-        if name not in lift.removed:
+        if name == _ROW_SOURCE_ADDITIONS and _ROW_SOURCE in lift.removed:
+            if lift.additions is not None:
+                kept.append(_additions_assignment(lift.additions))
+        elif name not in lift.removed:
             kept.append(item)
         elif name == _ROW_SOURCE and lift.additions is not None:
             kept.append(_additions_assignment(lift.additions))
@@ -1244,12 +1242,16 @@ def _lifted_text(block: _Block, lift: _Lift) -> str:
             scope = "other"
         key = _key_of(line)
         table_lift = lift.row_lift if scope == "row" else lift.constraint_lift if scope == "constraints" else None
-        if table_lift is not None and key is not None and key in table_lift.removed:
+        if (
+            table_lift is not None
+            and key is not None
+            and (key in table_lift.removed or (key == _ROW_SOURCE_ADDITIONS and _ROW_SOURCE in table_lift.removed))
+        ):
             depth = _scan_depth(line.partition("=")[2], 0)
             while depth > 0 and index + 1 < len(lines):
                 index += 1
                 depth = _scan_depth(lines[index], depth)
-            if key == _ROW_SOURCE and table_lift.additions is not None:
+            if key in {_ROW_SOURCE, _ROW_SOURCE_ADDITIONS} and table_lift.additions is not None:
                 out.append(_additions_assignment(table_lift.additions) + "\n")
             index += 1
             continue

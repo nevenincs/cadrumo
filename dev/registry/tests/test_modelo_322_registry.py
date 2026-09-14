@@ -12,7 +12,8 @@ from cadrumo.domain.calculations.registry.deadline_coordinate import deadline_se
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.domain.iva.schema import IvaLedgerObservationRole
+from cadrumo.domain.iva.flow import IvaFlowDirection
+from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.validator import RegistryValidator
@@ -316,8 +317,6 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
-    from cadrumo.domain.iva.flow import IvaFlowDirection
-    from cadrumo.domain.iva.schema import IvaCategory, IvaRateKind
 
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-2022"]
@@ -325,9 +324,9 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation(
             ledger_id="rep-1",
             transaction_date=date(2025, 6, 1),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("repercutido"),
             base_amount=Decimal("5000"),
             iva_amount=Decimal("1050"),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
@@ -335,14 +334,14 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
         IvaLedgerObservation(
             ledger_id="sop-1",
             transaction_date=date(2025, 6, 5),
-            category=IvaCategory.DOMESTIC_GENERAL,
-            rate_kind=IvaRateKind.GENERAL,
-            flow_direction=IvaFlowDirection.SOPORTADO,
+            category=IvaCategory("domestic_general"),
+            rate_kind=IvaRateKind("general"),
+            flow_direction=IvaFlowDirection._from_registry("soportado"),
             base_amount=Decimal("2000"),
             iva_amount=Decimal("420"),
-            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_fact_kind=IvaDeductionFactKind._from_registry("domestic_current"),
             deduction_provenance=_deduction_provenance(
-                IvaDeductionFactKind.DOMESTIC_CURRENT,
+                IvaDeductionFactKind._from_registry("domestic_current"),
                 source_locator="invoice:sop-1",
             ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,

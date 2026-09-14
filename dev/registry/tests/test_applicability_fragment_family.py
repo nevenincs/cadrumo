@@ -23,6 +23,9 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError, Regis
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicabilityRuleDefinition
+from cadrumo.domain.contribuyente.entity_type import EntityType
+from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
+from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_applicability_section import validate_applicability_section
@@ -140,21 +143,16 @@ def test_hydrate_applicability_rule_round_trips_every_axis() -> None:
     hydrated = hydrate_applicability_rule(Modelo("100"), fragment)
 
     from cadrumo.domain.calculations.registry.applicability_payer_facts import PayerFact
-    from cadrumo.domain.contribuyente.entity_type import EntityType
-    from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
-    from cadrumo.domain.deadlines.models import (
-        IrpfEstimationRegime,
-        IrpfIncomeCategory,
-        IVARegime,
-    )
 
     assert hydrated == ModeloApplicabilityRule(
         modelo=Modelo("100"),
-        applicable_entity_types=frozenset({EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}),
-        required_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
-        required_estimation_regimes=frozenset({IrpfEstimationRegime.DIRECTA_NORMAL}),
-        applicable_fiscal_residencies=frozenset({FiscalResidency.RESIDENT_IRPF}),
-        applicable_iva_regimes=frozenset({IVARegime.GENERAL}),
+        applicable_entity_types=frozenset(
+            {EntityType._from_registry("natural_person"), EntityType._from_registry("legal_entity")}
+        ),
+        required_income_categories=frozenset({IrpfIncomeCategory._from_registry("actividad_economica")}),
+        required_estimation_regimes=frozenset({IrpfEstimationRegime._from_registry("directa_normal")}),
+        applicable_fiscal_residencies=frozenset({FiscalResidency.from_registry("resident_irpf")}),
+        applicable_iva_regimes=frozenset({IVARegime("GENERAL")}),
         required_payer_fact=PayerFact.PAYS_WITHHELD_INCOME,
         applicable_reason="applies",
         not_applicable_reason="does not apply",
