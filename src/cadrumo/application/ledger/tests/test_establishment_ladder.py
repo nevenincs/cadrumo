@@ -47,6 +47,7 @@ from ....domain.iva.establishment import (
     territorial_scope_for_spanish_postal_code,
 )
 from ....domain.iva.identification import identification_state_for_printed_tax_identifier
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ....domain.iva.schema import EUMemberState
 from ....tests.attribute_scope import scoped_attribute
 from ..counterparty_establishment import (
@@ -68,6 +69,7 @@ from ..establishment_ladder import (
 )
 from ..evidence_draft import counterparty_draft_side
 from ..invoice_draft_records import InvoiceDraft, InvoiceDraftLine, InvoiceDraftRateBreakdown
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..regime_contradiction import draft_prints_a_repercutido_line
 
 #: The defining module itself, for the attribute scoping below. Named through
@@ -88,6 +90,12 @@ _MADRID = "28013"
 _PARIS = "75001"
 _BERLIN = "10115"
 _CEUTA = "51001"
+
+
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
 class _InMemoryCounterpartyEstablishmentRepository(CounterpartyEstablishmentRepositoryProtocol):
@@ -637,6 +645,7 @@ class TestDraftRouting:
                 draft=draft,
                 kind=InvoiceKind.ISSUED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -662,6 +671,7 @@ class TestDraftRouting:
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -742,6 +752,7 @@ class TestRungReachabilityFromADraft:
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -770,6 +781,7 @@ class TestRungReachabilityFromADraft:
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 
@@ -802,6 +814,7 @@ class TestRungReachabilityFromADraft:
                 draft=draft,
                 kind=InvoiceKind.RECEIVED,
                 repository=repository,
+                legends=_registry_legends(_authority_operation_for_test),
                 operation=_authority_operation_for_test,
             )
 

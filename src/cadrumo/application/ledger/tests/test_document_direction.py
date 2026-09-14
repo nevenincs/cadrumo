@@ -37,6 +37,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.regime_legend import resolve_regime_legends
 from ..confirmation_gate import BLOCKING_REASON_BY_DISCREPANCY_KIND
 from ..document_direction import (
     DIRECTION_BY_FILER_ROLE,
@@ -46,6 +47,7 @@ from ..document_direction import (
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..grounded_reading import ground_draft_against_transcription
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -229,6 +231,10 @@ def test_a_document_with_no_party_headings_settles_nothing() -> None:
         draft = ground_draft_against_transcription(
             draft=InvoiceDraft(supplier_tax_id=_FILER, customer_tax_id=_OTHER),
             transcription=_transcription(_ISSUED_PAGE),
+            legends=resolve_regime_legends(
+                operation=_authority_operation_for_test,
+                effective_date=default_invoice_extraction_period().end_date,
+            ),
             taxpayer_tax_id=_FILER,
             operation=_authority_operation_for_test,
         )

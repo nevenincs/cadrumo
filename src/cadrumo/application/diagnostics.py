@@ -152,6 +152,7 @@ def _readable_secure_state_repair_checks(
     from .wizard.status import build_wizard_status
     from .workflow.persistence import workflow_state_repository
     from .workflow.profile_health import assess_active_profile_health
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     # Read the secure state through whatever session the operator already
     # holds. This probe deliberately opens none of its own: it used to enter
@@ -168,12 +169,13 @@ def _readable_secure_state_repair_checks(
             summary=tr("cli.diagnostics.summary.state_backend_readable"),
         ),
     ]
-    profile_health = assess_active_profile_health(state)
+    with bundled_indexed_authority().operation() as operation:
+        profile_health = assess_active_profile_health(state, operation=operation)
+        setup_report = _repair_safe_wizard_status(
+            build_wizard_status(state, operation=operation),
+            active_profile_label=profile_health.active_profile_label,
+        )
     checks.append(_active_profile_storage_check(profile_health))
-    setup_report = _repair_safe_wizard_status(
-        build_wizard_status(state),
-        active_profile_label=profile_health.active_profile_label,
-    )
     checks.append(
         build_profile_check(
             setup_report,
@@ -224,9 +226,11 @@ def _unreadable_secure_state_repair_checks(
 ) -> list[_DiagnosticCheck]:
     """Build the redacted secure-state, profile, and auth fallback rows."""
     from .workflow.profile_health import assess_active_profile_health
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     _log.debug("config repair secure state probe failed", exc_info=True)
-    profile_health = assess_active_profile_health()
+    with bundled_indexed_authority().operation() as operation:
+        profile_health = assess_active_profile_health(operation=operation)
     missing_active_bucket_session = is_missing_active_bucket_session_failure(exc, ports=ports)
     return [
         _secure_state_failure_check(
@@ -526,6 +530,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
     single typed profile-editor action, avoiding per-finding transport prose.
     """
     from .user_profile.profile_keys import profile_keys
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
 
     if state is None:
         return ()
@@ -543,7 +548,9 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[_Diagnosti
 
     values = record_to_path_values(record)
     findings: list[_DiagnosticFinding] = []
-    for entry in profile_keys():
+    with bundled_indexed_authority().operation() as operation:
+        entries = profile_keys(operation)
+    for entry in entries:
         raw = values.get(entry.key)
         if raw is not None and raw.strip() != "":
             continue

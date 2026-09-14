@@ -31,6 +31,7 @@ from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
 from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from ....domain.iva.regime_legend import resolve_regime_legends
 
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
@@ -49,6 +50,7 @@ from ..grounded_reading import (
 from ..identity_roles import IdentityCandidate, resolve_counterparty_identity
 from ..invoice_draft_extraction_ports import InvoiceDraftExtractionPorts, InvoiceDraftReaderUnavailableError
 from ..invoice_draft_records import FieldProvenance, InvoiceDraft
+from ..invoice_extraction_authority import default_invoice_extraction_period
 from ..preconditions import LedgerPreconditionCondition
 from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
@@ -80,6 +82,12 @@ _SUPPLIER_CIF_BAD_CHECKSUM = "B1234567X"
 _CONTROL_TEXT_LAYER_PORTS = text_layer_ports_for_pages(
     (_SUPPLIER_CIF_BAD_CHECKSUM, _FILER_CIF, "766,30 21% 890,00 9.999,99")
 )
+
+
+def _registry_legends(operation):
+    """Resolve the registry vocabulary on the test's pinned authority lease."""
+    period = default_invoice_extraction_period()
+    return resolve_regime_legends(operation=operation, effective_date=period.end_date)
 
 
 class _ReaderUnavailableForTest(Exception):
@@ -187,7 +195,10 @@ def test_grounding_upgrades_a_real_anchor_to_anchored() -> None:
     """The upgrade the wiring exists to perform, on the real control document."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         by_field = {envelope.field: envelope for envelope in grounded.provenance}
@@ -199,7 +210,10 @@ def test_grounding_upgrades_a_percentage_anchor() -> None:
     """`21%` is the most common field in the corpus; it must survive the chain."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         rate = next(e for e in grounded.provenance if e.field == "iva_rate")
@@ -215,7 +229,10 @@ def test_a_fabricated_anchor_is_not_upgraded() -> None:
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         fabricated = next(e for e in grounded.provenance if e.field == "iva_amount")
@@ -245,7 +262,10 @@ def test_a_refused_anchor_stays_distinguishable_from_one_never_offered() -> None
         )
 
         grounded = ground_draft_against_transcription(
-            draft=draft, transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=draft,
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
         by_field = {envelope.field: envelope for envelope in grounded.provenance}
 
@@ -263,7 +283,10 @@ def test_a_located_anchor_records_no_refusal() -> None:
     """The negative leg: a passing check must not stamp a refusal it did not reach."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         anchored = next(e for e in grounded.provenance if e.field == "taxable_base")
@@ -275,7 +298,10 @@ def test_grounding_attaches_the_closure_finding() -> None:
     """The second leg runs on the wired path, not only in its own suite."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         kinds = {finding.kind for finding in grounded.discrepancies}
@@ -288,6 +314,7 @@ def test_role_resolution_runs_when_the_filer_is_known() -> None:
         grounded = ground_draft_against_transcription(
             draft=_reader_output(),
             transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
             taxpayer_tax_id=_FILER_CIF,
             operation=_authority_operation_for_test,
         )
@@ -307,7 +334,10 @@ def test_role_resolution_is_skipped_when_the_filer_is_unknown() -> None:
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         grounded = ground_draft_against_transcription(
-            draft=_reader_output(), transcription=_control_transcription(), operation=_authority_operation_for_test
+            draft=_reader_output(),
+            transcription=_control_transcription(),
+            legends=_registry_legends(_authority_operation_for_test),
+            operation=_authority_operation_for_test,
         )
 
         kinds = {finding.kind for finding in grounded.discrepancies}

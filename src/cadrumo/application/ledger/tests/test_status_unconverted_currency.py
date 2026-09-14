@@ -66,6 +66,13 @@ _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
 _REVISION_ID = "0" * 64
 
 
+@pytest.fixture
+def authority_operation() -> Iterator[PinnedAuthorityOperation]:
+    """Pin the compiled authority across transaction construction and summary."""
+    with bundled_indexed_authority().operation() as operation:
+        yield operation
+
+
 def _secure_write(
     *,
     namespace: str,
@@ -484,52 +491,60 @@ def _foreign(
     )
 
 
-def _summarise(*transactions: Transaction):
-    with bundled_indexed_authority().operation() as operation:
-        ports = LedgerActionPorts(
-            operation=operation,
-            transaction_repository=cast(Any, None),
-            bucket_event_repository=cast(Any, None),
-            invoice_repository=cast(Any, None),
-            attachment_store=cast(Any, None),
-            usage_ratio_profile=UsageRatioProfile(),
-            usage_ratio_profile_loader=cast(UsageRatioProfileLoader, None),
-            work_unit_repository=cast(Any, None),
-            calculation_repository=cast(Any, None),
-            purchase_invoice_evidence_records=(),
-        )
-        return summarize_manual_transactions(
-            bucket_id=_BUCKET,
-            ports=ports,
-            catalogue=TransactionCatalogue.from_transactions(transactions),
-        )
+def _summarise(*transactions: Transaction, operation: PinnedAuthorityOperation):
+    transaction_repository = _InMemoryTransactionRepository(
+        bucket_id=_BUCKET,
+        catalogue=TransactionCatalogue.from_transactions(transactions),
+    )
+    ports = LedgerActionPorts(
+        operation=operation,
+        transaction_repository=transaction_repository,
+        bucket_event_repository=_InMemoryEventRepository(),
+        invoice_repository=_InMemoryInvoiceRepository(),
+        attachment_store=_InMemoryAttachmentStore(),
+        usage_ratio_profile=UsageRatioProfile(),
+        usage_ratio_profile_loader=_empty_usage_ratio_profile,
+        work_unit_repository=_InMemoryWorkUnitRepository(),
+        calculation_repository=_InMemoryCalculationRepository(),
+        purchase_invoice_evidence_records=(),
+    )
+    return summarize_manual_transactions(
+        bucket_id=_BUCKET,
+        ports=ports,
+    )
 
 
-def test_a_domestic_row_without_an_explicit_eur_value_is_still_counted() -> None:
+def test_a_domestic_row_without_an_explicit_eur_value_is_still_counted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The fallback is correct here: a EUR row's native amount IS euros.
 
     Without this the fix would read as a pass merely because everything was
     excluded.
     """
-    report = _summarise(_eur_income("fx-domestic", base=Decimal("1000.00")))
+    report = _summarise(_eur_income("fx-domestic", base=Decimal("1000.00")), operation=authority_operation)
 
     assert report.unconverted_currency_count == 0
     assert Decimal(report.business_income_total) == Decimal("1210.00")
 
 
-def test_an_unconverted_foreign_row_is_excluded_from_the_total_and_counted() -> None:
+def test_an_unconverted_foreign_row_is_excluded_from_the_total_and_counted(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The defect: its native amount is not euros, so it has nothing to add."""
     domestic = _eur_income("fx-domestic", base=Decimal("1000.00"))
     unconverted = _foreign(_eur_income("fx-foreign", base=Decimal("5000.00")), currency="USD")
 
-    report = _summarise(domestic, unconverted)
+    report = _summarise(domestic, unconverted, operation=authority_operation)
 
     assert report.unconverted_currency_count == 1
     # The domestic row's gross alone -- the foreign figure is absent, not added.
     assert Decimal(report.business_income_total) == Decimal("1210.00")
 
 
-def test_a_converted_foreign_row_contributes_its_euro_value_not_its_face_value() -> None:
+def test_a_converted_foreign_row_contributes_its_euro_value_not_its_face_value(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """Conversion is what makes a foreign row summable, and at the converted figure."""
     # 6050.00 gross at 0.9 -> 5445.00, which is NOT the 6050.00 face value.
     converted = _foreign(
@@ -538,14 +553,16 @@ def test_a_converted_foreign_row_contributes_its_euro_value_not_its_face_value()
         fx_rate=Decimal("0.9"),
     )
 
-    report = _summarise(converted)
+    report = _summarise(converted, operation=authority_operation)
 
     assert report.unconverted_currency_count == 0
     assert Decimal(report.business_income_total) == Decimal("5445.00")
     assert Decimal(report.business_income_total) != converted.raw.amount
 
 
-def test_the_count_reports_only_rows_the_roll_up_would_otherwise_have_taken() -> None:
+def test_the_count_reports_only_rows_the_roll_up_would_otherwise_have_taken(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """An excluded-anyway row is not an unconverted-currency problem to report.
 
     A personal row never entered the total, so counting it would send the
@@ -556,7 +573,7 @@ def test_the_count_reports_only_rows_the_roll_up_would_otherwise_have_taken() ->
         currency="USD",
     ).model_copy(update={"business_classification": "PERSONAL"})
 
-    report = _summarise(personal_foreign)
+    report = _summarise(personal_foreign, operation=authority_operation)
 
     assert report.unconverted_currency_count == 0
     assert Decimal(report.business_income_total) == Decimal("0.00")

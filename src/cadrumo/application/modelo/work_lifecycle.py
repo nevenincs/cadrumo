@@ -48,6 +48,7 @@ from ...core.period import Period
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.modelos.codes import ModeloCode
@@ -327,6 +328,7 @@ def create_work_unit(
     actor: str = "system",
     causante_ccaa: CCAA | None = None,
     ports: WorkLifecyclePorts,
+    operation: PinnedAuthorityOperation,
     clock: datetime | None = None,
     enforce_applicability: bool = True,
 ) -> WorkUnit:
@@ -382,15 +384,18 @@ def create_work_unit(
         require_profile_ready_for_modelo_work,
     )
 
+    profile_decode_context = operation.profile_decode_context()
     require_existing_profile_baseline_ready_for_modelo_work(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
         period=period,
         enforce_applicability=enforce_applicability,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
-    reject_unknown_revision(modelo=modelo, revision_id=revision_id)
-    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
+    reject_unknown_revision(modelo=modelo, revision_id=revision_id, operation=operation)
+    reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period, operation=operation)
     from .work_addressing import law_selected_revision_for_work_target
 
     law_selected_revision_for_work_target(
@@ -407,6 +412,8 @@ def create_work_unit(
         filing_year=filing_year,
         period=period,
         enforce_applicability=enforce_applicability,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
     )
     repo = ports.work_unit_repository
     bv_repo = ports.bucket_event_repository
