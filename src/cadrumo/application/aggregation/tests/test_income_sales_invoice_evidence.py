@@ -169,7 +169,16 @@ def test_a_linked_sales_invoice_puts_casilla_01_on_the_base_not_the_cash() -> No
     """The defect this path closes: 1060 credited, 1000 declared."""
     transactions, invoices = _linked()
 
-    aggregation = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
+    aggregation = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert aggregation.issues == ()
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
@@ -187,6 +196,10 @@ def test_the_declared_retencion_is_preferred_over_the_inference() -> None:
         invoices,
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     ).observations[0]
 
     assert observation.withheld_amount == Decimal("150.00")
@@ -227,6 +240,10 @@ def test_a_declared_retencion_is_never_screened_by_the_rate_advisory() -> None:
         invoices,
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     ).observations
 
     assert observations[0].withheld_amount == Decimal("123.45")
@@ -258,8 +275,26 @@ def test_the_annual_m100_path_grounds_identically_to_the_quarterly_one() -> None
     """
     transactions, invoices = _linked()
 
-    quarterly = aggregate_renta_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_QUARTER)
-    annual = aggregate_renta_m100_income_ledger(transactions, invoices, bucket_id=_BUCKET, period=_ANNUAL)
+    quarterly = aggregate_renta_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
+    annual = aggregate_renta_m100_income_ledger(
+        transactions,
+        invoices,
+        bucket_id=_BUCKET,
+        period=_ANNUAL,
+        modelo="100",
+        target_casilla_id=_M100_ACTIVIDAD_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
+    )
 
     assert quarterly.casilla_aggregation.casilla_values["01"] == Decimal("1000.00")
     assert annual.casilla_aggregation.casilla_values["0171"] == Decimal("1000.00")
@@ -277,6 +312,10 @@ def test_an_unlinked_row_is_untouched_by_the_evidence_path() -> None:
         InvoiceCatalogue(),
         bucket_id=_BUCKET,
         period=_QUARTER,
+        modelo="130",
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_is_activity_income,
+        employment_category_matcher=_is_employment_income,
     )
 
     assert aggregation.casilla_aggregation.casilla_values["01"] == Decimal("1060.00")

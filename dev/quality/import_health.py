@@ -298,9 +298,9 @@ def render_import_health(payload: dict[str, object]) -> str:
             f"VERDICT: {payload['verdict']}",
             f"Graph authority: {graph['status']} ({graph['files']} files, {graph['dependencies']} dependencies)",
             f"Hard findings: {hard['total']}",
-            f"Module loadability: {payload['loadability']['status']} "
-            f"({payload['loadability']['loaded']}/{payload['loadability']['attempted']} loaded; "
-            f"{payload['loadability']['root_cause_count']} root-cause group(s))",
+            f"Module loadability: {loadability['status']} "
+            f"({loadability['loaded']}/{loadability['attempted']} loaded; "
+            f"{loadability['root_cause_count']} root-cause group(s))",
             f"Approved debt: {counts['approved_active']} occurrence(s)",
             "New / expanded / expired: "
             f"{counts['new_unapproved']} / {counts['expanded_existing']} / {counts['expired']}",
@@ -612,7 +612,7 @@ def _reconcile_ratchet(repository: Path, candidate: _CandidateInventory) -> _Rat
         counts["malformed"] += 1
         return {
             "baseline_status": "malformed",
-            "counts": dict(counts),
+            "counts": _ratchet_counts(counts),
             "detail_counts": {"malformed": 1},
             "details": {"malformed": [str(exc)]},
             "path": str(path),
