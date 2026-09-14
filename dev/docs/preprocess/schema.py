@@ -46,6 +46,7 @@ class SourceDocumentKind(StrEnum):
     NORMATIVES_HTML = "normatives_html"
     NORMATIVES_XML = "normatives_xml"
     DISENO_REGISTRO_WORKBOOK = "diseno_registro_workbook"
+    MODELO_100_PROPERTIES = "modelo_100_properties"
     CORPUS_PDF = "corpus_pdf"
     TERMINOLOGY_CONCEPT = "terminology_concept"
 

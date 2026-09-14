@@ -25,11 +25,10 @@ Two traps this gate has to route around, both real:
   and no base ``<file>.extracted.json``, so ``load_sidecar(source)`` would
   report it missing. The sweep therefore keys on the sidecar and delegates
   its declared-origin validation to :func:`validate_sidecar`.
-* **The glob is shared.** Two curated ``units``-only overlay files
-  (``.../renta/2025/*/source.pdf.extracted.md.extracted.json``) match
-  ``*.extracted.json`` but are hand-authored augmentations, not extractor
-  output, and carry no provenance fields at all. They are excluded by
-  provenance shape, never by filename.
+* **The glob is a contract.** Every ``*.extracted.json`` file is extractor
+  output and must carry provenance. Authored page selections use the explicit
+  ``*.annotation.json`` schema and cannot disappear from this gate by omitting
+  fields.
 
 Freshness alone is not enough, because it is checked against the source the
 record *names* rather than the one it sits *beside*. A sidecar written next
@@ -148,16 +147,10 @@ def _provenance_bearing_sidecars(
 ) -> tuple[list[tuple[Path, PreprocessOutput]], list[str]]:
     """Return validated provenance-bearing sidecars and named failures.
 
-    A file matching the sidecar glob but carrying no provenance is a curated
-    overlay rather than extractor output; it makes no freshness claim, so
-    there is nothing here to verify. Excluding by SHAPE rather than by
-    filename means a future overlay is handled without an allowlist.
-
     Schema, locality, source-digest, and rendered-text validation belong to
-    :func:`validate_sidecar`; this discovery function only distinguishes
-    provenance-bearing extractor output from curated overlays. A claimed
-    record that fails the shared validator is a named finding rather than a
-    crash, so the sweep reports every offender in one pass.
+    :func:`validate_sidecar`. A record that lacks provenance or fails the
+    shared validator is a named finding rather than a crash, so the sweep
+    reports every offender in one pass.
     """
     found: list[tuple[Path, PreprocessOutput]] = []
     unloadable: list[str] = []
@@ -169,6 +162,7 @@ def _provenance_bearing_sidecars(
             unloadable.append(f"{json_path.name}: is not valid JSON ({exc})")
             continue
         if "source_relpath" not in document:
+            unloadable.append(f"{json_path.name}: extracted sidecar has no source provenance")
             continue
         try:
             found.append((json_path, validate_sidecar(json_path, repo_root=repo_root)))
@@ -196,6 +190,18 @@ def test_sidecar_discovery_finds_the_committed_corpus() -> None:
             f"of {floor}; the freshness, loadability and locality sweeps below iterate this same "
             f"population, so each would report a clean corpus without having read a {kind} at all"
         )
+
+
+def test_extracted_filename_cannot_hide_an_authored_units_only_overlay(tmp_path: Path) -> None:
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    disguised = corpus / "source.pdf.extracted.md.extracted.json"
+    disguised.write_text('{"units": [{"text": "authored"}]}', encoding="utf-8")
+
+    found, failures = _provenance_bearing_sidecars(corpus, repo_root=tmp_path)
+
+    assert found == []
+    assert failures == [f"{disguised.name}: extracted sidecar has no source provenance"]
 
 
 def test_owner_check_rejects_an_enrolled_source_without_sidecars(tmp_path: Path) -> None:

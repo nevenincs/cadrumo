@@ -82,7 +82,7 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
     assert data["version"] == _RULE_SCHEMA_VERSION == 2
     rules = data["rule"]
-    assert len(rules) == 6
+    assert len(rules) == 8
     for rule in rules:
         assert rule["pattern"].startswith(("src/cadrumo/_data/corpus/", _TERMINOLOGY_PATTERN_PREFIX))
         assert _HOOK_COMMAND in rule["command"]
@@ -91,10 +91,12 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     patterns = {rule["pattern"] for rule in rules}
     assert patterns == {
         "src/cadrumo/_data/corpus/normatives/html/*.html",
+        "src/cadrumo/_data/corpus/normatives/**/*.xml",
         "src/cadrumo/_data/corpus/**/*.pdf",
         "src/cadrumo/_data/corpus/**/*.xls",
         "src/cadrumo/_data/corpus/**/*.xlsm",
         "src/cadrumo/_data/corpus/**/*.xlsx",
+        "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/*.properties",
         "src/cadrumo/_data/terminology/concepts/*.toml",
     }
 
@@ -158,7 +160,7 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
     """
     rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
     patterns = sorted({cast(str, rule["pattern"]) for rule in rules})
-    assert len(patterns) == len(rules) == 6, patterns
+    assert len(patterns) == len(rules) == 8, patterns
     for pattern in patterns:
         suffix = Path(pattern).suffix.lower()
         if pattern.startswith(_TERMINOLOGY_PATTERN_PREFIX):
@@ -167,6 +169,17 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
             )
         else:
             assert _smallest(f"*{suffix}").is_file(), pattern
+
+
+def test_properties_rule_is_limited_to_the_modelo_100_dictionary_directory() -> None:
+    """No other corpus family is enrolled through the CP1252-only extractor."""
+    rules = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))["rule"]
+    properties_patterns = [
+        cast(str, rule["pattern"]) for rule in rules if Path(cast(str, rule["pattern"])).suffix.lower() == ".properties"
+    ]
+    assert properties_patterns == [
+        "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/*.properties"
+    ]
 
 
 def test_manual_runtime_sidecars_are_excluded_without_excluding_pdf_hook_sources() -> None:
@@ -294,3 +307,20 @@ def test_hook_cli_emits_utf8_json_bytes() -> None:
     payload = json.loads(result.stdout.decode("utf-8"))
     assert payload["schema_version"] == UPSTREAM_SCHEMA_VERSION
     assert payload["units"]
+
+
+def test_properties_hook_cli_emits_cp1252_punctuation_as_utf8() -> None:
+    """The adapter preserves file04's en dash without replacement or C1 text."""
+    source = next((_CORPUS / "aeat_official" / "disenos_registro" / "modelo_100" / "files").glob("04-*.properties"))
+    result = subprocess.run(  # noqa: S603 - fixed interpreter, repo-internal module
+        [sys.executable, "-m", "dev.docs.preprocess.hook", str(source)],
+        capture_output=True,
+        check=True,
+        cwd=_REPO_ROOT,
+    )
+    payload = json.loads(result.stdout.decode("utf-8"))
+    units = cast(list[dict[str, object]], payload["units"])
+    text = "\n".join(cast(str, unit["text"]) for unit in units)
+    assert "\u2013[0454]" in text
+    assert "\ufffd" not in text
+    assert not any(0x80 <= ord(char) <= 0x9F for char in text)
