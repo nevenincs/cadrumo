@@ -733,6 +733,7 @@ def resolve_bucket_source_mesh(
                 calculation_repository=resolved_calculation_repository,
                 filing_repository=ports.filing_repository,
                 regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
+                operation=ports.operation,
             ),
             stage="conditional",
         ),
@@ -849,6 +850,7 @@ def resolve_bucket_source_mesh(
                         modelo_id=str(snapshot.modelo.id),
                         revision_id=str(snapshot.revision.id),
                     ),
+                    operation=ports.operation,
                 )
             ),
             # Relation canonical for cross-modelo fold-in. The relation resolver
@@ -866,6 +868,7 @@ def resolve_bucket_source_mesh(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
                     profile_read_ports=ports.profile_read_ports,
+                    operation=ports.operation,
                 )
             ),
             # Modelo 390 annual compensation carry boxes 97 / 662 are one FIFO
@@ -875,6 +878,7 @@ def resolve_bucket_source_mesh(
                 IvaCompensationAnnualPartitionSourceResolver(
                     registry_snapshot=snapshot,
                     repository=ports.observation_repository,
+                    operation=ports.operation,
                 )
             ),
             *annual_summary_resolutions,

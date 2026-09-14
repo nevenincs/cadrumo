@@ -243,6 +243,7 @@ def _persisted_decision_for_calculation(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
 ) -> IvaCompensationReconciliationDecision | None:
@@ -252,6 +253,7 @@ def _persisted_decision_for_calculation(
     refreshed = _refresh_local_iva_compensation_decision_if_evidence_changed(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         decision=persisted,
         repository=repository,
         observation_repository=observation_repository,
@@ -268,6 +270,7 @@ def _resolve_caller_supplied_prior_compensation(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
     supplied_amounts: tuple[Decimal, ...],
@@ -275,6 +278,7 @@ def _resolve_caller_supplied_prior_compensation(
     decision = lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         repository=repository,
         observation_repository=observation_repository,
         persist=False,
@@ -308,6 +312,7 @@ def resolve_iva_compensation_decision_for_calculation(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     supplied_decision: object | None,
     observation_repository: CalculationObservationRepositoryProtocol,
     repository: IvaWalletDecisionRepositoryProtocol,
@@ -339,6 +344,7 @@ def resolve_iva_compensation_decision_for_calculation(
     persisted = _persisted_decision_for_calculation(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         repository=repository,
         observation_repository=observation_repository,
     )
@@ -354,6 +360,7 @@ def resolve_iva_compensation_decision_for_calculation(
         return _resolve_caller_supplied_prior_compensation(
             work_unit,
             snapshot=snapshot,
+            operation=operation,
             repository=repository,
             observation_repository=observation_repository,
             supplied_amounts=supplied_amounts,
@@ -361,6 +368,7 @@ def resolve_iva_compensation_decision_for_calculation(
     return lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         repository=repository,
         observation_repository=observation_repository,
     )
@@ -734,6 +742,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     decision: IvaCompensationReconciliationDecision,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
@@ -747,6 +756,7 @@ def _refresh_local_iva_compensation_decision_if_evidence_changed(
     refreshed = lazily_reconcile_local_iva_compensation_for_work_unit(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         repository=repository,
         observation_repository=observation_repository,
         persist=False,
@@ -908,6 +918,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     repository: IvaWalletDecisionRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
     persist: bool = True,
@@ -938,6 +949,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     evidence = _prior_period_carry_evidence(
         work_unit,
         snapshot=snapshot,
+        operation=operation,
         repository=observation_repository,
     )
     report = reconcile_modelo_303_iva_compensation(
@@ -946,6 +958,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         wallet=None,
         repository=observation_repository,
         decision_repository=repository,
+        operation=operation,
         local_recurrence=evidence.recurrence,
         prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         # A stored prior-period observation this build cannot use is NOT an
@@ -1028,20 +1041,23 @@ def _prior_period_observation_is_usable(
     *,
     requirement: RegistryFoldRequirement,
     source_period: _Period,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     observation = payload.observation
     return (
         observation.filing_year == requirement.filing_year
         and observation.period == source_period.registry_token
-        and not revision_carry_outcome(payload.registry_snapshot_ref).refused
+        and not revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
     )
 
 
 def _validated_prior_period_observation(
     payload: ObservationEnvelopePayload,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> ObservationEnvelopePayload | None:
     try:
-        return validate_normalized_m303_carry_observation_envelope(payload)
+        return validate_normalized_m303_carry_observation_envelope(payload, operation=operation)
     except M303CarryIngressError:
         return None
 
@@ -1074,6 +1090,7 @@ def _prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
     snapshot: RegistrySnapshot,
+    operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
 ) -> _PriorPeriodCarryEvidence:
     """Return validated filed M303 envelope recurrence, and whether one was stored.
@@ -1105,9 +1122,10 @@ def _prior_period_carry_evidence(
         payload,
         requirement=requirement,
         source_period=source_period,
+        operation=operation,
     ):
         return found
-    validated = _validated_prior_period_observation(payload)
+    validated = _validated_prior_period_observation(payload, operation=operation)
     if validated is None:
         return found
     recurrence = _prior_period_recurrence(
