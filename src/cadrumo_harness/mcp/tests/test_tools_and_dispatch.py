@@ -422,9 +422,9 @@ def test_every_modelo_work_verb_pins_the_registry_eligible_modelo_set() -> None:
     trading an actionable answer for an unhinted one. The exemption is asserted to
     still be bare, so silently pinning it later also reds this gate.
     """
-    from cadrumo.domain.calculations.registry.authority import bundled_authority
+    from dev.registry.compiler.authority import compiled_bundled_authority
 
-    expected = sorted(definition.id for definition in bundled_authority().modelos)
+    expected = sorted(definition.id for definition in compiled_bundled_authority().modelos)
     assert expected
 
     #: Accepts out-of-taxonomy codes on purpose; see the docstring.
