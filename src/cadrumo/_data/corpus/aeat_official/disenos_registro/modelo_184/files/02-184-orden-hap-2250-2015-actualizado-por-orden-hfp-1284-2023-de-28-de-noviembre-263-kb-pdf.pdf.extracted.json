@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf",
   "source_sha256": "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_184_2023.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_184_2023.pdf",
   "units": [
     {
       "text": "Modelo 184.\nDeclaración Informativa. Entidades en régimen de atribución de\nrentas. Declaración anual.\nModelo 184.\nDeclaración Informativa. Entidades en régimen de atribución de rentas.\nDeclaración anual.\n1\nEjercicio 2023",

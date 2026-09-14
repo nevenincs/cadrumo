@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/02-193-orden-eha-3377-2011-actualizado-por-orden-hac-1504-2024-de-26-de-diciembre-352-kb-pdf.pdf",
   "source_sha256": "36184283123fec6827bf830a0b7d1b3e84a45937d7d85d9504d807f334caff8e",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2024.pdf",
   "units": [
     {
       "text": "Modelo 193.\nDeclaración Informativa. Retenciones e ingresos a cuenta del IRPF sobre\ndeterminados rendimientos del capital mobiliario. Retenciones e ingresos\na cuenta del IS e IRNR (establecimientos permanentes) sobre\ndeterminadas rentas. Resumen anual.\nModelo 193.\nDeclaración Informativa. Retenciones e ingresos a cuenta del IRPF\nsobre determinados rendimientos del capital mobiliario. Retenciones e\ningresos a cuenta del IS e IRNR (establecimientos permanentes) sobre\ndeterminadas rentas. Resumen anual.\n1\nEjercicio 2024",

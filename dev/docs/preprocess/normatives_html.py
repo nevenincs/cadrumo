@@ -29,10 +29,8 @@ composing the per-article permalink with the ``#aN`` anchor; single-article
 slices with no canonical link fall back to the standing BOE/AEAT attribution.
 Either way the reuse-with-attribution obligation is honoured.
 
-This is the production normatives preprocessor. When the upstream
-``vaultspec-rag`` preprocess-hook lands, this module re-targets the upstream
-sink and the committed sidecars are retired; ``PreprocessOutput`` is the
-forward-compatible precursor that makes that migration mechanical.
+The development RAG hook calls this extractor directly. Committed sidecars
+also serve registry citation grounding and runtime lexical search.
 """
 
 from __future__ import annotations
@@ -59,7 +57,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
-HTML_EXTRACTOR_VERSION = "1.3"
+HTML_EXTRACTOR_VERSION = "1.4"
 _UTF_8: Final[str] = UTF_8
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
@@ -425,6 +423,29 @@ def _attribution_for(boe_url: str) -> str:
     return _BASE_ATTRIBUTION
 
 
+def legal_markup_units(markup: str) -> list[PreprocessUnit]:
+    """Split legal prose at source-stated headings, excluding surrounding API metadata."""
+    markup = _promote_ordinal_legal_boundaries(markup)
+    units: list[PreprocessUnit] = []
+    for anchor, article_markup in _segments(markup):
+        heading, body = _heading_and_body(article_markup)
+        text = body or heading
+        if text:
+            units.append(
+                PreprocessUnit(
+                    text=text,
+                    title=heading or None,
+                    section=heading or None,
+                    anchor=anchor or _anchor_from_heading(heading) or None,
+                )
+            )
+    if not units:
+        whole = render_normative_prose(markup)
+        if whole:
+            units.append(PreprocessUnit(text=whole))
+    return units
+
+
 def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """Extract a BOE normatives HTML file into one or more records.
 
@@ -443,38 +464,36 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
         A list of validated records (one per sidecar pair to write).
     """
     markup = source.read_text(encoding=_UTF_8)
+    if re.match(r"\s*(?:<\?xml\b|<response(?:\s|>)|<!DOCTYPE\s+response\b)", markup):
+        from .boe_article_xml import article_response_units
+
+        return [
+            PreprocessOutput(
+                source_kind=SourceDocumentKind.NORMATIVES_XML,
+                status=ExtractionStatus.OK,
+                source_relpath=source.resolve().relative_to(repo_root.resolve()).as_posix(),
+                source_sha256=sha256_of(source),
+                preprocessor_id=HTML_EXTRACTOR_ID,
+                preprocessor_version=HTML_EXTRACTOR_VERSION,
+                attribution="Source: Boletin Oficial del Estado (BOE), article API response.",
+                units=tuple(group),
+            )
+            for group in split_units_by_budget(list(article_response_units(markup, segment=legal_markup_units)))
+        ]
     boe_url = _document_boe_url(markup)
     markup, container_anchor = _clip_to_content(markup)
     markup = _SCRIPT.sub(" ", markup)
     markup = _STYLE.sub(" ", markup)
     markup = _FORM.sub(" ", markup)
     markup = _SUBIR.sub(" ", markup)
-    markup = _promote_ordinal_legal_boundaries(markup)
 
     relpath = source.resolve().relative_to(repo_root.resolve()).as_posix()
     digest = sha256_of(source)
     attribution = _attribution_for(boe_url)
 
-    units: list[PreprocessUnit] = []
-    for anchor, article_markup in _segments(markup):
-        heading, body = _heading_and_body(article_markup)
-        if not body and not heading:
-            continue
-        # The heading rides as the unit title (which render_text emits as the
-        # "# heading" line), so the unit text is the article body alone. When
-        # an article has a heading but no body, the heading is the only text.
-        text = body or heading
-        if not text:
-            continue
-        anchor = anchor or _anchor_from_heading(heading)
-        units.append(
-            PreprocessUnit(
-                text=text,
-                title=heading or None,
-                section=heading or None,
-                anchor=anchor or None,
-            ),
-        )
+    units = legal_markup_units(markup)
+    if container_anchor and len(units) == 1 and units[0].title is None and units[0].anchor is None:
+        units[0] = units[0].model_copy(update={"anchor": container_anchor})
 
     # A file with no <h5 class="articulo"> (a single-article slice whose body
     # is bare parrafos, or an atypical fragment) still yields one unit from

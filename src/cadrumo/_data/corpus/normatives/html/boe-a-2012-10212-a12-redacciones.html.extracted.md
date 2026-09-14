@@ -1,5 +1,5 @@
-200
-ok
+# ARTÍCULO 12
+
 Artículo 12. Cánones
 1. Los cánones procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.
 2. El término «cánones» empleado en el presente artículo, significa las cantidades de cualquier clase pagadas por el uso o la concesión de uso de derechos de autor incluidas las películas cinematográficas y las películas, cintas y otros medios de reproducción de la imagen y el sonido, de patentes, marcas de fábrica o de comercio, dibujos o modelos, planos, fórmulas o procedimientos secretos, o por el uso, o la concesión de uso, de equipos industriales, comerciales o científicos, o por información relativa a experiencias industriales, comerciales o científicas. El término «cánones» comprende asimismo los pagos de cualquier naturaleza percibidos como contraprestación por el uso o la concesión de uso del nombre o la imagen de una persona o cualquier otro derecho de imagen o sobre la identidad, o por la grabación de la actividad de deportistas o las actuaciones de artistas para la radio o la televisión.

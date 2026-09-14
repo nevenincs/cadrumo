@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 2
+
 Artículo 2. Ámbito de aplicación.
 1. Este impuesto se aplicará en todo el territorio español.
 2. El territorio español comprende el territorio del Estado español, incluyendo el espacio aéreo, las aguas interiores, así como el mar territorial y las áreas exteriores a él, en las que, con arreglo al derecho internacional y en virtud de su legislación interna, el Estado español ejerza o pueda ejercer jurisdicción o derechos de soberanía respecto del fondo marino, su subsuelo y aguas suprayacentes y sus recursos naturales.

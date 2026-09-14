@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 11 | BOE-A-1990-30940 | fecha_vigencia=1990-11-21
+
 Artículo 11. Intereses.
 1. Los intereses procedentes de un Estado contratante y obtenidos por un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.
 2. Sin embargo, dichos intereses pueden también someterse a imposición en el Estado contratante del que procedan y de acuerdo con la legislación de ese Estado, pero si el beneficiario efectivo de los intereses es un residente del otro Estado contratante, el impuesto así exigido no podrá exceder del 10 por 100 del importe bruto de los intereses.
@@ -12,6 +12,9 @@ c) Los intereses pagados en relación con la venta a crédito de equipos industr
 6. A los efectos de este artículo, los intereses se considerarán procedentes de un Estado contratante cuando el deudor sea el propio Estado o una subdivisión política, Entidad local o residente de ese Estado. Sin embargo, cuando el deudor de los intereses, sea o no residente de un Estado contratante, tenga en un Estado contratante un establecimiento permanente o una base fija y tales intereses se soporten por ese establecimiento permanente o base fija, los intereses se considerarán procedentes del Estado contratante donde estén situados e establecimiento permanente o la base fija.
 7. Cuando, por razón de las relaciones especiales existentes entre el deudor y el beneficiario efectivo de los intereses o de las que uno y otro mantengan con otras personas, el importe de los intereses, habida cuenta del crédito por el que se pagan, exceda del que hubieran convenido el deudor y el beneficiario efectivo en ausencia de tales relaciones, las disposiciones de este artículo no serán aplicables más que a este último importe. En tal caso, el exceso podrá someterse a imposición de acuerdo con la legislación de cada Estado contratante, teniendo en cuenta las demás disposiciones del presente Convenio.
 Redactado el apartado 4 conforme a la corrección de errores publicada en BOE núm. 47, de 24 de febrero de 1993. Ref. BOE-A-1993-5135.
+
+# Artículo 11 | BOE-A-2019-15166 | fecha_vigencia=2019-11-27
+
 Artículo 11. Intereses.
 1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.
 2. No obstante lo dispuesto en el apartado 1 de este artículo:

@@ -1,6 +1,6 @@
 """Corpus PDF text extractor for the dev-side RAG index.
 
-Extracts the 72 tracked corpus PDFs - the AEAT Manuales Practicos (IRPF/IVA
+Extracts corpus PDFs - the AEAT Manuales Practicos (IRPF/IVA
 definition prose) and the official Diseno de Registro instruction PDFs -
 into schema-conformant sidecars so the resident ``vaultspec-rag`` walker
 indexes the BOE/AEAT definition surface that is otherwise structurally
@@ -20,10 +20,8 @@ with a per-artefact ``url`` matched by ``stored_path``) and the manuales
 manifest (a sibling of the PDF, with a flat ``source_pdf_url``). Both honour
 the BOE/AEAT reuse-with-attribution obligation.
 
-This is the production corpus-PDF preprocessor. When the upstream
-``vaultspec-rag`` preprocess-hook lands, this module re-targets the upstream
-sink and the committed sidecars are retired; ``PreprocessOutput`` is the
-forward-compatible precursor that makes that migration mechanical.
+The development RAG hook calls this extractor directly; committed sidecars
+remain available to page-aware evidence consumers and extraction checks.
 """
 
 from __future__ import annotations
@@ -31,6 +29,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Final, cast
+from urllib.parse import urlsplit
 
 from dev._paths import UTF_8
 
@@ -54,10 +53,21 @@ PDF_EXTRACTOR_ID = "corpus-pdf"
 
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
-PDF_EXTRACTOR_VERSION = "1.0"
+PDF_EXTRACTOR_VERSION = "1.1"
 
-#: Standing AEAT attribution used when a manifest cannot pin a precise URL.
-_BASE_ATTRIBUTION = "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution."
+_UNKNOWN_ATTRIBUTION = "Source attribution unavailable: no matching acquisition manifest entry."
+
+
+def _url_attribution(url: str) -> str:
+    """Name an institution only when the acquisition URL identifies its host."""
+    host = (urlsplit(url).hostname or "").lower()
+    if host == "boe.es" or host.endswith(".boe.es"):
+        institution = "Boletin Oficial del Estado (BOE)"
+    elif host == "agenciatributaria.gob.es" or host.endswith(".agenciatributaria.gob.es"):
+        institution = "Agencia Estatal de Administracion Tributaria (AEAT)"
+    else:
+        return f"Source URL recorded by acquisition manifest: {url}"
+    return f"Source: {institution}. Official source: {url}"
 
 
 def _attribution_for(source: Path) -> str:
@@ -70,22 +80,22 @@ def _attribution_for(source: Path) -> str:
     * Manuales practicos: a sibling ``manifest.json`` carrying a flat
       ``source_pdf_url``.
 
-    Falls back to the standing AEAT attribution when no manifest or matching
-    entry is found, so a PDF never ships corpus text with no attribution.
+    Missing acquisition metadata remains explicit; it does not imply AEAT
+    authorship or a reuse licence.
     """
     # Manuales: sibling manifest with a flat source_pdf_url.
     sibling = source.parent / "manifest.json"
     url = _manuals_url(sibling, source)
     if url:
-        return f"{_BASE_ATTRIBUTION} Official source: {url}"
+        return _url_attribution(url)
 
     # Diseno de registro: manifest one level above the files/ directory.
     diseno = source.parent.parent / "manifest.json"
     url = _diseno_url(diseno, source)
     if url:
-        return f"{_BASE_ATTRIBUTION} Official source: {url}"
+        return _url_attribution(url)
 
-    return _BASE_ATTRIBUTION
+    return _UNKNOWN_ATTRIBUTION
 
 
 def _load_manifest(path: Path) -> dict[str, object] | None:
@@ -107,7 +117,7 @@ def _manuals_url(manifest_path: Path, source: Path) -> str:
     rel = rel_value.strip() if isinstance(rel_value, str) else ""
     # The manuales manifest names the PDF it describes; only trust its URL
     # when the named file is this source (a directory may hold one PDF).
-    if rel and rel != source.name:
+    if not rel or (manifest_path.parent / rel).resolve() != source.resolve():
         return ""
     url = manifest.get("source_pdf_url")
     return url.strip() if isinstance(url, str) else ""
@@ -130,7 +140,7 @@ def _diseno_url(manifest_path: Path, source: Path) -> str:
         # boundary, documented per the type-escape rule).
         artefact = cast("dict[str, object]", entry)
         stored = artefact.get("stored_path")
-        if isinstance(stored, str) and stored.endswith(source.name):
+        if isinstance(stored, str) and (manifest_path.parent / stored).resolve() == source.resolve():
             url = artefact.get("url")
             return url.strip() if isinstance(url, str) else ""
     return ""

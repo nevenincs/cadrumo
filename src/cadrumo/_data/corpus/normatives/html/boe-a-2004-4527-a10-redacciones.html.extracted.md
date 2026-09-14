@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 10 | BOE-A-2004-4527 | fecha_vigencia=2004-03-13
+
 Artículo 10. Representantes.
 1. Los contribuyentes por este impuesto estarán obligados a nombrar, antes del fin del plazo de declaración de la renta obtenida en España, una persona física o jurídica con residencia en España, para que les represente ante la Administración tributaria en relación con sus obligaciones por este impuesto, cuando operen por mediación de un establecimiento permanente, en los supuestos a que se refieren los artículos 24.2 y 38 o cuando, debido a la cuantía y características de la renta obtenida en territorio español por el contribuyente, así lo requiera la Administración tributaria.
 El contribuyente o su representante estarán obligados a poner en conocimiento de la Administración tributaria el nombramiento, debidamente acreditado, en el plazo de dos meses a partir de la fecha de éste.
@@ -8,6 +8,9 @@ La designación se comunicará a la Delegación de la Agencia Estatal de Adminis
 3. El incumplimiento de la obligación a que se refiere el apartado 1 se considerará infracción tributaria grave y la sanción consistirá en multa pecuniaria fija de 2.000 euros.
 La sanción impuesta de acuerdo con lo previsto en este apartado se reducirá conforme a lo dispuesto en el artículo 188.3 de la Ley 58/2003, de 17 de diciembre, General Tributaria.
 El apartado 3 entra en vigor el 1 de julio de 2004, según establece la disposición final única.2.
+
+# Artículo 10 | BOE-A-2006-20843 | fecha_vigencia=2006-12-01
+
 Artículo 10. Representantes.
 1. Los contribuyentes por este Impuesto estarán obligados a nombrar, antes del fin del plazo de declaración de la renta obtenida en España, una persona física o jurídica con residencia en España, para que les represente ante la Administración tributaria en relación con sus obligaciones por este Impuesto, cuando operen por mediación de un establecimiento permanente, en los supuestos a que se refieren los artículos 24.2 y 38 de esta Ley o cuando, debido a la cuantía o características de la renta obtenida en territorio español por el contribuyente, así lo requiera la Administración tributaria.
 Esta obligación será, asimismo, exigible a las personas o entidades residentes en países o territorios con los que no exista un efectivo intercambio de información tributaria de acuerdo con lo dispuesto en el apartado 3 de la disposición adicional primera de la Ley de Medidas para la Prevención del Fraude Fiscal, que sean titulares de bienes situados o de derechos que se cumplan o ejerciten en territorio español, excluidos los valores negociados en mercados secundarios oficiales.
@@ -19,6 +22,9 @@ En el caso de incumplimiento de la obligación de nombramiento de representante 
 Cuando se trate de contribuyentes residentes en países o territorios con los que no exista un efectivo intercambio de información tributaria de acuerdo con lo dispuesto en el apartado 3 de la disposición adicional primera de la Ley de Medidas para la Prevención del Fraude Fiscal, dicha multa ascenderá a 6.000 euros.
 La sanción impuesta, de acuerdo con lo previsto en este apartado, se reducirá conforme a lo dispuesto en el artículo 188.3 de la Ley 58/2003, de 17 de diciembre, General Tributaria.
 Se modifica por el art. 2.2 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
+
+# Artículo 10 | BOE-A-2021-11473 | fecha_vigencia=2021-07-11
+
 Artículo 10. Representantes.
 1. Los contribuyentes por este Impuesto que no sean residentes en otro Estado miembro de la Unión Europea estarán obligados a nombrar, antes del fin del plazo de declaración de la renta obtenida en España, una persona física o jurídica con residencia en España, para que les represente ante la Administración Tributaria en relación con sus obligaciones por este Impuesto, cuando operen por mediación de un establecimiento permanente, en los supuestos a que se refieren los artículos 24.2 y 38 de esta Ley, o cuando, debido a la cuantía y características de la renta obtenida o a la posesión de un bien inmueble en territorio español, así lo requiera la Administración Tributaria.
 En el caso de Estados que formen parte del Espacio Económico Europeo que no sean Estado miembro de la Unión Europea, lo anterior no será de aplicación cuando exista normativa sobre asistencia mutua en materia de intercambio de información tributaria y de recaudación en los términos previstos en la Ley 58/2003, de 17 de diciembre, General Tributaria.

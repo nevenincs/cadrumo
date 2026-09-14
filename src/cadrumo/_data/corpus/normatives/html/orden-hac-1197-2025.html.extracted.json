@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1197-2025.html",
   "source_sha256": "48d090dcb2185ecdd7b6cc2fa183bf344af72f8cdebc758593d2092874456051",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.3",
+  "preprocessor_version": "1.4",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2025-21726",
   "units": [
     {

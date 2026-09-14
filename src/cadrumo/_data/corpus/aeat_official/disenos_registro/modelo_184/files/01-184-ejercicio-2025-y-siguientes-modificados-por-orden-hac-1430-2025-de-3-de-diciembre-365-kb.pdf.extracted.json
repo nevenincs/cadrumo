@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_184/files/01-184-ejercicio-2025-y-siguientes-modificados-por-orden-hac-1430-2025-de-3-de-diciembre-365-kb.pdf",
   "source_sha256": "b1e2b7884946061d5584f03253745b2936bcd99359f4b096acfe238c42bc9fba",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_184_2025.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_184_2025.pdf",
   "units": [
     {
       "text": "Modelo 184.\nDeclaración Informativa. Entidades en régimen de atribución de\nrentas. Declaración anual.\nModelo 184.\nDeclaración Informativa. Entidades en régimen de atribución de rentas.\nDeclaración anual.\n1\nEjercicio 2025",

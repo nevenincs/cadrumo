@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 1
+
 Artículo 1. Aprobación del modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación».
 Se aprueba el modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación», de formato electrónico, cuyo contenido figura en los anexos I y II de la presente orden.
 El anexo I contiene la autoliquidación del Impuesto y el anexo II recoge el formato del detalle informativo de las operaciones sujetas. Este anexo II deberá cumplimentarse de forma previa al anexo I.

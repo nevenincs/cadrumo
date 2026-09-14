@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 1
+
 Artículo 1. Aprobación del modelo 576.
 1. Se aprueba el modelo 576 «Impuesto Especial sobre Determinados Medios de Transporte. Autoliquidación» que figura como anexo I de la presente Orden.
 Este modelo será presentado por los siguientes sujetos pasivos:

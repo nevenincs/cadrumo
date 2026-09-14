@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 5 | BOE-A-2014-13675 | fecha_vigencia=2015-01-01
+
 Artículo 5. Plazo de presentación del modelo 143 para la solicitud de abono anticipado y de la comunicación de variaciones que afecten al cobro mensual de las deducciones por familia numerosa o por personas con discapacidad a cargo.
 1. La solicitud del abono mensual anticipado de las deducciones por familia numerosa o por personas con discapacidad a cargo en el Impuesto sobre la Renta de las Personas Físicas, ajustada al modelo 143, podrá realizarse a partir del momento en que, cumpliéndose los requisitos y condiciones establecidos para el derecho a su percepción, el contribuyente opte por la modalidad de abono anticipado de la misma.
 2. Cualquier variación producida que afecte al cobro anticipado de las deducciones por familia numerosa o por personas con discapacidad a cargo en el Impuesto sobre la Renta de las Personas Físicas, así como, en su caso, el incumplimiento de alguno de los requisitos establecidos para su percepción, determinará la obligación de comunicar dichas variaciones en el plazo de los quince días naturales siguientes a aquel en que se hubiera producido la variación o incumplimiento de los requisitos.
@@ -7,6 +7,9 @@ La comunicación de variaciones de la solicitud del abono anticipado podrá real
 a) Por vía electrónica a través de Internet, a través de los servicios electrónicos de comunicación de variaciones que se publiquen en la sede electrónica de la Agencia Tributaria.
 b) Mediante llamada al Centro de Atención Telefónica de la Agencia Estatal de Administración Tributaria. A estos efectos, la Agencia Estatal de Administración Tributaria adoptará las medidas de control precisas que permitan garantizar la identidad de la persona que efectúa la comunicación de variaciones, mediante llamada telefónica así como la conservación de la misma.
 3. En el supuesto de que, con posterioridad a la pérdida del derecho al abono anticipado de las deducciones, se tuviera derecho nuevamente al mismo y se deseara percibir de esta forma el importe de la deducción, deberá presentarse una nueva solicitud ajustada al modelo 143.
+
+# Artículo 5 | BOE-A-2022-24386 | fecha_vigencia=2023-01-01
+
 Artículo 5. Plazo de presentación del modelo 143 para la solicitud de abono anticipado y de la comunicación de variaciones que afecten al cobro mensual de las deducciones por familia numerosa o por personas con discapacidad a cargo.
 1. La solicitud del abono mensual anticipado de las deducciones por familia numerosa o por personas con discapacidad a cargo en el Impuesto sobre la Renta de las Personas Físicas, ajustada al modelo 143, podrá realizarse a partir del momento en que, cumpliéndose los requisitos y condiciones establecidos para el derecho a su percepción, el contribuyente opte por la modalidad de abono anticipado de la misma.
 2. Cualquier variación producida que afecte al cobro anticipado de las deducciones por familia numerosa o por personas con discapacidad a cargo en el Impuesto sobre la Renta de las Personas Físicas, así como, en su caso, el incumplimiento de alguno de los requisitos establecidos para su percepción, determinará la obligación de comunicar dichas variaciones en el plazo de los quince días naturales siguientes a aquel en que se hubiera producido la variación o incumplimiento de los requisitos.

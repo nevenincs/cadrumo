@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 24 | BOE-A-2004-4527 | fecha_vigencia=2004-03-13
+
 Artículo 24. Base imponible.
 1. Con carácter general, la base imponible correspondiente a los rendimientos que los contribuyentes por este impuesto obtengan sin mediación de establecimiento permanente estará constituida por su importe íntegro, determinado de acuerdo con las normas del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo, sin que sean de aplicación los porcentajes multiplicadores del artículo 23.1 de dicho texto refundido, ni las reducciones.
 2. En los casos de prestaciones de servicios, asistencia técnica, obras de instalación o montaje derivados de contratos de ingeniería y, en general, de actividades o explotaciones económicas realizadas en España sin mediación de establecimiento permanente, la base imponible será igual a la diferencia entre los ingresos íntegros y los gastos de personal, de aprovisionamiento de materiales incorporados a las obras o trabajos y de suministros, en las condiciones que se establezcan reglamentariamente.
@@ -7,6 +7,9 @@ Artículo 24. Base imponible.
 4. La base imponible correspondiente a las ganancias patrimoniales se determinará aplicando, a cada alteración patrimonial que se produzca, las normas previstas en la sección 4.ª del capítulo I del título II, salvo el artículo 31.2, y en el título VIII, salvo el artículo 95.1.a), segundo párrafo, del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo.
 En el caso de entidades no residentes, cuando la ganancia patrimonial provenga de una adquisición a título lucrativo, su importe será el valor normal de mercado del elemento adquirido.
 5. En el caso de personas físicas no residentes, la renta imputada de los bienes inmuebles situados en territorio español se determinará con arreglo a lo dispuesto en el artículo 87 del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo.
+
+# Artículo 24 | BOE-A-2006-20843 | fecha_vigencia=2006-12-01
+
 Artículo 24. Base imponible.
 1. Con carácter general, la base imponible correspondiente a los rendimientos que los contribuyentes por este impuesto obtengan sin mediación de establecimiento permanente estará constituida por su importe íntegro, determinado de acuerdo con las normas del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo, sin que sean de aplicación los porcentajes multiplicadores del artículo 23.1 de dicho texto refundido, ni las reducciones.
 2. En los casos de prestaciones de servicios, asistencia técnica, obras de instalación o montaje derivados de contratos de ingeniería y, en general, de actividades o explotaciones económicas realizadas en España sin mediación de establecimiento permanente, la base imponible será igual a la diferencia entre los ingresos íntegros y los gastos de personal, de aprovisionamiento de materiales incorporados a las obras o trabajos y de suministros, en las condiciones que se establezcan reglamentariamente.
@@ -16,6 +19,9 @@ En el caso de entidades no residentes, cuando la ganancia patrimonial provenga d
 Tratándose de ganancias patrimoniales a que se refiere el artículo 13.1.i).3.º de esta Ley procedentes de la transmisión de derechos o participaciones en entidades residentes en países o territorios con los que no exista un efectivo intercambio de información tributaria de acuerdo con lo dispuesto en el apartado 3 de la disposición adicional primera de la Ley de Medidas para la Prevención del Fraude Fiscal, el valor de transmisión se determinará atendiendo proporcionalmente al valor de mercado, en el momento de la transmisión, de los bienes inmuebles situados en territorio español, o de los derechos de disfrute sobre dichos bienes.
 5. En el caso de personas físicas no residentes, la renta imputada de los bienes inmuebles situados en territorio español se determinará con arreglo a lo dispuesto en el artículo 87 del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo.
 Se modifica el apartado 4 por el art. 2.7 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
+
+# Artículo 24 | BOE-A-2010-3366 | fecha_vigencia=2010-03-03
+
 Artículo 24. Base imponible.
 1. Con carácter general, la base imponible correspondiente a los rendimientos que los contribuyentes por este impuesto obtengan sin mediación de establecimiento permanente estará constituida por su importe íntegro, determinado de acuerdo con las normas del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo, sin que sean de aplicación los porcentajes multiplicadores del artículo 23.1 de dicho texto refundido, ni las reducciones.
 2. En los casos de prestaciones de servicios, asistencia técnica, obras de instalación o montaje derivados de contratos de ingeniería y, en general, de actividades o explotaciones económicas realizadas en España sin mediación de establecimiento permanente, la base imponible será igual a la diferencia entre los ingresos íntegros y los gastos de personal, de aprovisionamiento de materiales incorporados a las obras o trabajos y de suministros, en las condiciones que se establezcan reglamentariamente.
@@ -30,6 +36,9 @@ Tratándose de ganancias patrimoniales a que se refiere el artículo 13.1.i).3.�
 Se añade el apartado 6 por el art. 4.3 de la Ley 2/2010, de 1 de marzo. Ref. BOE-A-2010-3366.
 Esta modificación surte efectos desde el 1 de enero de 2010, según establece la disposición final 4.
 Se modifica el apartado 4 por el art. 2.7 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
+
+# Artículo 24 | BOE-A-2014-12327 | fecha_vigencia=2015-01-01
+
 Artículo 24. Base imponible.
 1. Con carácter general, la base imponible correspondiente a los rendimientos que los contribuyentes por este impuesto obtengan sin mediación de establecimiento permanente estará constituida por su importe íntegro, determinado de acuerdo con las normas del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Físicas, aprobado por el Real Decreto Legislativo 3/2004, de 5 de marzo, sin que sean de aplicación los porcentajes multiplicadores del artículo 23.1 de dicho texto refundido, ni las reducciones.
 2. En los casos de prestaciones de servicios, asistencia técnica, obras de instalación o montaje derivados de contratos de ingeniería y, en general, de actividades o explotaciones económicas realizadas en España sin mediación de establecimiento permanente, la base imponible será igual a la diferencia entre los ingresos íntegros y los gastos de personal, de aprovisionamiento de materiales incorporados a las obras o trabajos y de suministros, en las condiciones que se establezcan reglamentariamente.

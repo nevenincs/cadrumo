@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_347/files/03-347-orden-eha-3062-2010-ejercicio-2010-181-kb-pdf.pdf",
   "source_sha256": "4f9d5f9e3f7376a96408ea87b128bbb7316cd4650fbe4b9053a91e3dc5d30188",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347_2010_TIPOSV1.0.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/347_2010_TIPOSV1.0.pdf",
   "units": [
     {
       "text": "ANEXO II\nDISEÑOS FÍSICOS Y LÓGICOS PARA LA PRESENTACIÓN\nDEL MODELO 347 EN SOPORTE\nDIRECTAMENTE LEGIBLE POR ORDENADOR\nVersión 1.0",

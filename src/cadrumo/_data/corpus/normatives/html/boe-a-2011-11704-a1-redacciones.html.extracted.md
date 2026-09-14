@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 1
+
 Artículo 1. Aprobación y forma de presentación del modelo 763.
 1. Se aprueba el modelo 763, «Autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales» que figura como anexo I de la presente Orden y que deberá ser presentado por las entidades que operen, organicen o desarrollen tales actividades.
 El citado modelo estará disponible exclusivamente en formato electrónico.

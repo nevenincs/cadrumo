@@ -1,16 +1,5 @@
-# Octavo. Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta.
+# Artículo 4 | BOE-A-1991-14392 | fecha_vigencia=1992-01-01
 
-A estos efectos, el valor de los bienes y derechos se determinará conforme a las reglas que se establecen en el artículo 11 de esta Ley, minorado en el importe de las deudas derivadas de la actividad.
-Dos. Las participaciones en entidades, siempre que concurran las condiciones siguientes:
-a) Que la entidad no tenga por actividad principal la gestión de un patrimonio mobiliario o inmobiliario.
-b) Que, cuando la entidad revista forma societaria, no concurran los supuestos establecidos en el artículo 52 de la Ley 18/1991, de 6 de junio, del Impuesto sobre la Renta de las Personas Físicas.
-c) Que la participación del sujeto pasivo en el capital de la entidad sea superior al 20 por 100.
-d) Que el sujeto pasivo ejerza efectivamente funciones de dirección en la entidad, percibiendo por ello una remuneración que represente más del 50 por 100 de la totalidad de sus rendimientos empresariales, profesionales y de trabajo personal.
-La exención sólo alcanzará al valor de las participaciones, determinado conforme a las reglas que se establecen en el artículo 16, uno, de esta Ley, en la parte que corresponda a la proporción existente entre los activos necesarios para el ejercicio de la actividad empresarial, minorados en el importe de las deudas derivadas de la misma, y el valor total del patrimonio neto de la entidad.
-Tres. Reglamentariamente se determinarán:
-a) Los requisitos que deban concurrir para que sea aplicable la exención en cuanto a los bienes, derechos y deudas necesarios para el desarrollo de una actividad empresarial.
-b) Las condiciones que han de reunir las participaciones en entidades.
-Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -27,8 +16,54 @@ Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 17 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
 
-# Octavo. Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta.
+# Artículo 4 | BOE-A-1993-31153 | fecha_vigencia=1994-01-01
 
+Artículo 4.º Bienes y derechos exentos.
+Estarán exentos de este Impuesto:
+Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
+No obstante, en el supuesto de Zonas Arqueológicas y Sitios o Conjuntos Históricos, la exención no alcanzará a cualesquiera clase de bienes inmuebles ubicados dentro del perímetro de delimitación, sino, exclusivamente, a los que reúnan las siguientes condiciones:
+En Zonas Arqueológicas, los incluidos como objeto de especial protección en el instrumento de planeamiento urbanístico a que se refiere el artículo 20 de la Ley 16/1985, de 25 de junio.
+En Sitios o Conjuntos Históricos los que cuenten con una antigüedad igual o superior a cincuenta años y estén incluidos en el Catálogo previsto en el artículo 86 del Reglamento de Planeamiento Urbanístico como objeto de protección integral en los términos previstos en el artículo 21 de la Ley 16/1985, de 25 de junio.
+Dos. Los bienes integrantes del Patrimonio Histórico de las Comunidades Autónomas, que hayan sido calificados e inscritos de acuerdo con lo establecido en sus normas reguladoras.
+Tres. Los objetos de arte y antigüedades cuyo valor sea inferior a las cantidades que se establezcan a efectos de lo previsto en el artículo 26.4 de la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español.
+Gozarán asimismo de exención:
+a) Los objetos de arte y antigüedades comprendidos en el artículo 19, cuando hayan sido cedidos por sus propietarios en depósito permanente por un período no inferior a tres años a Museos o Instituciones Culturales sin fin de lucro para su exhibición pública, mientras se encuentren depositados.
+b) La obra propia de los artistas mientras permanezca en el patrimonio del autor.
+Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del hogar, utensilios domésticos y demás bienes muebles de uso particular del sujeto pasivo, excepto los bienes a los que se refieren los artículos 18 y 19 de esta Ley
+Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
+Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
+Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 17 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
+Octavo. Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta.
+A estos efectos, el valor de los bienes y derechos se determinará conforme a las reglas que se establecen en el artículo 11 de esta Ley, minorado en el importe de las deudas derivadas de la actividad.
+Dos. Las participaciones en entidades, siempre que concurran las condiciones siguientes:
+a) Que la entidad no tenga por actividad principal la gestión de un patrimonio mobiliario o inmobiliario.
+b) Que, cuando la entidad revista forma societaria, no concurran los supuestos establecidos en el artículo 52 de la Ley 18/1991, de 6 de junio, del Impuesto sobre la Renta de las Personas Físicas.
+c) Que la participación del sujeto pasivo en el capital de la entidad sea superior al 20 por 100.
+d) Que el sujeto pasivo ejerza efectivamente funciones de dirección en la entidad, percibiendo por ello una remuneración que represente más del 50 por 100 de la totalidad de sus rendimientos empresariales, profesionales y de trabajo personal.
+La exención sólo alcanzará al valor de las participaciones, determinado conforme a las reglas que se establecen en el artículo 16, uno, de esta Ley, en la parte que corresponda a la proporción existente entre los activos necesarios para el ejercicio de la actividad empresarial, minorados en el importe de las deudas derivadas de la misma, y el valor total del patrimonio neto de la entidad.
+Tres. Reglamentariamente se determinarán:
+a) Los requisitos que deban concurrir para que sea aplicable la exención en cuanto a los bienes, derechos y deudas necesarios para el desarrollo de una actividad empresarial.
+b) Las condiciones que han de reunir las participaciones en entidades.
+Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-1994-28968 | fecha_vigencia=1995-01-01
+
+Artículo 4.º Bienes y derechos exentos.
+Estarán exentos de este Impuesto:
+Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
+No obstante, en el supuesto de Zonas Arqueológicas y Sitios o Conjuntos Históricos, la exención no alcanzará a cualesquiera clase de bienes inmuebles ubicados dentro del perímetro de delimitación, sino, exclusivamente, a los que reúnan las siguientes condiciones:
+En Zonas Arqueológicas, los incluidos como objeto de especial protección en el instrumento de planeamiento urbanístico a que se refiere el artículo 20 de la Ley 16/1985, de 25 de junio.
+En Sitios o Conjuntos Históricos los que cuenten con una antigüedad igual o superior a cincuenta años y estén incluidos en el Catálogo previsto en el artículo 86 del Reglamento de Planeamiento Urbanístico como objeto de protección integral en los términos previstos en el artículo 21 de la Ley 16/1985, de 25 de junio.
+Dos. Los bienes integrantes del Patrimonio Histórico de las Comunidades Autónomas, que hayan sido calificados e inscritos de acuerdo con lo establecido en sus normas reguladoras.
+Tres. Los objetos de arte y antigüedades cuyo valor sea inferior a las cantidades que se establezcan a efectos de lo previsto en el artículo 26.4 de la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español.
+Gozarán asimismo de exención:
+a) Los objetos de arte y antigüedades comprendidos en el artículo 19, cuando hayan sido cedidos por sus propietarios en depósito permanente por un período no inferior a tres años a Museos o Instituciones Culturales sin fin de lucro para su exhibición pública, mientras se encuentren depositados.
+b) La obra propia de los artistas mientras permanezca en el patrimonio del autor.
+Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del hogar, utensilios domésticos y demás bienes muebles de uso particular del sujeto pasivo, excepto los bienes a los que se refieren los artículos 18 y 19 de esta Ley
+Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
+Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
+Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 17 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
+Octavo. Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta.
 A estos efectos, el valor de los bienes y derechos se determinará conforme a las reglas que se establecen en el artículo 11 de esta Ley, minorado en el importe de las deudas derivadas de la actividad.
 Dos. Las participaciones en entidades, siempre que concurran las condiciones siguientes:
 a) Que la entidad no tenga por actividad principal la gestión de un patrimonio mobiliario o inmobiliario.
@@ -41,6 +76,9 @@ a) Los requisitos que deban concurrir para que sea aplicable la exención en cua
 b) Las condiciones que han de reunir las participaciones en entidades.
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-1997-28053 | fecha_vigencia=1998-01-01
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -56,9 +94,7 @@ Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del
 Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 17 de la Ley del Impuesto sobre la Renta de las Personas Físicas.
-
-# Octavo.
-
+Octavo.
 Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial o profesional, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta. A efectos del cálculo de la principal fuente de renta, no se computarán ni las remuneraciones de las funciones de dirección que se ejerzan en las entidades a que se refiere el número dos de este apartado, ni cualesquiera otras remuneraciones que traigan su causa de la participación en dichas entidades.
 También estarán exentos los bienes y derechos comunes a ambos miembros del matrimonio, cuando se utilicen en el desarrollo de la actividad empresarial o profesional de cualquiera de los cónyuges, siempre que se cumplan los requisitos del párrafo anterior.
 Dos. Las participaciones en entidades, con o sin cotización en mercados organizados, siempre que concurran las condiciones siguientes:
@@ -76,6 +112,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-1998-28473 | fecha_vigencia=1999-01-01
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -91,9 +130,7 @@ Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del
 Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 13 de la Ley de Impuesto sobre la Renta de no Residentes y Normas Tributarias.
-
-# Octavo.
-
+Octavo.
 Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial o profesional, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta. A efectos del cálculo de la principal fuente de renta, no se computarán ni las remuneraciones de las funciones de dirección que se ejerzan en las entidades a que se refiere el número dos de este apartado, ni cualesquiera otras remuneraciones que traigan su causa de la participación en dichas entidades.
 También estarán exentos los bienes y derechos comunes a ambos miembros del matrimonio, cuando se utilicen en el desarrollo de la actividad empresarial o profesional de cualquiera de los cónyuges, siempre que se cumplan los requisitos del párrafo anterior.
 Dos. Las participaciones en entidades, con o sin cotización en mercados organizados, siempre que concurran las condiciones siguientes:
@@ -112,6 +149,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2000-11833 | fecha_vigencia=2000-06-25
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -127,9 +167,7 @@ Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del
 Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 13 de la Ley de Impuesto sobre la Renta de no Residentes y Normas Tributarias.
-
-# Octavo.
-
+Octavo.
 Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial o profesional, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta. A efectos del cálculo de la principal fuente de renta, no se computarán ni las remuneraciones de las funciones de dirección que se ejerzan en las entidades a que se refiere el número dos de este apartado, ni cualesquiera otras remuneraciones que traigan su causa de la participación en dichas entidades.
 También estarán exentos los bienes y derechos comunes a ambos miembros del matrimonio, cuando se utilicen en el desarrollo de la actividad empresarial o profesional de cualquiera de los cónyuges, siempre que se cumplan los requisitos del párrafo anterior.
 Dos. Las participaciones en entidades, con o sin cotización en mercados organizados, siempre que concurran las condiciones siguientes:
@@ -150,6 +188,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2000-22616 | fecha_vigencia=2000-12-15
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -165,9 +206,7 @@ Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del
 Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 13 de la Ley de Impuesto sobre la Renta de no Residentes y Normas Tributarias.
-
-# Octavo.
-
+Octavo.
 Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial o profesional, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta. A efectos del cálculo de la principal fuente de renta, no se computarán ni las remuneraciones de las funciones de dirección que se ejerzan en las entidades a que se refiere el número dos de este apartado, ni cualesquiera otras remuneraciones que traigan su causa de la participación en dichas entidades.
 También estarán exentos los bienes y derechos comunes a ambos miembros del matrimonio, cuando se utilicen en el desarrollo de la actividad empresarial o profesional de cualquiera de los cónyuges, siempre que se cumplan los requisitos del párrafo anterior.
 Dos. Las participaciones en entidades, con o sin cotización en mercados organizados, siempre que concurran las condiciones siguientes:
@@ -189,6 +228,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2002-25286 | fecha_vigencia=2003-01-01
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -204,9 +246,7 @@ Cuatro. El ajuar doméstico, entendiéndose por tal los efectos personales y del
 Cinco. Los derechos consolidados de los partícipes en un plan de pensiones.
 Seis. Los derechos derivados de la propiedad intelectual o industrial mientras permanezcan en el patrimonio del autor y en el caso de la pro piedad industrial no estén afectos a actividades empresariales.
 Siete. Los valores cuyos rendimientos estén exentos en virtud de lo dispuesto en el artículo 13 de la Ley de Impuesto sobre la Renta de no Residentes y Normas Tributarias.
-
-# Octavo.
-
+Octavo.
 Uno. Los bienes y derechos de las personas físicas necesarios para el desarrollo de su actividad empresarial o profesional, siempre que ésta se ejerza de forma habitual, personal y directa por el sujeto pasivo y constituya su principal fuente de renta. A efectos del cálculo de la principal fuente de renta, no se computarán ni las remuneraciones de las funciones de dirección que se ejerzan en las entidades a que se refiere el número dos de este apartado, ni cualesquiera otras remuneraciones que traigan su causa de la participación en dichas entidades.
 También estarán exentos los bienes y derechos comunes a ambos miembros del matrimonio, cuando se utilicen en el desarrollo de la actividad empresarial o profesional de cualquiera de los cónyuges, siempre que se cumplan los requisitos del párrafo anterior.
 Dos. Las participaciones en entidades, con o sin cotización en mercados organizados, siempre que concurran las condiciones siguientes:
@@ -229,6 +269,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2003-23936 | fecha_vigencia=2004-01-01
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -269,6 +312,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2006-20764 | fecha_vigencia=2007-01-01
+
 Artículo 4.º Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -326,6 +372,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2011-14809 | fecha_vigencia=2011-09-18
+
 Artículo 4. Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.
@@ -384,6 +433,9 @@ Se modifica el apartado 8 por el art. 3 de la Ley 66/1997, de 30 de diciembre. R
 Redactado conforme a la corrección de errores publicada en BOE núm. 157, de 2 de julio de 1998. Ref. BOE-A-1998-15586
 Se modifica la letra c) del apartado 8.2 por el art. 7 de la Ley 42/1994, de 30 de diciembre. Ref. BOE-A-1994-28968
 Se añade el apartado 8 por el art. 3 de la Ley 22/1993, de 29 de diciembre. Ref. BOE-A-1993-31153
+
+# Artículo 4 | BOE-A-2022-10852 | fecha_vigencia=2022-07-02
+
 Artículo 4. Bienes y derechos exentos.
 Estarán exentos de este Impuesto:
 Uno. Los bienes integrantes del Patrimonio Histórico Español, inscritos en el Registro General de Bienes de Interés Cultural o en el Inventario General de Bienes Muebles, a que se refiere la Ley 16/1985, de 25 de junio, del Patrimonio Histórico Español, así como los comprendidos en la Disposición Adicional Segunda de dicha Ley, siempre que en éste último caso hayan sido calificados como Bienes de Interés Cultural por el Ministerio de Cultura inscritos en el Registro correspondiente.

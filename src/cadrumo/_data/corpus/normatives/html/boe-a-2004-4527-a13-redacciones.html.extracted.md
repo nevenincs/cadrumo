@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 13
+
 Artículo 13. Rentas obtenidas en territorio español.
 1. Se consideran rentas obtenidas en territorio español las siguientes:
 a) Las rentas de actividades o explotaciones económicas realizadas mediante establecimiento permanente situado en territorio español.
