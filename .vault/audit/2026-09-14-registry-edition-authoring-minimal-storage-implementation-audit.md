@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-14'
 body_schema: 'body-v2'
-body_hash: 'sha256:e997db0d126ceee71a77dc6be65d2801a1a5d4afe2232e7206004df50a6dea8b'
+body_hash: 'sha256:8a1b270d496da0cc36d2c95942060a819f62e761055c8c4a67642c77da736c9b'
 related:
   - "[[2026-09-09-registry-edition-authoring-adr]]"
   - "[[2026-09-09-registry-edition-authoring-plan]]"
@@ -54,6 +54,22 @@ related:
 ### comment-association | medium | Packing preserves comment text but destroys its declaration association
 
 `toml_comments` returns only the text from `#` onward (`compact.py:60-85`), and packing concatenates every extracted comment at the beginning of `0001-declarations.toml` (`compact.py:141-147`). A trailing evidence or label comment that originally identified one row is therefore detached from that row; indentation, blank-line grouping, fragment boundaries, and placement are also discarded. The test at `test_compact.py:43-51` checks only the extracted comment list, so it positively passes this lossy relocation while naming comment preservation. Preserve each comment with its declaration (or retain an explicit source-to-member association) and add a fixture proving row-specific trailing and leading comments remain attributable after consolidation.
+
+### comment-association-resolution | low | Original comment placement is now retained on the concatenable path
+
+Resolved on re-review. `compact.py:197-228` concatenates fragment text in the compiler's POSIX-path order, and `test_compact.py:44-54` now proves each inline evidence comment remains attached to its row while locales and declaration order remain unchanged. The fallback for syntactically non-concatenable singleton-table fragments keeps the original commented source as explicit context before the canonical projection, so it does not silently discard the association.
+
+### apply-preflight-resolution | low | Whole-tree preflight and focused late-edit teeth now precede bounded publication
+
+Partially resolved on re-review. `publish_staged_tree` performs a fresh whole-tree equality check before its first mutation (`compact.py:118-121`), uses same-directory replacement for forward writes, rolls back completed paths on the two injected late-refusal shapes, and the CLI stops applying further modelos after a failure (`compact.py:298-303`). `test_compact.py:93-146` supplies the previously missing real-filesystem teeth. The remaining rollback race is recorded separately below.
+
+### rollback-publication | high | Recovery can overwrite a racing writer and is not interruption-safe
+
+The forward path uses same-directory atomic replacement, but recovery restores an original with direct `shutil.copy2(originals / name, target)` after a separate digest check (`compact.py:146-156`). A writer that changes `target` after line 148 and before line 154 is overwritten, contradicting the function's stated guarantee that recovery never overwrites concurrent bytes. `copy2` is also non-atomic at the destination, and any exception in one recovery operation escapes the recovery loop, leaving earlier or remaining completed paths unrestored. The two focused concurrency tests inject edits before the digest check and therefore do not exercise either recovery race or an interrupted recovery. Restore through a same-directory temporary plus atomic replace, revalidate immediately before replacement, keep attempting every owned rollback after an individual recovery failure, and report all unrecovered paths without claiming concurrent bytes were preserved.
+
+### rollback-publication-resolution | low | Capture-before-compare publication preserves racing bytes and continues recovery
+
+Resolved on final bounded re-review. `replace_if_unchanged` now stages replacement bytes beside the target, renames an existing destination to a private displaced path before comparing its digest, and installs with non-overwriting `os.link` (`compact.py:112-155`). A destination created during the gap makes installation fail rather than overwrite it; changed captured bytes are either restored to their name or retained at the reported displaced path. Forward publication and rollback share this helper, journal entries are recorded before mutation, and `publish_staged_tree` catches each ordinary recovery refusal independently so remaining entries are still attempted (`compact.py:169-195`). `test_compact.py:150-171` injects racing bytes immediately before capture and proves they survive at the target. No concrete remaining data-loss path was found in this bounded check.
 
 ## Recommendations
 
