@@ -219,7 +219,7 @@ _MODELOS_DIR: Final = "modelos"
 #: Edition fields that a lift declares rather than change: the edition-level
 #: reference defaults of every family that lifts member refs to the manifest.
 _EXCLUDED_FROM_EQUALITY: Final = frozenset(
-    {"predecessor", "reviewed_against", "casilla_source_refs"}
+    {"predecessor", "reviewed_against", "casilla_source_refs", "lineage_attestations"}
     | {default_field for _section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS}
 )
 _GIT_TIMEOUT_SECONDS: Final = 120

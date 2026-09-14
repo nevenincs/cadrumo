@@ -180,11 +180,12 @@ def pilot_input(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture(scope="module")
 def pilot(pilot_input: Path, tmp_path_factory: pytest.TempPathFactory) -> MigrationOutcome:
+    isolated = _registry(tmp_path_factory.mktemp("pilot-live"), _PILOT)
     return migrate_modelo(
-        registry_root=pilot_input,
+        registry_root=isolated,
         modelo_id=_PILOT,
         work_dir=tmp_path_factory.mktemp("pilot-work") / "run",
-        apply=False,
+        apply=True,
     )
 
 
@@ -221,7 +222,7 @@ def test_the_pilot_migrates_every_successor_edition_in_merge_order(
         if kind is RoundTripFindingKind.EXPORT_UNCHECKED and revision is not None
     ]
     assert sorted(unchecked) == sorted(successors)
-    assert not pilot.applied
+    assert pilot.applied
     assert pilot.staged_registry is not None
     assert {str(r.id) for r in _load(pilot_input, _PILOT).revisions.values() if r.predecessor is not None} == set()
 

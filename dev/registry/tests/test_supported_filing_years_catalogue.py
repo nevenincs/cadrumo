@@ -47,7 +47,6 @@ def test_bundled_tree_declares_one_ordered_supported_year_catalogue() -> None:
         pytest.param({"floor": 1999, "horizon": 2026}, id="floor-below-range"),
         pytest.param({"floor": 2022, "horizon": 2100}, id="horizon-above-range"),
         pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2024}, id="ceiling-below-horizon"),
-        pytest.param({"floor": 2022, "horizon": 2026, "hard_ceiling": 2028}, id="second-ceiling"),
         pytest.param({"years": (2022, 2023)}, id="retired-enumerated-key"),
     ],
 )
@@ -68,7 +67,27 @@ def test_supported_year_declaration_derives_its_span_from_its_bounds() -> None:
     assert catalogue.years == (2022, 2023, 2024, 2025, 2026)
     assert not catalogue.admits_filing_year(2021), "below the floor is outside what the product claims"
     assert catalogue.admits_filing_year(2022)
-    assert not catalogue.admits_filing_year(2027), "above the horizon is outside the global support range"
+    assert catalogue.admits_filing_year(2027), (
+        "an absent hard ceiling leaves the span open above the horizon, because the newest "
+        "declared revision carries forward into a year no revision names"
+    )
+
+
+def test_a_declared_hard_ceiling_closes_the_span_above_the_horizon() -> None:
+    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2028)
+
+    assert catalogue.years == (2022, 2023, 2024, 2025, 2026), "the ceiling does not widen authored coverage"
+    assert catalogue.admits_filing_year(2028)
+    assert not catalogue.admits_filing_year(2029)
+
+
+def test_a_hard_ceiling_at_the_horizon_disables_forward_projection() -> None:
+    catalogue = SupportedFilingYearsCatalogue(floor=2022, horizon=2026, hard_ceiling=2026)
+
+    assert catalogue.admits_filing_year(2026)
+    assert not catalogue.admits_filing_year(2027)
+    assert catalogue.projection_coordinate(2026) == 2026
+    assert catalogue.projection_coordinate(2027) is None
 
 
 @pytest.mark.parametrize(

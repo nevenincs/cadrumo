@@ -98,9 +98,12 @@ def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> No
 
     assert select_revision(modelo, filing_year=support.floor, period="0A", support=support).id == "2022"
     assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == "2025"
-    for outside in (support.floor - 1, support.horizon + 1):
-        with pytest.raises(NoRevisionForPeriodError):
-            select_revision(modelo, filing_year=outside, period="0A", support=support)
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=support.floor - 1, period="0A", support=support)
+    assert select_revision(modelo, filing_year=support.horizon + 1, period="0A", support=support).id == "2025"
+    closed = support.model_copy(update={"hard_ceiling": support.horizon})
+    with pytest.raises(NoRevisionForPeriodError):
+        select_revision(modelo, filing_year=closed.horizon + 1, period="0A", support=closed)
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2024, period="3T", support=support)
 
