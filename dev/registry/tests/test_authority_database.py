@@ -44,6 +44,20 @@ from ..pipeline.authority_publication import install_validated_authority_databas
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def test_retired_whole_authority_json_surfaces_do_not_exist() -> None:
+    """Keep SQLite as the only authority publication and admission implementation."""
+    repository_root = Path(__file__).resolve().parents[3]
+    retired_paths = (
+        repository_root / "dev/registry/authority_json.py",
+        repository_root / "dev/registry/benchmark_authority.py",
+        repository_root / "dev/registry/eager_authority_baseline.py",
+        repository_root / "dev/registry/indexed_authority_benchmark.py",
+        repository_root / "src/cadrumo/_data/registry/authority/authority.json",
+    )
+
+    assert not tuple(path.relative_to(repository_root) for path in retired_paths if path.exists())
+
+
 def test_admission_refuses_a_complete_dependency_cycle() -> None:
     rows = [
         ("modelo_revision", "100\x1frev", "governed_fact", "fact-a"),

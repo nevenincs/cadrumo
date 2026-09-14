@@ -6,17 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "iva-deduction-applicability-catalogue"
 _KIND_ORDER_KEY = "kind.order"
@@ -43,7 +38,7 @@ class IvaDeductionCatalogue:
             if not raw:
                 raise RegistryValidationError("IVA deduction kind must be a non-empty string token")
             try:
-                token = IvaDeductionFactKind._from_registry(raw)
+                token = IvaDeductionFactKind(raw, _registry_validated=True)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IVA deduction kind must be a non-empty string token") from exc
         else:
@@ -63,7 +58,7 @@ class IvaDeductionCatalogue:
             if not raw:
                 raise RegistryValidationError("IVA deduction evidence authority must be a non-empty string token")
             try:
-                token = IvaDeductionEvidenceAuthority._from_registry(raw)
+                token = IvaDeductionEvidenceAuthority(raw, _registry_validated=True)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError(
                     "IVA deduction evidence authority must be a non-empty string token",
@@ -145,7 +140,7 @@ def _bundled_entries(effective_date: date) -> Mapping[str, str]:
 def _selected_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
     selected = authority or governed_facts_in_scope()
@@ -157,15 +152,16 @@ def _selected_entries(
 def resolve_iva_deduction_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductionCatalogue:
     """Resolve all fifteen IVA-deduction axis tokens from fact 0085."""
     declarations = _selected_entries(effective_date=effective_date, authority=authority)
     kinds = tuple(
-        IvaDeductionFactKind._from_registry(value) for value in _csv(_required(declarations, _KIND_ORDER_KEY))
+        IvaDeductionFactKind(value, _registry_validated=True)
+        for value in _csv(_required(declarations, _KIND_ORDER_KEY))
     )
     authorities = tuple(
-        IvaDeductionEvidenceAuthority._from_registry(value)
+        IvaDeductionEvidenceAuthority(value, _registry_validated=True)
         for value in _csv(_required(declarations, _AUTHORITY_ORDER_KEY))
     )
     catalogue = IvaDeductionCatalogue(
@@ -189,7 +185,7 @@ def require_iva_deduction_fact_kind(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductionFactKind:
     """Project one IVA deduction kind through fact 0085."""
     return resolve_iva_deduction_catalogue(
@@ -202,7 +198,7 @@ def require_iva_deduction_evidence_authority(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductionEvidenceAuthority:
     """Project one evidence authority through fact 0085."""
     return resolve_iva_deduction_catalogue(
@@ -214,7 +210,7 @@ def require_iva_deduction_evidence_authority(
 def iva_deduction_fact_kinds(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[IvaDeductionFactKind, ...]:
     """Return all non-owner-only deduction kinds in registry order."""
     return resolve_iva_deduction_catalogue(
@@ -228,7 +224,7 @@ def is_iva_deduction_kind(
     projection_key: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Test membership in one fact-0085 projection without local values."""
     catalogue = resolve_iva_deduction_catalogue(effective_date=effective_date, authority=authority)
@@ -239,7 +235,7 @@ def is_iva_deduction_kind(
 def invoice_evidence_authority(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaDeductionEvidenceAuthority:
     """Return the registry-declared authority for invoice-linked evidence."""
     return resolve_iva_deduction_catalogue(

@@ -28,7 +28,7 @@ from ..compiler.validate_export_field_placement import (
 from ..conformance.cli import load_bundled_runtime_authority, validate_registry
 from ..maintenance_support import OracleEnvironment
 from ..parity.maintenance import audit_registry_oracles
-from ..pipeline.authority_publication import AuthorityArtifactCurrencyStatus, authority_database_currency
+from ..pipeline.authority_publication import AuthorityDatabaseCurrencyStatus, authority_database_currency
 
 _TARGET_STATE_NAMES: Final[tuple[str, ...]] = ("current", "stale", "drifted", "never-committed", "unreadable")
 
@@ -117,12 +117,12 @@ def collect_registry_status(
     *,
     registry_root: Path | None = None,
     source_root: Path | None = None,
-    authority_artifact: Path | None = None,
+    authority_descriptor: Path | None = None,
 ) -> RegistryStatus:
     """Delegate each status axis to its owning validator or currency primitive."""
     resolved_registry_root = registry_root or bundled_path("registry", "aeat")
     resolved_source_root = source_root or bundled_path()
-    resolved_artifact = authority_artifact or bundled_authority_descriptor_path()
+    resolved_descriptor = authority_descriptor or bundled_authority_descriptor_path()
     details: list[str] = []
 
     authority = None
@@ -195,17 +195,17 @@ def collect_registry_status(
     candidate_digest: str | None = None
     try:
         currency = authority_database_currency(
-            resolved_artifact,
+            resolved_descriptor,
             registry_root=resolved_registry_root,
             source_root=resolved_source_root,
         )
         authority_status = currency.status.value
         recorded_digest = currency.recorded_identity_digest
         candidate_digest = currency.candidate_identity_digest
-        if currency.status is not AuthorityArtifactCurrencyStatus.CURRENT:
+        if currency.status is not AuthorityDatabaseCurrencyStatus.CURRENT:
             details.append(f"AUTHORITY: {currency.detail}")
     except Exception as error:
-        authority_status = AuthorityArtifactCurrencyStatus.UNREADABLE.value
+        authority_status = AuthorityDatabaseCurrencyStatus.UNREADABLE.value
         details.append(f"AUTHORITY: {type(error).__name__}: {error}")
 
     try:
@@ -384,7 +384,7 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
     blocking_target_count = sum(target_counts[state] for state in ("stale", "drifted", "never-committed"))
     lanes = {
         "authority_currency": (
-            "passed" if status.authority == AuthorityArtifactCurrencyStatus.CURRENT.value else "failed"
+            "passed" if status.authority == AuthorityDatabaseCurrencyStatus.CURRENT.value else "failed"
         ),
         "oracle_bindings": "passed" if status.oracles else "failed",
         "registry_validity": "passed" if status.valid else "failed",
@@ -424,7 +424,7 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
             **({"reason_counts": dict(sorted(reason_counts.items()))} if reason_counts else {}),
         }
     actions: list[dict[str, object]] = []
-    if status.authority != AuthorityArtifactCurrencyStatus.CURRENT.value:
+    if status.authority != AuthorityDatabaseCurrencyStatus.CURRENT.value:
         actions.append(
             {
                 "code": "authority_not_current",

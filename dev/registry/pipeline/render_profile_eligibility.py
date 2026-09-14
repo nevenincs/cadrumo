@@ -53,6 +53,7 @@ from .source_defects import (
 
 __all__ = [
     "RenderProfileEligibility",
+    "normalise_aeat_type",
     "project_render_profile_eligibility",
     "resolve_render_profile_eligibility",
 ]
@@ -72,6 +73,7 @@ class RenderProfileEligibility(_StrictModel):
     all_fields: tuple[RecordDesignIntermediateField, ...]
     width_17_fields: tuple[RecordDesignIntermediateField, ...]
     smaller_fields: tuple[RecordDesignIntermediateField, ...]
+    signed_composite_fields: tuple[RecordDesignIntermediateField, ...] = ()
 
 
 def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
@@ -115,6 +117,11 @@ def _has_absent_naturaleza(field: RecordDesignIntermediateField) -> bool:
     return field.aeat_type.strip() == ABSENT_NATURALEZA_TYPE_CODE
 
 
+def normalise_aeat_type(aeat_type: str) -> str:
+    """Return the one accent-insensitive AEAT naturaleza vocabulary."""
+    return unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+
+
 def _is_numeric_aeat_type(aeat_type: str) -> bool:
     """Whether ``aeat_type`` names a numeric naturaleza, however AEAT spelled it.
 
@@ -128,7 +135,7 @@ def _is_numeric_aeat_type(aeat_type: str) -> bool:
     ``naturaleza_or_none`` is: AEAT does not spell consistently, and every
     unmatched spelling is a field that silently escapes review.
     """
-    normalised = unicodedata.normalize("NFKD", aeat_type.strip(" .")).encode("ascii", "ignore").decode("ascii").lower()
+    normalised = normalise_aeat_type(aeat_type)
     return normalised in {"num", "n"} or normalised.startswith("numeric")
 
 
@@ -215,6 +222,7 @@ def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
     *,
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str]] = frozenset(),
 ) -> RenderProfileEligibility:
     """Partition fixed joined fields eligible for reviewed absent-wire authority.
 
@@ -234,23 +242,33 @@ def project_render_profile_eligibility(
     directly with a hand-assembled argument is how a consumer comes to answer a
     different question from the renderer.
     """
-    eligible = tuple(
+    fields = tuple(fixed_fields)
+    numeric = tuple(
         field
-        for field in fixed_fields
+        for field in fields
         if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
         and _states_no_wire_fact(field, applicability_notes=applicability_notes)
         and not _is_source_reserved_field(field)
     )
+    signed_composites = tuple(
+        field
+        for field in fields
+        if (field.sheet, field.source_row, field.source_cell, field.ordinal, field.record_identity)
+        in signed_composite_anchor_keys
+    )
     return RenderProfileEligibility(
-        all_fields=eligible,
-        width_17_fields=tuple(field for field in eligible if field.length == 17),
-        smaller_fields=tuple(field for field in eligible if field.length != 17),
+        all_fields=(*numeric, *signed_composites),
+        width_17_fields=tuple(field for field in numeric if field.length == 17),
+        smaller_fields=tuple(field for field in numeric if field.length != 17),
+        signed_composite_fields=signed_composites,
     )
 
 
 def resolve_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
     source: RecordDesignIntermediateSource,
+    *,
+    signed_composite_anchor_keys: frozenset[tuple[str, int, str | None, str | None, str]] = frozenset(),
 ) -> RenderProfileEligibility:
     """Partition fields of one PARSER-READ design, resolving its declarations here.
 
@@ -273,4 +291,8 @@ def resolve_render_profile_eligibility(
     """
     applicability_notes = note_stated_applicability_for(source.source_ref)
     validate_note_stated_applicability_declarations(applicability_notes, source)
-    return project_render_profile_eligibility(fixed_fields, applicability_notes=applicability_notes)
+    return project_render_profile_eligibility(
+        fixed_fields,
+        applicability_notes=applicability_notes,
+        signed_composite_anchor_keys=signed_composite_anchor_keys,
+    )

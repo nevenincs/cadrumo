@@ -22875,12 +22875,6 @@ modelo:
             label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
         2025-y-siguientes:
           casilla:
-            x-8h834c1g60ojgghq60o3ae1o:
-              help: Indique o revise «Deducc. para incentivar determ.actividades -
-                Total - Aplicado en esta liquidación [00588]» para completar esta
-                autoliquidación.
-              label: Deducc. para incentivar determ.actividades - Total - Aplicado
-                en esta liquidación [00588]
             '00001':
               help: Indique o revise «Entidad sin ánimo de lucro acogida régimen fiscal
                 Título II Ley 49/2002 [00001]» para completar esta autoliquidación.
@@ -44993,6 +44987,12 @@ modelo:
               label: Liquidación IV - Cuota del ejercicio a ingresar o a devolver
                 - Total retenciones e ingresos a cuenta - Imputados por AIEs y UTEs
                 [01784]
+            x-8h834c1g60ojgghq60o3ae1o:
+              help: Indique o revise «Deducc. para incentivar determ.actividades -
+                Total - Aplicado en esta liquidación [00588]» para completar esta
+                autoliquidación.
+              label: Deducc. para incentivar determ.actividades - Total - Aplicado
+                en esta liquidación [00588]
             x-8h834c1g60p3cehg60r34d8:
               help: Indique o revise «Tributación conjunta Estado y Adm.Forales -
                 Cálculo porcentajes tributación - Admón.del Estado [00625]» para completar

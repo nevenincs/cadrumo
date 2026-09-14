@@ -26,7 +26,7 @@ from typing import Final, NamedTuple
 from ...core.aggregation import IntracomOperationType, TravelAgencyMediationType
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.travel_agency_mediation import require_travel_agency_mediation
-from ..iva.classification import InvoiceKind, TransactionKind, require_transaction_kind
+from ..iva.classification import InvoiceKind, TransactionKind
 from ..iva.oss import OssIossRegime, require_oss_ioss_regime
 from ..iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 from .enums import (
@@ -148,7 +148,7 @@ def _coerce_enum_field(payload: dict[str, object], rule: _EnumFieldRule) -> None
         payload[rule.field] = (
             require_oss_ioss_regime(text)
             if rule.enum is OssIossRegime
-            else require_transaction_kind(text, effective_date=date.today())
+            else TransactionKind(text)
             if rule.enum is TransactionKind
             else require_eu_member_state(text)
             if rule.enum is EUMemberState

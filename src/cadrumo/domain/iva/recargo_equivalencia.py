@@ -9,14 +9,13 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.schema import FactSelector, MappingFactPayload
 from ..calculations.registry.schema_base import DateAxis
@@ -24,7 +23,6 @@ from .errors import IvaCatalogueError, IvaValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
-    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
 
@@ -74,25 +72,22 @@ class RecargoRateRecord(BaseModel):
 
 def load_recargo_rate_table(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[RecargoRateRecord, ...]:
     """Return published recargo pairings from the authority artifact.
 
-    The optional source path belongs to development publication only; accepting
-    it in runtime would make an unsigned authoring tree a second authority.
+    Runtime callers must provide the operation that owns the published
+    authority generation; an unsigned authoring tree is never a fallback.
     """
-    if operation is None:
-        raise IvaCatalogueError("IVA recargo table requires an explicit pinned authority operation")
-    else:
-        fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
-    if fact is None:
-        raise IvaCatalogueError("installed authority has no IVA recargo facts")
+    fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
     records: list[RecargoRateRecord] = []
     for variant in fact.variants:
         if not isinstance(variant.payload, MappingFactPayload):
             raise IvaCatalogueError("IVA recargo fact contains a non-mapping variant")
         selectors = {selector.name: selector.value for selector in variant.selectors}
         payload = {str(entry.key): entry.value for entry in variant.payload.entries}
+        if variant.valid_from is None:
+            raise IvaCatalogueError("IVA recargo variant has no effective start date")
         records.append(
             RecargoRateRecord(
                 iva_rate=Decimal(str(selectors["applied_rate"])),
@@ -110,8 +105,7 @@ def recargo_rate_for_applied_rate(  # noqa: D417
     applied_rate: Decimal,
     on_date: date,
     *,
-    authority: GovernedFactSource | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Decimal | None:
     """Return the recargo rate paired with ``applied_rate`` on ``on_date``.
 
@@ -129,13 +123,12 @@ def recargo_rate_for_applied_rate(  # noqa: D417
         combination, which callers must not read as "no recargo applies".
 
     """
-    if not _recargo_fact_candidate_exists(applied_rate, on_date, authority=authority, operation=operation):
+    if not _recargo_fact_candidate_exists(applied_rate, on_date, operation=operation):
         return None
     return recargo_rate_record_from_fact(
         resolve_recargo_rate_for_applied_rate(
             applied_rate,
             on_date,
-            authority=authority,
             operation=operation,
         ),
     ).recargo_rate
@@ -145,21 +138,10 @@ def resolve_recargo_rate_for_applied_rate(
     applied_rate: Decimal,
     on_date: date,
     *,
-    authority: GovernedFactSource | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve the dated recargo pairing with its complete governed-fact provenance."""
-    if operation is not None and authority is not None:
-        raise TypeError("recargo resolution accepts either authority or operation, not both")
-    if operation is not None:
-        authority = operation
-    elif authority is None:
-        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
-
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise IvaCatalogueError("IVA recargo resolution requires an explicit operation or scoped fact source")
-    resolved = authority.resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id=IVA_RECARGO_FACT_ID,
             date_axis=DateAxis.DEVENGO_DATE,
@@ -167,15 +149,16 @@ def resolve_recargo_rate_for_applied_rate(
             selectors=(FactSelector(name="applied_rate", value=applied_rate),),
         ),
     )
-    return cast("ResolvedMappingFact", resolved)
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise IvaCatalogueError("IVA recargo fact must resolve as a mapping fact")
+    return resolved
 
 
 def _recargo_fact_candidate_exists(
     applied_rate: Decimal,
     on_date: date,
     *,
-    authority: GovernedFactSource | None = None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return false only for an unmodelled applied-rate/date pairing.
 
@@ -183,49 +166,10 @@ def _recargo_fact_candidate_exists(
     or other invalid exact selection remains a loud fail-closed error rather
     than being mistaken for the public ``None`` sentinel.
     """
-    if operation is not None and authority is not None:
-        raise TypeError("recargo candidate lookup accepts either authority or operation, not both")
-    if operation is not None:
-        fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
-    elif authority is not None:
-        try:
-            authority.resolve_governed_fact(
-                MappingFactQuery(
-                    fact_id=IVA_RECARGO_FACT_ID,
-                    date_axis=DateAxis.DEVENGO_DATE,
-                    effective_date=on_date,
-                    selectors=(FactSelector(name="applied_rate", value=applied_rate),),
-                ),
-            )
-        except RegistryValidationError as exc:
-            if "no variant" in str(exc).lower() or "not registered" in str(exc).lower():
-                return False
-            raise
-        return True
-    else:
-        from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
-
-        authority = governed_facts_in_scope()
-        if authority is None:
-            raise IvaCatalogueError("IVA recargo candidate lookup requires an explicit operation or scoped fact source")
-        try:
-            authority.resolve_governed_fact(
-                MappingFactQuery(
-                    fact_id=IVA_RECARGO_FACT_ID,
-                    date_axis=DateAxis.DEVENGO_DATE,
-                    effective_date=on_date,
-                    selectors=(FactSelector(name="applied_rate", value=applied_rate),),
-                ),
-            )
-        except RegistryValidationError as exc:
-            if "no variant" in str(exc).lower() or "not registered" in str(exc).lower():
-                return False
-            raise
-        return True
-    if fact is None:
-        return False
+    fact = operation.governed_fact(IVA_RECARGO_FACT_ID)
     return any(
         variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from is not None
         and variant.valid_from <= on_date
         and (variant.valid_to is None or on_date <= variant.valid_to)
         and {selector.name: selector.value for selector in variant.selectors}.get("applied_rate") == applied_rate

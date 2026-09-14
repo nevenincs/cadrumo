@@ -1,7 +1,7 @@
 """Locale-coverage gate for the wizard descriptor and the CLI surface.
 
 ``audit_wizard_translations`` walks every ``Translatable`` referenced
-by :data:`WIZARD_FLOWS`, the descriptor-derived flag-help keys, and
+by the operation-scoped wizard catalogue, the descriptor-derived flag-help keys, and
 the fixed runtime error keys. ``audit_cli_translations`` walks every
 ``cli.<group>.*`` key supplied to a ``tr(...)`` call by any module under
 ``cadrumo.entrypoints.cli``. Both audits assert every key resolves to

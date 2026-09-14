@@ -70,8 +70,8 @@ _PUBLICATION_LOCK_TIMEOUT: Final = 30.0
 _PUBLICATION_LOCK_RETRY_BACKOFF: Final = 0.05
 
 __all__ = [
-    "AuthorityArtifactCurrency",
-    "AuthorityArtifactCurrencyStatus",
+    "AuthorityDatabaseCurrency",
+    "AuthorityDatabaseCurrencyStatus",
     "AuthorityPublicationReceipt",
     "ValidatedAuthorityCandidate",
     "authority_candidate_identity",
@@ -93,8 +93,8 @@ on which tools last ran in a working copy rather than on the candidate.
 """
 
 
-class AuthorityArtifactCurrencyStatus(StrEnum):
-    """Whether a published artifact still describes the candidate it would be compiled from."""
+class AuthorityDatabaseCurrencyStatus(StrEnum):
+    """Whether an indexed authority generation describes the live candidate."""
 
     CURRENT = "current"
     STALE = "stale"
@@ -102,15 +102,15 @@ class AuthorityArtifactCurrencyStatus(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class AuthorityArtifactCurrency:
-    """One published artifact's recorded identity against the candidate's live identity.
+class AuthorityDatabaseCurrency:
+    """One indexed generation's recorded identity against the candidate's live identity.
 
-    ``recorded_identity_digest`` is ``None`` only when the artifact could not
+    ``recorded_identity_digest`` is ``None`` only when the descriptor could not
     be read, in which case ``detail`` names the refusal.
     """
 
-    artifact_path: Path
-    status: AuthorityArtifactCurrencyStatus
+    descriptor_path: Path
+    status: AuthorityDatabaseCurrencyStatus
     candidate_identity_digest: str
     recorded_identity_digest: str | None
     candidate_build_identity: AuthorityBuildIdentity
@@ -119,8 +119,8 @@ class AuthorityArtifactCurrency:
 
     @property
     def is_current(self) -> bool:
-        """Whether the artifact may stand as the publication of the live candidate."""
-        return self.status is AuthorityArtifactCurrencyStatus.CURRENT
+        """Whether the indexed generation is the publication of the live candidate."""
+        return self.status is AuthorityDatabaseCurrencyStatus.CURRENT
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,7 +288,7 @@ def authority_database_currency(
     registry_root: Path,
     source_root: Path,
     profile_schema_path: Path | None = None,
-) -> AuthorityArtifactCurrency:
+) -> AuthorityDatabaseCurrency:
     """Compare an admitted indexed generation with the exact live compiler receipt."""
     roots = canonical_authoring_root_pair(registry_root, source_root)
     receipt = _capture_receipt(*roots, profile_schema_path=profile_schema_path)
@@ -304,9 +304,9 @@ def authority_database_currency(
         finally:
             reader.close()
     except (AuthorityStoreError, OSError, ValueError) as exc:
-        return AuthorityArtifactCurrency(
-            artifact_path=descriptor_path,
-            status=AuthorityArtifactCurrencyStatus.UNREADABLE,
+        return AuthorityDatabaseCurrency(
+            descriptor_path=descriptor_path,
+            status=AuthorityDatabaseCurrencyStatus.UNREADABLE,
             candidate_identity_digest=receipt.identity_digest,
             recorded_identity_digest=None,
             candidate_build_identity=candidate_build,
@@ -314,17 +314,17 @@ def authority_database_currency(
             detail=f"{type(exc).__name__}: {exc}",
         )
     status = (
-        AuthorityArtifactCurrencyStatus.CURRENT
+        AuthorityDatabaseCurrencyStatus.CURRENT
         if recorded_identity == receipt.identity_digest
-        else AuthorityArtifactCurrencyStatus.STALE
+        else AuthorityDatabaseCurrencyStatus.STALE
     )
     detail = (
         "the indexed generation matches the live source manifest, compiler build, and component dependencies"
-        if status is AuthorityArtifactCurrencyStatus.CURRENT
+        if status is AuthorityDatabaseCurrencyStatus.CURRENT
         else "the indexed generation logical identity differs from the live complete-authority receipt"
     )
-    return AuthorityArtifactCurrency(
-        artifact_path=descriptor_path,
+    return AuthorityDatabaseCurrency(
+        descriptor_path=descriptor_path,
         status=status,
         candidate_identity_digest=receipt.identity_digest,
         recorded_identity_digest=recorded_identity,

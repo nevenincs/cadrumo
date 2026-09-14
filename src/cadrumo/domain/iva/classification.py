@@ -50,10 +50,15 @@ from typing import TYPE_CHECKING, NamedTuple, Self
 from pydantic import Field, GetCoreSchemaHandler, model_validator
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.logging import get_logger
-from ..calculations.registry.iva_category_catalogue import require_iva_category
-from ..calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
+from ..calculations.registry.iva_category_catalogue import (
+    IvaCategoryCatalogue,
+    resolve_iva_category_catalogue,
+)
+from ..calculations.registry.iva_rate_kind_catalogue import (
+    IvaRateKindCatalogue,
+    resolve_iva_rate_kind_catalogue,
+)
 from .errors import IvaRateNotFoundError, IvaValidationError
 from .lookup import lookup_rate
 from .place_of_supply import IvaPlaceOfSupplyRule, place_of_supply_rule
@@ -71,8 +76,8 @@ from .schema import (
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.facts.resolution import ResolvedMappingFact
-    from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 # -- Registry-projected classification vocabulary ------------------------
@@ -98,11 +103,6 @@ class _RegistryProjectedToken(str):
     def _require_registry_token(cls, value: object) -> Self:
         if isinstance(value, cls):
             return value
-        if isinstance(value, str):
-            if cls is IvaTerritorialScope:
-                return require_iva_territorial_scope(value)  # type: ignore[return-value]
-            if cls is CustomerTaxStatus:
-                return require_customer_tax_status(value)  # type: ignore[return-value]
         raise IvaValidationError(f"{cls.__name__} must be a registry-projected token")
 
     @classmethod
@@ -370,17 +370,17 @@ _CUSTOMER_STATUS_ALIAS_NAMES = frozenset(
 )
 
 
-def _classification_vocabulary_group(
+def _classification_vocabulary_group[T: _RegistryProjectedToken](
     entries: Mapping[str, str],
     *,
     prefix: str,
     order_key: str,
-    token_type: type[_RegistryProjectedToken],
+    token_type: type[T],
     alias_names: frozenset[str],
-) -> tuple[tuple[_RegistryProjectedToken, ...], Mapping[str, _RegistryProjectedToken]]:
+) -> tuple[tuple[T, ...], Mapping[str, T]]:
     """Project one membership order and its named aliases from fact 0083."""
     raw_tokens = _classification_csv(entries, order_key)
-    tokens: list[_RegistryProjectedToken] = []
+    tokens: list[T] = []
     for raw_token in raw_tokens:
         declared = _required_classification_entry(entries, f"{prefix}.{raw_token}.value")
         if declared != raw_token:
@@ -389,7 +389,7 @@ def _classification_vocabulary_group(
             )
         tokens.append(token_type(raw_token, _registry_validated=True))
     declared_set = frozenset(str(token) for token in tokens)
-    aliases: dict[str, _RegistryProjectedToken] = {}
+    aliases: dict[str, T] = {}
     alias_prefix = f"{prefix}.alias."
     for key, value in entries.items():
         if not key.startswith(alias_prefix):
@@ -416,10 +416,10 @@ def _classification_vocabulary_group(
 def resolve_iva_classification_catalogue(
     effective_date: date | None = None,
     *,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
-    resolved = _registry_iva_classification_catalogue(effective_date or date.today(), authority=authority)
+    resolved = _registry_iva_classification_catalogue(effective_date or date.today(), operation=operation)
     entries = _classification_mapping_entries(resolved)
     territorial_scopes, territorial_aliases = _classification_vocabulary_group(
         entries,
@@ -436,10 +436,10 @@ def resolve_iva_classification_catalogue(
         alias_names=_CUSTOMER_STATUS_ALIAS_NAMES,
     )
     return IvaClassificationCatalogue(
-        territorial_scopes=territorial_scopes,  # type: ignore[arg-type]
-        customer_tax_statuses=customer_statuses,  # type: ignore[arg-type]
-        territorial_aliases=territorial_aliases,  # type: ignore[arg-type]
-        customer_status_aliases=customer_status_aliases,  # type: ignore[arg-type]
+        territorial_scopes=territorial_scopes,
+        customer_tax_statuses=customer_statuses,
+        territorial_aliases=territorial_aliases,
+        customer_status_aliases=customer_status_aliases,
     )
 
 
@@ -447,49 +447,49 @@ def require_iva_territorial_scope(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope:
     """Return a territorial scope only when 0083 declares it."""
-    return resolve_iva_classification_catalogue(effective_date, authority=authority).require_territorial_scope(value)
+    return resolve_iva_classification_catalogue(effective_date, operation=operation).require_territorial_scope(value)
 
 
 def require_customer_tax_status(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CustomerTaxStatus:
     """Return a customer status only when 0083 declares it."""
-    return resolve_iva_classification_catalogue(effective_date, authority=authority).require_customer_tax_status(value)
+    return resolve_iva_classification_catalogue(effective_date, operation=operation).require_customer_tax_status(value)
 
 
 def iva_territorial_scope_alias(
     alias: str,
     *,
     effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaTerritorialScope:
     """Return one named territorial projection from fact 0083."""
-    return resolve_iva_classification_catalogue(effective_date, authority=authority).territorial_scope_alias(alias)
+    return resolve_iva_classification_catalogue(effective_date, operation=operation).territorial_scope_alias(alias)
 
 
 def customer_tax_status_alias(
     alias: str,
     *,
     effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CustomerTaxStatus:
     """Return one named customer-status projection from fact 0083."""
-    return resolve_iva_classification_catalogue(effective_date, authority=authority).customer_tax_status_alias(alias)
+    return resolve_iva_classification_catalogue(effective_date, operation=operation).customer_tax_status_alias(alias)
 
 
 def resolve_transaction_kind_catalogue(
     effective_date: date,
     *,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> TransactionKindCatalogue:
     """Resolve all transaction-kind membership through the 0083 fact query."""
-    resolved = _registry_iva_classification_catalogue(effective_date, authority=authority)
+    resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
     entries = _classification_mapping_entries(resolved)
     definitions: list[TransactionKindDefinition] = []
     for token in _classification_csv(entries, "transaction_kind.order"):
@@ -520,10 +520,10 @@ def require_transaction_kind(
     value: object,
     *,
     effective_date: date,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> TransactionKind:
     """Return one registry-declared transaction-kind token or refuse it."""
-    return resolve_transaction_kind_catalogue(effective_date, authority=authority).require(value)
+    return resolve_transaction_kind_catalogue(effective_date, operation=operation).require(value)
 
 
 # -- Criteria and classification records ----------------------------------
@@ -539,6 +539,7 @@ def domestic_rate_tier_is_required(
     art_69_dos_service: IvaArt69DosService | None = None,
     exempt_kinds: frozenset[TransactionKind] = frozenset(),
     outside_territories: frozenset[IvaTerritorialScope] = frozenset(),
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether the supplied axes require a rate tier.
 
@@ -547,11 +548,14 @@ def domestic_rate_tier_is_required(
     """
     if kind in exempt_kinds:
         return False
-    vocabulary = resolve_iva_classification_catalogue(transaction_date)
+    vocabulary = resolve_iva_classification_catalogue(transaction_date, operation=operation)
     mainland = vocabulary.territorial_scope_alias("mainland")
     if issuer_residency == mainland and customer_residency == mainland:
         return True
-    services_kind = resolve_transaction_kind_catalogue(transaction_date or date.today()).for_supply_nature("services")
+    services_kind = resolve_transaction_kind_catalogue(
+        transaction_date or date.today(),
+        operation=operation,
+    ).for_supply_nature("services")
     return (
         issuer_residency == mainland
         and customer_residency in outside_territories
@@ -634,13 +638,13 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
 
     @model_validator(mode="after")
     def _validate_member_state_consistency(self) -> IvaInvoiceClassificationCriteria:
-        """Keep criteria validation independent from registry-owned facts."""
-        require_iva_territorial_scope(self.issuer_residency, effective_date=self.transaction_date)
-        require_iva_territorial_scope(self.customer_residency, effective_date=self.transaction_date)
-        require_customer_tax_status(self.customer_tax_status, effective_date=self.transaction_date)
-        require_transaction_kind(self.kind, effective_date=self.transaction_date)
-        if self.rate_tier is not None:
-            require_iva_rate_kind(self.rate_tier, effective_date=self.transaction_date)
+        """Keep criteria construction free of ambient registry access.
+
+        Governed membership is checked by :func:`classify_iva`, where the
+        caller-owned operation is available.  Pydantic model validators do not
+        receive that operation, so validating through an ambient scope here
+        would violate the composition boundary.
+        """
         return self
 
 
@@ -724,16 +728,6 @@ class IvaClassificationResult(IvaStrictFrozen):
         ),
     )
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
-        if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
-            raise IvaValidationError(
-                f"exemption_article {self.exemption_article.value!r} is only valid when "
-                f"category is DOMESTIC_EXEMPT; got category {self.category.value!r}",
-            )
-        return self
-
 
 def domestic_categories_by_rate_kind(
     mapping: Mapping[IvaRateKind, IvaCategory] | None = None,
@@ -761,8 +755,270 @@ class IvaClassificationRule(NamedTuple):
     predicate: Callable[[IvaInvoiceClassificationCriteria], bool]
     category: IvaCategory | None = None
     description: str = ""
-    consumes: frozenset[PartyFact] = frozenset()
+    consumes: frozenset[PartyFact] = frozenset[PartyFact]()
     requires_reverse_charge: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class IvaClassificationInputs:
+    """Complete typed projection consumed by the IVA classifier.
+
+    The fact registry stores rule predicates as a small declarative language.
+    This record is the only boundary that turns that language into executable
+    predicates and rate/category mappings; the evaluator itself remains a
+    generic first-match consumer.
+    """
+
+    rules: tuple[IvaClassificationRule, ...]
+    rate_categories: Mapping[IvaRateKind, IvaCategory]
+    rate_territories: frozenset[IvaTerritorialScope]
+
+
+def _scope_predicate_values(
+    value: str,
+    *,
+    vocabulary: IvaClassificationCatalogue,
+) -> frozenset[IvaTerritorialScope]:
+    """Resolve one registry scope selector to its declared members."""
+    all_scopes = frozenset(vocabulary.territorial_scopes)
+    mainland = vocabulary.territorial_scope_alias("mainland")
+    canarias = vocabulary.territorial_scope_alias("canarias")
+    ceuta_melilla = vocabulary.territorial_scope_alias("ceuta_melilla")
+    third_country = vocabulary.territorial_scope_alias("third_country")
+    if value == "non_spanish_eu":
+        return all_scopes - {mainland, canarias, ceuta_melilla}
+    if value == "outside_tai":
+        return all_scopes - {mainland}
+    if value == "outside_comunidad":
+        return frozenset({canarias, ceuta_melilla, third_country})
+    try:
+        return frozenset({vocabulary.territorial_scope_alias(value)})
+    except IvaValidationError:
+        return frozenset({vocabulary.require_territorial_scope(value)})
+
+
+def _status_predicate_values(
+    value: str,
+    *,
+    vocabulary: IvaClassificationCatalogue,
+) -> frozenset[CustomerTaxStatus]:
+    """Resolve one registry customer-status selector to its members."""
+    aliases = vocabulary.customer_status_aliases
+    if value == "b2b_or_public":
+        return frozenset(
+            {
+                aliases["b2b_registered"],
+                aliases["b2b_not_registered"],
+                aliases["public_administration"],
+            },
+        )
+    if value == "b2c_or_public":
+        return frozenset({aliases["b2c_consumer"], aliases["public_administration"]})
+    if value == "b2c":
+        return frozenset({aliases["b2c_consumer"]})
+    try:
+        return frozenset({aliases[value]})
+    except KeyError:
+        return frozenset({vocabulary.require_customer_tax_status(value)})
+
+
+def _kind_predicate_values(
+    value: str,
+    *,
+    catalogue: TransactionKindCatalogue,
+) -> frozenset[TransactionKind]:
+    """Resolve one registry kind selector to its declared members."""
+    if value == "domestic_default":
+        return frozenset(
+            definition.token
+            for definition in catalogue.definitions
+            if not definition.token.value.endswith("_reverse_charge")
+        )
+    return frozenset({catalogue.require(value)})
+
+
+def _issuer_identification_state(criteria: IvaInvoiceClassificationCriteria) -> EUMemberState | None:
+    """Read the issuer's identification axis for a compiled predicate."""
+    return criteria.issuer_identification_state
+
+
+def _customer_identification_state(criteria: IvaInvoiceClassificationCriteria) -> EUMemberState | None:
+    """Read the customer's identification axis for a compiled predicate."""
+    return criteria.customer_identification_state
+
+
+def _compile_classification_predicate(
+    expression: str,
+    *,
+    vocabulary: IvaClassificationCatalogue,
+    kind_catalogue: TransactionKindCatalogue,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> Callable[[IvaInvoiceClassificationCriteria], bool]:
+    """Compile one registry predicate without introducing a second rule table."""
+    if expression.strip() == "no_match":
+        return lambda _criteria: False
+    clauses = tuple(part.strip() for part in expression.split(";") if part.strip())
+    if not clauses:
+        raise IvaValidationError("IVA classification predicate must not be empty")
+    conditions: list[Callable[[IvaInvoiceClassificationCriteria], bool]] = []
+    seen: set[str] = set()
+    spanish_state: EUMemberState = spanish_eu_member_state(effective_date=effective_date, authority=operation)
+    third_country = vocabulary.territorial_scope_alias("third_country")
+    for clause in clauses:
+        if "=" not in clause:
+            raise IvaValidationError(f"IVA classification predicate clause {clause!r} is malformed")
+        field, value = (part.strip() for part in clause.split("=", 1))
+        if not field or not value or field in seen:
+            raise IvaValidationError(f"IVA classification predicate clause {clause!r} is malformed")
+        seen.add(field)
+        if field in {"issuer", "customer"}:
+            allowed = _scope_predicate_values(value, vocabulary=vocabulary)
+            if field == "issuer":
+                conditions.append(lambda criteria, allowed=allowed: criteria.issuer_residency in allowed)
+            else:
+                conditions.append(lambda criteria, allowed=allowed: criteria.customer_residency in allowed)
+            continue
+        if field == "status":
+            allowed = _status_predicate_values(value, vocabulary=vocabulary)
+            conditions.append(lambda criteria, allowed=allowed: criteria.customer_tax_status in allowed)
+            continue
+        if field == "kind":
+            allowed = _kind_predicate_values(value, catalogue=kind_catalogue)
+            conditions.append(lambda criteria, allowed=allowed: criteria.kind in allowed)
+            continue
+        if field == "direction":
+            try:
+                direction = InvoiceKind(value)
+            except ValueError as exc:
+                raise IvaValidationError(f"IVA classification predicate names unknown direction {value!r}") from exc
+            conditions.append(lambda criteria, direction=direction: criteria.direction is direction)
+            continue
+        if field in {"issuer_identification", "customer_identification"}:
+            state_reader: Callable[[IvaInvoiceClassificationCriteria], EUMemberState | None]
+            if field == "issuer_identification":
+                state_reader = _issuer_identification_state
+            else:
+                state_reader = _customer_identification_state
+
+            if value == "other_member_state":
+                conditions.append(
+                    lambda criteria, state_reader=state_reader, spanish_state=spanish_state: (
+                        (state := state_reader(criteria)) is not None and state != spanish_state
+                    ),
+                )
+            elif value == "present":
+                conditions.append(lambda criteria, state_reader=state_reader: state_reader(criteria) is not None)
+            elif value == "absent":
+                conditions.append(lambda criteria, state_reader=state_reader: state_reader(criteria) is None)
+            elif value == "spanish":
+                conditions.append(
+                    lambda criteria, state_reader=state_reader, spanish_state=spanish_state: (
+                        state_reader(criteria) == spanish_state
+                    )
+                )
+            else:
+                raise IvaValidationError(
+                    f"IVA classification predicate names unknown identification selector {value!r}"
+                )
+            continue
+        if field == "art_69_dos_service":
+            if value == "present":
+                conditions.append(lambda criteria: criteria.art_69_dos_service is not None)
+            elif value == "absent_or_excepted":
+                conditions.append(
+                    lambda criteria, third_country=third_country: (
+                        not (criteria.art_69_dos_service is not None and criteria.customer_residency is third_country)
+                    ),
+                )
+            elif value == "absent":
+                conditions.append(lambda criteria: criteria.art_69_dos_service is None)
+            else:
+                raise IvaValidationError(f"IVA classification predicate names unknown Art. 69.Dos selector {value!r}")
+            continue
+        raise IvaValidationError(f"IVA classification predicate names unknown field {field!r}")
+
+    return lambda criteria: all(condition(criteria) for condition in conditions)
+
+
+def resolve_iva_classification_inputs(
+    *,
+    effective_date: date,
+    operation: PinnedAuthorityOperation,
+) -> IvaClassificationInputs:
+    """Project the dated classification fact into typed evaluator inputs."""
+    resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
+    entries = _classification_mapping_entries(resolved)
+    vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
+    kind_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
+    category_catalogue: IvaCategoryCatalogue = resolve_iva_category_catalogue(
+        effective_date=effective_date,
+        authority=operation,
+    )
+    rate_catalogue: IvaRateKindCatalogue = resolve_iva_rate_kind_catalogue(
+        effective_date=effective_date,
+        authority=operation,
+    )
+
+    rate_categories: dict[IvaRateKind, IvaCategory] = {}
+    for key, raw_category in entries.items():
+        if not key.startswith("rate_categories."):
+            continue
+        raw_rate_kind = key.removeprefix("rate_categories.")
+        if not raw_rate_kind:
+            raise IvaValidationError("IVA classification mapping contains a blank rate-kind selector")
+        rate_kind = rate_catalogue.require(raw_rate_kind)
+        if rate_kind in rate_categories:
+            raise IvaValidationError(f"IVA classification mapping repeats rate kind {raw_rate_kind!r}")
+        rate_categories[rate_kind] = category_catalogue.require(raw_category)
+    if not rate_categories:
+        raise IvaValidationError("IVA classification mapping must declare rate categories")
+    rate_territories = frozenset(
+        vocabulary.require_territorial_scope(raw_value)
+        for raw_value in _required_classification_entry(entries, "rate_territories").split(",")
+        if raw_value.strip()
+    )
+    if not rate_territories:
+        raise IvaValidationError("IVA classification mapping rate_territories must not be empty")
+
+    rules: list[IvaClassificationRule] = []
+    for rule_id in _classification_csv(entries, "rule_order"):
+        prefix = f"rule.{rule_id}"
+        expression = _required_classification_entry(entries, f"{prefix}.predicate")
+        raw_category = _required_classification_entry(entries, f"{prefix}.category")
+        category = None if raw_category == "rate_categories[rate_tier]" else category_catalogue.require(raw_category)
+        raw_consumes = entries.get(f"{prefix}.consumes")
+        if raw_consumes is None:
+            consumes = frozenset(PartyFact)
+        else:
+            consume_tokens = tuple(token.strip() for token in raw_consumes.split(",") if token.strip())
+            if not consume_tokens or len(consume_tokens) != len(set(consume_tokens)):
+                raise IvaValidationError(f"IVA classification rule {rule_id!r} has invalid party-fact membership")
+            try:
+                consumes = frozenset(PartyFact(token) for token in consume_tokens)
+            except ValueError as exc:
+                raise IvaValidationError(f"IVA classification rule {rule_id!r} names an unknown party fact") from exc
+        rules.append(
+            IvaClassificationRule(
+                rule_id=rule_id,
+                predicate=_compile_classification_predicate(
+                    expression,
+                    vocabulary=vocabulary,
+                    kind_catalogue=kind_catalogue,
+                    effective_date=effective_date,
+                    operation=operation,
+                ),
+                category=category,
+                description=_required_classification_entry(entries, f"{prefix}.label"),
+                consumes=consumes,
+                requires_reverse_charge=category is not None and "reverse_charge" in category.value,
+            ),
+        )
+    return IvaClassificationInputs(
+        rules=tuple(rules),
+        rate_categories=MappingProxyType(rate_categories),
+        rate_territories=rate_territories,
+    )
 
 
 # -- Public resolver ------------------------------------------------------
@@ -771,19 +1027,13 @@ class IvaClassificationRule(NamedTuple):
 def _registry_iva_classification_catalogue(
     effective_date: date,
     *,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
     from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
     from ...domain.calculations.registry.schema_base import DateAxis
 
-    if authority is None:
-        from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
-
-        authority = governed_facts_in_scope()
-    if authority is None:
-        raise IvaValidationError("IVA classification catalogue requires an explicit operation or scoped fact source")
-    resolved = authority.resolve_governed_fact(
+    resolved = operation.resolve_governed_fact(
         MappingFactQuery(
             fact_id="iva-invoice-classification-catalogue",
             date_axis=DateAxis.FILING_PERIOD,
@@ -814,7 +1064,7 @@ def classify_iva(
     rules: Iterable[IvaClassificationRule] | None = None,
     rate_categories: Mapping[IvaRateKind, IvaCategory] | None = None,
     rate_territories: frozenset[IvaTerritorialScope] | None = None,
-    authority: GovernedFactSource | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaClassificationResult:
     """Evaluate registry-projected rows in their supplied order.
 
@@ -823,11 +1073,31 @@ def classify_iva(
     when a matched row derives a category from a rate tier, provide the
     registry-owned ``rate_categories`` and ``rate_territories`` mappings.
     """
-    _registry_iva_classification_catalogue(criteria.transaction_date, authority=authority)
+    _registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
+    vocabulary = resolve_iva_classification_catalogue(criteria.transaction_date, operation=operation)
+    category_catalogue = resolve_iva_category_catalogue(
+        effective_date=criteria.transaction_date,
+        authority=operation,
+    )
+    rate_catalogue = resolve_iva_rate_kind_catalogue(
+        effective_date=criteria.transaction_date,
+        authority=operation,
+    )
+    vocabulary.require_territorial_scope(criteria.issuer_residency)
+    vocabulary.require_territorial_scope(criteria.customer_residency)
+    vocabulary.require_customer_tax_status(criteria.customer_tax_status)
+    resolve_transaction_kind_catalogue(
+        criteria.transaction_date,
+        operation=operation,
+    ).require(criteria.kind)
+    if criteria.rate_tier is not None:
+        rate_catalogue.require(criteria.rate_tier)
     if rules is None:
         raise IvaValidationError("IVA classification rows must be supplied by registry authority")
     projected_rules = tuple(rules)
     for rule in projected_rules:
+        if rule.category is not None:
+            category_catalogue.require(rule.category)
         if not rule.predicate(criteria):
             continue
         category = rule.category
@@ -843,8 +1113,11 @@ def classify_iva(
             category,
             rate_categories=rate_categories,
             rate_territories=rate_territories,
-            authority=authority,
+            operation=operation,
         )
+        category = category_catalogue.require(category)
+        if category == category_catalogue.require("domestic_exempt") and criteria.rate_tier is not None:
+            rate_catalogue.require(criteria.rate_tier)
         return IvaClassificationResult(
             category=category,
             rate=rate,
@@ -852,9 +1125,31 @@ def classify_iva(
             matched_rule_id=rule.rule_id,
             notes=rule.description,
             consumes_party_facts=rule.consumes,
-            place_of_supply=place_of_supply_rule(rule.rule_id, on=criteria.transaction_date),
+            place_of_supply=place_of_supply_rule(
+                rule.rule_id,
+                on=criteria.transaction_date,
+                operation=operation,
+                projected_year=criteria.transaction_date.year,
+            ),
         )
-    raise IvaValidationError("no registry IVA classification row matched the supplied criteria")
+    fallback = next((rule for rule in projected_rules if rule.rule_id == "R99_fallthrough"), None)
+    if fallback is None:
+        raise IvaValidationError("no registry IVA classification row matched the supplied criteria")
+    fallback_category = category_catalogue.require(fallback.category or "unknown")
+    return IvaClassificationResult(
+        category=fallback_category,
+        rate=None,
+        requires_reverse_charge=fallback.requires_reverse_charge,
+        matched_rule_id=fallback.rule_id,
+        notes=fallback.description,
+        consumes_party_facts=fallback.consumes,
+        place_of_supply=place_of_supply_rule(
+            fallback.rule_id,
+            on=criteria.transaction_date,
+            operation=operation,
+            projected_year=criteria.transaction_date.year,
+        ),
+    )
 
 
 def _resolve_rate_for_category(
@@ -863,7 +1158,7 @@ def _resolve_rate_for_category(
     *,
     rate_categories: Mapping[IvaRateKind, IvaCategory] | None,
     rate_territories: frozenset[IvaTerritorialScope] | None,
-    authority: GovernedFactSource | None,
+    operation: PinnedAuthorityOperation,
 ) -> IvaRateRecord | None:
     """Resolve a rate through caller-supplied registry mappings."""
     if rate_categories is None or rate_territories is None:
@@ -873,9 +1168,9 @@ def _resolve_rate_for_category(
         return None
     if criteria.issuer_residency not in rate_territories:
         return None
-    member_state = spanish_eu_member_state(effective_date=criteria.transaction_date, authority=authority)
+    member_state = spanish_eu_member_state(effective_date=criteria.transaction_date, authority=operation)
     try:
-        return lookup_rate(member_state, tier, criteria.transaction_date, authority=authority)
+        return lookup_rate(member_state, tier, criteria.transaction_date, operation=operation)
     except IvaRateNotFoundError:
         _logger.debug(
             "classify_iva: lookup_rate(%s, %s, %s) failed; returning rate=None",
@@ -890,6 +1185,7 @@ __all__ = [
     "CustomerTaxStatus",
     "InvoiceKind",
     "IvaClassificationCatalogue",
+    "IvaClassificationInputs",
     "IvaClassificationResult",
     "IvaClassificationRule",
     "IvaInvoiceClassificationCriteria",
@@ -908,5 +1204,6 @@ __all__ = [
     "require_iva_territorial_scope",
     "require_transaction_kind",
     "resolve_iva_classification_catalogue",
+    "resolve_iva_classification_inputs",
     "resolve_transaction_kind_catalogue",
 ]

@@ -254,6 +254,7 @@ type ExportFieldDerivationCode = Literal[
     "text-an-v1",
     "render-profile-width-17-v1",
     "render-profile-singleton-v1",
+    "render-profile-signed-monetary-composite-v1",
 ]
 
 
