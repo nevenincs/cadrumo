@@ -181,9 +181,7 @@ def test_verify_legal_catalogue_rejects_known_bad_roles(
 
 def test_known_bad_citation_matching_is_diacritic_insensitive() -> None:
     reference = _legal_reference()
-    blocked = find_known_bad(
-        "ley", "77", "cuota integra autonomica", effective_date=reference.effective_from
-    )
+    blocked = find_known_bad("ley", "77", "cuota integra autonomica", effective_date=reference.effective_from)
 
     assert blocked is not None
     assert blocked.role_substring == "cuota íntegra autonómica"

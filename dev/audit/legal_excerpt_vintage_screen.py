@@ -121,7 +121,7 @@ is plausibly a mislabelled excerpt rather than a resolution defect.
 
 THE SECOND ORACLE, and the trap that makes it dangerous. A norm with no bundled
 whole-norm consolidation can still have its individual articles bundled as BOE
-open-data ARTICLE payloads (``*-redacciones.html``). Those are NOT
+open-data ARTICLE payloads (``*-redacciones.xml``). Those are NOT
 current-text documents: each concatenates EVERY historical redaction of the
 article, wrapped in ``<version fecha_vigencia=...>`` elements. Comparing an
 excerpt against the whole payload finds a clause that survives only in a
@@ -133,11 +133,9 @@ which reads the maximum ``fecha_vigencia`` and REFUSES a tie rather than
 picking (art. 91 of LIVA carries two redactions dated 19950120, one reading
 3 per cent and one 4 per cent). This module never re-derives that rule.
 
-Their committed sidecars are unusable as an oracle for the same reason -- the
-extractor has no heading delimiter for this XML shape, so it folds every
-redaction into one unit and leads it with the response envelope's ``200``/``ok``
-tokens. The raw payload is read instead, which excludes the envelope by
-construction rather than by stripping it afterwards.
+Generated sidecars are deliberately not committed for this source family. The
+raw payload is parsed through the XML extractor, which excludes the response
+envelope by construction and preserves each dated redaction as its own unit.
 
 BOE's block ID is POSITIONAL and its ``titulo`` is SEMANTIC, so a payload is
 matched to an entry on the title. The catalogue's own ``corpus_ref`` anchor is
@@ -762,8 +760,8 @@ def article_payloads(corpus: Path) -> dict[str, tuple[ArticlePayload, ...]]:
     """
     grouped: dict[str, list[ArticlePayload]] = {}
     unparsed: list[str] = []
-    for path in scan_directory(corpus, pattern="*-redacciones.html"):
-        match = _REDACTION_PAYLOAD.match(path.name.removesuffix(".html"))
+    for path in scan_directory(corpus, pattern="*-redacciones.xml"):
+        match = _REDACTION_PAYLOAD.match(path.name.removesuffix(".xml"))
         if match is None:
             # The glob and the pattern name the same class of file two ways, so a
             # name the glob admits and the pattern rejects is a disagreement, not a
@@ -798,7 +796,7 @@ def screen(root: Path) -> ScreenResult:
     stems = frozenset(path.name.removesuffix(".html") for path in scan_directory(corpus, pattern="*.html"))
     if not stems:
         raise SystemExit(f"read zero corpus files, so the result would be meaningless: {corpus}")
-    payloads = article_payloads(corpus)
+    payloads = article_payloads(corpus.parent / "xml")
 
     findings: list[Finding] = []
     cites_consolidated_norm = 0

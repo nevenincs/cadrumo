@@ -300,9 +300,12 @@ class TestValidateSemanticRoleConsistency:
             ),
         )
 
-        assert semantic_role_consistency_failures(
-            [_registry_modelo("322", "2022", [historical]), _registry_modelo("322", "2026", [widened])]
-        ) == ()
+        assert (
+            semantic_role_consistency_failures(
+                [_registry_modelo("322", "2022", [historical]), _registry_modelo("322", "2026", [widened])]
+            )
+            == ()
+        )
 
     @pytest.mark.parametrize("scope", ["same_revision", "cross_model"])
     def test_differing_enums_outside_revision_widening_are_rejected(self, scope: str) -> None:
@@ -348,9 +351,7 @@ class TestValidateSemanticRoleConsistency:
         historical = _casilla(
             cid="historical-width",
             semantic_role="enum_non_enum_guard",
-            constraints=CasillaConstraints(
-                max_length=1, enum=("1",), legal_refs=legal, source_refs=("aeat-manual",)
-            ),
+            constraints=CasillaConstraints(max_length=1, enum=("1",), legal_refs=legal, source_refs=("aeat-manual",)),
         )
         widened_and_reshaped = _casilla(
             cid="reshaped",

@@ -9,9 +9,9 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.concepto_ingreso import ConceptoIngreso
-from cadrumo.core.irnr import TipoRentaIrnr
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from cadrumo.domain.deadlines.festivos import holiday_calendar_from_authority
@@ -92,7 +92,11 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     )
     assert projected_convenio == registry_authority.catalogues.convenio
     convenio = registry_authority.resolve_governed_fact(_probe("irnr-convenio").query)
-    convenio_row = registry_authority.catalogues.convenio.resolve("DE", TipoRentaIrnr.DIVIDEND, 2025)
+    dividend = resolve_tipo_renta_irnr_catalogue(
+        effective_date=date(2025, 1, 1),
+        authority=registry_authority,
+    ).require("dividend")
+    convenio_row = registry_authority.catalogues.convenio.resolve("DE", dividend, 2025)
     assert convenio_row is not None
     assert convenio_row.kind.value == convenio.payload.override_code
     assert convenio_row.rate == Decimal(convenio.payload.value)

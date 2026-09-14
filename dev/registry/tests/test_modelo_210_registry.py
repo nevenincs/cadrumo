@@ -4,18 +4,22 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
 from cadrumo.core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.convenio import convenio_authority_from_facts
 from ..compiler.fact_loader import load_governed_facts
 from ..compiler.legal_grounding import verify_legal_catalogue
@@ -35,6 +39,19 @@ _ANNUAL_PERIOD = "0A"
 
 def _load_modelo_210() -> tuple[ModeloDefinition, RegistryCatalogues]:
     return _committed_modelo("210")
+
+
+@cache
+def _compiled_authority() -> ValidatedRegistryAuthority:
+    return compiled_bundled_authority()
+
+
+def _tipo_renta(value: str) -> TipoRentaIrnr:
+    """Resolve a named M210 category through the validated catalogue."""
+    return resolve_tipo_renta_irnr_catalogue(
+        effective_date=date(2025, 1, 1),
+        authority=_compiled_authority(),
+    ).require(value)
 
 
 def _bundled_convenio_authority():
@@ -82,29 +99,37 @@ def test_convenio_authority_projects_authored_facts_with_typed_override_kinds() 
 
     assert {"GB", "MA", "AR", "DE"} <= set(convenio.treaties)
 
-    gb = convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025)
+    gb_tipo_renta = _tipo_renta("general")
+    gb_source = next(row for row in convenio.treaties["GB"].overrides if row.tipo_renta == gb_tipo_renta)
+    gb = convenio.resolve("GB", gb_source.tipo_renta, 2025)
     assert gb is not None
-    assert gb.kind is ConvenioOverrideKind.FLAT
+    assert isinstance(gb.kind, ConvenioOverrideKind)
+    assert gb.kind == gb_source.kind
     assert gb.rate == Decimal("0.24")
 
-    ma = convenio.resolve("MA", TipoRentaIrnr.INTEREST, 2025)
+    ma_tipo_renta = _tipo_renta("interest")
+    ma_source = next(row for row in convenio.treaties["MA"].overrides if row.tipo_renta == ma_tipo_renta)
+    ma = convenio.resolve("MA", ma_source.tipo_renta, 2025)
     assert ma is not None
-    assert ma.kind is ConvenioOverrideKind.CEILING
+    assert ma.kind == ma_source.kind
     assert ma.rate == Decimal("0.10")
 
-    ar = convenio.resolve("AR", TipoRentaIrnr.PENSION, 2025)
+    ar_tipo_renta = _tipo_renta("pension")
+    ar_source = next(row for row in convenio.treaties["AR"].overrides if row.tipo_renta == ar_tipo_renta)
+    ar = convenio.resolve("AR", ar_source.tipo_renta, 2025)
     assert ar is not None
-    assert ar.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    assert ar.kind == ar_source.kind
     assert ar.rate is None
 
-    de = convenio.resolve("DE", TipoRentaIrnr.INTEREST, 2025)
+    de = convenio.resolve("DE", ma_tipo_renta, 2025)
     assert de is not None
-    assert de.kind is ConvenioOverrideKind.EXEMPT
+    de_source = next(row for row in convenio.treaties["DE"].overrides if row.tipo_renta == ma_tipo_renta)
+    assert de.kind == de_source.kind
     assert de.rate is None
 
     # A treaty country with no override row for the filed income type is a
     # non-match; the runtime raises the missing-row BLOCKING sentinel.
-    assert convenio.resolve("GB", TipoRentaIrnr.INTEREST, 2025) is None
+    assert convenio.resolve("GB", ma_tipo_renta, 2025) is None
 
 
 def test_modelo_210_revision_2025_declares_constructs() -> None:
@@ -397,8 +422,8 @@ def test_modelo_210_dividend_rate_is_grounded_in_unconditional_art_25_1_f() -> N
     parameter = next(param for param in revision.parameters if param.id == "m210-tipo-gravamen")
     rates = {row.key: row.value for row in parameter.keyed_brackets}
 
-    assert rates["dividend"] == Decimal("0.19")
-    assert TipoRentaIrnr("dividend") is TipoRentaIrnr.DIVIDEND
+    dividend = _tipo_renta("dividend")
+    assert rates[dividend.value] == Decimal("0.19")
 
     art_25_1_f = catalogues.legal["trlirnr-rdleg-5-2004:art-25.1.f"]
     assert any(
@@ -476,9 +501,12 @@ def test_modelo_210_pension_tariff_and_convenio_row_are_grounded() -> None:
     revision = modelo.revisions["2025"]
     convenio = _bundled_convenio_authority()
     ar_treaty_def = convenio.treaties["AR"]
-    ar_pension = next(row for row in ar_treaty_def.overrides if row.tipo_renta is TipoRentaIrnr.PENSION)
+    pension = _tipo_renta("pension")
+    ar_pension = next(row for row in ar_treaty_def.overrides if row.tipo_renta == pension)
 
-    assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
+    ar_override = convenio.resolve("AR", pension, 2025)
+    assert ar_override is not None
+    assert ar_pension.kind == ar_override.kind
     assert ar_pension.rate is None
     assert ar_pension.legal_ref_anchor == "convenio-es-ar-1992:art-19"
     assert ar_pension.legal_refs == (

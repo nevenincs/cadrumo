@@ -55,21 +55,27 @@ def _require(
 
 
 def test_matching_boe_clause_in_cited_form_spec_passes() -> None:
-    assert _require(
-        _validator(),
-        ("boe-modelo-136-base-order",),
-        ("orden-hap-70-2013:art-7",),
-    ) == []
+    assert (
+        _require(
+            _validator(),
+            ("boe-modelo-136-base-order",),
+            ("orden-hap-70-2013:art-7",),
+        )
+        == []
+    )
 
 
 def test_clause_can_explicitly_govern_the_prior_information_year() -> None:
-    assert _require(
-        _validator(),
-        ("boe-modelo-345-base-order",),
-        ("orden-hfp-823-2022:art-4",),
-        valid_from=date(2022, 1, 1),
-        valid_to=date(2022, 12, 31),
-    ) == []
+    assert (
+        _require(
+            _validator(),
+            ("boe-modelo-345-base-order",),
+            ("orden-hfp-823-2022:art-4",),
+            valid_from=date(2022, 1, 1),
+            valid_to=date(2022, 12, 31),
+        )
+        == []
+    )
 
 
 @pytest.mark.parametrize("legal_refs", [(), ("orden-eha-3481-2008:art-5",)])
@@ -93,14 +99,10 @@ def test_out_of_window_boe_source_or_clause_fails(expired: str) -> None:
     source = catalogues.sources["boe-modelo-136-base-order"]
     legal = catalogues.legal["orden-hap-70-2013:art-7"]
     source_updates = (
-        {source.id: source.model_copy(update={"applies_to": date(2024, 12, 31)})}
-        if expired == "source"
-        else None
+        {source.id: source.model_copy(update={"applies_to": date(2024, 12, 31)})} if expired == "source" else None
     )
     legal_updates = (
-        {legal.id: legal.model_copy(update={"effective_to": date(2024, 12, 31)})}
-        if expired == "legal"
-        else None
+        {legal.id: legal.model_copy(update={"effective_to": date(2024, 12, 31)})} if expired == "legal" else None
     )
 
     assert _require(
@@ -111,13 +113,16 @@ def test_out_of_window_boe_source_or_clause_fails(expired: str) -> None:
 
 
 def test_existing_official_guidance_route_still_passes() -> None:
-    assert _require(
-        _validator(),
-        ("aeat-modelo-136-procedure",),
-        (),
-        valid_from=date(2026, 1, 1),
-        valid_to=date(2026, 12, 31),
-    ) == []
+    assert (
+        _require(
+            _validator(),
+            ("aeat-modelo-136-procedure",),
+            (),
+            valid_from=date(2026, 1, 1),
+            valid_to=date(2026, 12, 31),
+        )
+        == []
+    )
 
 
 def test_deadline_section_accepts_matching_boe_deadline_clause() -> None:
@@ -127,13 +132,16 @@ def test_deadline_section_accepts_matching_boe_deadline_clause() -> None:
     catalogues = authority.catalogues
     evidence = _validator()
 
-    assert validate_deadline_window_section(
-        prefix="modelo 136 revision 2022-2025",
-        revision=revision,
-        legal_refs=catalogues.legal,
-        source_refs=catalogues.sources,
-        evidence=evidence,
-    ) == []
+    assert (
+        validate_deadline_window_section(
+            prefix="modelo 136 revision 2022-2025",
+            revision=revision,
+            legal_refs=catalogues.legal,
+            source_refs=catalogues.sources,
+            evidence=evidence,
+        )
+        == []
+    )
 
 
 def test_deadline_section_rejects_matching_boe_clause_without_deadline_text() -> None:

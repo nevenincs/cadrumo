@@ -258,7 +258,7 @@ def validate_m210_tipo_renta_code_projection_parity(
     *,
     projected_codes: Collection[str] | None = None,
 ) -> list[str]:
-    """Enforce bidirectional parity between the registry code set and the core projection.
+    """Enforce parity between the revision code set and governed-fact projection.
 
     The official Modelo 210 tipo-de-renta code axis is declared in two places
     that MUST agree: the registry parameter ``m210-tipo-renta-code-<year>``
@@ -266,10 +266,11 @@ def validate_m210_tipo_renta_code_projection_parity(
     and the governed-fact catalogue projected by
     :func:`~cadrumo.domain.calculations.registry.irnr_tipo_renta.m210_tipo_renta_code_projection`
     (each code's :class:`~cadrumo.core.irnr.TipoRentaIrnr` rate concept). This gate fails the
-    registry build in BOTH directions: a code declared in the registry with no
-    core projection, and a code the core projects that the registry does not
-    declare. It keeps the two axes from drifting so no declared code resolves to
-    a fabricated rate and no projected code silently lacks a grounded home.
+    registry build in BOTH directions: a code declared in the revision with no
+    governed-fact projection, and a projected code the revision does not
+    declare. It keeps the two registry-owned axes from drifting so no declared
+    code resolves to a fabricated rate and no projected code silently lacks a
+    grounded home.
 
     Args:
         modelo: The :class:`ModeloDefinition` to check. Only revisions carrying
@@ -290,15 +291,15 @@ def validate_m210_tipo_renta_code_projection_parity(
             prefix = f"modelo {modelo.id} revision {revision.id} parameter {parameter.id!r}"
             for code in sorted(declared - projected):
                 failures.append(
-                    f"{prefix}: declared tipo-de-renta code {code!r} has no core "
-                    "TipoRentaIrnr projection (add it to OFFICIAL_M210_TIPO_RENTA_CODES "
-                    "or remove the declaration)",
+                    f"{prefix}: declared tipo-de-renta code {code!r} has no governed-fact "
+                    "TipoRentaIrnr projection (add it to the selected tipo-renta catalogue "
+                    "or remove the revision declaration)",
                 )
             for code in sorted(projected - declared):
                 failures.append(
-                    f"{prefix}: core-projected tipo-de-renta code {code!r} is not "
-                    "declared in the registry code set (declare it here or remove it "
-                    "from OFFICIAL_M210_TIPO_RENTA_CODES)",
+                    f"{prefix}: governed-fact-projected tipo-de-renta code {code!r} is not "
+                    "declared in the revision code set (declare it in the revision or "
+                    "remove it from the selected tipo-renta catalogue)",
                 )
     return failures
 
