@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_194/files/01-194-diseno-de-registro-actualizado-en-2024.pdf",
   "source_sha256": "4a738a126ddb465aac236b687aa25441b7cb71ec4b0ef6ea940096a3747b2651",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_194_2024.pdf",
   "units": [
     {

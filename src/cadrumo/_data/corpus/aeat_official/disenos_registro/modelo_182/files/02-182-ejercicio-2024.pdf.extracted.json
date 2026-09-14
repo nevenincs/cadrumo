@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/02-182-ejercicio-2024.pdf",
   "source_sha256": "6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2024.pdf",
   "units": [
     {

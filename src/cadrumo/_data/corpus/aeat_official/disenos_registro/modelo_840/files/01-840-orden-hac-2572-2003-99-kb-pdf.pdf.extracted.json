@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_840/files/01-840-orden-hac-2572-2003-99-kb-pdf.pdf",
   "source_sha256": "d0348a78787db7eb767dd8093ea84773c248c0b92bcefb512972573aff34391a",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr840.pdf",
   "units": [
     {

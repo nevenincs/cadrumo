@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_189/files/01-189-diseno-de-registro-actualizado-en-2023.pdf",
   "source_sha256": "c493f8d9d927f28211336324cbe17ab7bae7b256d3c563273e01a76834757d6a",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_189_2023.pdf",
   "units": [
     {

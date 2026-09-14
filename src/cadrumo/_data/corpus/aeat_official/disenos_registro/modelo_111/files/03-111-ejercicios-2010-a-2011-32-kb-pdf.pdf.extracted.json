@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_111/files/03-111-ejercicios-2010-a-2011-32-kb-pdf.pdf",
   "source_sha256": "2290c55c7a745c8447143520474a520be87dc7295535a4386e42991fbf61c787",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr111v14.pdf",
   "units": [
     {

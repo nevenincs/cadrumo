@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf",
   "source_sha256": "c048be1b2fba82c5d8f99abe1eec9a8865a617aa99f6d3488c88540c59e6a0a0",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2023/ManualRenta2023_es_es.pdf",
   "units": [
     {

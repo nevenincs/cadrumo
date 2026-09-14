@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf",
   "source_sha256": "36859c125b4aef4c4428471a573d3b717029ea92783b347b934a9fb05bbc4fa2",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source attribution unavailable: no matching acquisition manifest entry.",
   "units": [
     {

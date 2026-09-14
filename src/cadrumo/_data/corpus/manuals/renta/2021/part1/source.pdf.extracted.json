@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf",
   "source_sha256": "76949adf843e46b4c552923cd268249c954d8761c983bac449479543533164e0",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2021/ManualRenta2021_es_es.pdf",
   "units": [
     {

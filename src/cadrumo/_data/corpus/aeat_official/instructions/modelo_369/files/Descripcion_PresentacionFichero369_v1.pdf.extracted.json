@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/instructions/modelo_369/files/Descripcion_PresentacionFichero369_v1.pdf",
   "source_sha256": "521fb8e9918b77555be781434006d560bbec28d30318ff158096ecca0e9ed56d",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source attribution unavailable: no matching acquisition manifest entry.",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/14-100-ejercicio-2009-205-kb-pdf.pdf",
   "source_sha256": "9227f5bfb0f0cd1fb239ae5f3544c13c3c61d2236d4b869e0bc0fab326c80450",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/dr100_2009.pdf",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf",
   "source_sha256": "b8ddf161891630ab5b130128257f9b1307fbfe7f8519b775d3022b41bd1316be",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2022/ManualRenta2022_es_es.pdf",
   "units": [
     {

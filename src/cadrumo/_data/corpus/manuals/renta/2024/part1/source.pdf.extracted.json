@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf",
   "source_sha256": "15ff0d1fa69b5a2b7094a6c498403b1c55aa89a0e6eed4d87a5a2632eab34923",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.2",
   "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2024/ManualRenta2024Tomo1_es_es.pdf",
   "units": [
     {
