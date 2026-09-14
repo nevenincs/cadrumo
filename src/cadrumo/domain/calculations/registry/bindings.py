@@ -42,7 +42,7 @@ from ....core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ....core.type_guards import is_object_mapping
 from .bienes_inversion_regularizacion_bindings import BienesInversionRegularizacionProvider
 from .binding_provider_registration import registration_for, validator_for
-from .binding_selector_utils import selector_as_dict
+from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids as _bound_casilla_binding_ids
 from .bindings_previous_filing import PreviousFilingProvider
 from .errors import RegistryValidationError
@@ -380,7 +380,7 @@ def _iva_compensation_annual_partition_selector(
     binding: BindingDefinition,
 ) -> IvaCompensationAnnualPartitionProvider:
     try:
-        return IvaCompensationAnnualPartitionProvider.model_validate(selector_as_dict(binding))
+        return provider_member(binding, IvaCompensationAnnualPartitionProvider)
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed iva_compensation_annual_partition selector: {exc}",

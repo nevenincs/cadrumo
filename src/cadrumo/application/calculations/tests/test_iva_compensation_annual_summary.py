@@ -6,10 +6,12 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
     derive_iva_compensation_year_end_carry_partition,
+    iva_compensation_period_sort_key,
 )
 from ..iva_compensation_history import (
     cross_check_iva_compensation_annual_summary,
@@ -78,12 +80,13 @@ def test_modelo_390_annual_summary_cross_check_flags_303_390_divergence() -> Non
 
 
 _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
-    tuple[int, IvaCompensationExpiryReviewState, tuple[str, ...]],
+    tuple[int, int, IvaCompensationExpiryReviewState, tuple[str, ...]],
     ...,
 ] = (
-    (2024, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
+    (2024, 2025, IvaCompensationExpiryReviewState.ACTIVE, ("active", "active")),
     (
-        2020,
+        2022,
+        2027,
         IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED,
         ("expired_review_required", "active"),
     ),
@@ -91,12 +94,13 @@ _PRIOR_YEAR_390_CROSS_CHECK_CASES: tuple[
 
 
 @pytest.mark.parametrize(
-    ("prior_year", "prior_year_expiry_state", "expiry_review_states"),
+    ("prior_year", "as_of_year", "prior_year_expiry_state", "expiry_review_states"),
     _PRIOR_YEAR_390_CROSS_CHECK_CASES,
     ids=("active-prior-year", "expired-prior-year"),
 )
 def test_modelo_390_cross_check_keeps_prior_year_lots_out_of_annual_fields(
     prior_year: int,
+    as_of_year: int,
     prior_year_expiry_state: IvaCompensationExpiryReviewState,
     expiry_review_states: tuple[str, ...],
 ) -> None:
@@ -104,7 +108,7 @@ def test_modelo_390_cross_check_keeps_prior_year_lots_out_of_annual_fields(
         _state(filing_year=prior_year, period="4T", generated=Decimal("25.00")),
         _state(filing_year=2025, period="4T", generated=Decimal("100.00")),
     )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2025)
+    report = build_iva_compensation_carry_forward_report(states, as_of_year=as_of_year)
     summary = iva_compensation_annual_summary_from_filed_observation(
         _filed_390_observation(
             last_period_compensation=Decimal("100.00"),
@@ -182,16 +186,11 @@ def test_year_end_carry_partition_uncarried_credit_lands_in_box_662() -> None:
     assert partition.last_period_amount + partition.generated_not_in_last_amount == total_pending
 
 
-def test_year_end_carry_partition_treats_annual_0a_as_after_periodic_iva_rows() -> None:
-    """The annual IVA state is the last filing even though its span starts in January."""
-    states = (
-        _state(filing_year=2026, period="0A", available=Decimal("70.00")),
-        _state(filing_year=2026, period="4T", generated=Decimal("100.00"), available=Decimal("100.00")),
-    )
-    report = build_iva_compensation_carry_forward_report(states, as_of_year=2026)
+def test_iva_period_sort_key_places_annual_0a_after_periodic_rows() -> None:
+    """The generic annual period sorts last even though its span starts in January."""
+    annual = Period.from_year_and_code(2026, "0A")
+    fourth_quarter = Period.from_year_and_code(2026, "4T")
+    december = Period.from_year_and_code(2026, "12")
 
-    partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=2026)
-
-    assert partition.last_period_amount == Decimal("70.00")
-    assert partition.generated_not_in_last_amount == Decimal("30.00")
-    assert partition.total_year_remaining_amount == Decimal("100.00")
+    assert iva_compensation_period_sort_key(annual) > iva_compensation_period_sort_key(fourth_quarter)
+    assert iva_compensation_period_sort_key(annual) > iva_compensation_period_sort_key(december)

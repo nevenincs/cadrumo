@@ -602,9 +602,7 @@ class _Modelo720Fixture:
     for Modelo 720, available at:
       https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
         DR_Resto_Mod/archivos/modelo_720.pdf
-    Downloaded 2026-05-27 and saved at:
-      src/cadrumo/_data/corpus/aeat_official/instructions/modelo_720/files/
-        modelo-720-aeat-dr.pdf
+    Corpus source aeat-dr-720 is pinned in registry/aeat/legal/foreign-assets.toml.
 
     The record-type-1 field at positions 5-8 is named "EJERCICIO" in the record
     design.  The AEAT printed-form label for the ejercicio field uses the longer

@@ -26,7 +26,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from .authority import ValidatedRegistryAuthority
-from .binding_selector_utils import selector_as_dict
+from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
 from .profile_bindings import ProfileProvider
 from .schema import BindingDefinition
@@ -150,7 +150,7 @@ def binding_profile_keys(binding: BindingDefinition) -> tuple[str, ...]:
         # string-literal keys, so a field the model no longer declares fails
         # loud instead of silently under-reporting this key's grounding.
         try:
-            selector = ProfileProvider.model_validate(selector_as_dict(binding))
+            selector = provider_member(binding, ProfileProvider)
         except ValidationError as exc:
             raise RegistryValidationError(
                 f"binding {binding.id!r} has malformed profile selector: {exc}",

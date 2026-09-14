@@ -432,7 +432,7 @@ def boolean_binding_encoded_values(
     # renamed/misspelled ``true_value`` / ``false_value`` / ``data_type`` key
     # must raise, not silently return "not a boolean binding".
     try:
-        selector = ManualInputProvider.model_validate(selector_as_dict(binding))
+        selector = provider_member(binding, ManualInputProvider)
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",
@@ -499,7 +499,7 @@ def manual_input_record_field_selector(
     # renamed/misspelled ``record`` / ``field`` key must raise, not silently
     # read as "not a record-field binding".
     try:
-        selector = ManualInputProvider.model_validate(selector_as_dict(binding))
+        selector = provider_member(binding, ManualInputProvider)
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed manual_input selector: {exc}",

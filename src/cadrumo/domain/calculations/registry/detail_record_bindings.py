@@ -20,10 +20,10 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     invariant_diagnostics,
     optional_uppercase_alpha_code,
+    provider_member,
     selector_against_model,
     uppercase_alpha_code,
 )
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema_exports import ExportFieldDataType
@@ -182,7 +182,7 @@ class RelatedPartyOperationProvider(BaseModel):
 
 def _validated_related_party_selector(binding: BindingDefinition) -> RelatedPartyOperationProvider:
     try:
-        selector = RelatedPartyOperationProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, RelatedPartyOperationProvider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "related-party")
@@ -267,7 +267,7 @@ class ForeignAssetProvider(BaseModel):
 
 def _validated_foreign_asset_selector(binding: BindingDefinition) -> ForeignAssetProvider:
     try:
-        selector = ForeignAssetProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, ForeignAssetProvider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "foreign-asset")
@@ -508,7 +508,7 @@ class AtribucionMemberProvider(BaseModel):
 
 def _validated_atribucion_selector(binding: BindingDefinition) -> AtribucionMemberProvider:
     try:
-        selector = AtribucionMemberProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, AtribucionMemberProvider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "atribucion")
@@ -657,7 +657,7 @@ RelatedPartyOperationProvider = RelatedPartyOperationProvider
 
 def _validated_refund_selector(binding: BindingDefinition) -> RefundOperationProvider:
     try:
-        selector = RefundOperationProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, RefundOperationProvider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
     _validate_detail_record_row_field(binding, selector.fact, selector.row_field, "refund")

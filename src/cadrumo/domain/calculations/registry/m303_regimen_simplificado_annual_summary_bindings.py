@@ -11,7 +11,7 @@ from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode
-from .binding_selector_utils import selector_as_dict
+from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids
 from .binding_temporal import BindingTemporalSelector, FiledCurrentPeriod
 from .errors import RegistryValidationError
@@ -112,7 +112,7 @@ def m303_regimen_simplificado_annual_summary_selector(
 ) -> M303RegimenSimplificadoAnnualSummaryProvider:
     """Parse one declared simplified-regime annual-summary selector."""
     try:
-        return M303RegimenSimplificadoAnnualSummaryProvider.model_validate(selector_as_dict(binding))
+        return provider_member(binding, M303RegimenSimplificadoAnnualSummaryProvider)
     except ValueError as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed m303_regimen_simplificado_annual_summary selector: {exc}",

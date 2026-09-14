@@ -26,8 +26,7 @@ from pydantic import BaseModel, BeforeValidator
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
-from .binding_selector_utils import selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .schema_base import coerce_enum_member, coerce_enum_tuple
@@ -131,7 +130,7 @@ def resolve_retenciones_aggregation_binding_values(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.RETENCIONES_AGGREGATION:
             continue
-        selector = RetencionesAggregationProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, RetencionesAggregationProvider)
         resolved[binding.id] = _retenciones_selector_value(selector, aggregation)
     return resolved
 

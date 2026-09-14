@@ -5,14 +5,14 @@ back into deeply immutable typed models, which it may share between callers
 while the file is unchanged. The artifact is generated output, not
 a signed document: it carries no signature, key, or certificate. Its digest
 detects a truncated, corrupted, or hand-edited file, and its recorded
-``identity_digest`` names the registry and source-evidence inputs it was
+``identity_digest`` names the compiler build, registry, and source-evidence inputs it was
 compiled from, so development can tell when it is out of date. This module
 neither knows a registry root nor compiles, repairs, or validates authoring
 inputs on a failed read.
 
 The current format is a canonical JSON frame holding exactly ``format``,
 ``payload``, and ``payload_sha256``, the SHA-256 of the canonical JSON payload.
-The explicit format value is ``cadrumo-authority-artifact-v4``. The payload
+The explicit format value is ``cadrumo-authority-artifact-v5``. The payload
 projects every required schema field and every non-default value. A field is
 omitted only when its schema declares a default and its typed value equals that
 default; the strict schema restores it while decoding. A model that declares
@@ -22,7 +22,7 @@ Governed-fact atoms are typed ``str | int | Decimal | bool | date``, which JSON
 cannot tell apart, so every non-string atom in an atom position is written as a
 single-key tagged object -- ``{"$decimal": "0.40"}``, ``{"$date":
 "2025-01-01"}``, ``{"$int": 5}``, ``{"$bool": true}`` -- and a string atom stays
-a bare string. The reader decodes under the same strict schema and refuses an
+a bare string. The reader decodes under the same typed schema and refuses an
 unknown tag, a malformed or non-canonical payload, an untagged non-string atom,
 and any frame member beyond the three above.
 """
@@ -33,8 +33,8 @@ import json
 import os
 import re
 from base64 import b64decode, b64encode
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
@@ -44,8 +44,16 @@ from typing import Final, cast, get_args
 
 from pydantic import BaseModel, ValidationError
 
-from ....core.atomic_write import atomic_write_bytes
-from ....core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
+from ....core.atomic_write import hardened_staged_publication
+from ....core.file_change_time import file_change_time_ns
+from ....core.frozen_mapping import FrozenMapping
+from ....core.hashing import (
+    canonical_json_bytes,
+    content_hash_hex,
+    reject_duplicate_json_members,
+    reject_json_constant,
+    sha256_hex,
+)
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from .errors import RegistryValidationError
 from .facts.schema import (
@@ -67,19 +75,17 @@ __all__ = [
     "AuthorityArtifactFormatError",
     "AuthorityArtifactIntegrityError",
     "AuthorityArtifactUnavailableError",
+    "AuthorityBuildIdentity",
     "AuthorityEvidenceProjection",
-    "FactsAuthorityMergeBase",
     "PublishedLegalEvidence",
     "PublishedSourceEvidence",
     "read_authority_artifact",
-    "read_facts_authority_merge_base",
     "read_shared_authority_artifact",
     "write_authority_artifact",
-    "write_facts_authority_artifact",
 ]
 
-_ARTIFACT_FORMAT: Final = "cadrumo-authority-artifact-v4"
-_SUPERSEDED_ARTIFACT_FORMAT = re.compile(r"cadrumo-authority-artifact-v[1-3]")
+_ARTIFACT_FORMAT: Final = "cadrumo-authority-artifact-v5"
+_SUPERSEDED_ARTIFACT_FORMAT = re.compile(r"cadrumo-authority-artifact-v[1-4]")
 _FRAME_MEMBERS: Final = frozenset({"format", "payload", "payload_sha256"})
 #: The validators that mark a governed-fact atom position, read from the schema's own field types.
 _FACT_ATOM_VALIDATORS: Final = frozenset(
@@ -161,6 +167,8 @@ class AuthorityEvidenceProjection:
 
     legal: tuple[PublishedLegalEvidence, ...] = ()
     sources: tuple[PublishedSourceEvidence, ...] = ()
+    _legal_by_id: Mapping[str, PublishedLegalEvidence] = field(init=False, repr=False, compare=False)
+    _sources_by_id: Mapping[str, PublishedSourceEvidence] = field(init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         """Reject non-deterministic or ambiguous evidence collections."""
@@ -178,12 +186,16 @@ class AuthorityEvidenceProjection:
         source_ids = tuple(item.source_reference_id for item in self.sources)
         if len(source_ids) != len(set(source_ids)):
             raise ValueError("authority evidence projection source reference ids must be unique")
+        object.__setattr__(self, "_legal_by_id", FrozenMapping({item.legal_reference_id: item for item in self.legal}))
+        object.__setattr__(
+            self, "_sources_by_id", FrozenMapping({item.source_reference_id: item for item in self.sources})
+        )
 
     def legal_text(self, legal_reference_id: str) -> str:
         """Return publisher-validated text for one legal citation or refuse."""
-        for item in self.legal:
-            if item.legal_reference_id == legal_reference_id:
-                return item.anchored_text
+        item = self._legal_by_id.get(legal_reference_id)
+        if item is not None:
+            return item.anchored_text
         raise AuthorityArtifactFormatError(
             f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
         )
@@ -196,20 +208,78 @@ class AuthorityEvidenceProjection:
 
     def legal_provenance(self, legal_reference_id: str) -> NormativeCorpusProvenance:
         """Return the publisher-derived provenance for one legal reference."""
-        for item in self.legal:
-            if item.legal_reference_id == legal_reference_id:
-                return item.provenance
+        item = self._legal_by_id.get(legal_reference_id)
+        if item is not None:
+            return item.provenance
         raise AuthorityArtifactFormatError(
             f"published authority artifact has no evidence projection for legal reference {legal_reference_id!r}"
         )
 
     def source_bytes(self, source_reference_id: str) -> bytes:
         """Return digest-checked runtime source bytes for one source reference."""
-        for item in self.sources:
-            if item.source_reference_id == source_reference_id:
-                return item.payload
+        item = self._sources_by_id.get(source_reference_id)
+        if item is not None:
+            return item.payload
         raise AuthorityArtifactFormatError(
             f"published authority artifact has no evidence projection for source reference {source_reference_id!r}"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class AuthorityBuildIdentity:
+    """Distinct source, compiler, and whole-generation dependency receipts."""
+
+    source_identity_digest: str
+    compiler_identity_digest: str
+    component_dependency_digest: str
+
+    def __post_init__(self) -> None:
+        """Refuse malformed receipts or a dependency receipt for other inputs."""
+        if any(
+            _IDENTITY_DIGEST.fullmatch(value) is None
+            for value in (
+                self.source_identity_digest,
+                self.compiler_identity_digest,
+                self.component_dependency_digest,
+            )
+        ):
+            raise ValueError("authority build identities must be lowercase SHA-256 digests")
+        if self.component_dependency_digest != self._component_digest():
+            raise ValueError("authority component dependency identity does not match its complete inputs")
+
+    def _component_digest(self) -> str:
+        return content_hash_hex(
+            {
+                "schema": "authority-component-dependencies/v1",
+                "component": "complete-authority",
+                "source_identity_digest": self.source_identity_digest,
+                "compiler_identity_digest": self.compiler_identity_digest,
+            }
+        )
+
+    @classmethod
+    def from_inputs(cls, source_identity_digest: str, compiler_identity_digest: str) -> AuthorityBuildIdentity:
+        """Create the dependency receipt for a full canonical compilation."""
+        component = content_hash_hex(
+            {
+                "schema": "authority-component-dependencies/v1",
+                "component": "complete-authority",
+                "source_identity_digest": source_identity_digest,
+                "compiler_identity_digest": compiler_identity_digest,
+            }
+        )
+        return cls(source_identity_digest, compiler_identity_digest, component)
+
+    @property
+    def identity_digest(self) -> str:
+        """Combine the distinct receipts into the runtime generation identity."""
+        return content_hash_hex(
+            {
+                "schema": "authority-generation/v1",
+                "source_identity_digest": self.source_identity_digest,
+                "compiler_identity_digest": self.compiler_identity_digest,
+                "component_dependency_digest": self.component_dependency_digest,
+            }
         )
 
 
@@ -227,6 +297,7 @@ class AuthorityArtifact:
     modelos: tuple[ModeloDefinition, ...]
     catalogues: RegistryCatalogues
     identity_digest: str
+    build_identity: AuthorityBuildIdentity
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
 
     def __post_init__(self) -> None:
@@ -239,80 +310,52 @@ class AuthorityArtifact:
             raise TypeError("authority artifact catalogues must be a RegistryCatalogues instance")
         if _IDENTITY_DIGEST.fullmatch(self.identity_digest) is None:
             raise ValueError("authority artifact identity_digest must be a lowercase SHA-256 hexadecimal digest")
+        if not isinstance(self.build_identity, AuthorityBuildIdentity):
+            raise TypeError("authority artifact requires typed build identity")
+        if self.identity_digest != self.build_identity.identity_digest:
+            raise ValueError("authority generation identity does not match its build receipts")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
+        modelo_ids = tuple(modelo.id for modelo in self.modelos)
+        if len(modelo_ids) != len(set(modelo_ids)):
+            raise ValueError("authority artifact modelo identities must be unique")
+
+    def require_evidence_closure(self) -> None:
+        """Require every runtime evidence projection to agree with its catalogue."""
+        legal_ids = {item.legal_reference_id for item in self.evidence.legal}
+        if legal_ids != set(self.catalogues.legal):
+            raise ValueError("authority artifact legal evidence must cover exactly its legal catalogue")
+        required_sources = {
+            str(key) for key, source in self.catalogues.sources.items() if source.kind in {"dictionary", "xsd"}
+        }
+        source_ids = {item.source_reference_id for item in self.evidence.sources}
+        if source_ids != required_sources:
+            raise ValueError("authority artifact source evidence must cover exactly its runtime source catalogue")
+        for item in self.evidence.sources:
+            source = self.catalogues.sources[item.source_reference_id]
+            if item.payload_sha256 != source.sha256 or len(item.payload) != source.bytes:
+                raise ValueError(f"authority artifact source evidence disagrees with catalogue {source.id!r}")
 
 
-@dataclass(frozen=True, slots=True)
-class FactsAuthorityMergeBase:
-    """Authenticated authority document used by the facts-only publisher.
-
-    The merge base has passed the frame and payload digest checks, and its
-    governed-facts catalogue has been rebuilt through the typed facts schema.
-    The remaining payload is retained as authenticated JSON so a facts-only
-    publication can replace exactly ``catalogues.facts`` without constructing
-    or validating the unrelated Modelo graph.  The normal runtime reader still
-    performs the complete typed reconstruction.
-    """
-
-    payload: Mapping[str, object]
-    facts: GovernedFactCatalogue
-    identity_digest: str
-
-    def __post_init__(self) -> None:
-        """Reject an incomplete or untyped merge-base proof."""
-        if not isinstance(self.payload, Mapping):
-            raise TypeError("facts authority merge base payload must be a mapping")
-        if not isinstance(self.facts, GovernedFactCatalogue):
-            raise TypeError("facts authority merge base facts must be a GovernedFactCatalogue")
-        if _IDENTITY_DIGEST.fullmatch(self.identity_digest) is None:
-            raise ValueError("facts authority merge base identity_digest must be a lowercase SHA-256 digest")
-
-
-def write_authority_artifact(path: Path, artifact: AuthorityArtifact) -> None:
+def write_authority_artifact(
+    path: Path,
+    artifact: AuthorityArtifact,
+    *,
+    before_replace: Callable[[], None] | None = None,
+) -> None:
     """Atomically publish ``artifact`` as a digest-checked canonical JSON frame."""
     if not isinstance(artifact, AuthorityArtifact):
         raise TypeError("authority artifact writer requires an AuthorityArtifact")
-    atomic_write_bytes(path, _encode_artifact(artifact))
-
-
-def write_facts_authority_artifact(
-    path: Path,
-    merge_base: FactsAuthorityMergeBase,
-    facts: GovernedFactCatalogue,
-    *,
-    identity_digest: str,
-) -> None:
-    """Atomically replace only the facts section of an authenticated artifact.
-
-    The merge base is not treated as an unchecked fallback document: its frame,
-    payload digest, identity, and typed facts catalogue were verified by
-    :func:`read_facts_authority_merge_base`.  This writer preserves every other
-    payload member byte-for-byte at the parsed canonical-value level. It fully
-    reconstructs and validates the candidate graph before the atomic cutover.
-    """
-    if not isinstance(merge_base, FactsAuthorityMergeBase):
-        raise TypeError("facts authority merge base writer requires a FactsAuthorityMergeBase")
-    if not isinstance(facts, GovernedFactCatalogue):
-        raise TypeError("facts authority writer requires a GovernedFactCatalogue")
-    if _IDENTITY_DIGEST.fullmatch(identity_digest) is None:
-        raise ValueError("facts authority identity_digest must be a lowercase SHA-256 digest")
-    tax_id_format_from_catalogue(facts)
-    catalogues = _required_mapping(merge_base.payload, "catalogues")
-    payload = dict(merge_base.payload)
-    updated_catalogues = dict(catalogues)
-    updated_catalogues["facts"] = _json_value(facts)
-    payload["catalogues"] = updated_catalogues
-    payload["identity_digest"] = identity_digest
-    payload_bytes = canonical_json_bytes(payload)
-    frame = {
-        "format": _ARTIFACT_FORMAT,
-        "payload": payload,
-        "payload_sha256": sha256_hex(payload_bytes),
-    }
-    encoded = canonical_json_bytes(frame)
+    encoded = _encode_artifact(artifact)
     _decode_artifact(encoded)
-    atomic_write_bytes(path, encoded)
+    with hardened_staged_publication(path) as publication:
+        with publication.path.open("wb") as handle:
+            handle.write(encoded)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if before_replace is not None:
+            before_replace()
+        publication.publish()
 
 
 def read_authority_artifact(path: Path) -> AuthorityArtifact:
@@ -322,51 +365,6 @@ def read_authority_artifact(path: Path) -> AuthorityArtifact:
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
     return _decode_artifact(raw)
-
-
-def read_facts_authority_merge_base(path: Path) -> FactsAuthorityMergeBase:
-    """Read frame integrity and typed facts without decoding unrelated models.
-
-    This is intentionally narrower than :func:`read_authority_artifact`: the
-    facts-only publication boundary needs provider-owned facts and their
-    provenance, while the existing Modelo graph is retained as authenticated
-    payload and is validated by the normal reader only after publication.
-    """
-    try:
-        raw = path.read_bytes()
-    except OSError as exc:
-        raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
-    frame = _decode_json_object(raw, subject="published authority artifact")
-    unexpected = sorted(set(frame) - _FRAME_MEMBERS)
-    if unexpected:
-        raise AuthorityArtifactFormatError(f"published authority artifact frame has unexpected members {unexpected}")
-    _require_current_artifact_format(frame)
-    payload = _required_mapping(frame, "payload")
-    recorded_digest = _required_string(frame, "payload_sha256")
-    expected_digest = sha256_hex(canonical_json_bytes(payload))
-    if recorded_digest != expected_digest:
-        raise AuthorityArtifactIntegrityError("published authority artifact failed its content digest check")
-    identity_digest = _required_string(payload, "identity_digest")
-    if _IDENTITY_DIGEST.fullmatch(identity_digest) is None:
-        raise AuthorityArtifactFormatError(
-            "published authority artifact identity_digest must be a lowercase SHA-256 hexadecimal digest"
-        )
-    _required_sequence(payload, "modelos")
-    catalogues = _required_mapping(payload, "catalogues")
-    evidence = _required_mapping(payload, "evidence")
-    _required_sequence(evidence, "legal")
-    _required_sequence(evidence, "sources")
-    facts_document = _required_mapping(catalogues, "facts")
-    try:
-        facts = GovernedFactCatalogue.model_validate(
-            _immutable_json_value(facts_document), strict=False, context=_TAGGED_DECODE_CONTEXT
-        )
-        tax_id_format_from_catalogue(facts)
-    except (ValidationError, TypeError, ValueError) as exc:
-        raise AuthorityArtifactFormatError(
-            "published authority artifact has an invalid governed-facts catalogue"
-        ) from exc
-    return FactsAuthorityMergeBase(payload=payload, facts=facts, identity_digest=identity_digest)
 
 
 @dataclass(frozen=True, slots=True)
@@ -405,7 +403,7 @@ def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
     the bundle is a layering defect to fix at its call site, not a lock to make
     reentrant.
     """
-    key = os.path.abspath(path)
+    key = str(path.resolve())
     if getattr(_decoding_artifact, "in_progress", False):
         raise RegistryValidationError(
             f"published authority artifact {key} was requested while it was being decoded; "
@@ -413,17 +411,26 @@ def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
             "block forever. Registry validation must resolve its vocabulary from the governed "
             "facts being validated, never from the published authority artifact",
         )
-    identity = _artifact_file_identity(path)
     with _shared_artifact_lock:
+        identity = _artifact_file_identity(path)
         cached = _shared_artifacts.get(key)
         if cached is not None and cached[0] == identity:
             return cached[1]
         _shared_artifacts.pop(key, None)
         _decoding_artifact.in_progress = True
         try:
-            artifact = read_authority_artifact(path)
+            for _ in range(3):
+                artifact = read_authority_artifact(path)
+                observed = _artifact_file_identity(path)
+                if observed == identity:
+                    break
+                identity = observed
+            else:
+                raise AuthorityArtifactUnavailableError("published authority changed repeatedly during admission")
         finally:
             _decoding_artifact.in_progress = False
+        if len(_shared_artifacts) >= 32:
+            _shared_artifacts.pop(next(iter(_shared_artifacts)))
         _shared_artifacts[key] = (identity, artifact)
         return artifact
 
@@ -431,6 +438,7 @@ def read_shared_authority_artifact(path: Path) -> AuthorityArtifact:
 def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
     try:
         status = path.stat()
+        changed_ns = file_change_time_ns(path, status)
     except OSError as exc:
         raise AuthorityArtifactUnavailableError(f"published authority artifact is unavailable at {path}") from exc
     return _ArtifactFileIdentity(
@@ -438,13 +446,14 @@ def _artifact_file_identity(path: Path) -> _ArtifactFileIdentity:
         inode=status.st_ino,
         size=status.st_size,
         modified_ns=status.st_mtime_ns,
-        changed_ns=status.st_ctime_ns,
+        changed_ns=changed_ns,
     )
 
 
 def _encode_artifact(artifact: AuthorityArtifact) -> bytes:
     """Return the canonical digest-checked JSON frame for ``artifact``."""
     artifact.catalogues.runtime.require_complete()
+    artifact.require_evidence_closure()
     tax_id_format_from_catalogue(artifact.catalogues.facts)
     payload = _artifact_document(artifact)
     return canonical_json_bytes(
@@ -489,6 +498,11 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
         "modelos": [_json_value(modelo) for modelo in artifact.modelos],
         "catalogues": _json_value(artifact.catalogues),
         "identity_digest": artifact.identity_digest,
+        "build_identity": {
+            "source_identity_digest": artifact.build_identity.source_identity_digest,
+            "compiler_identity_digest": artifact.build_identity.compiler_identity_digest,
+            "component_dependency_digest": artifact.build_identity.component_dependency_digest,
+        },
         "evidence": {
             "legal": [
                 {
@@ -512,19 +526,46 @@ def _artifact_document(artifact: AuthorityArtifact) -> dict[str, object]:
 
 
 def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
-    """Rebuild a fresh strict authority graph from digest-checked JSON data."""
+    """Rebuild a fresh typed authority graph from digest-checked JSON data."""
     try:
+        _require_members(payload, {"modelos", "catalogues", "identity_digest", "build_identity", "evidence"}, "payload")
         modelos_document = _required_sequence(payload, "modelos")
         catalogues_document = _required_mapping(payload, "catalogues")
         identity_digest = _required_string(payload, "identity_digest")
+        build_document = _required_mapping(payload, "build_identity")
+        _require_members(
+            build_document,
+            {
+                "source_identity_digest",
+                "compiler_identity_digest",
+                "component_dependency_digest",
+            },
+            "build_identity",
+        )
+        build_identity = AuthorityBuildIdentity(
+            source_identity_digest=_required_string(build_document, "source_identity_digest"),
+            compiler_identity_digest=_required_string(build_document, "compiler_identity_digest"),
+            component_dependency_digest=_required_string(build_document, "component_dependency_digest"),
+        )
         evidence_document = _required_mapping(payload, "evidence")
+        _require_members(evidence_document, {"legal", "sources"}, "evidence")
+        for row in _required_sequence(evidence_document, "legal"):
+            _require_members(
+                _mapping_item(row, "evidence.legal"),
+                {"legal_reference_id", "anchored_text", "text_sha256", "provenance"},
+                "evidence.legal",
+            )
+        for row in _required_sequence(evidence_document, "sources"):
+            _require_members(
+                _mapping_item(row, "evidence.sources"),
+                {"source_reference_id", "payload_base64", "payload_sha256"},
+                "evidence.sources",
+            )
         try:
             facts_document = _required_mapping(catalogues_document, "facts")
         except AuthorityArtifactFormatError as exc:
             raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
-        facts = GovernedFactCatalogue.model_validate(
-            _immutable_json_value(facts_document), strict=False, context=_TAGGED_DECODE_CONTEXT
-        )
+        facts = GovernedFactCatalogue.model_validate(facts_document, strict=False, context=_TAGGED_DECODE_CONTEXT)
         tax_id_format = tax_id_format_from_catalogue(facts)
         decode_context = {**_TAGGED_DECODE_CONTEXT, TAX_ID_FORMAT_CONTEXT: tax_id_format}
         # Registry-owned validators must resolve against the facts in this
@@ -533,14 +574,14 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
         with validating_governed_facts(CandidateFactAuthority(facts, authority_digest=identity_digest)):
             modelos = tuple(
                 ModeloDefinition.model_validate(
-                    _immutable_json_value(_mapping_item(item, "modelos")),
+                    _mapping_item(item, "modelos"),
                     strict=False,
                     context=decode_context,
                 )
                 for item in modelos_document
             )
             catalogues = RegistryCatalogues.model_validate(
-                _immutable_json_value(catalogues_document),
+                {**catalogues_document, "facts": facts},
                 strict=False,
                 context=decode_context,
             )
@@ -567,9 +608,11 @@ def _artifact_from_document(payload: Mapping[str, object]) -> AuthorityArtifact:
             modelos=modelos,
             catalogues=catalogues,
             identity_digest=identity_digest,
+            build_identity=build_identity,
             evidence=AuthorityEvidenceProjection(legal=legal_evidence, sources=source_evidence),
         )
         artifact.catalogues.runtime.require_complete()
+        artifact.require_evidence_closure()
         return artifact
     except (ValidationError, TypeError, ValueError) as exc:
         raise AuthorityArtifactFormatError("published authority artifact has an invalid authority payload") from exc
@@ -598,14 +641,16 @@ def _json_value(value: object) -> object:
             if not _field_equals_declared_default(value, field_name)
         }
     if isinstance(value, Mapping):
-        return {_json_key(key): _json_value(item) for key, item in value.items()}
+        return {_json_key(key): _json_value(item) for key, item in cast(Mapping[object, object], value).items()}
     if isinstance(value, (frozenset, set)):
         # Iteration order of a set follows per-process string hashing, so an
         # unordered collection is written in canonical-JSON order: the same
         # authority always publishes the same bytes.
-        return sorted((_json_value(item) for item in value), key=canonical_json_bytes)
+        return sorted(
+            (_json_value(item) for item in cast(set[object] | frozenset[object], value)), key=canonical_json_bytes
+        )
     if isinstance(value, (tuple, list)):
-        return [_json_value(item) for item in value]
+        return [_json_value(item) for item in cast(Sequence[object], value)]
     if isinstance(value, Enum):
         return _json_value(value.value)
     if isinstance(value, Decimal):
@@ -639,55 +684,6 @@ def _field_equals_declared_default(model: BaseModel, field_name: str) -> bool:
     return comparison if isinstance(comparison, bool) else False
 
 
-_DATE_FIELD_NAMES = frozenset(
-    {
-        "applies_from",
-        "applies_to",
-        "closes_on",
-        "consolidated_as_of",
-        "effective_from",
-        "effective_to",
-        "event_date",
-        "governs_periods_from",
-        "governs_periods_to",
-        "observed_at",
-        "opens_on",
-        "payment_cutoff_on",
-        "published_at",
-        "retrieved_at",
-        "reviewed_at",
-        "span_from",
-        "span_to",
-        "valid_from",
-        "valid_to",
-    }
-)
-
-
-def _immutable_json_value(value: object, *, field_name: str | None = None) -> object:
-    """Restore JSON primitives only for declared strict authority field names.
-
-    The registry models are intentionally strict and model their declared
-    collections as tuples and date fields as :class:`date`. JSON has only
-    arrays and date strings, so this converts those authenticated wire shapes
-    before model reconstruction. The frame digest protects this canonical JSON;
-    the schema still validates every declared invariant.
-    """
-    if isinstance(value, Mapping):
-        return {str(key): _immutable_json_value(item, field_name=str(key)) for key, item in value.items()}
-    if isinstance(value, list):
-        return tuple(_immutable_json_value(item, field_name=field_name) for item in value)
-    if field_name in _DATE_FIELD_NAMES and isinstance(value, str):
-        try:
-            return date.fromisoformat(value)
-        except ValueError:
-            # A catalogue identifier may happen to use a date-shaped field
-            # name at a deeper mapping level; its declared schema remains the
-            # authority for interpreting that value.
-            return value
-    return value
-
-
 def _json_key(key: object) -> str:
     """Project a mapping key through the JSON-safe value vocabulary."""
     value = _json_value(key)
@@ -707,6 +703,12 @@ def _decode_json_object(raw: bytes, *, subject: str) -> dict[str, object]:
     return cast(dict[str, object], decoded)
 
 
+def _require_members(document: Mapping[str, object], expected: set[str], subject: str) -> None:
+    """Refuse misspelled or unrecognized envelope fields before typed admission."""
+    if set(document) != expected:
+        raise AuthorityArtifactFormatError(f"published authority artifact {subject} has unexpected or missing members")
+
+
 def _required_string(document: Mapping[str, object], field_name: str) -> str:
     """Return one non-empty string field or raise a format refusal."""
     value = document.get(field_name)
@@ -724,7 +726,7 @@ def _required_mapping(document: Mapping[str, object], field_name: str) -> Mappin
 
 def _mapping_item(value: object, field_name: str) -> Mapping[str, object]:
     """Require one decoded JSON object."""
-    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
+    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in cast(Mapping[object, object], value)):
         raise AuthorityArtifactFormatError(f"published authority artifact field {field_name!r} must be an object")
     return cast(Mapping[str, object], value)
 
@@ -734,7 +736,7 @@ def _required_sequence(document: Mapping[str, object], field_name: str) -> Seque
     value = document.get(field_name)
     if not isinstance(value, list):
         raise AuthorityArtifactFormatError(f"published authority artifact field {field_name!r} must be an array")
-    return value
+    return cast(Sequence[object], value)
 
 
 def _decode_base64(value: str) -> bytes:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol
+from typing import TYPE_CHECKING, Annotated, Literal, NamedTuple, Protocol, cast
 
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
@@ -41,8 +41,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .binding_targets import casillas_by_binding
 from .errors import RegistryValidationError
 from .ids import BindingId
@@ -84,7 +83,7 @@ in this module.
 def _coerce_cash_accounting_treatment_codes(value: object) -> object:
     """Hydrate TOML arrays before strict tuple validation."""
     if isinstance(value, (tuple, list)):
-        return tuple(value)
+        return tuple(cast("Sequence[object]", value))
     return value
 
 
@@ -289,6 +288,13 @@ class LedgerIvaProvider(BaseModel):
 
     @field_validator("categories", mode="after")
     @classmethod
+    def _categories_registry_declared(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
+        """Refuse category tokens absent from the candidate's governed catalogue."""
+        catalogue = resolve_iva_category_catalogue(effective_date=date.today())
+        return tuple(catalogue.require(str(category)) for category in value)
+
+    @field_validator("categories", mode="after")
+    @classmethod
     def _categories_unique(cls, value: tuple[IvaCategory, ...]) -> tuple[IvaCategory, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("categories entries must be unique")
@@ -358,7 +364,7 @@ class LedgerIvaProvider(BaseModel):
 def iva_ledger_selector(binding: BindingDefinition) -> LedgerIvaProvider:
     """Validate and parse a binding selector into a typed IVA selector."""
     try:
-        return LedgerIvaProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerIvaProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
 
@@ -614,6 +620,9 @@ def validate_ledger_iva_aggregation_binding_definition(
     """
     if binding.source != BindingSourceKind.LEDGER_IVA_AGGREGATION:
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
+    diagnostics = selector_against_model(binding, LedgerIvaProvider)
+    if diagnostics:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed IVA selector: {'; '.join(diagnostics)}")
     selector = iva_ledger_selector(binding)
 
     if binding.aggregation is not None:

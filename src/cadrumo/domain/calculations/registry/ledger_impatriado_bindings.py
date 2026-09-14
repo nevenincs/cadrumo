@@ -26,7 +26,7 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -34,8 +34,7 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import ImpatriadoLedgerIncomeFact, mapping_lacks_fact
@@ -111,9 +110,16 @@ class LedgerImpatriadoIncomeProvider(BaseModel):
         BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION
     )
 
-    modelo: Literal[Modelo("151")] = Modelo("151")
+    modelo: Modelo = Modelo("151")
     target_casilla_id: CasillaId
     fact: ImpatriadoLedgerIncomeFact
+
+    @field_validator("modelo")
+    @classmethod
+    def _require_modelo_151(cls, value: Modelo) -> Modelo:
+        if value != Modelo("151"):
+            raise ValueError("ledger_impatriado_income_aggregation modelo must be '151'")
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -148,7 +154,7 @@ _IMPATRIADO_SUPPORTED_FACTS: frozenset[str] = frozenset({"ingresos_integros_sum"
 
 def _impatriado_ledger_income_selector(binding: BindingDefinition) -> LedgerImpatriadoIncomeProvider:
     try:
-        return LedgerImpatriadoIncomeProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerImpatriadoIncomeProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_impatriado_income_aggregation selector: {exc}",

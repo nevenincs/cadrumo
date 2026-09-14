@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import shutil
 from collections.abc import MutableMapping
 from datetime import date
-from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
@@ -19,82 +19,77 @@ from ..authority_artifact import (
     AuthorityArtifactFormatError,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
+    AuthorityBuildIdentity,
+    AuthorityEvidenceProjection,
+    PublishedLegalEvidence,
+    PublishedSourceEvidence,
     read_authority_artifact,
-    read_facts_authority_merge_base,
     read_shared_authority_artifact,
     write_authority_artifact,
-    write_facts_authority_artifact,
 )
 from ..errors import RegistryValidationError
 from ..revision_contracts import NoPredecessor
-from ..runtime_catalogues import (
-    ApoderamientoScopeRecord,
-    CountryVocabularyRecord,
-    PublishedIvaPlaceOfSupplyRule,
-    PublishedIvaRegulation,
-    PublishedRecargoBand,
-    RuntimeRegistryCatalogues,
-    SpanishPostalTerritory,
-    TerritoryCarveOut,
-)
+from ..runtime_catalogues import RuntimeRegistryCatalogues
 from ..schema import BindingDefinition, RegistryCatalogues
 from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _minimal_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
+_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
+    source_identity_digest=sha256_hex(b"fixture authority sources"),
+    compiler_identity_digest=sha256_hex(b"fixture authority compiler"),
+)
+_IDENTITY_DIGEST = _BUILD_IDENTITY.identity_digest
 _LEGAL_ID = "ley-35-2006:art-1"
+_LEGAL_TEXT = "art-1 fixture authority text"
+_SOURCE_ID = "aeat-dr-130-2019-v12"
 
 
 def _complete_catalogues() -> RegistryCatalogues:
-    catalogues = _minimal_catalogues()
-    runtime = RuntimeRegistryCatalogues(
-        iva_regulations={
-            "fixture-exempt": PublishedIvaRegulation(
-                category="fixture-exempt",
-                requires_reverse_charge=False,
-                requires_supplier_iva_id=False,
-                manual_references=(),
-                citations=(),
-                notes="No legal treatment is asserted by this fixture row.",
-                legal_basis_exempt=True,
-            )
-        },
-        iva_place_of_supply={
-            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
-                rule_id="fixture-exempt", notes="No placement is asserted.", legal_basis_exempt=True
-            )
-        },
-        countries={"ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",))},
-        spanish_postal_territories={
-            "28": SpanishPostalTerritory(
-                postal_prefixes=("28",), scope="peninsula_baleares", name="Madrid", legal_refs=(_LEGAL_ID,)
-            )
-        },
-        territory_carve_outs={
-            "ES": TerritoryCarveOut(code="ES", name="Espana", establishes_nothing=True, legal_refs=(_LEGAL_ID,))
-        },
-        recargo_bands={
-            "all": PublishedRecargoBand(
-                id="all", min_completed_months=0, surcharge_pct=Decimal("1"), legal_ref=_LEGAL_ID
-            )
-        },
-        apoderamientos_version="fixture-v1",
-        apoderamientos_scopes={
-            "GENERAL": ApoderamientoScopeRecord(
-                code="GENERAL", name_es="General", name_en="General", name_ca="General", name_hu="Altalanos"
-            )
-        },
-    ).require_complete()
-    return catalogues.model_copy(update={"runtime": runtime})
+    return _minimal_catalogues()
 
 
-def _validated_authority_payload() -> AuthorityArtifact:
+def _complete_evidence(*, source_payload: bytes | None = None) -> AuthorityEvidenceProjection:
+    sources = ()
+    if source_payload is not None:
+        sources = (
+            PublishedSourceEvidence(
+                source_reference_id=_SOURCE_ID,
+                payload=source_payload,
+                payload_sha256=sha256_hex(source_payload),
+            ),
+        )
+    return AuthorityEvidenceProjection(
+        legal=(
+            PublishedLegalEvidence(
+                legal_reference_id=_LEGAL_ID,
+                anchored_text=_LEGAL_TEXT,
+                text_sha256=sha256_hex(_LEGAL_TEXT.encode("utf-8")),
+            ),
+        ),
+        sources=sources,
+    )
+
+
+def _catalogues_with_required_source(payload: bytes) -> RegistryCatalogues:
+    catalogues = _complete_catalogues()
+    source = catalogues.sources[_SOURCE_ID].model_copy(
+        update={"kind": "dictionary", "sha256": sha256_hex(payload), "bytes": len(payload)}
+    )
+    return catalogues.model_copy(update={"sources": {**catalogues.sources, _SOURCE_ID: source}})
+
+
+def _validated_authority_payload(*, source_payload: bytes | None = None) -> AuthorityArtifact:
     """Build a real typed registry payload without requiring the authoring corpus."""
+    catalogues = _complete_catalogues()
+    if source_payload is not None:
+        catalogues = _catalogues_with_required_source(source_payload)
     return AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
-        catalogues=_complete_catalogues(),
+        catalogues=catalogues,
+        build_identity=_BUILD_IDENTITY,
         identity_digest=_IDENTITY_DIGEST,
+        evidence=_complete_evidence(source_payload=source_payload),
     )
 
 
@@ -108,7 +103,7 @@ def _write_frame(path: Path, payload: object, **extra: object) -> None:
     path.write_bytes(
         canonical_json_bytes(
             {
-                "format": "cadrumo-authority-artifact-v4",
+                "format": "cadrumo-authority-artifact-v5",
                 "payload": payload,
                 "payload_sha256": sha256_hex(canonical_json_bytes(payload)),
                 **extra,
@@ -127,11 +122,39 @@ def test_published_authority_round_trips_as_the_complete_typed_payload(tmp_path:
     consumed = read_authority_artifact(artifact_path)
 
     assert consumed == published
+    assert consumed.build_identity == _BUILD_IDENTITY
+    assert consumed.build_identity.component_dependency_digest == _BUILD_IDENTITY.component_dependency_digest
+    assert consumed.identity_digest == consumed.build_identity.identity_digest
     assert consumed.modelos[0].title_localization_key == published.modelos[0].title_localization_key
     assert consumed.catalogues.legal == published.catalogues.legal
     revision = consumed.modelos[0].revisions["test-revision"]
     assert revision.valid_from == date(2024, 1, 1)
     assert revision.reviewed_at == date(2026, 7, 1)
+
+
+def test_artifact_identity_must_match_its_complete_build_identity() -> None:
+    with pytest.raises(ValueError, match="build receipts"):
+        AuthorityArtifact(
+            modelos=(_minimal_modelo(_minimal_revision()),),
+            catalogues=_complete_catalogues(),
+            build_identity=_BUILD_IDENTITY,
+            identity_digest="0" * 64,
+            evidence=_complete_evidence(),
+        )
+
+
+def test_build_identity_refuses_an_incoherent_component_receipt() -> None:
+    other = AuthorityBuildIdentity.from_inputs(
+        source_identity_digest=_BUILD_IDENTITY.source_identity_digest,
+        compiler_identity_digest=sha256_hex(b"other fixture compiler"),
+    )
+
+    with pytest.raises(ValueError, match="component dependency identity"):
+        AuthorityBuildIdentity(
+            source_identity_digest=_BUILD_IDENTITY.source_identity_digest,
+            compiler_identity_digest=other.compiler_identity_digest,
+            component_dependency_digest=_BUILD_IDENTITY.component_dependency_digest,
+        )
 
 
 def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(tmp_path: Path) -> None:
@@ -140,7 +163,9 @@ def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(t
     published = AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
         catalogues=_complete_catalogues(),
+        build_identity=_BUILD_IDENTITY,
         identity_digest=_IDENTITY_DIGEST,
+        evidence=_complete_evidence(),
     )
 
     write_authority_artifact(artifact_path, published)
@@ -148,7 +173,7 @@ def test_current_frame_omits_schema_defaults_and_restores_the_same_typed_model(t
     frame = json.loads(artifact_path.read_bytes())
     wire_modelo = frame["payload"]["modelos"][0]
     assert set(frame) == {"format", "payload", "payload_sha256"}
-    assert frame["format"] == "cadrumo-authority-artifact-v4"
+    assert frame["format"] == "cadrumo-authority-artifact-v5"
     assert "capabilities" not in wire_modelo
     assert "calculation_class" not in wire_modelo
     assert "output_sensitivity" not in wire_modelo
@@ -173,7 +198,9 @@ def test_published_authority_round_trips_strict_profile_selector_json(tmp_path: 
     published = AuthorityArtifact(
         modelos=(modelo,),
         catalogues=_complete_catalogues(),
+        build_identity=_BUILD_IDENTITY,
         identity_digest=_IDENTITY_DIGEST,
+        evidence=_complete_evidence(),
     )
 
     write_authority_artifact(artifact_path, published)
@@ -194,7 +221,9 @@ def test_published_authority_preserves_a_grounded_no_predecessor_declaration(tmp
     published = AuthorityArtifact(
         modelos=(_minimal_modelo(revision),),
         catalogues=_complete_catalogues(),
+        build_identity=_BUILD_IDENTITY,
         identity_digest=_IDENTITY_DIGEST,
+        evidence=_complete_evidence(),
     )
 
     write_authority_artifact(artifact_path, published)
@@ -223,7 +252,9 @@ def test_writer_refuses_a_missing_runtime_table(tmp_path: Path) -> None:
     artifact = AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
         catalogues=incomplete,
+        build_identity=_BUILD_IDENTITY,
         identity_digest=_IDENTITY_DIGEST,
+        evidence=_complete_evidence(),
     )
 
     with pytest.raises(RegistryValidationError, match=r"runtime authority catalogues are incomplete:.*countries"):
@@ -236,6 +267,54 @@ def test_a_digest_consistent_frame_does_not_admit_an_invalid_typed_payload(tmp_p
     _publish(artifact_path)
     frame = json.loads(artifact_path.read_bytes())
     frame["payload"]["catalogues"] = {}
+    _write_frame(artifact_path, frame["payload"])
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+def test_a_digest_consistent_frame_missing_legal_evidence_is_refused(tmp_path: Path) -> None:
+    """Artifact admission requires exact coverage of the legal catalogue."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    frame = json.loads(artifact_path.read_bytes())
+    frame["payload"]["evidence"]["legal"] = []
+    _write_frame(artifact_path, frame["payload"])
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+def test_a_digest_consistent_frame_missing_required_source_evidence_is_refused(tmp_path: Path) -> None:
+    """A runtime-required dictionary source cannot disappear behind a valid frame digest."""
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(artifact_path, _validated_authority_payload(source_payload=b"fixture dictionary"))
+    frame = json.loads(artifact_path.read_bytes())
+    frame["payload"]["evidence"]["sources"] = []
+    _write_frame(artifact_path, frame["payload"])
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+def test_a_digest_consistent_frame_with_mismatched_source_metadata_is_refused(tmp_path: Path) -> None:
+    """Runtime source bytes must retain the catalogue hash and length validated by publication."""
+    artifact_path = tmp_path / "authority.json"
+    write_authority_artifact(artifact_path, _validated_authority_payload(source_payload=b"fixture dictionary"))
+    frame = json.loads(artifact_path.read_bytes())
+    frame["payload"]["catalogues"]["sources"][_SOURCE_ID]["sha256"] = "0" * 64
+    _write_frame(artifact_path, frame["payload"])
+
+    with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
+        read_authority_artifact(artifact_path)
+
+
+def test_a_digest_consistent_frame_with_duplicate_modelo_identity_is_refused(tmp_path: Path) -> None:
+    """Artifact admission refuses two published definitions for one modelo identity."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    frame = json.loads(artifact_path.read_bytes())
+    frame["payload"]["modelos"].append(frame["payload"]["modelos"][0])
     _write_frame(artifact_path, frame["payload"])
 
     with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
@@ -291,7 +370,8 @@ def test_a_current_frame_with_an_extra_member_is_refused(tmp_path: Path) -> None
     ("format_name", "message"),
     (
         pytest.param("cadrumo-authority-artifact-v3", "superseded format", id="superseded"),
-        pytest.param("cadrumo-authority-artifact-v5", "unsupported format", id="unknown-future"),
+        pytest.param("cadrumo-authority-artifact-v4", "superseded format", id="previous"),
+        pytest.param("cadrumo-authority-artifact-v6", "unsupported format", id="unknown-future"),
     ),
 )
 def test_a_noncurrent_explicit_format_is_refused(tmp_path: Path, format_name: str, message: str) -> None:
@@ -304,22 +384,45 @@ def test_a_noncurrent_explicit_format_is_refused(tmp_path: Path, format_name: st
         read_authority_artifact(artifact_path)
 
 
-def test_facts_only_publication_validates_the_complete_graph_before_cutover(tmp_path: Path) -> None:
+def test_publication_validates_the_complete_graph_before_cutover(tmp_path: Path) -> None:
     """A fact removal that invalidates Modelo vocabulary preserves the known-good artifact."""
     artifact_path = tmp_path / "authority.json"
     shutil.copyfile(bundled_authority_artifact_path(), artifact_path)
-    merge_base = read_facts_authority_merge_base(artifact_path)
-    facts = dict(merge_base.facts.facts)
+    artifact = read_authority_artifact(artifact_path)
+    facts = dict(artifact.catalogues.facts.facts)
     facts.pop("iva-statutory-schema-vocabulary")
-    invalid_facts = merge_base.facts.model_copy(update={"facts": facts})
+    invalid_facts = artifact.catalogues.facts.model_copy(update={"facts": facts})
     previous_bytes = artifact_path.read_bytes()
 
     with pytest.raises(AuthorityArtifactFormatError, match="invalid authority payload"):
-        write_facts_authority_artifact(
+        write_authority_artifact(
             artifact_path,
-            merge_base,
-            invalid_facts,
-            identity_digest="0" * 64,
+            dataclasses.replace(
+                artifact,
+                catalogues=artifact.catalogues.model_copy(update={"facts": invalid_facts}),
+            ),
+        )
+
+    assert artifact_path.read_bytes() == previous_bytes
+
+
+def test_before_replace_refusal_preserves_the_previous_publication(tmp_path: Path) -> None:
+    """A final publication guard can refuse cutover without changing destination bytes."""
+    artifact_path = tmp_path / "authority.json"
+    _publish(artifact_path)
+    previous_bytes = artifact_path.read_bytes()
+
+    def refuse_cutover() -> None:
+        staged = tuple(path for path in tmp_path.iterdir() if path != artifact_path)
+        assert len(staged) == 1
+        assert staged[0].read_bytes()
+        raise RuntimeError("publication receipt changed")
+
+    with pytest.raises(RuntimeError, match="publication receipt changed"):
+        write_authority_artifact(
+            artifact_path,
+            _validated_authority_payload(),
+            before_replace=refuse_cutover,
         )
 
     assert artifact_path.read_bytes() == previous_bytes

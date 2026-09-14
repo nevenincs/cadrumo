@@ -6,15 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ..calculations.registry.schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from ..calculations.registry.governed_fact_scope import GovernedFactSource
-
 
 _FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
 _ORDER_KEY = "regime.order"
@@ -135,6 +131,7 @@ def resolve_oss_ioss_regime_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> OssIossRegimeCatalogue:
     """Resolve the complete OSS / IOSS regime catalogue through facts authority."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         from ..calculations.registry.authority import bundled_authority
 

@@ -28,11 +28,11 @@ from .binding_selector_utils import (
     intracommunity_clave_validator,
     invariant_diagnostics,
     operation_clave_validator,
+    provider_member,
     selector_against_model,
     uppercase_alpha_code,
     validate_rectification_fields,
 )
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .m347_threshold import m347_clave_c_declarable_party_ids, m347_declarable_party_ids
@@ -265,7 +265,7 @@ class M347ThirdPartyOperationProvider(InvoiceProviderBase):
 
 def _invoice_selector(binding: BindingDefinition) -> InvoiceProviderBase:
     try:
-        return InvoiceProviderBase.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, InvoiceProviderBase)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
 

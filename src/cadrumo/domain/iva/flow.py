@@ -109,6 +109,7 @@ class IvaFlowDirection(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only tokens admitted by the governing catalogue."""
         if not _registry_validated:
             raise TypeError("IvaFlowDirection tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -118,6 +119,14 @@ class IvaFlowDirection(str):
     @classmethod
     def _from_registry(cls, value: str) -> Self:
         return cls(value, _registry_validated=True)
+
+    def __copy__(self) -> Self:
+        """Share an immutable token without repeating membership admission."""
+        return self
+
+    def __deepcopy__(self, memo: dict[int, object]) -> Self:
+        """Preserve the admitted token when copying a containing projection."""
+        return self
 
     @classmethod
     def _require_registry_token(cls, value: object) -> Self:
@@ -131,6 +140,7 @@ class IvaFlowDirection(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Accept already admitted tokens at typed model boundaries."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),
@@ -261,6 +271,7 @@ class IvaSettlementSide(str):
     __slots__ = ()
 
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
+        """Construct only tokens admitted by the governing catalogue."""
         if not _registry_validated:
             raise TypeError("IvaSettlementSide tokens must be projected from the facts registry")
         if not isinstance(value, str) or not value:
@@ -283,6 +294,7 @@ class IvaSettlementSide(str):
         _source_type: object,
         _handler: GetCoreSchemaHandler,
     ) -> CoreSchema:
+        """Accept already admitted tokens at typed model boundaries."""
         return core_schema.no_info_plain_validator_function(
             cls._require_registry_token,
             json_schema_input_schema=core_schema.str_schema(),

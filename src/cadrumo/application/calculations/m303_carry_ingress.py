@@ -19,9 +19,10 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError, TerminalPreconditionErrorMixin
 from ...core.modelo import Modelo
+from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.authority_artifact import AuthorityArtifactError
-from ...domain.calculations.registry.bindings import CasillaObservation
+from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.queries import RegistryQueryService
@@ -41,14 +42,11 @@ if TYPE_CHECKING:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin[PreconditionVerdict]
 else:
     _M303CarryIngressErrorMixin = TerminalPreconditionErrorMixin
-from . import observations_repository as _observations_repository
 from .errors import (
     CalculationRefusalPrecondition,
     calculation_no_recovery_verdict,
 )
-from .observations_repository import ObservationEnvelopePayload, ObservationSourceKind
-
-_DispositionProjection = getattr(_observations_repository, "Result" + "Disposition" + "Projection")
+from .observations_repository import ObservationEnvelopePayload, ObservationSourceKind, ResultDispositionProjection
 
 
 def _required_registry_value(entries: Mapping[str, str], key: str) -> str:
@@ -212,17 +210,7 @@ def _selected_casilla_ids(entries: Mapping[str, str]) -> dict[str, CasillaId]:
     return selected
 
 
-def _registry_disposition_type() -> type:
-    annotation = _DispositionProjection.model_fields["disposition"].annotation
-    if not isinstance(annotation, type):
-        raise M303CarryIngressError(
-            translated_message="registry.disposition_type_unavailable",
-            context={"field": "disposition"},
-        )
-    return annotation
-
-
-def _disposition_token(disposition: object, *, entries: Mapping[str, str]) -> str:
+def _disposition_token(disposition: ResultDisposition, *, entries: Mapping[str, str]) -> str:
     """Translate an enum code through the registry-owned semantic projection."""
     raw_code = getattr(disposition, "value", disposition)
     if not isinstance(raw_code, str) or not raw_code.strip():
@@ -252,9 +240,9 @@ def _coerce_registry_disposition(
     *,
     entries: Mapping[str, str],
     source_locator: str,
-) -> object:
+) -> ResultDisposition:
     try:
-        return _registry_disposition_type()(value)
+        return ResultDisposition(value)
     except (TypeError, ValueError) as exc:
         raise M303CarryIngressError(
             translated_message=_translated_error(entries, "header_code_invalid"),
@@ -341,7 +329,7 @@ def validate_normalized_m303_carry_observation_envelope(
 def _resolve_result_disposition(
     envelope: ObservationEnvelopePayload,
     registry_mapping: Mapping[str, str],
-) -> object:
+) -> ResultDispositionProjection:
     """Recover one valid disposition without selecting a convenient default."""
     header_projection = _project_disposition_header(envelope, registry_mapping)
     supplied = envelope.result_disposition
@@ -428,7 +416,7 @@ def _resolve_result_disposition(
 def _project_disposition_header(
     envelope: ObservationEnvelopePayload,
     registry_mapping: Mapping[str, str],
-) -> object | None:
+) -> ResultDispositionProjection | None:
     """Return the one registry-selected header projection, refusing ambiguity."""
     header_key = _required_registry_value(registry_mapping, "disposition.header_key")
     facts = tuple(item for item in envelope.source_headers if item.header_key == header_key)
@@ -453,7 +441,7 @@ def _project_disposition_header(
             translated_message=_translated_error(registry_mapping, "header_code_not_admitted"),
             context={"value": fact.value, "source_locator": fact.source_locator},
         )
-    return _DispositionProjection(
+    return ResultDispositionProjection(
         disposition=disposition,
         provenance_kind="source_header",
         provenance_locator=fact.source_locator,
@@ -462,7 +450,7 @@ def _project_disposition_header(
 
 def _validate_disposition_result_sign(
     envelope: ObservationEnvelopePayload,
-    disposition: object,
+    disposition: ResultDisposition,
     registry_mapping: Mapping[str, str],
 ) -> None:
     """Reject a selected disposition whose result sign cannot support it."""
@@ -495,18 +483,13 @@ def _validate_disposition_result_sign(
 
 
 def _normalize_carry_observation(
-    observation: object,
-    disposition: object,
+    observation: RegistryModeloObservation,
+    disposition: ResultDisposition,
     *,
     prior_basis: str | None,
     registry_mapping: Mapping[str, str],
-) -> tuple[object, str]:
+) -> tuple[RegistryModeloObservation, str]:
     """Normalize the available/generated pair while preserving casilla-only storage."""
-    # ``observation`` is deliberately typed structurally at this private seam:
-    # importing RegistryModeloObservation just to repeat the public envelope's
-    # field contract makes no runtime distinction and obscures the policy.
-    from ...domain.calculations.registry.bindings import RegistryModeloObservation
-
     if not isinstance(observation, RegistryModeloObservation):
         raise M303CarryIngressError(
             translated_message=_translated_error(registry_mapping, "invalid_registry_observation"),
@@ -529,8 +512,7 @@ def _normalize_carry_observation(
             generated=casilla_ids["generated"],
             result=casilla_ids["result"],
         ),
-        refunded=_disposition_token(disposition, entries=registry_mapping)
-        in _mapping_tokens(registry_mapping, "sign.negative"),
+        refunded=result_disposition_is_refund(ResultDisposition(str(getattr(disposition, "value", disposition)))),
     )
     if derivation is None:
         raise M303CarryIngressError(

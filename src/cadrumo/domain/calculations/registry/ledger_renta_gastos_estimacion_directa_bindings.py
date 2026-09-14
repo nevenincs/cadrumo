@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import (
     BindingAggregationOp,
@@ -20,8 +20,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
@@ -57,9 +56,8 @@ class RentaGastosEstimacionDirectaObservationProtocol(Protocol):
     :class:`~cadrumo.domain.renta.RentaDeductibleExpenseObservation` satisfies
     this protocol without any explicit declaration.
 
-    Properties are declared read-only so that Literal-typed concrete attributes
-    (e.g. ``modelo: Literal[Modelo('100')]``) satisfy the protocol under strict
-    covariant checking.
+    Properties are declared read-only so that concrete attributes satisfy the
+    protocol under strict covariant checking.
     """
 
     @property
@@ -92,17 +90,24 @@ class LedgerRentaGastosEstimacionDirectaProvider(BaseModel):
         BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION
     )
 
-    modelo: Literal[Modelo("100")] = Modelo("100")
+    modelo: Modelo = Modelo("100")
     period: Literal["0A"] = "0A"
     target_casilla_id: CasillaId
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
+
+    @field_validator("modelo")
+    @classmethod
+    def _require_modelo_100(cls, value: Modelo) -> Modelo:
+        if value != Modelo("100"):
+            raise ValueError("ledger_renta_gastos_estimacion_directa_aggregation modelo must be '100'")
+        return value
 
 
 def _renta_ledger_gastos_estimacion_directa_selector(
     binding: BindingDefinition,
 ) -> LedgerRentaGastosEstimacionDirectaProvider:
     try:
-        return LedgerRentaGastosEstimacionDirectaProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerRentaGastosEstimacionDirectaProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_gastos_estimacion_directa_aggregation selector: {exc}",

@@ -5,19 +5,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....core.text_fold import fold_diacritics
 from ...contribuyente.ccaa import CCAA
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "renta-ccaa-tax-residence-catalogue"
 _CCAA_ORDER_KEY = "ccaa.order"
@@ -155,7 +150,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -239,20 +234,24 @@ def _catalogue(entries: Mapping[str, str]) -> CcaaCatalogue:
     )
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_catalogue(effective_date: date) -> CcaaCatalogue:
     from .authority import bundled_authority
 
-    return _catalogue(_resolve_entries(effective_date=effective_date, authority=bundled_authority()))
+    return _catalogue(_resolve_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    ))
 
 
 def resolve_ccaa_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> CcaaCatalogue:
     """Resolve the selected dated CCAA tax-residence fact."""
     coordinate = effective_date or date.today()
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_resolve_entries(effective_date=coordinate, authority=authority))
@@ -262,7 +261,7 @@ def require_ccaa(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> CCAA:
     """Project a common-regime CCAA token through the selected facts."""
     return resolve_ccaa_catalogue(effective_date=effective_date, authority=authority).require(value)
@@ -271,7 +270,7 @@ def require_ccaa(
 def ccaa_choices(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[CCAA, ...]:
     """Return the registry-authored CCAA choices in authored order."""
     return resolve_ccaa_catalogue(effective_date=effective_date, authority=authority).choices
@@ -280,7 +279,7 @@ def ccaa_choices(
 def foral_cli_choices(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[str, ...]:
     """Return the foral redirects exposed by the operator-facing CLI."""
     return resolve_ccaa_catalogue(
@@ -292,7 +291,7 @@ def foral_cli_choices(
 def default_ccaa(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> CCAA:
     """Return the profile default declared by the CCAA catalogue."""
     return resolve_ccaa_catalogue(effective_date=effective_date, authority=authority).default_token

@@ -5,18 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...deadlines.models import IrpfActivityKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "m036-activity-selector-catalogue"
 _ACTIVITY_KIND_SUFFIX = ".activity_kind"
@@ -80,7 +75,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_mapping_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -94,19 +89,23 @@ def _resolve_mapping_entries(
     return _mapping_entries(resolved)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     from .authority import bundled_authority
 
-    return _resolve_mapping_entries(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_mapping_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def _selected_mapping_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_mapping_entries(coordinate)
     return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
@@ -115,7 +114,7 @@ def _selected_mapping_entries(
 def resolve_irpf_activity_kind_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfActivityKindCatalogue:
     """Resolve activity-kind membership from the M036 selector catalogue."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
@@ -141,7 +140,7 @@ def require_irpf_activity_kind(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfActivityKind:
     """Return an activity-kind token only when fact 0082 declares it."""
     return resolve_irpf_activity_kind_catalogue(
@@ -153,7 +152,7 @@ def require_irpf_activity_kind(
 def irpf_activity_kind_profesional_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfActivityKind:
     """Return the registry-declared professional activity-kind token."""
     return resolve_irpf_activity_kind_catalogue(
@@ -165,7 +164,7 @@ def irpf_activity_kind_profesional_token(
 def irpf_activity_kind_sectorial_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfActivityKind:
     """Return the registry-declared sectorial activity-kind token."""
     return resolve_irpf_activity_kind_catalogue(
@@ -178,7 +177,7 @@ def is_irpf_activity_kind_profesional(
     value: IrpfActivityKind | str | None,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a value is the registry-declared professional token."""
     if value is None or value == "":
@@ -192,7 +191,7 @@ def is_irpf_activity_kind_sectorial(
     value: IrpfActivityKind | str | None,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a value is the registry-declared sectorial token."""
     if value is None or value == "":

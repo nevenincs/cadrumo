@@ -32,8 +32,7 @@ from ....core.casilla_id import CasillaId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import RegistrySelectorPeriodCode
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .binding_temporal import (
     BindingTemporalSelector,
     FiledCurrentPeriod,
@@ -648,18 +647,7 @@ class PreviousFilingProvider(BaseModel):
 
 
 def _previous_filing_selector(binding: BindingDefinition) -> PreviousFilingProvider:
-    selector = _selector_as_dict(binding)
-    try:
-        return PreviousFilingProvider.model_validate(selector)
-    except ValueError as exc:
-        hint = ""
-        if "source_casillas" in selector:
-            hint = "; use source_casilla_ids, not source_casillas"
-        elif "source_output" in selector:
-            hint = "; use source_casilla_id, not source_output"
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed previous-filing selector: {exc}{hint}",
-        ) from exc
+    return provider_member(binding, PreviousFilingProvider)
 
 
 _PREVIOUS_FILING_OPS: frozenset[BindingAggregationOp] = frozenset(

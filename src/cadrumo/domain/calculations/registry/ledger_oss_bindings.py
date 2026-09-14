@@ -22,8 +22,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .eu_member_state_catalogue import require_eu_member_state, require_registry_declared_eu_member_state
 from .governed_fact_scope import governed_facts_in_scope
@@ -151,7 +150,7 @@ class LedgerOssProvider(BaseModel):
 def _ledger_oss_selector(binding: BindingDefinition) -> LedgerOssProvider:
     """Validate and parse a binding selector into a typed OSS / IOSS selector."""
     try:
-        return LedgerOssProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerOssProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 

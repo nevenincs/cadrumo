@@ -70,8 +70,8 @@ from .schema import (
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
     from ...domain.calculations.registry.facts.resolution import ResolvedMappingFact
+    from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 # -- Registry-projected classification vocabulary ------------------------
@@ -220,7 +220,7 @@ class IvaClassificationCatalogue:
                 raise IvaValidationError("IVA territorial scope token must not be blank")
             if raw not in {str(item) for item in self.territorial_scopes}:
                 raise IvaValidationError(f"IVA territorial scope {raw!r} is not registry-declared")
-            token = IvaTerritorialScope._from_registry(raw)
+            token = IvaTerritorialScope(raw, _registry_validated=True)
         else:
             raise IvaValidationError("IVA territorial scope must be a string token")
         if token not in self.territorial_scope_set:
@@ -237,7 +237,7 @@ class IvaClassificationCatalogue:
                 raise IvaValidationError("customer tax status token must not be blank")
             if raw not in {str(item) for item in self.customer_tax_statuses}:
                 raise IvaValidationError(f"customer tax status {raw!r} is not registry-declared")
-            token = CustomerTaxStatus._from_registry(raw)
+            token = CustomerTaxStatus(raw, _registry_validated=True)
         else:
             raise IvaValidationError("customer tax status must be a string token")
         if token not in self.customer_tax_status_set:
@@ -386,7 +386,7 @@ def _classification_vocabulary_group(
             raise IvaValidationError(
                 f"IVA classification mapping {prefix}.{raw_token!s}.value declares {declared!r}, not {raw_token!r}",
             )
-        tokens.append(token_type._from_registry(raw_token))
+        tokens.append(token_type(raw_token, _registry_validated=True))
     declared_set = frozenset(str(token) for token in tokens)
     aliases: dict[str, _RegistryProjectedToken] = {}
     alias_prefix = f"{prefix}.alias."
@@ -401,7 +401,7 @@ def _classification_vocabulary_group(
             raise IvaValidationError(
                 f"IVA classification alias {key!r} names undeclared token {raw_value!r}",
             )
-        aliases[alias] = token_type._from_registry(raw_value)
+        aliases[alias] = token_type(raw_value, _registry_validated=True)
     if aliases.keys() != alias_names:
         missing = sorted(alias_names - aliases.keys())
         extra = sorted(aliases.keys() - alias_names)
@@ -415,7 +415,7 @@ def _classification_vocabulary_group(
 def resolve_iva_classification_catalogue(
     effective_date: date | None = None,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaClassificationCatalogue:
     """Resolve the territorial and customer-status vocabulary from fact 0083."""
     resolved = _registry_iva_classification_catalogue(effective_date or date.today(), authority=authority)
@@ -446,7 +446,7 @@ def require_iva_territorial_scope(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaTerritorialScope:
     """Return a territorial scope only when 0083 declares it."""
     return resolve_iva_classification_catalogue(effective_date, authority=authority).require_territorial_scope(value)
@@ -456,7 +456,7 @@ def require_customer_tax_status(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> CustomerTaxStatus:
     """Return a customer status only when 0083 declares it."""
     return resolve_iva_classification_catalogue(effective_date, authority=authority).require_customer_tax_status(value)
@@ -466,7 +466,7 @@ def iva_territorial_scope_alias(
     alias: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaTerritorialScope:
     """Return one named territorial projection from fact 0083."""
     return resolve_iva_classification_catalogue(effective_date, authority=authority).territorial_scope_alias(alias)
@@ -476,7 +476,7 @@ def customer_tax_status_alias(
     alias: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> CustomerTaxStatus:
     """Return one named customer-status projection from fact 0083."""
     return resolve_iva_classification_catalogue(effective_date, authority=authority).customer_tax_status_alias(alias)
@@ -485,7 +485,7 @@ def customer_tax_status_alias(
 def resolve_transaction_kind_catalogue(
     effective_date: date,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> TransactionKindCatalogue:
     """Resolve all transaction-kind membership through the 0083 fact query."""
     resolved = _registry_iva_classification_catalogue(effective_date, authority=authority)
@@ -519,7 +519,7 @@ def require_transaction_kind(
     value: object,
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> TransactionKind:
     """Return one registry-declared transaction-kind token or refuse it."""
     return resolve_transaction_kind_catalogue(effective_date, authority=authority).require(value)
@@ -769,7 +769,7 @@ class IvaClassificationRule(NamedTuple):
 def _registry_iva_classification_catalogue(
     effective_date: date,
     *,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
     from ...domain.calculations.registry.authority import bundled_authority

@@ -5,18 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...deadlines.models import IrpfEstimationRegime, IrpfSpecialRegime
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "irpf-regime-vocabulary"
 _ESTIMATION_ORDER_KEY = "irpf_estimation_regime.order"
@@ -57,13 +52,16 @@ class IrpfRegimeVocabulary:
 
     @property
     def all_estimation_regimes(self) -> frozenset[IrpfEstimationRegime]:
+        """Return every declared estimation regime."""
         return frozenset(item.token for item in self.estimation_regimes)
 
     @property
     def all_special_regimes(self) -> frozenset[IrpfSpecialRegime]:
+        """Return every declared special regime."""
         return frozenset(item.token for item in self.special_regimes)
 
     def require_estimation_regime(self, value: object) -> IrpfEstimationRegime:
+        """Return one declared estimation regime or refuse it."""
         if isinstance(value, IrpfEstimationRegime):
             token = value
         elif isinstance(value, str):
@@ -71,7 +69,7 @@ class IrpfRegimeVocabulary:
             if not raw:
                 raise RegistryValidationError("IRPF estimation-regime token must be non-empty")
             try:
-                token = IrpfEstimationRegime._from_registry(raw)
+                token = IrpfEstimationRegime(raw, _registry_validated=True)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IRPF estimation-regime token must be a non-empty string") from exc
         else:
@@ -83,6 +81,7 @@ class IrpfRegimeVocabulary:
         return token
 
     def require_special_regime(self, value: object) -> IrpfSpecialRegime:
+        """Return one declared special regime or refuse it."""
         if isinstance(value, IrpfSpecialRegime):
             token = value
         elif isinstance(value, str):
@@ -90,7 +89,7 @@ class IrpfRegimeVocabulary:
             if not raw:
                 raise RegistryValidationError("IRPF special-regime token must be non-empty")
             try:
-                token = IrpfSpecialRegime._from_registry(raw)
+                token = IrpfSpecialRegime(raw, _registry_validated=True)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IRPF special-regime token must be a non-empty string") from exc
         else:
@@ -102,10 +101,12 @@ class IrpfRegimeVocabulary:
         return token
 
     def estimation_definition(self, value: object) -> IrpfEstimationRegimeDefinition:
+        """Return the declaration for one admitted estimation regime."""
         token = self.require_estimation_regime(value)
         return next(item for item in self.estimation_regimes if item.token == token)
 
     def special_definition(self, value: object) -> IrpfSpecialRegimeDefinition:
+        """Return the declaration for one admitted special regime."""
         token = self.require_special_regime(value)
         return next(item for item in self.special_regimes if item.token == token)
 
@@ -172,7 +173,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_mapping_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -186,34 +187,38 @@ def _resolve_mapping_entries(
     return _mapping_entries(resolved)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     from .authority import bundled_authority
 
-    return _resolve_mapping_entries(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_mapping_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def _selected_mapping_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
-    if authority is None:
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
         return _bundled_mapping_entries(coordinate)
-    return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
+    return _resolve_mapping_entries(effective_date=coordinate, authority=selected)
 
 
 def resolve_irpf_regime_vocabulary(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfRegimeVocabulary:
     """Resolve and validate all five IRPF regime tokens from fact 0125."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
     estimation_regimes: list[IrpfEstimationRegimeDefinition] = []
     for raw_token in _csv(entries, _ESTIMATION_ORDER_KEY):
-        token = IrpfEstimationRegime._from_registry(raw_token)
+        token = IrpfEstimationRegime(raw_token, _registry_validated=True)
         prefix = f"{_ESTIMATION_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"IRPF estimation token {raw_token!r} declares a mismatched value")
@@ -230,7 +235,7 @@ def resolve_irpf_regime_vocabulary(
     vocabulary = IrpfRegimeVocabulary(estimation_regimes=tuple(estimation_regimes), special_regimes=())
     special_regimes: list[IrpfSpecialRegimeDefinition] = []
     for raw_token in _csv(entries, _SPECIAL_ORDER_KEY):
-        token = IrpfSpecialRegime._from_registry(raw_token)
+        token = IrpfSpecialRegime(raw_token, _registry_validated=True)
         prefix = f"{_SPECIAL_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"IRPF special token {raw_token!r} declares a mismatched value")
@@ -254,8 +259,9 @@ def require_irpf_estimation_regime(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfEstimationRegime:
+    """Return one registry-declared estimation regime."""
     return resolve_irpf_regime_vocabulary(effective_date=effective_date, authority=authority).require_estimation_regime(
         value,
     )
@@ -265,8 +271,9 @@ def require_irpf_special_regime(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfSpecialRegime:
+    """Return one registry-declared special regime."""
     return resolve_irpf_regime_vocabulary(effective_date=effective_date, authority=authority).require_special_regime(
         value,
     )
@@ -275,8 +282,9 @@ def require_irpf_special_regime(
 def irpf_estimation_regime_tokens(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[IrpfEstimationRegime, ...]:
+    """Return all estimation-regime tokens in declared order."""
     return tuple(
         item.token
         for item in resolve_irpf_regime_vocabulary(
@@ -288,8 +296,9 @@ def irpf_estimation_regime_tokens(
 def irpf_special_regime_tokens(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[IrpfSpecialRegime, ...]:
+    """Return all special-regime tokens in declared order."""
     return tuple(
         item.token
         for item in resolve_irpf_regime_vocabulary(effective_date=effective_date, authority=authority).special_regimes
@@ -299,8 +308,9 @@ def irpf_special_regime_tokens(
 def irpf_estimation_regime_directa_normal_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfEstimationRegime:
+    """Return the declared direct-normal estimation token."""
     return require_irpf_estimation_regime(
         "directa_normal",
         effective_date=effective_date,
@@ -311,8 +321,9 @@ def irpf_estimation_regime_directa_normal_token(
 def irpf_estimation_regime_directa_simplificada_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfEstimationRegime:
+    """Return the declared direct-simplified estimation token."""
     return require_irpf_estimation_regime(
         "directa_simplificada",
         effective_date=effective_date,
@@ -323,32 +334,36 @@ def irpf_estimation_regime_directa_simplificada_token(
 def irpf_estimation_regime_objetiva_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfEstimationRegime:
+    """Return the declared objective-estimation token."""
     return require_irpf_estimation_regime("objetiva", effective_date=effective_date, authority=authority)
 
 
 def irpf_special_regime_general_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfSpecialRegime:
+    """Return the declared general special-regime token."""
     return require_irpf_special_regime("general", effective_date=effective_date, authority=authority)
 
 
 def irpf_special_regime_impatriado_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfSpecialRegime:
+    """Return the declared impatriate special-regime token."""
     return require_irpf_special_regime("impatriado", effective_date=effective_date, authority=authority)
 
 
 def irpf_special_regime_impatriado_window_years(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> int:
+    """Return the declared duration of the impatriate regime window."""
     definition = resolve_irpf_regime_vocabulary(effective_date=effective_date, authority=authority).special_definition(
         "impatriado",
     )
