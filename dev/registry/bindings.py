@@ -24,7 +24,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import override
+from types import FunctionType
+from typing import TYPE_CHECKING, TypedDict, override
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 SCHEMA_VERSION = "binding-signal.v2"
 BINDING_REF_KEYS = frozenset(
@@ -48,6 +52,41 @@ class Location:
     path: str
     family: str
     ordinal: int
+
+
+class _RawRevisionRecord(TypedDict):
+    """Typed raw surfaces collected before compiler materialisation."""
+
+    metadata: dict[str, object]
+    families: dict[str, list[Mapping[str, object]]]
+    locations: dict[str, list[dict[str, object]]]
+
+
+def _mapping(value: object) -> Mapping[str, object] | None:
+    """Narrow a runtime mapping to the string-keyed shape TOML and JSON use."""
+    if not isinstance(value, Mapping):
+        return None
+    result: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            return None
+        result[key] = item
+    return result
+
+
+def _required_mapping(value: object, *, context: str) -> Mapping[str, object]:
+    """Require a string-keyed mapping at an internal typed boundary."""
+    result = _mapping(value)
+    if result is None:
+        raise TypeError(f"{context} must be a mapping with string keys")
+    return result
+
+
+def _qualified_callable_name(value: object) -> str | None:
+    """Return a callable's stable module/name identity when it exposes one."""
+    if isinstance(value, FunctionType):
+        return f"{value.__module__}.{value.__name__}"
+    return None
 
 
 def _json_value(value: object) -> object:
@@ -80,7 +119,7 @@ def _relative(path: Path, root: Path) -> str:
 def _load_toml(path: Path) -> tuple[dict[str, object] | None, str | None]:
     try:
         with path.open("rb") as stream:
-            return tomllib.load(stream), None
+            return dict(_required_mapping(tomllib.load(stream), context=str(path))), None
     except (OSError, tomllib.TOMLDecodeError) as exc:
         return None, f"{type(exc).__name__}: {exc}"
 
@@ -89,14 +128,19 @@ def _revision_table(data: Mapping[str, object], revision_id: str) -> Mapping[str
     revisions = data.get("revisions")
     if not isinstance(revisions, Mapping):
         return {}
-    revision = revisions.get(revision_id)
-    return revision if isinstance(revision, Mapping) else {}
+    revision = _mapping(revisions.get(revision_id))
+    return revision if revision is not None else {}
 
 
 def _rows(value: object) -> tuple[Mapping[str, object], ...]:
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
         return ()
-    return tuple(item for item in value if isinstance(item, Mapping))
+    rows: list[Mapping[str, object]] = []
+    for item in value:
+        row = _mapping(item)
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
 
 
 def _string_values(value: object) -> tuple[str, ...]:
@@ -123,14 +167,16 @@ def _walk_binding_refs(value: object, path: tuple[str, ...] = ()) -> Iterable[tu
 
 def _provider(binding: Mapping[str, object]) -> tuple[str | None, Mapping[str, object], str]:
     provider = binding.get("provider")
-    if isinstance(provider, Mapping):
-        kind = provider.get("kind")
-        return (kind if isinstance(kind, str) else None, provider, "provider_union")
+    provider_mapping = _mapping(provider)
+    if provider_mapping is not None:
+        kind = provider_mapping.get("kind")
+        return (kind if isinstance(kind, str) else None, provider_mapping, "provider_union")
     source = binding.get("source")
     selector = binding.get("selector")
+    selector_mapping = _mapping(selector)
     return (
         source if isinstance(source, str) else None,
-        selector if isinstance(selector, Mapping) else {},
+        selector_mapping if selector_mapping is not None else {},
         "source_selector_legacy" if source is not None or selector is not None else "unclassified",
     )
 
@@ -169,8 +215,8 @@ def _temporal_shape(provider: Mapping[str, object]) -> tuple[str, tuple[str, ...
 def _model_dump(value: object) -> dict[str, object]:
     dump = getattr(value, "model_dump", None)
     if callable(dump):
-        result = dump(mode="json")
-        return result if isinstance(result, dict) else {}
+        result = _mapping(dump(mode="json"))
+        return dict(result) if result is not None else {}
     return {}
 
 
@@ -201,7 +247,7 @@ def _registration_inventory(root: Path) -> tuple[dict[str, dict[str, object]], l
         result[kind_value] = {
             "kind": kind_value,
             "provider_model": f"{provider_model.__module__}.{provider_model.__name__}",
-            "validator": (f"{validator.__module__}.{validator.__name__}" if validator is not None else None),
+            "validator": _qualified_callable_name(validator),
             "disposition": registration.disposition,
             "output": registration.output,
             "permitted_value_channels": sorted(item.value for item in registration.permitted_value_channels),
@@ -222,7 +268,7 @@ def _registration_inventory(root: Path) -> tuple[dict[str, dict[str, object]], l
 def _compiled_revisions(
     root: Path,
     authored_registry_root: Path,
-) -> tuple[dict[tuple[str, str], object], list[dict[str, object]]]:
+) -> tuple[dict[tuple[str, str], ModeloRevision], list[dict[str, object]]]:
     """Load compiler-materialised revisions without running full authority validation."""
     limitations: list[dict[str, object]] = []
     root_text = str(root)
@@ -241,7 +287,7 @@ def _compiled_revisions(
         )
         return {}, limitations
 
-    result: dict[tuple[str, str], object] = {}
+    result: dict[tuple[str, str], ModeloRevision] = {}
     for modelo in modelos:
         modelo_id = str(modelo.id)
         for revision_id, revision in modelo.revisions.items():
@@ -302,7 +348,11 @@ class _BindingLiteralVisitor(ast.NodeVisitor):
         self.generic_visit(node)
         self.scope.pop()
 
-    visit_AsyncFunctionDef = visit_FunctionDef
+    @override
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self.scope.append(node.name)
+        self.generic_visit(node)
+        self.scope.pop()
 
     @override
     def visit_Constant(self, node: ast.Constant) -> None:
@@ -400,16 +450,16 @@ def _binding_closure(
         return "open_registration", tuple(failures)
 
     channel = value.get("channel") if isinstance(value, Mapping) else None
-    permitted_channels = registration.get("permitted_value_channels", ())
+    permitted_channels = _string_values(registration.get("permitted_value_channels", ()))
     if channel not in permitted_channels:
         failures.append("value_channel_not_permitted")
     aggregation = binding.get("aggregation")
     if isinstance(aggregation, Mapping):
         operation = aggregation.get("op")
-        if operation not in registration.get("permitted_aggregation_ops", ()):
+        if operation not in _string_values(registration.get("permitted_aggregation_ops", ())):
             failures.append("aggregation_operation_not_permitted")
     authored_origins = _rows(binding.get("terminal_origins"))
-    permitted_origins = registration.get("permitted_terminal_origins", ())
+    permitted_origins = _string_values(registration.get("permitted_terminal_origins", ()))
     for origin in authored_origins:
         if origin.get("source_class") not in permitted_origins:
             failures.append("terminal_origin_not_permitted")
@@ -456,7 +506,7 @@ def audit(root: Path) -> dict[str, object]:
             }
         )
 
-    raw_revisions: dict[tuple[str, str], dict[str, object]] = {}
+    raw_revisions: dict[tuple[str, str], _RawRevisionRecord] = {}
     parse_failures: list[dict[str, object]] = []
     modelos_without_revisions: list[str] = []
     family_file_counts: Counter[str] = Counter()
@@ -473,12 +523,10 @@ def audit(root: Path) -> dict[str, object]:
             continue
         for revision_dir in sorted(path for path in revisions_dir.iterdir() if path.is_dir()):
             coordinate = (modelo_dir.name, revision_dir.name)
-            record: dict[str, object] = {
-                "modelo": modelo_dir.name,
-                "revision": revision_dir.name,
+            record: _RawRevisionRecord = {
                 "metadata": {},
-                "families": defaultdict(list),
-                "locations": defaultdict(list),
+                "families": {},
+                "locations": {},
             }
             revision_file = revision_dir / "revision.toml"
             revision_data, error = _load_toml(revision_file)
@@ -507,8 +555,10 @@ def audit(root: Path) -> dict[str, object]:
                     rows = _rows(table.get(family))
                     family_row_counts[family] += len(rows)
                     for ordinal, row in enumerate(rows, 1):
-                        record["families"][family].append(dict(row))
-                        record["locations"][family].append(asdict(Location(_relative(fragment, root), family, ordinal)))
+                        record["families"].setdefault(family, []).append(row)
+                        record["locations"].setdefault(family, []).append(
+                            asdict(Location(_relative(fragment, root), family, ordinal))
+                        )
             raw_revisions[coordinate] = record
 
     findings: list[dict[str, object]] = []
@@ -842,7 +892,7 @@ def audit(root: Path) -> dict[str, object]:
                         "binding": binding["binding_id"],
                     },
                     message=f"binding route does not satisfy static closure: {', '.join(closure_failures)}",
-                    evidence=(binding["location"],),
+                    evidence=(_required_mapping(binding["location"], context="binding location"),),
                 )
             )
 
@@ -913,7 +963,9 @@ def audit(root: Path) -> dict[str, object]:
 
     finding_counts = Counter(item["code"] for item in findings)
     severity_counts = Counter(item["severity"] for item in findings)
-    route_status_counts = Counter(item["closure"]["status"] for item in routes)
+    route_status_counts = Counter(
+        str(_required_mapping(item["closure"], context="binding route closure")["status"]) for item in routes
+    )
     canonical_consumer_counts = Counter(
         item["kind"] for references in canonical_consumers.values() for item in references
     )
@@ -1035,7 +1087,7 @@ def audit(root: Path) -> dict[str, object]:
         "casilla_edges": casilla_edges,
         "routes": routes,
         "unreferenced_bindings": unreferenced_rows,
-        "findings": sorted(findings, key=lambda item: item["key"]),
+        "findings": sorted(findings, key=lambda item: str(item["key"])),
         "hotspots": {
             "findings_by_code": [
                 {"code": code, "count": count}
@@ -1062,12 +1114,13 @@ def audit(root: Path) -> dict[str, object]:
 
 
 def _summary(payload: Mapping[str, object], output: Path) -> dict[str, object]:
+    lanes = _required_mapping(payload["lanes"], context="audit lanes")
     return {
         "schema_version": "binding-signal-summary.v2",
         "output": output.resolve().as_posix(),
         "summary": payload["summary"],
-        "declaration_shape": payload["lanes"]["declaration_shape"],
-        "route_status": payload["lanes"]["route_status"],
+        "declaration_shape": lanes["declaration_shape"],
+        "route_status": lanes["route_status"],
         "hotspots": payload["hotspots"],
     }
 
@@ -1095,9 +1148,11 @@ def main() -> int:
         _stable_dump(output, payload)
         summary = _summary(payload, output)
         print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
-        processing_error = payload["summary"]["classification"] == "processing_error"
+        summary_payload = _required_mapping(payload["summary"], context="audit summary")
+        processing_error = summary_payload["classification"] == "processing_error"
+        finding_rows = _rows(payload["findings"])
         actionable_errors = any(
-            item["severity"] == "error" and item["actionability"] == "actionable" for item in payload["findings"]
+            item["severity"] == "error" and item["actionability"] == "actionable" for item in finding_rows
         )
         if processing_error:
             return 2

@@ -85,13 +85,16 @@ def _registry(destination: Path, modelo_id: str) -> Path:
         table = dict(edition.table)
         typed_rows = {str(row.id): row for row in definition.revisions[edition.revision_id].casillas}
         expanded_rows = []
-        for raw_row in table.get("casillas", ()):
+        raw_casillas = table.get("casillas", ())
+        assert isinstance(raw_casillas, list | tuple)
+        for raw_row in raw_casillas:
             row = dict(raw_row)
             typed = typed_rows[str(row["id"])]
             row.pop("additional_source_refs", None)
             row["source_refs"] = tuple(typed.source_refs)
             row["legal_refs"] = tuple(typed.legal_refs)
             if "constraints" in row:
+                assert typed.constraints is not None
                 constraints = dict(row["constraints"])
                 constraints.pop("additional_source_refs", None)
                 constraints["source_refs"] = tuple(typed.constraints.source_refs)
@@ -309,6 +312,7 @@ def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
     assert found is not None, "no row differs from its inherited row by a lineage claim alone"
     edition, row_id = found
     assert row_id not in edition.stated_ids
+    successor = pilot_before.revisions[edition.revision_id]
     original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
     matching_claims = tuple(
         claim for claim in edition.lineage_attestations if claim.continuidad_id == original_row.continuidad_id

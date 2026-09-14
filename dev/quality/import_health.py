@@ -7,9 +7,9 @@ import json
 import os
 import re
 from collections import Counter, defaultdict
+from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
-from collections.abc import Iterable
 from typing import Final, TypedDict
 
 from dev._paths import UTF_8
@@ -290,7 +290,8 @@ def render_import_health(payload: dict[str, object]) -> str:
     loadability = payload["loadability"]
     assert isinstance(graph, dict) and isinstance(ratchet, dict)
     assert isinstance(hard, dict) and isinstance(advisory, dict)
-    assert isinstance(loadability, dict)
+    if not isinstance(loadability, dict):
+        raise TypeError("loadability payload must be a mapping")
     counts = ratchet["counts"]
     assert isinstance(counts, dict)
     return "\n".join(

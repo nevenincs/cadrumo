@@ -28,7 +28,7 @@ import tokenize
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
-from typing import Any, override
+from typing import Any, TypedDict, override
 
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
@@ -37,6 +37,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     GovernedFactComponentQuery,
 )
 from cadrumo.domain.calculations.registry.authority_store import AuthorityStoreError, SQLiteAuthorityReader
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 from dev._paths import REPO_ROOT
 from dev.registry.analysis.governed_literal_discovery import (
     GovernedLiteralCandidate,
@@ -185,6 +186,25 @@ ANCHOR_STOPWORDS = frozenset(
 
 class ManifestError(ValueError):
     """Raised when the signal ledger is malformed or ambiguous."""
+
+
+class _ScopeBindings(TypedDict):
+    """Closed literal bindings collected for one lexical scope."""
+
+    strings: dict[str, str]
+    sequences: dict[str, tuple[str, ...]]
+    mappings: dict[str, dict[str, str]]
+    blocked: set[str]
+
+
+class _FactIdResolution(TypedDict, total=False):
+    """Typed result of resolving one statically inspected fact expression."""
+
+    ids: tuple[str, ...] | None
+    mode: str
+    mapping_fact_id: str
+    mapping_name: str
+    mapping_key: str
 
 
 def _repo_relative_path(raw: Any, *, label: str) -> tuple[Path, str]:
@@ -863,6 +883,7 @@ def _source_scan(
                     and len(same_shape_declarations) == 1
                     and observation.get("sha256") == relocation["live_sha256"]
                 )
+                retirement_scope: str | None = None
                 if exact:
                     status = "matched"
                     identity_matched += 1
@@ -953,10 +974,13 @@ def _source_scan(
     hash_mismatches = sum(item["hash_status"] == "mismatch" for item in hash_observations)
     hash_missing = sum(item["hash_status"] == "missing" for item in hash_observations)
     relocation_hash_mismatches = sum(
-        observations.get(relocation["live_file"], {}).get("exists")
-        and observations.get(relocation["live_file"], {}).get("read_status") == "ok"
-        and observations.get(relocation["live_file"], {}).get("sha256") != relocation["live_sha256"]
+        1
         for relocation in relocations.values()
+        if (
+            observations.get(relocation["live_file"], {}).get("exists")
+            and observations.get(relocation["live_file"], {}).get("read_status") == "ok"
+            and observations.get(relocation["live_file"], {}).get("sha256") != relocation["live_sha256"]
+        )
     )
     closed_without_hash = sum(
         row["status"] in CLOSED_STATUSES and not row.get("closure", {}).get("source_hashes")
@@ -1149,7 +1173,9 @@ def _consumer_source_paths() -> dict[str, Any]:
         rg_error = "rg-unavailable"
 
     paths: list[str] = []
-    fallback_errors: list[str] = [rg_error]
+    fallback_errors: list[str] = []
+    if rg_error is not None:
+        fallback_errors.append(rg_error)
     try:
         candidates = SOURCE_ROOT.rglob("*.py")
         for path in candidates:
@@ -1380,7 +1406,7 @@ def _scope_bindings(
     body: Sequence[ast.stmt],
     *,
     arguments: ast.arguments | None = None,
-) -> dict[str, Any]:
+) -> _ScopeBindings:
     """Build conservative literal bindings for one lexical scope.
 
     A name is usable only when it has exactly one write in this scope and the
@@ -1408,7 +1434,7 @@ def _scope_bindings(
         if isinstance(statement, ast.Assign):
             targets = _simple_assignment_names(statement.targets)
             mapping = _literal_string_mapping(statement.value)
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+        elif isinstance(statement.target, ast.Name):
             targets = [statement.target.id]
             mapping = _literal_string_mapping(statement.value)
         else:
@@ -1429,7 +1455,7 @@ def _scope_bindings(
             value_string = _literal_string(statement.value)
             value_sequence = _literal_string_sequence(statement.value)
             value_mapping = _literal_string_mapping(statement.value)
-        elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
+        elif isinstance(statement.target, ast.Name):
             targets = [statement.target.id]
             value_string = _literal_string(statement.value)
             value_sequence = _literal_string_sequence(statement.value)
@@ -1443,7 +1469,7 @@ def _scope_bindings(
             value = value_sequence
         else:
             value = value_string
-        if value is None and isinstance(statement, (ast.Assign, ast.AnnAssign)):
+        if value is None:
             value_node = statement.value
             if isinstance(value_node, ast.Subscript) and isinstance(value_node.value, ast.Name):
                 mapping = literal_mappings.get(value_node.value.id)
@@ -1647,7 +1673,8 @@ def _immutable_module_values(tree: ast.AST) -> dict[str, tuple[str, ...]]:
             for target in targets:
                 assignments.setdefault(target, []).append(statement.value)
         elif isinstance(statement, ast.AnnAssign) and isinstance(statement.target, ast.Name):
-            assignments.setdefault(statement.target.id, []).append(statement.value)
+            if statement.value is not None:
+                assignments.setdefault(statement.target.id, []).append(statement.value)
     writes = Counter(
         node.id for node in ast.walk(tree) if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
     )
@@ -1742,7 +1769,7 @@ class _ClosedWorldFlowVisitor(ast.NodeVisitor):
         self.caller = caller
         self.functions = functions
         self.module_values = module_values
-        self.environment = dict(parameter_values)
+        self.environment: dict[str, tuple[str, ...] | None] = dict(parameter_values)
         self.edges: list[tuple[str, dict[str, tuple[str, ...] | None]]] = []
 
     def _expression_values(self, node: ast.AST | None) -> tuple[str, ...] | None:
@@ -2806,7 +2833,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         self.query_symbols = set(CONSUMER_QUERY_SYMBOLS)
         self.query_family_by_symbol = dict(QUERY_FAMILY_BY_SYMBOL)
         module_body = tree.body if isinstance(tree, ast.Module) else []
-        self.scope_stack: list[dict[str, Any]] = [_scope_bindings(module_body)]
+        self.scope_stack: list[_ScopeBindings] = [_scope_bindings(module_body)]
         self.loop_bindings: list[dict[str, tuple[str, ...] | None]] = []
         self.function_scope_stack: list[str] = []
         self.mapping_return_facts = _mapping_return_fact_ids(tree)
@@ -2849,7 +2876,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
         node: ast.Call,
         observation: dict[str, Any],
         fact_expression: ast.AST | None,
-        resolution: dict[str, Any],
+        resolution: Mapping[str, object],
     ) -> dict[str, Any] | None:
         symbol = "::".join(self.symbol_stack)
         query_family = self.query_family_by_symbol.get(_call_symbol(node.func) or "")
@@ -3033,10 +3060,12 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
             if key in self.closed_world_values:
                 return self.closed_world_values[key]
         for scope in reversed(self.scope_stack):
-            if name in scope["sequences"]:
-                return scope["sequences"][name]
-            if name in scope["strings"]:
-                return scope["strings"][name]
+            sequences = scope["sequences"]
+            if name in sequences:
+                return sequences[name]
+            strings = scope["strings"]
+            if name in strings:
+                return strings[name]
             if name in scope["blocked"]:
                 return None
         if name in self.invalid_import_bindings:
@@ -3050,10 +3079,10 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
 
     def _scope_mapping(self, name: str) -> dict[str, str] | None:
         for scope in reversed(self.scope_stack):
-            mapping = scope.get("mappings", {}).get(name)
+            mapping = scope["mappings"].get(name)
             if mapping is not None:
                 return mapping
-            if name in scope.get("blocked", set()):
+            if name in scope["blocked"]:
                 return None
         return None
 
@@ -3102,7 +3131,7 @@ class _ConsumerQueryVisitor(ast.NodeVisitor):
                 return left + right
         return None
 
-    def _fact_id_resolution(self, node: ast.AST | None) -> dict[str, Any]:
+    def _fact_id_resolution(self, node: ast.AST | None) -> _FactIdResolution:
         if node is None:
             return {"ids": None, "mode": "unresolved"}
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
@@ -3430,7 +3459,7 @@ def _authored_fact_index() -> tuple[dict[str, list[str]], list[str]]:
     for path in paths:
         try:
             payload = tomllib.loads(path.read_text(encoding="utf-8"))
-            declaration = payload.get("fact") if isinstance(payload, dict) else None
+            declaration = payload.get("fact")
             fact_id = declaration.get("fact_id") if isinstance(declaration, dict) else None
             if isinstance(fact_id, str) and fact_id.strip():
                 relative = _display_path(path)
@@ -3570,7 +3599,7 @@ def _authored_indexed_payload_staleness(
     return result
 
 
-def _compiled_provider_id(compiled_fact: Any) -> str | None:
+def _compiled_provider_id(compiled_fact: object) -> str | None:
     """Return provider provenance only for a wholly generated compiled fact.
 
     Directly authored facts carry their own provider identity and authored
@@ -3581,8 +3610,8 @@ def _compiled_provider_id(compiled_fact: Any) -> str | None:
     """
     if not isinstance(compiled_fact, dict):
         return None
-    provider_id = compiled_fact.get("provider_id")
-    variants = compiled_fact.get("variants")
+    provider_id: object = compiled_fact.get("provider_id")
+    variants: object = compiled_fact.get("variants")
     if not isinstance(provider_id, str) or not provider_id.strip():
         return None
     if not isinstance(variants, list) or not variants:
@@ -3876,7 +3905,9 @@ def _consumer_fact_scan(
         }
         for item in malformed_observations
     ]
-    blockers = [item for item in observations if item["blocking"]] + malformed_blockers + dynamic_blockers
+    blockers: list[dict[str, Any]] = (
+        [item for item in observations if item["blocking"]] + malformed_blockers + dynamic_blockers
+    )
     return {
         "observations": observations,
         "blockers": blockers,
@@ -5032,27 +5063,29 @@ def _load_indexed_fact_authority(path: Path) -> tuple[dict[str, Any] | None, str
         metadata["error"] = str(exc)
         return None, metadata["status"], metadata
     metadata["descriptor_sha256"] = "sha256:" + hashlib.sha256(data).hexdigest()
-    reader: SQLiteAuthorityReader | None = None
     try:
         reader = SQLiteAuthorityReader(path)
-        pin = reader.pin()
-        queries = tuple(
-            query for query in reader.component_queries() if query.kind is AuthorityComponentKind.GOVERNED_FACT
-        )
-        facts = {
-            query.fact_id: reader.load(query, pin=pin)
-            for query in queries
-            if isinstance(query, GovernedFactComponentQuery)
-        }
-        raw_facts = {fact_id: fact.model_dump(mode="json") for fact_id, fact in facts.items()}
-        identity_digest = pin.logical_generation
+        try:
+            pin = reader.pin()
+            queries = tuple(
+                query for query in reader.component_queries() if query.kind is AuthorityComponentKind.GOVERNED_FACT
+            )
+            facts: dict[str, GovernedFact] = {}
+            for query in queries:
+                if not isinstance(query, GovernedFactComponentQuery):
+                    continue
+                fact = reader.load(query, pin=pin)
+                if not isinstance(fact, GovernedFact):
+                    raise TypeError(f"authority component {query.fact_id!r} is not a governed fact")
+                facts[query.fact_id] = fact
+            raw_facts = {fact_id: fact.model_dump(mode="json") for fact_id, fact in facts.items()}
+            identity_digest = pin.logical_generation
+        finally:
+            reader.close()
     except (AuthorityStoreError, AttributeError, OSError, TypeError, ValueError) as exc:
         metadata["status"] = f"invalid-authority:{type(exc).__name__}"
         metadata["error"] = str(exc)
         return None, metadata["status"], metadata
-    finally:
-        if reader is not None:
-            reader.close()
     metadata["identity_digest"] = identity_digest
     metadata["fact_count"] = len(facts)
     metadata["status"] = "ok"
@@ -5093,7 +5126,7 @@ def _authoring_fact_proof(
         result["read_status"] = f"parse-error:{type(exc).__name__}"
         return result
     result["read_status"] = "ok"
-    declaration = payload.get("fact") if isinstance(payload, dict) else None
+    declaration = payload.get("fact")
     if not isinstance(declaration, dict):
         result["read_status"] = "fact-declaration-missing"
         return result
@@ -5562,7 +5595,7 @@ def _ast_function_call_graph(
     definitions: dict[str, list[ast.AST]],
 ) -> tuple[dict[str, set[str]], set[str]]:
     """Build local call edges and module-level function roots from real Calls."""
-    graph = {name: set() for name in definitions}
+    graph: dict[str, set[str]] = {name: set() for name in definitions}
     for name, nodes in definitions.items():
         for node in nodes:
             if isinstance(node, ast.ClassDef):
@@ -5944,6 +5977,7 @@ def _placement_scan(
             continue
 
         path_parts = {part.casefold() for part in PurePosixPath(destination_relative).parts}
+        typed_missing_fields: dict[str, list[str]] = {}
         if "facts" in path_parts:
             declaration_by_id, fact_missing_fields = _fact_declaration(
                 payload,
@@ -5961,7 +5995,6 @@ def _placement_scan(
         else:
             declaration_by_id = {}
             fact_missing_fields = {}
-            typed_missing_fields = {}
         if "facts" in path_parts:
             typed_missing_fields = {}
         found_ids = [
@@ -6699,7 +6732,14 @@ def _validate_ownership(ownership: Any, candidates: Any) -> None:
 
 
 def _owner_for(row: dict[str, Any], ownership: dict[str, Any]) -> str:
-    return ownership.get("overrides", {}).get(row["id"], ownership["default_by_category"][row["category"]])
+    overrides = ownership.get("overrides", {})
+    defaults = ownership.get("default_by_category")
+    if not isinstance(overrides, dict) or not isinstance(defaults, dict):
+        raise ManifestError("ownership must contain validated owner mappings")
+    owner = overrides.get(row["id"], defaults[row["category"]])
+    if not isinstance(owner, str):
+        raise ManifestError("ownership owner must be a string")
+    return owner
 
 
 def _identity_payload(row: dict[str, Any]) -> dict[str, Any]:
@@ -7146,6 +7186,14 @@ def _exit_code(signal: dict[str, Any]) -> int:
     return 0
 
 
+def _signal_exit_code(signal: Mapping[str, object]) -> int:
+    """Return the already-computed exit code from a signal payload."""
+    exit_code = signal.get("exit_code")
+    if not isinstance(exit_code, int):
+        raise ManifestError("signal exit_code must be an integer")
+    return exit_code
+
+
 def _signal(
     manifest: dict[str, Any],
     manifest_path: Path,
@@ -7546,7 +7594,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(signal, ensure_ascii=False, sort_keys=True, indent=2))
         else:
             print(_facts_only_human(signal))
-        return signal["exit_code"]
+        return _signal_exit_code(signal)
     manifest_path = args.manifest.resolve()
     try:
         manifest = _load_manifest(manifest_path)
@@ -7581,7 +7629,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(signal, ensure_ascii=False, sort_keys=True, indent=2))
     else:
         print(_human(signal))
-    return signal["exit_code"]
+    return _signal_exit_code(signal)
 
 
 if __name__ == "__main__":

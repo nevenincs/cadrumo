@@ -49,6 +49,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.aggregation.renta_income_ledger import aggregate_renta_income_ledger
+from cadrumo.application.aggregation.tests.renta_income_aggregation_support import (
+    _M130_MODELO,
+    _m130_activity_category_matcher,
+    _m130_employment_category_matcher,
+)
 from cadrumo.core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -140,6 +145,10 @@ def _aggregated(*, declares_substrate: bool):
         TransactionCatalogue.from_transactions((_invoice_row(declares_substrate=declares_substrate),)),
         bucket_id=_BUCKET,
         period=_PERIOD,
+        modelo=_M130_MODELO,
+        target_casilla_id=_M130_INGRESOS_CASILLA,
+        activity_category_matcher=_m130_activity_category_matcher,
+        employment_category_matcher=_m130_employment_category_matcher,
     )
 
 
