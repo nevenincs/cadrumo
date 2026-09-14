@@ -49,6 +49,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
@@ -61,6 +62,10 @@ from .errors import IvaRateNotFoundError
 from .lookup import coexisting_tier_rates, lookup_rate
 from .schema import IvaCategory, IvaRateKind, IvaRateRecord, spanish_eu_member_state
 
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+
+
 """Non-derivable category reasons are projected from fact 0084."""
 
 
@@ -68,13 +73,17 @@ def _ambiguous_tier_reason(
     rate_kind: IvaRateKind,
     coexisting: tuple[IvaRateRecord, ...],
     on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> str:
     """Word the refusal for a tier carrying more than one rate on ``on_date``.
 
     Names every rate actually in force so the operator can pick, rather than
     reporting a bare "not derivable" for a tier that plainly has a rate.
     """
-    ordinary = ", ".join(f"{record.pct} %" for record in _ordinary_tier_rates(rate_kind, on_date))
+    ordinary = ", ".join(
+        f"{record.pct} %" for record in _ordinary_tier_rates(rate_kind, on_date, operation=operation)
+    )
     temporary = ", ".join(f"{record.pct} %" for record in coexisting)
     return (
         f"the {rate_kind.value.replace('_', '-')} tier carries more than one rate on "
@@ -86,10 +95,22 @@ def _ambiguous_tier_reason(
     )
 
 
-def _ordinary_tier_rates(rate_kind: IvaRateKind, on_date: date) -> tuple[IvaRateRecord, ...]:
+def _ordinary_tier_rates(
+    rate_kind: IvaRateKind,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaRateRecord, ...]:
     """Return the tier's ordinary in-force rate, for wording the refusal only."""
     try:
-        return (lookup_rate(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date),)
+        return (
+            lookup_rate(
+                spanish_eu_member_state(effective_date=on_date, authority=operation),
+                rate_kind,
+                on_date,
+                operation=operation,
+            ),
+        )
     except IvaRateNotFoundError:
         return ()
 
@@ -138,7 +159,12 @@ class IvaRateResolution(BaseModel):
     )
 
 
-def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateResolution:
+def resolve_category_rate(
+    category: IvaCategory,
+    *,
+    on_date: date,
+    operation: PinnedAuthorityOperation,
+) -> IvaRateResolution:
     """Resolve an :class:`IvaCategory` to its Spanish IVA rate fraction.
 
     Maps ``category`` to its :class:`IvaRateKind` and looks the applicable
@@ -154,6 +180,8 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
     Args:
         category: The selected IVA category to resolve.
         on_date: The effective date used to resolve the registry rate.
+        operation: Caller-owned pinned authority operation for the complete
+            category and rate lookup.
 
     Returns:
         A typed :class:`IvaRateResolution`. ``derivable`` is ``True`` with a
@@ -165,8 +193,8 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             that the registry has no record for on ``on_date`` (a registry
             gap, not a category-shape problem).
     """
-    category_catalogue = resolve_iva_category_catalogue(effective_date=on_date)
-    catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date)
+    category_catalogue = resolve_iva_category_catalogue(effective_date=on_date, authority=operation)
+    catalogue = resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation)
     rate_kind = next(
         (definition.token for definition in catalogue.definitions if definition.category == category.value),
         None,
@@ -179,14 +207,19 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=None,
             reason=category_catalogue.reason(category),
         )
-    coexisting = coexisting_tier_rates(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date)
+    coexisting = coexisting_tier_rates(
+        spanish_eu_member_state(effective_date=on_date, authority=operation),
+        rate_kind,
+        on_date,
+        operation=operation,
+    )
     if coexisting:
         return IvaRateResolution(
             category=category,
             derivable=False,
             rate=None,
             rate_kind=rate_kind,
-            reason=_ambiguous_tier_reason(rate_kind, coexisting, on_date),
+            reason=_ambiguous_tier_reason(rate_kind, coexisting, on_date, operation=operation),
         )
     if rate_kind in (catalogue.zero_token, catalogue.exempt_token):
         return IvaRateResolution(
@@ -196,7 +229,12 @@ def resolve_category_rate(category: IvaCategory, *, on_date: date) -> IvaRateRes
             rate_kind=rate_kind,
             reason="",
         )
-    record = lookup_rate(spanish_eu_member_state(effective_date=on_date), rate_kind, on_date)
+    record = lookup_rate(
+        spanish_eu_member_state(effective_date=on_date, authority=operation),
+        rate_kind,
+        on_date,
+        operation=operation,
+    )
     return IvaRateResolution(
         category=category,
         derivable=True,
