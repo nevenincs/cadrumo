@@ -392,7 +392,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=2025,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=ProrrataRegisterRegime._from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),
@@ -445,7 +445,7 @@ def _general_register(ejercicio: int, *, slots: tuple[int, ...]) -> ProrrataRegi
         entries=(
             ProrrataRegisterEntry(
                 ejercicio=ejercicio,
-                regime=ProrrataRegisterRegime.GENERAL,
+                regime=ProrrataRegisterRegime._from_registry("general"),
                 especial_transition=None,
                 source_registry_snapshot_refs=(),
             ),

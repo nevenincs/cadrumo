@@ -19,7 +19,6 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
-from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -476,10 +475,10 @@ def test_a_deadline_source_outside_both_the_revision_and_its_window_still_refuse
 def test_a_source_cited_outside_any_deadline_window_keeps_the_revision_axis() -> None:
     """The exemption follows the deadline-window citation, not the calendar date.
 
-    A design source is cited by casillas, so falling inside some window's dates
+    A form source is cited by casillas, so falling inside some window's dates
     earns it nothing: it still has to overlap the revision it grounds.
     """
-    design_source = "aeat-dr-123-2019-2023-v13"
+    design_source = "aeat-dr-123-2019-2023-v13-form-text"
     modelo, _catalogues = _committed_modelo(_DEADLINE_MODELO)
     revision = modelo.revisions[_DEADLINE_REVISION]
     window_source_ids = {ref for window in revision.deadline_windows for ref in window.source_refs}
@@ -565,7 +564,7 @@ def test_a_forward_reaching_declaration_is_refused_at_the_model_boundary() -> No
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     forward = reference.model_dump() | {"governs_periods_from": date(2026, 1, 1)}
 
-    with pytest.raises(ValidationError, match="RETROACTIVE reach only"):
+    with pytest.raises(RegistryValidationError, match="RETROACTIVE reach only"):
         LegalReference.model_validate(forward)
 
 
@@ -575,5 +574,5 @@ def test_a_governed_period_end_without_a_start_is_refused() -> None:
     reference = catalogues.legal[_RETRO_LEGAL_ID]
     dangling = reference.model_dump() | {"governs_periods_from": None}
 
-    with pytest.raises(ValidationError, match="governs_periods_to without governs_periods_from"):
+    with pytest.raises(RegistryValidationError, match="governs_periods_to without governs_periods_from"):
         LegalReference.model_validate(dangling)
