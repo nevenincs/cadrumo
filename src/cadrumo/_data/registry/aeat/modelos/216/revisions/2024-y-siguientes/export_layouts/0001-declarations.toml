@@ -1,33 +1,715 @@
-# Modelo 216 fichero BOE, transcribed position-by-position from the bundled
-# diseño de registro `aeat-dr-216-2024`
-# (sha256 ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0,
-# applies_from 2024-01-01, the exact span this revision declares).
-#
-# The design carries two record sheets and a closing constant:
-#   Pág. 0  the <AUX> file envelope, 13 positions to 328
-#   Pág. 1  the declaration record, 32 positions, 600 total
-#   row 15  the 18-byte envelope closing constant "</T2160AAAAPP0000>", whose
-#           position the design gives as "***" (it follows the variable-length
-#           file content) rather than as a fixed offset
-#
-# Every position of both sheets is written. Offsets and lengths were read out
-# of the design binary rather than transcribed by hand.
+# Original commentary: 0001-declarations.toml
+# # Modelo 216 fichero BOE, transcribed position-by-position from the bundled
+# # diseño de registro `aeat-dr-216-2024`
+# # (sha256 ebee21da4709d6cd63e42cbd82d8c0592252ce2157c93ac1df9833f1ea42cbf0,
+# # applies_from 2024-01-01, the exact span this revision declares).
+# #
+# # The design carries two record sheets and a closing constant:
+# #   Pág. 0  the <AUX> file envelope, 13 positions to 328
+# #   Pág. 1  the declaration record, 32 positions, 600 total
+# #   row 15  the 18-byte envelope closing constant "</T2160AAAAPP0000>", whose
+# #           position the design gives as "***" (it follows the variable-length
+# #           file content) rather than as a fixed offset
+# #
+# # Every position of both sheets is written. Offsets and lengths were read out
+# # of the design binary rather than transcribed by hand.
+# 
+# [[revisions."2024-y-siguientes".export_layouts]]
+# id = "modelo-216-fichero-boe"
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# [[revisions."2024-y-siguientes".export_layouts]]
+# id = "modelo-216-fichero-boe"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records]]
+# id = "modelo-216-envelope-header"
+# record_type = "envelope_header"
+# order = 0
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-open"
+# offset = 1
+# length = 2
+# kind = "literal"
+# literal = "<T"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-modelo"
+# offset = 3
+# length = 3
+# kind = "literal"
+# literal = "216"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-discriminante"
+# offset = 6
+# length = 1
+# kind = "literal"
+# literal = "0"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-year"
+# offset = 7
+# length = 4
+# kind = "draft"
+# draft_attribute = "filing_year"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-period"
+# offset = 11
+# length = 2
+# kind = "draft"
+# draft_attribute = "period_code"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-tipo-cierre"
+# offset = 13
+# length = 5
+# kind = "literal"
+# literal = "0000>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-aux-open"
+# offset = 18
+# length = 5
+# kind = "literal"
+# literal = "<AUX>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-reserved-1"
+# offset = 23
+# length = 70
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# # EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
+# # @101+9 "NIF Empresa Desarrollo (**)". AEAT's note (**) on this design reads
+# # "A cumplimentar por las entidades desarrolladoras (EEDD)". Both carry the
+# # software house's own identity -- the version of the SW and the NIF of the ED --
+# # not the filer's and not the presenter's, and this project declares no
+# # entidad-desarrolladora identity anywhere.
+# #
+# # These two were previously authored as fillers with that reasoning already
+# # correct, including an explicit refusal to map @101+9 to presenter.tax_id. Only
+# # the SHAPE changes here: the record renderer pre-fills every record with spaces
+# # before writing fields, so a right_space filler and an omitted span emit
+# # byte-identical output -- the blank rendering the earlier note intended is
+# # preserved exactly. What the filler additionally did was make the coverage gate
+# # count both positions as WRITTEN, which is coverage no datum earned. Leaving
+# # them unwritten reports the gap instead, and matches Modelos 111/115/117/122/
+# # 123/126/128/130/131/341/714 and now 390.
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-reserved-2"
+# offset = 97
+# length = 4
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# # @101+9 "NIF Empresa Desarrollo (**)" is UNWRITTEN -- see the EEDD note above.
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-reserved-3"
+# offset = 110
+# length = 213
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-aux-close"
+# offset = 323
+# length = 6
+# kind = "literal"
+# literal = "</AUX>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# [[revisions."2024-y-siguientes".export_layouts]]
+# id = "modelo-216-fichero-boe"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records]]
+# id = "modelo-216-page-01"
+# record_type = "page_01"
+# order = 1
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-open"
+# offset = 1
+# length = 2
+# kind = "literal"
+# literal = "<T"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-modelo"
+# offset = 3
+# length = 3
+# kind = "literal"
+# literal = "216"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-page"
+# offset = 6
+# length = 5
+# kind = "literal"
+# literal = "01000"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-end"
+# offset = 11
+# length = 1
+# kind = "literal"
+# literal = ">"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-complementaria-page-indicator"
+# offset = 12
+# length = 1
+# kind = "filler"
+# # The design states its content as "En blanco" -- this is the page-level
+# # complementaria indicator of the multi-page grammar, not the declaration's
+# # own complementaria mark, which AEAT places at position 432 and this layout
+# # writes from amendment evidence there.
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-tipo-autoliquidacion"
+# offset = 13
+# length = 1
+# kind = "header"
+# # Nota1: "I (ingreso) N (negativa) G (ingreso a anotar en CCT) U
+# # (domiciliacion del ingreso en CCC)" -- the ResultDisposition code vocabulary.
+# producer_key = "filing.result_disposition"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-nif"
+# offset = 14
+# length = 9
+# kind = "header"
+# producer_key = "taxpayer.tax_id"
+# data_type = "text"
+# required = true
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-apellidos-nombre-razon-social"
+# offset = 23
+# length = 80
+# kind = "header"
+# # AEAT gives ONE slot for "Apellidos y nombre o razon social", so it must
+# # read the fact populated for both populations: surnames/given_name are blank
+# # for an entity and legal_name is blank for a natural person, while full_name
+# # carries either.
+# producer_key = "taxpayer.full_name"
+# data_type = "text"
+# required = true
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-devengo-ejercicio"
+# offset = 103
+# length = 4
+# kind = "draft"
+# draft_attribute = "filing_year"
+# data_type = "integer"
+# required = true
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-devengo-periodo"
+# offset = 107
+# length = 2
+# kind = "draft"
+# draft_attribute = "period_code"
+# data_type = "text"
+# required = true
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-05"
+# offset = 109
+# length = 17
+# kind = "casilla"
+# casilla_id = "05"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-06"
+# offset = 126
+# length = 17
+# kind = "casilla"
+# casilla_id = "06"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-07"
+# offset = 143
+# length = 17
+# kind = "casilla"
+# casilla_id = "07"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-08"
+# offset = 160
+# length = 17
+# kind = "casilla"
+# casilla_id = "08"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-09"
+# offset = 177
+# length = 17
+# kind = "casilla"
+# casilla_id = "09"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-10"
+# offset = 194
+# length = 17
+# kind = "casilla"
+# casilla_id = "10"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-11"
+# offset = 211
+# length = 17
+# kind = "casilla"
+# casilla_id = "11"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-12"
+# offset = 228
+# length = 17
+# kind = "casilla"
+# casilla_id = "12"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-13"
+# offset = 245
+# length = 17
+# kind = "casilla"
+# casilla_id = "13"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-14"
+# offset = 262
+# length = 17
+# kind = "casilla"
+# casilla_id = "14"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-15"
+# offset = 279
+# length = 17
+# kind = "casilla"
+# casilla_id = "15"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-16"
+# offset = 296
+# length = 17
+# kind = "casilla"
+# casilla_id = "16"
+# data_type = "integer"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-17"
+# offset = 313
+# length = 17
+# kind = "casilla"
+# casilla_id = "17"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-18"
+# offset = 330
+# length = 17
+# kind = "casilla"
+# casilla_id = "18"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-19"
+# offset = 347
+# length = 17
+# kind = "casilla"
+# casilla_id = "19"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-20"
+# offset = 364
+# length = 17
+# kind = "casilla"
+# casilla_id = "20"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-casilla-21"
+# offset = 381
+# length = 17
+# kind = "casilla"
+# casilla_id = "21"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-iban"
+# offset = 398
+# length = 34
+# kind = "header"
+# producer_key = "selected_account.iban"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-complementaria"
+# offset = 432
+# length = 1
+# kind = "header"
+# producer_key = "amendment_evidence.is_complementaria"
+# data_type = "boolean"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-complementaria-justificante"
+# offset = 433
+# length = 13
+# kind = "header"
+# producer_key = "amendment_evidence.original_aeat_receipt"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-reserved-aeat"
+# offset = 446
+# length = 143
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-page-01-close"
+# offset = 589
+# length = 12
+# kind = "literal"
+# literal = "</T21601000>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
+# # Design row 15 of Pág. 0: the constant that closes the <T…> file envelope,
+# # 18 positions, "</T2160AAAAPP0000>" — modelo, discriminante, ejercicio de
+# # devengo, periodo and tipo, in that order. Its position is given as "***"
+# # because it follows the variable-length file content, so it is authored as its
+# # own terminator record rather than at a fixed offset inside Pág. 0.
+# #
+# # It is `computed` rather than `literal` because two of its eighteen bytes are
+# # the ejercicio and two more the periodo: the renderer's envelope_closing_tag
+# # builds exactly "</T{modelo}0{year}{period}0000>" from the draft, which is the
+# # same 18-byte grammar this design states.
+# 
+# [[revisions."2024-y-siguientes".export_layouts]]
+# id = "modelo-216-fichero-boe"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records]]
+# id = "modelo-216-envelope-footer"
+# record_type = "envelope_footer"
+# order = 2
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2024-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-216-envelope-close"
+# offset = 1
+# length = 18
+# kind = "computed"
+# computed_key = "envelope_closing_tag"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
+# source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts]]
+[[revisions.2024-y-siguientes.export_layouts]]
 id = "modelo-216-fichero-boe"
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
-[[revisions."2024-y-siguientes".export_layouts]]
-id = "modelo-216-fichero-boe"
 
-[[revisions."2024-y-siguientes".export_layouts.records]]
+[[revisions.2024-y-siguientes.export_layouts.records]]
 id = "modelo-216-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-open"
 offset = 1
 length = 2
@@ -41,7 +723,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-modelo"
 offset = 3
 length = 3
@@ -55,7 +737,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-discriminante"
 offset = 6
 length = 1
@@ -69,7 +751,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-year"
 offset = 7
 length = 4
@@ -83,7 +765,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-period"
 offset = 11
 length = 2
@@ -97,7 +779,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-tipo-cierre"
 offset = 13
 length = 5
@@ -111,7 +793,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-aux-open"
 offset = 18
 length = 5
@@ -125,7 +807,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-reserved-1"
 offset = 23
 length = 70
@@ -138,24 +820,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-# EEDD slots, deliberately UNWRITTEN: @93+4 "Version del Programa (**)" and
-# @101+9 "NIF Empresa Desarrollo (**)". AEAT's note (**) on this design reads
-# "A cumplimentar por las entidades desarrolladoras (EEDD)". Both carry the
-# software house's own identity -- the version of the SW and the NIF of the ED --
-# not the filer's and not the presenter's, and this project declares no
-# entidad-desarrolladora identity anywhere.
-#
-# These two were previously authored as fillers with that reasoning already
-# correct, including an explicit refusal to map @101+9 to presenter.tax_id. Only
-# the SHAPE changes here: the record renderer pre-fills every record with spaces
-# before writing fields, so a right_space filler and an omitted span emit
-# byte-identical output -- the blank rendering the earlier note intended is
-# preserved exactly. What the filler additionally did was make the coverage gate
-# count both positions as WRITTEN, which is coverage no datum earned. Leaving
-# them unwritten reports the gap instead, and matches Modelos 111/115/117/122/
-# 123/126/128/130/131/341/714 and now 390.
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-reserved-2"
 offset = 97
 length = 4
@@ -168,9 +833,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-# @101+9 "NIF Empresa Desarrollo (**)" is UNWRITTEN -- see the EEDD note above.
-
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-reserved-3"
 offset = 110
 length = 213
@@ -183,7 +846,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-aux-close"
 offset = 323
 length = 6
@@ -196,17 +859,15 @@ justification = "none"
 signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
-[[revisions."2024-y-siguientes".export_layouts]]
-id = "modelo-216-fichero-boe"
 
-[[revisions."2024-y-siguientes".export_layouts.records]]
+[[revisions.2024-y-siguientes.export_layouts.records]]
 id = "modelo-216-page-01"
 record_type = "page_01"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-open"
 offset = 1
 length = 2
@@ -220,7 +881,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-modelo"
 offset = 3
 length = 3
@@ -234,7 +895,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-page"
 offset = 6
 length = 5
@@ -248,7 +909,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-end"
 offset = 11
 length = 1
@@ -262,15 +923,11 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-complementaria-page-indicator"
 offset = 12
 length = 1
 kind = "filler"
-# The design states its content as "En blanco" -- this is the page-level
-# complementaria indicator of the multi-page grammar, not the declaration's
-# own complementaria mark, which AEAT places at position 432 and this layout
-# writes from amendment evidence there.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -279,13 +936,11 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-tipo-autoliquidacion"
 offset = 13
 length = 1
 kind = "header"
-# Nota1: "I (ingreso) N (negativa) G (ingreso a anotar en CCT) U
-# (domiciliacion del ingreso en CCC)" -- the ResultDisposition code vocabulary.
 producer_key = "filing.result_disposition"
 data_type = "text"
 required = true
@@ -295,7 +950,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-nif"
 offset = 14
 length = 9
@@ -309,15 +964,11 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-apellidos-nombre-razon-social"
 offset = 23
 length = 80
 kind = "header"
-# AEAT gives ONE slot for "Apellidos y nombre o razon social", so it must
-# read the fact populated for both populations: surnames/given_name are blank
-# for an entity and legal_name is blank for a natural person, while full_name
-# carries either.
 producer_key = "taxpayer.full_name"
 data_type = "text"
 required = true
@@ -327,7 +978,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-devengo-ejercicio"
 offset = 103
 length = 4
@@ -341,7 +992,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-devengo-periodo"
 offset = 107
 length = 2
@@ -355,7 +1006,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-05"
 offset = 109
 length = 17
@@ -369,7 +1020,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-06"
 offset = 126
 length = 17
@@ -383,7 +1034,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-07"
 offset = 143
 length = 17
@@ -397,7 +1048,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-08"
 offset = 160
 length = 17
@@ -411,7 +1062,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-09"
 offset = 177
 length = 17
@@ -425,7 +1076,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-10"
 offset = 194
 length = 17
@@ -439,7 +1090,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-11"
 offset = 211
 length = 17
@@ -453,7 +1104,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-12"
 offset = 228
 length = 17
@@ -467,7 +1118,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-13"
 offset = 245
 length = 17
@@ -481,7 +1132,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-14"
 offset = 262
 length = 17
@@ -495,7 +1146,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-15"
 offset = 279
 length = 17
@@ -509,7 +1160,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-16"
 offset = 296
 length = 17
@@ -523,7 +1174,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-17"
 offset = 313
 length = 17
@@ -537,7 +1188,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-18"
 offset = 330
 length = 17
@@ -551,7 +1202,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-19"
 offset = 347
 length = 17
@@ -565,7 +1216,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-20"
 offset = 364
 length = 17
@@ -579,7 +1230,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-casilla-21"
 offset = 381
 length = 17
@@ -593,7 +1244,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-iban"
 offset = 398
 length = 34
@@ -607,7 +1258,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-complementaria"
 offset = 432
 length = 1
@@ -621,7 +1272,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-complementaria-justificante"
 offset = 433
 length = 13
@@ -635,7 +1286,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-reserved-aeat"
 offset = 446
 length = 143
@@ -648,7 +1299,7 @@ signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-page-01-close"
 offset = 589
 length = 12
@@ -661,28 +1312,15 @@ justification = "none"
 signed = false
 legal_refs = ["orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-1", "orden-eha-3290-2008:art-4", "trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-dr-216-2024"]
-# Design row 15 of Pág. 0: the constant that closes the <T…> file envelope,
-# 18 positions, "</T2160AAAAPP0000>" — modelo, discriminante, ejercicio de
-# devengo, periodo and tipo, in that order. Its position is given as "***"
-# because it follows the variable-length file content, so it is authored as its
-# own terminator record rather than at a fixed offset inside Pág. 0.
-#
-# It is `computed` rather than `literal` because two of its eighteen bytes are
-# the ejercicio and two more the periodo: the renderer's envelope_closing_tag
-# builds exactly "</T{modelo}0{year}{period}0000>" from the draft, which is the
-# same 18-byte grammar this design states.
 
-[[revisions."2024-y-siguientes".export_layouts]]
-id = "modelo-216-fichero-boe"
-
-[[revisions."2024-y-siguientes".export_layouts.records]]
+[[revisions.2024-y-siguientes.export_layouts.records]]
 id = "modelo-216-envelope-footer"
 record_type = "envelope_footer"
 order = 2
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2024-y-siguientes".export_layouts.records.fields]]
+[[revisions.2024-y-siguientes.export_layouts.records.fields]]
 id = "modelo-216-envelope-close"
 offset = 1
 length = 18

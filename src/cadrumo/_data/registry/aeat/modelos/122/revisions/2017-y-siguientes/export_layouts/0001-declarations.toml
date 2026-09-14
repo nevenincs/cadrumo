@@ -1,30 +1,838 @@
-# Modelo 122 fichero BOE — envelope header (design sheet "Pag. 0"), 328 positions.
-#
-# Transcribed from the bundled AEAT Diseño de Registro aeat-dr-122-2016
-# (corpus/aeat_official/disenos_registro/modelo_122/files/
-# 01-122-ejercicio-2016-y-siguientes.xlsx, sha256
-# 2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7).
-#
-# Sheet "Pag. 0" declares 15 rows, of which 13 carry numeric coordinates and
-# span positions 1-328 (2+3+1+4+2+5+5+70+4+4+9+213+6 = 328). All 13 are
-# declared here. Row 14 is the variable-length "Contenido del fichero" slot the
-# page records below occupy, and row 15 is the 18-byte closing constant
-# "</T1220EEEE0A0000>" at position "***"; neither carries a fixed coordinate,
-# so the design reader emits neither, and the closing tag is declared as this
-# layout's envelope_footer record instead. Same <AUX> wrapper grammar as
-# Modelo 390's envelope.
+# Original commentary: 0001-declarations.toml
+# # Modelo 122 fichero BOE — envelope header (design sheet "Pag. 0"), 328 positions.
+# #
+# # Transcribed from the bundled AEAT Diseño de Registro aeat-dr-122-2016
+# # (corpus/aeat_official/disenos_registro/modelo_122/files/
+# # 01-122-ejercicio-2016-y-siguientes.xlsx, sha256
+# # 2b7c2bb3472cde1faba997f777aa88290e707a3773a3dc88348f74caeee0a4c7).
+# #
+# # Sheet "Pag. 0" declares 15 rows, of which 13 carry numeric coordinates and
+# # span positions 1-328 (2+3+1+4+2+5+5+70+4+4+9+213+6 = 328). All 13 are
+# # declared here. Row 14 is the variable-length "Contenido del fichero" slot the
+# # page records below occupy, and row 15 is the 18-byte closing constant
+# # "</T1220EEEE0A0000>" at position "***"; neither carries a fixed coordinate,
+# # so the design reader emits neither, and the closing tag is declared as this
+# # layout's envelope_footer record instead. Same <AUX> wrapper grammar as
+# # Modelo 390's envelope.
+# 
+# [[revisions."2017-y-siguientes".export_layouts]]
+# id = "modelo-122-fichero-boe"
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records]]
+# id = "modelo-122-envelope-header"
+# record_type = "envelope_header"
+# order = 0
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-open"
+# offset = 1
+# length = 2
+# kind = "literal"
+# literal = "<T"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-modelo"
+# offset = 3
+# length = 3
+# kind = "literal"
+# literal = "122"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-discriminante"
+# offset = 6
+# length = 1
+# kind = "literal"
+# literal = "0"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-year"
+# offset = 7
+# length = 4
+# kind = "draft"
+# draft_attribute = "filing_year"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-periodo"
+# offset = 11
+# length = 2
+# kind = "draft"
+# # The design fixes this slot at "0A" and this revision's period_selector
+# # admits only "0A", so the draft period token and the design's constant are
+# # the same two characters; taking it from the draft keeps the envelope
+# # correct rather than restating a value the draft already carries.
+# draft_attribute = "period_code"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-tipo-cierre"
+# offset = 13
+# length = 5
+# kind = "literal"
+# literal = "0000>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-aux-open"
+# offset = 18
+# length = 5
+# kind = "literal"
+# literal = "<AUX>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-reservado-pre-version"
+# offset = 23
+# length = 70
+# kind = "filler"
+# # "Reservado para la Administración. Rellenar con blancos."
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# # Positions 93-96 ("Versión del Programa") and 101-109 ("NIF Empresa
+# # Desarrollo") are DELIBERATELY NOT DECLARED, and this record therefore has a
+# # hole at each. Both carry the design's Nota 1, "A cumplimentar por las
+# # entidades desarrolladoras (EEDD)": they identify the software house that
+# # produced the file and the version of its product. This project holds no EEDD
+# # registration and no such identity exists to write, so any value would be
+# # invented and a blank would assert an EEDD identity that is empty rather than
+# # absent. Leaving them undeclared states honestly that this application cannot
+# # write them, and the coverage gate correctly reports 41 of 43 rather than
+# # reporting a completeness that does not exist. Modelo 131 sits permanently at
+# # 143/145 on exactly these two campos, for exactly this reason.
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-reservado-pre-nif-ed"
+# offset = 97
+# length = 4
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-reservado-post-nif-ed"
+# offset = 110
+# length = 213
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-aux-close"
+# offset = 323
+# length = 6
+# kind = "literal"
+# literal = "</AUX>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# # Modelo 122 fichero BOE — página 01 (design sheet "Pag. 1"), 1000 positions.
+# #
+# # Transcribed from the bundled AEAT Diseño de Registro aeat-dr-122-2016. The
+# # sheet declares 39 campos and its own TOTAL of 1000 posiciones; all 39 are
+# # declared here at the design's own (posición, longitud) coordinates, with no
+# # hole and no overlap.
+# 
+# [[revisions."2017-y-siguientes".export_layouts]]
+# id = "modelo-122-fichero-boe"
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records]]
+# id = "modelo-122-pagina-01"
+# record_type = "pagina_01"
+# order = 1
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-open"
+# offset = 1
+# length = 2
+# kind = "literal"
+# literal = "<T"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-modelo"
+# offset = 3
+# length = 3
+# kind = "literal"
+# literal = "122"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-pagina"
+# offset = 6
+# length = 2
+# kind = "literal"
+# literal = "01"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-fin-identificador"
+# offset = 8
+# length = 4
+# kind = "literal"
+# literal = "000>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-pagina-complementaria"
+# offset = 12
+# length = 1
+# kind = "casilla"
+# casilla_id = "decl.pagina-complementaria"
+# # Design campo 5, "Indicador de página complementaria", admitting "C o blanco".
+# # Deliberately NOT the amendment_evidence.is_complementaria producer: that is a
+# # boolean and renders the canonical "X", which this slot does not admit. It is
+# # an operator-supplied clave with AEAT's own stated domain, so it is a casilla.
+# # The separate "Autoliquidación complementaria" flag at position 667 DOES admit
+# # "X" and is wired to that producer.
+# data_type = "text"
+# required = false
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-tipo-declaracion"
+# offset = 13
+# length = 1
+# kind = "literal"
+# # The sheet's Nota 1 states the whole admitted domain in one line: "El tipo de
+# # declaración para la presentación puede ser: I (ingreso)". Modelo 122 only
+# # ever repays advance payments unduly received, so "I" is the single value the
+# # design admits and the only one this producer can correctly write.
+# literal = "I"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-contribuyente-nif"
+# offset = 14
+# length = 9
+# kind = "header"
+# # Section 1 of the design is the contribuyente no obligado a presentar
+# # declaración -- the taxpayer this filing is for, distinct from the
+# # representante in section 6. A NIF exactly fills its 9-byte slot, so left_zero
+# # would strip real leading digits from a low-numbered DNI on parse.
+# producer_key = "taxpayer.tax_id"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-contribuyente-apellidos"
+# offset = 23
+# length = 60
+# kind = "header"
+# # The design splits apellidos and nombre into two slots, so the composed
+# # full_name is wrong here: each half reads its own fact.
+# producer_key = "taxpayer.surnames"
+# data_type = "text"
+# required = true
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-contribuyente-nombre"
+# offset = 83
+# length = 20
+# kind = "header"
+# producer_key = "taxpayer.given_name"
+# data_type = "text"
+# required = true
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ejercicio"
+# offset = 103
+# length = 4
+# kind = "draft"
+# draft_attribute = "filing_year"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-periodo"
+# offset = 107
+# length = 2
+# kind = "filler"
+# # The design's Contenido cell shows Constante "0A", but its DESCRIPTION names
+# # the slot "Reservado AEAT (Periodo)" -- AEAT reserves these two bytes for
+# # itself, so the filer must not write a datum into them even though the value
+# # AEAT puts there is known. A fixed-width record is contiguous, so the bytes are
+# # still emitted; they are emitted as fill. The filing's own period token is
+# # carried by the envelope header at @11+2, which is not reserved.
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-reservado-aeat"
+# offset = 109
+# length = 129
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-conyuge-deduccion"
+# offset = 238
+# length = 17
+# kind = "casilla"
+# casilla_id = "conyuge.deduccion"
+# # Tipo "Num" -- numérico sin signo, right-aligned and zero-filled per the
+# # sheet's Nota 2. Two implied decimals, which is the money type's own shape.
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-conyuge-abono-anticipado"
+# offset = 255
+# length = 17
+# kind = "casilla"
+# casilla_id = "conyuge.abono-anticipado"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-descendientes-nif"
+# offset = 272
+# length = 9
+# kind = "casilla"
+# casilla_id = "descendientes.nif"
+# data_type = "text"
+# required = false
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-descendientes-nombre"
+# offset = 281
+# length = 60
+# kind = "casilla"
+# casilla_id = "descendientes.nombre"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-reservado-tras-descendientes"
+# offset = 341
+# length = 20
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-descendientes-deduccion"
+# offset = 361
+# length = 17
+# kind = "casilla"
+# casilla_id = "descendientes.deduccion"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-descendientes-abono-anticipado"
+# offset = 378
+# length = 17
+# kind = "casilla"
+# casilla_id = "descendientes.abono-anticipado"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendientes-nif"
+# offset = 395
+# length = 9
+# kind = "casilla"
+# casilla_id = "ascendientes.nif"
+# data_type = "text"
+# required = false
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendientes-nombre"
+# offset = 404
+# length = 60
+# kind = "casilla"
+# casilla_id = "ascendientes.nombre"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-reservado-tras-ascendientes"
+# offset = 464
+# length = 20
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendientes-deduccion"
+# offset = 484
+# length = 17
+# kind = "casilla"
+# casilla_id = "ascendientes.deduccion"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendientes-abono-anticipado"
+# offset = 501
+# length = 17
+# kind = "casilla"
+# casilla_id = "ascendientes.abono-anticipado"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-familia-numerosa-titulo"
+# offset = 518
+# length = 30
+# kind = "casilla"
+# casilla_id = "familia-numerosa.titulo"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-familia-numerosa-deduccion"
+# offset = 548
+# length = 17
+# kind = "casilla"
+# casilla_id = "familia-numerosa.deduccion"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-familia-numerosa-abono-anticipado"
+# offset = 565
+# length = 17
+# kind = "casilla"
+# casilla_id = "familia-numerosa.abono-anticipado"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendiente-dos-hijos-deduccion"
+# offset = 582
+# length = 17
+# kind = "casilla"
+# casilla_id = "ascendiente-dos-hijos.deduccion"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ascendiente-dos-hijos-abono-anticipado"
+# offset = 599
+# length = 17
+# kind = "casilla"
+# casilla_id = "ascendiente-dos-hijos.abono-anticipado"
+# data_type = "money"
+# required = false
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-resultado-a-ingresar"
+# offset = 616
+# length = 17
+# kind = "casilla"
+# casilla_id = "resultado.a-ingresar"
+# data_type = "money"
+# required = true
+# padding = "left_zero"
+# justification = "right"
+# signed = false
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-ingreso-iban"
+# offset = 633
+# length = 34
+# kind = "header"
+# # Design campo 31, "4.(Solo para Predeclaraciones). Ingreso. IBAN". 34 is the
+# # ISO 13616 maximum IBAN length, so the account identifier fills the slot
+# # alfanumérico left-aligned per the sheet's Nota 2.
+# producer_key = "selected_account.iban"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-complementaria-marca"
+# offset = 667
+# length = 1
+# kind = "header"
+# # Design campo 32 admits "X o blanco", which is exactly the canonical token a
+# # boolean producer renders -- unlike the "C o blanco" page indicator at
+# # position 12.
+# producer_key = "amendment_evidence.is_complementaria"
+# data_type = "boolean"
+# required = false
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-complementaria-justificante"
+# offset = 668
+# length = 13
+# kind = "header"
+# producer_key = "amendment_evidence.original_aeat_receipt"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-representante-nif"
+# offset = 681
+# length = 9
+# kind = "casilla"
+# casilla_id = "repr.nif"
+# data_type = "text"
+# required = false
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-representante-apellidos"
+# offset = 690
+# length = 60
+# kind = "casilla"
+# casilla_id = "repr.apellidos-razon-social"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-representante-nombre"
+# offset = 750
+# length = 20
+# kind = "casilla"
+# casilla_id = "repr.nombre"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-reservado-final"
+# offset = 770
+# length = 206
+# kind = "filler"
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-sello-electronico"
+# offset = 976
+# length = 13
+# kind = "filler"
+# # "Reservado para el sello electrónico de la AEAT" -- stamped by AEAT on
+# # receipt, never by the filer.
+# data_type = "text"
+# required = false
+# padding = "right_space"
+# justification = "left"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-p1-fin-registro"
+# offset = 989
+# length = 12
+# kind = "literal"
+# literal = "</T12201000>"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# # Modelo 122 fichero BOE — envelope footer, and the layout's own grounding.
+# #
+# # Sheet "Pag. 0" row 15 declares an 18-position closing constant at position
+# # "***": "Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>" with
+# # Contenido "</T1220EEEE0A0000>". Its position is not fixed -- it follows the
+# # variable-length file content -- so the design reader emits no coordinate for
+# # it and it is declared here as its own record, exactly as Modelo 390 declares
+# # the same <AUX> wrapper's footer. The tag interpolates the ejercicio, so it is
+# # `computed` rather than a literal.
+# #
+# # Like Modelo 390's footer, this record joins no design sheet: it declares no
+# # constant of its own for the coverage gate's constant-based join to match, and
+# # that is correct -- Pag. 0 describes the wrapper, not a separate footer record.
+# 
+# [[revisions."2017-y-siguientes".export_layouts]]
+# id = "modelo-122-fichero-boe"
+# legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records]]
+# id = "modelo-122-envelope-footer"
+# record_type = "envelope_footer"
+# order = 2
+# encoding = "iso-8859-1"
+# line_ending = "none"
+# 
+# [[revisions."2017-y-siguientes".export_layouts.records.fields]]
+# id = "modelo-122-envelope-close"
+# offset = 1
+# length = 18
+# kind = "computed"
+# computed_key = "envelope_closing_tag"
+# data_type = "text"
+# required = true
+# padding = "none"
+# justification = "none"
+# signed = false
+# legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
+# source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts]]
+[[revisions.2017-y-siguientes.export_layouts]]
 id = "modelo-122-fichero-boe"
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records]]
+[[revisions.2017-y-siguientes.export_layouts.records]]
 id = "modelo-122-envelope-header"
 record_type = "envelope_header"
 order = 0
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-open"
 offset = 1
 length = 2
@@ -38,7 +846,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-modelo"
 offset = 3
 length = 3
@@ -52,7 +860,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-discriminante"
 offset = 6
 length = 1
@@ -66,7 +874,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-year"
 offset = 7
 length = 4
@@ -80,15 +888,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-periodo"
 offset = 11
 length = 2
 kind = "draft"
-# The design fixes this slot at "0A" and this revision's period_selector
-# admits only "0A", so the draft period token and the design's constant are
-# the same two characters; taking it from the draft keeps the envelope
-# correct rather than restating a value the draft already carries.
 draft_attribute = "period_code"
 data_type = "text"
 required = true
@@ -98,7 +902,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-tipo-cierre"
 offset = 13
 length = 5
@@ -112,7 +916,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-aux-open"
 offset = 18
 length = 5
@@ -126,12 +930,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-reservado-pre-version"
 offset = 23
 length = 70
 kind = "filler"
-# "Reservado para la Administración. Rellenar con blancos."
 data_type = "text"
 required = false
 padding = "right_space"
@@ -140,19 +943,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-# Positions 93-96 ("Versión del Programa") and 101-109 ("NIF Empresa
-# Desarrollo") are DELIBERATELY NOT DECLARED, and this record therefore has a
-# hole at each. Both carry the design's Nota 1, "A cumplimentar por las
-# entidades desarrolladoras (EEDD)": they identify the software house that
-# produced the file and the version of its product. This project holds no EEDD
-# registration and no such identity exists to write, so any value would be
-# invented and a blank would assert an EEDD identity that is empty rather than
-# absent. Leaving them undeclared states honestly that this application cannot
-# write them, and the coverage gate correctly reports 41 of 43 rather than
-# reporting a completeness that does not exist. Modelo 131 sits permanently at
-# 143/145 on exactly these two campos, for exactly this reason.
-
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-reservado-pre-nif-ed"
 offset = 97
 length = 4
@@ -165,7 +956,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-reservado-post-nif-ed"
 offset = 110
 length = 213
@@ -178,7 +969,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-aux-close"
 offset = 323
 length = 6
@@ -191,24 +982,15 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
-# Modelo 122 fichero BOE — página 01 (design sheet "Pag. 1"), 1000 positions.
-#
-# Transcribed from the bundled AEAT Diseño de Registro aeat-dr-122-2016. The
-# sheet declares 39 campos and its own TOTAL of 1000 posiciones; all 39 are
-# declared here at the design's own (posición, longitud) coordinates, with no
-# hole and no overlap.
 
-[[revisions."2017-y-siguientes".export_layouts]]
-id = "modelo-122-fichero-boe"
-
-[[revisions."2017-y-siguientes".export_layouts.records]]
+[[revisions.2017-y-siguientes.export_layouts.records]]
 id = "modelo-122-pagina-01"
 record_type = "pagina_01"
 order = 1
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-open"
 offset = 1
 length = 2
@@ -222,7 +1004,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-modelo"
 offset = 3
 length = 3
@@ -236,7 +1018,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-pagina"
 offset = 6
 length = 2
@@ -250,7 +1032,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-fin-identificador"
 offset = 8
 length = 4
@@ -264,18 +1046,12 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-pagina-complementaria"
 offset = 12
 length = 1
 kind = "casilla"
 casilla_id = "decl.pagina-complementaria"
-# Design campo 5, "Indicador de página complementaria", admitting "C o blanco".
-# Deliberately NOT the amendment_evidence.is_complementaria producer: that is a
-# boolean and renders the canonical "X", which this slot does not admit. It is
-# an operator-supplied clave with AEAT's own stated domain, so it is a casilla.
-# The separate "Autoliquidación complementaria" flag at position 667 DOES admit
-# "X" and is wired to that producer.
 data_type = "text"
 required = false
 padding = "none"
@@ -284,15 +1060,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-tipo-declaracion"
 offset = 13
 length = 1
 kind = "literal"
-# The sheet's Nota 1 states the whole admitted domain in one line: "El tipo de
-# declaración para la presentación puede ser: I (ingreso)". Modelo 122 only
-# ever repays advance payments unduly received, so "I" is the single value the
-# design admits and the only one this producer can correctly write.
 literal = "I"
 data_type = "text"
 required = true
@@ -302,15 +1074,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-contribuyente-nif"
 offset = 14
 length = 9
 kind = "header"
-# Section 1 of the design is the contribuyente no obligado a presentar
-# declaración -- the taxpayer this filing is for, distinct from the
-# representante in section 6. A NIF exactly fills its 9-byte slot, so left_zero
-# would strip real leading digits from a low-numbered DNI on parse.
 producer_key = "taxpayer.tax_id"
 data_type = "text"
 required = true
@@ -320,13 +1088,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-contribuyente-apellidos"
 offset = 23
 length = 60
 kind = "header"
-# The design splits apellidos and nombre into two slots, so the composed
-# full_name is wrong here: each half reads its own fact.
 producer_key = "taxpayer.surnames"
 data_type = "text"
 required = true
@@ -336,7 +1102,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-contribuyente-nombre"
 offset = 83
 length = 20
@@ -350,7 +1116,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ejercicio"
 offset = 103
 length = 4
@@ -364,17 +1130,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-periodo"
 offset = 107
 length = 2
 kind = "filler"
-# The design's Contenido cell shows Constante "0A", but its DESCRIPTION names
-# the slot "Reservado AEAT (Periodo)" -- AEAT reserves these two bytes for
-# itself, so the filer must not write a datum into them even though the value
-# AEAT puts there is known. A fixed-width record is contiguous, so the bytes are
-# still emitted; they are emitted as fill. The filing's own period token is
-# carried by the envelope header at @11+2, which is not reserved.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -383,7 +1143,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-reservado-aeat"
 offset = 109
 length = 129
@@ -396,14 +1156,12 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-conyuge-deduccion"
 offset = 238
 length = 17
 kind = "casilla"
 casilla_id = "conyuge.deduccion"
-# Tipo "Num" -- numérico sin signo, right-aligned and zero-filled per the
-# sheet's Nota 2. Two implied decimals, which is the money type's own shape.
 data_type = "money"
 required = false
 padding = "left_zero"
@@ -412,7 +1170,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-conyuge-abono-anticipado"
 offset = 255
 length = 17
@@ -426,7 +1184,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-descendientes-nif"
 offset = 272
 length = 9
@@ -440,7 +1198,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-descendientes-nombre"
 offset = 281
 length = 60
@@ -454,7 +1212,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-reservado-tras-descendientes"
 offset = 341
 length = 20
@@ -467,7 +1225,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-descendientes-deduccion"
 offset = 361
 length = 17
@@ -481,7 +1239,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-descendientes-abono-anticipado"
 offset = 378
 length = 17
@@ -495,7 +1253,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendientes-nif"
 offset = 395
 length = 9
@@ -509,7 +1267,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendientes-nombre"
 offset = 404
 length = 60
@@ -523,7 +1281,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-reservado-tras-ascendientes"
 offset = 464
 length = 20
@@ -536,7 +1294,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendientes-deduccion"
 offset = 484
 length = 17
@@ -550,7 +1308,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendientes-abono-anticipado"
 offset = 501
 length = 17
@@ -564,7 +1322,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-familia-numerosa-titulo"
 offset = 518
 length = 30
@@ -578,7 +1336,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-familia-numerosa-deduccion"
 offset = 548
 length = 17
@@ -592,7 +1350,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-familia-numerosa-abono-anticipado"
 offset = 565
 length = 17
@@ -606,7 +1364,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendiente-dos-hijos-deduccion"
 offset = 582
 length = 17
@@ -620,7 +1378,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ascendiente-dos-hijos-abono-anticipado"
 offset = 599
 length = 17
@@ -634,7 +1392,7 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-resultado-a-ingresar"
 offset = 616
 length = 17
@@ -648,14 +1406,11 @@ signed = false
 legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-ingreso-iban"
 offset = 633
 length = 34
 kind = "header"
-# Design campo 31, "4.(Solo para Predeclaraciones). Ingreso. IBAN". 34 is the
-# ISO 13616 maximum IBAN length, so the account identifier fills the slot
-# alfanumérico left-aligned per the sheet's Nota 2.
 producer_key = "selected_account.iban"
 data_type = "text"
 required = false
@@ -665,14 +1420,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-complementaria-marca"
 offset = 667
 length = 1
 kind = "header"
-# Design campo 32 admits "X o blanco", which is exactly the canonical token a
-# boolean producer renders -- unlike the "C o blanco" page indicator at
-# position 12.
 producer_key = "amendment_evidence.is_complementaria"
 data_type = "boolean"
 required = false
@@ -682,7 +1434,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-complementaria-justificante"
 offset = 668
 length = 13
@@ -696,7 +1448,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-representante-nif"
 offset = 681
 length = 9
@@ -710,7 +1462,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-representante-apellidos"
 offset = 690
 length = 60
@@ -724,7 +1476,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-representante-nombre"
 offset = 750
 length = 20
@@ -738,7 +1490,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-reservado-final"
 offset = 770
 length = 206
@@ -751,13 +1503,11 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-sello-electronico"
 offset = 976
 length = 13
 kind = "filler"
-# "Reservado para el sello electrónico de la AEAT" -- stamped by AEAT on
-# receipt, never by the filer.
 data_type = "text"
 required = false
 padding = "right_space"
@@ -766,7 +1516,7 @@ signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-p1-fin-registro"
 offset = 989
 length = 12
@@ -779,33 +1529,15 @@ justification = "none"
 signed = false
 legal_refs = ["orden-hfp-105-2017:art-5", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-122-2016"]
-# Modelo 122 fichero BOE — envelope footer, and the layout's own grounding.
-#
-# Sheet "Pag. 0" row 15 declares an 18-position closing constant at position
-# "***": "Constante. </T+ modelo+discriminante+Ejercicio+periodo+Tipo+>" with
-# Contenido "</T1220EEEE0A0000>". Its position is not fixed -- it follows the
-# variable-length file content -- so the design reader emits no coordinate for
-# it and it is declared here as its own record, exactly as Modelo 390 declares
-# the same <AUX> wrapper's footer. The tag interpolates the ejercicio, so it is
-# `computed` rather than a literal.
-#
-# Like Modelo 390's footer, this record joins no design sheet: it declares no
-# constant of its own for the coverage gate's constant-based join to match, and
-# that is correct -- Pag. 0 describes the wrapper, not a separate footer record.
 
-[[revisions."2017-y-siguientes".export_layouts]]
-id = "modelo-122-fichero-boe"
-legal_refs = ["ley-35-2006:art-81-bis", "orden-hfp-105-2017:art-5", "orden-hfp-105-2017:art-7", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-122-2016"]
-
-[[revisions."2017-y-siguientes".export_layouts.records]]
+[[revisions.2017-y-siguientes.export_layouts.records]]
 id = "modelo-122-envelope-footer"
 record_type = "envelope_footer"
 order = 2
 encoding = "iso-8859-1"
 line_ending = "none"
 
-[[revisions."2017-y-siguientes".export_layouts.records.fields]]
+[[revisions.2017-y-siguientes.export_layouts.records.fields]]
 id = "modelo-122-envelope-close"
 offset = 1
 length = 18

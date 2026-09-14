@@ -919,6 +919,7 @@ class EditionStatus:
     # membership/evidence validation, so consumers must still check the exact
     # predecessor edge and the materialised identity before using a sidecar.
     lineage_attestations: tuple[LineageAttestation, ...] = ()
+    lineage_attestation_refusals: int = 0
     stated_keys: tuple[RowKey, ...] = ()
     retired_lineages: frozenset[str] = frozenset()
     #: Generic keyed-family retirements from ``identifier_evolutions``.  The
@@ -2152,11 +2153,22 @@ def scan_edition(modelo_id: str, edition_dir: Path, typed_fields: frozenset[str]
             parsed: list[LineageAttestation] = []
             for raw_attestation in raw_attestations:
                 try:
-                    parsed.append(LineageAttestation.model_validate(raw_attestation))
+                    if not isinstance(raw_attestation, dict):
+                        continue
+                    # Registry models are strict and expose refs as tuples;
+                    # TOML necessarily supplies arrays as lists.  Apply only
+                    # that representation normalization before typed parsing.
+                    candidate = {
+                        **raw_attestation,
+                        "legal_refs": tuple(raw_attestation.get("legal_refs", ())),
+                        "source_refs": tuple(raw_attestation.get("source_refs", ())),
+                    }
+                    parsed.append(LineageAttestation.model_validate(candidate))
                 except (TypeError, ValueError):
                     # A raw diagnostic must not upgrade malformed metadata to
                     # grounded evidence.  The validating compiler owns the
                     # refusal detail; this screen simply excludes the claim.
+                    status.lineage_attestation_refusals += 1
                     continue
             status.lineage_attestations = tuple(parsed)
         selector = table.get("period_selector")
