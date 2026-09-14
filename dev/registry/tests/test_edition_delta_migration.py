@@ -184,7 +184,6 @@ def pilot(pilot_input: Path, tmp_path_factory: pytest.TempPathFactory) -> Migrat
         registry_root=pilot_input,
         modelo_id=_PILOT,
         work_dir=tmp_path_factory.mktemp("pilot-work") / "run",
-        declare_blocked_roots=True,
         apply=True,
     )
 
@@ -281,10 +280,10 @@ def test_references_beyond_the_default_are_stated_as_additions(
     assert checked, "no row was lifted to additions, so the additions path was never exercised"
 
 
-def test_a_row_stating_only_a_lineage_claim_stays_stated_and_dropping_it_loses_the_claim(
-    pilot: MigrationOutcome, pilot_before: ModeloDefinition, pilot_input: Path, tmp_path: Path
+def test_a_row_stating_only_a_lineage_claim_moves_to_the_canonical_carrier(
+    pilot: MigrationOutcome, pilot_before: ModeloDefinition
 ) -> None:
-    """An inherited row carries no lineage claim, so a row differing only by one can never be inherited."""
+    """Continuity-only differences survive without pinning the complete casilla payload."""
     assert pilot.staged_registry is not None
     found: tuple[EditionPlan, str] | None = None
     for edition in reversed(_delta_editions(pilot)):
@@ -303,31 +302,34 @@ def test_a_row_stating_only_a_lineage_claim_stays_stated_and_dropping_it_loses_t
             break
     assert found is not None, "no row differs from its inherited row by a lineage claim alone"
     edition, row_id = found
-    assert row_id in edition.stated_ids
+    assert row_id not in edition.stated_ids
+    assert len(edition.lineage_attestations) == 1
+    claim = edition.lineage_attestations[0]
+    assert claim.to_revision == edition.revision_id
+    assert claim.from_revision == edition.predecessor
+    original_row = next(casilla for casilla in successor.casillas if str(casilla.id) == row_id)
+    assert claim.continuidad_id == original_row.continuidad_id
 
-    dropped = shutil.copytree(pilot.staged_registry, tmp_path / "dropped" / "registry" / "aeat")
-    _drop_row(_edition_dir(dropped, _PILOT, edition.revision_id), row_id)
-    report = edition_round_trip_report(
-        live_registry_root=dropped, reference_registry_root=pilot_input, modelo_id=_PILOT, export_scenarios={}
+    edition_dir = _edition_dir(pilot.staged_registry, _PILOT, edition.revision_id)
+    authored_payload_fields = sum(
+        len(row)
+        for fragment in (edition_dir / "casillas").glob("*.toml")
+        for revision in tomllib.loads(fragment.read_text(encoding="utf-8"))["revisions"].values()
+        for row in revision["casillas"]
+        if row["id"] == row_id
     )
-    content = {
-        finding.revision_id: finding.detail
-        for finding in report.findings
-        if finding.kind is RoundTripFindingKind.CONTENT
-    }
-    assert edition.revision_id in content
-    detail = content[edition.revision_id]
-    assert f"casilla {row_id!r} changed [" in detail
-    assert "continuidad_evidence" in detail or "continuidad_origin" in detail
+    assert authored_payload_fields == 0
+    hydrated = _load(pilot.staged_registry, _PILOT).revisions[edition.revision_id]
+    hydrated_row = next(casilla for casilla in hydrated.casillas if str(casilla.id) == row_id)
+    assert hydrated_row.continuidad_origin == original_row.continuidad_origin
+    assert hydrated_row.continuidad_evidence == original_row.continuidad_evidence
 
 
 def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_the_chain(
     pilot: MigrationOutcome, tmp_path: Path
 ) -> None:
     assert pilot.staged_registry is not None
-    again = migrate_modelo(
-        registry_root=pilot.staged_registry, modelo_id=_PILOT, work_dir=tmp_path / "again", declare_blocked_roots=True
-    )
+    again = migrate_modelo(registry_root=pilot.staged_registry, modelo_id=_PILOT, work_dir=tmp_path / "again")
     assert not again.changed
     assert again.staged_registry is None
     assert not (tmp_path / "again").exists()
@@ -350,9 +352,7 @@ def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_th
     )
     assert restated != block
     fragment.write_text(fragment.read_text(encoding="utf-8").replace(block, restated), encoding="utf-8", newline="\n")
-    lifted = migrate_modelo(
-        registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "lifted", declare_blocked_roots=True
-    )
+    lifted = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "lifted")
     assert lifted.changed
     assert lifted.staged_registry is not None
     assert _unexpected(lifted) == []
@@ -369,9 +369,7 @@ def test_a_rerun_is_a_no_op_and_a_restated_default_is_lifted_without_changing_th
 def test_two_runs_over_one_tree_write_the_same_bytes(
     pilot: MigrationOutcome, pilot_input: Path, tmp_path: Path
 ) -> None:
-    second = migrate_modelo(
-        registry_root=pilot_input, modelo_id=_PILOT, work_dir=tmp_path / "second", declare_blocked_roots=True
-    )
+    second = migrate_modelo(registry_root=pilot_input, modelo_id=_PILOT, work_dir=tmp_path / "second")
     assert pilot.staged_registry is not None and second.staged_registry is not None
     first_root, second_root = (root / "modelos" / _PILOT for root in (pilot.staged_registry, second.staged_registry))
 
@@ -391,24 +389,26 @@ def _lower_the_grade(edition_dir: Path) -> None:
     )
 
 
-def test_a_lower_grade_successor_is_blocked_and_refused_without_the_flag(
+def test_a_lower_grade_successor_reuses_the_adjacent_storage_baseline(
     pilot: MigrationOutcome, pilot_input: Path, tmp_path: Path
 ) -> None:
-    """A blocked edition needs a no-predecessor claim, which is written only on request and never staged otherwise."""
+    """Capability downgrade does not turn an otherwise exact storage delta into a root."""
     assert plan_migration(pilot_input / "modelos" / _PILOT, _load(pilot_input, _PILOT)).blocked_roots() == ()
 
     edition = _last_edition(pilot)
     planted = shutil.copytree(pilot_input, tmp_path / "registry" / "aeat")
     _lower_the_grade(_edition_dir(planted, _PILOT, edition.revision_id))
 
-    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT), declare_blocked_roots=True)
-    assert (
-        BlockedCause.LOWER_GRADE
-        in next(item for item in plan.editions if item.revision_id == edition.revision_id).blocked
-    )
-    with pytest.raises(RegistryError, match="needs an explicit no-predecessor declaration"):
-        migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
-    assert not (tmp_path / "work").exists()
+    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
+    changed = next(item for item in plan.editions if item.revision_id == edition.revision_id)
+    assert changed.basis is PredecessorBasis.ADJACENT
+    assert changed.predecessor is not None
+    assert changed.blocked == ()
+
+    outcome = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
+    assert outcome.staged_registry is not None
+    hydrated = _load(outcome.staged_registry, _PILOT).revisions[edition.revision_id]
+    assert str(hydrated.authority_grade) == "applicability"
 
 
 def test_a_row_the_successor_changed_is_kept_stated(pilot: MigrationOutcome, pilot_input: Path, tmp_path: Path) -> None:
@@ -424,7 +424,7 @@ def test_a_row_the_successor_changed_is_kept_stated(pilot: MigrationOutcome, pil
         text.replace(block, block.replace("required = false", "required = true")), encoding="utf-8", newline="\n"
     )
 
-    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT), declare_blocked_roots=True)
+    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
 
     changed = next(item for item in plan.editions if item.revision_id == edition.revision_id)
     assert row_id in changed.stated_ids
@@ -453,7 +453,7 @@ def test_a_withdrawn_lineage_blocks_until_a_retirement_declares_it(
     lineage = next(c.continuidad_id for c in pilot_before.revisions[revision_id].casillas if c.id == row_id)
     _drop_row(edition_dir, row_id)
 
-    unretired = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT), declare_blocked_roots=True)
+    unretired = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
     assert next(item for item in unretired.editions if item.revision_id == revision_id).blocked == (
         BlockedCause.UNRETIRED_WITHDRAWAL,
     )
@@ -482,9 +482,7 @@ def test_a_withdrawn_lineage_blocks_until_a_retirement_declares_it(
         newline="\n",
     )
 
-    retired = migrate_modelo(
-        registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work", declare_blocked_roots=True
-    )
+    retired = migrate_modelo(registry_root=planted, modelo_id=_PILOT, work_dir=tmp_path / "work")
 
     assert next(item for item in retired.plan.editions if item.revision_id == revision_id).is_delta
     assert _unexpected(retired) == []
@@ -536,7 +534,7 @@ def test_the_default_is_the_leading_run_most_rows_open_with_and_a_tie_withholds_
         [[top] if index % 2 == 0 else [runner_up] for index in range(len(rows))],
     )
 
-    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT), declare_blocked_roots=True)
+    plan = plan_migration(planted / "modelos" / _PILOT, _load(planted, _PILOT))
 
     tied = plan.editions[0]
     assert tied.source_default is None

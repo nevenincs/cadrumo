@@ -7,7 +7,6 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     EntitySetFactQuery,
     ResolvedEntitySetFact,
@@ -95,19 +94,52 @@ def test_payment_fraction_selectors_exclude_retired_broad_identity() -> None:
 
 
 @pytest.mark.parametrize(
-    ("fact_id", "before_first_window"),
+    ("fact_id", "before_first_window", "first_authored_date", "entities", "source_refs"),
     (
-        ("rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado", date(2026, 3, 25)),
-        ("rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones", date(2026, 3, 25)),
-        ("rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras", date(2026, 3, 25)),
-        ("modelo-131:selector-m036-volumen-ingresos-agrario", date(2026, 3, 31)),
+        (
+            "rd-439-2007-art-109:selector-m036-actividades-exencion-pago-fraccionado",
+            date(2026, 3, 25),
+            _FIRST_GROUNDED_DATE,
+            frozenset({"A02", "A04", "A05", "B01", "B02", "B03"}),
+            (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
+        ),
+        (
+            "rd-439-2007-art-109:selector-m036-actividades-base-neta-de-subvenciones",
+            date(2026, 3, 25),
+            _FIRST_GROUNDED_DATE,
+            frozenset({"A02", "B01", "B02", "B03"}),
+            (_M036_TABLE_SOURCE, _ARTICLE_109_SOURCE),
+        ),
+        (
+            "rd-439-2007-art-110:selector-m036-actividades-pago-fraccionado-agrarias-pesqueras",
+            date(2026, 3, 25),
+            _FIRST_GROUNDED_DATE,
+            frozenset({"A02", "B01", "B02", "B03", "B05"}),
+            (_M036_TABLE_SOURCE, _ARTICLE_110_SOURCE),
+        ),
+        (
+            "modelo-131:selector-m036-volumen-ingresos-agrario",
+            date(2026, 3, 31),
+            _M131_FIRST_GROUNDED_DATE,
+            frozenset({"A02", "B01", "B02", "B03"}),
+            (_M036_TABLE_SOURCE, "aeat-modelo-131-instructions-2026-04-01", _ARTICLE_110_SOURCE),
+        ),
     ),
 )
-def test_payment_fraction_selectors_refuse_before_their_first_citable_window(
-    fact_id: str, before_first_window: date
+def test_payment_fraction_selectors_back_project_before_their_first_citable_window(
+    fact_id: str,
+    before_first_window: date,
+    first_authored_date: date,
+    entities: frozenset[str],
+    source_refs: tuple[str, ...],
 ) -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve(fact_id, before_first_window)
+    resolved = _resolve(fact_id, before_first_window)
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == first_authored_date
+    assert resolved.variant_id.endswith(first_authored_date.isoformat())
+    assert resolved.payload.entities == entities
+    assert resolved.source_refs == source_refs
 
 
 def test_payment_fraction_selectors_cite_hash_pinned_boe_redactions_and_the_m036_table() -> None:

@@ -12,9 +12,8 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import SociedadesAnnualManualCoverageStatus
-from dev.registry.compiler.loader import load_shared_catalogues
+from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..extract_corpus_sidecars import check_all as check_corpus_sidecars
 from ..extract_manual_corpus_text import extract_raw_text
@@ -56,7 +55,7 @@ def _canonical_supported_filing_years() -> tuple[int, ...]:
     as "whatever happens to be on disk", so a family missing a year the product
     actually supports read as full coverage.
     """
-    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    catalogues = compiled_bundled_authority().catalogues
     declaration = catalogues.supported_filing_years
     assert declaration is not None, "the bundled registry declares no supported filing years"
     return declaration.years
@@ -105,7 +104,7 @@ def _sociedades_annual_manual_statuses() -> dict[int, SociedadesAnnualManualCove
     yet published; this physical-artifact gate verifies that the declared
     outcome matches the shipped PDF and runtime text sidecar.
     """
-    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    catalogues = compiled_bundled_authority().catalogues
     coverage = catalogues.sociedades_annual_manual_coverage
     assert coverage is not None, "the registry declares no Sociedades annual-manual coverage catalogue"
     statuses = {disposition.year: disposition.status for disposition in coverage.dispositions}

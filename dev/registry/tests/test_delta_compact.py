@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.i18n.render import override_locales_root
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
@@ -71,7 +72,7 @@ def test_duplicate_evidence_ownership_is_refused(tmp_path: Path) -> None:
     compact_deltas(directory, tmp_path / "work", apply=True)
     original.parent.mkdir()
     original.write_text(text, encoding="utf-8")
-    with pytest.raises(ValueError, match="duplicates lineage evidence ownership"):
+    with pytest.raises(RegistryLoadError, match="duplicates lineage evidence ownership"):
         load_modelo_directory(directory)
 
 

@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -102,9 +101,15 @@ def test_article_95_rate_boundaries_select_the_boe_redaction_value(
     assert resolved.source_refs == (f"boe-rirpf-art-95-{variant_suffix}",)
 
 
-def test_article_95_rates_refuse_before_the_first_captured_redaction() -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        _resolve("rirpf-art-95:retencion-actividades-profesionales-general", date(2007, 3, 31))
+def test_article_95_rates_back_project_before_the_first_captured_redaction() -> None:
+    resolved = _resolve("rirpf-art-95:retencion-actividades-profesionales-general", date(2007, 3, 31))
+
+    assert resolved.projection_direction == "backward"
+    assert resolved.projected_from_date == date(2007, 4, 1)
+    assert resolved.variant_id.endswith("2007-04-01")
+    assert resolved.payload.value == Decimal("0.15")
+    assert resolved.payload.unit == "fraction"
+    assert resolved.source_refs == ("boe-rirpf-art-95-2007-04-01",)
 
 
 def test_each_authored_rate_variant_has_its_own_hash_pinned_boe_window() -> None:

@@ -48,7 +48,6 @@ from ..loader_directory_mode_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_SUPPORTED_RECORD_DESIGN_YEARS = range(2023, 2027)
 _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
     ("184", "2025-y-siguientes", 2026): "aeat-dr-184-2025",
 }
@@ -69,6 +68,9 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
     design source, never chooses the revision.
     """
     modelos, catalogues = registry_tree()
+    supported_filing_years = catalogues.supported_filing_years
+    assert supported_filing_years is not None, "the bundled registry must declare supported filing years"
+    assert supported_filing_years.years, "the supported filing-year denominator must not be empty"
     missing: list[str] = []
     checked: set[tuple[str, str, int]] = set()
     required_modelos: set[str] = set()
@@ -90,7 +92,7 @@ def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
                 for source_ref in revision.source_refs
                 if catalogues.sources[source_ref].kind == "record_design"
             ]
-            for year in _SUPPORTED_RECORD_DESIGN_YEARS:
+            for year in supported_filing_years.years:
                 if not revision.period_selector.includes_year(year):
                     continue
                 revision_id = str(revision.id)

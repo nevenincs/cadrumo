@@ -289,8 +289,24 @@ def copy_registry_tree(source: Path, destination: Path, *, modelo_id: str | None
     """
     kept = frozenset[str]()
     if modelo_id is not None:
-        modelos, _catalogues = load_registry_tree(source)
-        kept = registry_dependency_closure(modelos, modelo_id)
+        # Discover the closure from the canonical modelo loader one member at a
+        # time.  Loading the complete registry here made a representation-only
+        # migration depend on unrelated modelos being readable.
+        kept_mutable: set[str] = set()
+        pending = deque([modelo_id])
+        while pending:
+            current = pending.popleft()
+            if current in kept_mutable:
+                continue
+            modelo_dir = source / _MODELOS_DIR / current
+            if not modelo_dir.is_dir():
+                raise RegistryDependencyClosureError(
+                    f"modelo {current!r} in the dependency closure of modelo {modelo_id!r} is absent"
+                )
+            modelo = load_modelo_directory(modelo_dir)
+            kept_mutable.add(current)
+            pending.extend(sorted(modelo_dependency_ids(modelo) - kept_mutable))
+        kept = frozenset(kept_mutable)
     modelos_dir = source / _MODELOS_DIR
 
     def ignore(directory: str, names: list[str]) -> list[str]:

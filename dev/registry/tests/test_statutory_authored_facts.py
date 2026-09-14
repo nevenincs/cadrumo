@@ -8,7 +8,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -136,17 +135,32 @@ def test_authored_statutory_facts_retain_fact_specific_evidence_and_temporal_axe
     assert facts["dehu-tacit-rejection-natural-days"].variants[0].date_axis is DateAxis.SUBMISSION_DATE
 
 
-def test_authored_reduced_multiple_payer_limit_fails_closed_after_last_grounded_year() -> None:
-    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
-        resolve_governed_fact(
-            _catalogue(),
-            MappingFactQuery(
-                fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
-                date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(2027, 1, 1),
-            ),
-            authority_digest="c" * 64,
-        )
+def test_authored_reduced_multiple_payer_limit_projects_forward_after_last_grounded_year() -> None:
+    resolved = resolve_governed_fact(
+        _catalogue(),
+        MappingFactQuery(
+            fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2027, 1, 1),
+        ),
+        authority_digest="c" * 64,
+    )
+
+    assert isinstance(resolved, ResolvedMappingFact)
+    assert resolved.projection_direction == "forward"
+    assert resolved.projected_from_date == date(2026, 12, 31)
+    assert resolved.variant_id.endswith("2019-2026")
+    assert resolved.source_refs == ("boe-lirpf-statutory-facts",)
+    assert dict((entry.key, entry.value) for entry in resolved.payload.entries) == {
+        2019: Decimal("14000"),
+        2020: Decimal("14000"),
+        2021: Decimal("14000"),
+        2022: Decimal("14000"),
+        2023: Decimal("15000"),
+        2024: Decimal("15876"),
+        2025: Decimal("15876"),
+        2026: Decimal("15876"),
+    }
 
 
 def test_spanish_tax_id_person_checks_remain_bound_to_official_algorithm_evidence() -> None:
