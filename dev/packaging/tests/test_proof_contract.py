@@ -201,7 +201,7 @@ def test_every_declared_claim_has_an_assertion_that_records_it(module: str) -> N
     """A form may not promise a proof no assertion anywhere can record.
 
     This is the static half. It catches the over-claim at author time, before
-    a lane is ever built: the removed browser claim (a tracked shipped-data
+    a lane is ever built: the removed browser claim (a source shipped-data
     payload check that form never performed) fails here.
     """
     tree = ast.parse((_PACKAGING / module).read_text(encoding="utf-8"))

@@ -605,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
         if preflight_failures:
             raise SystemExit("campaign preflight failed: " + "; ".join(preflight_failures))
 
-    # Fail before any wheel or venv work if a tracked shipped data file is
+    # Fail before any wheel or venv work if a source shipped-data file is
     # missing from the worktree (seconds). Runs in every profile that reaches
     # here; a carried quick proof returns above, which is safe because a missing
     # tracked file changes the proof scope's content digest and so cannot match

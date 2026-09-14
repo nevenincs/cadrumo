@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
     AuthorityBuildIdentity,
+    AuthorityComponentCodecError,
     AuthorityEvidenceProjection,
     ProfileSchemaComponentQuery,
 )
@@ -30,7 +33,7 @@ from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 from ..compiler.authority_database import build_authority_database
 from ..compiler.profile_schema import capture_profile_schema
-from ..pipeline.authority_publication import install_validated_authority_database
+from ..pipeline.authority_publication import install_validated_authority_database, promote_accepted_authority_database
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -84,11 +87,15 @@ def test_revision_context_selects_directory_before_one_complete_revision(tmp_pat
             directory = operation.modelo_directory("130")
             selected = operation.revision_for_context("130", filing_year=2025, period="0A")
             assert str(selected.id) == str(directory.revisions[0].id)
-            assert operation.legal_reference("ley-35-2006:art-1").id == "ley-35-2006:art-1"
-            assert (
-                operation.source_reference("aeat-dr-130-2019-v12").id
-                == "aeat-dr-130-2019-v12"
+            snapshot = operation.snapshot(
+                "130",
+                filing_year=2025,
+                period="0A",
+                grade=RegistryAuthorityGrade.CALCULATION,
             )
+            assert snapshot.modelo.revisions == {snapshot.revision.id: snapshot.revision}
+            assert operation.legal_reference("ley-35-2006:art-1").id == "ley-35-2006:art-1"
+            assert operation.source_reference("aeat-dr-130-2019-v12").id == "aeat-dr-130-2019-v12"
     finally:
         authority.close()
 
@@ -103,6 +110,41 @@ def test_admission_refuses_physical_database_tamper(tmp_path: Path) -> None:
 
     with pytest.raises(AuthorityStoreCorruptionError, match="disagree with the published descriptor"):
         SQLiteAuthorityReader(descriptor_path)
+
+
+def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path: Path) -> None:
+    """Admission is physical/global; strict typed decoding remains on demand."""
+    descriptor_path = _published_candidate(tmp_path)
+    original = AuthorityDescriptor.read(descriptor_path)
+    database = tmp_path / original.database
+    malformed = b"{}"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            "UPDATE components SET payload = ?, payload_sha256 = ?, retained_weight = ? WHERE kind = ? AND key = ?",
+            (malformed, sha256_hex(malformed), len(malformed), "profile_schema", "cadrumo.user_profile"),
+        )
+        connection.commit()
+    payload = database.read_bytes()
+    physical_digest = sha256_hex(payload)
+    renamed = tmp_path / f"authority-{physical_digest}.sqlite3"
+    database.replace(renamed)
+    descriptor_path.write_bytes(
+        AuthorityDescriptor(
+            database=renamed.name,
+            database_size=len(payload),
+            database_sha256=physical_digest,
+            logical_generation=original.logical_generation,
+        ).to_bytes()
+    )
+
+    reader = SQLiteAuthorityReader(descriptor_path)
+    try:
+        assert reader.telemetry().entries == 0
+        with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError):
+            reader.load(ProfileSchemaComponentQuery(), pin=pin)
+        assert reader.telemetry().entries == 0
+    finally:
+        reader.close()
 
 
 def test_failed_currentness_check_preserves_the_previous_descriptor(tmp_path: Path) -> None:
@@ -133,3 +175,15 @@ def test_content_addressed_install_refuses_an_existing_collision(tmp_path: Path)
             destination=tmp_path,
             require_current=lambda: None,
         )
+
+
+def test_promotion_copies_the_exact_accepted_bytes_without_recompiling(tmp_path: Path) -> None:
+    candidate = tmp_path / "candidate"
+    candidate.mkdir()
+    candidate_descriptor = _published_candidate(candidate)
+    destination = tmp_path / "published"
+
+    descriptor = promote_accepted_authority_database(candidate_descriptor, destination=destination)
+
+    assert (destination / "authority.current.json").read_bytes() == candidate_descriptor.read_bytes()
+    assert (destination / descriptor.database).read_bytes() == (candidate / descriptor.database).read_bytes()

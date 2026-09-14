@@ -20,7 +20,7 @@ from .lane_verification_core import (
     relative_manifest_path,
     require_executable,
     resolve_work_dir,
-    tracked_source_data_paths,
+    source_data_paths,
     validate_frozen_exports,
     venv_python_path,
     write_smoke_manifest,
@@ -34,8 +34,8 @@ from .python_cohort import (
 
 
 def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:
-    """Verify every tracked shipped-data file appears in the source distribution."""
-    expected = tracked_source_data_paths(repo_root)
+    """Verify every repository-visible shipped-data file appears in the source distribution."""
+    expected = source_data_paths(repo_root)
     _assert_sdist_contains_expected_data(
         sdist,
         expected,
@@ -62,7 +62,7 @@ def _assert_sdist_contains_expected_data(
         names = set(archive.getnames())
     missing = sorted(path for path in expected if not any(name.endswith(f"/{path}") for name in names))
     if missing:
-        raise SystemExit(f"sdist is missing {len(missing)} tracked shipped-data files; first ten: {missing[:10]!r}")
+        raise SystemExit(f"sdist is missing {len(missing)} source shipped-data files; first ten: {missing[:10]!r}")
     leaked = sorted(
         name for name in names if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith(corpus_binary_suffixes)
     )
@@ -70,8 +70,8 @@ def _assert_sdist_contains_expected_data(
         raise SystemExit(
             f"root sdist leaked {len(leaked)} companion-owned corpus binaries; first ten: {leaked[:10]!r}",
         )
-    record_proof("tracked shipped-data source preflight")
-    record_proof("sdist tracked shipped-data payload")
+    record_proof("source shipped-data preflight")
+    record_proof("sdist source shipped-data payload")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
     corpus_binary_suffixes = _configured_corpus_binary_suffixes(repo_root)
     expected_data_paths = {
         path
-        for path in tracked_source_data_paths(repo_root)
+        for path in source_data_paths(repo_root)
         if not _is_corpus_source_binary(path, corpus_binary_suffixes) and "/tests/" not in path
     }
     sdist = cohort.root_sdist
@@ -138,8 +138,8 @@ def main(argv: list[str] | None = None) -> int:
     assert_cli_smoke(work_dir, venv_path)
 
     declared = [
-        "tracked shipped-data source preflight",
-        "sdist tracked shipped-data payload",
+        "source shipped-data preflight",
+        "sdist source shipped-data payload",
         "stdlib venv creation",
         "exact local cohort install with pip",
         "pip dependency check",

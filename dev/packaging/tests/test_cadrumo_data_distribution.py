@@ -17,11 +17,11 @@ install), so ``importlib.resources.files("cadrumo_data")`` resolves a
 
 This gate builds both real companion wheels and asserts:
 
-1. Each companion packages EXACTLY the tracked corpus source binaries under
+1. Each companion packages EXACTLY the repository-visible corpus source binaries under
    its owned subtree — no more, no fewer — each under the mirrored
    ``cadrumo_data/_data/corpus/<relative>`` path the runtime corpus-locator seam
    resolves.
-2. The two companions are DISJOINT and their union equals the FULL tracked
+2. The two companions are DISJOINT and their union equals the FULL source-tree
    corpus-binary set — every binary the compact ``cadrumo`` wheel sheds is shipped by
    exactly one companion, and none twice.
 3. Neither ships ``cadrumo_data/__init__.py`` (the namespace-package invariant) nor
@@ -32,7 +32,7 @@ This gate builds both real companion wheels and asserts:
 5. Each built wheel is under PyPI's 100 MB per-file cap — the whole point of the
    split, asserted as a hard requirement.
 
-The expected binary set is derived from the repository's own tracked source
+The expected binary set is derived from the repository's visible source
 tree, not from the wheels under test, so the parity assertion is not
 tautological. No mocks, fakes, or skips: the real ``uv build`` pipeline runs,
 and a missing ``uv`` binary fails loudly.
@@ -77,7 +77,7 @@ class _Companion:
 
 # The split contract: which corpus top-level subtrees each companion owns. The
 # owned sets are disjoint and their union is every corpus subtree carrying source
-# binaries; the exhaustiveness test proves that against the live tracked tree.
+# binaries; the exhaustiveness test proves that against the live source tree.
 _COMPANIONS = (
     _Companion(
         dist_name="cadrumo-data-manuals",
@@ -103,9 +103,9 @@ class _BuiltWheel:
 
 
 @cache
-def _tracked_corpus_binaries() -> set[str]:
-    """Return tracked corpus source-binary paths relative to the repo root."""
-    tracked = {
+def _source_corpus_binaries() -> set[str]:
+    """Return repository-visible corpus source-binary paths relative to the repo root."""
+    binaries = {
         path
         for path in repository_files(_REPO_ROOT, under=(_CORPUS_SOURCE_PREFIX.rstrip("/"),))
         if path.lower().endswith(_CORPUS_BINARY_SUFFIXES)
@@ -113,24 +113,23 @@ def _tracked_corpus_binaries() -> set[str]:
     # Mirror the companion build hooks: the Cadrumo wheel sheds every tests/ subtree,
     # so test-pool binaries are not runtime corpus data and the companions omit
     # them too.
-    tracked = {path for path in tracked if "/tests/" not in path}
-    if not tracked:
+    binaries = {path for path in binaries if "/tests/" not in path}
+    if not binaries:
         raise AssertionError(
-            "the repository enumeration reported no tracked corpus source binaries; "
-            "the wheel-split contract has regressed"
+            "the repository enumeration reported no corpus source binaries; the wheel-split contract has regressed"
         )
-    return tracked
+    return binaries
 
 
-def _companion_member(tracked_path: str) -> str:
-    """Map a tracked ``src/cadrumo/_data/corpus/...`` path to its companion archive path."""
-    return f"{_COMPANION_CORPUS_PREFIX}{tracked_path.removeprefix(_CORPUS_SOURCE_PREFIX)}"
+def _companion_member(source_path: str) -> str:
+    """Map a source ``src/cadrumo/_data/corpus/...`` path to its companion archive path."""
+    return f"{_COMPANION_CORPUS_PREFIX}{source_path.removeprefix(_CORPUS_SOURCE_PREFIX)}"
 
 
 def _expected_members(companion: _Companion) -> set[str]:
     """Return the companion archive members expected for a companion's owned subtree."""
     owned_prefixes = tuple(f"{_CORPUS_SOURCE_PREFIX}{subdir}/" for subdir in companion.owned_subdirs)
-    return {_companion_member(path) for path in _tracked_corpus_binaries() if path.startswith(owned_prefixes)}
+    return {_companion_member(path) for path in _source_corpus_binaries() if path.startswith(owned_prefixes)}
 
 
 def _pyproject_version(pyproject: Path) -> str:
@@ -178,10 +177,10 @@ def _corpus_members(built: _BuiltWheel) -> set[str]:
 
 
 def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _BuiltWheel]) -> None:
-    """Each companion carries every tracked binary under its owned subtree, and no other."""
+    """Each companion carries every source binary under its owned subtree, and no other."""
     for companion in _COMPANIONS:
         expected = _expected_members(companion)
-        assert expected, f"{companion.dist_name} owns no tracked corpus binaries; the split contract has regressed"
+        assert expected, f"{companion.dist_name} owns no corpus binaries; the split contract has regressed"
         shipped = _corpus_members(built_wheels[companion.dist_name])
         missing = sorted(expected - shipped)
         extra = sorted(shipped - expected)
@@ -195,22 +194,22 @@ def test_companion_packages_exactly_its_owned_subtree(built_wheels: dict[str, _B
 
 
 def test_companions_are_disjoint_and_exhaustive(built_wheels: dict[str, _BuiltWheel]) -> None:
-    """The two companions share no member and together ship the full tracked corpus set."""
+    """The two companions share no member and together ship the full source corpus set."""
     manuals = _corpus_members(built_wheels["cadrumo-data-manuals"])
     official = _corpus_members(built_wheels["cadrumo-data-official"])
     overlap = sorted(manuals & official)
     assert not overlap, f"the two companions ship {len(overlap)} shared corpus member(s): {overlap[:10]!r}"
 
     union = manuals | official
-    expected_full = {_companion_member(path) for path in _tracked_corpus_binaries()}
+    expected_full = {_companion_member(path) for path in _source_corpus_binaries()}
     missing = sorted(expected_full - union)
     extra = sorted(union - expected_full)
     assert not missing, (
-        f"the companions together miss {len(missing)} tracked corpus binaries "
+        f"the companions together miss {len(missing)} corpus binaries "
         f"(a binary shed by the root wheel that no data distribution ships); first ten: {missing[:10]!r}"
     )
     assert not extra, (
-        f"the companions together ship {len(extra)} corpus members not in the tracked set; first ten: {extra[:10]!r}"
+        f"the companions together ship {len(extra)} corpus members not in the source set; first ten: {extra[:10]!r}"
     )
 
 

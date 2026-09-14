@@ -11,7 +11,7 @@ from dev._paths import REPO_ROOT
 from .lane_verification_core import (
     assert_cadrumo_version_output,
     assert_installed_data,
-    assert_wheel_contains_tracked_data,
+    assert_wheel_contains_source_data,
     assert_wheel_metadata_matches_pyproject,
     create_pip_venv,
     expected_wheel_data_paths,
@@ -136,7 +136,7 @@ def declared_claims(*, skip_export_checks: bool) -> tuple[str, ...]:
     and every optional extra - which is what this lane exists to install.
     """
     claims = [
-        "wheel tracked shipped-data payload",
+        "wheel source shipped-data payload",
         "wheel metadata dependency surface",
         "stdlib venv creation",
         "exact local cohort install with pip",
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     cohort = load_python_cohort(args.cohort_dir)
     wheel = cohort.root_wheel
     print("using supplied immutable Python cohort", flush=True)
-    assert_wheel_contains_tracked_data(
+    assert_wheel_contains_source_data(
         repo_root,
         wheel,
         expected_wheel_data_paths(repo_root),

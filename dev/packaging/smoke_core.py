@@ -26,7 +26,7 @@ from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
-    assert_wheel_contains_tracked_data,
+    assert_wheel_contains_source_data,
     assert_wheel_metadata_matches_pyproject,
     expected_wheel_data_paths,
     find_repo_root,
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     data_wheel_official = cohort.official_wheel
     companion_wheels = (data_wheel_manuals, data_wheel_official)
     print("using supplied complete wheel cohort", flush=True)
-    assert_wheel_contains_tracked_data(
+    assert_wheel_contains_source_data(
         repo_root,
         wheel,
         expected_wheel_data_paths(repo_root),
@@ -195,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
     # run, and the manifest is written from the recorded set, never from this
     # declaration.
     declared = [
-        "wheel tracked shipped-data payload",
+        "wheel source shipped-data payload",
         "wheel metadata dependency surface",
         "complete exact-version three-wheel cohort",
         "fresh uv virtualenv install",

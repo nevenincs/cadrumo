@@ -19,11 +19,13 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
     ProfileSchemaComponentQuery,
     ReferenceComponentQuery,
     RuntimeCatalogueComponentQuery,
+    SnapshotGlobalsComponentQuery,
     authority_component_identity,
     encode_authority_component,
 )
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import SnapshotGlobalCatalogues
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory
 
@@ -103,6 +105,16 @@ def _authority_components(artifact: AuthorityArtifact) -> tuple[_CompiledCompone
     ]
     profile_query = ProfileSchemaComponentQuery(profile_schema.id)
     components.append(_CompiledComponent(profile_query, encode_authority_component(profile_query, profile_schema)))
+    snapshot_globals_query = SnapshotGlobalsComponentQuery()
+    components.append(
+        _CompiledComponent(
+            snapshot_globals_query,
+            encode_authority_component(
+                snapshot_globals_query,
+                SnapshotGlobalCatalogues.from_catalogues(artifact.catalogues),
+            ),
+        )
+    )
     for family in type(artifact.catalogues.runtime).model_fields:
         query = RuntimeCatalogueComponentQuery(family)
         components.append(

@@ -54,6 +54,7 @@ from ..python_cohort import PythonCohort, build_python_cohort
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial, pytest.mark.timeout(900)]
 
 _REPO_ROOT = REPO_ROOT
+_AUTHORITY_CANDIDATE_ENV = "CADRUMO_AUTHORITY_CANDIDATE_DIR"
 _DISTRIBUTIONS = (
     "cadrumo",
     "cadrumo-data-manuals",
@@ -429,6 +430,7 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
     # needs a private `var/` to build the cohort into, isolated from whatever
     # a concurrent agent is doing to the real repository's own `var/`.
     snapshot(_REPO_ROOT, repository_files(_REPO_ROOT), clean_repo)
+    _stage_authority_candidate(clean_repo)
     # Under the snapshot's OWN var/, not beside it. `build_python_cohort` refuses
     # an output that is not below `<repo_root>/var`, and repo_root here is the
     # snapshot -- so a sibling of it can never satisfy it and this fixture
@@ -504,6 +506,26 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> InstalledCohor
         metadata=metadata,
         python_cohort=supplied,
     )
+
+
+def _stage_authority_candidate(clean_repo: Path) -> None:
+    """Copy release-selected authority bytes into only the private cohort tree."""
+    raw_candidate = os.environ.get(_AUTHORITY_CANDIDATE_ENV)
+    assert raw_candidate, f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory"
+    candidate = Path(raw_candidate).resolve(strict=True)
+    descriptor = candidate / "authority.current.json"
+    selected = json.loads(descriptor.read_text(encoding="utf-8"))
+    database_name = selected["database"]
+    database = candidate / database_name
+    database_digest = sha256_path(database)
+    assert database.is_file()
+    assert database_name == f"authority-{database_digest}.sqlite3"
+    assert selected["database_sha256"] == database_digest
+    assert selected["database_size"] == database.stat().st_size
+    destination = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "authority"
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(descriptor, destination / descriptor.name)
+    shutil.copy2(database, destination / database.name)
 
 
 def test_installed_cli_and_mcp_are_one_hashed_cohort(installed_cohort: InstalledCohort) -> None:

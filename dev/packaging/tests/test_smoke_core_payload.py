@@ -28,7 +28,7 @@ from ..lane_verification_core import (
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
     _validated_source_data_inventory,
-    assert_wheel_contains_tracked_data,
+    assert_wheel_contains_source_data,
     build_companion_wheels,
     build_root_snapshot,
     build_sdist,
@@ -36,7 +36,7 @@ from ..lane_verification_core import (
     build_wheel,
     expected_wheel_data_paths,
     run_checked,
-    tracked_source_data_paths,
+    source_data_paths,
 )
 from ..proof_ledger import recorded_proofs, reset_proof_ledger
 from ..python_cohort import load_python_cohort
@@ -60,12 +60,12 @@ _REVIEW_FOUND_PATHS = {
 # down" instead of a result.
 @pytest.mark.timeout(900)
 def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_path: Path) -> None:
-    """Build the wheel and prove tracked-data parity against companion ownership."""
+    """Build the wheel and prove source-data parity against companion ownership."""
     uv = shutil.which("uv")
     assert uv is not None
-    tracked = tracked_source_data_paths(_REPO_ROOT)
+    source_paths = source_data_paths(_REPO_ROOT)
     suffixes = _configured_corpus_binary_suffixes(_REPO_ROOT)
-    split_owned = {path for path in tracked if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
+    split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     assert split_owned >= _REVIEW_FOUND_PATHS
 
     # Build every artifact from an isolated snapshot, never from the live
@@ -83,7 +83,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
 
     independently_expected = {
         f"cadrumo/_data/{path.removeprefix('src/cadrumo/_data/')}"
-        for path in tracked - split_owned
+        for path in source_paths - split_owned
         if "/tests/" not in path
     }
     assert expected_wheel_data_paths(_REPO_ROOT) == independently_expected
@@ -109,7 +109,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         )
 
     expected_sdist_data = {
-        path for path in tracked if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path
+        path for path in source_paths if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path
     }
     sdist = build_sdist(tmp_path, uv, build_root=build_root)
     _assert_sdist_contains_expected_data(sdist, expected_sdist_data, corpus_binary_suffixes=suffixes)
@@ -170,12 +170,12 @@ def _seed_shipped_data_repository(origin: Path) -> set[str]:
         "__pycache__/\n/src/cadrumo/_data/registry/aeat/.*.lock\n",
         encoding="utf-8",
     )
-    tracked = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_MANUAL_PDF_PRESENCE_FLOOR}
-    for relative in sorted(tracked):
+    source_paths = {"src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml", *_MANUAL_PDF_PRESENCE_FLOOR}
+    for relative in sorted(source_paths):
         path = origin / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(relative.encode("utf-8"))
-    return tracked
+    return source_paths
 
 
 def test_shipped_data_inventory_is_identical_between_the_live_tree_and_a_snapshot(tmp_path: Path) -> None:
@@ -189,10 +189,10 @@ def test_shipped_data_inventory_is_identical_between_the_live_tree_and_a_snapsho
     """
     origin = tmp_path / "origin"
     origin.mkdir()
-    tracked = _seed_shipped_data_repository(origin)
+    source_paths = _seed_shipped_data_repository(origin)
 
-    assert build_source_data_paths(origin) == tracked
-    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-before")) == tracked
+    assert build_source_data_paths(origin) == source_paths
+    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-before")) == source_paths
 
     ignored_artefacts = (
         origin / "src/cadrumo/_data/registry/aeat/.publication-transaction.lock",
@@ -203,11 +203,11 @@ def test_shipped_data_inventory_is_identical_between_the_live_tree_and_a_snapsho
         artefact.write_bytes(b"transient\n")
     assert all(artefact.is_file() for artefact in ignored_artefacts)
 
-    assert build_source_data_paths(origin) == tracked
-    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-after")) == tracked
+    assert build_source_data_paths(origin) == source_paths
+    assert build_source_data_paths(build_root_snapshot(origin, tmp_path / "snapshot-after")) == source_paths
 
 
-def test_shipped_data_inventory_reflects_a_deleted_tracked_file(tmp_path: Path) -> None:
+def test_shipped_data_inventory_reflects_a_deleted_source_file(tmp_path: Path) -> None:
     """A file removed from the source tree drops out of the derived inventory.
 
     The enumerated tree has no index separate from the working tree, so a
@@ -217,14 +217,14 @@ def test_shipped_data_inventory_reflects_a_deleted_tracked_file(tmp_path: Path) 
     """
     origin = tmp_path / "origin"
     origin.mkdir()
-    tracked = _seed_shipped_data_repository(origin)
+    source_paths = _seed_shipped_data_repository(origin)
     removed = "src/cadrumo/_data/registry/aeat/modelos/036/manifest.toml"
     (origin / removed).unlink()
 
     remaining = build_source_data_paths(origin)
 
     assert removed not in remaining
-    assert remaining == tracked - {removed}
+    assert remaining == source_paths - {removed}
 
 
 def test_shipped_data_inventory_refuses_a_named_path_absent_from_disk(tmp_path: Path) -> None:
@@ -248,11 +248,11 @@ def test_shipped_data_inventory_refuses_a_named_path_absent_from_disk(tmp_path: 
         )
 
 
-def test_tracked_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp_path: Path) -> None:
+def test_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp_path: Path) -> None:
     """A deleted manual PDF named by the presence floor still fails the preflight, by name.
 
     General shipped-data deletion is no longer detectable without a git index
-    (see the sibling "reflects a deleted tracked file" test), but this
+    (see the sibling "reflects a deleted source file" test), but this
     specific, enumerated floor is checked by membership rather than by
     comparing the inventory to itself, so a deletion inside it still fails
     closed -- the property `source_preflight` still has teeth for.
@@ -264,7 +264,7 @@ def test_tracked_source_data_paths_refuses_a_missing_manual_pdf_floor_member(tmp
     (origin / removed).unlink()
 
     with pytest.raises(SystemExit, match="missing required manual PDFs"):
-        tracked_source_data_paths(origin)
+        source_data_paths(origin)
 
 
 def _write_data_wheel(path: Path, members: set[str]) -> Path:
@@ -282,7 +282,7 @@ def test_wheel_data_gate_detects_both_absent_and_surplus_payload(tmp_path: Path)
     Deriving the expectation from the enumerated tree rather than from a naive
     filesystem walk must not blunt the gate it feeds, so both directions are proven here against
     synthetic archives: a wheel that omits expected data, and a wheel that
-    carries an ignored artefact the source tree never tracked. The complete
+    carries an ignored artefact outside the source inventory. The complete
     archive is asserted to pass in the same test, so a gate that stopped
     comparing could not read as green.
     """
@@ -293,19 +293,19 @@ def test_wheel_data_gate_detects_both_absent_and_surplus_payload(tmp_path: Path)
     reset_proof_ledger()
 
     complete = _write_data_wheel(tmp_path / "complete.whl", expected)
-    assert_wheel_contains_tracked_data(_REPO_ROOT, complete, expected)
-    assert "wheel tracked shipped-data payload" in recorded_proofs()
+    assert_wheel_contains_source_data(_REPO_ROOT, complete, expected)
+    assert "wheel source shipped-data payload" in recorded_proofs()
 
     absent = _write_data_wheel(tmp_path / "absent.whl", {next(iter(sorted(expected)))})
     with pytest.raises(SystemExit, match="missing="):
-        assert_wheel_contains_tracked_data(_REPO_ROOT, absent, expected)
+        assert_wheel_contains_source_data(_REPO_ROOT, absent, expected)
 
     surplus = _write_data_wheel(
         tmp_path / "surplus.whl",
         expected | {"cadrumo/_data/registry/aeat/.m200-2024-source-rebind.lock.lock"},
     )
     with pytest.raises(SystemExit, match="unexpected="):
-        assert_wheel_contains_tracked_data(_REPO_ROOT, surplus, expected)
+        assert_wheel_contains_source_data(_REPO_ROOT, surplus, expected)
     reset_proof_ledger()
 
 
@@ -348,7 +348,7 @@ def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_pat
         {"aeat_official/b.json", "aeat_official/c.html", "aeat_official/d.doc"},
     )
     _assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=configured)
-    assert "sdist tracked shipped-data payload" in recorded_proofs()
+    assert "sdist source shipped-data payload" in recorded_proofs()
 
     # The same archive read against a configuration that DOES exclude ``.doc``
     # is a leak. A literal tuple in the assertion could not produce this answer.
