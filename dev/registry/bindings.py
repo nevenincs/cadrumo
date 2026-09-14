@@ -434,7 +434,7 @@ def _binding_closure(
 
 def audit(root: Path) -> dict[str, object]:
     """Return the complete advisory binding inventory and reverse-route signal."""
-    from dev.registry.analysis.edition_delta_status import edition_token_in_identifier
+    from dev.registry.identifier_edition import edition_token_in_identifier
 
     registry_root = root / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
     registrations, registration_limits = _registration_inventory(root)
