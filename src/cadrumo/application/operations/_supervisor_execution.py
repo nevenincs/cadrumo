@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel
 
 from ...core.errors.error_codes import ErrorCategory, get_registered_error_code
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from ...core.operations import OperationDeadline, OperationEffect, OperationLifecycle, OperationTerminalCondition
 from . import supervisor_context as _supervisor_context
@@ -380,10 +381,7 @@ class SupervisorExecutionMixin(SupervisorHost):
         message text, arguments, contexts, tracebacks, paths, and URLs never
         enter operation persistence.
         """
-        try:
-            registered = get_registered_error_code(error)
-        except ValueError:
-            registered = None
+        registered = get_registered_error_code(error) if isinstance(error, CadrumoError) else None
         if registered is not None and registered.category is ErrorCategory.REFUSED:
             receipt = OperationTerminalReceipt(
                 identity=snapshot.identity,

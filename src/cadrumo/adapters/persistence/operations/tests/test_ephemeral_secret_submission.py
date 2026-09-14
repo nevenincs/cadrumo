@@ -40,6 +40,7 @@ from .....application.operations.secret_submission import (
     OperationSecretRequirement,
 )
 from .....application.operations.supervisor import OperationSupervisor
+from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....core.models import STRICT_FROZEN_CONFIG
 from .....core.operations import (
     OperationCancellation,
@@ -222,6 +223,7 @@ def _supervisor(
 ) -> OperationSupervisor:
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=journal,
         event_stream=journal,

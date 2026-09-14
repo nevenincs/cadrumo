@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import override
 
 from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ....application.ledger.import_ports import (
@@ -35,6 +36,7 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
     def __init__(self, provider: FinancialProvider) -> None:
         self._provider = provider
 
+    @override
     def ingest(self, path: Path) -> Iterator[LedgerParsedRow]:
         """Yield application rows while translating provider failures."""
         try:
@@ -43,6 +45,7 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="ingest", path=path) from exc
 
+    @override
     def validate_source(self, path: Path) -> LedgerProviderValidation:
         """Return application validation facts while translating failures."""
         try:
@@ -93,6 +96,7 @@ class FinancialProviderResolverAdapter:
 class SecureTransactionCatalogueLocationAdapter(TransactionCatalogueLocationProtocol):
     """Translate the transaction catalogue namespace to its public URI form."""
 
+    @override
     def path_for(self, *, bucket_id: str) -> str:
         """Return the stable URI used in application import summaries."""
         return f"db://secure_objects/{TRANSACTION_CATALOGUE_NAMESPACE.namespace}/transaction-catalogue:{bucket_id}"

@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 from urllib.parse import urlsplit
 from uuid import uuid4
 
@@ -223,6 +223,7 @@ def classify_identity(raw: str) -> str:
 class ClaveIdentityProbeAdapter(ClaveIdentityProbePort):
     """Translate the concrete Cl@ve classifier for application probes."""
 
+    @override
     def classify(self, raw: str) -> ClaveIdentityProbeResult:
         """Return an application DTO instead of leaking provider exceptions."""
         try:

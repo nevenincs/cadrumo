@@ -60,6 +60,7 @@ from cadrumo.application.operations.registry import (
     OperationSchemaBindingV1,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.config import Settings
 from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -193,6 +194,7 @@ def _supervisor(
         ),
     )
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=OperationRegistry(definitions=(definition,), public_registrations=(registration,)),
         journal=journal,
         event_stream=journal,

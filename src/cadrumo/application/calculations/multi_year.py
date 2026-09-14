@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import RegistrySnapshot
@@ -52,6 +52,7 @@ class PreviousFilingSourceResolver:
     def __init__(
         self,
         *,
+        operation: PinnedAuthorityOperation,
         repository: CalculationObservationRepositoryProtocol,
         iva_history_repository: IvaCompensationHistoryRepositoryProtocol,
         profile_read_ports: ProfileReadPorts,
@@ -60,6 +61,7 @@ class PreviousFilingSourceResolver:
     ) -> None:
         """Bind the composed observation repository and registry collaborators."""
         self._repository = repository
+        self._operation = operation
         self._iva_history_repository = iva_history_repository
         self._profile_read_ports = profile_read_ports
         self._registry_snapshot = registry_snapshot
@@ -70,18 +72,18 @@ class PreviousFilingSourceResolver:
         if self._registry_snapshot is not None:
             snapshot = self._registry_snapshot
         else:
-            with bundled_indexed_authority().operation() as operation:
-                snapshot = operation.snapshot(
-                    context.modelo,
-                    filing_year=context.filing_year,
-                    period=context.period.registry_token,
-                )
+            snapshot = self._operation.snapshot(
+                context.modelo,
+                filing_year=context.filing_year,
+                period=context.period.registry_token,
+            )
         from .binding_prefill import UNKNOWN_SOURCE_COORDINATE, resolve_bindings_from_local_store
         from .relation_prefill import activity_start_date_for_bucket
 
         try:
             report = resolve_bindings_from_local_store(
                 snapshot,
+                operation=self._operation,
                 repository=self._repository,
                 iva_history_repository=self._iva_history_repository,
                 activity_start_date=activity_start_date_for_bucket(

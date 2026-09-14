@@ -1,15 +1,15 @@
-"""Application auth-probe policy tests using inward capability fakes.
+"""Application auth-probe policy tests with an explicit real composition seam.
 
-The real profile/session and path-budget integration setup lives with the
-persistence adapter tests. These cases exercise the application answer for an
-unbound session without importing a concrete storage implementation.
+The probe and scope capabilities remain inward fakes because these cases
+exercise the application answer for an unbound session. The preflight service
+is composed through the shared test seam with a real generation-pinned
+authority operation and persistence projection read ports.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.auth.operator import build_live_auth_preflight_report
 from cadrumo.application.auth.operator_probes import (
     _active_profile_path_values,
     live_auth_identity_state,
@@ -21,6 +21,7 @@ from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
 from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_projection_support import build_live_auth_preflight_report
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 

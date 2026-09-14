@@ -20,13 +20,17 @@ from ....core.auth_provider import AuthProviderKind
 from ....core.bucket_pointer import BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
-from ..operator import build_live_auth_preflight_report
-from ..operator import test_operator_auth as run_operator_auth_test
 from ..operator_probes import probe_local_session
 from ..operator_results import AuthOperationRequiresCustodySessionError
 from ..operator_scope import active_profile_storage_span
 from ..operator_scope_ports import OperatorScopeSession
 from ._operator_probe_fakes import fake_operator_probe_ports
+from ._operator_projection_support import (
+    build_live_auth_preflight_report,
+)
+from ._operator_projection_support import (
+    test_operator_auth as run_operator_auth_test,
+)
 from ._operator_scope_fakes import build_inward_operator_scope_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,9 +54,11 @@ def test_span_yields_the_target_when_its_custody_session_is_open() -> None:
     span that refused unconditionally, which is a different (and broken)
     behaviour from the one under test.
     """
-    with override_settings(cadrumo_active_profile=_BUCKET_A) as settings:
-        with active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id:
-            assert bucket_id == _BUCKET_A
+    with (
+        override_settings(cadrumo_active_profile=_BUCKET_A) as settings,
+        active_profile_storage_span(settings, operator_scope_ports=_OPERATOR_SCOPE_PORTS) as bucket_id,
+    ):
+        assert bucket_id == _BUCKET_A
 
 
 def test_span_yields_none_when_no_target_bucket_resolves(tmp_path: Path) -> None:

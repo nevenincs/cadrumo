@@ -41,6 +41,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle], EvidenceBu
         """Translate storage-specific failures before they cross the port."""
         return EvidenceBundlePersistenceError(operation)
 
+    @override
     def load(self, identifier: str) -> EvidenceBundle | None:
         """Load one encrypted bundle and translate storage failures."""
         try:
@@ -48,6 +49,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle], EvidenceBu
         except StorageError as error:
             raise self._translate("load", error) from error
 
+    @override
     def save(self, payload: EvidenceBundle) -> None:
         """Save one encrypted bundle and translate storage failures."""
         try:
@@ -55,6 +57,7 @@ class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle], EvidenceBu
         except StorageError as error:
             raise self._translate("save", error) from error
 
+    @override
     def iter_records(self) -> Iterator[EvidenceBundle]:
         """Iterate encrypted bundles and translate scan failures."""
         try:
@@ -70,6 +73,7 @@ class EvidenceBundleWorkUnitRepository(EvidenceBundleWorkUnitPort):
         """Bind the work-unit lookup to the same bucket-scoped store."""
         self._repository = WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
+    @override
     def exists(self, work_unit_id: str) -> bool:
         """Return whether the bucket's catalogue contains ``work_unit_id``."""
         try:

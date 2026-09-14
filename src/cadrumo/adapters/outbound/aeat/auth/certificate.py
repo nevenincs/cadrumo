@@ -605,6 +605,7 @@ def health(
 class CertificateHealthProbeAdapter(CertificateHealthProbePort):
     """Translate certificate adapter health records for the application probe."""
 
+    @override
     def evaluate(self, request: CertificateHealthProbeRequest) -> CertificateHealthProbeResult:
         """Return application-owned health facts, translating load failures."""
         try:

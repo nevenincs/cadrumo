@@ -700,6 +700,7 @@ def _assemble_withholding_row(
                 fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
             ),
             incapacity_kind_repercutido=coerce_decimal(fields.get("incapacity_kind_repercutido"), default=Decimal("0")),
+            base_retenciones=coerce_decimal(fields.get("base_retenciones"), default=Decimal("0")),
             foral_retention_estatal=coerce_decimal(fields.get("foral_retention_estatal"), default=Decimal("0")),
             foral_retention_navarra=coerce_decimal(fields.get("foral_retention_navarra"), default=Decimal("0")),
             foral_retention_araba=coerce_decimal(fields.get("foral_retention_araba"), default=Decimal("0")),

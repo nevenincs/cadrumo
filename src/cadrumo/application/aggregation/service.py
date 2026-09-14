@@ -20,10 +20,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
-from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_validator, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -189,34 +188,12 @@ class PerModeloAggregationCommand(BaseModel):
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = Field(default_factory=tuple)
     withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
 
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:
-        provider = provider_for_modelo(self.modelo)
-        populated = {
-            PerModeloAggregationContributor.RETENCIONES: bool(self.retencion_observations),
-            PerModeloAggregationContributor.COUNTERPART: bool(self.counterpart_observations),
-            PerModeloAggregationContributor.FOREIGN_ASSETS: bool(self.foreign_asset_observations),
-        }
-        invalid = tuple(
-            candidate for candidate, has_rows in populated.items() if candidate is not provider and has_rows
-        )
-        if invalid:
-            names = ", ".join(candidate.value for candidate in invalid)
-            raise AggregationConfigError(
-                translated_message="aggregation.service.errors.observations_mismatch",
-                context={"names": names, "modelo": self.modelo},
-            )
-        return self
-
-    @computed_field
-    @property
-    def provider(self) -> PerModeloAggregationContributor:
-        """Return the provider family selected by ``modelo``.
-
-        Returns a :class:`PerModeloAggregationContributor`.
-        """
-        return provider_for_modelo(self.modelo)
+    def provider_for_operation(
+        self,
+        operation: PinnedAuthorityOperation,
+    ) -> PerModeloAggregationContributor:
+        """Return the provider selected by this operation's registry generation."""
+        return provider_for_modelo(self.modelo, operation=operation)
 
 
 PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
@@ -320,7 +297,7 @@ def _provider_for_modelo_revisions(
 
 def _registered_per_modelo_provider_modelos(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[PerModeloAggregationContributor, tuple[str, ...]]:
     """Project aggregation ownership from explicit indexed registry components.
 
@@ -330,11 +307,6 @@ def _registered_per_modelo_provider_modelos(
     one of the few genuine bulk inventories, so it walks only the compact
     modelo directories and their addressed revision components.
     """
-    if operation is None:
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _registered_per_modelo_provider_modelos(operation=indexed_operation)
     grouped: dict[PerModeloAggregationContributor, list[str]] = {
         contributor: [] for contributor in PerModeloAggregationContributor
     }
@@ -348,7 +320,7 @@ def _registered_per_modelo_provider_modelos(
 
 def _supported_per_modelo_modelos(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     """Return the exact accepted modelo ids in canonical registry order."""
     grouped = _registered_per_modelo_provider_modelos(operation=operation)
@@ -357,7 +329,7 @@ def _supported_per_modelo_modelos(
 
 def build_per_modelo_aggregation_contract(
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract.
 
@@ -401,16 +373,18 @@ def build_per_modelo_aggregation_contract(
     return contract
 
 
-@lru_cache(maxsize=1)
-def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
-    """Return the cached backend-owned :class:`PerModeloAggregationContract`."""
-    return build_per_modelo_aggregation_contract()
+def get_per_modelo_aggregation_contract(
+    *,
+    operation: PinnedAuthorityOperation,
+) -> PerModeloAggregationContract:
+    """Build the backend-owned contract for one pinned authority generation."""
+    return build_per_modelo_aggregation_contract(operation=operation)
 
 
 def provider_for_modelo(
     modelo: str,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> PerModeloAggregationContributor:
     """Return the provider family for a supported modelo.
 
@@ -443,18 +417,25 @@ def provider_for_modelo(
 def aggregate_per_modelo(
     command: PerModeloAggregationCommand,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> PerModeloAggregationResult:
     """Run the central application aggregation service for one modelo.
 
     Returns a :class:`PerModeloAggregationResult`.
     """
-    if operation is None:
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_per_modelo(command, operation=indexed_operation)
     provider = provider_for_modelo(command.modelo, operation=operation)
+    populated = {
+        PerModeloAggregationContributor.RETENCIONES: bool(command.retencion_observations),
+        PerModeloAggregationContributor.COUNTERPART: bool(command.counterpart_observations),
+        PerModeloAggregationContributor.FOREIGN_ASSETS: bool(command.foreign_asset_observations),
+    }
+    invalid = tuple(candidate for candidate, has_rows in populated.items() if candidate is not provider and has_rows)
+    if invalid:
+        names = ", ".join(candidate.value for candidate in invalid)
+        raise AggregationConfigError(
+            translated_message="aggregation.service.errors.observations_mismatch",
+            context={"names": names, "modelo": command.modelo},
+        )
     # `command.modelo` is deliberately a loose `str` so an unsupported code earns
     # the late refusal above, which names the accepted set. `provider_for_modelo`
     # has now proven the code is one of those supported members, so this is the
@@ -511,25 +492,14 @@ def _aggregate_counterpart(
     period: Period,
     observations: tuple[CounterpartObservation, ...],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CounterpartAggregation:
-    if operation is None:
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _aggregate_counterpart(
-                modelo,
-                period,
-                observations,
-                operation=indexed_operation,
-            )
-    directory = operation.modelo_directory(modelo)
-    revisions = tuple(operation.revision(modelo, str(metadata.id)) for metadata in directory.revisions)
-    if any(
-        binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
-        for revision in revisions
-        for binding in revision.bindings
-    ):
+    revision = operation.revision_for_context(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    if any(binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION for binding in revision.bindings):
         return aggregate_counterpart_347(observations, period=period)
     return aggregate_counterpart_349(observations, period=period)
 

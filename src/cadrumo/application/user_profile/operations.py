@@ -210,6 +210,7 @@ class ProfileFieldMutationOperationExecutor:
             profile_id=str(payload.profile_id),
             path=payload.path,
             value=payload.value,
+            profile_decode_context=context.authority_operation.profile_decode_context(),
         )
         result = ProfileMutationOperationResult(
             profile_id=payload.profile_id,
@@ -240,6 +241,8 @@ class ProfileRepeatableRowMutationOperationExecutor:
             profile_id=str(payload.profile_id),
             section_key=payload.section_key,
             values=values,
+            schema=context.authority_operation.profile_schema(),
+            profile_decode_context=context.authority_operation.profile_decode_context(),
         )
         result = ProfileRepeatableRowMutationOperationResult(
             profile_id=payload.profile_id,
@@ -271,19 +274,16 @@ class ProfileBundleExportOperationExecutor:
             try:
                 await context.events.effect(OperationEffect.UNKNOWN)
                 await context.events.phase(_PROFILE_BUNDLE_EXPORT_PHASES[2])
-                from ...domain.calculations.registry.authority import bundled_indexed_authority
-
-                with bundled_indexed_authority().operation() as authority_operation:
-                    result = export_profile_bundle(
-                        ProfileBundleExportRequest(
-                            profile_name=None,
-                            destination=payload.destination,
-                            purpose=payload.purpose,
-                            transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
-                            passphrase=SecretStr(passphrase),
-                        ),
-                        profile_decode_context=authority_operation.profile_decode_context(),
-                    )
+                result = export_profile_bundle(
+                    ProfileBundleExportRequest(
+                        profile_name=None,
+                        destination=payload.destination,
+                        purpose=payload.purpose,
+                        transport=ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED,
+                        passphrase=SecretStr(passphrase),
+                    ),
+                    profile_decode_context=context.authority_operation.profile_decode_context(),
+                )
             finally:
                 passphrase = ""
         result_ref = await _result_reference(result, context)

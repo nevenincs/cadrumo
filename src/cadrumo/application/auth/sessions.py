@@ -347,7 +347,7 @@ async def ensure_authenticated_aeat_session(
     browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> AuthenticatedAeatSessionResult:
     """Serialize and fail-close the central live-session writer."""
     with active_profile_storage_span(settings, operator_scope_ports=operator_scope_ports) as bucket_id:
@@ -388,7 +388,7 @@ async def _ensure_authenticated_aeat_session_locked(
     browser_session_factory: BrowserSessionFactoryPort,
     certificate_credentials: ActiveCertificateCredentials | None = None,
     operator_scope_ports: OperatorScopePorts,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -647,7 +647,7 @@ def _prepare_clave_auth(
     provider_kind: AuthProviderKind,
     *,
     operator_scope_ports: OperatorScopePorts,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> tuple[Settings, str | None]:
     """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
 
@@ -669,19 +669,16 @@ def _prepare_clave_auth(
     meaningless, and a provider that returned no expectation would leave
     the session check silently no-opping.
     """
-    facts = (
-        _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)
-        if profile_decode_context is None
-        else _active_profile_auth_facts(
-            operator_scope_ports=operator_scope_ports,
-            profile_decode_context=profile_decode_context,
-        )
+    facts = _active_profile_auth_facts(
+        operator_scope_ports=operator_scope_ports,
+        profile_decode_context=profile_decode_context,
     )
     credentials = _resolve_clave_credentials(
         settings,
         provider_kind,
         facts=facts,
         operator_scope_ports=operator_scope_ports,
+        profile_decode_context=profile_decode_context,
     )
     if credentials is None:
         _assert_profile_identity_available_for_deferred_check(
@@ -723,6 +720,7 @@ def _resolve_clave_credentials(
     *,
     facts: ClaveAuthFacts | None = None,
     operator_scope_ports: OperatorScopePorts,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ClaveCredentials | None:
     """Resolve the Cl@ve halves for ``provider_kind`` from the active profile.
 
@@ -737,7 +735,14 @@ def _resolve_clave_credentials(
     return resolve_clave_credentials(
         provider_kind,
         settings=settings,
-        facts=(facts if facts is not None else _active_profile_auth_facts(operator_scope_ports=operator_scope_ports)),
+        facts=(
+            facts
+            if facts is not None
+            else _active_profile_auth_facts(
+                operator_scope_ports=operator_scope_ports,
+                profile_decode_context=profile_decode_context,
+            )
+        ),
     )
 
 
@@ -788,7 +793,7 @@ _CLAVE_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
 def _profile_field_label(
     path: str,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> str:
     """Return one profile field's operator label, as the profile editor shows it.
 
@@ -800,8 +805,6 @@ def _profile_field_label(
     """
     from ..user_profile.preflight import build_profile_preflight_requirement
 
-    if profile_decode_context is None:
-        return path
     return build_profile_preflight_requirement(
         path,
         schema=profile_decode_context.schema,
@@ -812,7 +815,7 @@ def _require_clave_credentials(
     settings: Settings,
     credentials: ClaveCredentials,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> None:
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
@@ -857,7 +860,7 @@ def _require_clave_credentials(
 def _assert_profile_identity_available_for_deferred_check(
     facts: ClaveAuthFacts,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> None:
     """Refuse a provider whose only identity check is deferred when there is nothing to defer to.
 
@@ -897,7 +900,7 @@ _PROFILE_TAX_ID_PATH = "identity.tax_id"
 
 def _grounded_profile_identity_requirement(
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> str:
     """Render the profile tax-identifier field as its operator label.
 
@@ -909,8 +912,6 @@ def _grounded_profile_identity_requirement(
     """
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 
-    if profile_decode_context is None:
-        return _PROFILE_TAX_ID_PATH
     return format_profile_preflight_requirement(
         build_profile_preflight_requirement(
             _PROFILE_TAX_ID_PATH,
@@ -922,7 +923,7 @@ def _grounded_profile_identity_requirement(
 def _assert_active_profile_identity_matches_provider(
     credentials: ClaveCredentials | None,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> str | None:
     """Fail closed before live auth can bind one taxpayer's session to another profile.
 
@@ -1075,7 +1076,7 @@ def clave_auth_facts_from_profile_values(
 def _active_profile_auth_facts(
     *,
     operator_scope_ports: OperatorScopePorts,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ClaveAuthFacts:
     """Read the active profile's identity and Cl@ve credentials in one pass.
 

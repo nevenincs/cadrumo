@@ -1052,6 +1052,7 @@ def _run_patch_edit(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
         door=ProfileFactWriteDoor.PATCH,
+        profile_decode_context=profile_decode_context,
     )
     return merged_values
 
@@ -1098,6 +1099,7 @@ def _persist_full_flow_answers(
         profile_id=profile_id,
         changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
         door=ProfileFactWriteDoor.ANSWERS,
+        profile_decode_context=profile_decode_context,
     )
     return values
 

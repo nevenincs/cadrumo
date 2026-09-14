@@ -18,6 +18,7 @@ from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -51,9 +52,11 @@ class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
     def __init__(self) -> None:
         self._rules: dict[str, LedgerClassificationRule] = {}
 
+    @override
     def save(self, payload: LedgerClassificationRule) -> None:
         self._rules[payload.rule_id] = payload
 
+    @override
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(sorted(self._rules.values(), key=lambda rule: (rule.priority, rule.rule_id)))
 

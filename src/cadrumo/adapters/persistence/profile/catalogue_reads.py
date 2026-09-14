@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import override
 
 from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
@@ -27,6 +28,7 @@ class InvoiceCatalogueReadAdapter(InvoiceCatalogueReader):
         """Bind an already-composed invoice repository."""
         self._repository = repository
 
+    @override
     def load(self) -> InvoiceCatalogue:
         """Load the catalogue while hiding persistence implementation errors."""
         try:
@@ -42,6 +44,7 @@ class TransactionCatalogueReadAdapter(TransactionCatalogueReader):
         """Bind an already-composed transaction repository."""
         self._repository = repository
 
+    @override
     def load(self) -> TransactionCatalogue:
         """Load the catalogue while hiding persistence implementation errors."""
         try:
@@ -49,6 +52,7 @@ class TransactionCatalogueReadAdapter(TransactionCatalogueReader):
         except (TransactionPersistenceError, StorageError, OSError) as exc:
             raise InvoiceCatalogueReadPersistenceError("transaction_catalogue_load") from exc
 
+    @override
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Partition the catalogue while hiding persistence implementation errors."""
         try:

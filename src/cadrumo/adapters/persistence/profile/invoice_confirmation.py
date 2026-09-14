@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, override
 
 from ....application.ledger.invoice_confirmation_ports import (
     InvoiceConfirmationPersistenceError,
@@ -47,28 +47,34 @@ class InvoiceConfirmationAttachmentStoreAdapter(AttachmentStoreProtocol):
     def __init__(self, *, store: AttachmentStore) -> None:
         self._store = store
 
+    @override
     def put_bytes(self, data: bytes) -> str:
         """Store bytes while translating persistence failures."""
         return _translate_attachment_failure("attachment_put_bytes", lambda: self._store.put_bytes(data))
 
+    @override
     def put_file(self, source: Path) -> tuple[str, int]:
         """Store a file while translating persistence failures."""
         return _translate_attachment_failure("attachment_put_file", lambda: self._store.put_file(source))
 
+    @override
     def read_bytes(self, sha256: str) -> bytes:
         """Read bytes while translating persistence failures."""
         return _translate_attachment_failure("attachment_read_bytes", lambda: self._store.read_bytes(sha256))
 
+    @override
     def write_manifest(self, attachment: Attachment) -> None:
         """Write a manifest while translating persistence failures."""
         _translate_attachment_failure("attachment_write_manifest", lambda: self._store.write_manifest(attachment))
 
+    @override
     def load_manifest(self, attachment_id: str) -> Attachment:
         """Load a manifest while preserving an ordinary domain miss."""
         return _translate_attachment_failure(
             "attachment_load_manifest", lambda: self._store.load_manifest(attachment_id)
         )
 
+    @override
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate manifests while translating failures raised during iteration."""
         try:
@@ -78,6 +84,7 @@ class InvoiceConfirmationAttachmentStoreAdapter(AttachmentStoreProtocol):
         except (AttachmentPersistenceError, StorageError, OSError, TypeError, ValueError, KeyError) as exc:
             raise InvoiceConfirmationPersistenceError("attachment_iter_manifests") from exc
 
+    @override
     def verify_blob(self, attachment_id: str) -> None:
         """Verify one blob while translating persistence failures."""
         _translate_attachment_failure("attachment_verify_blob", lambda: self._store.verify_blob(attachment_id))

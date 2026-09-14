@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping
 from enum import Enum
 from functools import cache
 from types import GenericAlias
-from typing import Any, cast
+from typing import Any, cast, override
 
 import typer
 from click import Choice, Context, Parameter, ParamType
@@ -48,6 +48,7 @@ class _PydanticStringParamType(ParamType):
         self._adapter = TypeAdapter(annotation)
         self.name = annotation.__name__
 
+    @override
     def convert(self, value: Any, param: Parameter | None, ctx: Context | None) -> object:
         try:
             return self._adapter.validate_python(value)

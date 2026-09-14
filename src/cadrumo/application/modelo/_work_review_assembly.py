@@ -12,7 +12,6 @@ from ...core.estado_casilla_oficial import EstadoCasillaOficial
 from ...core.identity.bucket import BucketId
 from ...core.modelo_work_progress_state import ModeloWorkProgressState
 from ...core.period import Period
-from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.export import (
@@ -156,12 +155,15 @@ def _current_revision(
 def _latest_verification(
     revision: CalculationRevision | None,
     repository: VerificationReportCatalogueRepositoryProtocol,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> VerificationReport | None:
     if revision is None:
         return None
-    reports = require_verification_report_coordinates_current(repository.load()).for_calculation_revision(
-        revision.calculation_revision_id
-    )
+    reports = require_verification_report_coordinates_current(
+        repository.load(),
+        operation=operation,
+    ).for_calculation_revision(revision.calculation_revision_id)
     return reports[-1] if reports else None
 
 
@@ -194,19 +196,13 @@ def _persisted_decimal_bindings(
 
 def _official_references(
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority | None,
     estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial],
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[CasillaId, str | None]:
     layouts = derive_export_layouts_from_bindings(snapshot.revision)
-    if operation is None:
-        if authority is None:
-            raise ValueError("work-review evidence requires an authority or pinned operation")
-        source_payloads = {item.source_reference_id: item.payload for item in authority.evidence.sources}
-    else:
-        source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
-        source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
+    source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
+    source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     xml_paths: dict[CasillaId, str] = {}
     for layout in layouts:
         if layout.dictionary_source_ref is None:
@@ -407,19 +403,13 @@ def _review_casilla(
 def _review_row_context(
     *,
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority | None,
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _ReviewRowContext:
     layouts = derive_export_layouts_from_bindings(snapshot.revision)
-    if operation is None:
-        if authority is None:
-            raise ValueError("work-review evidence requires an authority or pinned operation")
-        source_payloads = {item.source_reference_id: item.payload for item in authority.evidence.sources}
-    else:
-        source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
-        source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
+    source_ids = {str(source_id) for layout in layouts for source_id in layout.source_refs}
+    source_payloads = {source_id: operation.source_evidence(source_id).payload for source_id in source_ids}
     estados_casillas_oficiales = clasificar_casillas_oficiales(
         snapshot.revision,
         sources=snapshot.sources,
@@ -443,7 +433,6 @@ def _review_row_context(
         estados_casillas_oficiales=estados_casillas_oficiales,
         official_references=_official_references(
             snapshot,
-            authority,
             estados_casillas_oficiales,
             operation=operation,
         ),
@@ -454,14 +443,12 @@ def _review_row_context(
 def _review_casillas(
     *,
     snapshot: RegistrySnapshot,
-    authority: ValidatedRegistryAuthority | None,
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloWorkReviewCasilla, ...]:
     context = _review_row_context(
         snapshot=snapshot,
-        authority=authority,
         revision=revision,
         blocking_findings=blocking_findings,
         operation=operation,
@@ -510,16 +497,11 @@ def assemble_modelo_work_review(
     filing_year: int,
     period: Period,
     *,
-    authority: ValidatedRegistryAuthority | None,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
 ) -> ModeloWorkReview:
-    if operation is None:
-        raise ValueError("work-review assembly requires an explicit pinned authority operation")
-    if authority is not None:
-        raise ValueError("work-review assembly accepts a pinned operation, not a legacy authority")
     selected_revision = operation.revision_for_context(
         modelo,
         filing_year=filing_year,
@@ -532,7 +514,6 @@ def assemble_modelo_work_review(
         revision_id=selected_revision.id,
         grade=selected_revision.effective_authority_grade,
     )
-    resolved_authority = None
     work_units = work_unit_repository.load()
     calculation_repo = calculation_repository
     verification_repo = verification_repository
@@ -545,7 +526,7 @@ def assemble_modelo_work_review(
         catalogue=work_units,
     )
     revision = _current_revision(work_unit, calculation_repo)
-    verification = _latest_verification(revision, verification_repo)
+    verification = _latest_verification(revision, verification_repo, operation=operation)
     findings = () if verification is None else verification.findings
     blocking_findings = tuple(
         finding for finding in findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
@@ -553,7 +534,6 @@ def assemble_modelo_work_review(
     blockers = tuple(_blocker_ref(finding) for finding in blocking_findings)
     rows = _review_casillas(
         snapshot=snapshot,
-        authority=resolved_authority,
         revision=revision,
         blocking_findings=blocking_findings,
         operation=operation,

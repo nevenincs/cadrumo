@@ -54,10 +54,12 @@ class IvaCompensationHistoryRepository(
         return iva_compensation_period_key(payload.period)
 
     @property
+    @override
     def secure_object_repository(self) -> CalculationObservationStorageProtocol:
         """Expose the storage capability required for atomic co-commit."""
         return self._objects
 
+    @override
     def load_period(self, period: Period) -> IvaCompensationPeriodState | None:
         """Load one period and re-confirm its registry coordinate."""
         return _call_storage("load", lambda: self._load_period(period))
@@ -68,10 +70,12 @@ class IvaCompensationHistoryRepository(
             require_iva_compensation_period_coordinates_current(state)
         return state
 
+    @override
     def save_period(self, state: IvaCompensationPeriodState) -> None:
         """Persist one validated period state."""
         _call_storage("save", lambda: self.save(state))
 
+    @override
     def list_periods(self) -> tuple[IvaCompensationPeriodState, ...]:
         """Load and sort all persisted period states."""
 
@@ -88,6 +92,7 @@ class IvaCompensationHistoryRepository(
 
         return _call_storage("list", _list)
 
+    @override
     def to_secure_object_write(self, state: IvaCompensationPeriodState) -> SecureObjectWrite:
         """Prepare one encrypted history write without committing it."""
 

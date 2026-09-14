@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from ....application.modelo.taxation_comparison_ports import (
     TaxationComparisonPersistenceError,
     TaxationComparisonPorts,
@@ -21,6 +23,7 @@ class TaxationComparisonWorkUnitReaderAdapter(TaxationComparisonWorkUnitReader):
         """Bind an already-composed work-unit repository."""
         self._repository = repository
 
+    @override
     def load(self) -> WorkUnitCatalogue:
         """Load work units while hiding persistence implementation errors."""
         try:

@@ -9,7 +9,7 @@ and object-store details outside the application boundary.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, override
 
 from ....application.modelo.m036_lifecycle import (
     M036DeclarationAmbiguousError,
@@ -76,6 +76,7 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
     def __init__(self, *, repository: SecureSnapshotRepository[M036DeclarationResult]) -> None:
         self._repository = repository
 
+    @override
     def exists(self, declaration_id: str) -> bool:
         """Report declaration presence without exposing storage failures."""
         return _translate_adapter_failure(
@@ -83,6 +84,7 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
             lambda: self._repository.exists(declaration_id),
         )
 
+    @override
     def load(self, declaration_id: str) -> M036DeclarationResult:
         """Load one declaration by full id while preserving lookup errors."""
         return _translate_adapter_failure(
@@ -90,10 +92,12 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
             lambda: self._repository.load(declaration_id),
         )
 
+    @override
     def list_snapshots(self) -> tuple[M036DeclarationResult, ...]:
         """List declarations while translating malformed storage failures."""
         return _translate_adapter_failure("m036_declaration_list", self._repository.list_snapshots)
 
+    @override
     def resolve(self, declaration_id: str) -> M036DeclarationResult:
         """Resolve one full id or unique prefix while hiding adapter errors."""
         return _translate_adapter_failure(
@@ -101,6 +105,7 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
             lambda: self._repository.resolve(declaration_id),
         )
 
+    @override
     def save(self, declaration: M036DeclarationResult) -> None:
         """Persist one declaration through the secure-object repository."""
         _translate_adapter_failure(
@@ -108,6 +113,7 @@ class M036DeclarationRepositoryAdapter(M036DeclarationRepositoryPort):
             lambda: self._repository.save(declaration),
         )
 
+    @override
     def save_with_secure_object_writes(
         self,
         declaration: M036DeclarationResult,
@@ -126,10 +132,12 @@ class M036BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
         self._repository = repository
 
+    @override
     def exists(self) -> bool:
         """Report event-history presence without exposing storage failures."""
         return _translate_adapter_failure("bucket_event_history_exists", self._repository.exists)
 
+    @override
     def load(self) -> BucketEventHistoryCatalogue:
         """Load event history through the application-facing port."""
         return _translate_adapter_failure("bucket_event_history_load", self._repository.load)
@@ -138,10 +146,12 @@ class M036BucketEventRepositoryAdapter(BucketEventHistoryRepositoryProtocol):
         """Load event history together with its optimistic-concurrency revision."""
         return _translate_adapter_failure("bucket_event_history_load_revisioned", self._repository.load_revisioned)
 
+    @override
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist event history while translating storage failures."""
         _translate_adapter_failure("bucket_event_history_save", lambda: self._repository.save(catalogue))
 
+    @override
     def to_secure_object_write(
         self,
         catalogue: BucketEventHistoryCatalogue,

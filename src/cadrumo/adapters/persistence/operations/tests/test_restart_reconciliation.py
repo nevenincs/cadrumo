@@ -59,6 +59,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.application.operations.supervisor_context import SupervisorExecutorContext
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.operations import (
@@ -239,6 +240,7 @@ def build_supervisor(
 ) -> OperationSupervisor:
     """Compose one owner over durable filesystem state at a fixed instant."""
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=registry,
         journal=OperationJournalRepository(storage_root=storage_root),
         event_stream=OperationJournalRepository(storage_root=storage_root),

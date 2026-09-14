@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from ....core.config import Settings
 from ....core.identity.bucket import canonical_bucket_id
 from ..apoderado_repository import ApoderadoConfigurationRepository
@@ -15,12 +17,15 @@ class InMemoryApoderadoConfigurationRepository(ApoderadoConfigurationRepository)
         self._bucket_id = canonical_bucket_id(bucket_id)
         self._records = records
 
+    @override
     def load(self) -> ApoderadoConfiguration | None:
         return self._records.get(self._bucket_id)
 
+    @override
     def save(self, configuration: ApoderadoConfiguration) -> None:
         self._records[self._bucket_id] = configuration
 
+    @override
     def delete(self) -> bool:
         return self._records.pop(self._bucket_id, None) is not None
 

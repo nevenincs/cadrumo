@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import secrets
-from collections.abc import Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -71,7 +70,6 @@ from ..application.user_profile.operations import (
 from ..core.config import Settings, load_settings
 from ..core.paths import effective_storage_root
 from ..core.time.clock import now
-from ..domain.calculations.registry.authority import bundled_indexed_authority
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
@@ -89,7 +87,7 @@ _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry.authority import IndexedRegistryAuthority
+    from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _google_sheets_export_prepare_port(
@@ -161,7 +159,6 @@ def _google_sheets_export_prepare_port(
 
 def build_production_operation_registry(
     *,
-    authority_factory: Callable[[], IndexedRegistryAuthority] = bundled_indexed_authority,
     settings: Settings | None = None,
     auth_definitions: tuple[OperationDefinition, ...] | None = None,
     censal_definition: OperationDefinition | None = None,
@@ -181,7 +178,6 @@ def build_production_operation_registry(
     resolved_auth_definitions = auth_definitions if auth_definitions is not None else build_auth_operation_definitions()
     profile_definitions = build_user_profile_operation_definitions()
     modelo_definitions = build_modelo_lifecycle_operation_definitions(
-        authority_factory=authority_factory,
         certificate_secret_backend_factory=build_certificate_secret_backend,
         operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
@@ -245,7 +241,7 @@ def build_production_operation_registry(
 
 def compose_operation_dependencies(
     *,
-    authority_factory: Callable[[], IndexedRegistryAuthority] = bundled_indexed_authority,
+    authority_operation: PinnedAuthorityOperation,
     settings: Settings | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
@@ -258,16 +254,17 @@ def compose_operation_dependencies(
 ) -> OperationComposedServices:
     """Compose the immutable production registry and all public services.
 
-    Construction is deliberately explicit and effect-light: it opens no
-    browser and starts no operation. Profile-bound repositories resolve only
-    when an operation uses them, so the same graph can own pre-login and
-    post-login execution without retaining a stale profile repository.
+    Construction is deliberately explicit: the caller supplies the one
+    already-pinned registry operation that every governed executor in this
+    graph shares. It opens no browser and starts no supervised operation.
+    Profile-bound repositories resolve only when an operation uses them, so
+    the same graph can own pre-login and post-login execution without retaining
+    a stale profile repository.
     """
     resolved_settings = settings or load_settings()
     resolved_operator_scope_ports = operator_scope_ports or build_operator_scope_ports()
     storage_root = effective_storage_root(settings=resolved_settings)
     registry = build_production_operation_registry(
-        authority_factory=authority_factory,
         settings=resolved_settings,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
@@ -283,6 +280,7 @@ def compose_operation_dependencies(
     operands = operation_secure_reference_repository()
     return compose_operation_services(
         registry=registry,
+        authority_operation=authority_operation,
         journal=journal,
         reader=journal,
         event_stream=journal,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..application.auth.operator_probe_ports import OperatorProbePorts
 from ..application.auth.operator_scope_ports import OperatorScopePorts
@@ -31,6 +33,7 @@ class _DiagnosticsAuthProbeAdapter(DiagnosticAuthProbePort):
         self._operator_scope_ports = operator_scope_ports
         self._operation = operation
 
+    @override
     def probe(self) -> DiagnosticAuthProbeResult:
         """Read auth readiness through the root-composed state projection ports."""
         from ..application.auth.operator import test_operator_auth

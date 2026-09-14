@@ -32,6 +32,7 @@ from ....application.operations.composition import compose_operation_services
 from ....application.operations.models import OperationRequest
 from ....application.operations.persistence.leases import operation_conflict_scope_reference
 from ....application.operations.registry import OperationRegistry
+from ....application.operations.tests.authority_test_support import unread_authority_operation
 from ....core.operations import (
     OperationEffect,
     OperationEventKind,
@@ -75,6 +76,7 @@ def _services(root: Path, *, definition=None):
             definitions=(definition,),
             public_registrations=(build_google_sheets_export_operation_registration(definition),),
         ),
+        authority_operation=unread_authority_operation(),
         journal=journal,
         reader=journal,
         event_stream=journal,
@@ -168,7 +170,7 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
 def test_production_composition_registers_the_application_owned_definition_and_real_transport(tmp_path: Path) -> None:
     """The production registry binds this owner to the single outer composition transport."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        dependencies = compose_operation_dependencies()
+        dependencies = compose_operation_dependencies(authority_operation=unread_authority_operation())
         try:
             definition = dependencies.observation.registry.lookup(GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID)
             assert definition.executor_factory.create().__class__.__name__ == "GoogleSheetsExportOperationExecutor"

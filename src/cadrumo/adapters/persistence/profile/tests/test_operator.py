@@ -26,13 +26,9 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import active_auth_projection_span, resolve_certificate_source_secret
 from cadrumo.application.auth.operator import (
-    build_live_auth_preflight_report,
-    configure_operator_auth,
-    inspect_operator_auth,
     login_operator_auth,
     reset_operator_auth,
 )
-from cadrumo.application.auth.operator import test_operator_auth as run_operator_auth_test
 from cadrumo.application.auth.operator_probes import ProviderConfigurationProbe
 from cadrumo.application.auth.operator_results import (
     AuthLoginPreconditionError,
@@ -41,6 +37,15 @@ from cadrumo.application.auth.operator_results import (
 )
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.sessions import storage_state_paths
+from cadrumo.application.auth.tests._operator_projection_support import (
+    build_live_auth_preflight_report,
+    build_operator_state_projection,
+    configure_operator_auth,
+    inspect_operator_auth,
+)
+from cadrumo.application.auth.tests._operator_projection_support import (
+    test_operator_auth as run_operator_auth_test,
+)
 from cadrumo.application.state_projection_auth import ProjectionAuthReadiness
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
@@ -525,8 +530,6 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
     unconfigured, unavailable state. Login must refuse at that boundary, before
     any provider or browser-session construction can begin.
     """
-
-    from cadrumo.application.state_projection import build_operator_state_projection
 
     invalid_selector = "certificate-private-taxpayer-note"
     _register_operator_profile()

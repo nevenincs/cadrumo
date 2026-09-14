@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from google.auth.credentials import Credentials
@@ -595,6 +595,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
     class Borrador100SnapshotAdapter(SecureSnapshotRepository[Borrador100Snapshot]):
         """Bind the generic secure store while retaining borrador chronology."""
 
+        @override
         def exists(self, snapshot_id: str) -> bool:
             """Check snapshot presence while translating storage failures inward."""
             try:
@@ -602,6 +603,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_exists") from exc
 
+        @override
         def load(self, snapshot_id: str) -> Borrador100Snapshot:
             """Load one snapshot while translating storage failures inward."""
             try:
@@ -609,6 +611,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_load") from exc
 
+        @override
         def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
             """List snapshots while translating storage failures inward."""
             try:
@@ -618,6 +621,7 @@ def build_borrador_100_snapshot_repository(*, bucket_id: str) -> Borrador100Snap
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_list") from exc
 
+        @override
         def save(self, snapshot: Borrador100Snapshot) -> None:
             """Persist one snapshot while translating storage failures inward."""
             try:
@@ -994,6 +998,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         def __init__(self, register: DeclaracionesRegisterSession) -> None:
             self._register = register
 
+        @override
         async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
             try:
                 rows = await self._register.walk(modelo=modelo, ejercicio=ejercicio)
@@ -1010,6 +1015,7 @@ def build_expedientes_ports(*, bucket_id: str) -> ExpedientesPorts:
         """Adapt the browser register lifecycle to the application port."""
 
         @asynccontextmanager
+        @override
         async def open_register(self, session: AeatSession, *, settings: Settings):
             try:
                 async with (

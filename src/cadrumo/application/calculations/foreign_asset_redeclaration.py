@@ -34,7 +34,7 @@ from ...core.foreign_asset_obligation import (
     ForeignAssetObligationGroup,
 )
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ...domain.calculations.registry.detail_record_bindings import ForeignAssetProvider
@@ -84,25 +84,23 @@ def _resolve_foreign_asset_registry_declarations(
     modelo: str,
     filing_year: int,
     period: str,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloRevision:
     """Resolve the selected foreign-asset model and casilla declarations."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _resolve_foreign_asset_registry_declarations(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                operation=indexed_operation,
-            )
     return operation.revision_for_context(modelo, filing_year=filing_year, period=period)
 
 
 def _registry_valuation_casillas(
     modelo_revision: ModeloRevision,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> dict[ForeignAssetObligationGroup, CasillaId]:
     """Discover valuation casillas and their obligation groups from a revision."""
     result: dict[ForeignAssetObligationGroup, CasillaId] = {}
+    del operation
+    # TODO(authority-owner): resolve the foreign-asset taxonomy from the same
+    # operation.  The legacy catalogue adapter has not yet accepted
+    # PinnedAuthorityOperation and must not be reopened here.
     catalogue = resolve_foreign_asset_obligation_catalogue()
     for casilla in modelo_revision.casillas:
         parts = tuple(str(casilla.id).split("."))
@@ -120,7 +118,7 @@ def _registry_valuation_casillas(
 def _registry_modelo_721_fields(
     observation: RegistryModeloObservation,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> _Modelo721RegistryFields:
     """Resolve the selected Modelo 721 identity/value fields from registry metadata."""
     revision = _resolve_foreign_asset_registry_declarations(
@@ -199,12 +197,17 @@ def _modelo_720_asset_class(raw_code: object) -> ForeignAssetClass | None:
     )
 
 
-def _obligation_group_for_valuation_casilla(casilla_id: CasillaId) -> ForeignAssetObligationGroup | None:
+def _obligation_group_for_valuation_casilla(
+    casilla_id: CasillaId,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> ForeignAssetObligationGroup | None:
     """Infer the typed obligation group from a registry valuation casilla identity."""
     parts = tuple(str(casilla_id).split("."))
     if len(parts) < 2 or parts[-1].casefold() != "valoracion":
         return None
     namespace = parts[-2].replace("-", "_").casefold()
+    del operation
     catalogue = resolve_foreign_asset_obligation_catalogue()
     return next(
         (
@@ -221,6 +224,7 @@ def modelo_720_redeclaration_advisory_findings(
     prior_observation: RegistryModeloObservation,
     current_observation: RegistryModeloObservation,
     current_declaration_observation: RegistryModeloObservation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return non-blocking M720 re-declaration advisories for omitted grown groups.
 
@@ -235,10 +239,14 @@ def modelo_720_redeclaration_advisory_findings(
     """
     return _redeclaration_advisory_findings(
         modelo=Modelo("720").value,
-        prior_positions=_modelo_720_positions(prior_observation),
-        current_positions=_modelo_720_positions(current_observation),
-        declared_positions=_modelo_720_positions(current_declaration_observation or current_observation),
+        prior_positions=_modelo_720_positions(prior_observation, operation=operation),
+        current_positions=_modelo_720_positions(current_observation, operation=operation),
+        declared_positions=_modelo_720_positions(
+            current_declaration_observation or current_observation,
+            operation=operation,
+        ),
         filing_year=current_observation.filing_year,
+        operation=operation,
     )
 
 
@@ -247,6 +255,7 @@ def modelo_721_redeclaration_advisory_findings(
     prior_observation: RegistryModeloObservation,
     current_observation: RegistryModeloObservation,
     current_declaration_observation: RegistryModeloObservation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
     """Return non-blocking M721 re-declaration advisories for omitted grown tokens.
 
@@ -259,17 +268,21 @@ def modelo_721_redeclaration_advisory_findings(
         modelo=Modelo("721").value,
         prior_positions=_modelo_721_positions(
             prior_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation),
+            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
+            operation=operation,
         ),
         current_positions=_modelo_721_positions(
             current_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation),
+            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
+            operation=operation,
         ),
         declared_positions=_modelo_721_positions(
             current_declaration_observation or current_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation),
+            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
+            operation=operation,
         ),
         filing_year=current_observation.filing_year,
+        operation=operation,
     )
 
 
@@ -280,8 +293,9 @@ def _redeclaration_advisory_findings(
     current_positions: Mapping[tuple[str, ...], _RedeclarationPosition],
     declared_positions: Mapping[tuple[str, ...], _RedeclarationPosition],
     filing_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ModeloVerificationFinding, ...]:
-    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=filing_year)
+    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=filing_year, operation=operation)
     findings: list[ModeloVerificationFinding] = []
     for key in sorted(prior_positions):
         prior = prior_positions[key]
@@ -316,10 +330,14 @@ def _redeclaration_advisory_findings(
     return tuple(findings)
 
 
-def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
+def _modelo_720_positions(
+    observation: RegistryModeloObservation,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
     totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     for item in observation.observations:
-        group = _obligation_group_for_valuation_casilla(item.casilla_id)
+        group = _obligation_group_for_valuation_casilla(item.casilla_id, operation=operation)
         if group is None:
             continue
         if not isinstance(item.value, Decimal):
@@ -340,11 +358,12 @@ def _modelo_721_positions(
     observation: RegistryModeloObservation,
     *,
     registry_fields: _Modelo721RegistryFields,
+    operation: PinnedAuthorityOperation,
 ) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
     state = _Modelo721PositionState()
     for item in observation.observations:
         if item.casilla_id == registry_fields.balance:
-            _accumulate_modelo_721_balance(state, item.value)
+            _accumulate_modelo_721_balance(state, item.value, operation=operation)
             continue
         _update_modelo_721_position_identity(
             state,
@@ -355,9 +374,15 @@ def _modelo_721_positions(
     return state.positions
 
 
-def _accumulate_modelo_721_balance(state: _Modelo721PositionState, value: Decimal | str) -> None:
+def _accumulate_modelo_721_balance(
+    state: _Modelo721PositionState,
+    value: Decimal | str,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
     if not state.token or not isinstance(value, Decimal):
         return
+    del operation
     virtual_currency_group = resolve_foreign_asset_obligation_catalogue().group_for_asset_class(
         ForeignAssetClass.VIRTUAL_CURRENCY,
     )
@@ -406,6 +431,7 @@ def modelo_720_declared_observation(
     modelo_revision: ModeloRevision,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryModeloObservation:
     """Project what the operator actually DECLARED on a Modelo 720 draft.
 
@@ -430,13 +456,15 @@ def modelo_720_declared_observation(
             casilla's legal and source grounding.
         filing_year: Devengo year the observation is stamped with.
         period: Registry period token the observation is stamped with.
+        operation: The caller-owned generation-pinned authority operation used
+            for the selected foreign-asset declarations.
 
     See Also:
         :func:`modelo_720_evidence_observation`
             The independent valuation counterpart this declaration is tested
             against.
     """
-    valuation_casillas = _registry_valuation_casillas(modelo_revision)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for casilla_id in valuation_casillas.values():
@@ -469,6 +497,7 @@ def modelo_720_evidence_observation(
     modelo_revision: ModeloRevision,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryModeloObservation:
     """Project the per-asset-row valuation EVIDENCE on a Modelo 720 draft.
 
@@ -495,14 +524,17 @@ def modelo_720_evidence_observation(
             row bindings are discovered from by selector.
         filing_year: Devengo year the observation is stamped with.
         period: Registry period token the observation is stamped with.
+        operation: The caller-owned generation-pinned authority operation used
+            for the selected foreign-asset declarations.
     """
     class_binding, valuation_binding = _foreign_asset_binding_ids(revision, modelo_revision)
     totals = _modelo_720_evidence_totals(
         revision,
         class_binding=class_binding,
         valuation_binding=valuation_binding,
+        operation=operation,
     )
-    observations = _modelo_720_evidence_observations(totals, modelo_revision=modelo_revision)
+    observations = _modelo_720_evidence_observations(totals, modelo_revision=modelo_revision, operation=operation)
     return RegistryModeloObservation(
         modelo=Modelo("720").value,
         filing_year=filing_year,
@@ -516,6 +548,7 @@ def _modelo_720_evidence_totals(
     *,
     class_binding: str | None,
     valuation_binding: str | None,
+    operation: PinnedAuthorityOperation,
 ) -> dict[ForeignAssetObligationGroup, Decimal]:
     if class_binding is None or valuation_binding is None:
         return {}
@@ -549,8 +582,9 @@ def _modelo_720_evidence_observations(
     totals: Mapping[ForeignAssetObligationGroup, Decimal],
     *,
     modelo_revision: ModeloRevision,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[CasillaObservation, ...]:
-    valuation_casillas = _registry_valuation_casillas(modelo_revision)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for group, total in totals.items():
@@ -590,6 +624,7 @@ def modelo_720_prior_baseline_observation(
     modelo_revision: ModeloRevision,
     filing_year: int,
     period: str,
+    operation: PinnedAuthorityOperation,
 ) -> RegistryModeloObservation:
     """Project the prior-year declared baseline resolved by the previous-filing carry.
 
@@ -611,8 +646,10 @@ def modelo_720_prior_baseline_observation(
             casilla's legal and source grounding.
         filing_year: Devengo year the observation is stamped with.
         period: Registry period token the observation is stamped with.
+        operation: The caller-owned generation-pinned authority operation used
+            for the selected foreign-asset declarations.
     """
-    valuation_casillas = _registry_valuation_casillas(modelo_revision)
+    valuation_casillas = _registry_valuation_casillas(modelo_revision, operation=operation)
     refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
     observations: list[CasillaObservation] = []
     for binding in modelo_revision.bindings:

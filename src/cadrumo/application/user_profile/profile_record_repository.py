@@ -134,7 +134,7 @@ def close_active_profile_record_session() -> None:
 def profile_record_session_if_authenticated(
     profile_id: str | UUID,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRecordSession | None:
     """Return the record authority serving this UUID, or ``None`` when none is live.
 
@@ -206,7 +206,7 @@ def profile_record_session_if_authenticated(
         raise ProfileNotFoundError("profile identity is not a canonical UUID") from exc
     session = _ACTIVE_RECORD_SESSION.get()
     if session is not None and session.profile_id == identity and not session.closed:
-        if profile_decode_context is not None and profile_decode_context != session.profile_decode_context:
+        if profile_decode_context != session.profile_decode_context:
             raise ProfileRecordIntegrityError(
                 "profile record access crossed the pinned authority generation boundary",
             )
@@ -225,7 +225,7 @@ def profile_record_session_if_authenticated(
 def require_profile_record_session(
     profile_id: str | UUID,
     *,
-    profile_decode_context: ProfileDecodeContext | None = None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRecordSession:
     """Return the record authority that serves this exact UUID, or refuse.
 
@@ -264,16 +264,12 @@ def _live_custody_session_backs(profile_id: UUID) -> bool:
 def _record_session_from_live_custody_session(
     profile_id: UUID,
     *,
-    profile_decode_context: ProfileDecodeContext | None,
+    profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRecordSession | None:
     """Derive record authority only from the exact already-open custody session."""
     material = profile_custody_record_session_material(profile_id)
     if material is None:
         return None
-    if profile_decode_context is None:
-        raise ProfileRecordIntegrityError(
-            "profile record session requires a ProfileDecodeContext from the enclosing PinnedAuthorityOperation",
-        )
     return ProfileRecordSession.from_envelope(
         envelope=material.envelope,
         dek=material.dek,
@@ -295,7 +291,7 @@ class ProfileRecordRepository:
         profile_id: str | UUID,
         *,
         root: Path | None = None,
-        profile_decode_context: ProfileDecodeContext | None = None,
+        profile_decode_context: ProfileDecodeContext,
     ) -> ProfileRecordRepository:
         """Create a repository using the authenticated session for this profile."""
         return cls(

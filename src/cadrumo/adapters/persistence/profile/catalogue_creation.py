@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
+from typing import override
 
 from ....application.invoices.catalogue_creation_ports import (
     CatalogueCreationPorts,
@@ -41,6 +42,7 @@ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
     def __init__(self, *, repository: InvoiceCatalogueRepository) -> None:
         self._repository = repository
 
+    @override
     def load(self) -> InvoiceCatalogue:
         """Load one catalogue, hiding storage-specific failure types."""
         try:
@@ -48,6 +50,7 @@ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
         except (InvoicePersistenceError, StorageError, OSError) as exc:
             raise CatalogueInvoicePersistenceError("invoice_catalogue_load") from exc
 
+    @override
     def mutate(self, mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue]) -> InvoiceCatalogue:
         """Apply one guarded mutation, preserving domain validation refusals."""
         try:
@@ -64,6 +67,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
     def __init__(self, *, repository: BucketEventHistoryRepository) -> None:
         self._repository = repository
 
+    @override
     def exists(self) -> bool:
         """Report event-history presence through the application contract."""
         try:
@@ -71,6 +75,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
             raise CatalogueInvoicePersistenceError("bucket_event_history_exists") from exc
 
+    @override
     def load(self) -> BucketEventHistoryCatalogue:
         """Load event history, hiding storage-specific failure types."""
         try:
@@ -78,6 +83,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
             raise CatalogueInvoicePersistenceError("bucket_event_history_load") from exc
 
+    @override
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
         """Persist event history through the existing encrypted repository."""
         try:
@@ -85,6 +91,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
             raise CatalogueInvoicePersistenceError("bucket_event_history_save") from exc
 
+    @override
     def to_secure_object_write(
         self,
         catalogue: BucketEventHistoryCatalogue,
@@ -100,6 +107,7 @@ class CatalogueCreationEventRepositoryAdapter(CatalogueInvoiceEventRepositoryPor
         except (BucketEventHistoryPersistenceError, StorageError, OSError) as exc:
             raise CatalogueInvoicePersistenceError("bucket_event_history_prepare_write") from exc
 
+    @override
     def append_guarded(
         self,
         appender: Callable[[BucketEventHistoryCatalogue], BucketEventHistoryCatalogue],
@@ -124,10 +132,12 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
         self._provider = provider
 
     @property
+    @override
     def rate_source_id(self) -> str:
         """Return the provider's stable authority identifier."""
         return self._provider.rate_source_id
 
+    @override
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         """Fetch a rate while hiding outbound-provider failure types."""
         try:

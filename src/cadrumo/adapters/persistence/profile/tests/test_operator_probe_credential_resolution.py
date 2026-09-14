@@ -24,11 +24,14 @@ from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
-from cadrumo.application.auth.operator import build_live_auth_preflight_report, configure_operator_auth
 from cadrumo.application.auth.operator_probes import (
     live_auth_identity_kind,
     live_auth_identity_state,
     probe_clave_credentials,
+)
+from cadrumo.application.auth.tests._operator_projection_support import (
+    build_live_auth_preflight_report,
+    configure_operator_auth,
 )
 from cadrumo.application.state_projection_auth import build_auth_readiness
 from cadrumo.application.workflow.persistence import workflow_state_repository

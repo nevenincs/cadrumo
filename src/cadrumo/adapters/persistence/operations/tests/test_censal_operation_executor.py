@@ -30,6 +30,7 @@ from cadrumo.application.operations.registry import (
     operation_public_schema_reference,
 )
 from cadrumo.application.operations.supervisor import OperationSupervisor
+from cadrumo.application.operations.tests.authority_test_support import unread_authority_operation
 from cadrumo.application.user_profile.capsule_record import ProfileRecordSession, ProfileRecordStore
 from cadrumo.application.user_profile.censal_observation import (
     CensalObservation,
@@ -161,6 +162,7 @@ def _supervisor(
     )
     journal = OperationJournalRepository(storage_root=root)
     return OperationSupervisor(
+        authority_operation=unread_authority_operation(),
         registry=OperationRegistry(
             definitions=(definition,),
             public_registrations=(build_censal_operation_registration(definition),),

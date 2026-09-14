@@ -58,6 +58,7 @@ class _FakeRunTelemetryPort(DiagnosticRunTelemetryPort):
     def __init__(self, *, records: tuple[DiagnosticRunRecord, ...]) -> None:
         self._records = records
 
+    @override
     def load_records(
         self,
         *,
@@ -75,6 +76,7 @@ class _FakeRunTelemetryPort(DiagnosticRunTelemetryPort):
 class _FakeAuthProbePort(DiagnosticAuthProbePort):
     """Supply the redacted auth verdict required by the telemetry aggregate."""
 
+    @override
     def probe(self) -> DiagnosticAuthProbeResult:
         return DiagnosticAuthProbeResult()
 

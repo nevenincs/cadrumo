@@ -68,7 +68,7 @@ from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -129,6 +129,7 @@ _log = get_logger(__name__)
 def _gather_observations_for_snapshot(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     activity_start_date: date | None = None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
@@ -149,6 +150,7 @@ def _gather_observations_for_snapshot(
     requirements = scoped_relation_source_requirements(
         snapshot,
         activity_start_date,
+        operation=operation,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
     for requirement in requirements:
@@ -165,7 +167,7 @@ def _gather_observations_for_snapshot(
             # stamp is dropped from the fold rather than silently injecting a
             # stale value into the relation.
             obs = payload.observation
-            refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
+            refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
             if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
@@ -418,6 +420,7 @@ def scoped_relation_source_requirements(
     snapshot: RegistrySnapshot,
     activity_start_date: date | None,
     *,
+    operation: PinnedAuthorityOperation,
     m111_no_retenciones_periods: frozenset[tuple[int, str]] | None = None,
 ) -> tuple[RegistryFoldRequirement, ...]:
     """Return ``relation_source_requirements`` with no-obligation periods scoped out.
@@ -454,6 +457,7 @@ def scoped_relation_source_requirements(
             requirement,
             activity_start_date=activity_start_date,
             m111_no_retenciones_periods=attested_m111_periods,
+            operation=operation,
         )
         if scoped_requirement is not None:
             scoped.append(scoped_requirement)
@@ -465,11 +469,13 @@ def _scope_relation_requirement(
     *,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    operation: PinnedAuthorityOperation,
 ) -> RegistryFoldRequirement | None:
     kept = _kept_relation_periods(
         requirement,
         activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
+        operation=operation,
     )
     if len(kept) == len(requirement.periods):
         return requirement
@@ -487,6 +493,7 @@ def _kept_relation_periods(
     *,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    operation: PinnedAuthorityOperation,
 ) -> tuple[str, ...]:
     return tuple(
         token
@@ -497,6 +504,7 @@ def _kept_relation_periods(
             token,
             activity_start_date=activity_start_date,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
+            operation=operation,
         )
     )
 
@@ -508,6 +516,7 @@ def _relation_period_scoped_out(
     *,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether a relation source period is absent by explicit no-obligation evidence."""
     if is_m111_no_retenciones_period(
@@ -515,6 +524,7 @@ def _relation_period_scoped_out(
         filing_year=filing_year,
         period_token=period_token,
         attested_periods=m111_no_retenciones_periods,
+        operation=operation,
     ):
         return True
     if activity_start_date is None:
@@ -665,6 +675,7 @@ def _relation_values_for_snapshot(
 def resolve_relations_from_local_store(
     snapshot: RegistrySnapshot,
     *,
+    operation: PinnedAuthorityOperation,
     repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime | None = None,
     modelo_202_first_year_cuota: bool = False,
@@ -677,6 +688,8 @@ def resolve_relations_from_local_store(
     Args:
         snapshot: The :class:`RegistrySnapshot` whose declared relations are
             resolved from prior observation records in the local store.
+        operation: The caller-owned generation-pinned authority operation used
+            for relation selection and carry-coordinate checks.
         repository: The composed observation repository capability.
         captured_at: Optional timestamp for relation provenance. Defaults to
             the current clock.
@@ -722,6 +735,7 @@ def resolve_relations_from_local_store(
     )
     observations = _gather_observations_for_snapshot(
         snapshot,
+        operation=operation,
         repository=repo,
         activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
@@ -730,6 +744,7 @@ def resolve_relations_from_local_store(
         scoped_relation_source_requirements(
             snapshot,
             activity_start_date,
+            operation=operation,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
         ),
     )
@@ -1138,13 +1153,10 @@ def _snapshot_for_context(
     registry_snapshot: RegistrySnapshot | None,
     context: CalculationSourceContext,
     *,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RegistrySnapshot:
     if registry_snapshot is not None:
         return registry_snapshot
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return _snapshot_for_context(registry_snapshot, context, operation=indexed_operation)
     return operation.snapshot(
         context.modelo,
         filing_year=context.filing_year,
@@ -1156,6 +1168,7 @@ def _relation_prefill_context_inputs(
     snapshot: RegistrySnapshot,
     context: CalculationSourceContext,
     *,
+    operation: PinnedAuthorityOperation,
     profile_path_values_reader: ProfilePathValuesReadPort,
 ) -> _RelationPrefillContextInputs:
     bucket_id = str(context.bucket_id)
@@ -1170,6 +1183,7 @@ def _relation_prefill_context_inputs(
             filing_year=int(snapshot.filing_year),
             period_token=str(snapshot.period),
             revision=snapshot.revision,
+            operation=operation,
         ),
         not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(
             snapshot,
@@ -1194,9 +1208,11 @@ def _resolve_context_relation_values(
     repository: CalculationObservationRepositoryProtocol,
     captured_at: datetime | None,
     inputs: _RelationPrefillContextInputs,
+    operation: PinnedAuthorityOperation,
 ) -> RelationValues:
     return resolve_relations_from_local_store(
         snapshot,
+        operation=operation,
         repository=repository,
         captured_at=captured_at or context.calculated_at,
         modelo_202_first_year_cuota=inputs.modelo_202_first_year_cuota,
@@ -1213,6 +1229,7 @@ def _relation_prefill_resolution(
     relation_values: RelationValues,
     activity_start_date: date | None,
     m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    operation: PinnedAuthorityOperation,
     resolver_id: str,
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
@@ -1220,6 +1237,7 @@ def _relation_prefill_resolution(
         scoped_relation_source_requirements(
             snapshot,
             activity_start_date,
+            operation=operation,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
         ),
     )
@@ -1239,6 +1257,7 @@ def _relation_prefill_resolution(
             modelo=str(context.modelo),
             filing_year=int(snapshot.filing_year),
             period=context.period.registry_token,
+            operation=operation,
         ),
         **resolved_relation_values,
     }
@@ -1310,11 +1329,13 @@ class RelationPrefillSourceResolver:
         *,
         repository: CalculationObservationRepositoryProtocol,
         profile_read_ports: ProfileReadPorts,
+        operation: PinnedAuthorityOperation,
         registry_snapshot: RegistrySnapshot | None = None,
         captured_at: datetime | None = None,
     ) -> None:
         """Initialize the resolver with its composed repositories and profile projection."""
         self._repository = repository
+        self._operation = operation
         self._profile_read_ports = profile_read_ports
         self._registry_snapshot = registry_snapshot
         self._captured_at = captured_at
@@ -1327,11 +1348,12 @@ class RelationPrefillSourceResolver:
             carrying relation values, binding values, diagnostics for
             unresolved formula relations, and provenance for local filings.
         """
-        snapshot = _snapshot_for_context(self._registry_snapshot, context)
+        snapshot = _snapshot_for_context(self._registry_snapshot, context, operation=self._operation)
         try:
             inputs = _relation_prefill_context_inputs(
                 snapshot,
                 context,
+                operation=self._operation,
                 profile_path_values_reader=self._profile_read_ports.path_values,
             )
             relation_values = _resolve_context_relation_values(
@@ -1340,6 +1362,7 @@ class RelationPrefillSourceResolver:
                 repository=self._repository,
                 captured_at=self._captured_at,
                 inputs=inputs,
+                operation=self._operation,
             )
         except PersistenceDegradationError as exc:
             return storage_degradation_resolution(
@@ -1354,6 +1377,7 @@ class RelationPrefillSourceResolver:
             relation_values=relation_values,
             activity_start_date=inputs.activity_start_date,
             m111_no_retenciones_periods=inputs.m111_no_retenciones_periods,
+            operation=self._operation,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
         )

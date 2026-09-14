@@ -24,7 +24,7 @@ from cadrumo.application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
-from cadrumo.application.auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
+from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_results import (
     AuthOperationRequiresCustodySessionError,
     AuthOperationScopeConflictError,
@@ -33,8 +33,8 @@ from cadrumo.application.auth.operator_results import (
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths
+from cadrumo.application.auth.tests._operator_projection_support import configure_operator_auth
 from cadrumo.application.user_profile.profile_keys import profile_keys
-from cadrumo.application.wizard.catalogue import WIZARD_FLOWS
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
@@ -49,7 +49,6 @@ _PROFILE_B = "22222222-2222-4222-8222-222222222222"
 
 
 def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
-    assert WIZARD_FLOWS
     assert profile_keys()
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id)
@@ -89,7 +88,6 @@ def test_auth_mutation_uses_canonical_bucket_lock(tmp_path: Path) -> None:
         )
         storage = _OPERATOR_SCOPE_PORTS.storage
         assert isinstance(storage, InwardOperatorScopeStorage)
-        paths = storage.resolve(settings.cadrumo_local_storage_root, _PROFILE_A)
 
         def attempt_auth_mutation() -> None:
             with auth_mutation_span(
