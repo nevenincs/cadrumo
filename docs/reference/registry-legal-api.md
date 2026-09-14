@@ -30,19 +30,23 @@ digest before reconstructing typed authority data.
 | Term | Meaning |
 | --- | --- |
 | Validated candidate | The registry and source-evidence inputs accepted by the development compiler. |
-| Validation receipt | The digests captured for those inputs; a change before publication refuses the candidate. |
-| Identity digest | The content-addressed identity of the candidate, recorded in the artifact so a stale artifact can be detected. |
+| Source receipt | Root-relative registry and source-evidence content, including manually maintained evidence sidecars. |
+| Compiler receipt | Relevant Cadrumo and compiler code, dependency manifests, Python major/minor, and Pydantic versions. |
+| Component receipt | The source and compiler receipts bound to one fresh, complete-authority generation. |
+| Identity digest | The content-addressed combination of those receipts, recorded so a stale artifact can be detected. |
 | Authority artifact | The atomically written JSON publication containing the resolved authority. |
 
-The artifact is one canonical JSON object with exactly two members: `payload`
-and `payload_sha256`. `payload_sha256` is the SHA-256 digest of the canonical
-JSON of `payload`. The digest detects a truncated, corrupted, or hand-edited file.
+The v5 artifact is one canonical JSON frame with exactly `format`, `payload`,
+and `payload_sha256`. Its format value is
+`cadrumo-authority-artifact-v5`. `payload_sha256` is the SHA-256 digest of the
+canonical JSON payload and detects a truncated, corrupted, or hand-edited file.
 
-The identity digest folds, for every registry file and every source-evidence
-file, its path relative to its root and the SHA-256 of its content. Registry
-files are digested with CRLF line endings read as LF. Source evidence is
-digested byte for byte. Absolute paths, sizes, and timestamps never contribute,
-so an identical checkout anywhere derives the same identity.
+The source receipt folds each registry and source-evidence file's root-relative
+path and content digest. Registry files fold CRLF to LF; source evidence is
+byte-exact. The compiler receipt also changes with relevant source code,
+`pyproject.toml`, `uv.lock`, Python major/minor, or the installed `pydantic` and
+`pydantic-core` versions. A fresh clone in the same declared environment is
+stable, without promising identity across incompatible build environments.
 
 The payload is a compact
 projection of the complete typed authority. Required fields are always written;
@@ -88,23 +92,12 @@ incomplete typed catalogue, or invalid payload raises a format error. A digest
 mismatch raises an integrity error. These failures occur before
 authority-dependent calculation or filing proceeds.
 
-Development tooling publishes with
-`uv run --no-sync python -m dev.registry.pipeline publish-authority`, or
-programmatically through the development-only
-`dev.registry.pipeline.cli.publish_authority_candidate_workflow` API:
-
-```python
-publish_authority_candidate_workflow(
-    registry_root=registry_root,
-    source_root=source_root,
-    artifact_path=artifact_path,
-)
-```
-
 `python -m dev.registry.conformance integrity` refuses an artifact whose
 recorded identity digest differs from the identity of the live registry and
-source evidence. See [Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
-for the workflow and recovery path.
+its compiler environment. See
+[Publish a validated runtime authority](../how-to/publish-runtime-authority.md)
+for the canonical command, publication guarantees, currentness checks, and
+recovery path.
 
 ## Filing-input contract shapes
 

@@ -13,13 +13,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from pydantic import Field, ValidationInfo, model_validator
 
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import (
+    GovernedFactSource,
+    cache_governed_projection,
+    governed_facts_in_scope,
+)
 from ..calculations.registry.iva_category_catalogue import (
     IvaCategoryCatalogue,
     resolve_iva_category_catalogue,
@@ -32,9 +36,6 @@ from .schema import (
     IvaStrictFrozen,
     _RegistryLegalRef,  # pyright: ignore[reportPrivateUsage] -- intra-package reuse of this package's own constrained legal-ref alias
 )
-
-if TYPE_CHECKING:
-    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 
 class _IvaRegistryToken(str):
@@ -526,7 +527,7 @@ _KIND_APPLICABILITY_ORDER_KEY = "kind_applicability.order"
 def _resolve_component_catalogue_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> dict[str, str]:
     """Resolve and type-check the raw 0084 mapping entries once."""
     resolved = authority.resolve_governed_fact(
@@ -603,14 +604,14 @@ def _cuota_settlement_catalogue_from_entries(
     return catalogue
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_cuota_settlement_catalogue(effective_date: date) -> IvaCuotaSettlementCatalogue:
     """Cache the immutable 0084 cuota-settlement projection."""
     from ..calculations.registry.authority import bundled_authority
 
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=bundled_authority(),
+        authority=(governed_facts_in_scope() or bundled_authority()),
     )
     return _cuota_settlement_catalogue_from_entries(entries)
 
@@ -618,10 +619,11 @@ def _bundled_cuota_settlement_catalogue(effective_date: date) -> IvaCuotaSettlem
 def registry_cuota_settlement_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaCuotaSettlementCatalogue:
     """Resolve the explicit cuota-settlement vocabulary from published 0084."""
     selected_date = date.today() if effective_date is None else effective_date
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_cuota_settlement_catalogue(selected_date)
     entries = _resolve_component_catalogue_entries(
@@ -727,14 +729,14 @@ def _component_vocabulary_from_entries(entries: Mapping[str, str]) -> IvaCompone
     )
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_component_vocabulary(effective_date: date) -> IvaComponentVocabulary:
     """Cache the immutable 0084 component-axis vocabulary."""
     from ..calculations.registry.authority import bundled_authority
 
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=bundled_authority(),
+        authority=(governed_facts_in_scope() or bundled_authority()),
     )
     return _component_vocabulary_from_entries(entries)
 
@@ -742,10 +744,11 @@ def _bundled_component_vocabulary(effective_date: date) -> IvaComponentVocabular
 def registry_component_vocabulary(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaComponentVocabulary:
     """Resolve the four typed component-axis memberships from fact 0084."""
     selected_date = date.today() if effective_date is None else effective_date
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_component_vocabulary(selected_date)
     entries = _resolve_component_catalogue_entries(
@@ -759,7 +762,7 @@ def registry_component_presence_token(
     value: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaComponentPresence:
     return registry_component_vocabulary(
         effective_date=effective_date,
@@ -771,7 +774,7 @@ def registry_retencion_expectation_token(
     value: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaRetencionExpectation:
     return registry_component_vocabulary(
         effective_date=effective_date,
@@ -783,7 +786,7 @@ def registry_retencion_role_token(
     value: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaRetencionRole:
     return registry_component_vocabulary(
         effective_date=effective_date,
@@ -795,7 +798,7 @@ def registry_kind_applicability_token(
     value: str,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IvaKindApplicability:
     return registry_component_vocabulary(
         effective_date=effective_date,
@@ -842,7 +845,7 @@ def _category_projection_from_entries(
     return members
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_category_projection(
     effective_date: date,
     projection: CategoryProjectionName,
@@ -852,12 +855,15 @@ def _bundled_category_projection(
 
     entries = _resolve_component_catalogue_entries(
         effective_date=effective_date,
-        authority=bundled_authority(),
+        authority=(governed_facts_in_scope() or bundled_authority()),
     )
     return _category_projection_from_entries(
         entries,
         projection,
-        resolve_iva_category_catalogue(effective_date=effective_date, authority=bundled_authority()),
+        resolve_iva_category_catalogue(
+            effective_date=effective_date,
+            authority=governed_facts_in_scope() or bundled_authority(),
+        ),
     )
 
 
@@ -865,7 +871,7 @@ def registry_category_projection(
     projection: CategoryProjectionName,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[IvaCategory]:
     """Resolve an explicit category membership projection from published 0084.
 
@@ -874,6 +880,7 @@ def registry_category_projection(
     :class:`IvaValidationError`.
     """
     selected_date = date.today() if effective_date is None else effective_date
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_category_projection(selected_date, projection)
     entries = _resolve_component_catalogue_entries(
@@ -890,7 +897,7 @@ def registry_category_projection(
 def _project_component_catalogue(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> ComponentCatalogue:
     """Project the selected registry mapping fact into typed component rows."""
     entries = _resolve_component_catalogue_entries(effective_date=effective_date, authority=authority)
@@ -964,18 +971,21 @@ def _project_component_catalogue(
     return MappingProxyType(projected)
 
 
-@lru_cache(maxsize=16)
+@cache_governed_projection(maxsize=64)
 def _bundled_component_catalogue(effective_date: date) -> ComponentCatalogue:
     """Cache the immutable bundled projection by its legal effective date."""
     from ..calculations.registry.authority import bundled_authority
 
-    return _project_component_catalogue(effective_date=effective_date, authority=bundled_authority())
+    return _project_component_catalogue(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def registry_component_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ComponentCatalogue:
     """Return the Axis-A catalogue projected by the validated registry authority.
 
@@ -985,6 +995,7 @@ def registry_component_catalogue(
     governed projection without introducing a second source of row data.
     """
     selected_date = date.today() if effective_date is None else effective_date
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_component_catalogue(selected_date)
     return _project_component_catalogue(effective_date=selected_date, authority=authority)

@@ -20,9 +20,7 @@ from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import (
-    selector_as_dict as _selector_as_dict,
-)
+from .binding_selector_utils import provider_member
 from .errors import RegistryValidationError
 from .schema_exports import ExportFieldDataType
 
@@ -148,7 +146,7 @@ class Withholding296Provider(BaseModel):
 
 def _withholding296_selector(binding: BindingDefinition) -> Withholding296Provider:
     try:
-        return Withholding296Provider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, Withholding296Provider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding296 selector") from exc
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from collections.abc import MutableMapping
 from datetime import date
 from decimal import Decimal
@@ -22,6 +23,7 @@ from ..authority_artifact import (
     AuthorityArtifact,
     AuthorityArtifactIntegrityError,
     AuthorityArtifactUnavailableError,
+    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     PublishedLegalEvidence,
     read_authority_artifact,
@@ -33,8 +35,18 @@ from ._artifact_runtime_support import _minimal_catalogues, _minimal_modelo, _mi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_IDENTITY_DIGEST = "e4c712d347701b34615314b6e3f8fdfd75ca5ee3eabe9c1c651668549fb7f66f"
-_REPUBLISHED_IDENTITY_DIGEST = "5d41402abc4b2a76b9719d911017c592ae2d6c3f4b1b1c0e6a2d7f0f3e8a9b10"
+_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
+    source_identity_digest=sha256_hex(b"fixture authority sources"),
+    compiler_identity_digest=sha256_hex(b"fixture authority compiler"),
+)
+_REPUBLISHED_BUILD_IDENTITY = AuthorityBuildIdentity.from_inputs(
+    source_identity_digest=sha256_hex(b"republished fixture authority sources"),
+    compiler_identity_digest=sha256_hex(b"fixture authority compiler"),
+)
+_IDENTITY_DIGEST = _BUILD_IDENTITY.identity_digest
+_REPUBLISHED_IDENTITY_DIGEST = _REPUBLISHED_BUILD_IDENTITY.identity_digest
+_LEGAL_ID = "ley-35-2006:art-1"
+_LEGAL_TEXT = "art-1 fixture authority text"
 _IMMUTABLE_SCALARS = (str, bytes, int, float, bool, type(None), Decimal, date, Enum, PurePath)
 
 
@@ -44,12 +56,22 @@ class _UnfrozenModel(BaseModel):
     value: int
 
 
-def _publication(*, identity_digest: str) -> AuthorityArtifact:
+def _publication(*, build_identity: AuthorityBuildIdentity = _BUILD_IDENTITY) -> AuthorityArtifact:
     """Build a real typed authority payload without requiring the authoring corpus."""
     return AuthorityArtifact(
         modelos=(_minimal_modelo(_minimal_revision()),),
         catalogues=_minimal_catalogues(),
-        identity_digest=identity_digest,
+        build_identity=build_identity,
+        identity_digest=build_identity.identity_digest,
+        evidence=AuthorityEvidenceProjection(
+            legal=(
+                PublishedLegalEvidence(
+                    legal_reference_id=_LEGAL_ID,
+                    anchored_text=_LEGAL_TEXT,
+                    text_sha256=sha256_hex(_LEGAL_TEXT.encode("utf-8")),
+                ),
+            )
+        ),
     )
 
 
@@ -58,7 +80,7 @@ def _stage_runtime_publication(root: Path) -> Path:
     publication = root / "registry" / "authority"
     publication.mkdir(parents=True)
     artifact_path = publication / "authority.json"
-    write_authority_artifact(artifact_path, _publication(identity_digest=_IDENTITY_DIGEST))
+    write_authority_artifact(artifact_path, _publication())
     return artifact_path
 
 
@@ -155,11 +177,13 @@ def test_runtime_uses_one_authority_cache_per_published_artifact_identity(tmp_pa
 
     assert snapshot.modelo.id == "130"
     assert capture.projection.modelo.id == "130"
+    assert capture.projection is snapshot
     capture.require_current(first.read_current_coordinate())
     assert "consumer-injected" not in later.catalogues.legal
     assert "consumer-injected" not in later.modelos[0].revisions
     assert later is first
     assert later._snapshots is first._snapshots
+    assert later.snapshot("130", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY) is snapshot
 
 
 def test_a_republished_artifact_is_decoded_afresh_rather_than_served_stale(tmp_path: Path) -> None:
@@ -167,11 +191,11 @@ def test_a_republished_artifact_is_decoded_afresh_rather_than_served_stale(tmp_p
     artifact_path = _stage_runtime_publication(tmp_path)
     assert published_authority(artifact_path)._identity_digest == _IDENTITY_DIGEST
 
-    write_authority_artifact(artifact_path, _publication(identity_digest=_REPUBLISHED_IDENTITY_DIGEST))
+    write_authority_artifact(artifact_path, _publication(build_identity=_REPUBLISHED_BUILD_IDENTITY))
     atomically_republished = published_authority(artifact_path)
 
     staging = tmp_path / "staging.json"
-    write_authority_artifact(staging, _publication(identity_digest=_IDENTITY_DIGEST))
+    write_authority_artifact(staging, _publication())
     artifact_path.write_bytes(staging.read_bytes())
     rewritten_in_place = published_authority(artifact_path)
 
@@ -188,6 +212,23 @@ def test_a_corrupt_artifact_is_refused_on_every_call_even_after_a_good_read(tmp_
     for _ in range(2):
         with pytest.raises(AuthorityArtifactIntegrityError):
             published_authority(artifact_path)
+
+
+def test_cached_artifact_refuses_equal_length_corruption_with_restored_mtime(tmp_path: Path) -> None:
+    """Change-time invalidation catches a stat-shaped rewrite before cached authority reuse."""
+    artifact_path = _stage_runtime_publication(tmp_path)
+    published_authority(artifact_path)
+    before = artifact_path.stat()
+    corrupted = artifact_path.read_bytes().replace(_IDENTITY_DIGEST.encode(), b"0" * 64, 1)
+
+    artifact_path.write_bytes(corrupted)
+    os.utime(artifact_path, ns=(before.st_atime_ns, before.st_mtime_ns))
+
+    after = artifact_path.stat()
+    assert after.st_size == before.st_size
+    assert after.st_mtime_ns == before.st_mtime_ns
+    with pytest.raises(AuthorityArtifactIntegrityError):
+        published_authority(artifact_path)
 
 
 def test_the_bundled_authority_graph_is_deeply_immutable() -> None:
@@ -225,11 +266,12 @@ def test_runtime_answers_a_citation_from_published_evidence_without_a_corpus_roo
         AuthorityArtifact(
             modelos=(_minimal_modelo(_minimal_revision()),),
             catalogues=_minimal_catalogues(),
+            build_identity=_BUILD_IDENTITY,
             identity_digest=_IDENTITY_DIGEST,
             evidence=AuthorityEvidenceProjection(
                 legal=(
                     PublishedLegalEvidence(
-                        legal_reference_id="test:art-1",
+                        legal_reference_id=_LEGAL_ID,
                         anchored_text=citation_text,
                         text_sha256=sha256_hex(citation_text.encode("utf-8")),
                     ),
@@ -241,7 +283,7 @@ def test_runtime_answers_a_citation_from_published_evidence_without_a_corpus_roo
 
     authority = bundled_authority()
 
-    assert authority.legal_quotation_is_grounded("test:art-1", "published provision")
+    assert authority.legal_quotation_is_grounded(_LEGAL_ID, "published provision")
 
 
 def test_runtime_reads_published_provenance_without_a_corpus_tree(
@@ -249,18 +291,18 @@ def test_runtime_reads_published_provenance_without_a_corpus_tree(
 ) -> None:
     """The runtime reads the artifact projection without a package corpus root."""
     artifact_path = _stage_runtime_publication(tmp_path)
-    legal_id = "test:art-1"
     citation_text = "validated published provision"
     write_authority_artifact(
         artifact_path,
         AuthorityArtifact(
             modelos=(_minimal_modelo(_minimal_revision()),),
             catalogues=_minimal_catalogues(),
+            build_identity=_BUILD_IDENTITY,
             identity_digest=_IDENTITY_DIGEST,
             evidence=AuthorityEvidenceProjection(
                 legal=(
                     PublishedLegalEvidence(
-                        legal_reference_id=legal_id,
+                        legal_reference_id=_LEGAL_ID,
                         anchored_text=citation_text,
                         text_sha256=sha256_hex(citation_text.encode("utf-8")),
                         provenance=NormativeCorpusProvenance.BOE_ATTESTED,
@@ -272,7 +314,7 @@ def test_runtime_reads_published_provenance_without_a_corpus_tree(
     _use_staged_package(monkeypatch, tmp_path)
     authority = bundled_authority()
 
-    provenance = authority.legal_corpus_provenance(legal_id)
+    provenance = authority.legal_corpus_provenance(_LEGAL_ID)
 
     assert provenance is NormativeCorpusProvenance.BOE_ATTESTED
 

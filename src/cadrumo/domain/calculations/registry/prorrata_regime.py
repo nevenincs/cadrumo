@@ -6,16 +6,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....domain.iva.prorrata import ProrrataRegime
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "renta-iva-deduction-ratio-policy"
 _ORDER_KEY = "prorrata.regime_order"
@@ -90,9 +86,10 @@ def _csv_tokens(entries: Mapping[str, str], key: str) -> tuple[str, ...]:
 def resolve_prorrata_regime_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ProrrataRegimeCatalogue:
     """Resolve the dated prorrata regime vocabulary through facts authority."""
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         from .authority import bundled_authority
 
@@ -137,7 +134,7 @@ def require_prorrata_regime(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> ProrrataRegime:
     """Return one registry-declared opaque regime token or refuse it."""
     return resolve_prorrata_regime_catalogue(

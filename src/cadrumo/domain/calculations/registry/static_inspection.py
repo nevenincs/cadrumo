@@ -14,11 +14,12 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from types import MappingProxyType
-from typing import Protocol
+from typing import Annotated, Protocol
 
 from pydantic import Field, model_validator
 
 from ....core.casilla_id import CasillaId
+from ....core.frozen_mapping import FROZEN_MAPPING, FrozenMapping
 from ....core.revision_review import RevisionReviewStatus
 from .casilla_membership import casillas_by_id
 from .ids import BindingId, LegalRefId, ModeloId, RevisionId, SourceRefId
@@ -197,7 +198,7 @@ class RegistryRevisionInspection(RegistryModel):
     """The revision's own governance stamp -- not filing-grade content, so it
     stays in scope for a static inspection whose job is validating generated
     static artefacts against a revision it may or may not trust yet."""
-    family_dispositions: Mapping[str, SchemaFamilyDispositionDeclaration]
+    family_dispositions: Annotated[Mapping[str, SchemaFamilyDispositionDeclaration], FROZEN_MAPPING]
     """The revision's declared not-applicable schema families and their
     grounding reason/legal_refs/source_refs -- classification metadata, not
     filing-grade content, so it stays in scope for a static inspection."""
@@ -208,7 +209,7 @@ class RegistryRevisionInspection(RegistryModel):
     consumers must request an explicit signed projection instead.
     """
     revision_source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-    sources: Mapping[SourceRefId, SourceReference]
+    sources: Annotated[Mapping[SourceRefId, SourceReference], FROZEN_MAPPING]
     """The exact source catalogue slice exercised by this model/revision."""
 
     source_ref_ids: frozenset[SourceRefId]
@@ -216,7 +217,9 @@ class RegistryRevisionInspection(RegistryModel):
     """The exact legal-reference union exercised by this model/revision."""
 
     casilla_ids: frozenset[CasillaId]
-    casilla_sections: Mapping[CasillaId, tuple[str, ...]] = MappingProxyType({})
+    casilla_sections: Annotated[Mapping[CasillaId, tuple[str, ...]], FROZEN_MAPPING] = Field(
+        default_factory=lambda: FrozenMapping({})
+    )
     """Each casilla's declared section path, as the revision itself declares it.
 
     Carried alongside the ids because the ids alone cannot say where a casilla

@@ -18,11 +18,15 @@ back to the bundle it must not read.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections import OrderedDict
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from functools import wraps
+from threading import RLock
 from typing import Final, Protocol
+from weakref import ReferenceType, ref
 
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .facts.schema import GovernedFactCatalogue
@@ -45,16 +49,26 @@ class GovernedFactSource(Protocol):
         ...
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, weakref_slot=True)
 class CandidateFactAuthority:
     """Resolve governed facts from the catalogue currently being validated."""
 
     catalogue: GovernedFactCatalogue
     authority_digest: str = UNPUBLISHED_CANDIDATE_DIGEST
+    _resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
+        default_factory=dict, init=False, repr=False, compare=False
+    )
 
     def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
         """Resolve one query against the candidate, never against the bundle."""
-        return resolve_governed_fact(self.catalogue, query, authority_digest=self.authority_digest)
+        cached = self._resolutions.get(query)
+        if cached is not None:
+            return cached
+        resolved = resolve_governed_fact(self.catalogue, query, authority_digest=self.authority_digest)
+        if len(self._resolutions) >= 1024:
+            self._resolutions.pop(next(iter(self._resolutions)))
+        self._resolutions[query] = resolved
+        return resolved
 
 
 _VALIDATING_GOVERNED_FACTS: ContextVar[GovernedFactSource | None] = ContextVar(
@@ -64,7 +78,7 @@ _VALIDATING_GOVERNED_FACTS: ContextVar[GovernedFactSource | None] = ContextVar(
 
 
 @contextmanager
-def validating_governed_facts(authority: GovernedFactSource) -> Iterator[None]:
+def validating_governed_facts(authority: GovernedFactSource) -> Generator[None]:
     """Scope registry validation to the governed facts it is validating."""
     token = _VALIDATING_GOVERNED_FACTS.set(authority)
     try:
@@ -78,10 +92,56 @@ def governed_facts_in_scope() -> GovernedFactSource | None:
     return _VALIDATING_GOVERNED_FACTS.get()
 
 
+def cache_governed_projection[**P, R](
+    *,
+    maxsize: int = 64,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Cache a projection by its authority incarnation and hashable arguments.
+
+    Weak ownership prevents the cache from retaining complete old generations.
+    Candidate objects with the same unpublished digest remain distinct owners.
+    The selected owner stays scoped throughout construction of a cache miss.
+    """
+    if maxsize < 1:
+        raise ValueError("projection cache size must be positive")
+
+    def decorate(function: Callable[P, R]) -> Callable[P, R]:
+        cache: OrderedDict[tuple[object, ...], tuple[ReferenceType[GovernedFactSource], R]] = OrderedDict()
+        lock = RLock()
+
+        @wraps(function)
+        def projected(*args: P.args, **kwargs: P.kwargs) -> R:
+            from .authority import bundled_authority
+
+            owner = governed_facts_in_scope() or bundled_authority()
+            key = (id(owner), args, tuple(sorted(kwargs.items())))
+            with lock:
+                cached = cache.get(key)
+                if cached is not None and cached[0]() is owner:
+                    cache.move_to_end(key)
+                    return cached[1]
+                with validating_governed_facts(owner):
+                    result = function(*args, **kwargs)
+                try:
+                    owner_ref = ref(owner)
+                except TypeError:
+                    return result
+                cache[key] = (owner_ref, result)
+                cache.move_to_end(key)
+                while len(cache) > maxsize:
+                    cache.popitem(last=False)
+                return result
+
+        return projected
+
+    return decorate
+
+
 __all__ = [
     "UNPUBLISHED_CANDIDATE_DIGEST",
     "CandidateFactAuthority",
     "GovernedFactSource",
+    "cache_governed_projection",
     "governed_facts_in_scope",
     "validating_governed_facts",
 ]

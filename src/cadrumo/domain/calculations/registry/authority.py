@@ -8,6 +8,7 @@ access. It reconstructs the published, validated authority artifact into typed
 
 from __future__ import annotations
 
+import hmac
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
@@ -34,6 +35,7 @@ from .facts.resolution import (
     ResolvedMappingFact,
     resolve_governed_fact,
 )
+from .governed_fact_scope import validating_governed_facts
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .provenance import NormativeCorpusProvenance
 from .schema import (
@@ -58,27 +60,11 @@ type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
 
 
 _artifact_process_nonce = token_bytes(32)
-_artifact_coordinate_domains: set[ContentDigest] = set()
 
 
 @dataclass(frozen=True, slots=True)
 class RegistryCoverageFacts:
-    """The isolated facts a model-law coverage ledger reads, without the rest of the snapshot.
-
-    A coverage ledger consumes six things: the coordinate it was built for, and
-    four collections of evidence references. It reads no casilla, no formula and
-    no binding. Obtaining those six through :meth:`ValidatedRegistryAuthority.snapshot`
-    means deep-copying the entire validated projection to look at a hundredth of
-    it - against a mid-sized modelo the four collections cost about 1.4 ms to
-    isolate and the whole snapshot about 127 ms, and the audit that builds these
-    ledgers did it 884 times.
-
-    This carries the same isolation guarantee for the part that is actually read.
-    Every collection is copied, so a consumer still cannot reach cached registry
-    state through it, and each coordinate still gets its own facts rather than
-    sharing one revision's copy - which is what lets the ledger builder keep
-    refusing a coordinate that disagrees with the data beside it.
-    """
+    """Immutable evidence collections for one admitted filing coordinate."""
 
     modelo: ModeloId
     revision: RevisionId
@@ -127,25 +113,22 @@ class RegistryAuthorityCurrentCoordinate:
 
 def _artifact_coordinate_domain(identity_digest: str) -> ContentDigest:
     """Mint an opaque coordinate for one constructed artifact incarnation."""
-    domain = content_hash_hex(
-        {
-            "schema": "published-authority-artifact-coordinate/v1",
-            "artifact_identity_digest": identity_digest,
-            "process_incarnation": _artifact_process_nonce.hex(),
-            "artifact_incarnation": token_bytes(32).hex(),
-        }
-    )
-    _artifact_coordinate_domains.add(domain)
-    return domain
+    nonce = content_hash_hex({"identity": identity_digest, "incarnation": token_bytes(32).hex()})[:32]
+    signature = hmac.digest(_artifact_process_nonce, nonce.encode("ascii"), "sha256").hex()[:32]
+    return nonce + signature
 
 
 def _require_artifact_coordinate_domain(domain: ContentDigest) -> None:
-    """Refuse a capture coordinate minted by another process incarnation."""
-    if domain not in _artifact_coordinate_domains:
+    """Authenticate a process-local coordinate without retaining past owners."""
+    if len(domain) != 64 or not domain.isascii():
+        raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
+    nonce, signature = domain[:32], domain[32:]
+    expected = hmac.digest(_artifact_process_nonce, nonce.encode("ascii"), "sha256").hex()[:32]
+    if not hmac.compare_digest(signature, expected):
         raise RegistrySnapshotError("registry authority coordinate belongs to another process incarnation")
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, slots=True, weakref_slot=True)
 class ValidatedRegistryAuthority:
     """Load, validate, and cache registry material behind one access point."""
 
@@ -157,6 +140,9 @@ class ValidatedRegistryAuthority:
     evidence: AuthorityEvidenceProjection = field(default_factory=AuthorityEvidenceProjection)
     _capture_comparison_domain: ContentDigest | None = field(default=None, init=False, repr=False)
     _state_lock: RLock = field(default_factory=RLock, init=False, repr=False)
+    _fact_resolutions: dict[GovernedFactQuery, ResolvedGovernedFact] = field(
+        default_factory=dict, init=False, repr=False
+    )
 
     @classmethod
     def from_validated_components(
@@ -185,7 +171,7 @@ class ValidatedRegistryAuthority:
 
     def _bind_published_artifact_incarnation(self) -> None:
         """Bind a fresh artifact graph to this process without a mutable root slot."""
-        self._capture_comparison_domain = _artifact_coordinate_domain(self._identity_digest)
+        object.__setattr__(self, "_capture_comparison_domain", _artifact_coordinate_domain(self._identity_digest))
 
     def modelo(self, modelo_id: str | Modelo) -> ModeloDefinition:
         """Return a modelo definition by id.
@@ -267,11 +253,18 @@ class ValidatedRegistryAuthority:
         with self._state_lock:
             if not self._identity_digest:
                 raise RegistryValidationError("governed fact resolution requires an authority identity digest")
-            return resolve_governed_fact(
+            cached = self._fact_resolutions.get(query)
+            if cached is not None:
+                return cached
+            resolved = resolve_governed_fact(
                 self.catalogues.facts,
                 query,
                 authority_digest=self._identity_digest,
             )
+            if len(self._fact_resolutions) >= 1024:
+                self._fact_resolutions.pop(next(iter(self._fact_resolutions)))
+            self._fact_resolutions[query] = resolved
+            return resolved
 
     def validate_modelo(self, modelo_id: str) -> ModeloDefinition:
         """Validate one modelo once and return its definition.
@@ -347,7 +340,7 @@ class ValidatedRegistryAuthority:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistrySnapshot:
-        """Return an isolated copy of the cached validated snapshot for one filing context.
+        """Return the shared immutable snapshot for one admitted filing context.
 
         ``grade`` names the rung of authority the CALLER needs and defaults to the
         strictest one, so a caller that says nothing is unchanged. It exists because
@@ -369,7 +362,7 @@ class ValidatedRegistryAuthority:
                 on=on,
                 revision_id=revision_id,
                 grade=grade,
-            ).model_copy(deep=True)
+            )
 
     def admitted_revision_id(
         self,
@@ -381,23 +374,7 @@ class ValidatedRegistryAuthority:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> str:
-        """Return the revision identifier the snapshot boundary admits for one filing context.
-
-        Same selection, same validation and the same refusals as :meth:`snapshot`;
-        the difference is what comes back. A caller that only needs to know which
-        revision governs a coordinate - and that the boundary admitted it at the
-        requested rung - is asking a question whose whole answer is an identifier,
-        and it pays for a deep copy of the entire validated projection to read one
-        string out of it.
-
-        That copy is what makes :meth:`snapshot` expensive: against the bundled
-        registry a cache hit costs no measurable time and the isolating copy costs
-        practically the whole call. Returning the identifier is safe precisely
-        because a string is not shared mutable state, so this accessor gives up
-        nothing the deep copy was protecting. Callers that go on to READ the
-        projection must still use :meth:`snapshot` and receive their own isolated
-        copy.
-        """
+        """Return the revision identifier admitted by the canonical snapshot boundary."""
         with self._state_lock:
             return str(
                 self._cached_snapshot(
@@ -420,16 +397,7 @@ class ValidatedRegistryAuthority:
         revision_id: RevisionId | None = None,
         grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
     ) -> RegistryCoverageFacts:
-        """Return the isolated coverage facts for one filing context.
-
-        Same selection, same validation and the same refusals as :meth:`snapshot`.
-        It differs only in isolating the four evidence collections a coverage
-        ledger reads instead of the whole validated projection, which is what
-        that ledger was paying for and never reading. A caller that needs a
-        casilla, a formula or a binding still takes a snapshot.
-        """
-        import copy
-
+        """Project immutable evidence from the same admitted snapshot consumers read."""
         with self._state_lock:
             snapshot = self._cached_snapshot(
                 modelo_id,
@@ -444,10 +412,10 @@ class ValidatedRegistryAuthority:
                 revision=snapshot.revision.id,
                 filing_year=snapshot.filing_year,
                 period=snapshot.period,
-                legal=tuple(copy.deepcopy(item) for item in snapshot.legal),
-                sources=copy.deepcopy(dict(snapshot.sources)),
-                workbook_parity_refs=tuple(copy.deepcopy(item) for item in snapshot.workbook_parity_refs.values()),
-                live_cross_references=tuple(copy.deepcopy(item) for item in snapshot.live_cross_references.values()),
+                legal=tuple(snapshot.legal),
+                sources=snapshot.sources,
+                workbook_parity_refs=tuple(snapshot.workbook_parity_refs.values()),
+                live_cross_references=tuple(snapshot.live_cross_references.values()),
             )
 
     def _cached_snapshot(
@@ -460,29 +428,25 @@ class ValidatedRegistryAuthority:
         revision_id: RevisionId | None,
         grade: RegistryAuthorityGrade,
     ) -> RegistrySnapshot:
-        """Return the authority-private cache entry used by every snapshot read.
-
-        The cache remains the single native snapshot authority. Its value never
-        crosses the public boundary directly because ``RegistrySnapshot`` has
-        mutable nested maps; callers receive isolated copies from
-        :meth:`snapshot`, while native capture copies this same entry under the
-        owner lock.
-        """
+        """Share an admitted immutable projection within the bounded context cache."""
         normalized_modelo_id = Modelo(modelo_id).value
         key = (normalized_modelo_id, filing_year, period, on, revision_id, grade)
         cached = self._snapshots.get(key)
         if cached is not None:
             return cached
         modelo = self.validate_modelo(normalized_modelo_id)
-        snapshot = build_validated_snapshot(
-            modelo,
-            self.catalogues,
-            filing_year=filing_year,
-            period=period,
-            on=on,
-            revision_id=revision_id,
-            grade=grade,
-        )
+        with validating_governed_facts(self):
+            snapshot = build_validated_snapshot(
+                modelo,
+                self.catalogues,
+                filing_year=filing_year,
+                period=period,
+                on=on,
+                revision_id=revision_id,
+                grade=grade,
+            )
+        if len(self._snapshots) >= 1024:
+            self._snapshots.pop(next(iter(self._snapshots)))
         self._snapshots[key] = snapshot
         return snapshot
 
@@ -499,8 +463,7 @@ class ValidatedRegistryAuthority:
 
         ``grade=None`` deliberately selects the static-inspection authority;
         supplying a grade selects the existing snapshot admission path.  The
-        returned value is deep-copied so a consumer cannot mutate a cached
-        registry projection after the capture has completed.
+        returned projection is deeply immutable and belongs to this generation.
         """
         with self._state_lock:
             projection = (
@@ -521,7 +484,7 @@ class ValidatedRegistryAuthority:
                 )
             )
             return RegistryAuthorityCapture(
-                projection=projection.model_copy(deep=True),
+                projection=projection,
                 comparison_domain=self._current_coordinate().comparison_domain,
                 generation=0,
             )
@@ -650,6 +613,8 @@ def published_authority(artifact_path: Path) -> ValidatedRegistryAuthority:
         if cached is not None and cached[0] is artifact:
             return cached[1]
         authority = _authority_from_published_artifact(artifact, artifact_path=artifact_path)
+        if len(_published_authorities) >= 32:
+            _published_authorities.pop(next(iter(_published_authorities)))
         _published_authorities[key] = (artifact, authority)
         return authority
 

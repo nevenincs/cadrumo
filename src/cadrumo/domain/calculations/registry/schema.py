@@ -1297,19 +1297,23 @@ class RegistrySnapshot(RegistryModel):
     # Accepts normal period codes and declared event-period names; upstream
     # PeriodSelector + ModeloScheduleDefinition constrain the token set.
     period: RegistrySelectorPeriodCode
-    legal: Mapping[LegalRefId, LegalReference]
-    sources: Mapping[SourceRefId, SourceReference]
-    extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]
-    live_cross_references: Mapping[CrossReferenceId, LiveCrossReferenceDecision]
-    workbook_parity_refs: Mapping[WorkbookParityRefId, WorkbookParityReference]
-    verification_expectations: Mapping[VerificationExpectationId, VerificationExpectationDefinition]
-    application_links: Mapping[ApplicationLinkId, _ApplicationLinkDefinition]
-    deadline_windows: Mapping[DeadlineWindowId, _DeadlineWindowDefinition]
-    filing_schedules: Mapping[str, _ModeloScheduleDefinition]
-    constructs: Mapping[ConstructId, _ConstructDefinition]
-    dependency_classifications: Mapping[DependencyClassificationId, _DependencyClassificationDefinition]
+    legal: Annotated[Mapping[LegalRefId, LegalReference], FROZEN_MAPPING]
+    sources: Annotated[Mapping[SourceRefId, SourceReference], FROZEN_MAPPING]
+    extraction_profiles: Annotated[Mapping[ExtractionProfileId, ExtractionProfileDefinition], FROZEN_MAPPING]
+    live_cross_references: Annotated[Mapping[CrossReferenceId, LiveCrossReferenceDecision], FROZEN_MAPPING]
+    workbook_parity_refs: Annotated[Mapping[WorkbookParityRefId, WorkbookParityReference], FROZEN_MAPPING]
+    verification_expectations: Annotated[
+        Mapping[VerificationExpectationId, VerificationExpectationDefinition], FROZEN_MAPPING
+    ]
+    application_links: Annotated[Mapping[ApplicationLinkId, _ApplicationLinkDefinition], FROZEN_MAPPING]
+    deadline_windows: Annotated[Mapping[DeadlineWindowId, _DeadlineWindowDefinition], FROZEN_MAPPING]
+    filing_schedules: Annotated[Mapping[str, _ModeloScheduleDefinition], FROZEN_MAPPING]
+    constructs: Annotated[Mapping[ConstructId, _ConstructDefinition], FROZEN_MAPPING]
+    dependency_classifications: Annotated[
+        Mapping[DependencyClassificationId, _DependencyClassificationDefinition], FROZEN_MAPPING
+    ]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
-    supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
+    supplementary_ordenes: Annotated[Mapping[Modelo, M303AnnualOrdenAuthority], FROZEN_MAPPING] = Field(
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],
     )
 

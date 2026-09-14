@@ -11,13 +11,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 
 from ....core.concepto_ingreso import ConceptoIngreso
 from .errors import RegistryValidationError
 from .facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
 from .facts.schema import FactSelector
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _FACT_ID = "rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario"
@@ -79,11 +78,14 @@ def _resolve_catalogue(
     )
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_catalogue(effective_date: date) -> ConceptoIngresoCatalogue:
     from .authority import bundled_authority
 
-    return _resolve_catalogue(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_catalogue(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def resolve_concepto_ingreso_catalogue(

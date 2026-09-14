@@ -27,7 +27,7 @@ from decimal import Decimal
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
-from .binding_selector_utils import selector_as_dict as _binding_selector_as_dict
+from .binding_selector_utils import provider_member
 from .binding_targets import bound_casilla_binding_ids
 from .binding_temporal import SameTargetContext
 from .bindings import CasillaObservation, CasillaObservationValueKind, resolve_bound_casilla_binding_value
@@ -396,7 +396,7 @@ def _binding_is_absent_by_design(binding: BindingDefinition, *, target_period: s
     if binding.source != BindingSourceKind.PREVIOUS_FILING:
         return False
     try:
-        selector = PreviousFilingProvider.model_validate(_binding_selector_as_dict(binding))
+        selector = provider_member(binding, PreviousFilingProvider)
     except ValueError:
         return False
     if not _previous_filing_selector_has_period_anchor(selector):

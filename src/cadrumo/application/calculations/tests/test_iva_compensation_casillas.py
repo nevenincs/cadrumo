@@ -19,19 +19,24 @@ import pytest
 from .... import application, domain
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
-from ....domain import iva_compensation as iva_compensation_policy
-from .. import iva_compensation_casillas as _iva_compensation_casillas
+from ....domain.calculations.registry import iva_compensation_annual_partition_bindings as _casilla_authority
+from .. import iva_compensation_casillas as _iva_compensation_queries
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SHARED_M303_CONSTANTS = (
-    "M303_RESULTADO_CASILLA",
-    "M303_GENERADA_CASILLA",
-    "M303_POSTERIOR_CASILLA",
-    "M303_DISPONIBLE_CASILLA",
-    "M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA",
-    "M303_COMPENSACION_APLICADA_CASILLA",
-    "M303_RESULTADO_FINAL_CASILLA",
+    "M303_COMPENSATION_RESULTADO_CASILLA",
+    "M303_COMPENSATION_GENERADA_CASILLA",
+    "M303_COMPENSATION_POSTERIOR_CASILLA",
+    "M303_COMPENSATION_AVAILABLE_CASILLA",
+    "M303_COMPENSATION_PENDING_PRIOR_CASILLA",
+    "M303_COMPENSATION_APLICADA_CASILLA",
+    "M303_COMPENSATION_RESULTADO_FINAL_CASILLA",
+)
+
+_SHARED_M390_CONSTANTS = (
+    "M390_COMPENSATION_LAST_PERIOD_CASILLA",
+    "M390_COMPENSATION_GENERATED_OUTSIDE_LAST_PERIOD_CASILLA",
 )
 
 #: The packages swept for modules that name a compensation casilla token. Both
@@ -42,8 +47,8 @@ _SWEPT_PACKAGES = (application, domain)
 
 def _authority_by_token() -> dict[str, str]:
     tokens: dict[str, str] = {}
-    for name in _iva_compensation_casillas.__all__:
-        value = getattr(_iva_compensation_casillas, name)
+    for name in (*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS):
+        value = getattr(_casilla_authority, name)
         if isinstance(value, str):
             tokens[value] = value
     return tokens
@@ -137,20 +142,14 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
     # anyway. Including it manufactures subjects the check cannot rule on. It
     # stays in the authority set, so a module discovered for another reason is
     # still checked against it.
-    literal_tokens = {token for token in _authority_by_token() if not token.isdigit()}
-    # Both declaring authorities, because the vocabulary is declared across two
-    # layers: the domain policy owns the tokens it decides figures from, and the
-    # calculations authority binds those rather than re-typing them. A sweep that
-    # knew only the calculations names missed every consumer that imports the
-    # domain constants directly -- including the registry's binding validator.
-    authority_names = {
-        *_iva_compensation_casillas.__all__,
-        *(name for name in dir(iva_compensation_policy) if name.startswith("M303_COMPENSATION_")),
-    }
+    authority_by_token = _authority_by_token()
+    literal_tokens = {token for token in authority_by_token if not token.isdigit()}
+    # The provider module is the one canonical Python authority for the token
+    # names used by registry declarations and their calculation consumers.
+    authority_names = {*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS}
     authority_by_name = {
-        name: getattr(_iva_compensation_casillas, name)
-        for name in _iva_compensation_casillas.__all__
-        if isinstance(getattr(_iva_compensation_casillas, name, None), str)
+        name: getattr(_casilla_authority, name)
+        for name in authority_names
     }
     discovered: dict[str, ModuleType] = {}
     for package in _SWEPT_PACKAGES:
@@ -173,8 +172,8 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
             if not (literal or imported):
                 continue
             name = _module_name_for(source, package=package)
-            if name == _iva_compensation_casillas.__name__:
-                discovered[name] = _iva_compensation_casillas
+            if name == _casilla_authority.__name__:
+                discovered[name] = _casilla_authority
                 continue
             static_tree = tree
             static_module = ModuleType(name)
@@ -190,7 +189,7 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 token_values = [
                     node.value
                     for node in ast.walk(value)
-                    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in authority
+                    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in authority_by_token
                 ]
                 if not token_values:
                     continue
@@ -200,7 +199,11 @@ def _discover_token_naming_modules() -> tuple[ModuleType, ...]:
                 if isinstance(value, (ast.Tuple, ast.List, ast.Set, ast.Dict)):
                     entries = tuple(
                         item.value
-                        if isinstance(item, ast.Constant) and isinstance(item.value, str) and item.value in authority
+                        if (
+                            isinstance(item, ast.Constant)
+                            and isinstance(item.value, str)
+                            and item.value in authority_by_token
+                        )
                         else object()
                         for item in (value.elts if hasattr(value, "elts") else ())
                     )
@@ -223,7 +226,7 @@ def test_the_sweep_finds_the_declaring_authority_itself() -> None:
     identity check with no cases and the gate green over nine twins.
     """
     assert _authority_by_token(), "the authority exports no tokens, so every check below is vacuous"
-    assert _iva_compensation_casillas in _TOKEN_NAMING_MODULES
+    assert _casilla_authority in _TOKEN_NAMING_MODULES
 
 
 @pytest.mark.parametrize("module", _TOKEN_NAMING_MODULES, ids=lambda module: module.__name__.rsplit(".", 1)[-1])
@@ -251,7 +254,7 @@ def test_no_module_declares_a_second_object_for_an_authority_token(module: Modul
 
     One blind spot, stated rather than papered over: CPython interns short
     string literals, so a twin declaration of the bare-numeric token
-    ``M303_RESULTADO_FINAL_CASILLA`` ("71") is the SAME object as the
+    ``M303_COMPENSATION_RESULTADO_FINAL_CASILLA`` ("71") is the SAME object as the
     authority's and passes this check. Discovery does not close that -- it finds
     such a module, and the identity verdict then cannot discriminate its twin.
     Only the dotted registry ids are covered.
@@ -304,10 +307,10 @@ def test_the_verdict_catches_a_twin_restored_at_this_real_site(module: ModuleTyp
     assert _twin_declarations(mutated, authority=authority) == (attribute,)
 
 
-@pytest.mark.parametrize("name", (*_SHARED_M303_CONSTANTS, "M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA"))
+@pytest.mark.parametrize("name", (*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS))
 def test_every_declared_constant_is_a_validated_casilla_id(name: str) -> None:
     """Each constant passes the canonical casilla-id validator."""
-    value = getattr(_iva_compensation_casillas, name)
+    value = getattr(_casilla_authority, name)
 
     assert validated_casilla_id(value, surface="test") == value
 
@@ -320,14 +323,11 @@ def test_malformed_tokens_are_refused_at_declaration(malformed: str) -> None:
     never reach a compensation calculation.
     """
     with pytest.raises(RuntimeError):
-        _iva_compensation_casillas.iva_compensation_casilla_id(malformed)
+        _iva_compensation_queries.iva_compensation_casilla_id(malformed)
 
 
-def test_authority_exports_exactly_the_shared_vocabulary() -> None:
-    """The module's public surface is the compensation vocabulary and its validator."""
-    assert set(_iva_compensation_casillas.__all__) == {
-        *_SHARED_M303_CONSTANTS,
-        "M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA",
-        "M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA",
-        "iva_compensation_casilla_id",
-    }
+def test_authority_exports_the_complete_shared_casilla_vocabulary() -> None:
+    """Every public compensation casilla belongs to the canonical vocabulary."""
+    exported_casillas = {name for name in _casilla_authority.__all__ if name.endswith("_CASILLA")}
+
+    assert exported_casillas == {*_SHARED_M303_CONSTANTS, *_SHARED_M390_CONSTANTS}

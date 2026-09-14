@@ -29,6 +29,7 @@ from typing import Annotated, Literal, cast
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
+from ....core.frozen_mapping import FROZEN_MAPPING
 from ....core.period import RegistrySelectorPeriodCode
 from .errors import RegistryValidationError
 from .ids import RevisionId
@@ -191,7 +192,7 @@ class FilingYearOffsetByTargetPeriod(RegistryModel):
     kind: Literal[BindingTemporalKind.FILING_YEAR_OFFSET_BY_TARGET_PERIOD] = (
         BindingTemporalKind.FILING_YEAR_OFFSET_BY_TARGET_PERIOD
     )
-    offsets: Mapping[RegistrySelectorPeriodCode, int]
+    offsets: Annotated[Mapping[RegistrySelectorPeriodCode, int], FROZEN_MAPPING]
     source_periods: _SourcePeriods
 
     @field_validator("source_periods")

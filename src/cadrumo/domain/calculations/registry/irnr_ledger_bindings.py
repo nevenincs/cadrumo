@@ -17,7 +17,7 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -25,8 +25,7 @@ from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG
 from ._ledger_binding_resolution import resolve_ledger_family_binding_values, unsupported_ledger_family_observations
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 
@@ -50,9 +49,16 @@ class LedgerIrnrIncomeProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION
 
-    modelo: Literal[Modelo("210")] = Modelo("210")
+    modelo: Modelo = Modelo("210")
     target_casilla_id: CasillaId
     fact: Literal["gross_income_sum"] = "gross_income_sum"
+
+    @field_validator("modelo")
+    @classmethod
+    def _require_modelo_210(cls, value: Modelo) -> Modelo:
+        if value != Modelo("210"):
+            raise ValueError("ledger_irnr_income_aggregation modelo must be '210'")
+        return value
 
 
 _IRNR_GROSS_INCOME_CASILLAS: frozenset[CasillaId] = frozenset(
@@ -62,7 +68,7 @@ _IRNR_GROSS_INCOME_CASILLAS: frozenset[CasillaId] = frozenset(
 
 def _irnr_ledger_income_selector(binding: BindingDefinition) -> LedgerIrnrIncomeProvider:
     try:
-        return LedgerIrnrIncomeProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerIrnrIncomeProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_irnr_income_aggregation selector: {exc}",

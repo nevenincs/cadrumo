@@ -6,18 +6,13 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ....core.identity.nif_iva import NifIvaFormatSpec, NifIvaPrefix
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "nif-iva-country-format-catalogue"
 _ORDER_KEY = "nif_iva.order"
@@ -117,7 +112,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -177,20 +172,24 @@ def _catalogue(entries: Mapping[str, str]) -> NifIvaCatalogue:
     return NifIvaCatalogue(definitions=definitions)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_catalogue(effective_date: date) -> NifIvaCatalogue:
     from .authority import bundled_authority
 
-    return _catalogue(_resolve_entries(effective_date=effective_date, authority=bundled_authority()))
+    return _catalogue(_resolve_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    ))
 
 
 def resolve_nif_iva_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> NifIvaCatalogue:
     """Resolve the selected NIF-IVA country/format fact."""
     coordinate = effective_date or date.today()
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_catalogue(coordinate)
     return _catalogue(_resolve_entries(effective_date=coordinate, authority=authority))

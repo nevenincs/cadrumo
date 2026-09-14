@@ -46,7 +46,11 @@ from ..lane_verification_core import (
 )
 from ..python_cohort import PythonCohort, build_python_cohort
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
+# The module-scoped cohort fixture snapshots and ZIPs the complete tracked
+# source corpus before building three distributions. On Windows that legitimate
+# setup can exceed the repository's ordinary five-minute per-test ceiling while
+# CRC-compressing the binary evidence corpus; keep a finite ceiling for hangs.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial, pytest.mark.timeout(900)]
 
 _REPO_ROOT = REPO_ROOT
 _DISTRIBUTIONS = (
@@ -107,11 +111,18 @@ print(json.dumps({
 """
 _TYPED_AUTHORITY_PROBE = """
 import json
+from copy import deepcopy
 from datetime import date
+from decimal import Decimal
 
 from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
+from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from cadrumo.domain.calculations.registry.fixed_width_codec import (
+    parse_fixed_width_export_field,
+    render_fixed_width_export_field,
+)
+from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from cadrumo.domain.deadlines.recargo import load_recargo_bands
 from cadrumo.domain.iva.catalogue import bundled_iva_catalogue, resolve_catalogue
 
@@ -128,7 +139,34 @@ for operation in (
         operation()
     except RegistrySnapshotError:
         refusals.append(True)
+m303 = authority.snapshot("303", filing_year=2025, period="4T")
+m303_values = resolve_ledger_iva_aggregation_binding_values(m303.revision, ())
+assert m303_values and all(value == 0 for value in m303_values.values())
+assert deepcopy(m303) == m303
+assert authority.snapshot("303", filing_year=2025, period="4T") is m303
+m303_export = authority.snapshot("303", filing_year=2026, period="1T")
+export_fields = [
+    field
+    for layout in m303_export.revision.export_layouts
+    for record in layout.records
+    for field in record.fields
+    if field.kind == "casilla" and field.data_type == "money" and field.value_policy is None
+]
+assert export_fields
+for field in export_fields:
+    amount = Decimal("123.45")
+    wire = render_fixed_width_export_field(field, amount)
+    assert len(wire) == field.length
+    assert parse_fixed_width_export_field(field, wire) == amount
+try:
+    render_fixed_width_export_field(export_fields[0], "not-an-amount")
+except RegistryValidationError:
+    pass
+else:
+    raise AssertionError("installed M303 export accepted a malformed amount")
 print(json.dumps({
+    "m303_empty_ledger_bindings": len(m303_values),
+    "m303_export_money_fields": len(export_fields),
     "apoderamientos": len(load_default_catalogue().scopes),
     "authority_record_types": sorted({
         type(next(iter(runtime.iva_regulations.values()))).__name__,
@@ -465,6 +503,8 @@ def test_installed_consumers_use_typed_catalogues_and_central_temporal_admission
     assert observed["recargo"] > 0
     assert observed["apoderamientos"] > 0
     assert observed["temporal_refusals"] == 2
+    assert observed["m303_empty_ledger_bindings"] > 0
+    assert observed["m303_export_money_fields"] > 0
 
 
 def test_cli_and_mcp_complete_the_same_grounded_oracle_from_that_cohort(
@@ -734,6 +774,7 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     work = installed_cohort.work_dir / "owned-launch-capture"
     work.mkdir()
     environment = isolated_mcp_environment(work / "state")
+    environment["CADRUMO_CLI_EXECUTABLE"] = str(installed_cohort.cli)
     transcript = capture_owned_server_launch(
         server=installed_cohort.mcp_server,
         env=environment,

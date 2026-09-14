@@ -5,9 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...contribuyente.renta_codes import FiscalResidency
 from .errors import RegistryValidationError
@@ -17,11 +15,8 @@ from .facts.resolution import (
     ResolvedEntitySetFact,
     ResolvedMappingFact,
 )
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FISCAL_RESIDENCY_FACT_ID = "renta-fiscal-residency-vocabulary"
 _EU_EEA_COUNTRY_FACT_ID = "eu-eea-country-membership"
@@ -115,7 +110,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_mapping_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -129,19 +124,23 @@ def _resolve_mapping_entries(
     return _mapping_entries(resolved)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     from .authority import bundled_authority
 
-    return _resolve_mapping_entries(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_mapping_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def _selected_mapping_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_mapping_entries(coordinate)
     return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
@@ -150,7 +149,7 @@ def _selected_mapping_entries(
 def resolve_fiscal_residency_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> FiscalResidencyCatalogue:
     """Resolve the dated fiscal-residency vocabulary through fact 0122."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
@@ -190,7 +189,7 @@ def require_fiscal_residency(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> FiscalResidency:
     """Project one registry-governed fiscal-residency token."""
     return resolve_fiscal_residency_catalogue(
@@ -202,7 +201,7 @@ def require_fiscal_residency(
 def fiscal_residency_choices(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[FiscalResidency, ...]:
     """Return fiscal-residency choices in authored order."""
     return resolve_fiscal_residency_catalogue(
@@ -214,7 +213,7 @@ def fiscal_residency_choices(
 def default_fiscal_residency(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> FiscalResidency:
     """Return the registry-declared default residency token."""
     return resolve_fiscal_residency_catalogue(
@@ -227,7 +226,7 @@ def fiscal_residency_requires_country(
     value: FiscalResidency | str | None,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return the registry-declared country requirement for one token."""
     if value is None or value == "":
@@ -245,7 +244,7 @@ def fiscal_residency_requires_country(
 def _resolve_country_entities(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> frozenset[str]:
     resolved = authority.resolve_governed_fact(
         EntitySetFactQuery(
@@ -262,20 +261,24 @@ def _resolve_country_entities(
     return frozenset(entities)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_country_entities(effective_date: date) -> frozenset[str]:
     from .authority import bundled_authority
 
-    return _resolve_country_entities(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_country_entities(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def ue_eea_country_codes(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> frozenset[str]:
     """Return the selected EU/EEA country-code entity set from fact 0123."""
     coordinate = effective_date or date.today()
+    authority = authority or governed_facts_in_scope()
     if authority is None:
         return _bundled_country_entities(coordinate)
     return _resolve_country_entities(effective_date=coordinate, authority=authority)
@@ -285,7 +288,7 @@ def is_ue_eea_country_code(
     country_code: str | None,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
     """Return whether a country token is in the selected EU/EEA entity set."""
     if country_code is None:

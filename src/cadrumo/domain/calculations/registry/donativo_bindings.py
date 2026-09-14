@@ -33,10 +33,10 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     invariant_diagnostics,
+    provider_member,
     selector_against_model,
     uppercase_alpha_code,
 )
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .schema_base import coerce_enum_member
 from .schema_exports import ExportFieldDataType
@@ -150,7 +150,7 @@ class DonativoDonorProvider(BaseModel):
 
 def _validated_donativo_selector(binding: BindingDefinition) -> DonativoDonorProvider:
     try:
-        selector = DonativoDonorProvider.model_validate(_selector_as_dict(binding))
+        selector = provider_member(binding, DonativoDonorProvider)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed donativo selector") from exc
     _validate_donativo_row_field(binding, selector.fact, selector.row_field)

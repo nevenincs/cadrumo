@@ -3,12 +3,23 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.tax_domain import TaxDomain
 from ..facts.schema import GovernedFact, GovernedFactCatalogue
+from ..runtime_catalogues import (
+    ApoderamientoScopeRecord,
+    CountryVocabularyRecord,
+    PublishedIvaPlaceOfSupplyRule,
+    PublishedIvaRegulation,
+    PublishedRecargoBand,
+    RuntimeRegistryCatalogues,
+    SpanishPostalTerritory,
+    TerritoryCarveOut,
+)
 from ..schema import (
     BindingDefinition,
     ModeloDefinition,
@@ -98,10 +109,68 @@ def _minimal_catalogues() -> RegistryCatalogues:
             ),
         }
     )
+    runtime = RuntimeRegistryCatalogues(
+        iva_regulations={
+            "fixture-exempt": PublishedIvaRegulation(
+                category="fixture-exempt",
+                requires_reverse_charge=False,
+                requires_supplier_iva_id=False,
+                manual_references=(),
+                citations=(),
+                notes="No legal treatment is asserted by this fixture row.",
+                legal_basis_exempt=True,
+            )
+        },
+        iva_place_of_supply={
+            "fixture-exempt": PublishedIvaPlaceOfSupplyRule(
+                rule_id="fixture-exempt",
+                notes="No placement is asserted by this fixture row.",
+                legal_basis_exempt=True,
+            )
+        },
+        countries={
+            "ES": CountryVocabularyRecord(code="ES", alpha3="ESP", names=("Espana",)),
+        },
+        spanish_postal_territories={
+            "28": SpanishPostalTerritory(
+                postal_prefixes=("28",),
+                scope="peninsula_baleares",
+                name="Madrid",
+                legal_refs=(_LEGAL_ID,),
+            )
+        },
+        territory_carve_outs={
+            "ES": TerritoryCarveOut(
+                code="ES",
+                name="Espana",
+                establishes_nothing=True,
+                legal_refs=(_LEGAL_ID,),
+            )
+        },
+        recargo_bands={
+            "all": PublishedRecargoBand(
+                id="all",
+                min_completed_months=0,
+                surcharge_pct=Decimal("1"),
+                legal_ref=_LEGAL_ID,
+            )
+        },
+        apoderamientos_version="fixture-v1",
+        apoderamientos_scopes={
+            "GENERAL": ApoderamientoScopeRecord(
+                code="GENERAL",
+                name_es="General",
+                name_en="General",
+                name_ca="General",
+                name_hu="Altalanos",
+            )
+        },
+    ).require_complete()
     return RegistryCatalogues(
         legal={_LEGAL_ID: legal},
         sources={source.id: source, workbook.id: workbook},
         facts=GovernedFactCatalogue(facts={tax_id_format.fact_id: tax_id_format}),
+        runtime=runtime,
     )
 
 

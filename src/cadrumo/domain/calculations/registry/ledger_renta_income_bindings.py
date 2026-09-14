@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from ....core.aggregation import (
     BindingAggregationOp,
@@ -23,8 +23,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import LedgerIncomeFactValue, casilla_id_set, mapping_lacks_fact
@@ -86,9 +85,16 @@ class LedgerRentaIncomeProvider(BaseModel):
 
     kind: Literal[BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION] = BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
 
-    modelo: Literal[Modelo("130"), Modelo("100"), Modelo("131")] = Modelo("130")
+    modelo: Modelo = Modelo("130")
     target_casilla_id: CasillaId
     fact: LedgerIncomeFactValue
+
+    @field_validator("modelo")
+    @classmethod
+    def _require_supported_modelo(cls, value: Modelo) -> Modelo:
+        if value not in _RENTA_INCOME_MODELOS:
+            raise ValueError(f"ledger_renta_income_aggregation modelo must be one of {sorted(_RENTA_INCOME_MODELOS)!r}")
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -112,6 +118,7 @@ class LedgerRentaIncomeProvider(BaseModel):
 # feeds the cumulative-quarter ingresos casillas; M100 (annual IRPF) feeds the
 # estimación-directa "Ingresos de explotación" leaf (0171). Validated at registry
 # load so a binding targeting any other casilla surfaces before any calculation.
+_RENTA_INCOME_MODELOS: frozenset[Modelo] = frozenset((Modelo("100"), Modelo("130"), Modelo("131")))
 _RENTA_130_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_130_INCOME_CASILLAS", "01", "03")
 _RENTA_100_INCOME_CASILLAS: frozenset[CasillaId] = casilla_id_set("_RENTA_100_INCOME_CASILLAS", "0171")
 # One casilla, and the narrowness is the point. Modelo 131 casilla 01 is the sum
@@ -128,7 +135,7 @@ _RENTA_INCOME_CASILLAS_BY_MODELO: dict[Modelo, frozenset[CasillaId]] = {
 
 def _renta_ledger_income_selector(binding: BindingDefinition) -> LedgerRentaIncomeProvider:
     try:
-        return LedgerRentaIncomeProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerRentaIncomeProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector: {exc}",

@@ -12,13 +12,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
 
 from ....domain.deadlines.festivos import CalendarCCAA
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
-from .governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
 
 _FACT_ID = "deadline-calendar-territory-catalogue"
@@ -151,11 +150,11 @@ def _resolve_entries(*, effective_date: date, authority: GovernedFactSource) -> 
     return _mapping_entries(resolved)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_entries(effective_date: date) -> Mapping[str, str]:
     from .authority import bundled_authority
 
-    return _resolve_entries(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_entries(effective_date=effective_date, authority=(governed_facts_in_scope() or bundled_authority()))
 
 
 def _selected_entries(
@@ -219,7 +218,7 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
     )
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_catalogue(effective_date: date) -> CalendarCcaaCatalogue:
     return _catalogue(_bundled_entries(effective_date))
 

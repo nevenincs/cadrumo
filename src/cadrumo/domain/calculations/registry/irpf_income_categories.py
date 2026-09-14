@@ -5,22 +5,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
 from types import MappingProxyType
-from typing import TYPE_CHECKING
 
 from ...deadlines.models import IrpfIncomeCategory
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact
+from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope
 from .schema_base import DateAxis
-
-if TYPE_CHECKING:
-    from .authority import ValidatedRegistryAuthority
-
 
 _FACT_ID = "irpf-income-category-vocabulary"
 _ORDER_KEY = "irpf_income_category.order"
-_ACTIVITY_TOKEN_KEY = "irpf_income_category.activity_token"
+_ACTIVITY_CATEGORY_ENTRY = "irpf_income_category.activity_token"
 _PREFIX = "irpf_income_category."
 
 
@@ -45,13 +40,16 @@ class IrpfIncomeCategoryCatalogue:
 
     @property
     def all_categories(self) -> frozenset[IrpfIncomeCategory]:
+        """Return the complete declared category membership."""
         return frozenset(item.token for item in self.definitions)
 
     @property
     def choices(self) -> tuple[IrpfIncomeCategory, ...]:
+        """Return categories in their declared presentation order."""
         return tuple(item.token for item in self.definitions)
 
     def require(self, value: object) -> IrpfIncomeCategory:
+        """Return one declared category or refuse an unknown value."""
         if isinstance(value, IrpfIncomeCategory):
             token = value
         elif isinstance(value, str):
@@ -59,7 +57,7 @@ class IrpfIncomeCategoryCatalogue:
             if not raw:
                 raise RegistryValidationError("IRPF income-category token must be non-empty")
             try:
-                token = IrpfIncomeCategory._from_registry(raw)
+                token = IrpfIncomeCategory(raw, _registry_validated=True)
             except (TypeError, ValueError) as exc:
                 raise RegistryValidationError("IRPF income-category token must be a non-empty string") from exc
         else:
@@ -71,10 +69,12 @@ class IrpfIncomeCategoryCatalogue:
         return token
 
     def definition(self, value: object) -> IrpfIncomeCategoryDefinition:
+        """Return the declaration for one admitted category."""
         token = self.require(value)
         return next(item for item in self.definitions if item.token == token)
 
     def is_economic_activity(self, value: object) -> bool:
+        """Report whether a value is the declared economic-activity category."""
         return self.require(value) == self.activity_token
 
 
@@ -118,7 +118,7 @@ def _mapping_entries(resolved: ResolvedMappingFact) -> Mapping[str, str]:
 def _resolve_mapping_entries(
     *,
     effective_date: date,
-    authority: ValidatedRegistryAuthority,
+    authority: GovernedFactSource,
 ) -> Mapping[str, str]:
     resolved = authority.resolve_governed_fact(
         MappingFactQuery(
@@ -132,34 +132,38 @@ def _resolve_mapping_entries(
     return _mapping_entries(resolved)
 
 
-@lru_cache(maxsize=64)
+@cache_governed_projection(maxsize=64)
 def _bundled_mapping_entries(effective_date: date) -> Mapping[str, str]:
     from .authority import bundled_authority
 
-    return _resolve_mapping_entries(effective_date=effective_date, authority=bundled_authority())
+    return _resolve_mapping_entries(
+        effective_date=effective_date,
+        authority=governed_facts_in_scope() or bundled_authority(),
+    )
 
 
 def _selected_mapping_entries(
     *,
     effective_date: date | None,
-    authority: ValidatedRegistryAuthority | None,
+    authority: GovernedFactSource | None,
 ) -> Mapping[str, str]:
     coordinate = effective_date or date.today()
-    if authority is None:
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
         return _bundled_mapping_entries(coordinate)
-    return _resolve_mapping_entries(effective_date=coordinate, authority=authority)
+    return _resolve_mapping_entries(effective_date=coordinate, authority=selected)
 
 
 def resolve_irpf_income_category_catalogue(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfIncomeCategoryCatalogue:
     """Resolve all six income categories from fact 0128."""
     entries = _selected_mapping_entries(effective_date=effective_date, authority=authority)
     definitions: list[IrpfIncomeCategoryDefinition] = []
     for raw_token in _csv(entries, _ORDER_KEY):
-        token = IrpfIncomeCategory._from_registry(raw_token)
+        token = IrpfIncomeCategory(raw_token, _registry_validated=True)
         prefix = f"{_PREFIX}{raw_token}."
         if _required(entries, f"{prefix}value") != raw_token:
             raise RegistryValidationError(f"IRPF income-category token {raw_token!r} declares a mismatched value")
@@ -173,7 +177,7 @@ def resolve_irpf_income_category_catalogue(
                 legal_refs=_refs(entries, f"{prefix}legal_refs"),
             ),
         )
-    activity_token = IrpfIncomeCategory._from_registry(_required(entries, _ACTIVITY_TOKEN_KEY))
+    activity_token = IrpfIncomeCategory(_required(entries, _ACTIVITY_CATEGORY_ENTRY), _registry_validated=True)
     catalogue = IrpfIncomeCategoryCatalogue(
         definitions=tuple(definitions),
         activity_token=activity_token,
@@ -194,8 +198,9 @@ def require_irpf_income_category(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfIncomeCategory:
+    """Return one registry-declared IRPF income category."""
     return resolve_irpf_income_category_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -205,8 +210,9 @@ def require_irpf_income_category(
 def irpf_income_category_choices(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> tuple[IrpfIncomeCategory, ...]:
+    """Return the registry-declared IRPF income categories in order."""
     return resolve_irpf_income_category_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -216,8 +222,9 @@ def irpf_income_category_choices(
 def irpf_income_category_actividad_economica_token(
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> IrpfIncomeCategory:
+    """Return the category designated for economic-activity income."""
     return resolve_irpf_income_category_catalogue(
         effective_date=effective_date,
         authority=authority,
@@ -228,8 +235,9 @@ def irpf_income_category_is_economic_activity(
     value: object,
     *,
     effective_date: date | None = None,
-    authority: ValidatedRegistryAuthority | None = None,
+    authority: GovernedFactSource | None = None,
 ) -> bool:
+    """Report whether a value is the declared economic-activity category."""
     return resolve_irpf_income_category_catalogue(
         effective_date=effective_date,
         authority=authority,

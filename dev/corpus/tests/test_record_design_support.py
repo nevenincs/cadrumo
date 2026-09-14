@@ -285,8 +285,8 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
 
     This is deliberately the record-design synchronizer's boundary, not a
     traversal of all bundled ``_data``.  Its payload walk includes manifested
-    official files and the two named sheet-text derivatives, while project
-    declarations remain owned by their separate declaration contracts.
+    official files and the named sheet-text derivatives. Correction targets
+    are checked here; annotation content remains owned by the record reader.
     """
     catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
     payload_paths = set(_payload_paths(_CORPUS))
@@ -300,11 +300,13 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
         if diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE
     } == explicit_debt
     assert all(diagnostic.kind is ArtifactDiagnosticKind.UNKNOWN_FILE for diagnostic in catalogue.diagnostics)
-    assert set(catalogue.roles) | explicit_debt == payload_paths
+    annotation_paths = {path for path, role in catalogue.roles.items() if role is ArtifactRole.SEMANTIC_ANNOTATION}
+    assert (set(catalogue.roles) - annotation_paths) | explicit_debt == payload_paths
     assert set(catalogue.roles).isdisjoint(explicit_debt)
     assert set(catalogue.roles.values()) <= {
         ArtifactRole.OFFICIAL_ARTIFACT,
         ArtifactRole.DERIVED_ARTIFACT,
+        ArtifactRole.SEMANTIC_ANNOTATION,
     }
     assert {path for path, role in catalogue.roles.items() if role is ArtifactRole.OFFICIAL_ARTIFACT} == set(
         catalogue.identities
@@ -313,6 +315,30 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
     assert all(
         catalogue.roles[derivative.path] is ArtifactRole.DERIVED_ARTIFACT
         for derivative in _EXTRACTION_SIDECAR_DERIVATIONS
+    )
+
+
+def test_record_design_catalogue_rejects_an_orphaned_correction(tmp_path: Path) -> None:
+    """Annotations must retain their exact binary, not a differently named sibling."""
+    manifests = _corpus_fixture(tmp_path)
+    source = tmp_path / "modelo_999/files/01-design.pdf"
+    correction = source.with_name(source.name + ".record-design-correction.json")
+    correction.write_text('{"corrections": []}', encoding="utf-8")
+    relative = PurePosixPath(correction.relative_to(tmp_path).as_posix())
+
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    assert failures == []
+    assert catalogue is not None
+    assert catalogue.roles[relative] is ArtifactRole.SEMANTIC_ANNOTATION
+    assert not any(diagnostic.path == relative for diagnostic in catalogue.diagnostics)
+
+    source.rename(source.with_suffix(".xlsx"))
+    catalogue, failures = _record_design_catalogue(manifests, tmp_path)
+    assert failures == []
+    assert catalogue is not None
+    assert any(
+        diagnostic.path == relative and diagnostic.kind is ArtifactDiagnosticKind.ORPHANED_TARGET
+        for diagnostic in catalogue.diagnostics
     )
 
 

@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.artifact_catalogue import (  # noqa: E
     ArtifactDiagnosticKind,
     ArtifactRole,
     DerivedArtifact,
+    SemanticAnnotation,
     compile_artifact_catalogue,
     record_design_manifest_identities,
 )
@@ -68,10 +69,11 @@ _MANIFEST_NAME: Final[str] = "manifest.json"
 _DECLARATION_NAMES: Final[frozenset[str]] = frozenset(
     {_MANIFEST_NAME, "declared-non-record-sheets.json"},
 )
+_CORRECTION_SUFFIX: Final[str] = ".record-design-correction.json"
 _DERIVED_SUFFIXES: Final[tuple[str, ...]] = (
     ".extracted.md",
     ".extracted.json",
-    ".record-design-correction.json",
+    _CORRECTION_SUFFIX,
 )
 
 #: Payload files that are present in the corpus and named by no manifest.
@@ -1449,13 +1451,14 @@ def _record_design_catalogue(
     manifests: dict[str, _Manifest],
     corpus_root: Path,
 ) -> tuple[ArtifactCatalogue | None, list[str]]:
-    """Compile manifest acquisition identity for this synchronizer's payloads.
+    """Compile payload identities and the targets of their correction annotations.
 
     The compiler owns the canonical path join and payload classification.  The
     synchronizer deliberately retains byte rehashing and retrieval checks;
     catalog compilation is an identity/role projection, not a replacement for
-    either.  Production ``check`` always fails closed on an incomplete
-    identity row.
+    either. Correction annotations must name a payload inside this boundary;
+    their correction content is validated by the record-design reader.
+    Production ``check`` always fails closed on an incomplete identity row.
     """
     derived_paths = {derivative.path for derivative in _EXTRACTION_SIDECAR_DERIVATIONS}
     identities = []
@@ -1472,10 +1475,20 @@ def _record_design_catalogue(
             failures.append(f"manifest acquisition identity is malformed: M{modelo}: {error}")
     if failures:
         return None, failures
+    annotations = tuple(
+        SemanticAnnotation(
+            path=PurePosixPath(path.relative_to(corpus_root).as_posix()),
+            target_path=PurePosixPath(path.relative_to(corpus_root).as_posix().removesuffix(_CORRECTION_SUFFIX)),
+        )
+        for model_dir in scan_directory(corpus_root, pattern="modelo_*")
+        for path in sorted(model_dir.rglob(f"*{_CORRECTION_SUFFIX}"))
+        if path.is_file()
+    )
     catalogue = compile_artifact_catalogue(
-        known_paths=_payload_paths(corpus_root),
+        known_paths=(*_payload_paths(corpus_root), *(annotation.path for annotation in annotations)),
         official_identities=identities,
         derived_artifacts=_EXTRACTION_SIDECAR_DERIVATIONS,
+        semantic_annotations=annotations,
     )
     return catalogue, []
 

@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, NamedTuple, Protocol
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ....core.aggregation import (
     BindingAggregationOp,
@@ -20,8 +20,7 @@ from ._ledger_binding_resolution import (
     unsupported_ledger_family_observations,
 )
 from .binding_aggregation import binding_aggregation_op
-from .binding_selector_utils import invariant_diagnostics, selector_against_model
-from .binding_selector_utils import selector_as_dict as _selector_as_dict
+from .binding_selector_utils import invariant_diagnostics, provider_member, selector_against_model
 from .errors import RegistryValidationError
 from .ids import BindingId
 from .ledger_binding_selector_support import casilla_id_set
@@ -68,16 +67,23 @@ class LedgerRentaGastosPagoFraccionadoProvider(BaseModel):
         BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
     )
 
-    modelo: Literal[Modelo("130")] = Modelo("130")
+    modelo: Modelo = Modelo("130")
     target_casilla_id: CasillaId
     fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
+
+    @field_validator("modelo")
+    @classmethod
+    def _require_modelo_130(cls, value: Modelo) -> Modelo:
+        if value != Modelo("130"):
+            raise ValueError("ledger_renta_gastos_pago_fraccionado_aggregation modelo must be '130'")
+        return value
 
 
 def _renta_ledger_gastos_pago_fraccionado_selector(
     binding: BindingDefinition,
 ) -> LedgerRentaGastosPagoFraccionadoProvider:
     try:
-        return LedgerRentaGastosPagoFraccionadoProvider.model_validate(_selector_as_dict(binding))
+        return provider_member(binding, LedgerRentaGastosPagoFraccionadoProvider)
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_gastos_pago_fraccionado_aggregation selector: {exc}",
