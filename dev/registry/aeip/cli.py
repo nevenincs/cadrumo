@@ -11,12 +11,15 @@ from dev._paths import REPO_ROOT
 
 from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, AdjudicationSet, load_adjudications
 from .manager import (
+    AeipApplyPlan,
     AeipInventory,
     ChainPlan,
+    apply_prepared_plan,
     build_inventory,
     detect_stale_adjudications,
     extract_occurrences,
     plan_chains,
+    prepare_apply,
     render_evolution_record,
 )
 
@@ -186,3 +189,55 @@ def plan_command(
             if show_records:
                 record = render_evolution_record(pair, casilla_id=entry.occurrences[-1].casilla_id)
                 typer.echo("".join(f"\n      {line}" for line in record.splitlines()))
+
+
+def _report_apply_plan(plan: AeipApplyPlan, planned: ChainPlan) -> None:
+    """Print the complete dry-run accounting in stable, reviewable form."""
+    typer.echo(f"planned chains          : {len(planned.entries)}")
+    typer.echo(f"planned stamp rows      : {planned.stamp_count}")
+    typer.echo(f"already stamped rows    : {plan.existing_stamps}")
+    typer.echo(f"stamp rows to write     : {len(plan.stamp_writes)}")
+    typer.echo(f"planned evolution recs  : {planned.record_count}")
+    typer.echo(f"existing evolution recs : {plan.existing_evolutions}")
+    typer.echo(f"extra evolution recs    : {plan.unexpected_evolutions}")
+    typer.echo(f"evolution recs to write : {len(plan.evolution_writes)}")
+    typer.echo(f"refusals                : {len(plan.refusals)}")
+    for refusal in plan.refusals:
+        typer.echo(f"  REFUSAL {refusal}")
+    if plan.stamp_writes:
+        typer.echo("stamp targets:")
+        for write in plan.stamp_writes:
+            typer.echo(f"  {write.revision_id}/{write.casilla_id} -> {write.path}")
+    if plan.evolution_writes:
+        typer.echo("evolution targets:")
+        for write in plan.evolution_writes:
+            typer.echo(f"  {write.path}")
+
+
+@app.command("apply")
+def apply_command(
+    modelo: Annotated[str, _MODELO_OPTION] = "100",
+    adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
+    write: Annotated[
+        bool,
+        typer.Option("--write", help="Apply the reviewed plan; without this flag the command is dry-run only."),
+    ] = False,
+) -> None:
+    """Preflight the adjudicated AEIP plan; write only with explicit ``--write``."""
+    inventory, planned, adjudications_set = _load(modelo, adjudications)
+    prepared = prepare_apply(
+        _modelos_root(),
+        inventory,
+        planned,
+        adjudications_set,
+        modelo_id=modelo,
+    )
+    _report_apply_plan(prepared, planned)
+    if prepared.refusals:
+        raise typer.Exit(code=1)
+    if not write:
+        typer.echo("dry-run only; pass --write after review")
+        return
+    stamp_rows, evolution_records = apply_prepared_plan(prepared)
+    typer.echo(f"applied stamp rows      : {stamp_rows}")
+    typer.echo(f"applied evolution recs  : {evolution_records}")

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014:00567"
+continuidad_id = "dp200014-00567"
 number = "00567"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -11,6 +12,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00568"
+continuidad_id = "dp200014-00568"
 number = "00568"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -22,6 +24,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00563"
+continuidad_id = "dp200014-00563"
 number = "00563"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -33,6 +36,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00566"
+continuidad_id = "dp200014-00566"
 number = "00566"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -44,6 +48,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00576"
+continuidad_id = "dp200014-00576"
 number = "00576"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -55,6 +60,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00569"
+continuidad_id = "dp200014-00569"
 number = "00569"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -66,6 +72,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00570"
+continuidad_id = "dp200014-00570"
 number = "00570"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -77,6 +84,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00572"
+continuidad_id = "dp200014-00572"
 number = "00572"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -88,6 +96,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00571"
+continuidad_id = "dp200014-00571"
 number = "00571"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -99,6 +108,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00575"
+continuidad_id = "dp200014-00575"
 number = "00575"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -110,6 +120,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00577"
+continuidad_id = "dp200014-00577"
 number = "00577"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -121,6 +132,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00581"
+continuidad_id = "dp200014-00581"
 number = "00581"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -132,6 +144,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014:00582"
+continuidad_id = "is-liquidacion-iii-cuota-integra-ajustada-positiva"
 number = "00582"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]
@@ -146,6 +159,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00583"
+continuidad_id = "dp200014b-00583"
 number = "00583"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -157,6 +171,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00585"
+continuidad_id = "dp200014b-00585"
 number = "00585"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -168,6 +183,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00584"
+continuidad_id = "dp200014b-00584"
 number = "00584"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -179,6 +195,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00588"
+continuidad_id = "dp200014b-00588"
 number = "00588"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -190,6 +207,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00565"
+continuidad_id = "dp200014b-00565"
 number = "00565"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -201,6 +219,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00590"
+continuidad_id = "dp200014b-00590"
 number = "00590"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -212,6 +231,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00399"
+continuidad_id = "dp200014b-00399"
 number = "00399"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -223,6 +243,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00082"
+continuidad_id = "dp200014b-00082"
 number = "00082"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]
@@ -234,6 +255,7 @@ legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", 
 
 [[revisions."2024".casillas]]
 id = "DP200014B:00619"
+continuidad_id = "is-liquidacion-iv-cuota-liquida-minima"
 number = "00619"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "otras_deducciones"]

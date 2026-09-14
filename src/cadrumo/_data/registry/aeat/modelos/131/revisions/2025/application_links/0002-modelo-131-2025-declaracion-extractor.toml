@@ -1,7 +1,0 @@
-[[revisions."2025".application_links]]
-id = "modelo-131-declaracion-extractor"
-surface = "extractor"
-consumer = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
-requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
-additional_source_refs = ["aeat-modelo-131-instructions"]

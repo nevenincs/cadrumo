@@ -115,13 +115,12 @@ already-lifted tree is a clean no-op.
 
 Where it stops:
 
-- Migration states casilla declarations only. Formulas, bindings, layouts and
-  every other family are left exactly as the edition declares them by the
-  migration proper. That is this tool's scope, NOT a claim about the loader:
-  the loader inherits formulas and nine further keyed families along the
-  predecessor chain, and ``--drop-restatement`` below is the operation that
-  removes what those families restate. Bindings and the completeness manifest
-  genuinely do not inherit and stay full copy in every edition.
+- The full-copy conversion path authors casilla declarations; the explicit
+  ``--drop-restatement`` path also accepts every keyed family enrolled by the
+  canonical union, including projection endpoints and verification predicates.
+  Bindings participate in the keyed union with provider-kind, data-type and
+  channel identity guards. Layouts, verification expectations, workbook pins
+  and the completeness manifest remain per-edition claims by policy.
 - It never authors a retirement, a repurpose, or lineage; it reads them.
 - Label text is not rewritten. Locale keys are edition-scoped and the loader
   gives an inherited row its origin edition's key as a fallback.
@@ -147,11 +146,19 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError
+
 from cadrumo.core.authority_grade import UNDECLARED_REGISTRY_AUTHORITY_GRADE, RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.identifier_lineage import identifier_lineage
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.keyed_families import (
+    DROPPABLE_FAMILY_SPECS,
+    HELD_BACK_FAMILY_REASONS,
+    family_identity_value,
+)
+from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from dev._paths import REPO_ROOT
 from dev.test_runs.paths import allocate_run_directory
@@ -228,8 +235,11 @@ _TOML_ESCAPES: Final[Mapping[str, str]] = {
 }
 
 
-class MigrationRefusedError(RuntimeError):
-    """The modelo cannot be migrated as asked, and nothing was written outside the work directory."""
+# The migration refusal is a registry-domain failure.  Keep the public symbol
+# as an alias rather than defining an unregistered subclass in this dev module:
+# ``CadrumoError`` subclasses must have a declared error-code entry in the
+# domain error registry, and this tool does not own that registry.
+MigrationRefusedError = RegistryError
 
 
 class PredecessorBasis(StrEnum):
@@ -1024,7 +1034,7 @@ def _choose_predecessor(
         return None, PredecessorBasis.FIRST, []
     earlier, current = ordered[position - 1], ordered[position]
     causes: list[BlockedCause] = []
-    if revisions_overlap(earlier, current):
+    if revisions_coexist(earlier, current):
         causes.append(BlockedCause.OVERLAPPING_PREDECESSOR)
     ladder = tuple(RegistryAuthorityGrade)
     if ladder.index(_grade(source.manifest)) < ladder.index(_grade(_manifest_of(earlier))):
@@ -1559,55 +1569,32 @@ class _DroppableFamily:
     identity_fields: tuple[str, ...] = ()
 
 
-#: The families a drop may touch, and the reason each one is safe.
+#: The families a drop may touch, and the reason each one is safe.  Membership
+#: and identity axes come from the domain policy table consumed by the loader;
+#: this projection is only the migration tool's local value type.
 #:
 #: A restatement is redundant only where the family INHERITS. Omitting a member
 #: of a family the loader does not carry along the predecessor chain does not
 #: leave the predecessor's member in its place; it deletes the member outright.
-#: So this set mirrors the loader's keyed-family enrolment - its own merge for
-#: casillas, and ``_KEYED_FAMILIES`` for the rest - and a family absent from
-#: that enrolment is absent here.
+#: A family absent from that enrolment is absent here.
 #:
-#: The enrolment is mirrored rather than imported: it is private to the compiler
-#: package. Mirroring is safe here in the one direction that matters, because
-#: the chain proof is what authorises the write. A family wrongly listed here
-#: produces a materialisation difference and refuses the modelo loudly; it can
-#: never write a silent loss. A family wrongly omitted costs an opportunity and
-#: nothing else. Drift therefore fails safe, and fails closed.
-_DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = (
-    _DroppableFamily(section=_CASILLAS, identity=_LINEAGE, identity_fields=("id",)),
-    _DroppableFamily(section="formulas", identity="id", identity_fields=("target_casilla_id",)),
-    _DroppableFamily(section="applicability", identity="id"),
-    _DroppableFamily(section="filing_schedules", identity="id"),
-    _DroppableFamily(section="live_cross_references", identity="id"),
-    _DroppableFamily(section="extraction_profiles", identity="id"),
-    _DroppableFamily(section="dependency_classifications", identity="id"),
-    _DroppableFamily(section="constructs", identity="id"),
-    _DroppableFamily(section="application_links", identity="id"),
-    _DroppableFamily(section="parameters", identity="id", identity_fields=("data_type",)),
+#: The chain proof still authorises every write: a policy error produces a
+#: materialisation difference and refuses the modelo rather than silently
+#: losing a member.
+_DROPPABLE_FAMILIES: Final[tuple[_DroppableFamily, ...]] = tuple(
+    _DroppableFamily(
+        section=spec.section,
+        identity=spec.identity,
+        identity_fields=spec.identity_fields,
+    )
+    for spec in DROPPABLE_FAMILY_SPECS
+    if spec.identity is not None
 )
 
 #: Families deliberately held back, and what holds each one back. Naming them
 #: here keeps the refusal a decision on the record rather than an omission, and
 #: gives ``--family`` something honest to refuse against.
-_HELD_BACK_FAMILIES: Final[Mapping[str, str]] = {
-    "bindings": (
-        "not enrolled in the loader's keyed families, so a dropped member is deleted rather than inherited; the "
-        "strip that enrolment would make legal is the bindings lane's own tool, not this one"
-    ),
-    "deadline_windows": (
-        "enrolled, but inheritance is conditional on the successor's period_selector covering the member's own "
-        "filing_year and period, so an omitted member is not reliably inherited; its year and period are data, "
-        "and this tool will not guess at a selector"
-    ),
-    "completeness_manifest": "a per-edition graded closure claim; inheriting it would attest for the successor "
-    "something nobody established",
-    "workbook_parity_refs": "a per-edition claim about that edition's own workbook",
-    "export_layouts": "a per-edition claim about that edition's own record design",
-    "projection_endpoints": "not enrolled in the loader's keyed families",
-    "verification_predicates": "carries no member identity, so no member can be matched to an inherited one",
-    "verification_expectations": "not enrolled in the loader's keyed families",
-}
+_HELD_BACK_FAMILIES: Final[Mapping[str, str]] = HELD_BACK_FAMILY_REASONS
 
 #: Manifest scalars that are load-bearing per-edition defaults. This loader has
 #: NO manifest-scalar inheritance: an omitted default is absent, not inherited,
@@ -1634,6 +1621,7 @@ class FamilyDrop:
     kept_new: tuple[str, ...]
     kept_differs: tuple[str, ...]
     kept_pinned: tuple[str, ...]
+    lineage_attestations: tuple[LineageAttestation, ...] = ()
     kept_no_identity: int = 0
 
     @property
@@ -1715,6 +1703,8 @@ def _plan_family_drop(
     *,
     family: _DroppableFamily,
     revision_id: str,
+    predecessor_revision_id: str,
+    manifest: Mapping[str, object],
     stated: Sequence[_Block],
     inherited: Sequence[_Row],
 ) -> FamilyDrop:
@@ -1741,6 +1731,7 @@ def _plan_family_drop(
     kept_new: list[str] = []
     kept_differs: list[str] = []
     kept_pinned: list[str] = []
+    lineage_attestations: list[LineageAttestation] = []
     kept_no_identity = 0
     seen: set[str] = set()
     for block in stated:
@@ -1770,15 +1761,44 @@ def _plan_family_drop(
             kept_new.append(identity)
             continue
         (candidate,) = candidates
-        if family.section == _CASILLAS and any(claim in member for claim in _LINEAGE_CLAIMS):
-            kept_pinned.append(identity)
-            continue
-        if any(member.get(field) != candidate.get(field) for field in family.identity_fields):
+        if any(
+            family_identity_value(member, field) != family_identity_value(candidate, field)
+            for field in family.identity_fields
+        ):
             kept_differs.append(identity)
             continue
-        left = _comparable(member, revision_id=revision_id, path=f"{family.section}.{identity}")
-        right = _comparable(candidate, revision_id=revision_id, path=f"{family.section}.{identity}")
+        left_member = _without_lineage_claims(member) if family.section == _CASILLAS else member
+        right_member = _without_lineage_claims(candidate) if family.section == _CASILLAS else candidate
+        left = _comparable(left_member, revision_id=revision_id, path=f"{family.section}.{identity}")
+        right = _comparable(right_member, revision_id=revision_id, path=f"{family.section}.{identity}")
         if left == right:
+            if family.section == _CASILLAS and any(claim in member for claim in _LINEAGE_CLAIMS):
+                source_refs = member.get(_ROW_SOURCE)
+                if not isinstance(source_refs, list | tuple) or not source_refs:
+                    default_refs = manifest.get("casilla_source_refs")
+                    additions = member.get(_ROW_SOURCE_ADDITIONS)
+                    source_refs = (
+                        tuple(default_refs if isinstance(default_refs, list | tuple) else ())
+                        + tuple(additions if isinstance(additions, list | tuple) else ())
+                    )
+                legal_refs = member.get(_ROW_LEGAL)
+                if not isinstance(legal_refs, list | tuple) or not legal_refs:
+                    legal_refs = manifest.get("orden_aplicabilidad")
+                raw_attestation = {
+                    "family": _CASILLAS,
+                    "continuidad_id": identity,
+                    "from_revision": predecessor_revision_id,
+                    "to_revision": revision_id,
+                    "origin": member.get("continuidad_origin"),
+                    "evidence": member.get("continuidad_evidence"),
+                    "legal_refs": tuple(legal_refs) if isinstance(legal_refs, list | tuple) else legal_refs,
+                    "source_refs": tuple(source_refs) if isinstance(source_refs, list | tuple) else source_refs,
+                }
+                try:
+                    lineage_attestations.append(LineageAttestation.model_validate(raw_attestation))
+                except ValidationError:
+                    kept_pinned.append(identity)
+                    continue
             dropped.append(identity)
         else:
             kept_differs.append(identity)
@@ -1788,6 +1808,7 @@ def _plan_family_drop(
         kept_new=tuple(kept_new),
         kept_differs=tuple(kept_differs),
         kept_pinned=tuple(kept_pinned),
+        lineage_attestations=tuple(lineage_attestations),
         kept_no_identity=kept_no_identity,
     )
 
@@ -1820,6 +1841,8 @@ def _plan_edition_drop(
         drop = _plan_family_drop(
             family=family,
             revision_id=revision_id,
+            predecessor_revision_id=predecessor,
+            manifest=source.manifest,
             stated=stated,
             inherited=_materialised_members(inherited_table, family.section),
         )
@@ -1880,6 +1903,29 @@ def _rewrite_family_fragment(fragment: _MemberFragment, family: _DroppableFamily
 def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _DroppableFamily]) -> None:
     """Apply one edition's planned drops to a staged tree."""
     edition_dir = modelo_dir / "revisions" / edition.revision_id
+    attestations = tuple(attestation for drop in edition.families for attestation in drop.lineage_attestations)
+    if attestations:
+        manifest_path = edition_dir / _MANIFEST
+        text = manifest_path.read_text(encoding="utf-8")
+        for attestation in attestations:
+            block = [
+                f'[[revisions."{edition.revision_id}".lineage_attestations]]',
+                f'family = {json.dumps(attestation.family, ensure_ascii=False)}',
+                f'continuidad_id = {json.dumps(attestation.identity, ensure_ascii=False)}',
+                f'from_revision = {json.dumps(str(attestation.from_revision), ensure_ascii=False)}',
+                f'to_revision = {json.dumps(str(attestation.to_revision), ensure_ascii=False)}',
+                f'origin = {json.dumps(attestation.origin.value, ensure_ascii=False)}',
+            ]
+            if attestation.evidence is not None:
+                block.append(f'evidence = {json.dumps(attestation.evidence, ensure_ascii=False)}')
+            block.extend(
+                (
+                    f'legal_refs = {json.dumps(list(attestation.legal_refs), ensure_ascii=False)}',
+                    f'source_refs = {json.dumps(list(attestation.source_refs), ensure_ascii=False)}',
+                )
+            )
+            text = text.rstrip() + "\n\n" + "\n".join(block) + "\n"
+        manifest_path.write_text(text, encoding="utf-8", newline="\n")
     for drop in edition.families:
         if not drop.dropped:
             continue

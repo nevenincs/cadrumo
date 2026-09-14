@@ -1475,3 +1475,32 @@ entries = [
   { key = "pct", value_type = "decimal", value = "7.5" },
   { key = "supersedes_tier_default", value = true },
 ]
+
+[[fact.variants]]
+variant_id = "iva-rate-schedule:rate-role-catalogue:1995-01-01"
+selectors = [
+  { name = "scope", value = "rate_role_catalogue" },
+]
+date_axis = "devengo_date"
+valid_from = 1995-01-01
+legal_refs = ["ley-37-1992:art-90", "ley-37-1992:art-91"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "rate_role.order", value = "ordinary,coexisting-5,coexisting-2,coexisting-7.5" },
+  { key = "rate_role.default", value = "ordinary" },
+  { key = "rate_role.ordinary.value", value = "ordinary" },
+  { key = "rate_role.ordinary.is_default", value = "true" },
+  { key = "rate_role.ordinary.supersedes_tier_default", value = "false" },
+  { key = "rate_role.coexisting-5.value", value = "coexisting-5" },
+  { key = "rate_role.coexisting-5.is_default", value = "false" },
+  { key = "rate_role.coexisting-5.supersedes_tier_default", value = "true" },
+  { key = "rate_role.coexisting-2.value", value = "coexisting-2" },
+  { key = "rate_role.coexisting-2.is_default", value = "false" },
+  { key = "rate_role.coexisting-2.supersedes_tier_default", value = "true" },
+  { key = "rate_role.coexisting-7.5.value", value = "coexisting-7.5" },
+  { key = "rate_role.coexisting-7.5.is_default", value = "false" },
+  { key = "rate_role.coexisting-7.5.supersedes_tier_default", value = "true" },
+]

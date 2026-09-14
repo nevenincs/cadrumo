@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01234"
+continuidad_id = "01234"
+continuidad_origin = "seeded"
 number = "01234"
 section = ["liquidacion_iv", "resultado_de_la_autoliquidacion"]
 data_type = "money"

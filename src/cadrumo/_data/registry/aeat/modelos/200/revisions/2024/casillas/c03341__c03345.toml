@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03341"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-permanente-aumento"
 number = "03341"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03342"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-temporaria-ejercicio-aumento"
 number = "03342"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03343"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-temporaria-anteriores-aumento"
 number = "03343"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03344"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-saldo-inicial"
 number = "03344"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03345"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-saldo-final"
 number = "03345"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "aumento"]
 data_type = "money"

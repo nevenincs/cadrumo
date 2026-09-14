@@ -887,7 +887,22 @@ corpus_path = "corpus/aeat_official/instructions/modelo_296/files/modelo-296-pro
 sha256 = "1acee493b408c9aa4d6300847c7561268fc41bdc704d36349468f67678012c54"
 bytes = 54093
 retrieved_at = 2026-07-01
-applies_from = 2024-02-01
+# applies_from corrected to 2020-01-01. The bundled page contradicts the
+# previous date with the same evidence the modelo-190 correction was recorded
+# on (see aeat-modelo-190-procedure in irpf.toml): it carries the link title
+# "Modelo 296. Ejercicio 2020 y siguientes. Consultas y bajas de
+# declaraciones." -- the same sentence, in the same link, in the same position
+# as on 190, with only the modelo number changed. Leaving it at 2024-02-01 while 190
+# sits at 2020-01-01 on that identical string is an inconsistency in the corpus
+# rather than a difference between the documents.
+#
+# WHAT IS INFERRED HERE, stated so a reviewer can weigh it: the link scopes a
+# consultas-y-bajas SERVICE to ejercicio 2020 onward. Treating that as the
+# PROCEDURE DOCUMENT's own applicability window is an inference, and it is the
+# one the 190 correction already made rather than a new one. Anyone who thinks
+# it reasons too freely from a service scope to a document window should
+# revisit 190 first; these five stand or fall with it.
+applies_from = 2020-01-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI22.shtml"
 review_status = "pending_review"
 

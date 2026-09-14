@@ -9,12 +9,13 @@ continuity chains are keyed on the event:
 
 This package extracts the family from the registry authoring tree, derives
 those chain ids, and plans the stamps and evolution records a grounding
-campaign would author. It never writes into the registry, and it fails closed
-on the shapes that need a legal-identity judgment rather than guessing them.
+campaign would author. The explicit ``apply`` command is dry-run by default
+and writes only after its complete preflight succeeds; it fails closed on the
+shapes that need a legal-identity judgment rather than guessing them.
 
 Run via ``python -m dev.registry.aeip inventory`` for the event matrix,
-``check`` for the open adjudications (exits non-zero while any remain), or
-``plan`` for the chain plan.
+``check`` for the open adjudications (exits non-zero while any remain),
+``plan`` for the chain plan, or ``apply`` for a dry-run/apply report.
 
 Major declarations:
 

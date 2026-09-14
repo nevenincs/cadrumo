@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014B:00592"
+continuidad_id = "is-cuota-liquida"
 number = "00592"
 segmento = "DP200014B"
 section = ["liquidacion", "cuota_liquida"]

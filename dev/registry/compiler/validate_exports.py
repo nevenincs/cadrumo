@@ -21,6 +21,12 @@ revision, where the overlap check runs at layout resolution -- so a width
 contradiction is refused when the registry is validated, not when a taxpayer's
 export happens to resolve that one layout.
 
+The record-level member of the same family
+(:func:`~.validate_export_field_placement.validate_export_record_field_placement`,
+also extracted to its own module) asks what neither field check can: whether the
+record's fields, taken together, cover every position from the first onwards. It
+runs once per record here, over the fields this validator already walks.
+
 See Also:
     :func:`cadrumo.domain.calculations.registry.validate_revision_sections.validate_revision_definition`
         Per-revision dispatcher that invokes this export validator.
@@ -63,6 +69,11 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ._validate_helpers import missing_refs as _missing_refs
 from .corpus_catalogue import verify_source_file
 from .validate_evidence import EvidenceValidator
+from .validate_export_field_placement import (
+    PlacedSpan,
+    binding_export_spans,
+    validate_export_record_field_placement,
+)
 from .validate_export_field_widths import validate_draft_field_slot_width
 from .validate_projection_endpoints import validate_projection_endpoint_declarations
 
@@ -96,6 +107,7 @@ def validate_export_layout_section(
     the revision validation context.
     """
     failures: list[str] = []
+    binding_spans = binding_export_spans(revision)
     for layout in revision.export_layouts:
         owner = f"export {layout.id}"
         failures.extend(_missing_refs(prefix, owner, layout.legal_refs, legal_refs, "legal"))
@@ -114,6 +126,7 @@ def validate_export_layout_section(
                 prefix=prefix,
                 revision=revision,
                 record=record,
+                binding_spans=binding_spans,
                 casillas=casillas,
                 bindings=bindings,
                 legal_refs=legal_refs,
@@ -326,6 +339,7 @@ def validate_export_record(
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
     evidence: EvidenceValidator,
+    binding_spans: Mapping[str, tuple[PlacedSpan, ...]] | None = None,
 ) -> None:
     """Append failures for one export record declaration.
 
@@ -352,6 +366,13 @@ def validate_export_record(
                 f"{prefix}: export record {record.id!r} row_field_casilla_ids.{row_field} "
                 f"references unknown casilla {casilla_id!r}",
             )
+    failures.extend(
+        validate_export_record_field_placement(
+            prefix=prefix,
+            record=record,
+            binding_spans=binding_export_spans(revision) if binding_spans is None else binding_spans,
+        ),
+    )
     for field in record.fields:
         _validate_export_field(
             failures,

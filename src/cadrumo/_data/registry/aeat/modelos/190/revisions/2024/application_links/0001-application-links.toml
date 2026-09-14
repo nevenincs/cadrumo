@@ -1,3 +1,11 @@
+# A 2025-dated form and orden ground this 2024 edition, and that is correct
+# rather than a year mismatch: modelo 190 is an informativa, so the Orden
+# published at the close of the year governs the ejercicio just ended.
+# Orden HAC/1431/2025 and boe-modelo-190-2025-form are therefore the
+# authorities for ejercicio 2024. A sweep for a source year ahead of its
+# edition year will land on the source_refs below; this is the one it should
+# skip.
+
 [[revisions."2024".application_links]]
 id = "modelo-190-portal"
 surface = "portal"

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01192"
+continuidad_id = "is-correccion-dotaciones-deterioro-creditos-saldo-final-cumplido-condiciones"
 number = "01192"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 data_type = "money"

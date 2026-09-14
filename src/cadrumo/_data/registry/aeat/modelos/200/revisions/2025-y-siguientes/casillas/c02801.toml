@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02801"
+continuidad_id = "is-correccion-gastos-contrarios-ordenamiento-art15f-permanente-aumento"
+continuidad_origin = "seeded"
 number = "02801"
 section = ["gastos_de_actuaciones_contrarias_al_ordenamiento_j", "aumento"]
 data_type = "money"

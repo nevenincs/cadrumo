@@ -57,3 +57,471 @@ source_refs = ["aeat-modelo-193-procedure"]
 reason = "A projection endpoint admits one typed filing endpoint that an export record REPEATS. Modelo 193's record design declares three fixed records -- declarante, perceptor and the gastos relationship, none of which repeats a projection -- and no field of kind 'projection' exists in any authored surface. The family has no repeated endpoint to admit and nothing an entry here could name; authoring a repeated projection row into the layout is what would make this family apply."
 legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1"]
 source_refs = ["aeat-dr-193-2024", "aeat-dr-193-2025"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-telefono"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-contacto-nombre"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-numero-identificativo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-complementaria"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-sustitutiva"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declaracion-anterior-numero"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresadas-total"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gastos-total-declarante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "declarante-naturaleza"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "total-perceptores-count"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "base-retenciones-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "retenciones-ingresos-a-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-contributor-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-contributor-nombre"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "representante-legal-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "gasto-importe-anual"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-nif-representante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-name"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-mediador-flag"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-province"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-codigo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-codigo-emisor"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-naturaleza-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-pago"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-tipo-codigo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-codigo-cuenta"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-pendiente-flag"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "devengo-year"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-tipo-percepcion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-percepciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-reducciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-base-retenciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-porcentaje-retencion"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-penalizaciones"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-naturaleza-declarante"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-inicio-prestamo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-vencimiento-prestamo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-compensaciones"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-garantias"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-estatal"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-navarra"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-araba"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-gipuzkoa"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-retenciones-forales-bizkaia"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-ceuta-melilla-clave"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-numero-orden-193"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif-pagador-anterior"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-fecha-devengo"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]
+
+[[revisions."2025-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-clave-mercado"
+from_revision = "2024"
+to_revision = "2025-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2025", "boe-modelo-193-2011-form"]

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00459"
+continuidad_id = "00459"
 number = "00459"
 section = ["deducc_para_incentivar_determ_actividades", "2013_investigacion_y_desarrollo"]
 data_type = "money"

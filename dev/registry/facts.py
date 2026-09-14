@@ -79,6 +79,10 @@ REGISTRY_QUERY_SYMBOLS = frozenset(
         "EventFactQuery",
         "MultiOutputFactQuery",
         "RegistrySnapshot",
+        # Typed catalogue resolvers are query seams too: their implementation
+        # owns the MappingFactQuery, while the consumer intentionally imports
+        # only the narrow projection boundary.
+        "resolve_iva_deduction_catalogue",
     }
 )
 RETAIN_KINDS = frozenset(
@@ -679,12 +683,57 @@ def _observe_anchor(
     }
 
 
+def _source_identity_retirement_scope(row: Mapping[str, Any]) -> str | None:
+    """Return a nonblocking retirement scope only for complete relocation proof.
+
+    A missing enrichment declaration is not enough to infer that a symbol was
+    intentionally removed.  The row must preserve its source hashes and
+    explicit retirement evidence, name at least one destination, and record a
+    resolved consumer seam.  This deliberately derives the classification
+    from evidence shape and destination ownership rather than from candidate
+    IDs, so historical identity records remain auditable without becoming
+    false live-source errors.
+    """
+    closure = row.get("closure")
+    if not isinstance(closure, Mapping) or closure.get("source_disposition") != "removed":
+        return None
+    source_hashes = closure.get("source_hashes")
+    retirement_evidence = closure.get("retirement_evidence")
+    if not isinstance(source_hashes, list) or not source_hashes:
+        return None
+    if not isinstance(retirement_evidence, list) or not retirement_evidence:
+        return None
+
+    placement = closure.get("placement")
+    if not isinstance(placement, Mapping):
+        return None
+    destinations = placement.get("destinations")
+    consumer_resolution = placement.get("consumer_resolution")
+    if not isinstance(destinations, list) or not destinations:
+        return None
+    if not isinstance(consumer_resolution, Mapping) or consumer_resolution.get("resolved") is not True:
+        return None
+
+    destination_paths = [
+        destination.get("path")
+        for destination in destinations
+        if isinstance(destination, Mapping) and isinstance(destination.get("path"), str)
+    ]
+    if closure.get("contains_model_fact") is True or any(
+        "modelos" in {part.casefold() for part in PurePosixPath(path).parts}
+        for path in destination_paths
+    ):
+        return "modelo_registry"
+    return "facts_registry"
+
+
 def _source_scan(
     manifest: dict[str, Any],
     enrichment: dict[str, Any],
 ) -> dict[str, Any]:
     """Collect bounded source observations for every manifest evidence path."""
     relocations = _source_relocations(manifest.get("source_relocations"))
+    rows_by_id = {row["id"]: row for row in manifest["candidates"]}
     path_refs: dict[str, list[tuple[str, str]]] = {}
     identity_refs: dict[str, list[tuple[str, str]]] = {}
     declared_source_paths: set[str] = set()
@@ -757,6 +806,8 @@ def _source_scan(
     identity_matched = 0
     identity_missing = 0
     identity_drifted = 0
+    identity_retired_by_relocation = 0
+    retired_by_relocation_identities: list[dict[str, Any]] = []
     if enrichment["status"] == "ready":
         for candidate_id in sorted(enrichment["records"]):
             for declaration in enrichment["records"][candidate_id]["declarations"]:
@@ -825,8 +876,29 @@ def _source_scan(
                     status = "drifted"
                     identity_drifted += 1
                 else:
-                    status = "missing"
-                    identity_missing += 1
+                    retirement_scope = _source_identity_retirement_scope(rows_by_id[candidate_id])
+                    if retirement_scope is not None:
+                        status = "retired_by_relocation"
+                        identity_retired_by_relocation += 1
+                        retired_by_relocation_identities.append(
+                            {
+                                "candidate_id": candidate_id,
+                                "file": relative,
+                                "symbol": declaration["symbol"],
+                                "scope": declaration["scope"],
+                                "ast_node_kind": declaration["ast_node_kind"],
+                                "expected_source_span": declaration["source_span"],
+                                "retirement_scope": retirement_scope,
+                                "reason": (
+                                    "historical declaration is absent after an explicit source removal with "
+                                    "preserved source hashes, retirement evidence, a destination, and a "
+                                    "resolved consumer seam"
+                                ),
+                            }
+                        )
+                    else:
+                        status = "missing"
+                        identity_missing += 1
                 identity_observations.append(
                     {
                         "candidate_id": candidate_id,
@@ -837,6 +909,16 @@ def _source_scan(
                         "expected_source_span": declaration["source_span"],
                         "source_fingerprint_input": declaration["source_fingerprint_input"],
                         "identity_status": status,
+                        **(
+                            {
+                                "retirement_scope": retirement_scope,
+                                "retirement_reason": (
+                                    "explicit source removal has complete destination and consumer proof"
+                                ),
+                            }
+                            if status == "retired_by_relocation"
+                            else {}
+                        ),
                     }
                 )
 
@@ -918,12 +1000,16 @@ def _source_scan(
             "source_relocation_hash_mismatch_count": relocation_hash_mismatches,
             "closed_without_source_hash_count": closed_without_hash,
             "source_integrity_error_count": source_integrity_error_count,
-            "enrichment_declaration_count": (identity_matched + identity_missing + identity_drifted),
+            "enrichment_declaration_count": (
+                identity_matched + identity_missing + identity_drifted + identity_retired_by_relocation
+            ),
             "enrichment_identity_matched_count": identity_matched,
             "enrichment_identity_missing_count": identity_missing,
             "enrichment_identity_drifted_count": identity_drifted,
+            "enrichment_identity_retired_by_relocation_count": identity_retired_by_relocation,
             "enrichment_identity_error_count": identity_missing + identity_drifted,
         },
+        "retired_by_relocation_identities": retired_by_relocation_identities,
     }
 
 
@@ -4364,7 +4450,15 @@ def _discovery_scan(manifest: dict[str, Any]) -> dict[str, Any]:
         and isinstance(item.get("candidate_id"), str)
         and item.get("disposition") in {"registry_consumer", "relocated", "retained_mechanic", "not_a_fact"}
     }
-    candidates = discover_governed_literal_candidates(SOURCE_ROOT)
+    # The broad discovery helper is intentionally reusable and has a looser
+    # filesystem walk than this campaign.  Apply the same path predicate as
+    # the frozen universe before any candidate can become campaign work; this
+    # keeps test/dunder/private paths out without filtering production files.
+    candidates = [
+        candidate
+        for candidate in discover_governed_literal_candidates(SOURCE_ROOT)
+        if not _fd_excluded(PurePosixPath(candidate.path.replace("\\", "/")))
+    ]
     observations = [
         _candidate_payload(candidate)
         | {
@@ -4378,6 +4472,7 @@ def _discovery_scan(manifest: dict[str, Any]) -> dict[str, Any]:
     observations.extend(
         catalogue | {"ledger_context": catalogue["path"] in ledger_paths}
         for catalogue in _discover_tax_enum_catalogues(SOURCE_ROOT)
+        if not _fd_excluded(PurePosixPath(catalogue["path"].replace("\\", "/")))
     )
     observations.sort(key=lambda item: (item["path"], item["line"], item["candidate_id"]))
     for item in observations:
@@ -5781,6 +5876,91 @@ def _consumer_registry_resolution(
     return seam_present, seam_present, consumer_relative
 
 
+def _facts_publication_scan(
+    publication: Any,
+    destinations: list[dict[str, Any]],
+    destination_observations: list[dict[str, Any]],
+    *,
+    consumer_resolved: bool,
+) -> dict[str, Any]:
+    """Prove an optional facts-authority publication without publishing Modelos.
+
+    Placement rows can contain both governed fact destinations and Modelo
+    destinations.  The latter remain an independent, non-blocking publication
+    concern here: a facts-only closure is proven only by the explicit
+    ``publication.facts`` claim, the validated current facts authority, the
+    corresponding authored destinations, and the already-proven consumer seam.
+    """
+    claim = publication.get("facts") if isinstance(publication, dict) else None
+    result: dict[str, Any] = {
+        "claimed": isinstance(claim, dict),
+        "published": claim.get("published") if isinstance(claim, dict) else None,
+        "artifact": None,
+        "authority_status": "not-claimed",
+        "authority_fact_count": 0,
+        "declaration_ids": list(claim.get("declaration_ids", [])) if isinstance(claim, dict) else [],
+        "missing_destination_ids": [],
+        "missing_authority_ids": [],
+        "unverified_destination_ids": [],
+        "consumer_resolved": consumer_resolved,
+        "failure_reasons": [],
+        "verified": True,
+        "blocking": False,
+    }
+    if not isinstance(claim, dict) or claim.get("published") is not True:
+        return result
+
+    artifact_path, artifact_relative = _authority_path(
+        claim.get("artifact"),
+        label="placement publication.facts.artifact",
+    )
+    result["artifact"] = artifact_relative
+    frame, artifact_status, metadata = _load_v4_authority_frame(artifact_path)
+    result["authority_status"] = artifact_status
+    result["authority_fact_count"] = metadata.get("fact_count", 0)
+
+    facts_destinations: dict[str, dict[str, Any]] = {}
+    for destination, observation in zip(destinations, destination_observations, strict=True):
+        path_parts = {part.casefold() for part in PurePosixPath(destination["path"]).parts}
+        if "facts" not in path_parts:
+            continue
+        for declaration_id in destination["declaration_ids"]:
+            facts_destinations[declaration_id] = observation
+
+    declaration_ids = result["declaration_ids"]
+    result["missing_destination_ids"] = [
+        declaration_id for declaration_id in declaration_ids if declaration_id not in facts_destinations
+    ]
+    result["unverified_destination_ids"] = [
+        declaration_id
+        for declaration_id in declaration_ids
+        if declaration_id in facts_destinations and not facts_destinations[declaration_id]["verified"]
+    ]
+    raw_facts = frame.get("raw_facts") if isinstance(frame, dict) else None
+    result["missing_authority_ids"] = [
+        declaration_id
+        for declaration_id in declaration_ids
+        if not isinstance(raw_facts, dict) or not isinstance(raw_facts.get(declaration_id), dict)
+    ]
+    reasons: list[str] = []
+    if artifact_path.resolve() != BUNDLED_AUTHORITY_ARTIFACT.resolve():
+        reasons.append("facts_publication_artifact_is_not_current_bundled_authority")
+    if artifact_status != "ok":
+        reasons.append("facts_publication_authority_unreadable_or_invalid")
+    if result["missing_destination_ids"]:
+        reasons.append("facts_publication_destination_missing")
+    if result["unverified_destination_ids"]:
+        reasons.append("facts_publication_destination_unverified")
+    if result["missing_authority_ids"]:
+        reasons.append("facts_publication_payload_missing")
+    if not consumer_resolved:
+        reasons.append("facts_publication_consumer_unresolved")
+    result["failure_reasons"] = reasons
+    result["verified"] = not reasons
+    result["blocking"] = not result["verified"]
+    return result
+
+
 def _placement_scan(
     row: dict[str, Any],
     source_scan: dict[str, Any],
@@ -5908,6 +6088,36 @@ def _placement_scan(
         destination_observations.append(observation)
 
     destination_verified = bool(destination_observations) and all(item["verified"] for item in destination_observations)
+    fact_destination_observations = [
+        observation
+        for destination, observation in zip(placement["destinations"], destination_observations, strict=True)
+        if "facts" in {part.casefold() for part in PurePosixPath(destination["path"]).parts}
+    ]
+    modelo_destination_observations = [
+        observation
+        for destination, observation in zip(placement["destinations"], destination_observations, strict=True)
+        if "modelos" in {part.casefold() for part in PurePosixPath(destination["path"]).parts}
+    ]
+    fact_destination_verified = bool(fact_destination_observations) and all(
+        item["verified"] for item in fact_destination_observations
+    )
+    modelo_destination_verified = bool(modelo_destination_observations) and all(
+        item["verified"] for item in modelo_destination_observations
+    )
+    unclassified_destination_observations = [
+        observation
+        for destination, observation in zip(placement["destinations"], destination_observations, strict=True)
+        if not (
+            {part.casefold() for part in PurePosixPath(destination["path"]).parts}
+            & {"facts", "modelos"}
+        )
+    ]
+    facts_publication = _facts_publication_scan(
+        placement["publication"],
+        placement["destinations"],
+        destination_observations,
+        consumer_resolved=consumer_resolved,
+    )
     failure_reasons: list[str] = []
     if not source_ok:
         failure_reasons.append("source_missing_or_unreadable_or_unparsed")
@@ -5929,16 +6139,34 @@ def _placement_scan(
         and not registry_query_present
     ):
         failure_reasons.append("registry_query_symbol_missing")
-    if not destination_verified:
+    # A facts-only closure must not inherit the historical Modelo registry
+    # placement denominator.  Those observations remain visible below, but
+    # only authored governed-fact destinations (and any unclassified
+    # destination, which is still a contract error) can block this gate.
+    if unclassified_destination_observations:
+        destination_gate_verified = destination_verified
+    elif fact_destination_observations:
+        destination_gate_verified = fact_destination_verified
+    else:
+        destination_gate_verified = True
+    if not destination_gate_verified:
         failure_reasons.append("canonical_destination_missing_or_incomplete")
+    if facts_publication["blocking"]:
+        failure_reasons.append("facts_publication_unverified")
     verified = bool(
         placement["publication"]["published"] is False
         and source_ok
         and forbidden_symbols_absent
         and forbidden_literals_absent
         and (todo_present or consumer_resolved)
-        and destination_verified
+        and destination_gate_verified
+        and not facts_publication["blocking"]
     )
+    modelo_destinations = [
+        destination
+        for destination in placement["destinations"]
+        if "modelos" in {part.casefold() for part in PurePosixPath(destination["path"]).parts}
+    ]
     return {
         "candidate_id": row["id"],
         "item_id": _item_id(row),
@@ -5955,9 +6183,43 @@ def _placement_scan(
         "registry_query_present": registry_query_present,
         "destinations": destination_observations,
         "destination_verified": destination_verified,
+        "fact_destination_verified": fact_destination_verified,
+        "modelo_destination_verified": modelo_destination_verified,
+        "modelo_destination_error_count": sum(
+            not item["verified"] for item in modelo_destination_observations
+        ),
+        "modelo_destinations_nonblocking": True,
+        "destination_gate_verified": destination_gate_verified,
+        "facts_publication": facts_publication,
+        "modelo_publication": {
+            "published": placement["publication"].get("model_registry_published"),
+            "destination_count": len(modelo_destinations),
+            "destination_verified": modelo_destination_verified,
+            "blocking": False,
+        },
         "failure_reasons": failure_reasons,
         "verified": verified,
     }
+
+
+def _authority_claim_scope(authority: dict[str, Any]) -> str:
+    """Classify an authority claim by its authored destination family.
+
+    Governed facts and Modelo-registry declarations share the published
+    authority artifact, but they are proved by different contracts. A claim
+    whose authored destination is under ``_data/registry/.../modelos`` is a
+    Modelo placement/exclusion observation, not a facts-registry authority
+    claim. Keep this derived from the destination path so the separation does
+    not depend on a ledger row identifier or a hardcoded model list.
+    """
+    authoring_paths = authority.get("authoring_paths", ())
+    if isinstance(authoring_paths, (list, tuple)) and any(
+        "modelos" in {part.casefold() for part in PurePosixPath(path).parts}
+        for path in authoring_paths
+        if isinstance(path, str)
+    ):
+        return "modelo_registry"
+    return "facts_registry"
 
 
 def _authority_scan(
@@ -5975,6 +6237,7 @@ def _authority_scan(
     false.
     """
     observations: list[dict[str, Any]] = []
+    excluded_modelo_authority_observations: list[dict[str, Any]] = []
     placement_observations: list[dict[str, Any]] = []
     frame_cache: dict[str, tuple[dict[str, Any] | None, str, dict[str, Any]]] = {}
     for row in manifest["candidates"]:
@@ -5985,6 +6248,7 @@ def _authority_scan(
             placement_observations.append(_placement_scan(row, source_scan))
             continue
         authority = closure["authority"]
+        authority_scope = _authority_claim_scope(authority)
         artifact_path, artifact_relative = _authority_path(
             authority["artifact"],
             label=f"{row['id']}: closure.authority.artifact",
@@ -6057,37 +6321,57 @@ def _authority_scan(
                 source_retirement_evidence,
             )
         )
-        observations.append(
-            {
-                "candidate_id": row["id"],
-                "item_id": _item_id(row),
-                "status": row["status"],
-                "artifact": artifact_relative,
-                "declared_digest": declared_digest,
-                "observed_digest": artifact_actual_digest,
-                "artifact_status": artifact_status,
-                "artifact_payload_sha256": recorded_payload_sha256,
-                "artifact_payload_sha256_recomputed": computed_payload_sha256,
-                "payload_digest_proof": payload_digest_proof,
-                "identity_digest": identity_digest,
-                "identity_digest_proof": identity_digest_proof,
-                "authoring": authoring_observations,
-                "authoring_presence": authoring_presence,
-                "authoring_fact_proof": authoring_fact_proof,
-                "governed_fact": governed_fact,
-                "governed_fact_presence": governed_fact["present"],
-                "legacy_metadata_stale": legacy_metadata_stale,
-                "parity_declared": authority["parity"],
-                "duplicate_retired_declared": authority["duplicate_retired"],
-                "source_retirement_evidence": source_retirement_evidence,
-                "verified": verified,
-            }
-        )
+        observation = {
+            "candidate_id": row["id"],
+            "item_id": _item_id(row),
+            "status": row["status"],
+            "authority_scope": authority_scope,
+            "artifact": artifact_relative,
+            "declared_digest": declared_digest,
+            "observed_digest": artifact_actual_digest,
+            "artifact_status": artifact_status,
+            "artifact_payload_sha256": recorded_payload_sha256,
+            "artifact_payload_sha256_recomputed": computed_payload_sha256,
+            "payload_digest_proof": payload_digest_proof,
+            "identity_digest": identity_digest,
+            "identity_digest_proof": identity_digest_proof,
+            "authoring": authoring_observations,
+            "authoring_presence": authoring_presence,
+            "authoring_fact_proof": authoring_fact_proof,
+            "governed_fact": governed_fact,
+            "governed_fact_presence": governed_fact["present"],
+            "legacy_metadata_stale": legacy_metadata_stale,
+            "parity_declared": authority["parity"],
+            "duplicate_retired_declared": authority["duplicate_retired"],
+            "source_retirement_evidence": source_retirement_evidence,
+            "verified": verified,
+        }
+        if authority_scope == "modelo_registry":
+            # This proof remains intentionally false: a Modelo declaration is
+            # not facts-authority proof. It is retained for nonblocking
+            # placement/exclusion accounting instead of being counted as a
+            # governed-fact authority error.
+            observation["nonblocking_exclusion"] = True
+            observation["exclusion_reason"] = (
+                "authored destination is under the Modelo registry; governed-fact authority proof is not applicable"
+            )
+            excluded_modelo_authority_observations.append(observation)
+        else:
+            observations.append(observation)
 
     failed = sum(not item["verified"] for item in observations)
     placement_failed = sum(not item["verified"] for item in placement_observations)
+    facts_publication_claims = [
+        item["facts_publication"]
+        for item in placement_observations
+        if item.get("facts_publication", {}).get("claimed") is True
+    ]
     return {
         "observations": sorted(observations, key=lambda item: item["item_id"]),
+        "excluded_modelo_authority_observations": sorted(
+            excluded_modelo_authority_observations,
+            key=lambda item: item["item_id"],
+        ),
         "placement_observations": sorted(
             placement_observations,
             key=lambda item: item["item_id"],
@@ -6103,9 +6387,21 @@ def _authority_scan(
             "legacy_metadata_stale_count": sum(bool(item["legacy_metadata_stale"]) for item in observations),
             "authority_verified_count": sum(item["verified"] for item in observations),
             "authority_integrity_error_count": failed,
+            "excluded_modelo_authority_claim_count": len(excluded_modelo_authority_observations),
+            "excluded_modelo_authority_verified_count": sum(
+                item["verified"] for item in excluded_modelo_authority_observations
+            ),
+            "excluded_modelo_authority_error_count": sum(
+                not item["verified"] for item in excluded_modelo_authority_observations
+            ),
             "placement_claim_count": len(placement_observations),
             "placement_verified_count": sum(item["verified"] for item in placement_observations),
             "placement_integrity_error_count": placement_failed,
+            "facts_publication_claim_count": len(facts_publication_claims),
+            "facts_publication_verified_count": sum(item["verified"] for item in facts_publication_claims),
+            "facts_publication_integrity_error_count": sum(
+                not item["verified"] for item in facts_publication_claims
+            ),
         },
     }
 
@@ -6379,6 +6675,34 @@ def _validate_placement(candidate_id: str, closure: dict[str, Any]) -> None:
     publication = placement.get("publication")
     if not isinstance(publication, dict) or publication.get("published") is not False:
         raise ManifestError(f"{label}.publication.published must be false")
+    facts_publication = publication.get("facts")
+    if facts_publication is not None:
+        if not isinstance(facts_publication, dict):
+            raise ManifestError(f"{label}.publication.facts must be an object when present")
+        if type(facts_publication.get("published")) is not bool:
+            raise ManifestError(f"{label}.publication.facts.published must be boolean")
+        if facts_publication.get("published") is True:
+            artifact = facts_publication.get("artifact")
+            if not isinstance(artifact, str) or not artifact.strip():
+                raise ManifestError(f"{label}.publication.facts.artifact is required when published")
+            _authority_path(
+                artifact,
+                label=f"{label}.publication.facts.artifact",
+            )
+            declaration_ids = facts_publication.get("declaration_ids")
+            if not isinstance(declaration_ids, list) or not declaration_ids:
+                raise ManifestError(
+                    f"{label}.publication.facts.declaration_ids must be non-empty when published",
+                )
+            if any(not isinstance(value, str) or not value.strip() for value in declaration_ids):
+                raise ManifestError(
+                    f"{label}.publication.facts.declaration_ids must contain non-empty strings",
+                )
+            if len(declaration_ids) != len(set(declaration_ids)):
+                raise ManifestError(f"{label}.publication.facts.declaration_ids must be unique")
+    model_registry_published = publication.get("model_registry_published")
+    if model_registry_published is not None and type(model_registry_published) is not bool:
+        raise ManifestError(f"{label}.publication.model_registry_published must be boolean when present")
 
     destinations = placement.get("destinations")
     if not isinstance(destinations, list) or not destinations:
@@ -6726,6 +7050,7 @@ def _counts(
     todo_debt: dict[str, Any],
     discovery_scan: dict[str, Any],
     consumer_fact_scan: dict[str, Any],
+    facts_publication_signal: dict[str, Any],
 ) -> dict[str, Any]:
     candidates = manifest["candidates"]
     actionable = [row for row in candidates if row["status"] in BLOCKING_STATUSES]
@@ -6764,6 +7089,12 @@ def _counts(
     universe_counts = universe_scan["counts"]
     discovery_counts = discovery_scan["counts"]
     consumer_counts = consumer_fact_scan["counts"]
+    facts_publication_counts = facts_publication_signal.get("counts", {})
+    fact_accounting_error_count = facts_publication_counts.get("fact_accounting_error_count", 0)
+    if type(fact_accounting_error_count) is not int or fact_accounting_error_count < 0:
+        # A malformed auxiliary signal must fail closed rather than silently
+        # disappearing from the campaign gates.
+        fact_accounting_error_count = 1
     identity_ids = [_item_id(row) for row in candidates]
     identity_count = len(identity_ids)
     duplicate_identity_count = identity_count - len(set(identity_ids))
@@ -6800,6 +7131,7 @@ def _counts(
         + discovery_counts["discovery_stale_disposition_count"]
         + consumer_counts["consumer_fact_blocker_count"]
         + consumer_counts["consumer_fact_error_count"]
+        + fact_accounting_error_count
     )
     ledger_coverage_complete = coverage_gap_count == 0 and coverage_overrun_count == 0
     frozen_coverage_complete = universe_reconciliation["complete"]
@@ -6819,9 +7151,12 @@ def _counts(
         + duplicate_identity_count
         + discovery_counts["discovery_stale_disposition_count"]
         + consumer_counts["consumer_fact_error_count"]
+        + fact_accounting_error_count
     )
     publication_blocker_count = (
-        authority_counts["authority_integrity_error_count"] + consumer_counts["consumer_fact_blocker_count"]
+        authority_counts["authority_integrity_error_count"]
+        + consumer_counts["consumer_fact_blocker_count"]
+        + fact_accounting_error_count
     )
     zero_target = (
         campaign_work_remaining_count == 0
@@ -6876,6 +7211,7 @@ def _counts(
         "campaign_work_remaining_count": campaign_work_remaining_count,
         "accounting_error_count": accounting_error_count,
         "publication_blocker_count": publication_blocker_count,
+        "fact_accounting_error_count": fact_accounting_error_count,
         "source_integrity_ok": source_counts["source_integrity_error_count"] == 0,
         "authority_integrity_ok": authority_counts["authority_integrity_error_count"] == 0,
         "consumer_fact_integrity_ok": consumer_counts["consumer_fact_blocker_count"] == 0
@@ -6922,9 +7258,10 @@ def _exit_code(signal: dict[str, Any]) -> int:
         or counts["coverage_gap_count"]
         or counts["coverage_overrun_count"]
         or counts["universe_coverage_error_count"]
+        or counts["discovery_stale_disposition_count"]
     ):
         return 3
-    if counts["authority_integrity_error_count"]:
+    if counts["authority_integrity_error_count"] or counts["fact_accounting_error_count"]:
         return 4
     return 0
 
@@ -6939,6 +7276,7 @@ def _signal(
     enrichment: dict[str, Any],
     discovery_scan: dict[str, Any],
     consumer_fact_scan: dict[str, Any],
+    facts_publication_signal: dict[str, Any],
 ) -> dict[str, Any]:
     todo_debt = _todo_debt_scan(manifest, universe_scan)
     counts = _counts(
@@ -6951,6 +7289,7 @@ def _signal(
         todo_debt,
         discovery_scan,
         consumer_fact_scan,
+        facts_publication_signal,
     )
     items = [
         {
@@ -6992,7 +7331,8 @@ def _signal(
                         "declaration_count": len(enrichment["records"][row["id"]]["declarations"]),
                         "canonical_actionable": enrichment["records"][row["id"]].get("canonical_actionable"),
                         "identity_error": any(
-                            item["candidate_id"] == row["id"] and item["identity_status"] != "matched"
+                            item["candidate_id"] == row["id"]
+                            and item["identity_status"] in {"missing", "drifted"}
                             for item in source_scan["identities"]
                         ),
                     }
@@ -7045,11 +7385,34 @@ def _signal(
                 item["expected_source_span"],
             ),
         ),
+        "retired_by_relocation_identity_observations": sorted(
+            source_scan["retired_by_relocation_identities"],
+            key=lambda item: (
+                item["candidate_id"],
+                item["file"],
+                item["scope"],
+                item["symbol"],
+                item["ast_node_kind"],
+                item["expected_source_span"],
+            ),
+        ),
         "authority_observations": authority_scan["observations"],
+        "excluded_modelo_authority_observations": authority_scan[
+            "excluded_modelo_authority_observations"
+        ],
         "placement_observations": authority_scan["placement_observations"],
         "consumer_fact_observations": consumer_fact_scan["observations"],
         "consumer_fact_blockers": consumer_fact_scan["blockers"],
         "consumer_fact_scan_errors": consumer_fact_scan["errors"],
+        "facts_publication_accounting": {
+            "fact_accounting_error_count": counts["fact_accounting_error_count"],
+            "facts_publication_blocker_count": facts_publication_signal.get("counts", {}).get(
+                "facts_publication_blocker_count", 0
+            ),
+            "published_fact_payload_stale_count": facts_publication_signal.get("counts", {}).get(
+                "published_fact_payload_stale_count", 0
+            ),
+        },
         "discovery": {
             "counts": discovery_scan["counts"],
             "untriaged": discovery_scan["untriaged"],
@@ -7098,6 +7461,16 @@ def _human(signal: dict[str, Any]) -> str:
     counts = signal["counts"]
     category_counts = counts["actionable_by_category"]
     status_counts = counts["status_counts"]
+    stale_disposition_ids = [
+        value
+        for value in signal.get("discovery", {}).get("stale_disposition_ids", [])
+        if isinstance(value, str)
+    ]
+    stale_disposition_line = (
+        f"stale discovery dispositions: {counts['discovery_stale_disposition_count']}"
+    )
+    if stale_disposition_ids:
+        stale_disposition_line += "; ids=" + ", ".join(stale_disposition_ids)
     lines = [
         "registry fact-boundary signal",
         "=============================",
@@ -7105,6 +7478,19 @@ def _human(signal: dict[str, Any]) -> str:
         f"campaign_work={counts['campaign_work_remaining_count']}, "
         f"publication={counts['publication_blocker_count']}, "
         f"accounting={counts['accounting_error_count']}",
+        "facts-only authored/bundled accounting: "
+        f"errors={counts['fact_accounting_error_count']}",
+        stale_disposition_line,
+        "accounting components: "
+        f"source_integrity={counts['source_integrity_error_count']}, "
+        f"coverage_gap={counts['coverage_gap_count']}, "
+        f"coverage_overrun={counts['coverage_overrun_count']}, "
+        f"universe_coverage={counts['universe_coverage_error_count']}, "
+        f"unowned={counts['unowned_count']}, "
+        f"duplicate_identity={counts['duplicate_identity_count']}, "
+        f"stale_discovery_dispositions={counts['discovery_stale_disposition_count']}, "
+        f"consumer_errors={counts['consumer_fact_error_count']}, "
+        f"facts_only={counts['fact_accounting_error_count']}",
         f"ledger rows: {counts['total_ledger_rows']}",
         f"declared-open ledger rows: {counts['actionable_count']}",
         f"tracked rows requiring work: {counts['tracked_row_work_count']}",
@@ -7124,6 +7510,19 @@ def _human(signal: dict[str, Any]) -> str:
         f"authority_errors={counts['authority_integrity_error_count']}, "
         f"placement_errors={counts.get('placement_integrity_error_count', 0)}, "
         f"universe_errors={counts['universe_coverage_error_count']}",
+        "source identity retirements: "
+        f"total={counts.get('enrichment_identity_retired_by_relocation_count', 0)} "
+        "(nonblocking; historical identity evidence retained)",
+        "facts-only placement publication: "
+        f"claims={counts.get('facts_publication_claim_count', 0)}, "
+        f"verified={counts.get('facts_publication_verified_count', 0)}, "
+        f"errors={counts.get('facts_publication_integrity_error_count', 0)} "
+        "(Modelo-registry publication is reported separately and nonblocking)",
+        "excluded Modelo authority claims: "
+        f"claims={counts.get('excluded_modelo_authority_claim_count', 0)}, "
+        f"verified={counts.get('excluded_modelo_authority_verified_count', 0)}, "
+        f"errors={counts.get('excluded_modelo_authority_error_count', 0)} "
+        "(nonblocking; not governed-fact authority proof)",
         "governed consumer facts: "
         f"required={counts['consumer_fact_required_count']}, "
         f"callsites={counts['consumer_fact_callsite_count']}, "
@@ -7288,6 +7687,7 @@ def main(argv: list[str] | None = None) -> int:
             universe_scan,
         )
         consumer_fact_scan = _consumer_fact_scan(manifest, universe_scan)
+        facts_publication_signal = _facts_only_signal()
         discovery_scan = _discovery_scan(manifest)
         signal = _signal(
             manifest,
@@ -7299,6 +7699,7 @@ def main(argv: list[str] | None = None) -> int:
             enrichment,
             discovery_scan,
             consumer_fact_scan,
+            facts_publication_signal,
         )
     except ManifestError as exc:
         print(f"fact-relocation signal error: {exc}", file=sys.stderr)

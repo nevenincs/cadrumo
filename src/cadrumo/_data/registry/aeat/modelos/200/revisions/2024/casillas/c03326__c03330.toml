@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03326"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-permanente-disminucion"
 number = "03326"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
 data_type = "money"
@@ -11,6 +12,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03327"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-temporaria-ejercicio-disminucion"
 number = "03327"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
 data_type = "money"
@@ -22,6 +24,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03328"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-temporaria-anteriores-disminucion"
 number = "03328"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
 data_type = "money"
@@ -33,6 +36,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03329"
+continuidad_id = "03329"
 number = "03329"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
 data_type = "money"
@@ -42,6 +46,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03330"
+continuidad_id = "03330"
 number = "03330"
 section = ["operaciones_a_plazos_dt_1a_lis", "disminucion"]
 data_type = "money"

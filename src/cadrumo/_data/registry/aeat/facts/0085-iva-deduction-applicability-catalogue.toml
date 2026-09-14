@@ -21,6 +21,9 @@ required_text = ["Modelo 303"]
 [fact.variants.payload]
 kind = "mapping"
 entries = [
+  { key = "kind.order", value = "domestic_current,domestic_investment,import_current,import_investment,intra_eu_current,intra_eu_investment,reagp_compensation,rectification,investment_goods_regularisation" },
+  { key = "evidence_authority.order", value = "invoice_evidence,customs_declaration,intra_eu_self_assessment,reagp_receipt,rectification_evidence,bienes_inversion_register" },
+  { key = "evidence_authority.invoice", value = "invoice_evidence" },
   { key = "category.domestic", value = "domestic_general,domestic_reduced,domestic_super_reduced,domestic_zero,domestic_reverse_charge" },
   { key = "category.intra_eu", value = "intra_community_acquisition_reverse_charge,intra_community_service_acquisition_reverse_charge" },
   { key = "category.import", value = "import_third_country" },

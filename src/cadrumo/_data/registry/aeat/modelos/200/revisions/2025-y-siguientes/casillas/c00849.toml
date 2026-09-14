@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00849"
+continuidad_id = "00849"
+continuidad_origin = "seeded"
 number = "00849"
 section = ["deducciones_doble_imposicion_internacional_rdleg_4", "di_internacional_2006"]
 data_type = "money"

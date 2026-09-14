@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01020"
+continuidad_id = "is-conversion-aid-abono"
+continuidad_origin = "seeded"
 number = "01020"
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "abono_por_conversion_de_activos_por_impuesto_difer"]
 data_type = "money"

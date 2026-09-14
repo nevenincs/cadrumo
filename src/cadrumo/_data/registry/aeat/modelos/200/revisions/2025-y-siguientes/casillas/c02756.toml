@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02756"
+continuidad_id = "is-correccion-subvenciones-publicas-no-integrables-art14-8-permanente-disminucion"
+continuidad_origin = "seeded"
 number = "02756"
 section = ["subvenciones_publicas_incluidas_en_el_resultado_de", "disminucion"]
 data_type = "money"

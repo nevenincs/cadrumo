@@ -283,6 +283,34 @@ def test_revision_validation_accepts_disjoint_windows_with_shared_period_selecto
     assert validate_revision_windows(mutated) == []
 
 
+def test_revision_validation_separates_meeting_windows_from_a_single_shared_day() -> None:
+    """The window guard reads the canonical inclusive-bounds predicate.
+
+    Windows that meet end-to-start are a temporal succession and stay silent
+    however identical their period selectors; windows sharing even one day are
+    a genuine simultaneity and must be reported.
+    """
+
+    modelo = _committed_modelo_100()
+    template = modelo.revisions["2025"]
+
+    def _pair(later_valid_from: date) -> ModeloDefinition:
+        revisions = (
+            template.model_copy(
+                update={"id": "window-a", "valid_from": date(2023, 1, 1), "valid_to": date(2025, 2, 2)},
+            ),
+            template.model_copy(
+                update={"id": "window-b", "valid_from": later_valid_from, "valid_to": None},
+            ),
+        )
+        return modelo.model_copy(update={"revisions": {revision.id: revision for revision in revisions}})
+
+    assert validate_revision_windows(_pair(date(2025, 2, 3))) == []
+    assert validate_revision_windows(_pair(date(2025, 2, 2))) == [
+        "modelo 100: revisions 'window-a' and 'window-b' overlap on period selector",
+    ]
+
+
 def _declared_filing_windows() -> list[tuple[str, str, DeadlineWindowDefinition]]:
     """``(modelo id, revision id, window)`` for every filing window the corpus declares."""
     modelos, _catalogues = _committed_registry_tree()

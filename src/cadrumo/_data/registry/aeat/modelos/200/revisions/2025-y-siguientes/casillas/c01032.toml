@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01032"
+continuidad_id = "is-reserva-capitalizacion-importe"
+continuidad_origin = "seeded"
 number = "01032"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

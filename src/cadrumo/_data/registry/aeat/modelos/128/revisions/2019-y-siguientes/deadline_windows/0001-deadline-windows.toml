@@ -4,8 +4,8 @@ filing_year = 2025
 period = "2025 1T"
 period_kind = "quarterly"
 opens_on = 2025-04-01
-closes_on = 2025-04-21
-legal_refs = ["orden-eha-3435-2007:anexo-v"]
+closes_on = 2025-04-20
+legal_refs = ["orden-eha-3435-2007:anexo-v", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-128-procedure"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -14,8 +14,8 @@ filing_year = 2025
 period = "2025 2T"
 period_kind = "quarterly"
 opens_on = 2025-07-01
-closes_on = 2025-07-21
-legal_refs = ["orden-eha-3435-2007:anexo-v"]
+closes_on = 2025-07-20
+legal_refs = ["orden-eha-3435-2007:anexo-v", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-128-procedure"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -24,8 +24,8 @@ filing_year = 2025
 period = "2025 3T"
 period_kind = "quarterly"
 opens_on = 2025-10-01
-closes_on = 2025-10-21
-legal_refs = ["orden-eha-3435-2007:anexo-v"]
+closes_on = 2025-10-20
+legal_refs = ["orden-eha-3435-2007:anexo-v", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-128-procedure"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -34,7 +34,7 @@ filing_year = 2025
 period = "2025 4T"
 period_kind = "quarterly"
 opens_on = 2026-01-01
-closes_on = 2026-01-21
-legal_refs = ["orden-eha-3435-2007:anexo-v"]
+closes_on = 2026-01-20
+legal_refs = ["orden-eha-3435-2007:anexo-v", "rd-439-2007:art-108"]
 source_refs = ["aeat-modelo-128-procedure"]
 

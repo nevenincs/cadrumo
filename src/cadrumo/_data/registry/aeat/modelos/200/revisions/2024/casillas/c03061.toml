@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03061"
+continuidad_id = "is-correccion-impuesto-extranjero-art32-1-permanente-aumento"
 number = "03061"
 section = ["impuesto_extranjero_sobre_los_beneficios_con_cargo", "aumento"]
 data_type = "money"

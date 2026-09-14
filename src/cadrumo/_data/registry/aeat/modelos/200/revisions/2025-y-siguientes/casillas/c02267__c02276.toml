@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02267"
+continuidad_id = "02267"
+continuidad_origin = "seeded"
 number = "02267"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02268"
+continuidad_id = "02268"
+continuidad_origin = "seeded"
 number = "02268"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02269"
+continuidad_id = "02269"
+continuidad_origin = "seeded"
 number = "02269"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02270"
+continuidad_id = "02270"
+continuidad_origin = "seeded"
 number = "02270"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -36,6 +44,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02271"
+continuidad_id = "02271"
+continuidad_origin = "seeded"
 number = "02271"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -45,6 +55,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02272"
+continuidad_id = "02272"
+continuidad_origin = "seeded"
 number = "02272"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -54,6 +66,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02273"
+continuidad_id = "02273"
+continuidad_origin = "seeded"
 number = "02273"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -63,6 +77,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02274"
+continuidad_id = "02274"
+continuidad_origin = "seeded"
 number = "02274"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -72,6 +88,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02275"
+continuidad_id = "02275"
+continuidad_origin = "seeded"
 number = "02275"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"
@@ -81,6 +99,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-130"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02276"
+continuidad_id = "02276"
+continuidad_origin = "seeded"
 number = "02276"
 section = ["conversion_activos_impuesto_diferido_credito_exigi", "activos_impuesto_diferido_aid_art_130_lis"]
 data_type = "money"

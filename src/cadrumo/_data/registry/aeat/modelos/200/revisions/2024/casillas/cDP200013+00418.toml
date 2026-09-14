@@ -10,6 +10,7 @@
 # id, never the bare number.
 [[revisions."2024".casillas]]
 id = "DP200013:00418"
+continuidad_id = "is-correcciones-disminuciones-total"
 number = "00418"
 segmento = "DP200013"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]

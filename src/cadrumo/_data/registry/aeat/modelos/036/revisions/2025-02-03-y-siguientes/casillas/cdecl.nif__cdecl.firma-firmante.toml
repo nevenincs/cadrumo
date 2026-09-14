@@ -94,6 +94,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla: the three fields are composite components of a single fecha.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.fecha-efectiva-cese"
+continuidad_id = "decl-fecha-efectiva-cese"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:37 (sha256 3ecea6c06e3d) box [141] over 3 printed components @189+8 (30 189 2 Num Modificación. Fecha efectiva del cese. Día [141]) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:61 (sha256 791479fbf9e9) box [141] over 3 printed components @189+8 (30 189 2 Num Modificación. Fecha efectiva del cese. Día [141])."
 number = "141"
 section = ["declaracion", "causas", "modificacion"]
 data_type = "date"
@@ -128,6 +131,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla, as [141] above.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "decl.fecha-efectiva-baja"
+continuidad_id = "decl-fecha-efectiva-baja"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:42 (sha256 3ecea6c06e3d) box [152] over 3 printed components @199+8 (35 199 2 Num Baja. Fecha efectiva de la baja. Día [152] *) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:66 (sha256 791479fbf9e9) box [152] over 3 printed components @199+8 (35 199 2 Num Baja. Fecha efectiva de la baja. Día [152])."
 number = "152"
 section = ["declaracion", "causas", "baja"]
 data_type = "date"

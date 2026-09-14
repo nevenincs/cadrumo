@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00618"
+continuidad_id = "is-ecpn-otras-variaciones-importe"
+continuidad_origin = "seeded"
 number = "00618"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
@@ -22,6 +24,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00620"
+continuidad_id = "00620"
+continuidad_origin = "seeded"
 number = "00620"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
@@ -31,6 +35,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00621"
+continuidad_id = "00621"
+continuidad_origin = "seeded"
 number = "00621"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
@@ -40,6 +46,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00622"
+continuidad_id = "00622"
+continuidad_origin = "seeded"
 number = "00622"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
@@ -49,6 +57,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00623"
+continuidad_id = "00623"
+continuidad_origin = "seeded"
 number = "00623"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"
@@ -58,6 +68,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "00624"
+continuidad_id = "00624"
+continuidad_origin = "seeded"
 number = "00624"
 section = ["estado_de_cambios_patrimonio_neto_ii", "otras_variaciones_del_patrimonio_neto"]
 data_type = "money"

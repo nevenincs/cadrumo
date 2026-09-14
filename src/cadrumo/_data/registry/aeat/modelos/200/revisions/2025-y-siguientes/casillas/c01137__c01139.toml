@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01137"
+continuidad_id = "is-reserva-capitalizacion-derecho-generado"
+continuidad_origin = "seeded"
 number = "01137"
 section = ["reserva_capitalizacion", "total"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-25"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01139"
+continuidad_id = "is-reserva-capitalizacion-pendiente-futuros"
+continuidad_origin = "seeded"
 number = "01139"
 section = ["reserva_capitalizacion", "total"]
 data_type = "money"

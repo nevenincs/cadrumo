@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
-from typing import Final
+from typing import TYPE_CHECKING, Final, Protocol
 
 from cadrumo.core.hashing import hash_file
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
@@ -27,6 +27,20 @@ from cadrumo.domain.calculations.registry.schema_references import SourceReferen
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from .legal_grounding import PROVISION_SUFFIXED_FILENAME
+
+if TYPE_CHECKING:
+    from cadrumo.core.config import Settings
+    from cadrumo.domain.manuals.ids import ManualId, ManualPart
+    from cadrumo.domain.manuals.schema import Manual
+
+
+class ManualLoader(Protocol):
+    """Call signature of the manual loader used by the manual-structure check."""
+
+    def __call__(self, *, manual_id: ManualId, year: int, part: ManualPart, settings: Settings) -> Manual:
+        """Load one manual volume, or raise the manual loader's own error."""
+        ...
+
 
 _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
 _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
@@ -140,32 +154,50 @@ def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, pa
         )
 
 
-def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -> None:
+def _manual_structure_error(source: GeneratedArtifactSource, detail: object) -> RegistryValidationError:
+    return RegistryValidationError(
+        f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {detail}"
+    )
+
+
+def _verify_manual_structure(
+    repo_root: Path, source: GeneratedArtifactSource, *, load: ManualLoader | None = None
+) -> None:
+    """Prove a practical-manual source is addressable by the manual loader.
+
+    Only two failures belong to this check: a ``corpus_path`` that is not
+    shaped ``corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf``, and a
+    manual the loader itself rejects. Every other exception propagates
+    untouched so its own subject is reported.
+    """
     if source.kind is not RegistrySourceKind.MANUAL_PDF or not source.corpus_path.startswith("corpus/manuals/"):
         return
-    try:
-        parts = source.corpus_path.split("/")
-        if len(parts) < 5:
-            raise ValueError(
-                "a practical-manual source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'"
-            )
-        from cadrumo.core.config import Settings
-        from cadrumo.domain.manuals.ids import ManualId, ManualPart
-        from cadrumo.domain.manuals.loader import load_manual
-
-        manuals_dir = repo_root / "corpus" / "manuals"
-        if not manuals_dir.is_dir():
-            manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
-        load_manual(
-            manual_id=ManualId(parts[2]),
-            year=int(parts[3]),
-            part=ManualPart.SINGLE if parts[4] == "source.pdf" else ManualPart(parts[4]),
-            settings=Settings(aeat_manuals_root=manuals_dir),
+    parts = source.corpus_path.split("/")
+    if len(parts) < 5:
+        raise _manual_structure_error(
+            source, "a practical-manual source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'"
         )
-    except Exception as exc:
-        raise RegistryValidationError(
-            f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}"
-        ) from exc
+
+    from cadrumo.core.config import Settings
+    from cadrumo.domain.manuals.errors import ManualError
+    from cadrumo.domain.manuals.ids import ManualId, ManualPart
+    from cadrumo.domain.manuals.loader import load_manual
+
+    try:
+        manual_id = ManualId(parts[2])
+        year = int(parts[3])
+        part = ManualPart.SINGLE if parts[4] == "source.pdf" else ManualPart(parts[4])
+    except ValueError as exc:
+        raise _manual_structure_error(source, exc) from exc
+
+    manuals_dir = repo_root / "corpus" / "manuals"
+    if not manuals_dir.is_dir():
+        manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
+    settings = Settings(aeat_manuals_root=manuals_dir)
+    try:
+        (load or load_manual)(manual_id=manual_id, year=year, part=part, settings=settings)
+    except ManualError as exc:
+        raise _manual_structure_error(source, exc) from exc
 
 
 def _resolve_corpus_path(root: Path, source: GeneratedArtifactSource) -> Path:

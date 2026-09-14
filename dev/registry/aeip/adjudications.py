@@ -22,9 +22,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.domain.calculations.registry.errors import RegistryError
 
 __all__ = [
-    "AdjudicationError",
     "AdjudicationSet",
     "ChainIdOverride",
     "Exclusion",
@@ -36,10 +36,6 @@ __all__ = [
 
 _UTF_8 = UTF_8_ENCODING
 DEFAULT_ADJUDICATIONS_FILENAME = "adjudications.toml"
-
-
-class AdjudicationError(RuntimeError):
-    """Raised when the adjudications file is malformed or ungrounded."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,17 +86,17 @@ class VariantsDistinct:
 def _require(table: dict[str, object], key: str, *, context: str) -> str:
     value = table.get(key)
     if not isinstance(value, str) or not value.strip():
-        raise AdjudicationError(f"{context}: missing or empty {key!r}")
+        raise RegistryError(f"{context}: missing or empty {key!r}")
     return value.strip()
 
 
 def _require_list(table: dict[str, object], key: str, *, context: str) -> tuple[str, ...]:
     value = table.get(key)
     if not isinstance(value, list) or not value:
-        raise AdjudicationError(f"{context}: {key!r} must be a non-empty list")
+        raise RegistryError(f"{context}: {key!r} must be a non-empty list")
     items = tuple(str(item).strip() for item in value)
     if any(not item for item in items):
-        raise AdjudicationError(f"{context}: {key!r} contains an empty entry")
+        raise RegistryError(f"{context}: {key!r} contains an empty entry")
     return items
 
 
@@ -161,12 +157,12 @@ def load_adjudications(path: Path) -> AdjudicationSet:
     try:
         data = tomllib.loads(path.read_text(encoding=_UTF_8))
     except (OSError, tomllib.TOMLDecodeError) as error:
-        raise AdjudicationError(f"cannot read adjudications file {path}: {error}") from error
+        raise RegistryError(f"cannot read adjudications file {path}: {error}") from error
 
     def tables(key: str) -> list[dict[str, object]]:
         raw = data.get(key) or []
         if not isinstance(raw, list):
-            raise AdjudicationError(f"{path}: {key!r} must be an array of tables")
+            raise RegistryError(f"{path}: {key!r} must be an array of tables")
         return [entry for entry in raw if isinstance(entry, dict)]
 
     exclusions = tuple(

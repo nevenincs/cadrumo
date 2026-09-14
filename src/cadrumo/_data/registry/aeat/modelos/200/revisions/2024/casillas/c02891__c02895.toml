@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02891"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-permanente-aumento"
 number = "02891"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02892"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-temporaria-ejercicio-aumento"
 number = "02892"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02893"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-temporaria-anteriores-aumento"
 number = "02893"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02894"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-saldo-inicial"
 number = "02894"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02895"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-saldo-final"
 number = "02895"
 section = ["revalorizaciones_contables_art_17_1_lis", "aumento"]
 data_type = "money"

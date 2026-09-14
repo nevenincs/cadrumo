@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01140"
+continuidad_id = "01140"
 number = "01140"
 section = ["reserva_capitalizacion", "reserva_capitalizacion_dotada_en_el_ejercicio"]
 data_type = "money"

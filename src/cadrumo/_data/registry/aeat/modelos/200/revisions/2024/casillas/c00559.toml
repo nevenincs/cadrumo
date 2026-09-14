@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00559"
+continuidad_id = "is-base-imponible-zec-importe"
 number = "00559"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

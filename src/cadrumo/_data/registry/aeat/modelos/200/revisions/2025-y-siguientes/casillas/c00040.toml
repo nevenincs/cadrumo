@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00040"
+continuidad_id = "is-grupo-fiscal-numero"
+continuidad_origin = "seeded"
 number = "00040"
 section = ["grupo_fiscal", "claves_00009_o_00010"]
 data_type = "text"

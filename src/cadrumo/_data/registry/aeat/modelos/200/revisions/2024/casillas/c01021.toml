@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01021"
+continuidad_id = "is-conversion-aid-compensacion"
 number = "01021"
 section = ["conversion_de_activos_por_impuesto_diferido_en_cre", "compensacion_por_conversion_de_activos_por_impuest"]
 data_type = "money"

@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00774"
+continuidad_id = "is-deduccion-inversion-canarias-importe"
+continuidad_origin = "seeded"
 number = "00774"
 section = ["deducciones_inversion_canarias", "inversiones_en_la_palma_la_gomera_y_el_hierro_2023"]
 data_type = "money"

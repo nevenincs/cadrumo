@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02375"
+continuidad_id = "02375"
 number = "02375"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "aumento"]
 data_type = "money"

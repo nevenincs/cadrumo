@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02780"
+continuidad_id = "02780"
 number = "02780"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"

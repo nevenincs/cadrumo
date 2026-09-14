@@ -133,7 +133,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
@@ -145,8 +144,6 @@ from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 
 _CASILLA_0012: CasillaId = validated_casilla_id("0012", surface="_CASILLA_0012")
 _CASILLA_0017: CasillaId = validated_casilla_id("0017", surface="_CASILLA_0017")
@@ -254,7 +251,7 @@ def test_0025_manual_worked_example_despido_improcedente_discapacidad() -> None:
         expected_0025=Decimal("5837.50"),
         scenario_id="m100-2020-0025-manual-despido-improcedente-discapacidad",
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -275,11 +272,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
         expected_0025=Decimal("5837.50"),
         scenario_id="m100-2020-0025-anti-tautology-with-reduccion",
     )
-    with_reduccion_report = run_registry_calculation_scenario(
-        with_reduccion,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
+    with_reduccion_report = run_registry_calculation_scenario(with_reduccion)
     assert_registry_scenario_matches(with_reduccion_report)
 
     # The zero-reducción scenario's expected 0025 value is never asserted
@@ -292,11 +285,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
         expected_0025=Decimal("0.00"),
         scenario_id="m100-2020-0025-anti-tautology-without-reduccion",
     )
-    without_reduccion_report = run_registry_calculation_scenario(
-        without_reduccion,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
+    without_reduccion_report = run_registry_calculation_scenario(without_reduccion)
     assert (
         with_reduccion_report.calculation.values[_CASILLA_0025]
         != without_reduccion_report.calculation.values[_CASILLA_0025]

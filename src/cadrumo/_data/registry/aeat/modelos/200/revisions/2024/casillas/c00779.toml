@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00779"
+continuidad_id = "00779"
 number = "00779"
 section = ["deducciones_dt_24a_1_lis", "2025_periodificacion"]
 data_type = "money"

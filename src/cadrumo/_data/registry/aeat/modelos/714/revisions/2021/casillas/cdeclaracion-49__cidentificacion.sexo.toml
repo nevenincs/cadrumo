@@ -7,6 +7,7 @@ number = "49"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_deducciones_autonomicas_aplicadas"
 required = false
 input_kind = "manual"
 
@@ -17,6 +18,7 @@ number = "50"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_bonificacion_autonomica_aplicada"
 required = false
 input_kind = "manual"
 
@@ -42,6 +44,7 @@ number = "56"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
 data_type = "money"
+semantic_role = "patrimonio_cuotas_previas_complementaria"
 required = false
 input_kind = "manual"
 
@@ -52,6 +55,7 @@ number = "57"
 segmento = "714-10"
 section = ["regularizacion_declaracion_complementaria"]
 data_type = "money"
+semantic_role = "patrimonio_diferencia_ingresar_complementaria"
 required = false
 input_kind = "manual"
 # also printed on 714-Ingreso
@@ -63,6 +67,7 @@ number = "60"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_susceptible_exencion"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
@@ -75,6 +80,7 @@ number = "61"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_exenta"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
@@ -87,6 +93,7 @@ number = "62"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_vivienda_habitual_no_exenta"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-4-9", "orden-hfp-207-2022:art-4"]
@@ -98,6 +105,7 @@ number = "63"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_otros_inmuebles_urbanos"
 required = false
 input_kind = "manual"
 
@@ -108,6 +116,7 @@ number = "1"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "boolean"
+semantic_role = "patrimonio_obligacion_real_no_residente"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
@@ -119,6 +128,7 @@ number = "2"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "boolean"
+semantic_role = "patrimonio_opcion_obligacion_personal_no_residente"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
@@ -130,6 +140,7 @@ number = "3"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "ccaa_code"
+semantic_role = "patrimonio_comunidad_mayor_valor_bienes"
 required = false
 input_kind = "manual"
 
@@ -140,6 +151,7 @@ number = "4"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "boolean"
+semantic_role = "patrimonio_obligacion_real_regimen_impatriados"
 required = false
 input_kind = "manual"
 legal_refs = ["orden-hfp-207-2022:art-2", "orden-hfp-207-2022:art-4"]
@@ -151,6 +163,7 @@ number = "8"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "ccaa_code"
+semantic_role = "patrimonio_comunidad_residencia"
 required = false
 input_kind = "manual"
 
@@ -161,6 +174,7 @@ number = "10"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "boolean"
+semantic_role = "patrimonio_declaracion_complementaria"
 required = false
 input_kind = "manual"
 
@@ -171,6 +185,7 @@ number = "12"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "boolean"
+semantic_role = "patrimonio_opcion_normativa_autonomica_impatriados"
 required = false
 input_kind = "manual"
 
@@ -181,6 +196,7 @@ number = "15"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_tipo_via"
 required = false
 input_kind = "manual"
 
@@ -191,6 +207,7 @@ number = "16"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_nombre_via"
 required = false
 input_kind = "manual"
 
@@ -201,6 +218,7 @@ number = "17"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_tipo_numeracion"
 required = false
 input_kind = "manual"
 
@@ -211,6 +229,7 @@ number = "18"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_numero_casa"
 required = false
 input_kind = "manual"
 
@@ -221,6 +240,7 @@ number = "19"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_calificador_numero"
 required = false
 input_kind = "manual"
 
@@ -231,6 +251,7 @@ number = "20"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_bloque"
 required = false
 input_kind = "manual"
 
@@ -241,6 +262,7 @@ number = "21"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_portal"
 required = false
 input_kind = "manual"
 
@@ -251,6 +273,7 @@ number = "22"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_escalera"
 required = false
 input_kind = "manual"
 
@@ -261,6 +284,7 @@ number = "23"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_planta"
 required = false
 input_kind = "manual"
 
@@ -271,6 +295,7 @@ number = "24"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_puerta"
 required = false
 input_kind = "manual"
 
@@ -281,6 +306,7 @@ number = "25"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_datos_complementarios"
 required = false
 input_kind = "manual"
 
@@ -291,6 +317,7 @@ number = "26"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_localidad"
 required = false
 input_kind = "manual"
 
@@ -301,6 +328,7 @@ number = "27"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "postal_code"
+semantic_role = "patrimonio_domicilio_habitual_codigo_postal"
 required = false
 input_kind = "manual"
 
@@ -311,6 +339,7 @@ number = "28"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_municipio"
 required = false
 input_kind = "manual"
 
@@ -321,6 +350,7 @@ number = "29"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_habitual_provincia"
 required = false
 input_kind = "manual"
 
@@ -331,6 +361,7 @@ number = "35"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_direccion"
 required = false
 input_kind = "manual"
 
@@ -341,6 +372,7 @@ number = "36"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_datos_complementarios"
 required = false
 input_kind = "manual"
 
@@ -351,6 +383,7 @@ number = "37"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_poblacion"
 required = false
 input_kind = "manual"
 
@@ -361,6 +394,7 @@ number = "39"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_codigo_postal"
 required = false
 input_kind = "manual"
 
@@ -371,6 +405,7 @@ number = "40"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_provincia_region_estado"
 required = false
 input_kind = "manual"
 
@@ -381,6 +416,7 @@ number = "41"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_domicilio_extranjero_pais"
 required = false
 input_kind = "manual"
 
@@ -391,6 +427,7 @@ number = "42"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "country_code"
+semantic_role = "patrimonio_domicilio_extranjero_codigo_pais"
 required = false
 input_kind = "manual"
 
@@ -429,6 +466,7 @@ number = "a"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_impuestos_satisfechos_extranjero"
 required = false
 input_kind = "manual"
 
@@ -439,6 +477,7 @@ number = "b"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_base_liquidable_gravada_extranjero"
 required = false
 input_kind = "manual"
 
@@ -449,6 +488,7 @@ number = "I"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
 data_type = "money"
+semantic_role = "patrimonio_importe_ingreso"
 required = false
 input_kind = "manual"
 
@@ -459,6 +499,7 @@ number = "forma-de-pago"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
 data_type = "integer"
+semantic_role = "patrimonio_forma_pago"
 required = false
 input_kind = "manual"
 
@@ -469,6 +510,7 @@ number = "declaracion-negativa"
 segmento = "714-ID"
 section = ["ingreso_devolucion"]
 data_type = "boolean"
+semantic_role = "patrimonio_declaracion_negativa"
 required = false
 input_kind = "manual"
 
@@ -479,6 +521,7 @@ number = "tipo-declaracion"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_tipo_declaracion"
 required = false
 input_kind = "manual"
 
@@ -489,5 +532,6 @@ number = "sexo"
 segmento = "714-01"
 section = ["identificacion"]
 data_type = "text"
+semantic_role = "patrimonio_sexo_contribuyente"
 required = false
 input_kind = "manual"

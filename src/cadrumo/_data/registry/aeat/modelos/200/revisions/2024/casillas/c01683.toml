@@ -1,5 +1,6 @@
 [[revisions.2024.casillas]]
 id = '01683'
+continuidad_id = "is-deduccion-acontecimiento-interes-publico-otras"
 number = '01683'
 data_type = 'money'
 semantic_role = 'is_deduccion_acontecimiento_interes_publico_otras'

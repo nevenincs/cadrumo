@@ -27,10 +27,10 @@ from cadrumo.core.prorrata_register import (
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.bienes_inversion.register import (
     BienesInversionSectorContribution,
-    BienInversionKind,
     RegistroRegularizacionResult,
     RegistroRegularizacionRow,
 )
+from cadrumo.domain.bienes_inversion.vocabulary import BienInversionKind
 from cadrumo.domain.bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation

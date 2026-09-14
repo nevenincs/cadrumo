@@ -1,0 +1,48 @@
+[fact]
+fact_id = "third-party-declaration-role-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "third-party-declaration-role-catalogue:2008-01-01"
+date_axis = "filing_period"
+valid_from = 2008-01-01
+legal_refs = [
+  "rd-1065-2007:art-31",
+  "ley-37-1992:art-20",
+  "ley-58-2003:art-94",
+]
+source_refs = ["aeat-modelo-347-procedure", "aeat-dr-347-2025"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-347-procedure"
+required_text = ["Modelo 347"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-347-2025"
+required_text = ["%PDF"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "role.order", value = "third_party_fee_collector,propiedad_horizontal_entity,social_character_entity,statutory_information_duty_entity,public_administration_entity" },
+  { key = "role.third_party_fee_collector.value", value = "third_party_fee_collector" },
+  { key = "role.third_party_fee_collector.description", value = "Entity that collects professional, intellectual, industrial, or authorship-rights income on behalf of its members; the registry projection feeds the C selection role." },
+  { key = "role.third_party_fee_collector.legal_refs", value = "rd-1065-2007:art-31" },
+  { key = "role.propiedad_horizontal_entity.value", value = "propiedad_horizontal_entity" },
+  { key = "role.propiedad_horizontal_entity.description", value = "Community-of-owners entity covered by the information-duty population; the registry projection feeds the D selection role." },
+  { key = "role.propiedad_horizontal_entity.legal_refs", value = "rd-1065-2007:art-31" },
+  { key = "role.social_character_entity.value", value = "social_character_entity" },
+  { key = "role.social_character_entity.description", value = "Private entity or establishment of a social character in the statutory information-duty population; the registry projection feeds the D selection role." },
+  { key = "role.social_character_entity.legal_refs", value = "rd-1065-2007:art-31,ley-37-1992:art-20" },
+  { key = "role.statutory_information_duty_entity.value", value = "statutory_information_duty_entity" },
+  { key = "role.statutory_information_duty_entity.description", value = "Authority, public body, professional body, mutuality, political party, union, business association, or other entity subject to the statutory information duty; the registry projection feeds the D selection role." },
+  { key = "role.statutory_information_duty_entity.legal_refs", value = "rd-1065-2007:art-31,ley-58-2003:art-94" },
+  { key = "role.public_administration_entity.value", value = "public_administration_entity" },
+  { key = "role.public_administration_entity.description", value = "Entity integrated into a public administration, represented separately because the statutory selection projection feeds both D and the exclusive E selection role." },
+  { key = "role.public_administration_entity.legal_refs", value = "rd-1065-2007:art-31,ley-58-2003:art-94" },
+  { key = "selection.C.roles", value = "third_party_fee_collector" },
+  { key = "selection.D.roles", value = "propiedad_horizontal_entity,social_character_entity,statutory_information_duty_entity,public_administration_entity" },
+  { key = "selection.E.roles", value = "public_administration_entity" },
+]

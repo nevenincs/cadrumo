@@ -81,6 +81,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Final, cast, get_args
 
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
@@ -88,7 +89,6 @@ from .corpus_write import verify_written, write_preserving_newlines
 from .run_exclusions import (
     DEFAULT_EXCLUSION_REASON,
     Exclusion,
-    MalformedExclusionError,
     collect_exclusions,
     excluded_editions,
 )
@@ -1125,7 +1125,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             reason=args.exclude_reason,
             path=args.exclusions_file,
         )
-    except MalformedExclusionError as exc:
+    except RegistryError as exc:
         print(str(exc), file=sys.stderr)
         return 2
     plans = [

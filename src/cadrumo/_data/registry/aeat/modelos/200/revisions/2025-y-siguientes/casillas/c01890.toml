@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01890"
+continuidad_id = "01890"
+continuidad_origin = "seeded"
 number = "01890"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00055"
+continuidad_id = "00055"
 number = "00055"
 section = ["tributacion_conjunta_estado_y_adm_forales", "convenio_economico"]
 data_type = "money"

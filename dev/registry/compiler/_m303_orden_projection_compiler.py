@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from datetime import date
 
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.text_fold import ascii_slug
+from cadrumo.domain.calculations.registry.annual_orden_auxiliary_indicator import (
+    AnnualOrdenAuxiliaryActivityIndicators,
+    resolve_annual_orden_auxiliary_activity_indicators,
+)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from cadrumo.domain.calculations.registry.ids import LegalRefId, RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenProjection
 from cadrumo.domain.iva.regimen_simplificado_rows import (
@@ -35,17 +40,6 @@ from ._m303_orden_keys import (
 from ._m303_orden_source import annual_orden_raw_activity_identity
 from .m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenSourceCensus
 
-_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY: Mapping[tuple[str, str], Literal["1", "2"]] = {
-    ("691.9", "reparacion-de-calzado"): "1",
-    (
-        "691.9",
-        "reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales",
-    ): "2",
-    ("722", "transporte-de-mercancias-por-carretera-excepto-residuos"): "1",
-    ("722", "transporte-de-residuos-por-carretera"): "2",
-}
-
-
 def compile_m303_annual_orden_projection(
     *,
     census: M303AnnualOrdenSourceCensus,
@@ -60,12 +54,17 @@ def compile_m303_annual_orden_projection(
         raise RegistryValidationError(
             "annual Orden projection must cite exactly its source-scoped legal authority axes",
         )
+    auxiliary_indicators = resolve_annual_orden_auxiliary_activity_indicators(
+        effective_date=date(census.ejercicio, 1, 1),
+        authority=governed_facts_in_scope(),
+    )
     activities = tuple(
         _compile_actividad_orden_anual(
             raw_activity,
             ejercicio=census.ejercicio,
             source_ref=census.source_ref,
             legal_ref=legal_refs[activity_legal_key(annual_orden_raw_activity_identity(raw_activity))],
+            auxiliary_indicators=auxiliary_indicators,
         )
         for raw_activity in census.activities
     )
@@ -129,10 +128,12 @@ def compile_m303_annual_orden_projection(
         lorca_2022_reduction=(
             None
             if census.lorca_2022_reduction is None
-            else ReduccionLorcaOrdenAnual(
+            else ReduccionLorcaOrdenAnual.from_registry_source(
+                ejercicio=census.ejercicio,
+                municipality=census.lorca_2022_reduction.municipality,
                 percentage=census.lorca_2022_reduction.percentage,
-                legal_refs=(legal_refs[lorca_2022_reduction_legal_key()],),
-                source_refs=(census.source_ref,),
+                legal_ref=legal_refs[lorca_2022_reduction_legal_key()],
+                source_ref=census.source_ref,
                 source_content_digest=census.source_content_digest,
             )
         ),
@@ -145,6 +146,7 @@ def _compile_actividad_orden_anual(
     ejercicio: int,
     source_ref: SourceRefId,
     legal_ref: LegalRefId,
+    auxiliary_indicators: AnnualOrdenAuxiliaryActivityIndicators,
 ) -> ActividadOrdenAnual:
     activity_identity = annual_orden_raw_activity_identity(raw_activity)
     orden_id = f"m303:{ejercicio}:iva:{activity_identity}"
@@ -165,8 +167,9 @@ def _compile_actividad_orden_anual(
         kind="no_agricola",
         activity_code=activity_code,
         iae_epigrafe=raw_activity.iae_epigrafe,
-        auxiliary_activity_indicator=_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY.get(
-            (raw_activity.iae_epigrafe, activity_code),
+        auxiliary_activity_indicator=auxiliary_indicators.for_activity(
+            iae_epigrafe=raw_activity.iae_epigrafe,
+            activity_code=activity_code,
         ),
         modulos=modules,
         cuota_minima_pct=raw_activity.cuota_minima_pct,

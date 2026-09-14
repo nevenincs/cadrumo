@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02445"
+continuidad_id = "is-deduccion-cinematografica-pendiente-generada"
 number = "02445"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024_deduccion_pendiente_generada"]
 data_type = "money"

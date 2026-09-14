@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02413"
+continuidad_id = "02413"
+continuidad_origin = "seeded"
 number = "02413"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02414"
+continuidad_id = "02414"
+continuidad_origin = "seeded"
 number = "02414"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02415"
+continuidad_id = "02415"
+continuidad_origin = "seeded"
 number = "02415"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02416"
+continuidad_id = "02416"
+continuidad_origin = "seeded"
 number = "02416"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"

@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00969"
+continuidad_id = "00969"
 number = "00969"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "00970"
+continuidad_id = "00970"
 number = "00970"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "00971"
+continuidad_id = "00971"
 number = "00971"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "00972"
+continuidad_id = "00972"
 number = "00972"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "00973"
+continuidad_id = "00973"
 number = "00973"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"

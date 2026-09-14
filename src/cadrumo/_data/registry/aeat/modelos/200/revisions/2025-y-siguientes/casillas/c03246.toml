@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "03246"
+continuidad_id = "is-correccion-montes-vecinales-cap-xv-permanente-disminucion"
+continuidad_origin = "seeded"
 number = "03246"
 section = ["montes_vecinales_en_mano_comun_capitulo_xv_del_tit", "disminucion"]
 data_type = "money"

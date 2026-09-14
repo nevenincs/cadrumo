@@ -53,6 +53,26 @@
 # NOT obtained; the published recargos material covers art-27 only. Recorded as
 # unobtained rather than filled with a search-engine paraphrase.
 
+[legal."ley-58-2003:art-188"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a188"
+document_id = "BOE-A-2003-23186"
+article = "188"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a188"
+published_at = 2003-12-18
+effective_from = 2021-07-11
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent"
+notes = "Current redaction of LGT art. 188 after Ley 11/2021 art. 13.18: 30 percent for conformidad and a further 40 percent after the remaining sanction is paid in the statutory window without appeal."
+required_text = [
+  "Artículo 188. Reducción de las sanciones.",
+  "b) Un 30 por ciento en los supuestos de conformidad.",
+  "se reducirá en el 40 por ciento si concurren las siguientes circunstancias",
+]
+
 [legal."ley-58-2003:art-191"]
 evidence_tier = "legal_authority"
 authority = "boe"

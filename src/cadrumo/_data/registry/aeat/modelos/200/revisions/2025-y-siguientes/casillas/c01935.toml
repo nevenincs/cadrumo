@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01935"
+continuidad_id = "01935"
+continuidad_origin = "seeded"
 number = "01935"
 section = ["deducciones_i_d_i_excluidas_de_limite", "informacion_adicional_para_el_calculo_de_limites_d"]
 data_type = "money"

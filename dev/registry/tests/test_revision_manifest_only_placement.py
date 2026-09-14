@@ -81,9 +81,6 @@ _FIELD_LITERALS: dict[str, str] = {
         '{ casilla_continuidad_evolutions = { reason = "declared for the placement refusal", '
         f'legal_refs = ["{_LEGAL_REF}"], source_refs = ["aeat-manual"] }} }}'
     ),
-    "source_default_dispositions": (
-        '{ bindings = { kind = "underivable", reason = "declared for the placement refusal" } }'
-    ),
     # An array of inline tables, for the same reason: the placement refusal must
     # fire on WHERE the field is declared, so the entry has to parse.
     "restated_families": (
@@ -250,7 +247,6 @@ def test_the_manifest_only_set_is_exactly_todays_marked_fields() -> None:
         "parameter_source_refs",
         "predecessor",
         "restated_families",
-        "source_default_dispositions",
         "valid_to",
     }
 

@@ -41,6 +41,7 @@
 # @16+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Abono por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03373"
+continuidad_id = "t22016001-03373"
 number = "03373"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -52,6 +53,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @33+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Gipuzkoa. Abono por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03374"
+continuidad_id = "t22016001-03374"
 number = "03374"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -63,6 +65,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @50+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Bizkaia. Abono por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03375"
+continuidad_id = "t22016001-03375"
 number = "03375"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -74,6 +77,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @67+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Navarra. Abono por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03376"
+continuidad_id = "t22016001-03376"
 number = "03376"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -85,6 +89,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @84+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Total territorios forales. Abono por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03362"
+continuidad_id = "t22016001-03362"
 number = "03362"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -96,6 +101,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @101+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Compensación por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03377"
+continuidad_id = "t22016001-03377"
 number = "03377"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -107,6 +113,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @118+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Gipuzkoa. Compensación por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03378"
+continuidad_id = "t22016001-03378"
 number = "03378"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -118,6 +125,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @135+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Bizkaia. Compensación por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03379"
+continuidad_id = "t22016001-03379"
 number = "03379"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -129,6 +137,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @152+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Navarra. Compensación por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03380"
+continuidad_id = "t22016001-03380"
 number = "03380"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -140,6 +149,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @169+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación).Total territorios forales.. Compensación por conversión de activos por impuesto diferido
 [[revisions."2024".casillas]]
 id = "T22016001:03364"
+continuidad_id = "t22016001-03364"
 number = "03364"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -151,6 +161,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @186+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Complementaria: Devolución acordada/compensada
 [[revisions."2024".casillas]]
 id = "T22016001:03325"
+continuidad_id = "t22016001-03325"
 number = "03325"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -162,6 +173,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @203+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Gipuzkoa. Complementaria: Devolución acordada/compensada
 [[revisions."2024".casillas]]
 id = "T22016001:02173"
+continuidad_id = "t22016001-02173"
 number = "02173"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -173,6 +185,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @220+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Bizkaia. Complementaria: Devolución acordada/compensada
 [[revisions."2024".casillas]]
 id = "T22016001:02174"
+continuidad_id = "t22016001-02174"
 number = "02174"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -184,6 +197,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @237+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Navarra. Complementaria: Devolución acordada/compensada
 [[revisions."2024".casillas]]
 id = "T22016001:02175"
+continuidad_id = "t22016001-02175"
 number = "02175"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -195,6 +209,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @254+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Total territorios forales.. Complementaria: Devolución acordada/compensada
 [[revisions."2024".casillas]]
 id = "T22016001:02804"
+continuidad_id = "t22016001-02804"
 number = "02804"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -206,6 +221,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @271+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Resultado de conversión de AID tras regularización: Abono
 [[revisions."2024".casillas]]
 id = "T22016001:02176"
+continuidad_id = "t22016001-02176"
 number = "02176"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -217,6 +233,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @288+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Gipuzkoa. Resultado de conversión de AID tras regularización: Abono
 [[revisions."2024".casillas]]
 id = "T22016001:02177"
+continuidad_id = "t22016001-02177"
 number = "02177"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -228,6 +245,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @305+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Bizkaia. Resultado de conversión de AID tras regularización: Abono
 [[revisions."2024".casillas]]
 id = "T22016001:02178"
+continuidad_id = "t22016001-02178"
 number = "02178"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -239,6 +257,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @322+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Navarra. Resultado de conversión de AID tras regularización: Abono
 [[revisions."2024".casillas]]
 id = "T22016001:02179"
+continuidad_id = "t22016001-02179"
 number = "02179"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -250,6 +269,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @339+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Total territorios forales.. Resultado de conversión de AID tras regularización: Abono
 [[revisions."2024".casillas]]
 id = "T22016001:02807"
+continuidad_id = "t22016001-02807"
 number = "02807"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -261,6 +281,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @356+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2024".casillas]]
 id = "T22016001:02180"
+continuidad_id = "t22016001-02180"
 number = "02180"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -272,6 +293,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @373+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Gipuzkoa. Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2024".casillas]]
 id = "T22016001:02181"
+continuidad_id = "t22016001-02181"
 number = "02181"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -283,6 +305,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @390+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Bizkaia. Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2024".casillas]]
 id = "T22016001:02182"
+continuidad_id = "t22016001-02182"
 number = "02182"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -294,6 +317,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @407+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Navarra. Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2024".casillas]]
 id = "T22016001:02183"
+continuidad_id = "t22016001-02183"
 number = "02183"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -305,6 +329,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @424+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Total territorios forales.. Resultado de conversión de AID tras regularización: Compensación
 [[revisions."2024".casillas]]
 id = "T22016001:02810"
+continuidad_id = "t22016001-02810"
 number = "02810"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -316,6 +341,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @441+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Araba. Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2024".casillas]]
 id = "T22016001:02184"
+continuidad_id = "t22016001-02184"
 number = "02184"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -327,6 +353,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @458+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Gipuzkoa. Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2024".casillas]]
 id = "T22016001:02185"
+continuidad_id = "t22016001-02185"
 number = "02185"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -338,6 +365,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @475+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Bizkaia. Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2024".casillas]]
 id = "T22016001:02186"
+continuidad_id = "t22016001-02186"
 number = "02186"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -349,6 +377,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @492+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). . Navarra. Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2024".casillas]]
 id = "T22016001:02187"
+continuidad_id = "t22016001-02187"
 number = "02187"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]
@@ -360,6 +389,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @509+17. Determinación del líquido a ingresar o a devolver a cada una de las Administraciones forales (continuación). Total territorios forales.. Resultado de conversión de AID tras regularización: A ingresar
 [[revisions."2024".casillas]]
 id = "T22016001:02813"
+continuidad_id = "t22016001-02813"
 number = "02813"
 segmento = "T22016001"
 section = ["liquidacion", "reparto_foral"]

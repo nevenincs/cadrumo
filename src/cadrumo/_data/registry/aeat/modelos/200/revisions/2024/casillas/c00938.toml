@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00938"
+continuidad_id = "00938"
 number = "00938"
 section = ["reg_especial_reserva_inversiones_canarias", "ric_2020"]
 data_type = "money"

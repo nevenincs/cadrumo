@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02831"
+continuidad_id = "is-correccion-gastos-extincion-relacion-laboral-art15i-permanente-aumento"
 number = "02831"
 section = ["gastos_derivados_de_la_extincion_de_la_relacion_la", "aumento"]
 data_type = "money"

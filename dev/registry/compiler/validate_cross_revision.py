@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.cross_revision_divergence import (
     iter_cross_revision_casilla_divergences,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.revision_order import revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
@@ -109,9 +109,14 @@ def _chain_revision_ids(occurrences: Iterable[_ContinuityOccurrence]) -> tuple[R
 
 
 def _crosses_revision_boundary(modelo: ModeloDefinition, revision_ids: tuple[RevisionId, ...]) -> bool:
-    """Return whether any pair of chain revisions has a non-overlapping window."""
+    """Return whether any pair of chain revisions cannot both be in force at once.
+
+    A boundary is real only when the pair does not coexist: sharing a period
+    vocabulary across successive editions whose windows merely meet is a
+    temporal succession, not a simultaneity.
+    """
     return any(
-        not revisions_overlap(modelo.revisions[left_revision_id], modelo.revisions[right_revision_id])
+        not revisions_coexist(modelo.revisions[left_revision_id], modelo.revisions[right_revision_id])
         for left_revision_id, right_revision_id in combinations(revision_ids, 2)
     )
 
@@ -165,9 +170,13 @@ def cross_revision_casilla_consistency_failures(
     that needs explicit handling (either deprecate-and-rename or
     reconcile-to-canonical-form), never silent acceptance.
     """
+    modelo_by_id = {modelo.id: modelo for modelo in modelos}
     failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
-    for divergence in iter_cross_revision_casilla_divergences(modelos):
-        if not divergence.revisions_overlap:
+    for divergence in iter_cross_revision_casilla_divergences(modelo_by_id.values()):
+        modelo = modelo_by_id[divergence.modelo_id]
+        left_revision = modelo.revisions[divergence.left_revision_id]
+        right_revision = modelo.revisions[divergence.right_revision_id]
+        if not revisions_coexist(left_revision, right_revision):
             continue
         key = (
             divergence.modelo_id,
@@ -196,10 +205,10 @@ def strict_cross_revision_casilla_continuity_failures(
     for modelo in modelos:
         semantic_failures.extend(strict_continuity_evolution_failures(modelo))
         for divergence in iter_cross_revision_casilla_divergences((modelo,)):
-            if divergence.revisions_overlap:
-                continue
             left_revision = modelo.revisions[divergence.left_revision_id]
             right_revision = modelo.revisions[divergence.right_revision_id]
+            if revisions_coexist(left_revision, right_revision):
+                continue
             if left_revision.continuidad_validation != "strict" and right_revision.continuidad_validation != "strict":
                 continue
             if not _has_declared_continuity_surface(divergence):

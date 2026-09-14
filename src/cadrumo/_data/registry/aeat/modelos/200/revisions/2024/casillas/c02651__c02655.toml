@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02651"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-permanente-aumento"
 number = "02651"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02652"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-temporaria-ejercicio-aumento"
 number = "02652"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02653"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-temporaria-anteriores-aumento"
 number = "02653"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02654"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-saldo-inicial"
 number = "02654"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02655"
+continuidad_id = "is-correccion-deterioro-art13-1-no-afectado-saldo-final-neto"
 number = "02655"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_no_afectad", "aumento"]
 data_type = "money"

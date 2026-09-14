@@ -1,4 +1,10 @@
 [revisions."2024-y-siguientes"]
+# This edition declares an explicit root rather than omitting the predecessor
+# key, so that an edition for the 2020-2023 era can be authored ahead of it
+# without two editions of modelo 216 omitting the key at once, which the
+# predecessor-forest rule refuses. The declaration is inert while this is the
+# only edition and load-bearing the moment an earlier one lands.
+predecessor = { none = { cause = "official_structure_differs", reason = "The 2024 form is a redesign, not a revision of the 2020-2023 form: aeat-dr-216-2020-2023 prints seven unnumbered partidas over a flat liquidacion with no section structure, while aeat-dr-216-2024 prints numbered boxes [01] to [21] in two sections (I rentas sometidas a retencion, II rentas no sometidas), each split dividendos / resto de rentas / totales. This edition's seventeen casillas are ids '05' to '21', which are 2024 box numbers and do not exist on the earlier form. The 2024 design refuses the earlier years in its own validation: its devengo-ejercicio field [01] is declared obligatorio with >= 2024. So no earlier edition can be materialised into this one by the merge.", legal_refs = ["orden-eha-3290-2008:art-1"], source_refs = ["aeat-dr-216-2024"] } }
 formula_source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]
 casilla_source_refs = ["boe-modelo-216-form-layout"]
 application_link_source_refs = ["aeat-modelo-216-procedure"]

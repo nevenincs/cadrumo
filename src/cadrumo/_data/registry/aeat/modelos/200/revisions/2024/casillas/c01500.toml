@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01500"
+continuidad_id = "01500"
 number = "01500"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 data_type = "money"

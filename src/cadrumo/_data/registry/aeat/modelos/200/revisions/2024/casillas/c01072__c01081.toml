@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01072"
+continuidad_id = "01072"
 number = "01072"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01073"
+continuidad_id = "01073"
 number = "01073"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01074"
+continuidad_id = "01074"
 number = "01074"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01078"
+continuidad_id = "01078"
 number = "01078"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01079"
+continuidad_id = "01079"
 number = "01079"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -45,6 +50,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01080"
+continuidad_id = "01080"
 number = "01080"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"
@@ -54,6 +60,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20", "ley-49-2002:art-22"]
 [[revisions."2024".casillas]]
 id = "01081"
+continuidad_id = "01081"
 number = "01081"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_para_actividades_prioritarias_de_mecena"]
 data_type = "money"

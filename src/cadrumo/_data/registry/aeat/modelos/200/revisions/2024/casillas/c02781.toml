@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02781"
+continuidad_id = "is-correccion-perdidas-juego-art15d-permanente-aumento"
 number = "02781"
 section = ["perdidas_del_juego_art_15_d_lis", "aumento"]
 data_type = "money"

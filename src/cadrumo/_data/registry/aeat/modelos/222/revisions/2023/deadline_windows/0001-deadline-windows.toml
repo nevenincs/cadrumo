@@ -24,7 +24,7 @@ period_kind = "quarterly"
 opens_on = 2023-04-01
 closes_on = 2023-04-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
-source_refs = ["boe-modelo-202-base-order"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
 [[revisions."2023".deadline_windows]]
 id = "modelo-222-2023-2p"
@@ -34,7 +34,7 @@ period_kind = "quarterly"
 opens_on = 2023-10-01
 closes_on = 2023-10-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
-source_refs = ["boe-modelo-202-base-order"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]
 
 [[revisions."2023".deadline_windows]]
 id = "modelo-222-2023-3p"
@@ -44,4 +44,4 @@ period_kind = "quarterly"
 opens_on = 2023-12-01
 closes_on = 2023-12-20
 legal_refs = ["orden-hfp-227-2017:art-5"]
-source_refs = ["boe-modelo-202-base-order"]
+source_refs = ["boe-modelo-202-base-order", "aeat-modelo-222-instructions"]

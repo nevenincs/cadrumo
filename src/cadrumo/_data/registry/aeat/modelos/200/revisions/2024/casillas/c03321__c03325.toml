@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03321"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-permanente-aumento"
 number = "03321"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
@@ -11,6 +12,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03322"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-temporaria-ejercicio-aumento"
 number = "03322"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
@@ -22,6 +24,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03323"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-temporaria-anteriores-aumento"
 number = "03323"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
@@ -33,6 +36,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03324"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-saldo-inicial"
 number = "03324"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"
@@ -42,6 +46,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-1"]
 [[revisions."2024".casillas]]
 id = "03325"
+continuidad_id = "is-correccion-operaciones-a-plazos-dt1-saldo-final"
 number = "03325"
 section = ["operaciones_a_plazos_dt_1a_lis", "aumento"]
 data_type = "money"

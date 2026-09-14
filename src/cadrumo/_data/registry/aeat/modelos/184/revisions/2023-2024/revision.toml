@@ -71,3 +71,12 @@ Modelo 184 is a pure declaracion INFORMATIVA. Under the regimen de atribucion de
 zero formulas, and no cuota-bearing casilla. A verification predicate guards a calculated result -- characteristically that a positive economic input did not produce a zero base or cuota. With no base and no cuota computed here, there is no such implication to assert. The under-declaration risk this family exists to catch lives on each member's own return, where the attributed renta is actually taxed."""
 legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2023-2024", "aeat-modelo-184-procedure"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2022"
+to_revision = "2023-2024"
+origin = "seeded"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2023-2024"]

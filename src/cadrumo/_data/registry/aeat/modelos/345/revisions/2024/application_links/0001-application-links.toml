@@ -1,0 +1,41 @@
+# Filing and deadline surfaces for this era. The 2025 sibling declares both on the
+# same articles; these editions declared neither, so two surfaces the application
+# consumes were undeclared while their articles applied throughout.
+#
+# THE SUCCESSOR'S REFS ARE NOT COPIED WHOLESALE. aeat-dr-345-2025 is the successor
+# design and is excluded; the era's own design aeat-dr-345-2024 is cited instead.
+# aeat-modelo-345-deadlines is excluded from the deadline link although the 2025
+# sibling cites it: that page is 6 KB and states one campaign only, "Plazo de
+# presentacion: Del 1 de enero al 2 de febrero de 2026", so it evidences nothing
+# about this era.
+#
+# THE DEADLINE LINK CARRIES NO source_refs, following the modelo-490
+# 2023-y-siguientes sibling, which declares its deadline surface the same way.
+# The plazo is grounded in orden-hfp-823-2022 art 4; no AEAT guidance document in
+# this corpus states this modelo's plazo for this era, and asserting one that does
+# not would pass the tier gate while citing a document silent on the claim.
+#
+# orden-hfp-823-2022 takes effect 2023-01-01, which is later than this edition's
+# valid_from for the 2022 ejercicio. That is the normal annual shape and is what
+# the revision's own legal_refs already declare: an annual modelo's ejercicio is
+# declared the following January, so the governing orden postdates the ejercicio.
+
+[[revisions."2024".application_links]]
+id = "modelo-345-filing"
+surface = "filing"
+consumer = "cadrumo.application.filing"
+requires_snapshot = true
+legal_refs = ["orden-hfp-823-2022:art-1", "orden-hfp-823-2022:art-5"]
+source_refs = ["aeat-modelo-345-procedure", "aeat-dr-345-2024", "boe-modelo-345-base-order"]
+
+[[revisions."2024".application_links]]
+id = "modelo-345-deadline"
+surface = "deadline"
+consumer = "cadrumo.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["orden-hfp-823-2022:art-4"]
+# source_refs names the document that CONTAINS the cited article. It is the
+# honest citation for this surface even where its tier is layout_authority:
+# the field is required, and naming a document that does state the plazo is
+# better than naming a guidance page that does not.
+source_refs = ["boe-modelo-345-base-order"]

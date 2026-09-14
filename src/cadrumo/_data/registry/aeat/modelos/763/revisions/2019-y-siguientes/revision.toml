@@ -19,3 +19,21 @@ source_refs = [
     "enrolled-modelo-763-layout",
     "boe-modelo-763-2018-amendment",
 ]
+
+[[revisions."2019-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2018-4t"
+to_revision = "2019-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]
+
+[[revisions."2019-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-period"
+from_revision = "2018-4t"
+to_revision = "2019-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-eha-1881-2011:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-763-procedure"]

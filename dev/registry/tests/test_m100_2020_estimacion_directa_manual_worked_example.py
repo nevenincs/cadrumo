@@ -170,7 +170,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.tests.scenarios import (
     RegistryCalculationScenario,
@@ -182,8 +181,6 @@ from dev.registry.tests.manual_oracle_support import oracle_declared_figures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_REGISTRY_ROOT = bundled_path("registry", "aeat")
-_SOURCE_ROOT = bundled_path()
 _CASILLA_0226: CasillaId = validated_casilla_id("0226", surface="_CASILLA_0226")
 
 # The 0226 formula's OWN declared legal_refs / source_refs
@@ -259,7 +256,7 @@ def test_0226_manual_worked_example_medico_radiologo_simplificada() -> None:
         expected_0226=Decimal("58100.00"),
         scenario_id="m100-2020-0226-manual-medico-radiologo-simplificada",
     )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    report = run_registry_calculation_scenario(scenario)
     assert_registry_scenario_matches(report)
 
 
@@ -281,11 +278,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
         expected_0226=Decimal("58100.00"),
         scenario_id="m100-2020-0226-anti-tautology-simplificada",
     )
-    simplificada_report = run_registry_calculation_scenario(
-        simplificada,
-        registry_root=_REGISTRY_ROOT,
-        source_root=_SOURCE_ROOT,
-    )
+    simplificada_report = run_registry_calculation_scenario(simplificada)
     assert_registry_scenario_matches(simplificada_report)
 
     # The "normal" branch's expected value is never asserted against a
@@ -298,7 +291,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
         expected_0226=Decimal("0.00"),
         scenario_id="m100-2020-0226-anti-tautology-normal",
     )
-    normal_report = run_registry_calculation_scenario(normal, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
+    normal_report = run_registry_calculation_scenario(normal)
     assert simplificada_report.calculation.values[_CASILLA_0226] != normal_report.calculation.values[_CASILLA_0226], (
         "0226 must differ between modalidad simplificada and modalidad normal"
     )

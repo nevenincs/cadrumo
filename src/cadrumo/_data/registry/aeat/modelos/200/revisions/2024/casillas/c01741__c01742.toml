@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01741"
+continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-aumento"
 number = "01741"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-18"]
 [[revisions."2024".casillas]]
 id = "01742"
+continuidad_id = "is-correccion-libertad-amortizacion-vehiculos-temporaria-ejercicio-aumento"
 number = "01742"
 section = ["libertad_de_amortizacion_de_determinados_vehiculos", "aumento"]
 data_type = "money"

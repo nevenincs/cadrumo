@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02771"
+continuidad_id = "is-correccion-multas-sanciones-art15c-permanente-aumento"
+continuidad_origin = "seeded"
 number = "02771"
 section = ["multas_sanciones_y_otros_art_15_c_lis", "aumento"]
 data_type = "money"

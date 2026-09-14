@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03346"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-permanente-disminucion"
 number = "03346"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03347"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-temporaria-ejercicio-disminucion"
 number = "03347"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03348"
+continuidad_id = "is-correccion-reinversion-beneficios-extraordinarios-dt24-temporaria-anteriores-disminucion"
 number = "03348"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03349"
+continuidad_id = "03349"
 number = "03349"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-24"]
 [[revisions."2024".casillas]]
 id = "03350"
+continuidad_id = "03350"
 number = "03350"
 section = ["reinversion_de_beneficios_extraordinarios_dt_24a_l", "disminucion"]
 data_type = "money"

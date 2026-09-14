@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "03181"
+continuidad_id = "03181"
+continuidad_origin = "seeded"
 number = "03181"
 section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03182"
+continuidad_id = "is-erd-libertad-amortizacion-correccion-ejercicio-aumento"
+continuidad_origin = "seeded"
 number = "03182"
 section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03183"
+continuidad_id = "03183"
+continuidad_origin = "seeded"
 number = "03183"
 section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03184"
+continuidad_id = "is-erd-libertad-amortizacion-saldo-pendiente-aumento"
+continuidad_origin = "seeded"
 number = "03184"
 section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
 data_type = "money"
@@ -36,6 +44,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-102"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "03185"
+continuidad_id = "03185"
+continuidad_origin = "seeded"
 number = "03185"
 section = ["empresas_de_reducida_dimension_libertad_de_amortiz", "aumento"]
 data_type = "money"

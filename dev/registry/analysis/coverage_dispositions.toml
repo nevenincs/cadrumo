@@ -23,6 +23,23 @@
 # These two refuse identically in the corpus and mean opposite things; collapsing them
 # into one "not applicable" destroys the only signal saying which cells are debt.
 #
+# AN `unauthored` REASON PROVES THE MODELO EXISTED. It does NOT say what authoring the
+# year would need, and it must not try: that belongs in the modelo's own
+# `[modelo.inception.unauthored]` reason, which is the structural surface a tool can
+# read. The division is deliberate and was nearly collapsed once. Four cells --
+# 189/2022, 216/2022, 216/2023, 222/2022 and 210/2022's January-May remainder -- were
+# found to be blocked because the only layout authority covering the year carries its
+# form as BOE raster images; the obvious move was to write that cause into the four
+# reasons here. Every one of those modelos ALREADY declared its own blocker in its
+# manifest, more precisely than the sweep had: 216 names the design printing only
+# "Partida 1" to "Partida 7" with no box numbers, 210 names the unheld AEAT edition for
+# devengos before 01-06-2022, and 189 names neither a raster nor a missing design but a
+# measured field-position shift (NUMERO DE VALORES moving from 130-145 to 130-146) plus
+# the two artefacts authoring it needs. Copying a weaker cause in here would have
+# contradicted a manifest that was already right.
+#
+# So: read `[modelo.inception.unauthored]` before writing or widening any reason below.
+#
 # When the research comes back uncertain, write NO entry. An unclassified gap honestly
 # says nobody knows yet, which beats a confident guess with a citation attached.
 #
@@ -183,7 +200,7 @@ filing_year = 2022
 period = "*"
 kind = "promised_year_unserved"
 classification = "unauthored"
-reason = "Hash-verified AEAT record design for this exact ejercicio, re-fetched and byte-confirmed against live AEAT. No founding orden is established in the legal catalogue, so the anchor is the official design rather than the norm: it evidences that AEAT published a design for this year, which is the claim this classification makes."
+reason = "Hash-verified AEAT record design for this exact ejercicio, re-fetched and byte-confirmed against live AEAT. No founding orden is established in the legal catalogue, so the anchor is the official design rather than the norm: it evidences that AEAT published a design for this year, which is the claim this classification makes. The approving orden for ejercicio 2022 is likewise unbundled and, unlike 2023's, NOT IDENTIFIED -- it is deliberately not inferred from the Orden HAC/495/2024 pattern. Acquiring it is the prerequisite, not transcription: the design parses complete at 125 sheets, 14,864 fields, 0 skipped."
 authority = "aeat-dr-220-2022"
 
 [[disposition]]
@@ -192,7 +209,7 @@ filing_year = 2023
 period = "*"
 kind = "promised_year_unserved"
 classification = "unauthored"
-reason = "Hash-verified AEAT record design for this exact ejercicio. No founding orden is established in the legal catalogue, so the anchor is the official design rather than the norm."
+reason = "Hash-verified AEAT record design for this exact ejercicio. No founding orden is established in the legal catalogue, so the anchor is the official design rather than the norm. The approving orden is Orden HAC/495/2024, de 21 de mayo, art. 4.2, which approves los modelos 200 y 220 for periods begun between 2023-01-01 and 2023-12-31; it is not bundled under corpus/normatives/html/ and resolves nowhere in the legal catalogue's 567 source ids. It is NAMED in three bundled documents and held in none: the guidance-tier AEAT manuals for ejercicios 2023 and 2024, and a consolidation note inside orden-hfp-227-2017 reading 'Se modifica el apartado 1 por la disposicion final 2 de la Orden HAC/495/2024, de 21 de mayo. Ref. BOE-A-2024-10574', which supplies the exact BOE identifier to acquire. The 2024 manual states independently that the orden 'aprueba los modelos de declaracion aplicables a los periodos impositivos iniciados' in the relevant range. Its Anexo VI is NOT the thing to fetch for this modelo: the 2023 manual states outright that the Anexo VI formulario of this orden is the one filers must complete for the reserva para inversiones en las Illes Balears. WHERE THE MODELO 220 CONTENT SITS WITHIN THE ORDEN IS UNKNOWN from the bundled evidence -- no lane has seen its table of contents, so naming any anexo would be guessing at a structure nobody can see. Two traps for whoever acquires it: a nearby 2023-manual sentence places 'se publica en el Anexo VI' immediately after an item about the modelo 200 AIE/UTE cuadro detalle, which invites the wrong antecedent; and the 2024 manual's own 'Anexo VI' belongs to a DIFFERENT orden, HAC/657/2025, so grepping 'Anexo VI' across the manuals collects hits from two ordenes. Acquiring and registering that BOE text is the prerequisite, not transcription: the design parses complete at 128 sheets, 15,661 fields, 0 skipped."
 authority = "aeat-dr-220-2023"
 
 
@@ -431,11 +448,30 @@ classification = "unauthored"
 reason = "Modelo 296, the declaracion anual de retenciones e ingresos a cuenta del IRNR de no residentes sin establecimiento permanente, was approved by Orden EHA/3290/2008 art. 6, whose texto original entered into force on 18 November 2008, fourteen years before this gap year. Art. 11 of the same orden fixes the plazo as el comprendido entre el 1 de enero y el 31 de enero del ano siguiente al que corresponde la declaracion anual, an unconditional annual obligation that names no terminal ejercicio and was still being amended in 2024 by Orden HAC/56/2024 art. 2.3, which proves the modelo was live across 2022. The modelo existed and was filed for this ejercicio; no revision was authored for it. This entry NAMES the gap and does not close it."
 authority = "orden-eha-3290-2008:art-6 (BOE-A-2008-18497); orden-eha-3290-2008:art-11 (BOE-A-2008-18111, consolidated)"
 
+
 [[disposition]]
-modelo = "763"
-filing_year = 2012
-period = "4T"
-kind = "promised_coordinate_unserved"
+modelo = "220"
+filing_year = 2026
+period = "*"
+kind = "promised_year_unserved"
 classification = "unauthored"
-reason = "Modelo 763 was approved by Orden EHA/1881/2011 art. 1, in force from 7 July 2011, more than a year before this trimestre, and art. 4 of the same orden fixes the plazo as la presentacion sera trimestral y se efectuara durante el mes siguiente a la finalizacion de cada trimestre natural del ano -- an unconditional quarterly obligation naming every trimestre natural, with no terminal date and no exception for the fourth of 2012. The gap is NOT in the source: aeat-dr-763-2012 declares applies_from 2012-04-01 and applies_to 2014-12-31, one continuous window that covers this trimestre, and the bundled design's own periodo de autoliquidacion field admits the values 1T a 4T with no restriction. The corpus filename names ejercicios 2t-3t-2012-2013-y-2014, which records the first applicable trimestres rather than excluding the fourth. What leaves the coordinate unserved is the edition split alone: revision 2012-2t-3t closes 2012-09-30 and revision 2013-2014 opens 2013-01-01, so October to December 2012 is authored by neither. The modelo existed and was filable in this trimestre; no revision serves it. This entry NAMES the gap and does not close it."
-authority = "orden-eha-1881-2011:art-1 (BOE-A-2011-11704); orden-eha-1881-2011:art-4 (plazo trimestral)"
+reason = "Modelo 220 is authored as per-year editions and the newest bundled diseno de registro is aeat-dr-220-2025; no 2026 design is bundled, and the corpus carries no 2026-epoch source for this modelo at all. The obligation exists for the year, so this is missing evidence rather than a year the modelo did not exist. Authoring 2026 needs the AEAT design, not more transcription."
+authority = "orden-hac-529-2026:art-6-3 (BOE-A-2026-11583)"
+
+[[disposition]]
+modelo = "390"
+filing_year = 2026
+period = "*"
+kind = "promised_year_unserved"
+classification = "unauthored"
+reason = "Modelo 390 is authored as per-year editions 2021-2025 and the newest bundled diseno de registro is aeat-dr-390-2025; no 2026 design is bundled. UNLIKE 220 AND 714, THE LEGAL BASIS IS ALREADY PRESENT: Orden HAC/27/2026 ANEXO IV is the modelo 390 form, and its disposicion final unica point 2 applies it 'a la declaracion-resumen anual del Impuesto sobre el Valor Anadido, modelo 390, correspondiente al ejercicio 2026'. So only the AEAT design file is absent here; the authority for the year is bundled and dated."
+authority = "orden-eha-3111-2009:art-1 (BOE-A-2009-18472)"
+
+[[disposition]]
+modelo = "714"
+filing_year = 2026
+period = "*"
+kind = "promised_year_unserved"
+classification = "unauthored"
+reason = "Modelo 714 is authored as per-year editions 2021-2025 and the newest bundled diseno de registro is aeat-dr-714-2025; no 2026 design is bundled, and the corpus carries no 2026-epoch source for this modelo at all. The obligation exists for the year, so this is missing evidence rather than a year the modelo did not exist."
+authority = "orden-hac-277-2026:art-4 (BOE-A-2026-7041)"

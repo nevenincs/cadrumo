@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00040"
+continuidad_id = "is-grupo-fiscal-numero"
 number = "00040"
 section = ["grupo_fiscal", "claves_00009_o_00010"]
 data_type = "text"

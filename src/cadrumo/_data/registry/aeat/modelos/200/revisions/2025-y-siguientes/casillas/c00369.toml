@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00369"
+continuidad_id = "is-deduccion-donativos-general"
+continuidad_origin = "seeded"
 number = "00369"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"

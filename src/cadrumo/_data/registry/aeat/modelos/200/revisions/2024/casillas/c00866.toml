@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00866"
+continuidad_id = "is-liquidacion-iv-resultado-misc"
 number = "00866"
 section = ["liquidacion_iv", "rectificacion"]
 data_type = "money"

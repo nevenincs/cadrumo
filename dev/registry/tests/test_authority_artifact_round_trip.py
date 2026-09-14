@@ -34,9 +34,12 @@ from ..pipeline.cli import publish_authority_candidate_workflow
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_MAX_COMPACT_AUTHORITY_BYTES = 64 * 1024 * 1024
+
 
 def test_the_full_bundled_registry_round_trips_through_a_publication(tmp_path: Path) -> None:
     registry_root = bundled_path("registry", "aeat")
+    tracked_artifact_path = bundled_path("registry", "authority", "authority.json")
     artifact_path = tmp_path / "authority.json"
 
     published = publish_authority_candidate_workflow(
@@ -61,6 +64,14 @@ def test_the_full_bundled_registry_round_trips_through_a_publication(tmp_path: P
     assert consumed.catalogues == published.catalogues
     assert consumed.evidence == published.evidence
     assert consumed.identity_digest == published.identity_digest
+    assert consumed == published
+    assert read_authority_artifact(tracked_artifact_path) == published, (
+        "the tracked runtime authority must be semantically equal to a fresh canonical publication"
+    )
+    assert tracked_artifact_path.stat().st_size <= _MAX_COMPACT_AUTHORITY_BYTES, (
+        f"the compact authority artifact is {tracked_artifact_path.stat().st_size:,} bytes; "
+        f"the budget is {_MAX_COMPACT_AUTHORITY_BYTES:,} bytes"
+    )
     assert published.identity_digest == authority_candidate_identity(
         registry_root=registry_root, source_root=bundled_path()
     ), "the publication must record the identity the currency gate derives for the same inputs"
@@ -99,7 +110,15 @@ def _redigest(path: Path, edit_payload_text: Callable[[str], str]) -> None:
     frame = json.loads(path.read_bytes())
     payload_text = json.dumps(frame["payload"])
     payload = json.loads(edit_payload_text(payload_text))
-    path.write_bytes(canonical_json_bytes({"payload": payload, "payload_sha256": sha256_hex(canonical_json_bytes(payload))}))
+    path.write_bytes(
+        canonical_json_bytes(
+            {
+                "format": "cadrumo-authority-artifact-v4",
+                "payload": payload,
+                "payload_sha256": sha256_hex(canonical_json_bytes(payload)),
+            }
+        )
+    )
 
 
 def _published_atoms(tmp_path: Path) -> Path:

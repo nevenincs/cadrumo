@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01013"
+continuidad_id = "is-deduccion-di-internacional-detalle"
 number = "01013"
 section = ["deducciones_doble_imposicion_internacional_lis", "di_internacional_2024"]
 data_type = "money"

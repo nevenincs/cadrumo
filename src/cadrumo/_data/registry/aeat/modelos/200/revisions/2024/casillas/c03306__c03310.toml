@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03306"
+continuidad_id = "03306"
 number = "03306"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
 [[revisions."2024".casillas]]
 id = "03307"
+continuidad_id = "03307"
 number = "03307"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
 [[revisions."2024".casillas]]
 id = "03308"
+continuidad_id = "03308"
 number = "03308"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
 [[revisions."2024".casillas]]
 id = "03309"
+continuidad_id = "03309"
 number = "03309"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:da-6"]
 [[revisions."2024".casillas]]
 id = "03310"
+continuidad_id = "03310"
 number = "03310"
 section = ["exencion_transmision_bienes_inmuebles_da_6a_lis", "disminucion"]
 data_type = "money"

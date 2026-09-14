@@ -1,8 +1,16 @@
 # Application links for the 2023 epoch. Every source_ref is checked against its
 # own declared window: boe-modelo-202-base-order applies_from 2017-03-16
 # open-ended, aeat-dr-222-2023-2024 applies_from 2023-01-01 applies_to
-# 2024-12-31. aeat-modelo-202-instructions and aeat-modelo-222-instructions are
-# BOTH absent here because both declare applies_from 2025-01-01.
+# 2024-12-31. aeat-modelo-222-instructions IS cited below.
+# The earlier note here said it was absent because it declared applies_from
+# 2025-01-01. That was true of the recorded date and false of the document: the
+# page's own index carries "Instrucciones para periodos impositivos iniciados en
+# 2023 y 2024", so the date was corrected to 2018-01-01 and the page does
+# instruct this era. It also states the plazo verbatim -- the first twenty
+# natural days of April (1/P), October (2/P) and December (3/P) -- which is what
+# makes it admissible on the deadline surface rather than merely tier-eligible.
+# aeat-modelo-202-instructions REMAINS absent: it still declares 2025-01-01, and
+# its 2023-2024 sibling names modelo 222 exactly once, in passing.
 #
 # The 2025-y-siguientes edition also declares an "export" link. This edition
 # declares no export layout, so it declares no export link either rather than
@@ -14,6 +22,7 @@ surface = "deadline"
 consumer = "cadrumo.domain.deadlines"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-5"]
+source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2023".application_links]]
 id = "modelo-222-filing"
@@ -21,6 +30,7 @@ surface = "filing"
 consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2023".application_links]]
 id = "modelo-222-workflow"
@@ -28,6 +38,7 @@ surface = "workflow"
 consumer = "cadrumo.application.workflow"
 requires_snapshot = true
 legal_refs = ["orden-hfp-227-2017:art-2"]
+source_refs = ["aeat-modelo-222-instructions"]
 
 [[revisions."2023".application_links]]
 id = "modelo-222-calculation"
@@ -35,4 +46,4 @@ surface = "calculation"
 consumer = "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true
 legal_refs = ["ley-27-2014:art-40"]
-source_refs = ["aeat-dr-222-2023-2024"]
+source_refs = ["aeat-dr-222-2023-2024", "aeat-modelo-222-instructions"]

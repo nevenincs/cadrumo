@@ -1,0 +1,28 @@
+# Supported filing years this edition left without a deadline window.
+#
+# GROUNDING. Art 4 states the plazo: "1 de enero" to "31 de marzo" -- NOT the January close the other
+# annual informativas carry.
+# orden-hac-1504-2024:df-unica is NOT carried from the 2024 row: it declares
+# governs_periods 2024-01-01..2024-12-31 and governs no period authored here.
+#
+# Dates are NOMINAL; weekend and festivo movement happens at read time.
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-721-2025-0a"
+filing_year = 2025
+period = "2025 0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-03-31
+legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-721-procedure"]
+
+[[revisions."2024".deadline_windows]]
+id = "modelo-721-2026-0a"
+filing_year = 2026
+period = "2026 0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-03-31
+legal_refs = ["orden-hfp-886-2023:art-4", "ley-58-2003:art-93"]
+source_refs = ["aeat-modelo-721-procedure"]

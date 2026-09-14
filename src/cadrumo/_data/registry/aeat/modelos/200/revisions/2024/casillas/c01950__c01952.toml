@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01950"
+continuidad_id = "01950"
 number = "01950"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions."2024".casillas]]
 id = "01951"
+continuidad_id = "01951"
 number = "01951"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-49-2002:art-20"]
 [[revisions."2024".casillas]]
 id = "01952"
+continuidad_id = "01952"
 number = "01952"
 section = ["deduccion_donativos_entidades_sin_fines_lucro", "donaciones_de_caracter_general"]
 data_type = "money"

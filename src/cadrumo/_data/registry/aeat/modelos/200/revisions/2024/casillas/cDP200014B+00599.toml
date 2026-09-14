@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "DP200014B:00599"
+continuidad_id = "is-resultado-ingresar-o-devolver"
 number = "00599"
 segmento = "DP200014B"
 section = ["liquidacion", "cuota_a_ingresar"]

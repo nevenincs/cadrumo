@@ -32,3 +32,102 @@ source_refs = [
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "reagp-importe-operaciones"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "02"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "03"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "reagp-porcentaje-compensacion"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "05"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "06"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "reagp-importe-compensacion"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "08"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "09"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-130", "ley-37-1992:art-131", "orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-341-2016"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]
+
+[[revisions."2016-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2005-2015"
+to_revision = "2016-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-min-2000-12-15-m341:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-341-procedure"]

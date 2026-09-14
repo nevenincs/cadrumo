@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.casilla_lineage_totality import (
     unresolved_successor_rows,
 )
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
@@ -33,7 +34,6 @@ from ..analysis.casilla_lineage_seed import (
     LineageRefusalCategory,
     ModeloLoadFailure,
     PartialStamping,
-    PartialStampingError,
     Ruling,
     admit_bare_chain,
     carried_refusals,
@@ -439,7 +439,7 @@ def test_a_partly_stamped_modelo_is_recorded_and_stops_only_itself() -> None:
 
     planted = _half_stamped(modelo)
     # The refusal to seed into a partly stamped chain is unchanged: planning it alone still raises.
-    with pytest.raises(PartialStampingError, match="stay partly stamped"):
+    with pytest.raises(RegistryError, match="stay partly stamped"):
         plan_modelo(_PLANTED, planted, oracle, {})
 
     plans, records = plan_corpus((_LOADABLE, _PLANTED), {_LOADABLE: modelo, _PLANTED: planted}, oracle, {})

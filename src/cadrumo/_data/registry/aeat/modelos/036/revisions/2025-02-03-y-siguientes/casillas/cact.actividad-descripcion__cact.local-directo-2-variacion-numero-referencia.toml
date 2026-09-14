@@ -70,6 +70,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @71+5. Actividad. Seccion del I.A.E. y grupo o epigrafe. ONE casilla over two design components at @71+1 seccion and @72+4 grupo o epigrafe, BOTH printed under the single number 402.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.actividad-iae-seccion-grupo"
+continuidad_id = "act-actividad-iae-seccion-grupo"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:473 (sha256 3ecea6c06e3d) box [402] over 2 printed components @71+5 (4 71 1 An Actividad. Sección I.A.E. [402] * Tabla) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:533 (sha256 791479fbf9e9) box [402] over 2 printed components @71+5 (4 71 1 An Actividad. Sección I.A.E. [402] Tabla)."
 number = "402"
 section = ["declaracion", "actividades", "actividad"]
 data_type = "text"
@@ -121,6 +124,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @80+8. Actividad desarrollada fuera de un local determinado. Fecha de alta. ONE casilla over @80+2 dia, @82+2 mes and @84+4 ano, all printed under the single number 406.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.sin-local-alta-fecha"
+continuidad_id = "act-sin-local-alta-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:477 (sha256 3ecea6c06e3d) box [406] over 3 printed components @80+8 (8 80 2 Num La actividad se desarrolla fuera de un local determinado...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:537 (sha256 791479fbf9e9) box [406] over 3 printed components @80+8 (8 80 2 Num La actividad se desarrolla fuera de un local determinado...)."
 number = "406"
 section = ["declaracion", "actividades", "sin_local"]
 data_type = "date"
@@ -154,6 +160,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @89+8. Actividad desarrollada fuera de un local determinado. Fecha de baja. ONE casilla over @89+2 dia, @91+2 mes and @93+4 ano, all printed under the single number 409.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.sin-local-baja-fecha"
+continuidad_id = "act-sin-local-baja-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:481 (sha256 3ecea6c06e3d) box [409] over 3 printed components @89+8 (12 89 2 Num La actividad se desarrolla fuera de un local determinad...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:541 (sha256 791479fbf9e9) box [409] over 3 printed components @89+8 (12 89 2 Num La actividad se desarrolla fuera de un local determinad...)."
 number = "409"
 section = ["declaracion", "actividades", "sin_local"]
 data_type = "date"
@@ -438,6 +447,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @263+8. Local directamente afecto a la actividad (primero). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-1-alta-fecha"
+continuidad_id = "act-local-directo-1-alta-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:501 (sha256 3ecea6c06e3d) box [425] over 3 printed components @263+8 (32 263 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:561 (sha256 791479fbf9e9) box [425] over 3 printed components @263+8 (32 263 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "425"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -471,6 +483,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @272+8. Local directamente afecto a la actividad (primero). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-1-baja-fecha"
+continuidad_id = "act-local-directo-1-baja-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:505 (sha256 3ecea6c06e3d) box [428] over 3 printed components @272+8 (36 272 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:565 (sha256 791479fbf9e9) box [428] over 3 printed components @272+8 (36 272 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "428"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -522,6 +537,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @294+8. Local directamente afecto a la actividad (primero). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-1-variacion-fecha"
+continuidad_id = "act-local-directo-1-variacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:510 (sha256 3ecea6c06e3d) box [431] over 3 printed components @294+8 (41 294 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:570 (sha256 791479fbf9e9) box [431] over 3 printed components @294+8 (41 294 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "431"
 section = ["declaracion", "actividades", "local_directo_1"]
 data_type = "date"
@@ -771,6 +789,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @435+8. Local directamente afecto a la actividad (segundo). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-2-alta-fecha"
+continuidad_id = "act-local-directo-2-alta-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:527 (sha256 3ecea6c06e3d) box [446] over 3 printed components @435+8 (58 435 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:587 (sha256 791479fbf9e9) box [446] over 3 printed components @435+8 (58 435 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "446"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"
@@ -804,6 +825,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @444+8. Local directamente afecto a la actividad (segundo). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-2-baja-fecha"
+continuidad_id = "act-local-directo-2-baja-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:531 (sha256 3ecea6c06e3d) box [449] over 3 printed components @444+8 (62 444 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:591 (sha256 791479fbf9e9) box [449] over 3 printed components @444+8 (62 444 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "449"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"
@@ -855,6 +879,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @466+8. Local directamente afecto a la actividad (segundo). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-directo-2-variacion-fecha"
+continuidad_id = "act-local-directo-2-variacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:536 (sha256 3ecea6c06e3d) box [452] over 3 printed components @466+8 (67 466 2 Num La actividad se desarrolla en local determinado. Fecha...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:596 (sha256 791479fbf9e9) box [452] over 3 printed components @466+8 (67 466 2 Num La actividad se desarrolla en local determinado. Fecha...)."
 number = "452"
 section = ["declaracion", "actividades", "local_directo_2"]
 data_type = "date"

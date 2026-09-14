@@ -10,7 +10,19 @@
 # 2015-2022 sibling.
 
 [[revisions."2025-y-siguientes".applicability]]
-id = "m151-2023-impatriado"
+# The id is REUSED from the 2015-2022 sibling rather than minted fresh. This
+# edition supersedes that rule, it does not add a second one: entity types,
+# fiscal residencies, not_applicable_reason and cuota_bearing are identical,
+# and the note above says the Ley 28/2022 widening "did not change who the
+# contribuyente is". A distinct id made the merge inherit the predecessor AND
+# declare this one, which is the "2 applicability rules" finding. Id-reuse is
+# this modelo's own supersession convention -- predicate
+# modelo-151-base-liquidable-implica-cuota-integra is declared in both
+# editions under one id and overrides cleanly.
+#
+# The retired spelling also embedded an edition year, which a member id should
+# never carry: the containing revision directory already states it.
+id = "m151-impatriado"
 applicable_entity_types = ["natural_person"]
 applicable_fiscal_residencies = ["resident_irpf"]
 applicable_reason = "Modelo 151: la persona física residente que ha optado por el régimen especial aplicable a los trabajadores, profesionales, emprendedores e inversores desplazados a territorio español (art. 93 LIRPF) presenta esta autoliquidación anual del IRPF, en la que la deuda tributaria se determina con arreglo a las normas del Impuesto sobre la Renta de no Residentes."

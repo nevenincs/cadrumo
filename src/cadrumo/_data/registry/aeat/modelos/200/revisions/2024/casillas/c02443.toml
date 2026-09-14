@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02443"
+continuidad_id = "02443"
 number = "02443"
 section = ["deducciones_por_producciones_cinematograficas_extr", "2024"]
 data_type = "money"

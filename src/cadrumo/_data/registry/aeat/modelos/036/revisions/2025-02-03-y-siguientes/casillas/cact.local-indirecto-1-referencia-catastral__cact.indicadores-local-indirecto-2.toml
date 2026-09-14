@@ -262,6 +262,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @609+8. Local indirectamente afecto a la actividad (primero). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-1-alta-fecha"
+continuidad_id = "act-local-indirecto-1-alta-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:554 (sha256 3ecea6c06e3d) box [469] over 3 printed components @609+8 (85 609 2 Num Locales indirectamente afectos a la actividad. Fecha. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:614 (sha256 791479fbf9e9) box [469] over 3 printed components @609+8 (85 609 2 Num Locales indirectamente afectos a la actividad. Fecha. ...)."
 number = "469"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -295,6 +298,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @618+8. Local indirectamente afecto a la actividad (primero). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-1-baja-fecha"
+continuidad_id = "act-local-indirecto-1-baja-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:558 (sha256 3ecea6c06e3d) box [472] over 3 printed components @618+8 (89 618 2 Num Locales indirectamente afectos a la actividad. Fecha. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:618 (sha256 791479fbf9e9) box [472] over 3 printed components @618+8 (89 618 2 Num Locales indirectamente afectos a la actividad. Fecha. ...)."
 number = "472"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -346,6 +352,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @640+8. Local indirectamente afecto a la actividad (primero). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-1-variacion-fecha"
+continuidad_id = "act-local-indirecto-1-variacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:563 (sha256 3ecea6c06e3d) box [475] over 3 printed components @640+8 (94 640 2 Num Locales indirectamente afectos a la actividad. Fecha. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:623 (sha256 791479fbf9e9) box [475] over 3 printed components @640+8 (94 640 2 Num Locales indirectamente afectos a la actividad. Fecha. ...)."
 number = "475"
 section = ["declaracion", "actividades", "local_indirecto_1"]
 data_type = "date"
@@ -613,6 +622,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @783+8. Local indirectamente afecto a la actividad (segundo). Fecha de alta.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-2-alta-fecha"
+continuidad_id = "act-local-indirecto-2-alta-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:581 (sha256 3ecea6c06e3d) box [492] over 3 printed components @783+8 (112 783 2 Num Locales indirectamente afectos a la actividad. Fecha....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:641 (sha256 791479fbf9e9) box [492] over 3 printed components @783+8 (112 783 2 Num Locales indirectamente afectos a la actividad. Fecha....)."
 number = "492"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"
@@ -646,6 +658,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @792+8. Local indirectamente afecto a la actividad (segundo). Fecha de baja.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-2-baja-fecha"
+continuidad_id = "act-local-indirecto-2-baja-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:585 (sha256 3ecea6c06e3d) box [495] over 3 printed components @792+8 (116 792 2 Num Locales indirectamente afectos a la actividad. Fecha....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:645 (sha256 791479fbf9e9) box [495] over 3 printed components @792+8 (116 792 2 Num Locales indirectamente afectos a la actividad. Fecha....)."
 number = "495"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"
@@ -697,6 +712,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @814+8. Local indirectamente afecto a la actividad (segundo). Fecha de variacion.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "act.local-indirecto-2-variacion-fecha"
+continuidad_id = "act-local-indirecto-2-variacion-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:590 (sha256 3ecea6c06e3d) box [498] over 3 printed components @814+8 (121 814 2 Num Locales indirectamente afectos a la actividad. Fecha....) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:650 (sha256 791479fbf9e9) box [498] over 3 printed components @814+8 (121 814 2 Num Locales indirectamente afectos a la actividad. Fecha....)."
 number = "498"
 section = ["declaracion", "actividades", "local_indirecto_2"]
 data_type = "date"

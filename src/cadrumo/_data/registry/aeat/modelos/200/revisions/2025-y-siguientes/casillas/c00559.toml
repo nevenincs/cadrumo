@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00559"
+continuidad_id = "is-base-imponible-zec-importe"
+continuidad_origin = "seeded"
 number = "00559"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

@@ -1,0 +1,110 @@
+[fact]
+fact_id = "foreign-asset-obligation-taxonomy"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "foreign-asset-obligation-taxonomy:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+valid_to = 2022-12-31
+legal_refs = [
+  "rd-1065-2007:art-42-bis",
+  "rd-1065-2007:art-42-ter",
+  "rd-1065-2007:art-54-bis",
+]
+source_refs = ["aeat-modelo-720-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "group.order", value = "cuentas,valores_derechos_seguros,inmuebles" },
+  { key = "group.cuentas.value", value = "cuentas" },
+  { key = "group.cuentas.description", value = "Foreign accounts held with entities situated abroad under RGAT art. 42 bis." },
+  { key = "group.cuentas.establishing_legal_ref", value = "rd-1065-2007:art-42-bis" },
+  { key = "group.valores_derechos_seguros.value", value = "valores_derechos_seguros" },
+  { key = "group.valores_derechos_seguros.description", value = "Foreign securities, rights, collective investments, insurance and annuities under RGAT art. 42 ter." },
+  { key = "group.valores_derechos_seguros.establishing_legal_ref", value = "rd-1065-2007:art-42-ter" },
+  { key = "group.inmuebles.value", value = "inmuebles" },
+  { key = "group.inmuebles.description", value = "Foreign real estate and rights in foreign real estate under RGAT art. 54 bis." },
+  { key = "group.inmuebles.establishing_legal_ref", value = "rd-1065-2007:art-54-bis" },
+
+  { key = "asset_class.cuenta_entidad_financiera.group", value = "cuentas" },
+  { key = "asset_class.valor_derecho_extranjero.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.institucion_inversion_colectiva.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.seguro_renta_temporal_vitalicia.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.inmueble_derecho_real_extranjero.group", value = "inmuebles" },
+]
+
+# The AEAT procedure page grounds WHAT this taxonomy is about -- its own title names the
+# declaration of bienes y derechos situados en el extranjero -- and nothing more. The THREE-GROUP
+# decomposition is NOT grounded here and is not claimed: cuentas, valores/derechos/seguros and
+# inmuebles rest on RGAT arts 42 bis, 42 ter and 54 bis, which each group already names in its
+# own establishing_legal_ref. The page's other mentions of cuentas and inmuebles are entries in
+# the site's navigation list of other modelos, not statements about this one.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = [
+    "Declaración sobre bienes y derechos situados en el extranjero",
+]
+
+[[fact.variants]]
+variant_id = "foreign-asset-obligation-taxonomy:2023-01-01"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+legal_refs = [
+  "rd-1065-2007:art-42-bis",
+  "rd-1065-2007:art-42-ter",
+  "rd-1065-2007:art-54-bis",
+  "rd-1065-2007:art-42-quater",
+]
+source_refs = ["aeat-modelo-720-procedure", "aeat-modelo-721-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "group.order", value = "cuentas,valores_derechos_seguros,inmuebles,monedas_virtuales" },
+  { key = "group.cuentas.value", value = "cuentas" },
+  { key = "group.cuentas.description", value = "Foreign accounts held with entities situated abroad under RGAT art. 42 bis." },
+  { key = "group.cuentas.establishing_legal_ref", value = "rd-1065-2007:art-42-bis" },
+  { key = "group.valores_derechos_seguros.value", value = "valores_derechos_seguros" },
+  { key = "group.valores_derechos_seguros.description", value = "Foreign securities, rights, collective investments, insurance and annuities under RGAT art. 42 ter." },
+  { key = "group.valores_derechos_seguros.establishing_legal_ref", value = "rd-1065-2007:art-42-ter" },
+  { key = "group.inmuebles.value", value = "inmuebles" },
+  { key = "group.inmuebles.description", value = "Foreign real estate and rights in foreign real estate under RGAT art. 54 bis." },
+  { key = "group.inmuebles.establishing_legal_ref", value = "rd-1065-2007:art-54-bis" },
+  { key = "group.monedas_virtuales.value", value = "monedas_virtuales" },
+  { key = "group.monedas_virtuales.description", value = "Foreign virtual currencies declared through the Modelo 721 sibling under RGAT art. 42 quater." },
+  { key = "group.monedas_virtuales.establishing_legal_ref", value = "rd-1065-2007:art-42-quater" },
+
+  { key = "asset_class.cuenta_entidad_financiera.group", value = "cuentas" },
+  { key = "asset_class.valor_derecho_extranjero.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.institucion_inversion_colectiva.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.seguro_renta_temporal_vitalicia.group", value = "valores_derechos_seguros" },
+  { key = "asset_class.inmueble_derecho_real_extranjero.group", value = "inmuebles" },
+  { key = "asset_class.moneda_virtual.group", value = "monedas_virtuales" },
+]
+
+# The AEAT procedure page grounds WHAT this taxonomy is about -- its own title names the
+# declaration of bienes y derechos situados en el extranjero -- and nothing more. The THREE-GROUP
+# decomposition is NOT grounded here and is not claimed: cuentas, valores/derechos/seguros and
+# inmuebles rest on RGAT arts 42 bis, 42 ter and 54 bis, which each group already names in its
+# own establishing_legal_ref. The page's other mentions of cuentas and inmuebles are entries in
+# the site's navigation list of other modelos, not statements about this one.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = [
+    "Declaración sobre bienes y derechos situados en el extranjero",
+]
+
+# Modelo 721's page grounds only the monedas_virtuales group added by this variant; its title
+# names the declaration of monedas virtuales situadas en el extranjero. The other three groups
+# are the 720 citation's and the RGAT articles', not this one's.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-721-procedure"
+required_text = [
+    "Declaración informativa sobre monedas virtuales situadas en el extranjero",
+]

@@ -24,9 +24,10 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.loader import load_modelo_directory
-from ..corpus_write import CRLF, LF, ReadBackFailedError, detect_newline, verify_written, write_preserving_newlines
+from ..corpus_write import CRLF, LF, detect_newline, verify_written, write_preserving_newlines
 from ..lift_family_source_defaults import (
     FAMILIES,
     FAMILY_DEFAULT_KEY,
@@ -911,13 +912,13 @@ def test_a_write_keeps_the_file_line_ending_style_and_is_read_back_on_raw_bytes(
     assert b"\r\r\n" not in crlf.read_bytes()
 
     crlf.write_bytes(b'name = "b"\nvalue = 2\n')
-    with pytest.raises(ReadBackFailedError, match="line endings changed"):
+    with pytest.raises(RegistryLoadError, match="line endings changed"):
         verify_written(crlf, CRLF)
     crlf.write_bytes(b'name = "b"\r\r\nvalue = 2\r\n')
-    with pytest.raises(ReadBackFailedError, match="doubled carriage return"):
+    with pytest.raises(RegistryLoadError, match="doubled carriage return"):
         verify_written(crlf, CRLF)
     lf.write_bytes(b"name = \n")
-    with pytest.raises(ReadBackFailedError, match="unparsable TOML"):
+    with pytest.raises(RegistryLoadError, match="unparsable TOML"):
         verify_written(lf, LF)
 
 

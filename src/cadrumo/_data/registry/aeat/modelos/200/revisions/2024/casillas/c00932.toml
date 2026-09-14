@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00932"
+continuidad_id = "is-base-imponible-cooperativa-ajuste"
 number = "00932"
 section = ["liquidacion_iii", "base_imponible"]
 data_type = "money"

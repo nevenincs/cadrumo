@@ -174,6 +174,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @213+8. Identificacion. Fecha del acuerdo de voluntades. ONE casilla over three design components at @213+2 dia, @215+2 mes and @217+4 ano, all three printed under the single number B8.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.ident-fecha-acuerdo-voluntades"
+continuidad_id = "pj-ident-fecha-acuerdo-voluntades"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:196 (sha256 3ecea6c06e3d) box [B8] over 3 printed components @213+8 (9 213 2 Num Pers. jcas. o entidades. Identificación. Fecha acuerdo ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:234 (sha256 791479fbf9e9) box [B8] over 3 printed components @213+8 (9 213 2 Num Pers. jcas. o entidades. Identificación. Fecha acuerdo ...)."
 number = "B8"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -189,6 +192,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @221+8. Identificacion. Fecha de constitucion. ONE casilla over three design components at @221+2 dia, @223+2 mes and @225+4 ano, all three printed under the single number B9.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.ident-fecha-constitucion"
+continuidad_id = "pj-ident-fecha-constitucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:199 (sha256 3ecea6c06e3d) box [B9] over 3 printed components @221+8 (12 221 2 Num Pers. jcas. o entidades. Identificación. Fecha constit...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:237 (sha256 791479fbf9e9) box [B9] over 3 printed components @221+8 (12 221 2 Num Pers. jcas. o entidades. Identificación. Fecha constit...)."
 number = "B9"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -204,6 +210,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @229+8. Identificacion. Fecha de inscripcion registral. ONE casilla over three design components at @229+2 dia, @231+2 mes and @233+4 ano, all three printed under the single number B10.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pj.ident-fecha-inscripcion-registral"
+continuidad_id = "pj-ident-fecha-inscripcion-registral"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:202 (sha256 3ecea6c06e3d) box [B10] over 3 printed components @229+8 (15 229 2 Num Pers. jcas. o entidades. Identificación. Fecha inscrip...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:240 (sha256 791479fbf9e9) box [B10] over 3 printed components @229+8 (15 229 2 Num Pers. jcas. o entidades. Identificación. Fecha inscrip...)."
 number = "B10"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"

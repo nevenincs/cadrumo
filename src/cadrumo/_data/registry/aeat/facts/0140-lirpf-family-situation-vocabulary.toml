@@ -1,0 +1,46 @@
+[fact]
+fact_id = "lirpf-family-situation-vocabulary"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lirpf-family-situation-vocabulary:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["boe-lirpf-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = [
+  "modalidades de unidad familiar",
+  "cónyuges no separados legalmente",
+  "Los hijos menores",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "situacion_familiar.order", value = "casado,pareja_hecho_registrada,pareja_hecho_no_registrada,soltero,separado_divorciado" },
+  { key = "situacion_familiar.casado.value", value = "casado" },
+  { key = "situacion_familiar.casado.description", value = "Cónyuges no separados legalmente; unidad familiar de la modalidad del artículo 82.1.1ª." },
+  { key = "situacion_familiar.casado.legal_refs", value = "ley-35-2006:art-82" },
+  { key = "situacion_familiar.casado.monoparental_required", value = "false" },
+  { key = "situacion_familiar.pareja_hecho_registrada.value", value = "pareja_hecho_registrada" },
+  { key = "situacion_familiar.pareja_hecho_registrada.description", value = "Pareja de hecho registrada sin vínculo matrimonial; unidad familiar monoparental de la modalidad del artículo 82.1.2ª." },
+  { key = "situacion_familiar.pareja_hecho_registrada.legal_refs", value = "ley-35-2006:art-82" },
+  { key = "situacion_familiar.pareja_hecho_registrada.monoparental_required", value = "true" },
+  { key = "situacion_familiar.pareja_hecho_no_registrada.value", value = "pareja_hecho_no_registrada" },
+  { key = "situacion_familiar.pareja_hecho_no_registrada.description", value = "Pareja de hecho no registrada sin vínculo matrimonial; unidad familiar monoparental de la modalidad del artículo 82.1.2ª." },
+  { key = "situacion_familiar.pareja_hecho_no_registrada.legal_refs", value = "ley-35-2006:art-82" },
+  { key = "situacion_familiar.pareja_hecho_no_registrada.monoparental_required", value = "true" },
+  { key = "situacion_familiar.soltero.value", value = "soltero" },
+  { key = "situacion_familiar.soltero.description", value = "Persona soltera; unidad familiar monoparental de la modalidad del artículo 82.1.2ª cuando existen hijos que cumplen los requisitos legales." },
+  { key = "situacion_familiar.soltero.legal_refs", value = "ley-35-2006:art-82" },
+  { key = "situacion_familiar.soltero.monoparental_required", value = "true" },
+  { key = "situacion_familiar.separado_divorciado.value", value = "separado_divorciado" },
+  { key = "situacion_familiar.separado_divorciado.description", value = "Persona separada legalmente o divorciada; unidad familiar monoparental de la modalidad del artículo 82.1.2ª cuando existen hijos que cumplen los requisitos legales." },
+  { key = "situacion_familiar.separado_divorciado.legal_refs", value = "ley-35-2006:art-82" },
+  { key = "situacion_familiar.separado_divorciado.monoparental_required", value = "true" },
+]

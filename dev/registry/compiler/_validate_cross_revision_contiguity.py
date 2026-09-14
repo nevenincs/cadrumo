@@ -24,7 +24,7 @@ from collections import defaultdict
 from itertools import pairwise
 
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions as _ordered_revisions
-from cadrumo.domain.calculations.registry.revision_order import revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 __all__ = ("strict_continuity_chain_contiguity_failures",)
@@ -99,14 +99,16 @@ def _skipped_revisions(
     """Return the revisions between two chain occurrences that are a real gap.
 
     Variant schemas sharing a validity window are alternative shapes of one
-    period, not a temporal gap, so an overlapping revision never counts as a
-    skipped one.
+    period, not a temporal gap, so a coexisting revision never counts as a
+    skipped one. Coexistence, not bare selector overlap, is the test: a
+    successive edition serving the same period vocabulary from a later window
+    is exactly the temporal gap this is looking for.
     """
     return tuple(
         revision
         for revision in ordered_revisions[left + 1 : right]
-        if not revisions_overlap(revision, ordered_revisions[left])
-        and not revisions_overlap(revision, ordered_revisions[right])
+        if not revisions_coexist(revision, ordered_revisions[left])
+        and not revisions_coexist(revision, ordered_revisions[right])
     )
 
 

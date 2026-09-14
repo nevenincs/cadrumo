@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "03241"
+continuidad_id = "03241"
+continuidad_origin = "seeded"
 number = "03241"
 section = ["gastos_que_sean_objeto_de_la_deduccion_por_inversi", "aumento"]
 data_type = "money"

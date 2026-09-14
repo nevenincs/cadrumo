@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "03021"
+continuidad_id = "03021"
 number = "03021"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-22"]
 [[revisions."2024".casillas]]
 id = "03022"
+continuidad_id = "03022"
 number = "03022"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-22"]
 [[revisions."2024".casillas]]
 id = "03023"
+continuidad_id = "03023"
 number = "03023"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-22"]
 [[revisions."2024".casillas]]
 id = "03024"
+continuidad_id = "03024"
 number = "03024"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-22"]
 [[revisions."2024".casillas]]
 id = "03025"
+continuidad_id = "03025"
 number = "03025"
 section = ["exencion_de_rentas_en_el_extranjero_art_22_lis", "aumento"]
 data_type = "money"

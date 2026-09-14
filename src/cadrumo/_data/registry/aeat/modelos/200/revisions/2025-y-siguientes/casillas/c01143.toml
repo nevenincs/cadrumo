@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01143"
+continuidad_id = "is-correccion-dotaciones-deterioro-creditos-saldo-inicial-cumplido-condiciones"
+continuidad_origin = "seeded"
 number = "01143"
 section = ["dotaciones_deterioro_creditos_u_otros_activos", "ejercicio_generacion"]
 data_type = "money"

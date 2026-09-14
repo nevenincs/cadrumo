@@ -158,6 +158,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @129+17 Num. Liquidación (3) - Cuota íntegra del grupo [00562]. {DID_liq_CI}
 [[revisions."2024".casillas]]
 id = "T220DID00:00562"
+continuidad_id = "t220did00-00562"
 number = "00562"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -169,6 +170,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @146+17 N. Liquidación (3)- Resultado: Estado [00621]
 [[revisions."2024".casillas]]
 id = "T220DID00:00621"
+continuidad_id = "t220did00-00621"
 number = "00621"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -180,6 +182,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @163+17 N. Liquidación (3)- Opción de fraccionamiento art. 19.1 LIS. Líquido a ingresar incluido el 1er fraccionamiento del art. 19.1 LIS: Estado. Estado [02800]
 [[revisions."2024".casillas]]
 id = "T220DID00:02800"
+continuidad_id = "t220did00-02800"
 number = "02800"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "liquidacion"]
@@ -356,6 +359,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @507+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Abono [02806]
 [[revisions."2024".casillas]]
 id = "T220DID00:02806"
+continuidad_id = "t220did00-02806"
 number = "02806"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -367,6 +371,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @524+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: Compensación [02809]
 [[revisions."2024".casillas]]
 id = "T220DID00:02809"
+continuidad_id = "t220did00-02809"
 number = "02809"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]
@@ -378,6 +383,7 @@ legal_refs = ["orden-hac-657-2025:art-3", "ley-27-2014:art-124"]
 # @541+17 N. Abono/Compensación(6). Resultado de conversión de AID tras regularización: A ingresar [02812]
 [[revisions."2024".casillas]]
 id = "T220DID00:02812"
+continuidad_id = "t220did00-02812"
 number = "02812"
 segmento = "T220DID00"
 section = ["documento_ingreso_devolucion", "abono_compensacion"]

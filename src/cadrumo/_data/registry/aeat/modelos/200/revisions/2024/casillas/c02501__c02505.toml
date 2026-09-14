@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02501"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-permanente-aumento"
 number = "02501"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02502"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-temporaria-ejercicio-aumento"
 number = "02502"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02503"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-temporaria-anteriores-aumento"
 number = "02503"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02504"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-saldo-inicial"
 number = "02504"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02505"
+continuidad_id = "is-correccion-cambio-criterios-contables-art11-3-saldo-final"
 number = "02505"
 section = ["cambio_de_criterios_contables_art_11_3_2o_lis", "aumento"]
 data_type = "money"

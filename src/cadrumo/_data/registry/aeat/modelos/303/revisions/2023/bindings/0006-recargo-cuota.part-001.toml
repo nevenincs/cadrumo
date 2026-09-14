@@ -13,6 +13,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_general"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -24,6 +25,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_reduced"],
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"
@@ -35,6 +37,7 @@ provider = { kind = "ledger_iva_aggregation", categories = ["domestic_super_redu
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2023.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

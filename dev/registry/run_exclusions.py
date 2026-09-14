@@ -11,9 +11,8 @@ reason it was made. The reason is part of the exclusion rather than a property
 of the run: a campaign file groups several unrelated judgements, and a single
 run-wide reason would make one of them stand for all.
 
-:data:`FROZEN_MODELOS` is the structural half of the same idea. Those modelos
-are excluded from every run whether or not anyone passes a flag, because a
-freeze that depends on the operator remembering a flag is not a freeze.
+:data:`FROZEN_MODELOS` records structural freezes when a live campaign has one.
+It is empty once lane ownership has been handed back to the corpus campaign.
 """
 
 from __future__ import annotations
@@ -22,6 +21,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+from cadrumo.domain.calculations.registry.errors import RegistryError
 
 __all__ = [
     "FROZEN_MODELOS",
@@ -35,18 +36,15 @@ __all__ = [
     "parse_exclusions_file",
 ]
 
-#: Modelos no corpus tool may plan under, flags or no flags. They are another
-#: lane's adjudication surface; lift here by hand-off only.
-FROZEN_MODELOS: Final[tuple[str, ...]] = ("100", "200")
+#: No modelo is structurally frozen.  Lane ownership is transient campaign
+#: coordination, not registry authority, and must not become a permanent reason
+#: for the bulk authoring tools to hide otherwise eligible work.
+FROZEN_MODELOS: Final[tuple[str, ...]] = ()
 
 FROZEN_REASON: Final = "frozen: another lane's adjudication surface; lift here by hand-off only"
 
 #: The reason recorded for an exclusion the operator named without giving one.
 DEFAULT_EXCLUSION_REASON: Final = "excluded by the operator for this run"
-
-
-class MalformedExclusionError(ValueError):
-    """An exclusion the tool will not guess the meaning of."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,7 +111,7 @@ def parse_exclusion(text: str, reason: str) -> Exclusion:
     """
     modelo, separator, edition = text.strip().partition("/")
     if not modelo.strip() or (separator and not edition.strip()):
-        raise MalformedExclusionError(f"malformed exclusion {text!r}: expected '<modelo>' or '<modelo>/<edition>'")
+        raise RegistryError(f"malformed exclusion {text!r}: expected '<modelo>' or '<modelo>/<edition>'")
     return Exclusion(modelo=modelo.strip(), edition=edition.strip(), reason=reason)
 
 
@@ -139,11 +137,11 @@ def parse_exclusions_file(path: Path) -> tuple[Exclusion, ...]:
             continue
         try:
             item = parse_exclusion(line, reason)
-        except MalformedExclusionError as exc:
-            raise MalformedExclusionError(f"{path}:{number}: {exc}") from exc
+        except RegistryError as exc:
+            raise RegistryError(f"{path}:{number}: {exc}") from exc
         found.setdefault((item.modelo, item.edition), item)
     if not found:
-        raise MalformedExclusionError(f"{path}: names no exclusion")
+        raise RegistryError(f"{path}: names no exclusion")
     return tuple(found.values())
 
 

@@ -30,6 +30,7 @@ id = "modelo-303-casilla-120-no-sujetas-localizacion-base"
 provider = { kind = "ledger_iva_aggregation", categories = ["intra_community_service_supply"], rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"], flow_direction = "repercutido", fact = "base_amount_sum", observation_roles = ["settlement"], cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"] }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-69", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2024-late", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 
 [[revisions.2024-desde-09-y-3t.bindings.source_citations]]
 source_ref = "aeat-modelo-303-procedure"

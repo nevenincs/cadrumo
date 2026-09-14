@@ -59,3 +59,57 @@ periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad."
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-64"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-66"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "dr303-71"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-303-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-autoconsumo-promotor-base"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-autoconsumo-promotor-cuota"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "iva-resultado-autoliquidacion"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30"]
+source_refs = ["aeat-dr-303-2026", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]

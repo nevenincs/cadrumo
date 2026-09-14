@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01317"
+continuidad_id = "is-deduccion-cinematografica-extranjera-canarias-total"
 number = "01317"
 section = ["deducciones_por_producciones_cinematograficas_extr", "total"]
 data_type = "money"

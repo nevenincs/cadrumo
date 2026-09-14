@@ -1,5 +1,6 @@
 [[revisions.2024.casillas]]
 id = '00814'
+continuidad_id = "is-deduccion-idi-excluida-limite-info-adicional"
 number = '00814'
 data_type = 'money'
 semantic_role = 'is_deduccion_idi_excluida_limite_info_adicional'

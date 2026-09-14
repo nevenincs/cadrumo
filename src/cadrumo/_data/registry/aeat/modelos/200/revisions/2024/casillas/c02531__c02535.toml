@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02531"
+continuidad_id = "is-correccion-rentas-negativas-art11-9-10-permanente-aumento"
 number = "02531"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02532"
+continuidad_id = "is-correccion-rentas-negativas-art11-9-10-temporaria-ejercicio-aumento"
 number = "02532"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02533"
+continuidad_id = "is-correccion-rentas-negativas-art11-9-10-temporaria-anteriores-aumento"
 number = "02533"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02534"
+continuidad_id = "is-correccion-rentas-negativas-art11-9-10-saldo-inicial"
 number = "02534"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-11"]
 [[revisions."2024".casillas]]
 id = "02535"
+continuidad_id = "is-correccion-rentas-negativas-art11-9-10-saldo-final-neto"
 number = "02535"
 section = ["rentas_negativas_art_11_9_y_11_10_lis", "aumento"]
 data_type = "money"

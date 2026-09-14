@@ -62,6 +62,7 @@ from ._validate_surfaces import (
 from ._validate_valid_from_ejercicio_convention import validate_valid_from_ejercicio_convention
 from .validate_applicability_section import validate_applicability_section
 from .validate_authority_grade import validate_authority_grade_section
+from .validate_below_floor_export_refs import downgrade_below_floor_export_reference_failures
 from .validate_bindings import validate_binding_registration_section
 from .validate_evidence import EvidenceValidator
 from .validate_export_layout_coverage import validate_export_layout_record_coverage
@@ -179,16 +180,20 @@ def _validate_revision_surface_sections(
         ),
     )
     failures.extend(
-        validate_export_layout_section(
-            prefix=prefix,
-            revision=revision,
-            casillas=context.casillas,
-            bindings=context.bindings,
-            casilla_by_id=context.casilla_by_id,
-            legal_refs=legal_refs,
-            source_refs=source_refs,
-            evidence=evidence,
-            source_root=source_root,
+        downgrade_below_floor_export_reference_failures(
+            validate_export_layout_section(
+                prefix=prefix,
+                revision=revision,
+                casillas=context.casillas,
+                bindings=context.bindings,
+                casilla_by_id=context.casilla_by_id,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+                evidence=evidence,
+                source_root=source_root,
+            ),
+            modelo_id=modelo_id,
+            revision_id=revision.id,
         ),
     )
     failures.extend(

@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02761"
+continuidad_id = "is-correccion-gastos-retribucion-fondos-propios-art15a-permanente-aumento"
+continuidad_origin = "seeded"
 number = "02761"
 section = ["gastos_no_deducibles_por_considerarse_retribucion", "aumento"]
 data_type = "money"

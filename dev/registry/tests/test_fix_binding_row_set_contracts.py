@@ -1,36 +1,32 @@
 """Behaviour of the row-producing binding value-contract normaliser.
 
-Every case builds an isolated temporary registry tree seeded from one small
+Every case builds an isolated temporary registry tree holding one synthetic
 authored modelo, so the contributor's working tree is never mutated and the
 detector teeth (a refused row, an untouched file, a dry run) are proven on real
-files rather than on a patched module.
+files rather than on a patched module. The tree carries exactly the shapes the
+normaliser is asked about, so no case's meaning moves when the shipped corpus
+is reauthored.
 """
 
 from __future__ import annotations
 
-import shutil
 import tomllib
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from ..convert_binding_provider_shape import REGISTRY_MODELOS_ROOT
 from ..fix_binding_row_set_contracts import FixReport, RowSetRefusalError, fix_modelo, row_set_value_for
+from ._synthetic_binding_modelo import BASE_TAIL, MODELO, REVISION, write_seed_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-SEED_MODELO = "151"
-REVISION = "2025-y-siguientes"
-BASE_TAIL = 'legal_refs = ["ley-35-2006:art-93"]\nsource_refs = ["aeat-modelo-151-procedure"]\n'
+SEED_MODELO = MODELO
 
 
 def _seed_tree(tmp_path: Path) -> Path:
-    modelos_root = tmp_path / "modelos"
-    modelos_root.mkdir()
-    shutil.copytree(REGISTRY_MODELOS_ROOT / SEED_MODELO, modelos_root / SEED_MODELO)
-    return modelos_root
+    return write_seed_tree(tmp_path)
 
 
 def _bindings_file(modelos_root: Path) -> Path:

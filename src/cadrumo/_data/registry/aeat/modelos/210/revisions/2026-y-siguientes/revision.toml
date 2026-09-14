@@ -81,3 +81,120 @@ source_refs = ["aeat-dr-210-2026", "aeat-modelo-210-procedure"]
 kind = "underivable"
 reason = """
 lift refuses: 2 source_refs statement(s) not textually rewritable: 0004-m210-tipo-renta-code.toml: source_refs = [; 0005-m210-tipo-renta-multiple-payers.toml: source_refs = ["""
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-tipo-renta"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-rendimientos-integros"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1", "trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-catastral"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-imputacion-inmobiliaria-coeficiente"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-imputacion-inmobiliaria-dias"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-adquisicion"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-imputacion-inmobiliaria-valor-comprobado-administracion"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-gastos-deducibles"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-retencion-practicada"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-base-imponible"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24", "ley-35-2006:art-85"]
+source_refs = ["aeat-modelo-210-procedure", "aeat-irnr-renta-imputada-inmueble-urbano"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-tipo-gravamen"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-cuota-integra"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.b"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2026-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "irnr-cuota-diferencial"
+from_revision = "2025"
+to_revision = "2026-y-siguientes"
+origin = "seeded"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]

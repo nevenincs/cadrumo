@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01009"
+continuidad_id = "is-correccion-deterioro-participaciones-dt16-saldo-inicial-neto"
+continuidad_origin = "seeded"
 number = "01009"
 section = ["ajustes_por_deterioro_de_valores_repr_de_partic_en", "disminucion"]
 data_type = "money"

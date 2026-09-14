@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01344"
+continuidad_id = "01344"
 number = "01344"
 segmento = "DP200014"
 section = ["liquidacion_iii", "bonificaciones_deducciones_doble_imposicion"]

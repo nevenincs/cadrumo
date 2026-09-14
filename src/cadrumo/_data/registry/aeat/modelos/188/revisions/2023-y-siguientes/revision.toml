@@ -21,3 +21,43 @@ while the tipo-1/tipo-2 value, semantic-map, generated-fragment and emitted-byte
 absent. Stated because it is not a discriminator: 60 of the 80 revisions stamped before 2026-08-21 \
 carry the same flag and none of them name it."""
 reviewed_at = 2026-08-21
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-resumen-perceptores-base-positiva"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-resumen-base-positiva"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-resumen-retenciones"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "capitalizacion-seguros-resumen-base-negativa"
+from_revision = "2022"
+to_revision = "2023-y-siguientes"
+origin = "grounded"
+evidence = "corpus/normatives/pdf/boe-a-1999-22372-modelo-188-annex-text.txt (sha256 a595bb60c6f5f067): ANEXO IV lists boxes [01]-[05] in order; corpus/aeat_official/disenos_registro/modelo_188/files/01-188-diseno-de-registro-actualizado-en-2023.pdf.extracted.md (sha256 30ced236b558): [01]/[04] are the two base-sign counts, [02]/[05] the corresponding bases and [03] retenciones; both registry revisions preserve the same row meaning."
+legal_refs = ["ley-35-2006:art-99", "orden-1999-11-17:apartado-quinto"]
+source_refs = ["boe-modelo-188-form-text", "boe-modelo-188-form-layout"]

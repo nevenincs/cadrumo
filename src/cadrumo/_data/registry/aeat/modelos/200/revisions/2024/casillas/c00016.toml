@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00016"
+continuidad_id = "is-cooperativa-base-imponible"
 number = "00016"
 section = ["reg_cooperativas", "determ_base_imponible"]
 data_type = "money"

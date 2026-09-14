@@ -5,9 +5,11 @@ from __future__ import annotations
 import json
 import logging
 import warnings
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING
+from zipfile import BadZipFile
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
@@ -24,6 +26,16 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
+
+if TYPE_CHECKING:
+    import pypdfium2
+    from openpyxl.workbook import Workbook
+
+type WorkbookOpener = Callable[[str], Workbook]
+"""Opens one XLSX source for read-only cell extraction."""
+
+type PdfDocumentOpener = Callable[[str], pypdfium2.PdfDocument]
+"""Opens one PDF source for page-text extraction."""
 
 _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
@@ -163,16 +175,28 @@ def _read_source_text(source: SourceReference, source_path: Path) -> str:
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
 
 
-def _extract_xlsx_text_impl(path: str) -> str:
-    """Return cell text from an enrolled XLSX record-design authority."""
+def _extract_xlsx_text_impl(path: str, *, open_workbook: WorkbookOpener | None = None) -> str:
+    """Return cell text from an enrolled XLSX record-design authority.
+
+    Only a workbook the reader itself rejects is relabelled as an unreadable
+    XLSX source. The extraction limits below raise ``OSError`` deliberately and
+    keep their own message, and every other exception keeps its own subject.
+
+    Args:
+        path: Filesystem path of the XLSX source to read.
+        open_workbook: Reader override used by the tests to exercise the
+            refusal paths; defaults to openpyxl's read-only loader.
+    """
     try:
         from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
         raise OSError("openpyxl is required to validate XLSX source citations") from exc
+    opener = open_workbook or (lambda source: load_workbook(source, read_only=True, data_only=False))
     try:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
-            workbook = load_workbook(path, read_only=True, data_only=False)
+            workbook = opener(path)
             try:
                 cells: list[str] = []
                 text_chars = 0
@@ -197,8 +221,8 @@ def _extract_xlsx_text_impl(path: str) -> str:
                 return "\n".join(cells)
             finally:
                 workbook.close()
-    except Exception as exc:
-        raise OSError(f"could not extract text from XLSX source {path}") from exc
+    except (InvalidFileException, BadZipFile, KeyError, TypeError, ValueError) as exc:
+        raise OSError(f"could not extract text from XLSX source {path}: {exc}") from exc
 
 
 _disk_cache: dict[str, str] | None = None
@@ -287,13 +311,25 @@ def _write_disk_cache(data: dict[str, str]) -> None:
         _LOGGER.warning("Could not write corpus text cache at %s", cache_path, exc_info=True)
 
 
-def _extract_pdf_text_impl(path: str) -> str:
+def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
+    """Return page text from an enrolled manual PDF authority.
+
+    Only a document pdfium itself rejects, or a filesystem failure reading it,
+    is relabelled as an unreadable PDF source; every other exception keeps its
+    own subject.
+
+    Args:
+        path: Filesystem path of the PDF source to read.
+        open_document: Reader override used by the tests to exercise the
+            refusal paths; defaults to pdfium's document constructor.
+    """
     try:
         import pypdfium2 as pdfium
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
         raise OSError("pypdfium2 is required to validate manual PDF citations") from exc
+    opener = open_document or pdfium.PdfDocument
     try:
-        pdf = pdfium.PdfDocument(path)
+        pdf = opener(path)
         pages: list[str] = []
         try:
             for index in range(len(pdf)):
@@ -309,8 +345,8 @@ def _extract_pdf_text_impl(path: str) -> str:
         finally:
             pdf.close()
         return "\n".join(pages)
-    except Exception as exc:
-        raise OSError(f"could not extract text from manual PDF {path}") from exc
+    except (pdfium.PdfiumError, OSError, ValueError) as exc:
+        raise OSError(f"could not extract text from manual PDF {path}: {exc}") from exc
 
 
 class EvidenceValidator:

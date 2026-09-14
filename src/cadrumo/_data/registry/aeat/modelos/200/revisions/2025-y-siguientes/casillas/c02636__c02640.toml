@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02636"
+continuidad_id = "is-correccion-libertad-amortizacion-mantenimiento-empleo-permanente-disminucion"
+continuidad_origin = "seeded"
 number = "02636"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
@@ -11,6 +13,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02637"
+continuidad_id = "is-correccion-libertad-amortizacion-mantenimiento-empleo-temporaria-ejercicio-disminucion"
+continuidad_origin = "seeded"
 number = "02637"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
@@ -22,6 +26,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02638"
+continuidad_id = "is-correccion-libertad-amortizacion-mantenimiento-empleo-temporaria-anteriores-disminucion"
+continuidad_origin = "seeded"
 number = "02638"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
@@ -33,6 +39,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02639"
+continuidad_id = "02639"
+continuidad_origin = "seeded"
 number = "02639"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"
@@ -42,6 +50,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02640"
+continuidad_id = "02640"
+continuidad_origin = "seeded"
 number = "02640"
 section = ["libertad_de_amortizacion_con_mantenimiento_de_empl", "disminucion"]
 data_type = "money"

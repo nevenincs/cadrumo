@@ -46,3 +46,228 @@ captured 2026-08-26, which still publish the 2023 design as CURRENT -- AEAT reis
 for modelo 347 under this same orden and did NOT for modelo 270. Its df unica applies the \
 orden "por primera vez ... al ejercicio 2025 y siguientes", so 2025 is governed here."""
 reviewed_at = 2026-08-30
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "filing-year"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "tipo-declaracion"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-persona-contacto-telefono"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-persona-contacto-nombre"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-numero-identificativo"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-declaracion-complementaria"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-declaracion-sustitutiva"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-numero-identificativo-anterior"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-nif"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-representative-nif"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-name"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-representante-nombre"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-tipo-perceptor"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-clave-personalidad"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "payee-province"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-fecha-sorteo"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-fecha-pago-premio"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-importe-premio"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-base-retencion"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "perc-retencion"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-gestor-cobro"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-nif-pais-residencia"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-fecha-nacimiento"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-lugar-nacimiento"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]
+
+[[revisions."2023-y-siguientes".lineage_attestations]]
+family = "casillas"
+continuidad_id = "m270-pais-residencia"
+from_revision = "2013-2022"
+to_revision = "2023-y-siguientes"
+origin = "seeded"
+legal_refs = ["orden-hap-2368-2013:art-1", "ley-35-2006:da-33", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-270-2023", "enrolled-modelo-270-procedure"]

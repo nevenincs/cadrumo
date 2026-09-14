@@ -23,8 +23,8 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.keyed_families import INHERITED_FAMILIES
 from cadrumo.domain.calculations.registry.restated_families import (
-    INHERITED_FAMILIES,
     RestatedFamilyCause,
     RestatedFamilyDeclaration,
 )

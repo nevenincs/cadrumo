@@ -81,6 +81,7 @@ data_type = "text"
 semantic_role = "m280_tipo_plan_ahorro"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-hap-2118-2015:art-1"], additional_source_refs = ["aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1"]
 
 # @77+1 Alfabético. TIPO DE IDENTIFICADOR | Se consignará una de las siguientes claves: I: Si el Plan de Ahorro a Largo Plazo se identifica mediante un código IBAN. O: Si se aporta otro identificador, por ejemplo, el número de referencia de un contrato de seguro.
@@ -93,6 +94,7 @@ data_type = "text"
 semantic_role = "m280_tipo_identificador"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["I", "O"], legal_refs = ["orden-hap-2118-2015:art-1"], additional_source_refs = ["aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1"]
 
 # @78+24 Alfanumérico. IDENTIFICADOR DEL PRODUCTO CONTRATADO | Se consignará el código identificativo del CIALP o SIALP cuya titularidad corresponda al declarado.
@@ -105,6 +107,7 @@ data_type = "text"
 semantic_role = "m280_identificador_producto"
 required = false
 input_kind = "manual"
+constraints = { max_length = 24, legal_refs = ["orden-hap-2118-2015:art-1"], additional_source_refs = ["aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1"]
 
 # @102+8 Numérico. FECHA DE APERTURA | Este campo se subdivide en 3:
@@ -117,6 +120,7 @@ data_type = "text"
 semantic_role = "m280_fecha_apertura"
 required = false
 input_kind = "manual"
+constraints = { max_length = 8, legal_refs = ["orden-hap-2118-2015:art-1"], additional_source_refs = ["aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1"]
 
 # @110+1 Alfabético. CLAVE DE ALTA | Se consignará una de las claves siguientes: A. Plan de Ahorro a Largo Plazo constituido en el ejercicio al que se refiere la declaración o en un ejercicio anterior. B. Baja de un Plan de Ahorro a Largo plazo por movilización a otra entidad aseguradora o de crédito. C. Alta de un Plan de Ahorro a Largo Plazo por movilización desde otra Entidad Aseguradora o de Crédito. D. Alta de un Plan de Ahorro a Largo Plazo y movilización a otra entidad aseguradora o de crédito en el mismo ejercicio de la apertura.
@@ -225,6 +229,7 @@ data_type = "money"
 semantic_role = "m280_base_retencion_practicada"
 required = false
 input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 
 # @176+11 Alfanumérico. RENDIMIENTOS NEGATIVOS IMPUTABLES | En caso de que en el campo «EXTINCIÓN DEL PLAN DE AHORRO A LARGO PLAZO», posición 137 del registro de tipo 2, se hubiera declarado la clave 2, deberá consignarse el importe de los rendimientos negativos del capital mobiliario que proceda imputar al ejercicio de la extinción conforme a lo dispuesto en el apartado 7 de la Disposición adicional vigésima sexta de la Ley del IRPF. En otro caso el campo se rellenará a ceros. Este campo se subdivide en dos: 176. SIGNO: Campo alfabético: se consignará siempre una “N” 177-186: RENDIMIENTO NEGATIVO: Campo numérico de diez posiciones. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos:

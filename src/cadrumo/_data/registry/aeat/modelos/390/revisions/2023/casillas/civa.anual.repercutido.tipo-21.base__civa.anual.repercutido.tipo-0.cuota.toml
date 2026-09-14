@@ -30,21 +30,6 @@ input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-21-base"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 
-# Box [06] - "Tipo 21 % - Cuota". Vigencia: todo el ejercicio.
-[[revisions."2023".casillas]]
-id = "iva.anual.repercutido.tipo-21.cuota"
-number = "06"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_repercutida_tipo_21"
-continuidad_id = "iva-cuota-repercutida-tipo-21"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per rate; the 21 % tier is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-repercutido-tipo-21-cuota"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-
 # Box [03] - "Tipo 10 % - Base imponible". Vigencia: todo el ejercicio.
 [[revisions."2023".casillas]]
 id = "iva.anual.repercutido.tipo-10.base"
@@ -58,21 +43,6 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 10 % tie
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-10-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-
-# Box [04] - "Tipo 10 % - Cuota". Vigencia: todo el ejercicio.
-[[revisions."2023".casillas]]
-id = "iva.anual.repercutido.tipo-10.cuota"
-number = "04"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_repercutida_tipo_10"
-continuidad_id = "iva-cuota-repercutida-tipo-10"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per rate; the 10 % tier is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-repercutido-tipo-10-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 
 # Box [669] - "Tipo 7,5 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).
@@ -118,21 +88,6 @@ semantic_role_cardinality_reason = "One official AEAT box per rate; the 4 % tier
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-tipo-4-base"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
-
-# Box [02] - "Tipo 4 % - Cuota". Vigencia: todo el ejercicio.
-[[revisions."2023".casillas]]
-id = "iva.anual.repercutido.tipo-4.cuota"
-number = "02"
-section = ["iva", "anual", "devengado"]
-data_type = "money"
-semantic_role = "iva_cuota_repercutida_tipo_4"
-continuidad_id = "iva-cuota-repercutida-tipo-4"
-semantic_role_cardinality = "intentional_singleton"
-semantic_role_cardinality_reason = "One official AEAT box per rate; the 4 % tier is a distinct box from its sibling rates, not a typo twin."
-required = false
-input_kind = "bound"
-binding = "modelo-390-iva-repercutido-tipo-4-cuota"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 
 # Box [667] - "Tipo 2 % - Base imponible". Vigencia: desde el 1 de octubre de 2024 (RDL 4/2024 art. 1).

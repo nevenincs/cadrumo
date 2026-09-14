@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00699"
+continuidad_id = "00699"
+continuidad_origin = "seeded"
 number = "00699"
 section = ["detalle_compensacion_bases_imponibles_negativas", "2014"]
 data_type = "money"

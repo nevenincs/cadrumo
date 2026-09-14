@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01674"
+continuidad_id = "is-correccion-cambio-residencia-ue-eee-art19-permanente-aumento"
+continuidad_origin = "seeded"
 number = "01674"
 section = ["cambio_de_residencia_a_estados_miembros_de_la_unio", "aumento"]
 data_type = "money"

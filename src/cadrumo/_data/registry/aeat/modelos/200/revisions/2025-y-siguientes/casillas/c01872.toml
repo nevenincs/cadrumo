@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01872"
+continuidad_id = "01872"
+continuidad_origin = "seeded"
 number = "01872"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"

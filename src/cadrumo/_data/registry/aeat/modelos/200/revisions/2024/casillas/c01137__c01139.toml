@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01137"
+continuidad_id = "is-reserva-capitalizacion-derecho-generado"
 number = "01137"
 section = ["reserva_capitalizacion", "total"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-25"]
 [[revisions."2024".casillas]]
 id = "01139"
+continuidad_id = "is-reserva-capitalizacion-pendiente-futuros"
 number = "01139"
 section = ["reserva_capitalizacion", "total"]
 data_type = "money"

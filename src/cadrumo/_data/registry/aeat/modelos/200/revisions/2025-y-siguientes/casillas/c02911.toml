@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02911"
+continuidad_id = "is-correccion-socio-sicav-reducciones-capital-permanente-aumento"
+continuidad_origin = "seeded"
 number = "02911"
 section = ["socio_sicav_reducciones_de_capital_y_distribucion", "aumento"]
 data_type = "money"

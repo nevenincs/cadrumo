@@ -54,6 +54,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla: the diseno splits it into dia @12+2, mes @14+2 and ano @16+4.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.fecha-causa"
+continuidad_id = "rep1-fecha-causa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:420 (sha256 3ecea6c06e3d) box [303] over 3 printed components @12+8 (4 12 2 Num 3.1.- Causa de la presentación. Alta, Baja o Modificació...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:480 (sha256 791479fbf9e9) box [303] over 3 printed components @12+8 (4 12 2 Num 3.1.- Causa de la presentación. Alta, Baja o Modificació...)."
 number = "303"
 section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
@@ -142,6 +145,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla: dia @156+2, mes @158+2, ano @160+4.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep1.designada-fecha-causa"
+continuidad_id = "rep1-designada-fecha-causa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:427 (sha256 3ecea6c06e3d) box [313] over 3 printed components @156+8 (11 156 2 Num 3.1.- Identificacion persona fisica designada- Causa d...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:487 (sha256 791479fbf9e9) box [313] over 3 printed components @156+8 (11 156 2 Num 3.1.- Identificacion persona fisica designada- Causa d...)."
 number = "313"
 section = ["declaracion", "representantes", "representante_1"]
 data_type = "date"
@@ -320,6 +326,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla: dia @488+2, mes @490+2, ano @492+4.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.fecha-causa"
+continuidad_id = "rep2-fecha-causa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:440 (sha256 3ecea6c06e3d) box [353] over 3 printed components @488+8 (24 488 2 Num 3.2.- Causa de la presentación. Alta, Baja o Modificac...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:500 (sha256 791479fbf9e9) box [353] over 3 printed components @488+8 (24 488 2 Num 3.2.- Causa de la presentación. Alta, Baja o Modificac...)."
 number = "353"
 section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"
@@ -408,6 +417,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # ONE date casilla: dia @632+2, mes @634+2, ano @636+4.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "rep2.designada-fecha-causa"
+continuidad_id = "rep2-designada-fecha-causa"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:447 (sha256 3ecea6c06e3d) box [363] over 3 printed components @632+8 (31 632 2 Num 3.2.- Identificacion persona fisica designada- Causa d...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:507 (sha256 791479fbf9e9) box [363] over 3 printed components @632+8 (31 632 2 Num 3.2.- Identificacion persona fisica designada- Causa d...)."
 number = "363"
 section = ["declaracion", "representantes", "representante_2"]
 data_type = "date"

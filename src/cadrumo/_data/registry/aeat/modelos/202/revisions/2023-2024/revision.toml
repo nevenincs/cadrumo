@@ -49,3 +49,113 @@ source_refs = ["aeat-dr-202-2023"]
 kind = "underivable"
 reason = """
 No leading source_refs run is shared by two rows of this edition's bindings family. The family holds a single source-stating row, and one statement can open no run that a second shares, so no default is derivable here and the row keeps its own refs rather than lifting them to a manifest default a later authored row might not carry."""
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-excluido-quita-espera"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount excluded for debt-remission or deferral operations, distinct from the part integrated into the tax base. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-integrado-base-imponible-quita-espera"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the part of debt-remission or deferral operations integrated into the tax base, distinct from the excluded amount and the cooperative quota-level amount. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-integrado-cuota-quita-espera-cooperativas"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the part of debt-remission or deferral operations integrated into the tax base at quota level, expressly restricted to cooperatives. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "rentas-reversion-deterioros-integradas-base-imponible"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: income from reversal of impairments integrated into the tax base. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-11"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-reserva-inversiones-canarias"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount corresponding to the reserve for investments in the Canary Islands. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40", "ley-19-1994:art-27"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-bonificacion-art-26-ley-19-1994"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount corresponding to the allowance expressly identified by article 26 of Ley 19/1994. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-no-computable-regimen-zec"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount not counted under the ZEC tax regime. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "minoracion-rentas-bonificacion-art-33-lis"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the reduction for income entitled to the allowance in article 33 LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-excluido-aumento-capital-art-17-2-lis"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount excluded for capital or equity increases through debt compensation not integrated into the tax base under article 17.2 LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "renta-exenta-cap-xiv-tit-vii-lis"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: exempt income of entities applying the special regime in chapter XIV of title VII LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]
+
+[[revisions."2023-2024".lineage_attestations]]
+family = "casillas"
+continuidad_id = "importe-bonificacion-art-34-lis"
+from_revision = "2019-2022"
+to_revision = "2023-2024"
+origin = "grounded"
+evidence = "AEAT aeat-dr-202-2019 and aeat-dr-202-2023 preserve the Informacion adicional measure: the amount of the allowance expressly identified by article 34 LIS. Both designs keep this separately declared unsigned monetary amount; its legal qualifier and role, not its record position, ground continuity."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-dr-202-2023"]

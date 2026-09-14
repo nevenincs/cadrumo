@@ -15,10 +15,15 @@ plant each shape.
 
 from __future__ import annotations
 
+import inspect
+import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
+import dev.registry.analysis.chain_contiguity as chain_contiguity
 import dev.registry.analysis.edition_delta_status as module
 from dev.registry.analysis.edition_delta_status import Edge, build_report, edges, scan_registry
 
@@ -80,12 +85,53 @@ def _finding_loci(root: Path, kind: str) -> set[str]:
     return {finding.locus for status in statuses for finding in status.findings if finding.kind == kind}
 
 
+def _finding_kinds(root: Path) -> set[str]:
+    """Every kind the full report emits, so conditions raised outside the edge pass are visible."""
+    return {finding.kind for status in build_report(root).statuses for finding in status.findings}
+
+
 def _edge(root: Path, predecessor: str, successor: str) -> Edge:
     found = [
         edge for edge in edges(scan_registry(root)) if (edge.predecessor, edge.successor) == (predecessor, successor)
     ]
     assert len(found) == 1, f"expected one {predecessor}->{successor} edge, got {len(found)}"
     return found[0]
+
+
+class TestLimitationsAreDeclaredAndReachable:
+    """Limitations were the third category and the only one with no inventory.
+
+    `CONDITIONS` and `MEASUREMENTS` are tuples, so declared-equals-emitted is
+    checkable both ways. A limitation's name existed solely as an f-string literal
+    at its emit site, so one that silently STOPPED being emitted -- a guard moved,
+    a code path restructured -- was caught by nothing. That is the most expensive
+    absence to lose: a limitation is the screen saying what it could NOT measure,
+    and losing it turns an unmeasured axis into an apparently clean one.
+    """
+
+    def test_every_declared_limitation_has_an_emit_site(self) -> None:
+        """The absence-catching direction: a declared name whose emit site vanished."""
+        source = inspect.getsource(module)
+        assert module.LIMITATIONS, "nothing declared, so this proves nothing"
+        orphans = [name for name in module.LIMITATIONS if f'"{name}:' not in source]
+        assert not orphans, f"declared with no emit site, so it can never fire: {sorted(orphans)}"
+
+    def test_every_emitted_limitation_is_declared(self, tmp_path: Path) -> None:
+        """The other direction, over whatever a real run records."""
+        module._LIMITATIONS.clear()
+        module._family_default_keys.cache_clear()
+        _write_edition(tmp_path, "2024")
+        _write_promise(tmp_path, (2024, 2024))
+        build_report(tmp_path)
+        recorded = list(module._LIMITATIONS)
+        assert recorded, "the run recorded none, so this proves nothing"
+        undeclared = [text for text in recorded if not text.split(":", 1)[0] in module.LIMITATIONS]
+        assert not undeclared, f"emitted but not declared: {undeclared}"
+
+    def test_the_emit_site_check_can_fail(self) -> None:
+        """The control: a name with no emit site must be detected as having none."""
+        source = inspect.getsource(module)
+        assert '"a_limitation_this_screen_never_records:' not in source
 
 
 class TestWholeModeloReadiness:
@@ -444,8 +490,7 @@ class TestServedDispositionIsNamed:
         kinds = self._kinds(tmp_path)
         assert ("999", 2024, "disposition_coordinate_served") not in kinds
         assert any(
-            modelo == "999" and year == 2024 and kind != "disposition_coordinate_served"
-            for modelo, year, kind in kinds
+            modelo == "999" and year == 2024 and kind != "disposition_coordinate_served" for modelo, year, kind in kinds
         ), f"2024 must still be reported as an outstanding gap; got {kinds}"
 
 
@@ -499,6 +544,96 @@ class TestServednessIsAskedOfTheEditions:
         """The positive half, so the negative above is not passing vacuously."""
         self._quarterly_edition(tmp_path)
         assert "disposition_coordinate_served" in self._served_kinds(tmp_path, "1T")
+
+
+class TestUnreachableDisposition:
+    """A signature nothing can reach is reported, not skipped.
+
+    The served pass drops two cases before it can judge them: a disposition
+    naming a modelo with no manifest, and one naming a filing year outside the
+    promise. Both load, both are accepted, and before this guard no pass ever
+    reached either -- so a mistyped modelo id governed nothing, silently, for as
+    long as it sat in the file.
+    """
+
+    def _corpus(self, root: Path) -> None:
+        edition_dir = root / "modelos" / "999" / "revisions" / "2022"
+        (edition_dir / "casillas").mkdir(parents=True)
+        (edition_dir / "revision.toml").write_text(
+            '[revisions."2022"]\n'
+            "valid_from = 2022-01-01\nvalid_to = 2022-12-31\n"
+            'authority_grade = "filing"\n'
+            'casilla_source_refs = ["src-a"]\n'
+            'period_selector = { year_from = 2022, year_to = 2022, periods = ["1T"] }\n',
+            encoding="utf-8",
+        )
+        (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+            '[[revisions."2022".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n', encoding="utf-8"
+        )
+        _write_promise(root, (2022, 2022))
+
+    def _kinds(self, root: Path, modelo: str, year: int, period: str) -> set[str]:
+        from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
+
+        path = root / "dispositions.toml"
+        path.write_text(
+            "[[disposition]]\n"
+            f'modelo = "{modelo}"\nfiling_year = {year}\nperiod = "{period}"\n'
+            'kind = "promised_coordinate_unserved"\nclassification = "unauthored"\n'
+            'reason = "a signature whose subject may or may not exist"\n'
+            'authority = "orden-test-1:art-1"\n',
+            encoding="utf-8",
+        )
+        # `whole_corpus=True` because the fixture tree IS the whole corpus for this
+        # dispositions file. The production caller passes it only for an unscoped
+        # scan of the bundled tree, since a scoped scan cannot judge an entry
+        # naming a modelo it never read.
+        gaps = module.coverage_gaps(scan_registry(root), (2022,), load_coverage_dispositions(path), whole_corpus=True)
+        return {gap.kind for gap in gaps}
+
+    def test_a_disposition_naming_a_modelo_no_manifest_declares_is_reported(self, tmp_path: Path) -> None:
+        self._corpus(tmp_path)
+        assert "disposition_coordinate_unreachable" in self._kinds(tmp_path, "998", 2022, "1T")
+
+    def test_a_disposition_naming_a_year_outside_the_promise_is_reported(self, tmp_path: Path) -> None:
+        self._corpus(tmp_path)
+        assert "disposition_coordinate_unreachable" in self._kinds(tmp_path, "999", 2019, "1T")
+
+    def test_a_disposition_on_a_real_modelo_and_promised_year_is_not_reported(self, tmp_path: Path) -> None:
+        """The control: the guard must be able to stay silent, or the two above prove nothing."""
+        self._corpus(tmp_path)
+        assert "disposition_coordinate_unreachable" not in self._kinds(tmp_path, "999", 2022, "1T")
+
+    def test_a_period_absent_from_the_denominator_is_not_unreachable(self, tmp_path: Path) -> None:
+        """The 303/0A precedent: reachability is modelo and year, never period."""
+        self._corpus(tmp_path)
+        assert "disposition_coordinate_unreachable" not in self._kinds(tmp_path, "999", 2022, "0A")
+
+    def test_a_scoped_scan_does_not_judge_reachability_at_all(self, tmp_path: Path) -> None:
+        """The gate: an unanswerable question must not be asked.
+
+        The dispositions file is global. Scoped to one modelo, "no modelo of that
+        id carries a manifest" is true of every other entry in the file and says
+        nothing about it -- an ungated check reported all 41 other signatures as
+        unreachable when the screen was pointed at modelo 100 alone.
+        """
+        from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
+
+        self._corpus(tmp_path)
+        path = tmp_path / "dispositions.toml"
+        path.write_text(
+            "[[disposition]]\n"
+            'modelo = "998"\nfiling_year = 2022\nperiod = "1T"\n'
+            'kind = "promised_coordinate_unserved"\nclassification = "unauthored"\n'
+            'reason = "an entry a scoped scan has no standing to judge"\n'
+            'authority = "orden-test-1:art-1"\n',
+            encoding="utf-8",
+        )
+        signed = load_coverage_dispositions(path)
+        scoped = {gap.kind for gap in module.coverage_gaps(scan_registry(tmp_path), (2022,), signed)}
+        whole = {gap.kind for gap in module.coverage_gaps(scan_registry(tmp_path), (2022,), signed, whole_corpus=True)}
+        assert "disposition_coordinate_unreachable" not in scoped
+        assert "disposition_coordinate_unreachable" in whole, "the control: the same input DOES fire when asked"
 
 
 class TestRootReasonResolved:
@@ -571,9 +706,7 @@ class TestVerdictStaleness:
     def _edition(self, root: Path) -> Path:
         edition_dir = root / "modelos" / "999" / "revisions" / "2025"
         (edition_dir / "casillas").mkdir(parents=True)
-        (edition_dir / "revision.toml").write_text(
-            '[revisions."2025"]\nvalid_from = 2025-01-01\n', encoding="utf-8"
-        )
+        (edition_dir / "revision.toml").write_text('[revisions."2025"]\nvalid_from = 2025-01-01\n', encoding="utf-8")
         return edition_dir
 
     def test_a_verdict_older_than_the_edition_reads_stale(self, tmp_path: Path) -> None:
@@ -715,18 +848,29 @@ class TestMismatchedDisposition:
     """
 
     def _quarterly(self, root: Path) -> None:
-        edition_dir = root / "modelos" / "999" / "revisions" / "2022"
-        (edition_dir / "casillas").mkdir(parents=True)
-        (edition_dir / "revision.toml").write_text(
-            '[revisions."2022"]\n'
-            "valid_from = 2022-01-01\nvalid_to = 2022-12-31\n"
-            'authority_grade = "filing"\ncasilla_source_refs = ["src-a"]\n'
-            'period_selector = { year_from = 2022, year_to = 2022, periods = ["1T", "0A"] }\n',
-            encoding="utf-8",
-        )
-        (edition_dir / "casillas" / "0001-casillas.toml").write_text(
-            '[[revisions."2022".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n', encoding="utf-8"
-        )
+        """2022 serves 1T only; 2023 serves 0A.
+
+        The 303 shape. 0A must be in the period DENOMINATOR -- the union of the
+        tokens the modelo's own editions declare -- while being served by no
+        edition in 2022. Declaring 0A on the 2022 edition itself makes it
+        served, which is what the first version of this fixture did, and both
+        tests then failed against a screen that was behaving correctly.
+        """
+        for edition, periods in (("2022", '["1T"]'), ("2023", '["0A"]')):
+            edition_dir = root / "modelos" / "999" / "revisions" / edition
+            (edition_dir / "casillas").mkdir(parents=True)
+            (edition_dir / "revision.toml").write_text(
+                f'[revisions."{edition}"]\n'
+                f"valid_from = {edition}-01-01\nvalid_to = {edition}-12-31\n"
+                'authority_grade = "filing"\ncasilla_source_refs = ["src-a"]\n'
+                f"period_selector = {{ year_from = {edition}, year_to = {edition}, "
+                f"periods = {periods} }}\n",
+                encoding="utf-8",
+            )
+            (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+                f'[[revisions."{edition}".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n',
+                encoding="utf-8",
+            )
 
     def _kinds(self, root: Path, signed_kind: str) -> set[str]:
         from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
@@ -798,3 +942,539 @@ class TestBoundedAuthority:
             assert time.monotonic() - started < 5, "returned only after the worker finished"
         finally:
             module._AUTHORITY_BOUND_SECONDS = original
+
+
+class TestBoundIsStickyPerLabel:
+    """One wedged dependency must cost the bound once, not once per caller.
+
+    The bound protects a single call; the screen makes many. `_scenario_editions`
+    is cached PER MODELO, so a corpus-wide report asks it about fifty-eight
+    modelos -- and against a wedged authority each one would wait the full 300s
+    and leak its own worker thread. That turns a hang into a five-hour hang with
+    fifty-eight leaked threads, which is worse than the failure the bound was
+    added to prevent.
+    """
+
+    def _isolated(self) -> None:
+        module._BOUND_EXHAUSTED.discard("probe")
+
+    def test_a_second_call_after_a_timeout_returns_immediately(self) -> None:
+        import time
+
+        original = module._AUTHORITY_BOUND_SECONDS
+        self._isolated()
+        try:
+            module._AUTHORITY_BOUND_SECONDS = 0.2
+            assert module._within_bound(lambda: time.sleep(20), "probe") is None
+            started = time.monotonic()
+            assert module._within_bound(lambda: time.sleep(20), "probe") is None
+            elapsed = time.monotonic() - started
+            assert elapsed < 0.05, f"second call waited {elapsed:.2f}s; the bound is not sticky"
+        finally:
+            module._AUTHORITY_BOUND_SECONDS = original
+            self._isolated()
+
+    def test_a_different_label_is_unaffected(self) -> None:
+        """Stickiness is per dependency. One wedged path must not silence a
+        healthy one -- that would be the suppression this screen keeps fixing."""
+        import time
+
+        original = module._AUTHORITY_BOUND_SECONDS
+        self._isolated()
+        module._BOUND_EXHAUSTED.discard("other-probe")
+        try:
+            module._AUTHORITY_BOUND_SECONDS = 0.2
+            assert module._within_bound(lambda: time.sleep(20), "probe") is None
+            assert module._within_bound(lambda: "fine", "other-probe") == "fine"
+        finally:
+            module._AUTHORITY_BOUND_SECONDS = original
+            self._isolated()
+            module._BOUND_EXHAUSTED.discard("other-probe")
+
+    def test_the_limitation_says_it_covers_the_whole_run(self) -> None:
+        """Asserted against the whole list, not the tail.
+
+        `_note_limitation` DEDUPES -- it appends only text it has not already
+        recorded -- so a sibling test that produced the identical string leaves
+        nothing for a "what was added since" check to find. That is correct for
+        the screen, which must not print one limitation fifty-eight times, and
+        it made this tooth fail on a slice of an empty tail while the behaviour
+        under test was working.
+        """
+        import time
+
+        original = module._AUTHORITY_BOUND_SECONDS
+        self._isolated()
+        try:
+            module._AUTHORITY_BOUND_SECONDS = 0.2
+            module._within_bound(lambda: time.sleep(20), "probe")
+        finally:
+            module._AUTHORITY_BOUND_SECONDS = original
+            self._isolated()
+        assert any("probe_timed_out" in text and "whole run" in text for text in module._LIMITATIONS), (
+            module._LIMITATIONS
+        )
+
+
+class TestDispositionPassesDoNotReportEachOther:
+    """A served disposition must not also be reported as kind-mismatched.
+
+    Both passes append synthetic gaps that describe a DISPOSITION rather than a
+    coverage failure. A served coordinate's synthetic kind is
+    `disposition_coordinate_served`, which differs from whatever kind somebody
+    signed for -- so running the mismatch pass over the already-extended list
+    reported every served disposition a second time, under a condition that
+    means something else entirely.
+    """
+
+    def _served_tree(self, root: Path) -> None:
+        for edition in ("2022", "2023"):
+            edition_dir = root / "modelos" / "999" / "revisions" / edition
+            (edition_dir / "casillas").mkdir(parents=True)
+            (edition_dir / "revision.toml").write_text(
+                f'[revisions."{edition}"]\n'
+                f"valid_from = {edition}-01-01\nvalid_to = {edition}-12-31\n"
+                'authority_grade = "filing"\ncasilla_source_refs = ["src-a"]\n'
+                f'period_selector = {{ year_from = {edition}, year_to = {edition}, periods = ["0A"] }}\n',
+                encoding="utf-8",
+            )
+            (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+                f'[[revisions."{edition}".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n', encoding="utf-8"
+            )
+
+    def test_a_served_coordinate_is_reported_once_not_twice(self, tmp_path: Path) -> None:
+        from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
+
+        self._served_tree(tmp_path)
+        path = tmp_path / "dispositions.toml"
+        path.write_text(
+            "[[disposition]]\n"
+            'modelo = "999"\nfiling_year = 2022\nperiod = "0A"\n'
+            'kind = "promised_coordinate_unserved"\nclassification = "unauthored"\n'
+            'reason = "nobody authored it"\nauthority = "orden-test-1:art-1"\n',
+            encoding="utf-8",
+        )
+        gaps = module.coverage_gaps(scan_registry(tmp_path), (2022, 2023), load_coverage_dispositions(path))
+        kinds = [gap.kind for gap in gaps if (gap.modelo, gap.filing_year, gap.period) == ("999", 2022, "0A")]
+        assert kinds == ["disposition_coordinate_served"], kinds
+
+
+class TestDomainPolicyIsDeferred:
+    """The screen reports on a corpus whose domain package may not import.
+
+    The family policy was read at module scope, so a domain-side breakage made
+    this screen unimportable -- ``python -m`` died before argument parsing, and
+    a measurement that cannot be imported goes quiet exactly when the question
+    it answers is being asked. The policy is still canonical in the domain; only
+    the moment of reading moved.
+    """
+
+    def test_importing_the_screen_does_not_read_the_family_policy(self) -> None:
+        code = (
+            "import sys\n"
+            "import dev.registry.analysis.edition_delta_status\n"
+            "print([name for name in sys.modules if name.endswith('keyed_families')])\n"
+        )
+        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            cwd=Path(module.__file__).parents[3],
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+        assert completed.stdout.strip() == "[]", completed.stdout
+
+    def test_the_probe_can_see_the_policy_when_something_does_import_it(self) -> None:
+        """Teeth for the test above: an empty list must mean absence, not a blind probe."""
+        code = (
+            "import sys\n"
+            "import cadrumo.domain.calculations.registry.keyed_families\n"
+            "print([name for name in sys.modules if name.endswith('keyed_families')])\n"
+        )
+        completed = subprocess.run(  # noqa: S603 - fixed argv, no shell
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            cwd=Path(module.__file__).parents[3],
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+        assert "keyed_families" in completed.stdout, completed.stdout
+
+    def test_the_policy_still_reaches_the_screen_when_a_family_default_is_resolved(self) -> None:
+        assert module._family_default_keys()["casillas"] == "casilla_source_refs"
+
+    def test_the_inheritance_vocabulary_resolves_through_the_same_accessor(self) -> None:
+        assert module._per_edition_families()
+        assert module._inheritance().PER_EDITION is not module._inheritance().CASILLA
+
+
+class TestForeignEditionToken:
+    """The sibling branch of the edition-token check, which has never fired live.
+
+    `foreign_edition_token` and `year_token_as_content` are the two outcomes of
+    one test: an identifier carrying another edition's token is a stale REFERENCE
+    when a sibling of the same family spells the same stem without it, and is
+    CONTENT when nothing else spells that concept. The corpus exercises only the
+    content branch (2 findings), so the reference branch reported clean with no
+    test behind it -- a zero from a condition nothing had shown could speak.
+    """
+
+    def _modelo(self, root: Path, first_ids: tuple[str, ...], later_ids: tuple[str, ...]) -> None:
+        def body(ids: tuple[str, ...], edition: str) -> str:
+            return "".join(f'[[revisions."{edition}".formulas]]\nid = "{i}"\nexpression = "1"\n' for i in ids)
+
+        _write_edition(root, "2024", families={"formulas": body(first_ids, "2024")})
+        _write_edition(root, "2025", predecessor='"2024"', families={"formulas": body(later_ids, "2025")})
+
+    def test_a_foreign_token_with_a_sibling_stem_is_a_stale_reference(self, tmp_path: Path) -> None:
+        """`total-2024-neto` beside `total-neto`: the sibling proves the token is decoration."""
+        self._modelo(tmp_path, ("total-neto",), ("total-2024-neto", "total-neto"))
+        assert "foreign_edition_token" in _finding_kinds(tmp_path)
+
+    def test_a_foreign_token_with_no_sibling_stem_is_content(self, tmp_path: Path) -> None:
+        """The teeth for the branch above: with no bare stem anywhere the year is a datum.
+
+        The sibling is sought across EVERY edition of the modelo rather than only
+        the one declaring the identifier, so the bare stem must be absent from
+        both editions -- a fixture that put it in the predecessor reported the
+        reference branch and looked like a screen defect.
+        """
+        self._modelo(tmp_path, ("otra-cosa",), ("total-2024-neto",))
+        kinds = _finding_kinds(tmp_path)
+        assert "year_token_as_content" in kinds
+        assert "foreign_edition_token" not in kinds
+
+
+class TestSupersededDisposition:
+    """A kind no disposition may sign cannot be repaired by rewriting the kind.
+
+    `disposition_kind_mismatched` pooled two outcomes whose remedies are
+    opposite. Where the coordinate's new kind is one the loader accepts, the
+    signature is repairable in place. Where it is one the loader refuses --
+    `promised_year_projected`, `awaiting_ejercicio_orden`,
+    `pending_orden_declaration_stale` -- no value of `kind` makes the entry apply
+    again, so the reasoning has to be re-homed before the entry goes. Reporting
+    both as "mismatched" invites somebody to fix the second by editing a field
+    the loader will reject.
+    """
+
+    def _corpus(self, root: Path, *, predecessor_year: bool) -> None:
+        """A modelo serving 2022 only. With `predecessor_year`, it also serves 2021."""
+        years = (2021, 2022) if predecessor_year else (2022,)
+        for year in years:
+            edition_dir = root / "modelos" / "999" / "revisions" / str(year)
+            (edition_dir / "casillas").mkdir(parents=True)
+            (edition_dir / "revision.toml").write_text(
+                f'[revisions."{year}"]\n'
+                f"valid_from = {year}-01-01\nvalid_to = {year}-12-31\n"
+                'authority_grade = "filing"\n'
+                'casilla_source_refs = ["src-a"]\n'
+                f'period_selector = {{ year_from = {year}, year_to = {year}, periods = ["1T"] }}\n',
+                encoding="utf-8",
+            )
+            (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+                f'[[revisions."{year}".casillas]]\nid = "01"\ncontinuidad_id = "c{year}"\n', encoding="utf-8"
+            )
+        _write_promise(root, (min(years), 2023))
+
+    def _sign_2023(self, root: Path) -> object:
+        from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
+
+        path = root / "dispositions.toml"
+        path.write_text(
+            "[[disposition]]\n"
+            'modelo = "999"\nfiling_year = 2023\nperiod = "*"\n'
+            'kind = "promised_coordinate_unserved"\nclassification = "unauthored"\n'
+            'reason = "signed for one kind while the screen now fails it as another"\n'
+            'authority = "orden-test-1:art-1"\n',
+            encoding="utf-8",
+        )
+        return load_coverage_dispositions(path)
+
+    def _kinds(self, root: Path, *, predecessor_year: bool) -> set[str]:
+        self._corpus(root, predecessor_year=predecessor_year)
+        signed = self._sign_2023(root)
+        years = (2021, 2022, 2023) if predecessor_year else (2022, 2023)
+        return {gap.kind for gap in module.coverage_gaps(scan_registry(root), years, signed)}
+
+    def test_a_coordinate_failing_as_an_unsignable_kind_is_superseded(self, tmp_path: Path) -> None:
+        """2023 has a covered year below it, so it fails as the unsignable projected kind."""
+        kinds = self._kinds(tmp_path, predecessor_year=True)
+        assert "promised_year_projected" in kinds
+        assert "disposition_kind_superseded" in kinds
+        assert "disposition_kind_mismatched" not in kinds
+
+    def test_a_coordinate_failing_as_a_signable_kind_is_merely_mismatched(self, tmp_path: Path) -> None:
+        """The control: signed for a coordinate kind, failing as the year kind, which IS signable.
+
+        The gap year must sit BELOW the served one. A gap year above a covered
+        year is claimed by `promised_year_projected`, which is itself unsignable
+        -- so the obvious fixture proves supersession twice and the split not at
+        all.
+        """
+        from dev.registry.analysis.coverage_dispositions import load_coverage_dispositions
+
+        edition_dir = tmp_path / "modelos" / "999" / "revisions" / "2023"
+        (edition_dir / "casillas").mkdir(parents=True)
+        (edition_dir / "revision.toml").write_text(
+            '[revisions."2023"]\n'
+            "valid_from = 2023-01-01\nvalid_to = 2023-12-31\n"
+            'authority_grade = "filing"\n'
+            'casilla_source_refs = ["src-a"]\n'
+            'period_selector = { year_from = 2023, year_to = 2023, periods = ["1T"] }\n',
+            encoding="utf-8",
+        )
+        (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+            '[[revisions."2023".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n', encoding="utf-8"
+        )
+        _write_promise(tmp_path, (2022, 2023))
+        path = tmp_path / "dispositions.toml"
+        path.write_text(
+            "[[disposition]]\n"
+            'modelo = "999"\nfiling_year = 2022\nperiod = "*"\n'
+            'kind = "promised_coordinate_unserved"\nclassification = "unauthored"\n'
+            'reason = "signed for the coordinate kind while the year kind is what fails"\n'
+            'authority = "orden-test-1:art-1"\n',
+            encoding="utf-8",
+        )
+        kinds = {
+            gap.kind
+            for gap in module.coverage_gaps(scan_registry(tmp_path), (2022, 2023), load_coverage_dispositions(path))
+        }
+        assert "promised_year_unserved" in kinds
+        assert "disposition_kind_mismatched" in kinds
+        assert "disposition_kind_superseded" not in kinds
+
+    def test_a_synthetic_gap_leaves_its_classification_empty(self, tmp_path: Path) -> None:
+        """A report ABOUT a signature must not read as a classified coordinate.
+
+        The three synthetic passes once passed `False` into `disposition`, which
+        pushed the message into `classification` and made every one of them count
+        as classified unauthored debt in the coverage worklist.
+        """
+        self._corpus(tmp_path, predecessor_year=True)
+        gaps = module.coverage_gaps(scan_registry(tmp_path), (2021, 2022, 2023), self._sign_2023(tmp_path))
+        synthetic = [gap for gap in gaps if gap.kind in module._SYNTHETIC_COVERAGE_KINDS]
+        assert synthetic, "fixture produced no synthetic gap, so this proves nothing"
+        assert all(gap.classification == "" for gap in synthetic)
+        assert all(not gap.classified for gap in synthetic)
+        assert all(gap.disposition for gap in synthetic), "the reason must still be carried"
+
+
+class TestOrderOnlyRefs:
+    """Refs holding the whole default out of order are measured, not reclassified."""
+
+    def _refs(self, root: Path, refs: str) -> set[str]:
+        edition_dir = root / "modelos" / "999" / "revisions" / "2022"
+        (edition_dir / "casillas").mkdir(parents=True)
+        (edition_dir / "revision.toml").write_text(
+            '[revisions."2022"]\n'
+            "valid_from = 2022-01-01\nvalid_to = 2022-12-31\n"
+            'authority_grade = "filing"\n'
+            'casilla_source_refs = ["src-a", "src-b"]\n'
+            'period_selector = { year_from = 2022, year_to = 2022, periods = ["1T"] }\n',
+            encoding="utf-8",
+        )
+        (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+            f'[[revisions."2022".casillas]]\nid = "01"\ncontinuidad_id = "c1"\nsource_refs = {refs}\n',
+            encoding="utf-8",
+        )
+        statuses = scan_registry(root)
+        return {finding.kind for status in statuses for finding in status.findings}
+
+    def test_the_default_present_but_not_leading_is_measured_and_still_irreducible(self, tmp_path: Path) -> None:
+        """The 117/126/128/136/220 shape: addition listed first."""
+        kinds = self._refs(tmp_path, '["extra", "src-a", "src-b"]')
+        assert "row_source_refs_order_only" in kinds
+        assert "row_source_refs_irreducible" in kinds, "the conservative bucket must not be vacated"
+
+    def test_a_genuinely_irreducible_value_is_not_measured_as_order_only(self, tmp_path: Path) -> None:
+        """The control: part of the default absent, so no reordering would lift it."""
+        kinds = self._refs(tmp_path, '["extra", "src-a"]')
+        assert "row_source_refs_irreducible" in kinds
+        assert "row_source_refs_order_only" not in kinds
+
+    def test_a_prefix_value_lifts_and_is_neither(self, tmp_path: Path) -> None:
+        kinds = self._refs(tmp_path, '["src-a", "src-b", "extra"]')
+        assert "row_source_refs_liftable" in kinds
+        assert "row_source_refs_irreducible" not in kinds
+        assert "row_source_refs_order_only" not in kinds
+
+
+class TestConstraintsRefsReportTheSameFourOutcomes:
+    """A row and its constraints table are classified by one helper and one rule set.
+
+    The helper took a bool that hardcoded the ROW kind names, so a row reported
+    four outcomes and its nested constraints table reported two: 81 constraint
+    statements the edition default cannot reproduce were counted by nothing,
+    while the catalogue said the family was "lifted by the same rules". A
+    discarded outcome is indistinguishable from an empty population.
+    """
+
+    def _kinds(self, root: Path, constraint_refs: str) -> set[str]:
+        edition_dir = root / "modelos" / "999" / "revisions" / "2022"
+        (edition_dir / "casillas").mkdir(parents=True)
+        (edition_dir / "revision.toml").write_text(
+            '[revisions."2022"]\n'
+            "valid_from = 2022-01-01\nvalid_to = 2022-12-31\n"
+            'authority_grade = "filing"\n'
+            'casilla_source_refs = ["src-a", "src-b"]\n'
+            'period_selector = { year_from = 2022, year_to = 2022, periods = ["1T"] }\n',
+            encoding="utf-8",
+        )
+        (edition_dir / "casillas" / "0001-casillas.toml").write_text(
+            '[[revisions."2022".casillas]]\nid = "01"\ncontinuidad_id = "c1"\n'
+            f"constraints = {{ source_refs = {constraint_refs} }}\n",
+            encoding="utf-8",
+        )
+        statuses = scan_registry(root)
+        return {finding.kind for status in statuses for finding in status.findings}
+
+    def test_a_constraints_value_the_default_cannot_reproduce_is_reported(self, tmp_path: Path) -> None:
+        kinds = self._kinds(tmp_path, '["other-a", "other-b"]')
+        assert "constraints_source_refs_irreducible" in kinds
+        assert "constraints_source_refs_order_only" not in kinds
+
+    def test_a_constraints_value_holding_the_default_out_of_order_is_measured_too(self, tmp_path: Path) -> None:
+        kinds = self._kinds(tmp_path, '["extra", "src-a", "src-b"]')
+        assert "constraints_source_refs_irreducible" in kinds
+        assert "constraints_source_refs_order_only" in kinds
+
+    def test_the_two_reducible_outcomes_still_report_on_their_own_kinds(self, tmp_path: Path) -> None:
+        """The control: neither new kind may fire where the old two do, or the split leaks."""
+        restated = self._kinds(tmp_path, '["src-a", "src-b"]')
+        assert "constraints_source_refs_restated" in restated
+        assert "constraints_source_refs_irreducible" not in restated
+        liftable = self._kinds(tmp_path / "second", '["src-a", "src-b", "extra"]')
+        assert "constraints_source_refs_liftable" in liftable
+        assert "constraints_source_refs_irreducible" not in liftable
+
+    def test_a_constraints_statement_never_borrows_a_row_kind(self, tmp_path: Path) -> None:
+        """The bug in its exact shape: the row states nothing, so only constraint kinds may fire."""
+        kinds = self._kinds(tmp_path, '["other-a", "other-b"]')
+        assert not {kind for kind in kinds if kind.startswith("row_source_refs_")}
+
+
+class TestKeylessKeyedFamiliesAreNamed:
+    """A keyed family absent from the default-key mapping reports nothing, so the run must say so.
+
+    `family_default_undeclared` can only fire for a family whose
+    `source_default_key` exists. Three keyed families declare none, so they are
+    silent by construction -- not clean. The catalogue used to assert the
+    opposite outright ("Every keyed family carries such a key"), which turns a
+    blind spot into a reassurance.
+    """
+
+    def _limitation(self) -> str:
+        module._family_default_keys.cache_clear()
+        module._LIMITATIONS.clear()
+        module._family_default_keys()
+        named = [text for text in module._LIMITATIONS if text.startswith("family_default_unmeasurable:")]
+        assert len(named) == 1, f"expected exactly one such limitation, got {named}"
+        return named[0]
+
+    def test_every_keyed_family_without_a_key_is_named(self) -> None:
+        """Derived from the schema here, so adding a key must shrink the limitation."""
+        specs = module._keyed_families().CANONICAL_FAMILY_SPECS
+        per_edition = module._inheritance().PER_EDITION
+        expected = {
+            spec.section for spec in specs if spec.source_default_key is None and spec.inheritance is not per_edition
+        }
+        assert expected, "no keyed family lacks a key, so this test can no longer prove anything"
+        limitation = self._limitation()
+        for family in expected:
+            assert family in limitation
+
+    def test_a_per_edition_family_without_a_key_is_not_named(self) -> None:
+        """The control: per-edition families are never measured as restated, so silence is correct."""
+        specs = module._keyed_families().CANONICAL_FAMILY_SPECS
+        per_edition = module._inheritance().PER_EDITION
+        excluded = {
+            spec.section for spec in specs if spec.source_default_key is None and spec.inheritance is per_edition
+        }
+        assert excluded, "fixture assumption gone: no keyless per-edition family left to control against"
+        limitation = self._limitation()
+        for family in excluded:
+            assert family not in limitation
+
+    def test_a_family_carrying_a_key_is_measurable_and_unnamed(self) -> None:
+        """Casillas is the loudest measured family; it must never appear as unmeasurable."""
+        assert "casillas" in module._family_default_keys()
+        assert "casillas" not in self._limitation()
+
+
+class TestEveryDeclaredKindReachesTheSignal:
+    """A kind declared but never emitted is invisible to anyone diffing two runs.
+
+    The sibling suite asserts `emitted <= declared`, which catches an undeclared
+    record and PASSES a declared one that nothing emits. That asymmetry hid
+    `ledger_totality`: declared in the allowlist, emitted by nothing, a gate with
+    proven teeth and no production caller for the length of a campaign. An
+    emitted kind nobody documents and a declared record nobody emits are the same
+    failure in opposite directions, and only the first is catchable by reading a
+    docstring.
+
+    This is the other direction. Every name in `CONDITIONS` and `MEASUREMENTS`
+    must appear in the signal, zero count included -- the signal prints
+    `condition <kind>=0` for a condition that did not fire, so presence is not
+    conditional on the corpus and a fixture tree is enough.
+    """
+
+    def _signal(self, root: Path) -> str:
+        _write_edition(root, "2024")
+        _write_promise(root, (2024, 2024))
+        return "\n".join(module._signal_lines(build_report(root)))
+
+    def test_every_declared_condition_and_measurement_is_in_the_signal(self, tmp_path: Path) -> None:
+        signal = self._signal(tmp_path)
+        declared = (*module.CONDITIONS, *module.MEASUREMENTS)
+        assert declared, "nothing declared, so this proves nothing"
+        absent = [kind for kind in declared if kind not in signal]
+        assert not absent, f"declared but never emitted, so invisible to a run diff: {sorted(absent)}"
+
+    def test_the_check_can_fail(self, tmp_path: Path) -> None:
+        """The control: a name absent from the signal must be detected as absent.
+
+        Asserted against a name this screen does not declare rather than by
+        mutating the declared tuples, so the production module is untouched.
+        """
+        signal = self._signal(tmp_path)
+        assert "a_kind_this_screen_never_declares" not in signal
+
+
+class TestEveryDeclaredKindIsDocumented:
+    """A kind absent from its module catalogue is invisible to anyone reading it.
+
+    27 of the two screens' 74 declared kinds had no catalogue entry at all, and
+    the largest were conditions added DURING the campaign -- each went into the
+    tuple, the emission site and the signal output, and not into the prose that
+    claims to list them. Nothing contradicts an absent claim, so nothing caught
+    it; this does.
+    """
+
+    @staticmethod
+    def _undocumented(module: object, declared: set[str]) -> list[str]:
+        source = Path(module.__file__ or "").read_text(encoding="utf-8")
+        catalogue = source.split('"""', 2)[1]
+        documented = set(re.findall(r"``([a-z_]+)``", catalogue))
+        return sorted(declared - documented)
+
+    def test_the_delta_screen_documents_every_kind_it_can_report(self) -> None:
+        declared = (
+            set(module.CONDITIONS)
+            | set(module.MEASUREMENTS)
+            | set(module.COVERAGE_CONDITIONS)
+            | set(module._BLOCKER_CAUSES)
+        )
+        assert not self._undocumented(module, declared)
+
+    def test_the_chain_screen_documents_every_kind_it_can_report(self) -> None:
+        assert not self._undocumented(
+            chain_contiguity, set(chain_contiguity.CONDITIONS) | set(chain_contiguity.MEASUREMENTS)
+        )
+
+    def test_the_check_itself_can_see_an_undocumented_kind(self) -> None:
+        """Teeth: a name no catalogue mentions must come back as undocumented."""
+        assert self._undocumented(module, {"a_kind_no_catalogue_names"}) == ["a_kind_no_catalogue_names"]

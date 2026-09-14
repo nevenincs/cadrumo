@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.runtime_catalogues import (
 
 
 def compile_runtime_catalogues(registry_root: Path) -> RuntimeRegistryCatalogues:
+    """Compile every former raw runtime table from one candidate registry root."""
     root = registry_root.resolve()
     iva_root = root / "iva"
     countries = _records(_read(iva_root / "country_names.toml"), "country", CountryVocabularyRecord, "code")

@@ -136,6 +136,7 @@ data_type = "money"
 semantic_role = "m280_importe_total_aportaciones"
 required = false
 input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 
 # @165+20 Numérico. BASE DE RETENCIONES | Se consignará la suma de los importes incluidos en el campo del registro de tipo 2, BASE DE LA RETENCIÓN PRACTICADA, posiciones 166 a 175. Los importes deben consignarse en EUROS. El importe no irá precedido de signo alguno (+/-), ni incluirá coma decimal. Este campo se subdivide en dos: 165-182: Numérico. ENTERO: Parte entera. Se consignará la parte entera de la base de retenciones. 183-184: Numérico. DECIMAL: Parte decimal. Se consignará la parte decimal de la base de retenciones.
@@ -148,4 +149,5 @@ data_type = "money"
 semantic_role = "m280_base_retenciones"
 required = false
 input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["orden-hfp-1822-2016:art-sexto"], source_refs = ["boe-modelo-280-2016-amendment-hfp-1822", "aeat-dr-280-2022"] }
 legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]

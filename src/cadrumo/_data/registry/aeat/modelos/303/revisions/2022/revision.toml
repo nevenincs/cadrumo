@@ -48,7 +48,7 @@ source_refs = ["aeat-dr-303-2022", "aeat-modelo-303-procedure", "boe-orden-hfp-1
 [revisions.2022.period_selector]
 year_from = 2022
 year_to = 2022
-periods = ["1T", "2T", "3T", "4T"]
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 [revisions."2022".family_dispositions.applicability]
 reason = "Modelo 303 applicability is defined by filing_schedules and orden_aplicabilidad. Revision '2022' declares both: orden_aplicabilidad cites orden-eha-3786-2008:art-1, and the revision carries its own filing_schedules fragment, so the applicability family holds no separate member for this modelo."

@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02918"
+continuidad_id = "02918"
+continuidad_origin = "seeded"
 number = "02918"
 section = ["reg_especial_reserva_inversiones_illes_balears", "importe_de_la_dotacion_riib_con_cargo_a_beneficios"]
 data_type = "money"

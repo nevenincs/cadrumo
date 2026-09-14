@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02661"
+continuidad_id = "is-correccion-deterioro-art13-1-provisiones-permanente-aumento"
 number = "02661"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02662"
+continuidad_id = "02662"
 number = "02662"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02663"
+continuidad_id = "02663"
 number = "02663"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02664"
+continuidad_id = "is-correccion-deterioro-art13-1-provisiones-saldo-inicial"
 number = "02664"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-13"]
 [[revisions."2024".casillas]]
 id = "02665"
+continuidad_id = "is-correccion-deterioro-art13-1-provisiones-saldo-final"
 number = "02665"
 section = ["perdidas_por_deterioro_del_art_13_1_lis_y_provisio", "aumento"]
 data_type = "money"

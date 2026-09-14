@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "02896"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-permanente-disminucion"
 number = "02896"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02897"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-temporaria-ejercicio-disminucion"
 number = "02897"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02898"
+continuidad_id = "is-correccion-revalorizaciones-contables-art17-1-temporaria-anteriores-disminucion"
 number = "02898"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02899"
+continuidad_id = "02899"
 number = "02899"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-17"]
 [[revisions."2024".casillas]]
 id = "02900"
+continuidad_id = "02900"
 number = "02900"
 section = ["revalorizaciones_contables_art_17_1_lis", "disminucion"]
 data_type = "money"

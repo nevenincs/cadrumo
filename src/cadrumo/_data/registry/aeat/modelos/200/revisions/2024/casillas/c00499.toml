@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00499"
+continuidad_id = "00499"
 number = "00499"
 section = ["estado_de_cambios_patrimonio_neto_iii", "ingresos_y_gastos_reconocidos_en_patrimonio_neto"]
 data_type = "money"

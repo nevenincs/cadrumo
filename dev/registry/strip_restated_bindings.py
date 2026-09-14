@@ -1,11 +1,9 @@
 """Remove a successor edition's binding members that restate what it would inherit.
 
 The union rule says a successor edition states only the members that are new in
-it or that differ from the member it would inherit. Bindings do not inherit yet:
-the keyed-family merge the loader runs along a predecessor chain enrols formulas,
-parameters, constructs and seven further families, and ``bindings`` is not among
-them. This tool prepares the strip that enrolment makes legal, and proves it
-exact before anything is written.
+it or that differ from the member it would inherit. Bindings participate in the
+canonical keyed-family merge by their edition-free ``id``. This tool proves a
+prospective strip exact before anything is written.
 
 What "restated" means here, and why it is stricter than the census signal.
 The edition-delta status screen counts a member restated when its table equals
@@ -43,13 +41,23 @@ outside its ``bindings/`` directory (this tool rewrites those fragments and
 nothing else), and one carrying two binding members under one id. A member
 differing in any field is kept, with the differing keys named.
 
-Proof. With ``bindings`` enrolled in the loader's ``_KEYED_FAMILIES`` the proof
-is the live one: ``load_modelo_directory`` of the successor must materialise the
-same ``BindingDefinition`` set before and after the strip. Bindings are NOT
-enrolled today, so the proof runs here against the loader's own keyed-merge
-function, called with a ``bindings`` family description built locally -- the
-merge semantics are the shipped ones, only the enrolment is simulated. Every
-report says so, and the live proof re-runs once enrolment lands.
+Carried grounding. Byte-identical payload is not identical meaning. A member
+whose payload matches may still be kept, because what it would INHERIT carries
+``source_refs`` the successor's own grounding does not supply: the predecessor
+states its design ref inline, the successor declares a different default, and a
+strip would move the row onto the predecessor's grounding in an edition whose
+constructs and dependency classifications do not cite it. A member is therefore
+strippable only when the refs it materialises after inheritance are what the
+successor's own ``binding_source_refs`` default supplies -- no refs of its own,
+exactly that default, or a tail every successor declaration claiming the member
+already grounds. Otherwise it is kept and reported under ``carried_grounding``
+with its id, the refs it would inherit, and the successor default they failed
+against. The rule is decided in the plan, never at write time.
+
+Proof. The proof runs against the loader's supported keyed-merge boundary with
+the canonical ``bindings`` family policy. It compares the typed
+``BindingDefinition`` set before and after the prospective strip, so a dropped
+member must materialise byte-identically under the enrolled family.
 
 Scoping. ``--all`` and ``--modelo`` sweep whole modelos. ``--edge
 <modelo>/<successor-edition>`` and ``--edges-file`` name individual
@@ -59,15 +67,8 @@ now inherit and on no others. A named edge whose successor is not declared,
 declares an explicit no-predecessor root, or states no binding members is
 refused before anything is planned, and every named edge appears in the report.
 
-Writes nothing without ``--apply``, and ``--apply`` refuses while the merge is
-simulated unless ``--enrolment-simulated`` states that the operator accepts a
-simulated proof. That gate keeps its name: what the operator accepts is a
-simulated proof, not an enrolment. Renaming it ``--enrolled`` would turn an
-acknowledgement of the proof's standing into an assertion about the loader's
-``_KEYED_FAMILIES``, which the operator cannot make true by typing it and which
-would go stale silently the day enrolment lands. When bindings are enrolled the
-proof stops being simulated and the gate is deleted outright rather than
-renamed.
+Writes nothing without ``--apply``. Materialised equality is the only equality
+that ``--apply`` accepts; ``lifted`` remains a census/advisory comparison.
 """
 
 from __future__ import annotations
@@ -83,26 +84,22 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
+from cadrumo.domain.calculations.registry.keyed_families import FamilyInheritanceMode, family_spec
 from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.schema import BindingDefinition
 
 # `inherit_keyed_family` is the loader's supported keyed merge boundary.
-# Enrolling `bindings` is the registry
-# migration lane's change; simulating the enrolment is what lets the proof run
-# before it lands, against the shipped merge semantics rather than against a
-# reimplementation of them.
-from .compiler.loader import inherit_keyed_family
+from .compiler.loader import inherit_keyed_family, modelo_fact_scope
 from .corpus_write import verify_written, write_preserving_newlines
-from .edition_round_trip import run_git
 from .run_exclusions import (
     DEFAULT_EXCLUSION_REASON,
     ExclusionSet,
-    MalformedExclusionError,
     collect_exclusions,
 )
 
 __all__ = [
+    "CarriedGrounding",
     "EditionOutcome",
     "Equality",
     "ModeloOutcome",
@@ -125,7 +122,30 @@ _PREDECESSOR: Final = "predecessor"
 #: Set aside by the census signal's equality, which measures how much the union
 #: could eventually absorb rather than what is deletable today.
 _REFERENCE_KEYS: Final = frozenset({"source_refs", "legal_refs", "additional_source_refs"})
-_BINDING_DEFAULT_FIELD: Final = dict(FAMILY_SOURCE_DEFAULT_FIELDS)[_BINDINGS]
+_SOURCE_DEFAULT_FIELDS: Final = dict(FAMILY_SOURCE_DEFAULT_FIELDS)
+_BINDING_DEFAULT_FIELD: Final = _SOURCE_DEFAULT_FIELDS[_BINDINGS]
+
+#: The successor declarations that claim a binding member and must therefore
+#: carry its grounding: a construct lists its members under ``bindings``, a
+#: dependency classification under ``binding_refs``.
+_CONSTRUCTS: Final = "constructs"
+_CLASSIFICATIONS: Final = "dependency_classifications"
+_CLAIMANT_FAMILIES: Final = ((_CONSTRUCTS, "bindings"), (_CLASSIFICATIONS, "binding_refs"))
+
+
+def _family_policy(family: str):
+    """Return the canonical enrolled policy for one keyed family or refuse the strip."""
+    policy = family_spec(family)
+    if policy is None or policy.inheritance is not FamilyInheritanceMode.KEYED:
+        raise RegistryLoadError(f"{family} are not enrolled in the canonical keyed-family merge")
+    return policy
+
+
+def _binding_family_policy():
+    """Return the canonical enrolled binding policy or refuse the strip."""
+    return _family_policy(_BINDINGS)
+
+
 _REVISION_SEGMENT: Final = r'(?:"[^"\n]+"|[^".\]\n]+)'
 _MEMBER_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.bindings\]\]\s*$")
 
@@ -134,10 +154,6 @@ _MEMBER_HEADER: Final = re.compile(rf"^\[\[revisions\.{_REVISION_SEGMENT}\.bindi
 type Equality = str
 MATERIALISED: Final[Equality] = "materialised"
 LIFTED: Final[Equality] = "lifted"
-
-
-class StripRefusedError(RuntimeError):
-    """The edition cannot be stripped as asked, and nothing was written."""
 
 
 # ── edge selection ──────────────────────────────────────────────────────────
@@ -152,7 +168,7 @@ def parse_edge(text: str) -> tuple[str, str]:
     """
     modelo, separator, edition = text.strip().partition("/")
     if not separator or not modelo.strip() or not edition.strip():
-        raise StripRefusedError(f"malformed edge {text!r}: expected '<modelo>/<successor-edition>'")
+        raise RegistryError(f"malformed edge {text!r}: expected '<modelo>/<successor-edition>'")
     return modelo.strip(), edition.strip()
 
 
@@ -169,10 +185,10 @@ def parse_edges_file(path: Path) -> tuple[tuple[str, str], ...]:
             continue
         try:
             edges[parse_edge(line)] = None
-        except StripRefusedError as exc:
-            raise StripRefusedError(f"{path}:{number}: {exc}") from exc
+        except RegistryError as exc:
+            raise RegistryError(f"{path}:{number}: {exc}") from exc
     if not edges:
-        raise StripRefusedError(f"{path}: names no edge")
+        raise RegistryError(f"{path}: names no edge")
     return tuple(edges)
 
 
@@ -224,14 +240,14 @@ def _split_blocks(text: str) -> tuple[str, list[str]]:
 def _block_member(block: str) -> dict[str, Any]:
     revisions = tomllib.loads(block).get(_REVISIONS)
     if not isinstance(revisions, dict) or len(revisions) != 1:
-        raise StripRefusedError(f"binding block does not declare exactly one revision:\n{block}")
+        raise RegistryError(f"binding block does not declare exactly one revision:\n{block}")
     (revision,) = revisions.values()
     members = revision.get(_BINDINGS) if isinstance(revision, dict) else None
     if not isinstance(members, list) or len(members) != 1:
-        raise StripRefusedError(f"binding block does not declare exactly one member:\n{block}")
+        raise RegistryError(f"binding block does not declare exactly one member:\n{block}")
     member = members[0]
     if not isinstance(member, dict):
-        raise StripRefusedError(f"binding block does not declare a table:\n{block}")
+        raise RegistryError(f"binding block does not declare a table:\n{block}")
     return dict(member)
 
 
@@ -290,7 +306,7 @@ def _defaulted(member: Mapping[str, Any], default: Sequence[str]) -> dict[str, A
     additions = filled.pop(_SOURCE_ADDITIONS, None)
     if additions is not None:
         if _SOURCE_REFS in filled or not isinstance(additions, list) or not additions or not default:
-            raise StripRefusedError(f"binding {member.get('id')!r} states additions the loader would refuse")
+            raise RegistryError(f"binding {member.get('id')!r} states additions the loader would refuse")
         filled[_SOURCE_REFS] = list(dict.fromkeys((*default, *(str(item) for item in additions))))
     elif default and _SOURCE_REFS not in filled:
         filled[_SOURCE_REFS] = list(default)
@@ -320,8 +336,8 @@ def _lifted(member: Mapping[str, Any], default: Sequence[str]) -> dict[str, Any]
     return lifted
 
 
-def _keyed_members(table: Mapping[str, Any]) -> tuple[object, ...]:
-    members = table.get(_BINDINGS, ())
+def _keyed_members(table: Mapping[str, Any], family: str = _BINDINGS) -> tuple[object, ...]:
+    members = table.get(family, ())
     return tuple(members) if isinstance(members, list | tuple) else ()
 
 
@@ -331,29 +347,42 @@ def _materialised_bindings(
     tables: Mapping[str, Mapping[str, Any]],
     seen: frozenset[str] = frozenset(),
 ) -> tuple[object, ...]:
-    """The raw binding members an edition holds once its declared chain is merged.
+    """The raw binding members an edition holds once its declared chain is merged."""
+    return _materialised_family(modelo_id, revision_id, tables, _BINDINGS, seen)
+
+
+def _materialised_family(
+    modelo_id: str,
+    revision_id: str,
+    tables: Mapping[str, Mapping[str, Any]],
+    family: str,
+    seen: frozenset[str] = frozenset(),
+) -> tuple[object, ...]:
+    """The raw members of one keyed family an edition holds once its declared chain is merged.
 
     The merge is the loader's :func:`inherit_keyed_family` boundary, configured
-    as ``bindings`` would be once enrolled. Defaults are NOT applied
+    from the canonical policy of the named family. Defaults are NOT applied
     here: the loader applies them to the materialised edition, and applying them
     earlier is precisely the mistake that would make an inherited member carry
     its origin edition's grounding.
     """
     table = tables.get(revision_id)
     if table is None:
-        raise StripRefusedError(f"modelo {modelo_id}: revision {revision_id!r} is not declared")
+        raise RegistryError(f"modelo {modelo_id}: revision {revision_id!r} is not declared")
     predecessor_id = _declared_predecessor(table)
     if predecessor_id is None:
-        return _keyed_members(table)
+        return _keyed_members(table, family)
     if predecessor_id in seen:
-        raise StripRefusedError(f"modelo {modelo_id}: revision {revision_id!r} loops through {predecessor_id!r}")
-    inherited = _materialised_bindings(modelo_id, predecessor_id, tables, seen | {revision_id})
+        raise RegistryError(f"modelo {modelo_id}: revision {revision_id!r} loops through {predecessor_id!r}")
+    inherited = _materialised_family(modelo_id, predecessor_id, tables, family, seen | {revision_id})
+    policy = _family_policy(family)
     return inherit_keyed_family(
         f"{modelo_id}: revision {revision_id!r} inheriting from {predecessor_id!r}",
         revision_id=revision_id,
-        section=_BINDINGS,
-        identity="id",
-        identity_fields=("provider.kind", "value.channel"),
+        section=policy.section,
+        identity=policy.identity or "id",
+        identity_fields=policy.identity_fields,
+        period_scoped=policy.period_scoped,
         inherited=inherited,
         successor=table,
     )
@@ -379,7 +408,7 @@ def _typed(members: Iterable[object], default: Sequence[str]) -> dict[str, Any]:
     dumped: dict[str, Any] = {}
     for member in members:
         if not isinstance(member, dict):
-            raise StripRefusedError(f"binding member is not a table: {member!r}")
+            raise RegistryError(f"binding member is not a table: {member!r}")
         filled = _defaulted(member, default)
         definition = BindingDefinition.model_validate(_frozen(filled))
         dumped[str(filled["id"])] = definition.model_dump(mode="json")
@@ -401,12 +430,17 @@ class EditionOutcome:
     removed: tuple[str, ...] = ()
     kept_new: int = 0
     kept_differs: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    #: Members equal under the run's equality but kept because the grounding
+    #: they would inherit is not what this edition's own default supplies.
+    carried_grounding: tuple[CarriedGrounding, ...] = ()
+    successor_default: tuple[str, ...] = ()
     restated_after_lifting: tuple[str, ...] = ()
     restated_ignoring_refs: tuple[str, ...] = ()
     blocking_fields: tuple[tuple[str, int], ...] = ()
     fragments_rewritten: tuple[str, ...] = ()
     fragments_deleted: tuple[str, ...] = ()
-    fragments_emptied_but_dirty: tuple[str, ...] = ()
+    comment_only_removed: tuple[tuple[str, str], ...] = ()
+    directories_removed: tuple[str, ...] = ()
     proof: str = "not run"
 
     def as_json(self) -> dict[str, Any]:
@@ -421,12 +455,16 @@ class EditionOutcome:
             "kept_new": self.kept_new,
             "kept_differs_count": len(self.kept_differs),
             "kept_differs": [{"id": identity, "fields": list(fields)} for identity, fields in self.kept_differs[:20]],
+            "successor_default": list(self.successor_default),
+            "carried_grounding_count": len(self.carried_grounding),
+            "carried_grounding": [kept.as_json(self.successor_default) for kept in self.carried_grounding],
             "restated_after_lifting_count": len(self.restated_after_lifting),
             "restated_ignoring_refs_count": len(self.restated_ignoring_refs),
             "blocking_fields": dict(self.blocking_fields),
             "fragments_rewritten": list(self.fragments_rewritten),
             "fragments_deleted": list(self.fragments_deleted),
-            "fragments_emptied_but_dirty": list(self.fragments_emptied_but_dirty),
+            "comment_only_removed": [{"fragment": name, "text": text} for name, text in self.comment_only_removed],
+            "directories_removed": list(self.directories_removed),
             "proof": self.proof,
         }
 
@@ -447,6 +485,11 @@ class ModeloOutcome:
     def kept_differs(self) -> int:
         """The number of stated members kept because they differ from the inherited member."""
         return sum(len(edition.kept_differs) for edition in self.editions)
+
+    @property
+    def carried_grounding(self) -> int:
+        """The number of restated members kept because their inherited grounding is not this edition's."""
+        return sum(len(edition.carried_grounding) for edition in self.editions)
 
     @property
     def restated_after_lifting(self) -> int:
@@ -488,13 +531,13 @@ class StripReport:
             "edges": [f"{modelo}/{edition}" for modelo, edition in self.edges],
             "exclusions": self.exclusions.as_json(),
             "proof_note": (
-                "bindings are not enrolled in the loader's _KEYED_FAMILIES, so the byte-identity proof ran against "
-                "the loader's own keyed-merge function called with a locally built bindings family; the live proof "
-                "through load_modelo_directory re-runs once enrolment lands"
+                "bindings are enrolled in the loader's _KEYED_FAMILIES; the byte-identity proof ran against the "
+                "loader's supported keyed-merge boundary with the canonical bindings family policy"
             ),
             "totals": {
                 "removed": sum(modelo.removed for modelo in self.modelos),
                 "kept_differs": sum(modelo.kept_differs for modelo in self.modelos),
+                "carried_grounding": sum(modelo.carried_grounding for modelo in self.modelos),
                 "restated_after_lifting": sum(modelo.restated_after_lifting for modelo in self.modelos),
                 "restated_ignoring_refs": sum(modelo.restated_ignoring_refs for modelo in self.modelos),
                 "refusals": sum(modelo.refusals for modelo in self.modelos),
@@ -504,6 +547,7 @@ class StripReport:
                     "modelo": modelo.modelo,
                     "removed": modelo.removed,
                     "kept_differs": modelo.kept_differs,
+                    "carried_grounding": modelo.carried_grounding,
                     "restated_after_lifting": modelo.restated_after_lifting,
                     "restated_ignoring_refs": modelo.restated_ignoring_refs,
                     "refusals": modelo.refusals,
@@ -526,6 +570,106 @@ def _without_references(member: Mapping[str, Any]) -> dict[str, Any]:
 
 def _differing_fields(left: Mapping[str, Any], right: Mapping[str, Any]) -> tuple[str, ...]:
     return tuple(sorted(key for key in set(left) | set(right) if left.get(key) != right.get(key)))
+
+
+# ── carried grounding ───────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class CarriedGrounding:
+    """A member kept because the grounding it would inherit is not the successor's own.
+
+    ``inherited_refs`` is what the member materialises once the successor stops
+    stating it -- the inherited raw member filled from the successor's own
+    ``binding_source_refs`` default. ``uncovered_refs`` are the refs in it that
+    neither that default supplies nor a successor declaration claiming the
+    member grounds, named by ``owners``.
+    """
+
+    identity: str
+    inherited_refs: tuple[str, ...]
+    uncovered_refs: tuple[str, ...]
+    owners: tuple[str, ...]
+
+    def as_json(self, default: Sequence[str]) -> dict[str, Any]:
+        """Return the kept member as report JSON, beside the successor default it failed against."""
+        return {
+            "id": self.identity,
+            "inherited_source_refs": list(self.inherited_refs),
+            "uncovered_source_refs": list(self.uncovered_refs),
+            "successor_default": list(default),
+            "claimed_by": list(self.owners),
+        }
+
+
+def _family_source_default(table: Mapping[str, Any], family: str) -> tuple[str, ...]:
+    value = table.get(_SOURCE_DEFAULT_FIELDS[family])
+    return tuple(str(item) for item in value) if isinstance(value, list | tuple) else ()
+
+
+def _stated_refs(member: Mapping[str, Any], default: Sequence[str]) -> frozenset[str]:
+    refs = member.get(_SOURCE_REFS)
+    if isinstance(refs, list | tuple):
+        return frozenset(str(item) for item in refs)
+    return frozenset(default)
+
+
+def _grounding_cover(
+    modelo_id: str,
+    revision_id: str,
+    tables: Mapping[str, Mapping[str, Any]],
+) -> dict[str, tuple[tuple[str, frozenset[str]], ...]]:
+    """The refs each successor declaration claiming a binding member can ground it with.
+
+    Construct closure requires the claiming declaration's ``source_refs`` to
+    include every ref its member carries, so a ref no claimant states is a ref
+    the member cannot legally materialise in this edition. Both claimant
+    families are materialised through the same keyed merge as the bindings and
+    filled from THIS edition's own family default, which is what the loader
+    hands the validator.
+    """
+    cover: dict[str, list[tuple[str, frozenset[str]]]] = {}
+    table = tables[revision_id]
+    for family, field_name in _CLAIMANT_FAMILIES:
+        default = _family_source_default(table, family)
+        for member in _materialised_family(modelo_id, revision_id, tables, family):
+            if not isinstance(member, dict):
+                continue
+            claimed = member.get(field_name, ())
+            if not isinstance(claimed, list | tuple):
+                continue
+            owner = f"{family}:{member.get('id')}"
+            grounds = _stated_refs(member, default)
+            for identity in claimed:
+                cover.setdefault(str(identity), []).append((owner, grounds))
+    return {identity: tuple(owners) for identity, owners in cover.items()}
+
+
+def _carried_grounding(
+    identity: str,
+    inherited_materialised: Mapping[str, Any],
+    default: Sequence[str],
+    owners: Sequence[tuple[str, frozenset[str]]],
+) -> CarriedGrounding | None:
+    """Return why the member must be kept, or ``None`` when it is safe to stop stating it.
+
+    Byte-identical payload is not identical meaning. A member is strippable only
+    when the ``source_refs`` it materialises after inheritance are what the
+    successor's OWN declared default would supply -- the inherited member states
+    no refs of its own, or states exactly that default, or a tail every
+    successor declaration claiming the member already grounds. Anything else is
+    the predecessor's grounding carried into an edition that does not cite it,
+    which is a construct-closure failure the tool must refuse rather than write.
+    """
+    materialised = inherited_materialised.get(_SOURCE_REFS, ())
+    refs = tuple(str(item) for item in materialised) if isinstance(materialised, list | tuple) else ()
+    beyond = tuple(ref for ref in dict.fromkeys(refs) if ref not in default)
+    if not beyond:
+        return None
+    uncovered = tuple(ref for ref in beyond if not owners or any(ref not in grounds for _owner, grounds in owners))
+    if not uncovered:
+        return None
+    return CarriedGrounding(identity, refs, uncovered, tuple(owner for owner, _grounds in owners))
 
 
 def plan_modelo(
@@ -578,7 +722,7 @@ def plan_modelo(
         result.predecessor = predecessor_id
         try:
             _plan_edition(modelo_id, edition_id, edition_dir, tables, result, equality=equality)
-        except (StripRefusedError, RegistryLoadError) as exc:
+        except (RegistryError, RegistryLoadError) as exc:
             # A merge refusal is this edition's answer, not the run's: enrolling
             # bindings would refuse it too, and the operator needs to see which
             # editions those are rather than a stopped sweep.
@@ -600,14 +744,14 @@ def _plan_edition(
     fragments = _read_fragments(edition_dir)
     stated_blocks = [block for fragment in fragments for block in fragment.blocks]
     if len(stated_blocks) != len(_keyed_members(table)):
-        raise StripRefusedError(
+        raise RegistryError(
             "bindings_declared_outside_fragments: the edition declares binding members outside its bindings/ "
             "directory, which this tool does not rewrite"
         )
     identities = [block.identity for block in stated_blocks]
     duplicated = sorted({identity for identity in identities if identities.count(identity) > 1})
     if duplicated or "" in identities:
-        raise StripRefusedError(f"ambiguous_identity: {duplicated or ['<member stating no id>']}")
+        raise RegistryError(f"ambiguous_identity: {duplicated or ['<member stating no id>']}")
     result.stated = len(stated_blocks)
 
     default = _binding_default(table)
@@ -617,7 +761,11 @@ def _plan_edition(
         str(member["id"]): dict(member) for member in inherited_raw if isinstance(member, dict) and "id" in member
     }
 
+    result.successor_default = default
+    cover = _grounding_cover(modelo_id, edition_id, tables)
+
     removable: list[str] = []
+    carried: list[CarriedGrounding] = []
     restated_lifted: list[str] = []
     restated_ignoring_refs: list[str] = []
     blocking: Counter[str] = Counter()
@@ -636,12 +784,17 @@ def _plan_edition(
         if lifted_left == lifted_right:
             restated_lifted.append(block.identity)
         if strict_left == strict_right or (equality == LIFTED and lifted_left == lifted_right):
-            removable.append(block.identity)
+            withheld = _carried_grounding(block.identity, strict_left, default, cover.get(block.identity, ()))
+            if withheld is None:
+                removable.append(block.identity)
+            else:
+                carried.append(withheld)
         else:
             fields = _differing_fields(lifted_left, lifted_right)
             blocking[", ".join(fields)] += 1
             differs.append((block.identity, fields))
     result.removed = tuple(removable)
+    result.carried_grounding = tuple(carried)
     result.restated_after_lifting = tuple(restated_lifted)
     result.restated_ignoring_refs = tuple(restated_ignoring_refs)
     result.blocking_fields = tuple(sorted(blocking.items(), key=lambda item: (-item[1], item[0]))[:10])
@@ -651,35 +804,23 @@ def _plan_edition(
 # ── writing and proof ───────────────────────────────────────────────────────
 
 
-def _git_clean(path: Path) -> bool:
-    """Whether git reports no pending change for ``path``.
-
-    A fragment another contributor is mid-edit is never deleted: the delete
-    would take their uncommitted work with it. A path git does not answer for at
-    all -- a staged registry tree outside any repository, which is what the tests
-    and a staging run work on -- has no version-controlled state to lose and is
-    clean; a path inside a repository that git names for any reason, including an
-    untracked file, is not.
-    """
-    completed = run_git(path.parent, "status", "--porcelain", "--", str(path))
-    if completed.returncode != 0:
-        return True
-    return not completed.stdout.strip()
-
-
 def _preview(edition_dir: Path, removed: frozenset[str], result: EditionOutcome) -> dict[Path, str | None]:
     """The text each fragment would hold after the strip, ``None`` meaning the file is deleted.
 
     A fragment keeping rows is rewritten from its surviving blocks, so every
     sibling row and every comment run that belongs to one survives byte-for-byte.
-    A fragment left with no row at all is deleted only when git reports it clean:
-    a file another contributor is mid-edit is emptied of rows and left in place
-    instead, because deleting it would take their uncommitted work with it.
+    A fragment left with no row is deleted, never written back blank or as the
+    remnant of its own leading comment run: the loader requires every fragment
+    to declare a ``[revisions.<id>]`` table, so a file holding only whitespace
+    or commentary stops the edition loading. A leading comment run above the
+    first member states nothing the loader reads, so a fragment reduced to one
+    counts as having nothing left; its text is preserved in the report under
+    ``comment_only_removed`` rather than on disk.
     """
     planned: dict[Path, str | None] = {}
     rewritten: list[str] = []
     deleted: list[str] = []
-    dirty: list[str] = []
+    comment_only: list[tuple[str, str]] = []
     for fragment in _read_fragments(edition_dir):
         kept = [block for block in fragment.blocks if block.identity not in removed]
         if len(kept) == len(fragment.blocks):
@@ -688,31 +829,44 @@ def _preview(edition_dir: Path, removed: frozenset[str], result: EditionOutcome)
             rewritten.append(fragment.path.name)
             planned[fragment.path] = fragment.preamble + "".join(block.text for block in kept)
             continue
-        if not _git_clean(fragment.path):
-            dirty.append(fragment.path.name)
-            planned[fragment.path] = fragment.preamble
-            continue
         deleted.append(fragment.path.name)
+        if fragment.preamble.strip():
+            comment_only.append((fragment.path.name, fragment.preamble))
         planned[fragment.path] = None
     result.fragments_rewritten = tuple(rewritten)
     result.fragments_deleted = tuple(deleted)
-    result.fragments_emptied_but_dirty = tuple(dirty)
+    result.comment_only_removed = tuple(comment_only)
     return planned
 
 
-def _write(planned: Mapping[Path, str | None]) -> None:
+def _write(planned: Mapping[Path, str | None], result: EditionOutcome) -> None:
     """Write the previewed strip, keeping each file's own line endings, and read every write back.
 
     The read-back is on the raw bytes: a write that doubled a carriage return or
     flipped the file's style raises rather than being accepted, because a
     fragment corrupted here is otherwise only discovered by the next load.
+
+    A section directory left holding no fragment is removed in the same pass.
+    The loader refuses an empty section directory, so deleting the last fragment
+    below one and leaving the directory standing would stop the modelo loading
+    just as surely as an empty fragment would. The sweep is version-control
+    free, and it removes only a directory it finds genuinely empty.
     """
+    emptied: set[Path] = set()
     for path, text in sorted(planned.items()):
         if text is None:
             path.unlink()
+            emptied.add(path.parent)
         else:
             style = write_preserving_newlines(path, text)
             verify_written(path, style)
+    removed: list[str] = []
+    for directory in sorted(emptied):
+        if any(directory.glob("*.toml")) or any(directory.iterdir()):
+            continue
+        directory.rmdir()
+        removed.append(directory.name)
+    result.directories_removed = tuple(removed)
 
 
 def _members_from_texts(edition_dir: Path, planned: Mapping[Path, str | None]) -> tuple[object, ...]:
@@ -745,7 +899,7 @@ def _binding_state(
     tables: Mapping[str, dict[str, Any]],
     stated: tuple[object, ...] | None = None,
 ) -> dict[str, Any]:
-    """The typed binding set the successor materialises, under the simulated enrolment.
+    """The typed binding set the successor materialises under canonical enrollment.
 
     ``stated`` replaces the edition's own members with the ones the strip would
     leave, which is how the after side is computed without writing anything.
@@ -787,7 +941,7 @@ def _validate_edges(registry_root: Path, edges: Sequence[tuple[str, str]]) -> No
         if (reason := _edge_refusal(registry_root / _MODELOS / modelo, edition))
     ]
     if refused:
-        raise StripRefusedError("unplannable edge(s): " + "; ".join(refused))
+        raise RegistryError("unplannable edge(s): " + "; ".join(refused))
 
 
 def strip_registry(
@@ -814,7 +968,7 @@ def strip_registry(
     report = StripReport(
         equality=equality,
         applied=apply,
-        enrolment="simulated: bindings are not in the loader's _KEYED_FAMILIES",
+        enrolment="canonical: bindings are in the loader's _KEYED_FAMILIES",
         edges=tuple(edges),
         exclusions=exclusions if exclusions is not None else collect_exclusions(),
     )
@@ -836,37 +990,40 @@ def strip_registry(
             continue
         if withheld.excludes_modelo(modelo_dir.name):
             continue
-        outcome = plan_modelo(
-            modelo_dir,
-            equality=equality,
-            edition_ids=selected.get(modelo_dir.name, ()),
-            excluded_edition_ids=withheld.editions_of(modelo_dir.name),
-        )
-        tables = _edition_tables(modelo_dir) if any(edition.removed for edition in outcome.editions) else {}
-        for edition in outcome.editions:
-            if edition.refusal or not edition.removed:
-                continue
-            edition_dir = modelo_dir / _REVISIONS / edition.edition
-            try:
-                before = _binding_state(modelo_dir, edition.edition, tables)
-                planned = _preview(edition_dir, frozenset(edition.removed), edition)
-                after = _binding_state(modelo_dir, edition.edition, tables, _members_from_texts(edition_dir, planned))
-            except (StripRefusedError, RegistryLoadError) as exc:
-                # The merge refuses this edition as it stands -- an undeclared
-                # repurpose is the usual cause -- so the strip is unprovable and
-                # the edition is reported refused rather than written.
-                edition.refusal = f"{type(exc).__name__}: {exc}"
-                edition.removed = ()
-                continue
-            if after != before:
-                edition.proof = _proof_failure(before, after)
-                raise StripRefusedError(
-                    f"modelo {modelo_dir.name} edition {edition.edition!r}: the strip would change the materialised "
-                    f"binding set: {edition.proof}"
-                )
-            edition.proof = "byte-identical (simulated enrolment)"
-            if apply:
-                _write(planned)
+        with modelo_fact_scope(modelo_dir):
+            outcome = plan_modelo(
+                modelo_dir,
+                equality=equality,
+                edition_ids=selected.get(modelo_dir.name, ()),
+                excluded_edition_ids=withheld.editions_of(modelo_dir.name),
+            )
+            tables = _edition_tables(modelo_dir) if any(edition.removed for edition in outcome.editions) else {}
+            for edition in outcome.editions:
+                if edition.refusal or not edition.removed:
+                    continue
+                edition_dir = modelo_dir / _REVISIONS / edition.edition
+                try:
+                    before = _binding_state(modelo_dir, edition.edition, tables)
+                    planned = _preview(edition_dir, frozenset(edition.removed), edition)
+                    after = _binding_state(
+                        modelo_dir, edition.edition, tables, _members_from_texts(edition_dir, planned)
+                    )
+                except (RegistryError, RegistryLoadError) as exc:
+                    # The merge refuses this edition as it stands -- an undeclared
+                    # repurpose is the usual cause -- so the strip is unprovable and
+                    # the edition is reported refused rather than written.
+                    edition.refusal = f"{type(exc).__name__}: {exc}"
+                    edition.removed = ()
+                    continue
+                if after != before:
+                    edition.proof = _proof_failure(before, after)
+                    raise RegistryError(
+                        f"modelo {modelo_dir.name} edition {edition.edition!r}: the strip would change the "
+                        f"materialised binding set: {edition.proof}"
+                    )
+                edition.proof = "byte-identical (canonical enrolment)"
+                if apply:
+                    _write(planned, edition)
         report.modelos.append(outcome)
     return report
 
@@ -892,6 +1049,7 @@ def render_report(report: StripReport) -> str:
             continue
         lines.append(
             f"  {modelo.modelo}: removable={modelo.removed} kept_differs={modelo.kept_differs} "
+            f"carried_grounding={modelo.carried_grounding} "
             f"restated_after_lifting={modelo.restated_after_lifting} "
             f"restated_ignoring_refs={modelo.restated_ignoring_refs} refusals={modelo.refusals}"
         )
@@ -903,11 +1061,13 @@ def render_report(report: StripReport) -> str:
                     f"    {edition.edition} <- {edition.predecessor}: stated={edition.stated} "
                     f"removable={len(edition.removed)} kept_new={edition.kept_new} "
                     f"kept_differs={len(edition.kept_differs)} "
+                    f"carried_grounding={len(edition.carried_grounding)} "
                     f"restated_after_lifting={len(edition.restated_after_lifting)} proof={edition.proof}"
                 )
     payload = report.as_json()["totals"]
     lines.append(
         f"corpus: removable={payload['removed']} kept_differs={payload['kept_differs']} "
+        f"carried_grounding={payload['carried_grounding']} "
         f"restated_after_lifting={payload['restated_after_lifting']} "
         f"restated_ignoring_refs={payload['restated_ignoring_refs']} refusals={payload['refusals']}"
     )
@@ -980,11 +1140,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=MATERIALISED,
         help="which restatement equality to remove under; only 'materialised' may be applied",
     )
-    parser.add_argument(
-        "--enrolment-simulated",
-        action="store_true",
-        help="accept a proof run against the simulated bindings enrolment when applying",
-    )
     args = parser.parse_args(argv)
     edge_mode = bool(args.edge or args.edges_file is not None)
     if edge_mode and (args.modelo or args.all):
@@ -993,11 +1148,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("name at least one --modelo or --edge, pass --edges-file, or pass --all")
     if args.apply and args.equality != MATERIALISED:
         parser.error("--apply removes only members provable under the 'materialised' equality")
-    if args.apply and not args.enrolment_simulated:
-        parser.error(
-            "bindings are not enrolled in the loader's keyed merge, so the byte-identity proof is simulated; "
-            "pass --enrolment-simulated to accept it, or apply after enrolment lands"
-        )
     root = args.registry_root.resolve() if args.registry_root is not None else _default_registry_root()
     try:
         edges = dict.fromkeys(
@@ -1019,12 +1169,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             equality=args.equality,
             apply=bool(args.apply),
         )
-    except MalformedExclusionError as exc:
+    except RegistryError as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 2
-    except StripRefusedError as exc:
-        print(f"refused: {exc}", file=sys.stderr)
-        return 1
     print(render_report(report))
     if args.report is not None:
         args.report.parent.mkdir(parents=True, exist_ok=True)

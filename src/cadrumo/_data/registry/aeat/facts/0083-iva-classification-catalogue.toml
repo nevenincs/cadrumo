@@ -3,10 +3,10 @@ fact_id = "iva-invoice-classification-catalogue"
 family = "mapping"
 
 [[fact.variants]]
-variant_id = "iva-invoice-classification-catalogue:2022-01-01"
+variant_id = "iva-invoice-classification-catalogue:1993-01-01"
 date_axis = "filing_period"
-valid_from = 2022-01-01
-legal_refs = ["ley-37-1992:art-3.dos", "ley-37-1992:art-13", "ley-37-1992:art-18", "ley-37-1992:art-20", "ley-37-1992:art-21", "ley-37-1992:art-25", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84"]
+valid_from = 1993-01-01
+legal_refs = ["ley-37-1992:art-3.dos", "ley-37-1992:art-13", "ley-37-1992:art-18", "ley-37-1992:art-20", "ley-37-1992:art-21", "ley-37-1992:art-25", "ley-37-1992:art-68", "ley-37-1992:art-69", "ley-37-1992:art-70", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92"]
 source_refs = ["aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -85,6 +85,57 @@ entries = [
   { key = "transaction_kind.ioss_distance_sale_low_value.oss_regime", value = "import_scheme" },
   { key = "counterparty.export_categories", value = "export_third_country_zero_rated,export_assimilated_zero_rated" },
   { key = "rate_territories", value = "es_mainland,es_canarias,es_ceuta_melilla" },
+  { key = "flow_direction.order", value = "repercutido,soportado,inversion_sujeto_pasivo,operacion_con_inversion" },
+  { key = "flow_direction.issued_token", value = "repercutido" },
+  { key = "flow_direction.received_token", value = "soportado" },
+  { key = "flow_direction.recipient_reverse_charge_token", value = "inversion_sujeto_pasivo" },
+  { key = "flow_direction.supplier_reverse_charge_token", value = "operacion_con_inversion" },
+  { key = "flow_direction.repercutido.value", value = "repercutido" },
+  { key = "flow_direction.repercutido.description", value = "Output IVA charged by the taxable person to the customer on a supply (repercusion)." },
+  { key = "flow_direction.repercutido.legal_refs", value = "ley-37-1992:art-88" },
+  { key = "flow_direction.repercutido.settlement_sides", value = "devengada" },
+  { key = "flow_direction.soportado.value", value = "soportado" },
+  { key = "flow_direction.soportado.description", value = "Input IVA borne by the taxable person and eligible for deduction under the statutory conditions." },
+  { key = "flow_direction.soportado.legal_refs", value = "ley-37-1992:art-92" },
+  { key = "flow_direction.soportado.settlement_sides", value = "deducible" },
+  { key = "flow_direction.inversion_sujeto_pasivo.value", value = "inversion_sujeto_pasivo" },
+  { key = "flow_direction.inversion_sujeto_pasivo.description", value = "Recipient-side reverse charge: the recipient self-assesses output and matching deductible IVA." },
+  { key = "flow_direction.inversion_sujeto_pasivo.legal_refs", value = "ley-37-1992:art-84" },
+  { key = "flow_direction.inversion_sujeto_pasivo.settlement_sides", value = "devengada,deducible" },
+  { key = "flow_direction.operacion_con_inversion.value", value = "operacion_con_inversion" },
+  { key = "flow_direction.operacion_con_inversion.description", value = "Supplier-side reverse-charge operation: the recipient is liable, so no IVA quota is charged or borne by the supplier." },
+  { key = "flow_direction.operacion_con_inversion.legal_refs", value = "ley-37-1992:art-84" },
+  { key = "flow_direction.operacion_con_inversion.settlement_sides", value = "none" },
+  { key = "flow_direction.settlement_side_order", value = "devengada,deducible" },
+  { key = "flow_direction.no_settlement_token", value = "none" },
+  { key = "flow_direction.settlement_side.devengada.value", value = "devengada" },
+  { key = "flow_direction.settlement_side.devengada.description", value = "Output IVA settlement side for chargeable or self-assessed quota." },
+  { key = "flow_direction.settlement_side.devengada.legal_refs", value = "ley-37-1992:art-88" },
+  { key = "flow_direction.settlement_side.deducible.value", value = "deducible" },
+  { key = "flow_direction.settlement_side.deducible.description", value = "Input IVA settlement side for deductible quota borne or self-assessed." },
+  { key = "flow_direction.settlement_side.deducible.legal_refs", value = "ley-37-1992:art-92" },
+  { key = "territorial_scope.order", value = "es_mainland,es_canarias,es_ceuta_melilla,eu_member,third_country" },
+  { key = "territorial_scope.es_mainland.value", value = "es_mainland" },
+  { key = "territorial_scope.es_canarias.value", value = "es_canarias" },
+  { key = "territorial_scope.es_ceuta_melilla.value", value = "es_ceuta_melilla" },
+  { key = "territorial_scope.eu_member.value", value = "eu_member" },
+  { key = "territorial_scope.third_country.value", value = "third_country" },
+  { key = "territorial_scope.alias.mainland", value = "es_mainland" },
+  { key = "territorial_scope.alias.canarias", value = "es_canarias" },
+  { key = "territorial_scope.alias.ceuta_melilla", value = "es_ceuta_melilla" },
+  { key = "territorial_scope.alias.eu_member", value = "eu_member" },
+  { key = "territorial_scope.alias.third_country", value = "third_country" },
+  { key = "customer_tax_status.order", value = "b2b_iva_registered,b2b_not_registered,b2c_consumer,public_administration,unknown" },
+  { key = "customer_tax_status.b2b_iva_registered.value", value = "b2b_iva_registered" },
+  { key = "customer_tax_status.b2b_not_registered.value", value = "b2b_not_registered" },
+  { key = "customer_tax_status.b2c_consumer.value", value = "b2c_consumer" },
+  { key = "customer_tax_status.public_administration.value", value = "public_administration" },
+  { key = "customer_tax_status.unknown.value", value = "unknown" },
+  { key = "customer_tax_status.alias.b2b_registered", value = "b2b_iva_registered" },
+  { key = "customer_tax_status.alias.b2b_not_registered", value = "b2b_not_registered" },
+  { key = "customer_tax_status.alias.b2c_consumer", value = "b2c_consumer" },
+  { key = "customer_tax_status.alias.public_administration", value = "public_administration" },
+  { key = "customer_tax_status.alias.unknown", value = "unknown" },
   { key = "rule.R01_construction_reverse_charge.priority", value = "1" },
   { key = "rule.R01_construction_reverse_charge.predicate", value = "issuer=es_mainland;customer=es_mainland;status=b2b_or_public;kind=construction_reverse_charge" },
   { key = "rule.R01_construction_reverse_charge.category", value = "domestic_reverse_charge" },

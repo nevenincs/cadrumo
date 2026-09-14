@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01410"
+continuidad_id = "01410"
 number = "01410"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2024".casillas]]
 id = "01411"
+continuidad_id = "01411"
 number = "01411"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-105"]
 [[revisions."2024".casillas]]
 id = "01412"
+continuidad_id = "01412"
 number = "01412"
 section = ["reserva_de_nivelacion", "dotacion_de_la_reserva"]
 data_type = "money"

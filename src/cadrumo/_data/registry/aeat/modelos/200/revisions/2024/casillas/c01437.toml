@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01437"
+continuidad_id = "01437"
 number = "01437"
 section = ["deduccion_por_reversion_de_medidas_temporales_d_t", "2015"]
 data_type = "money"

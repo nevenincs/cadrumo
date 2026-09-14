@@ -11,6 +11,8 @@
 # segment-qualified id, never the bare number.
 [[revisions."2025-y-siguientes".casillas]]
 id = "DP200014:00550"
+continuidad_id = "is-liquidacion-iii-base-imponible-previa"
+continuidad_origin = "seeded"
 number = "00550"
 segmento = "DP200014"
 section = ["liquidacion_iii", "base_imponible"]

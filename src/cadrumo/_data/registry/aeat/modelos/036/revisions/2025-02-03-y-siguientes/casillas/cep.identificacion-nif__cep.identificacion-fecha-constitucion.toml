@@ -1307,6 +1307,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1286+8. Identificacion. Fecha de inscripcion en el registro mercantil. ONE casilla over three design components at @1286+2 dia, @1288+2 mes and @1290+4 ano, all three printed under the single number C70.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-fecha-inscripcion-registro-mercantil"
+continuidad_id = "ep-identificacion-fecha-inscripcion-registro-mercantil"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:395 (sha256 3ecea6c06e3d) box [C70] over 3 printed components @1286+8 (67 1286 2 Num Establecimiento perm. de una per.jca. o ent. no resid...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:455 (sha256 791479fbf9e9) box [C70] over 3 printed components @1286+8 (78 1286 2 Num Establecimiento perm. de una per.jca. o ent. no resid...)."
 number = "C70"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "date"
@@ -1322,6 +1325,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1294+8. Identificacion. Fecha de constitucion. ONE casilla over three design components at @1294+2 dia, @1296+2 mes and @1298+4 ano, all three printed under the single number C71.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "ep.identificacion-fecha-constitucion"
+continuidad_id = "ep-identificacion-fecha-constitucion"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:398 (sha256 3ecea6c06e3d) box [C71] over 3 printed components @1294+8 (1294 2 Num Establecimiento perm. de una per.jca. o ent. no resid.. ...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:458 (sha256 791479fbf9e9) box [C71] over 3 printed components @1294+8 (81 1294 2 Num Establecimiento perm. de una per.jca. o ent. no resid...)."
 number = "C71"
 section = ["declaracion", "establecimiento_permanente", "identificacion"]
 data_type = "date"

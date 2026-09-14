@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00061"
+continuidad_id = "is-identificacion-regimen-flag"
+continuidad_origin = "seeded"
 number = "00061"
 section = ["estados_de_cuentas_de_instituciones_de_inversion_c", "entidades_que_utilicen_los_estados_de_cuentas_apli"]
 data_type = "decimal"

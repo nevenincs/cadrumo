@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "DP200014B:00601"
+continuidad_id = "is-liquidacion-iv-pago-fraccionado-primero"
+continuidad_origin = "seeded"
 number = "00601"
 segmento = "DP200014B"
 section = ["liquidacion_iv", "pagos_fraccionados_cuota_diferencial"]

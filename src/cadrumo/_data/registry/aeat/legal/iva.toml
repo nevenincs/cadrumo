@@ -1569,6 +1569,104 @@ required_text = [
     "el empresario o profesional obligado a la expedición de la factura haya de considerarse establecido en dicho territorio",
 ]
 
+[legal."rd-1619-2012:art-6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012-art-6.html#a6"
+document_id = "BOE-A-2012-14696"
+article = "6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a6"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
+notes = "RD 1619/2012 Reglamento de facturacion art 6: contenido obligatorio de la factura completa. Fundamenta la clase ORDINARIA del catalogo de clasificacion de facturas."
+required_text = [
+    "Contenido de la factura",
+    "Toda factura y sus copias contendrán los datos o requisitos que se citan a continuación",
+]
+
+[legal."rd-1619-2012:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012.html#a7"
+document_id = "BOE-A-2012-14696"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a7"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
+notes = "RD 1619/2012 Reglamento de facturacion art 7: contenido de la factura simplificada. Fundamenta la clase SIMPLIFICADA. corpus_ref nombra el acto consolidado completo porque no hay captura por articulo para el 7; la del articulo 6 no lo contiene."
+required_text = [
+    "Contenido de las facturas simplificadas",
+    "las facturas simplificadas y sus copias contendrán los siguientes datos o requisitos",
+]
+
+[legal."rd-1619-2012:art-6.1.a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012-art-6.html#a6"
+document_id = "BOE-A-2012-14696"
+article = "6.1.a"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a6"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
+notes = "RD 1619/2012 art 6.1.a: numero y serie de la factura. Se declara con el id compuesto porque la clase RECTIFICATIVA cita la letra, no el articulo entero. El texto citado es el del articulo 6; el articulo 7.1.a usa la misma formula para las facturas SIMPLIFICADAS, de ahi que la cita incluya 'las facturas dentro de cada serie' sin el adjetivo."
+required_text = [
+    "Contenido de la factura",
+    "Número y, en su caso, serie",
+    "La numeración de las facturas dentro de cada serie será correlativa",
+]
+
+[legal."rd-1619-2012:art-6.1.i"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012-art-6.html#a6"
+document_id = "BOE-A-2012-14696"
+article = "6.1.i"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a6"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-authored from the bundled corpus capture; operator to re-stamp"
+notes = "RD 1619/2012 art 6.1.i: fecha de operacion y de pago anticipado cuando difieren de la de expedicion. Fundamenta los roles OPERATION_PERFORMED y ADVANCE_PAYMENT_RECEIVED."
+required_text = [
+    "Contenido de la factura",
+    "La fecha en que se hayan efectuado las operaciones que se documentan",
+    "se haya recibido el pago anticipado, siempre que se trate de una fecha distinta a la de expedición de la factura",
+]
+
+[legal."rd-1619-2012:disp-adicional-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012.html#dacuaa"
+document_id = "BOE-A-2012-14696"
+article = "disposición adicional cuarta"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#dacuaa"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-13
+reviewed_by = "agent-review (re-verified 2026-09-13 against corpus/normatives/html/rd-1619-2012.html Bloque 52 #dacuaa, 0 U+FFFD; the prior review attested 'verbatim' for a required_text the provision does not contain)"
+notes = "RD 1619/2012 disposición adicional cuarta: invoices for services mediated by travel agencies in the agency's own name and on behalf of another party. The provision enumerates the covered service set and requires those invoices to be distinguished in the annual third-party declaration. What this citation does NOT claim: the provision's service list is GENERIC -- apartado 1.c) reads 'a´) transporte de viajeros y sus equipajes;' alongside hostelería, restauración, arrendamiento de medios de transporte, visitas, acceso a manifestaciones culturales and seguros de viajes. The words 'vía aérea' and 'aérea' do not occur in the disposición at all. The air-transport narrowing belongs to AEAT's Modelo 347 design (clave G), not to this RD, so clave G must be grounded on the 347 design and never on this reference."
+required_text = [
+    "Facturación de determinadas prestaciones de servicios en cuya realización intervienen agencias de viajes actuando como mediadoras en nombre y por cuenta ajena",
+    "transporte de viajeros y sus equipajes",
+    "declaración anual de operaciones con terceras personas",
+]
+
 [legal."rd-1619-2012:art-15"]
 evidence_tier = "legal_authority"
 authority = "boe"

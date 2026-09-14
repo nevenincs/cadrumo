@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00370"
+continuidad_id = "is-liquidacion-ii-detalle-correcciones"
+continuidad_origin = "seeded"
 number = "00370"
 section = ["liquidacion_ii", "detalle_correcciones_resultado_cta_perdidas_y_gana"]
 data_type = "money"

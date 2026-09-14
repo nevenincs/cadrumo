@@ -8,6 +8,10 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.convenio import ConvenioAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.iva.compilation_catalogues import compiling_catalogues
@@ -37,7 +41,6 @@ from .loader_fingerprints import collect_registry_tree_fingerprints
 from .runtime_catalogues import compile_runtime_catalogues
 from .source_evidence_fingerprint import collect_source_evidence_fingerprints
 from .supplementary_orden import compile_supplementary_ordenes
-from .validator import RegistryValidator
 
 
 def compile_structural_authority(
@@ -81,11 +84,23 @@ def _compile_validated_authority_uncached(
     authority = compile_structural_authority(root, sources_root, identity=identity)
     modelos, catalogues = authority.modelos, authority.catalogues
     source_evidence_fingerprint = collect_source_evidence_fingerprints(sources_root)
-    RegistryValidator(
-        catalogues,
-        source_root=sources_root,
-        source_evidence_fingerprint=source_evidence_fingerprint,
-    ).validate_registry(modelos)
+    # Scope validation re-validates typed members whose field validators read
+    # governed vocabulary, exactly as the tree load does, so it needs the same
+    # candidate facts in scope. Without them every ledger-IVA binding refuses
+    # rather than resolving a rate kind through the artifact this compile
+    # replaces.
+    with validating_governed_facts(CandidateFactAuthority(catalogues.facts)):
+        # Import only after candidate facts are scoped. The validator imports
+        # applicability projections whose typed module constants resolve
+        # governed vocabulary; importing it at module load would bootstrap a
+        # publication through the stale artifact it is meant to replace.
+        from .validator import RegistryValidator
+
+        RegistryValidator(
+            catalogues,
+            source_root=sources_root,
+            source_evidence_fingerprint=source_evidence_fingerprint,
+        ).validate_registry(modelos)
     return authority
 
 
@@ -141,14 +156,24 @@ def compile_registry_tree(
         identity = resolve_registry_identity(root, collect_fingerprints=collect_registry_tree_fingerprints)
     authored_facts = compile_authored_fact_catalogue(root)
     candidate_tax_id_format = tax_id_format_from_catalogue(authored_facts)
-    modelos, catalogues = load_registry_tree(
-        root,
-        identity=identity,
-        tax_id_format=candidate_tax_id_format,
-    )
-    validate_fact_provider_directory_ownership(root)
+    # A modelo's bindings declare governed vocabulary, so validating them reads
+    # facts. They must be the candidate's own facts: the published artifact is
+    # what this compile replaces, and reading it here would make the fix for a
+    # broken artifact depend on that artifact.
+    with validating_governed_facts(CandidateFactAuthority(authored_facts)):
+        modelos, catalogues = load_registry_tree(
+            root,
+            identity=identity,
+            tax_id_format=candidate_tax_id_format,
+        )
+    if fact_providers.FACT_PROVIDER_REGISTRATIONS:
+        validate_fact_provider_directory_ownership(root)
     with compiling_catalogues(catalogues.legal, catalogues.sources, sources_root):
-        facts = compile_registered_fact_providers(root, modelos=modelos)
+        facts = (
+            compile_registered_fact_providers(root, modelos=modelos)
+            if fact_providers.FACT_PROVIDER_REGISTRATIONS
+            else authored_facts
+        )
         runtime_catalogues = compile_runtime_catalogues(root)
     # Provider-free isolated candidates are supported by the fact-validation
     # contract. They cannot project a treaty override, but remain useful for
@@ -161,13 +186,14 @@ def compile_registry_tree(
     supported_filing_years = catalogues.supported_filing_years
     if supported_filing_years is None:
         raise RegistryValidationError("registry has no supported_filing_years catalogue")
-    supplementary_ordenes = compile_supplementary_ordenes(
-        root,
-        source_root=sources_root,
-        modelos=modelos,
-        sources=catalogues.sources,
-        supported_filing_years=supported_filing_years.years,
-    )
+    with validating_governed_facts(CandidateFactAuthority(facts)):
+        supplementary_ordenes = compile_supplementary_ordenes(
+            root,
+            source_root=sources_root,
+            modelos=modelos,
+            sources=catalogues.sources,
+            supported_filing_years=supported_filing_years.years,
+        )
     duplicate_legal_refs = set(catalogues.legal).intersection(supplementary_ordenes.legal)
     if duplicate_legal_refs:
         raise RegistryValidationError(

@@ -229,6 +229,7 @@ semantic_role = "m322_identificacion_destinatario_criterio_caja"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -272,6 +273,7 @@ semantic_role = "m322_identificacion_grupo_rol"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["D", "P"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 
 [[revisions."2008-2022".casillas]]
@@ -293,6 +295,7 @@ semantic_role = "m322_identificacion_redeme_inscrito"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
 [[revisions."2008-2022".casillas]]
@@ -304,6 +307,7 @@ semantic_role = "m322_identificacion_regimen_163_sexies_cinco"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71", "ley-37-1992:art-163-sexies"]
 
 [[revisions."2008-2022".casillas]]
@@ -315,8 +319,20 @@ semantic_role = "m322_identificacion_tributacion_exclusivamente_foral"
 data_type = "text"
 required = false
 input_kind = "manual"
+constraints = { max_length = 1, enum = ["X"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
 legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
 
+# NO constraints lifted here, deliberately, and this is the one field of the six
+# that must stay bare. The 2026 edition declares enum ["0", "1", "2"], and its
+# own continuidad_evidence says why that is not this edition's value: 2022, 2023
+# and 2024-25 all read "Si=1/No=2", while "2026 reordena el campo y explicita 0,
+# sin cambio de concepto, tipo ni ancho". The 0 clave is a 2026 addition.
+# Copying it back would widen the values this edition accepts to include one AEAT
+# did not publish until 2026 -- a filer could then submit a 0 for 2022 and pass.
+# The residual semantic_role finding against the 2026 row is therefore CORRECT and
+# is a real cross-edition divergence: the role check compares one signature across
+# every edition and cannot express a design that legitimately widened. It needs a
+# ruling on the check, not an edit to this row.
 [[revisions."2008-2022".casillas]]
 id = "decl.volumen-anual-no-cero"
 continuidad_id = "m322-identificacion-volumen-anual-no-cero"

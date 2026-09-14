@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "00183"
+continuidad_id = "00183"
 number = "00183"
 section = ["deducc_para_incentivar_determ_actividades", "2012_suma_deducciones"]
 data_type = "money"

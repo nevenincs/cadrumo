@@ -1707,3 +1707,13 @@ grounded = [
   "T220DID00:t220did00.49-108>T220DID00:t220did00.49-108",
   "T220DID00:t220did00.558>T220DID00:t220did00.558",
 ]
+[[ruling]]
+modelo = "296"
+predecessor = "2023"
+successor = "2024-y-siguientes"
+rationale = "The three Tipo 1 resumen totals occupy identical positions under identical official field names in both pinned designs: BASE RETENCIONES E INGRESOS A CUENTA at 145-159, RETENCIONES E INGRESOS A CUENTA at 160-174 and RETENCIONES E INGRESOS A CUENTA INGRESADOS at 175-189, in aeat-dr-296-2023 and aeat-dr-296-2024 alike, each subdividing at the same stated boundaries. The 2024 design adds two Anexos al registro tipo 2 and retires no Tipo 1 field, so the declarante record is unchanged across the pair. The mechanical predicate cannot settle these: 296/2023 was authored by modelling the existing 2024 edition, so its identifier, semantic_role and data_type agree with 2024 by construction and an agreement test over those fields is circular. The designs are the independent evidence and they are what this ruling names."
+grounded = [
+  "02>02",
+  "03>03",
+  "04>04",
+]

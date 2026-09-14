@@ -10,7 +10,7 @@ edited row and the diff shows the whole file. Worse, text that already carries
 So the style is read off the file's own raw bytes and restored on write, and the
 read-back proves it on the raw bytes rather than trusting the write: the file is
 re-read, checked for ``\\r\\r\\n``, checked for the style it had, and parsed as
-TOML. A file that fails any of those raises :class:`ReadBackFailedError` and is
+TOML. A file that fails any of those raises :class:`RegistryLoadError` and is
 reported. Silent acceptance is the one outcome this module exists to prevent --
 a corrupted fragment that nobody is told about is discovered by the next load,
 long after the run that caused it.
@@ -22,10 +22,11 @@ import tomllib
 from pathlib import Path
 from typing import Final
 
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+
 __all__ = [
     "CRLF",
     "LF",
-    "ReadBackFailedError",
     "detect_newline",
     "verify_written",
     "write_preserving_newlines",
@@ -35,10 +36,6 @@ LF: Final = "\n"
 CRLF: Final = "\r\n"
 
 _DOUBLED_CR: Final = b"\r\r\n"
-
-
-class ReadBackFailedError(RuntimeError):
-    """A written file did not read back as the write intended."""
 
 
 def detect_newline(raw: bytes) -> str:
@@ -69,20 +66,20 @@ def write_preserving_newlines(path: Path, text: str) -> str:
 def verify_written(path: Path, expected_newline: str, *, parse_toml: bool = True) -> None:
     """Re-read ``path`` from disk and prove the write did what it said.
 
-    Raises :class:`ReadBackFailedError` on a doubled carriage return, on a
+    Raises :class:`RegistryLoadError` on a doubled carriage return, on a
     changed line-ending style, or on TOML the corpus loader could not parse. The
     check reads the bytes back rather than inspecting the string that was
     written, so a translating write layer cannot pass it.
     """
     raw = path.read_bytes()
     if _DOUBLED_CR in raw:
-        raise ReadBackFailedError(f"{path}: read back with a doubled carriage return")
+        raise RegistryLoadError(f"{path}: read back with a doubled carriage return")
     found = detect_newline(raw)
     if found != expected_newline:
-        raise ReadBackFailedError(f"{path}: line endings changed from {expected_newline!r} to {found!r}")
+        raise RegistryLoadError(f"{path}: line endings changed from {expected_newline!r} to {found!r}")
     if not parse_toml:
         return
     try:
         tomllib.loads(raw.decode("utf-8"))
     except (tomllib.TOMLDecodeError, UnicodeDecodeError) as exc:
-        raise ReadBackFailedError(f"{path}: read back as unparsable TOML: {exc}") from exc
+        raise RegistryLoadError(f"{path}: read back as unparsable TOML: {exc}") from exc

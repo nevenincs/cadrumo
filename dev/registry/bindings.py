@@ -325,6 +325,19 @@ def _python_binding_references(
     limitations: list[dict[str, object]] = []
     scan_roots = (root / "src" / "cadrumo", root / "dev" / "registry")
     for scan_root in scan_roots:
+        if not scan_root.is_dir():
+            # A scan root that is not there contributes no rows, which is
+            # indistinguishable from a tree that genuinely names no binding id.
+            # The narrowed scope is reported so a zero reference count cannot be
+            # read as evidence of absence.
+            limitations.append(
+                {
+                    "code": "PYTHON_BINDING_REFERENCE_ROOT_MISSING",
+                    "path": _relative(scan_root, root),
+                    "message": "scan root is not a directory; its binding-id literals are outside this measurement",
+                }
+            )
+            continue
         for path in sorted(scan_root.rglob("*.py")):
             relative = _relative(path, root)
             try:
@@ -441,12 +454,18 @@ def audit(root: Path) -> dict[str, object]:
 
     raw_revisions: dict[tuple[str, str], dict[str, object]] = {}
     parse_failures: list[dict[str, object]] = []
+    modelos_without_revisions: list[str] = []
     family_file_counts: Counter[str] = Counter()
     family_row_counts: Counter[str] = Counter()
 
     for modelo_dir in sorted(path for path in registry_root.iterdir() if path.is_dir()):
         revisions_dir = modelo_dir / "revisions"
         if not revisions_dir.is_dir():
+            # The modelo contributes no coordinate, so it is absent from the
+            # modelo and revision totals and from every per-revision row. That
+            # is a narrowed scope rather than a measured zero, and it is
+            # reported as one instead of leaving the corpus looking smaller.
+            modelos_without_revisions.append(_relative(modelo_dir, root))
             continue
         for revision_dir in sorted(path for path in revisions_dir.iterdir() if path.is_dir()):
             coordinate = (modelo_dir.name, revision_dir.name)
@@ -869,6 +888,15 @@ def audit(root: Path) -> dict[str, object]:
                     evidence=(row,),
                 )
             )
+
+    if modelos_without_revisions:
+        limitations.append(
+            {
+                "code": "MODELOS_WITHOUT_REVISIONS",
+                "count": len(modelos_without_revisions),
+                "items": modelos_without_revisions,
+            }
+        )
 
     if parse_failures:
         limitations.append(

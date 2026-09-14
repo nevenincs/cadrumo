@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01828"
+continuidad_id = "01828"
 number = "01828"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 data_type = "money"
@@ -9,6 +10,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2024".casillas]]
 id = "01829"
+continuidad_id = "01829"
 number = "01829"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 data_type = "decimal"
@@ -18,6 +20,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2024".casillas]]
 id = "01830"
+continuidad_id = "01830"
 number = "01830"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 data_type = "money"
@@ -27,6 +30,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2024".casillas]]
 id = "01831"
+continuidad_id = "01831"
 number = "01831"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 data_type = "money"
@@ -36,6 +40,7 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:dt-23"]
 [[revisions."2024".casillas]]
 id = "01832"
+continuidad_id = "01832"
 number = "01832"
 section = ["deducciones_doble_imposicion_interna_dt_23_1_lis", "di_interna_2018"]
 data_type = "money"

@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02220"
+continuidad_id = "02220"
+continuidad_origin = "seeded"
 number = "02220"
 section = ["deducciones_i_d_i_excluidas_de_limite", "2024_innovacion_tecnologica"]
 data_type = "money"

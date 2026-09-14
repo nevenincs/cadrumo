@@ -16,6 +16,7 @@ number = "01"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_inmuebles_urbanos_no_exentos"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -27,6 +28,7 @@ number = "02"
 segmento = "714-02"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_inmuebles_rusticos"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -38,6 +40,7 @@ number = "03"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_no_exentos"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -49,6 +52,7 @@ number = "04"
 segmento = "714-03"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_bienes_afectos_exentos"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -60,6 +64,7 @@ number = "05"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_depositos_cuentas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -71,6 +76,7 @@ number = "06"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_valores_cesion_capitales_negociados"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -82,6 +88,7 @@ number = "07"
 segmento = "714-04"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_valores_cesion_capitales_no_negociados"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -93,6 +100,7 @@ number = "08"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_inversion_colectiva_negociada_no_exenta"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -104,6 +112,7 @@ number = "09"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_otras_entidades_negociadas_no_exentas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -115,6 +124,7 @@ number = "10"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_inversion_colectiva_no_negociada_no_exenta"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -126,6 +136,7 @@ number = "11"
 segmento = "714-05"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_otras_entidades_no_negociadas_no_exentas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -137,6 +148,7 @@ number = "12"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_participaciones_negociadas_exentas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -148,6 +160,7 @@ number = "13"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_participaciones_no_negociadas_exentas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -159,6 +172,7 @@ number = "14"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_seguros_vida"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -170,6 +184,7 @@ number = "15"
 segmento = "714-06"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_rentas_temporales_vitalicias"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -181,6 +196,7 @@ number = "16"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_vehiculos_joyas_pieles_embarcaciones_aeronaves"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -192,6 +208,7 @@ number = "17"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_arte_antiguedades"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -203,6 +220,7 @@ number = "18"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_derechos_reales_uso_disfrute"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -214,6 +232,7 @@ number = "19"
 segmento = "714-07"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_concesiones_administrativas"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -225,6 +244,7 @@ number = "20"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_propiedad_intelectual_industrial"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -236,6 +256,7 @@ number = "21"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_opciones_contractuales"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -247,6 +268,7 @@ number = "22"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_demas_bienes_derechos"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -258,6 +280,7 @@ number = "23"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
 data_type = "money"
+semantic_role = "patrimonio_total_bienes_derechos_no_exentos"
 required = false
 input_kind = "manual"
 # also printed on 714-Ingreso
@@ -269,6 +292,7 @@ number = "24"
 segmento = "714-08"
 section = ["deudas_deducibles"]
 data_type = "money"
+semantic_role = "patrimonio_deudas_deducibles"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -295,6 +319,7 @@ number = "26"
 segmento = "714-09"
 section = ["resumen_patrimonio_neto"]
 data_type = "money"
+semantic_role = "patrimonio_minimo_exento"
 required = false
 input_kind = "manual"
 legal_refs = ["ley-19-1991:art-28", "orden-hfp-207-2022:art-4"]
@@ -321,6 +346,7 @@ number = "28"
 segmento = "714-09"
 section = ["patrimonio_exento_con_progresividad"]
 data_type = "money"
+semantic_role = "patrimonio_exento_progresividad"
 required = false
 input_kind = "manual"
 
@@ -508,6 +534,7 @@ number = "41"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_deduccion_impuestos_extranjero"
 required = false
 input_kind = "manual"
 
@@ -518,6 +545,7 @@ number = "42"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_valor_neto_bienes_ceuta_melilla"
 required = false
 input_kind = "manual"
 
@@ -528,6 +556,7 @@ number = "43"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_cuota_proporcional_bienes_ceuta_melilla"
 required = false
 input_kind = "manual"
 
@@ -538,6 +567,7 @@ number = "44"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_bonificacion_ceuta_melilla"
 required = false
 input_kind = "manual"
 
@@ -562,6 +592,7 @@ number = "46"
 segmento = "714-08"
 section = ["bienes_y_derechos"]
 data_type = "money"
+semantic_role = "patrimonio_monedas_virtuales"
 required = false
 input_kind = "manual"
 # also printed on 714-09
@@ -573,5 +604,6 @@ number = "48"
 segmento = "714-10"
 section = ["liquidacion"]
 data_type = "money"
+semantic_role = "patrimonio_deducciones_autonomicas_derecho"
 required = false
 input_kind = "manual"

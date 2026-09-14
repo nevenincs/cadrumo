@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "00911"
+continuidad_id = "00911"
+continuidad_origin = "seeded"
 number = "00911"
 section = ["reg_cooperativas", "detalle_compensacion_cuotas_2014_aplicado_en_esta"]
 data_type = "money"

@@ -79,6 +79,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @213+8 Num. Pers. jcas. o entidades. Identificación. Fecha acuerdo voluntades. Día [ONE casilla over 3 printed components: @213+2, @215+2, @217+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.ident-fecha-acuerdo-voluntades"
+continuidad_id = "pj-ident-fecha-acuerdo-voluntades"
 number = "B8"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -89,6 +90,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @221+8 Num. Pers. jcas. o entidades. Identificación. Fecha constitución. Día [ONE casilla over 3 printed components: @221+2, @223+2, @225+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.ident-fecha-constitucion"
+continuidad_id = "pj-ident-fecha-constitucion"
 number = "B9"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"
@@ -99,6 +101,7 @@ legal_refs = ["rd-1065-2007:art-11", "orden-eha-1274-2007:art-1"]
 # @229+8 Num. Pers. jcas. o entidades. Identificación. Fecha inscripción registral. Día [ONE casilla over 3 printed components: @229+2, @231+2, @233+4]
 [[revisions."2023-hasta-2025-02-02".casillas]]
 id = "pj.ident-fecha-inscripcion-registral"
+continuidad_id = "pj-ident-fecha-inscripcion-registral"
 number = "B10"
 section = ["declaracion", "persona_juridica", "identificacion"]
 data_type = "date"

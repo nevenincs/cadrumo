@@ -1,5 +1,6 @@
 [[revisions.2024.casillas]]
 id = '02288'
+continuidad_id = "02288"
 number = '02288'
 data_type = 'money'
 semantic_role = 'is_informacion_adicional_limites_deducciones_canarias_generada'

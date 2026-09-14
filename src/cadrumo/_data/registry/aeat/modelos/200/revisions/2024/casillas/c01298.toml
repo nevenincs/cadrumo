@@ -1,5 +1,6 @@
 [[revisions."2024".casillas]]
 id = "01298"
+continuidad_id = "01298"
 number = "01298"
 section = ["deduccion_por_inversiones_y_gastos_realizados_por", "total"]
 data_type = "money"

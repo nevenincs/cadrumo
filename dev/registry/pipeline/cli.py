@@ -34,7 +34,7 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from dev.locales.manager import LocaleManager, discover_locale_codes
+
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
 from ..compiler.fact_providers import AUTHORED_FACT_PROVIDER_ID
@@ -167,9 +167,7 @@ def publish_facts_authority(
         artifact_path=artifact_path,
     )
     provider_counts = Counter(
-        str(fact.provider_id)
-        for fact in published.catalogues.facts.facts.values()
-        if fact.provider_id is not None
+        str(fact.provider_id) for fact in published.catalogues.facts.facts.values() if fact.provider_id is not None
     )
     authored_count = provider_counts.get(AUTHORED_FACT_PROVIDER_ID, 0)
     provider_owned_count = sum(
@@ -360,6 +358,8 @@ def stage_isolated_edition(
     locale where the row has no text of its own, so every staged label resolves
     to exactly what the live edition resolves.
     """
+    from dev.locales.manager import LocaleManager, discover_locale_codes
+
     edition = materialise_edition(source_modelo_root, revision)
     shutil.copytree(source_modelo_root, staged_root)
     revisions_root = staged_root / "revisions"

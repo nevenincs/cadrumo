@@ -902,6 +902,9 @@ additional_source_refs = ["aeat-dr-036-2025"]
 # @1788+8. Identificacion. Empresario de Responsabilidad Limitada. Fecha de alta o baja. ONE casilla over three design components at @1788+2 dia, @1790+2 mes and @1792+4 ano, all three printed under the single number A10.
 [[revisions."2025-02-03-y-siguientes".casillas]]
 id = "pf.identificacion-erl-fecha"
+continuidad_id = "pf-identificacion-erl-fecha"
+continuidad_origin = "grounded"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_036/files/03-036-diseno-de-registro-del-modelo-m036-ejercicio-2023-y-siguientes-107-kb-xlsx.xlsx.extracted.md:158 (sha256 3ecea6c06e3d) box [A10] over 3 printed components @1788+8 (92 1788 2 Num Persona Física. Identificación. Empresario de Respons...) continues as corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md:197 (sha256 791479fbf9e9) box [A10] over 3 printed components @1788+8 (104 1788 2 Num Persona Física. Identificación. Empresario de Respon...)."
 number = "A10"
 section = ["declaracion", "persona_fisica", "identificacion"]
 data_type = "date"

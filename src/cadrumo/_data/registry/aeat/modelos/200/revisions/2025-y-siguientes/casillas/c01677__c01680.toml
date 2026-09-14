@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "01677"
+continuidad_id = "is-correccion-operaciones-art19-otras-permanente-aumento"
+continuidad_origin = "seeded"
 number = "01677"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01678"
+continuidad_id = "is-correccion-operaciones-art19-otras-temporaria-ejercicio-aumento"
+continuidad_origin = "seeded"
 number = "01678"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
 data_type = "money"
@@ -18,6 +22,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01679"
+continuidad_id = "is-correccion-operaciones-art19-otras-importe"
+continuidad_origin = "seeded"
 number = "01679"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
 data_type = "money"
@@ -27,6 +33,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-19"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "01680"
+continuidad_id = "is-correccion-operaciones-art19-otras-saldo-final"
+continuidad_origin = "seeded"
 number = "01680"
 section = ["operaciones_del_art_19_lis_distintas_del_cambio_de", "aumento"]
 data_type = "money"

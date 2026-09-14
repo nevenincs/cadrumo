@@ -12,7 +12,7 @@ from collections import defaultdict
 from itertools import pairwise
 
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_overlap
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaContinuidadEvolutionDefinition
 
@@ -214,7 +214,7 @@ def _validate_strict_retired_continuity_surfaces(modelo: ModeloDefinition) -> tu
     continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
     failures: list[str] = []
     for left_revision, right_revision in _adjacent_revisions(modelo):
-        if not _is_strict_non_overlapping_revision_pair(left_revision, right_revision):
+        if not _is_strict_non_coexisting_revision_pair(left_revision, right_revision):
             continue
         missing_ids = continuidad_ids_by_revision[left_revision.id] - continuidad_ids_by_revision[right_revision.id]
         for continuidad_id in sorted(missing_ids):
@@ -262,13 +262,13 @@ def _adjacent_revisions(modelo: ModeloDefinition) -> tuple[tuple[ModeloRevision,
     return tuple(pairwise(ordered_revisions(modelo)))
 
 
-def _is_strict_non_overlapping_revision_pair(
+def _is_strict_non_coexisting_revision_pair(
     left_revision: ModeloRevision,
     right_revision: ModeloRevision,
 ) -> bool:
     return (
         left_revision.continuidad_validation == "strict" or right_revision.continuidad_validation == "strict"
-    ) and not revisions_overlap(left_revision, right_revision)
+    ) and not revisions_coexist(left_revision, right_revision)
 
 
 def _has_retired_evolution(

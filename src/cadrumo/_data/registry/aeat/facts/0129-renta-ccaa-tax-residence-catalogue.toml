@@ -1,0 +1,132 @@
+[fact]
+fact_id = "renta-ccaa-tax-residence-catalogue"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "renta-ccaa-tax-residence-catalogue:2007-01-01"
+date_axis = "filing_period"
+valid_from = 2007-01-01
+legal_refs = [
+    "ley-35-2006:art-9",
+    "ley-35-2006:art-74",
+    "trlirnr-rdleg-5-2004:art-2",
+]
+source_refs = ["boe-lirpf-statutory-facts", "aeat-modelo-100-procedure"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-lirpf-statutory-facts"
+required_text = ["residencia habitual en territorio español"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-100-procedure"
+required_text = ["Modelo"]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "ccaa.order", value = "andalucia,aragon,asturias,baleares,canarias,cantabria,castilla_la_mancha,castilla_y_leon,cataluna,comunidad_valenciana,extremadura,galicia,la_rioja,madrid,murcia" },
+  { key = "ccaa.default_token", value = "madrid" },
+
+  { key = "ccaa.andalucia.value", value = "andalucia" },
+  { key = "ccaa.andalucia.member_name", value = "ANDALUCIA" },
+  { key = "ccaa.andalucia.description", value = "Andalucía" },
+  { key = "ccaa.aragon.value", value = "aragon" },
+  { key = "ccaa.aragon.member_name", value = "ARAGON" },
+  { key = "ccaa.aragon.description", value = "Aragón" },
+  { key = "ccaa.asturias.value", value = "asturias" },
+  { key = "ccaa.asturias.member_name", value = "ASTURIAS" },
+  { key = "ccaa.asturias.description", value = "Principado de Asturias" },
+  { key = "ccaa.baleares.value", value = "baleares" },
+  { key = "ccaa.baleares.member_name", value = "BALEARES" },
+  { key = "ccaa.baleares.description", value = "Illes Balears" },
+  { key = "ccaa.canarias.value", value = "canarias" },
+  { key = "ccaa.canarias.member_name", value = "CANARIAS" },
+  { key = "ccaa.canarias.description", value = "Canarias" },
+  { key = "ccaa.cantabria.value", value = "cantabria" },
+  { key = "ccaa.cantabria.member_name", value = "CANTABRIA" },
+  { key = "ccaa.cantabria.description", value = "Cantabria" },
+  { key = "ccaa.castilla_la_mancha.value", value = "castilla_la_mancha" },
+  { key = "ccaa.castilla_la_mancha.member_name", value = "CASTILLA_LA_MANCHA" },
+  { key = "ccaa.castilla_la_mancha.description", value = "Castilla-La Mancha" },
+  { key = "ccaa.castilla_y_leon.value", value = "castilla_y_leon" },
+  { key = "ccaa.castilla_y_leon.member_name", value = "CASTILLA_Y_LEON" },
+  { key = "ccaa.castilla_y_leon.description", value = "Castilla y León" },
+  { key = "ccaa.cataluna.value", value = "cataluna" },
+  { key = "ccaa.cataluna.member_name", value = "CATALUNA" },
+  { key = "ccaa.cataluna.description", value = "Cataluña" },
+  { key = "ccaa.comunidad_valenciana.value", value = "comunidad_valenciana" },
+  { key = "ccaa.comunidad_valenciana.member_name", value = "COMUNIDAD_VALENCIANA" },
+  { key = "ccaa.comunidad_valenciana.description", value = "Comunitat Valenciana" },
+  { key = "ccaa.extremadura.value", value = "extremadura" },
+  { key = "ccaa.extremadura.member_name", value = "EXTREMADURA" },
+  { key = "ccaa.extremadura.description", value = "Extremadura" },
+  { key = "ccaa.galicia.value", value = "galicia" },
+  { key = "ccaa.galicia.member_name", value = "GALICIA" },
+  { key = "ccaa.galicia.description", value = "Galicia" },
+  { key = "ccaa.la_rioja.value", value = "la_rioja" },
+  { key = "ccaa.la_rioja.member_name", value = "LA_RIOJA" },
+  { key = "ccaa.la_rioja.description", value = "La Rioja" },
+  { key = "ccaa.madrid.value", value = "madrid" },
+  { key = "ccaa.madrid.member_name", value = "MADRID" },
+  { key = "ccaa.madrid.description", value = "Comunidad de Madrid" },
+  { key = "ccaa.murcia.value", value = "murcia" },
+  { key = "ccaa.murcia.member_name", value = "MURCIA" },
+  { key = "ccaa.murcia.description", value = "Región de Murcia" },
+
+  { key = "ccaa.iso_alias.order", value = "AND,ARA,AST,BAL,CAN,CAB,CLM,CYL,CAT,VAL,EXT,GAL,LAR,MAD,MUR" },
+  { key = "ccaa.iso_alias.AND.value", value = "andalucia" },
+  { key = "ccaa.iso_alias.AND.ccaa", value = "andalucia" },
+  { key = "ccaa.iso_alias.ARA.value", value = "aragon" },
+  { key = "ccaa.iso_alias.ARA.ccaa", value = "aragon" },
+  { key = "ccaa.iso_alias.AST.value", value = "asturias" },
+  { key = "ccaa.iso_alias.AST.ccaa", value = "asturias" },
+  { key = "ccaa.iso_alias.BAL.value", value = "baleares" },
+  { key = "ccaa.iso_alias.BAL.ccaa", value = "baleares" },
+  { key = "ccaa.iso_alias.CAN.value", value = "canarias" },
+  { key = "ccaa.iso_alias.CAN.ccaa", value = "canarias" },
+  { key = "ccaa.iso_alias.CAB.value", value = "cantabria" },
+  { key = "ccaa.iso_alias.CAB.ccaa", value = "cantabria" },
+  { key = "ccaa.iso_alias.CLM.value", value = "castilla_la_mancha" },
+  { key = "ccaa.iso_alias.CLM.ccaa", value = "castilla_la_mancha" },
+  { key = "ccaa.iso_alias.CYL.value", value = "castilla_y_leon" },
+  { key = "ccaa.iso_alias.CYL.ccaa", value = "castilla_y_leon" },
+  { key = "ccaa.iso_alias.CAT.value", value = "cataluna" },
+  { key = "ccaa.iso_alias.CAT.ccaa", value = "cataluna" },
+  { key = "ccaa.iso_alias.VAL.value", value = "comunidad_valenciana" },
+  { key = "ccaa.iso_alias.VAL.ccaa", value = "comunidad_valenciana" },
+  { key = "ccaa.iso_alias.EXT.value", value = "extremadura" },
+  { key = "ccaa.iso_alias.EXT.ccaa", value = "extremadura" },
+  { key = "ccaa.iso_alias.GAL.value", value = "galicia" },
+  { key = "ccaa.iso_alias.GAL.ccaa", value = "galicia" },
+  { key = "ccaa.iso_alias.LAR.value", value = "la_rioja" },
+  { key = "ccaa.iso_alias.LAR.ccaa", value = "la_rioja" },
+  { key = "ccaa.iso_alias.MAD.value", value = "madrid" },
+  { key = "ccaa.iso_alias.MAD.ccaa", value = "madrid" },
+  { key = "ccaa.iso_alias.MUR.value", value = "murcia" },
+  { key = "ccaa.iso_alias.MUR.ccaa", value = "murcia" },
+
+  { key = "foral_alias.order", value = "pais_vasco,euskadi,navarra" },
+  { key = "foral_alias.pais_vasco.value", value = "pais_vasco" },
+  { key = "foral_alias.pais_vasco.classification", value = "foral_unsupported" },
+  { key = "foral_alias.pais_vasco.operator_choice", value = "true" },
+  { key = "foral_alias.euskadi.value", value = "pais_vasco" },
+  { key = "foral_alias.euskadi.classification", value = "foral_unsupported" },
+  { key = "foral_alias.euskadi.operator_choice", value = "false" },
+  { key = "foral_alias.navarra.value", value = "navarra" },
+  { key = "foral_alias.navarra.classification", value = "foral_unsupported" },
+  { key = "foral_alias.navarra.operator_choice", value = "true" },
+
+  { key = "territory_exclusion.order", value = "pais_vasco,euskadi,navarra,ceuta,melilla" },
+  { key = "territory_exclusion.euskadi.classification", value = "foral_unsupported" },
+  { key = "territory_exclusion.euskadi.iso_aliases", value = "PVA" },
+  { key = "territory_exclusion.pais_vasco.classification", value = "foral_unsupported" },
+  { key = "territory_exclusion.pais_vasco.iso_aliases", value = "PVA" },
+  { key = "territory_exclusion.navarra.classification", value = "foral_unsupported" },
+  { key = "territory_exclusion.navarra.iso_aliases", value = "NAV" },
+  { key = "territory_exclusion.ceuta.classification", value = "autonomous_city_unsupported" },
+  { key = "territory_exclusion.ceuta.iso_aliases", value = "CEU" },
+  { key = "territory_exclusion.melilla.classification", value = "autonomous_city_unsupported" },
+  { key = "territory_exclusion.melilla.iso_aliases", value = "MEL" },
+]

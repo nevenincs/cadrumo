@@ -6,7 +6,8 @@ sources into registry schema models; shipped runtime reads a published, digest-c
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
@@ -14,6 +15,12 @@ from pathlib import Path
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.identity.documents import SpanishTaxIdFormat
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
+from cadrumo.domain.calculations.registry.keyed_families import KeyedFamilySpec
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_alias_locale_key,
@@ -34,7 +41,6 @@ from cadrumo.domain.calculations.registry.schema_references import LegalReferenc
 
 from ._loader_internals import (
     _inherit_keyed_family,
-    _KeyedFamily,
     _load_catalogue_file_cached,
     _load_modelo_directory_cached,
     _load_modelo_manifest,
@@ -50,6 +56,7 @@ from .compiled_cache import (
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
+from .fact_providers import compile_authored_fact_catalogue
 from .identity import (
     RegistryIdentity,
     resolve_registry_identity,
@@ -71,6 +78,81 @@ from .loader_fingerprints import (
 )
 
 
+def _authored_facts_fingerprint(facts_directory: Path) -> tuple[tuple[str, int, int], ...]:
+    """Identify the authored facts on disk so a stale compile is never reused."""
+    entries = []
+    for path in sorted(facts_directory.glob("*.toml")):
+        status = path.stat()
+        entries.append((path.name, status.st_mtime_ns, status.st_size))
+    return tuple(entries)
+
+
+@lru_cache(maxsize=8)
+def _authored_fact_authority(
+    registry_root: str,
+    fingerprint: tuple[tuple[str, int, int], ...],
+) -> CandidateFactAuthority:
+    del fingerprint
+    return CandidateFactAuthority(compile_authored_fact_catalogue(Path(registry_root)))
+
+
+@contextmanager
+def _modelo_facts_in_scope(modelo_directory: Path) -> Iterator[None]:
+    """Scope a modelo's validation to the governed facts authored beside it.
+
+    A binding declares registry vocabulary -- an IVA rate tier, a cash-accounting
+    treatment -- and validating it means checking that declaration against the
+    governed facts. Those facts are the ones being compiled, not the ones the
+    published artifact carries: reaching for the artifact here would make the
+    compiler depend on the file it is about to replace, and would deadlock
+    outright when the compile runs inside that artifact's own decode.
+
+    A caller already inside a wider compilation keeps its scope. A tree with no
+    authored facts leaves the scope unset, and a binding that declares governed
+    vocabulary then refuses rather than falling back.
+    """
+    facts_directory = modelo_directory.parent.parent / "facts"
+    if governed_facts_in_scope() is not None or not facts_directory.is_dir():
+        yield
+        return
+    authority = _authored_fact_authority(
+        str(modelo_directory.parent.parent),
+        _authored_facts_fingerprint(facts_directory),
+    )
+    with validating_governed_facts(authority):
+        yield
+
+
+@contextmanager
+def modelo_fact_scope(modelo_directory: Path) -> Iterator[None]:
+    """Expose the compiler's candidate-fact scope to authoring proofs.
+
+    A migration that reconstructs typed members outside a complete modelo load
+    must validate them against the mutable tree's governed facts, never the
+    published authority it is preparing to replace.  This supported boundary
+    keeps that policy in the compiler instead of duplicating fact discovery in
+    each authoring tool.
+    """
+    with _modelo_facts_in_scope(modelo_directory.resolve()):
+        yield
+
+
+def load_modelo_declarations(directory: Path) -> dict[str, object]:
+    """Read the canonical authored declaration tree, before inheritance.
+
+    Representation-only migrations compare this tree on both sides so malformed
+    semantic declarations remain visible without blocking lossless file packing.
+    This is an authoring view, never a validated filing authority.
+    """
+    resolved = directory.resolve()
+    validate_modelo_directory_source(resolved)
+    manifest = _load_modelo_manifest(resolved)
+    revisions = _load_modelo_revisions(resolved)
+    if not revisions:
+        raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
+    return {**manifest, "revisions": revisions}
+
+
 def load_modelo_directory(directory: Path, *, tax_id_format: SpanishTaxIdFormat | None = None) -> ModeloDefinition:
     """Compile one directory-mode modelo from its mutable TOML sources."""
     resolved = directory.resolve()
@@ -80,13 +162,14 @@ def load_modelo_directory(directory: Path, *, tax_id_format: SpanishTaxIdFormat 
         raise RegistryLoadError(f"{resolved}: missing manifest.toml")
     validate_modelo_directory_source(resolved)
     fingerprints = collect_modelo_directory_fingerprints(resolved)
-    try:
-        return _load_modelo_directory_cached(str(resolved), fingerprints, tax_id_format)
-    except RegistryLoadError as exc:
-        refreshed = _refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
-        if refreshed == fingerprints:
-            raise
-        return _load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
+    with _modelo_facts_in_scope(resolved):
+        try:
+            return _load_modelo_directory_cached(str(resolved), fingerprints, tax_id_format)
+        except RegistryLoadError as exc:
+            refreshed = _refresh_modelo_directory_fingerprints_after_load_error(resolved, exc)
+            if refreshed == fingerprints:
+                raise
+            return _load_modelo_directory_cached(str(resolved), refreshed, tax_id_format)
 
 
 def inherit_keyed_family(
@@ -109,7 +192,7 @@ def inherit_keyed_family(
     return _inherit_keyed_family(
         subject,
         revision_id=revision_id,
-        family=_KeyedFamily(
+        family=KeyedFamilySpec(
             section=section,
             identity=identity,
             identity_fields=identity_fields,

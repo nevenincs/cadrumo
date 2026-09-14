@@ -1,5 +1,7 @@
 [[revisions."2025-y-siguientes".casillas]]
 id = "02368"
+continuidad_id = "02368"
+continuidad_origin = "seeded"
 number = "02368"
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 data_type = "money"
@@ -9,6 +11,8 @@ input_kind = "manual"
 legal_refs = ["ley-27-2014:art-16"]
 [[revisions."2025-y-siguientes".casillas]]
 id = "02369"
+continuidad_id = "02369"
+continuidad_origin = "seeded"
 number = "02369"
 section = ["limitacion_deducibilidad_gastos_financieros", "limite_art_16_1_y_16_2_lis"]
 data_type = "money"

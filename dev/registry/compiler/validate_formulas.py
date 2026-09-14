@@ -207,6 +207,8 @@ def _formula_scalar_reference_failures(
         failures.append(f"{scope}: formula {formula_id!r} references unknown casilla {expression.casilla_id!r}")
     if expression.binding is not None and expression.binding not in bindings:
         failures.append(f"{scope}: formula {formula_id!r} references unknown binding {expression.binding!r}")
+    if expression.date_binding is not None and expression.date_binding not in bindings:
+        failures.append(f"{scope}: formula {formula_id!r} references unknown date binding {expression.date_binding!r}")
     if expression.parameter is not None and expression.parameter not in parameters:
         failures.append(f"{scope}: formula {formula_id!r} references unknown parameter {expression.parameter!r}")
     return failures

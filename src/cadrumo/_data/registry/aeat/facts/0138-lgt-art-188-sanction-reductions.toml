@@ -1,0 +1,18 @@
+[fact]
+fact_id = "lgt-art-188-sanction-reductions"
+family = "mapping"
+
+[[fact.variants]]
+variant_id = "lgt-art-188-sanction-reductions:2021-07-11"
+date_axis = "filing_period"
+valid_from = 2021-07-11
+legal_refs = ["ley-58-2003:art-188"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "reduction.conformidad.percentage", value_type = "decimal", value = "30" },
+  { key = "reduction.pronto_pago.percentage", value_type = "decimal", value = "40" },
+]
