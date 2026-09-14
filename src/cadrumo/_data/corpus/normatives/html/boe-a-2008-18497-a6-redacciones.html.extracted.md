@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 6
+
 Artículo 6. Aprobación del modelo 296.
 1. Se aprueba el modelo 296 «Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Declaración anual de retenciones e ingresos a cuenta», que figura como anexo II de la presente Orden.
 2. El modelo 296 consta de:

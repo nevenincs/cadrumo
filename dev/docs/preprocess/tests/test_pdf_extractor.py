@@ -14,6 +14,7 @@ Exercises one real corpus PDF through the production extractor (no mocks):
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -65,6 +66,53 @@ _MANUAL_PDF = _CORPUS / "manuals" / "renta" / "2025" / "part1" / "source.pdf"
 def test_worked_example_pdf_exists() -> None:
     """The small real corpus PDF is present (guards the whole proof)."""
     assert _SMALL_PDF.is_file(), _SMALL_PDF
+
+
+def test_missing_manifest_does_not_invent_aeat_attribution(tmp_path: Path) -> None:
+    assert "unavailable" in _attribution_for(tmp_path / "european-parliament.pdf")
+    assert "AEAT" not in _attribution_for(tmp_path / "european-parliament.pdf")
+
+
+def test_manual_manifest_must_identify_its_pdf(tmp_path: Path) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps({"source_pdf_url": "https://www.boe.es/manual.pdf"}), encoding="utf-8")
+    assert "unavailable" in _attribution_for(tmp_path / "unrelated.pdf")
+
+
+def test_pdf_attribution_uses_exact_path_and_source_host(tmp_path: Path) -> None:
+    files = tmp_path / "files"
+    files.mkdir()
+    source = files / "law.pdf"
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "artefacts": [
+                    {
+                        "stored_path": "other/law.pdf",
+                        "url": "https://www.boe.es/law.pdf",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert "unavailable" in _attribution_for(source)
+    manifest.write_text(
+        json.dumps(
+            {
+                "artefacts": [
+                    {
+                        "stored_path": "files/law.pdf",
+                        "url": "https://www.boe.es/law.pdf",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert "BOE" in _attribution_for(source)
+    assert "AEAT" not in _attribution_for(source)
 
 
 def test_pdf_extracts_readable_per_page_text() -> None:

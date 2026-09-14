@@ -1,0 +1,73 @@
+"""BOE response metadata and other versions must not become legal prose."""
+
+from pathlib import Path
+
+import pytest
+
+from ..boe_article_xml import article_response_units
+from ..normatives_html import build_outputs, legal_markup_units
+from ..schema import SourceDocumentKind
+from ..sidecar import PreprocessSidecarError
+
+pytestmark = [pytest.mark.unit, pytest.mark.docs, pytest.mark.hex_core]
+
+
+def _response(versions: str) -> str:
+    return (
+        '<?xml version="1.0"?><response><status><code>200</code><text>ok</text></status>'
+        '<data><bloque id="a1-2" titulo="Artículo 10">' + versions + "</bloque></data></response>"
+    )
+
+
+_OLD = '<version id_norma="BOE-A-2000-1" fecha_vigencia="20000101"><p>Old <b>rule</b>.</p></version>'
+_NEW = '<version id_norma="BOE-A-2020-2" fecha_vigencia="20200101"><p>New rule.</p></version>'
+
+
+def test_response_versions_are_separate_and_status_is_not_prose(tmp_path: Path) -> None:
+    source = tmp_path / "article.html"
+    source.write_text(_response(_OLD + _NEW), encoding="utf-8")
+    (output,) = build_outputs(source, repo_root=tmp_path)
+    assert output.source_kind is SourceDocumentKind.NORMATIVES_XML
+    assert [unit.text for unit in output.units] == ["Old rule.", "New rule."]
+    assert output.units[0].anchor == "#a1-2"
+    assert "2000-01-01" in output.units[0].section
+    assert "2020-01-01" in output.units[1].section
+
+
+@pytest.mark.parametrize(
+    "markup",
+    [
+        _response(_OLD + _OLD),
+        _response(""),
+        _response(_OLD).replace("<code>200</code>", "<code>400</code>"),
+        _response(_OLD).replace("20000101", "20001301"),
+        _response(_OLD).replace("BOE-A-2000-1", "BOE-A-invalid"),
+        '<!DOCTYPE response [<!ENTITY injected "not evidence">]>' + _response(_OLD).split("?>", 1)[1],
+        "<?xml version='1.0'?><other/>",
+        "<?xml version='1.0'?><response>",
+    ],
+)
+def test_invalid_or_ambiguous_response_is_refused(markup: str) -> None:
+    with pytest.raises(PreprocessSidecarError):
+        article_response_units(markup, segment=legal_markup_units)
+
+
+def test_xml_without_declaration_uses_the_same_extractor(tmp_path: Path) -> None:
+    source = tmp_path / "article.html"
+    source.write_text(_response(_OLD).split("?>", 1)[1], encoding="utf-8")
+    (output,) = build_outputs(source, repo_root=tmp_path)
+    assert output.source_kind is SourceDocumentKind.NORMATIVES_XML
+    assert output.units[0].text == "Old rule."
+
+
+def test_ordinal_provisions_keep_their_existing_citation_boundaries() -> None:
+    version = (
+        '<version id_norma="BOE-A-2000-1" fecha_vigencia="20000101">'
+        '<p class="parrafo_2">Primero. First provision.</p><p>First body.</p>'
+        '<p class="parrafo_2">Segundo. Second provision.</p><p>Second body.</p>'
+        '</version>'
+    )
+    units = article_response_units(_response(version), segment=legal_markup_units)
+    assert [unit.title for unit in units] == ["Primero. First provision.", "Segundo. Second provision."]
+    assert [unit.text for unit in units] == ["First body.", "Second body."]
+    assert all(unit.anchor is None for unit in units)  # source has titles, not fragment IDs

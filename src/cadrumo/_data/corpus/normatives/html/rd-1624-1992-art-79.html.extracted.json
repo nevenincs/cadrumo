@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1624-1992-art-79.html",
   "source_sha256": "7267429c591c05e18569399903bff2ca6f44642fafa9e5e796b15495e6e035b3",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.3",
+  "preprocessor_version": "1.4",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

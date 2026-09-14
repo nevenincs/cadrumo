@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 12
+
 Artículo 12. Cánones.
 1. Los cánones procedentes de un Estado contratante y pagados a un residente del otro Estado contratante solo pueden someterse a imposición en este otro Estado.
 2. a) No obstante lo dispuesto en la letra b), los cánones mencionados en el apartado 1 también pueden someterse a imposición en el Estado contratante del que procedan y conforme a la legislación de ese Estado, pero si el perceptor de los cánones es el beneficiario efectivo, el impuesto así establecido no puede exceder del 5 por 100 del importe bruto de los cánones.

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1619-2012-art-4.html",
   "source_sha256": "38f19516821a259952def5ee047421e3ca97f95dbd5bb0d4ed63d2da826593f1",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.3",
+  "preprocessor_version": "1.4",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 29 | BOE-A-2002-9969 | fecha_vigencia=2002-05-25
+
 Artículo 29. Gestión e inspección del Impuesto.
 Uno. El resultado de las liquidaciones del Impuesto se imputará a las Administraciones competentes en proporción al volumen de las contraprestaciones, excluido el Impuesto sobre el Valor Añadido, correspondientes a las entregas de bienes y prestaciones de servicios gravadas y las exentas que originan derecho a la deducción que se hayan realizado en los territorios respectivos durante cada año natural.
 Dos. Las proporciones provisionalmente aplicables durante cada año natural serán las determinadas en función de las operaciones del año precedente. La proporción provisional aplicable en los períodos de liquidación del primer año natural del ejercicio de la actividad será fijada por el sujeto pasivo según su previsión de las operaciones a realizar en cada territorio, sin perjuicio de la regularización final correspondiente.
@@ -20,6 +20,9 @@ Tercera. Lo establecido en las reglas anteriores se entenderá sin perjuicio de 
 Cuarta. Las proporciones fijadas en las comprobaciones por la Administración competente surtirán efectos frente al sujeto pasivo en relación con las obligaciones liquidadas, sin perjuicio de las que con posterioridad a dichas comprobaciones se acuerden con carácter definitivo entre las Administraciones competentes.
 Siete. Las declaraciones recapitulativas de entregas y adquisiciones intracomunitarias se presentarán ante la Administración tributaria que tenga atribuida la competencia para la comprobación e investigación de los sujetos pasivos.
 Redactado el párrafo primero del apartado 2 conforme a la corrección de errores publicada en BOE núm. 143, de 15 de junio de 2002. Ref. BOE-A-2002-11704
+
+# Artículo 29 | BOE-A-2007-18576 | fecha_vigencia=2007-10-27
+
 Artículo 29. Gestión e inspección del Impuesto.
 Uno. El resultado de las liquidaciones del Impuesto se imputará a las Administraciones competentes en proporción al volumen de las contraprestaciones, excluido el Impuesto sobre el Valor Añadido, correspondientes a las entregas de bienes y prestaciones de servicios gravadas y las exentas que originan derecho a la deducción que se hayan realizado en los territorios respectivos durante cada año natural.
 Dos. Las proporciones provisionalmente aplicables durante cada año natural serán las determinadas en función de las operaciones del año precedente. La proporción provisional aplicable en los períodos de liquidación del primer año natural del ejercicio de la actividad será fijada por el sujeto pasivo según su previsión de las operaciones a realizar en cada territorio, sin perjuicio de la regularización final correspondiente.
@@ -48,6 +51,9 @@ Quinta. El régimen especial del grupo de entidades no alterará en ningún caso
 Ocho. Las declaraciones recapitulativas de entregas y adquisiciones intracomunitarias se presentarán ante la Administración tributaria que tenga atribuida la competencia para la comprobación e investigación de los sujetos pasivos.
 Se modifica por el anexo de la Ley 28/2007, de 25 de octubre. Ref. BOE-A-2007-18576
 Redactado el párrafo primero del apartado 2 conforme a la corrección de errores publicada en BOE núm. 143, de 15 de junio de 2002. Ref. BOE-A-2002-11704
+
+# Artículo 29 | BOE-A-2017-15713 | fecha_vigencia=2017-12-30
+
 Artículo 29. Gestión e inspección del Impuesto.
 Uno. El resultado de las liquidaciones del Impuesto se imputará a las Administraciones competentes en proporción al volumen de las contraprestaciones, excluido el Impuesto sobre el Valor Añadido, correspondientes a las entregas de bienes y prestaciones de servicios gravadas y las exentas que originan derecho a la deducción que se hayan realizado en los territorios respectivos durante cada año natural.
 Dos. Las proporciones provisionalmente aplicables durante cada año natural serán las determinadas en función de las operaciones del año precedente. La proporción provisional aplicable en los períodos de liquidación del primer año natural del ejercicio de la actividad será fijada por el sujeto pasivo según su previsión de las operaciones a realizar en cada territorio, sin perjuicio de la regularización final correspondiente.
@@ -84,6 +90,9 @@ A estos efectos, se entenderá que ha variado sustancialmente la proporción en 
 Se modifica por el art. único, en los términos establecidos en el anexo de la Ley 10/2017, de 28 de diciembre. Ref. BOE-A-2017-15713
 Se modifica por el anexo de la Ley 28/2007, de 25 de octubre. Ref. BOE-A-2007-18576
 Redactado el párrafo primero del apartado 2 conforme a la corrección de errores publicada en BOE núm. 143, de 15 de junio de 2002. Ref. BOE-A-2002-11704
+
+# Artículo 29 | BOE-A-2022-2051 | fecha_vigencia=2022-02-10
+
 Artículo 29. Gestión e inspección del Impuesto.
 Uno. El resultado de las liquidaciones del Impuesto se imputará a las Administraciones competentes en proporción al volumen de las contraprestaciones, excluido el Impuesto sobre el Valor Añadido, correspondientes a las entregas de bienes y prestaciones de servicios gravadas y las exentas que originan derecho a la deducción que se hayan realizado en los territorios respectivos durante cada año natural.
 Dos. Las proporciones provisionalmente aplicables durante cada año natural serán las determinadas en función de las operaciones del año precedente. La proporción provisional aplicable en los períodos de liquidación del primer año natural del ejercicio de la actividad será fijada por el sujeto pasivo según su previsión de las operaciones a realizar en cada territorio, sin perjuicio de la regularización final correspondiente.

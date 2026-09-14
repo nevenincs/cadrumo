@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 1
+
 Artículo 1. Aprobación del modelo 490.
 1. Se aprueba el modelo 490 «Impuesto sobre Determinados Servicios Digitales. Autoliquidación», que figura en el anexo de esta orden.
 2. El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 490.

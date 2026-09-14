@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/correccion-errores-real-decreto-ley-6-2024.html",
   "source_sha256": "28c6fdfe50979482faeaef79b5793068e767a0a3f0b531c4d049bf059d7215ab",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.3",
+  "preprocessor_version": "1.4",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24097",
   "units": [
     {

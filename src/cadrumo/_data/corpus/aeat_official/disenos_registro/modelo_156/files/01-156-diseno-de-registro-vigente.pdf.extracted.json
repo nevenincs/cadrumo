@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_156/files/01-156-diseno-de-registro-vigente.pdf",
   "source_sha256": "d387cfeb7254e49d539d5c3a731c0bd6bf275c8c1fdae80e6faa5a1006d5d068",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/156_HAC_3580_2003.pdf",
   "units": [
     {
       "text": "ANEXO II\nDISEÑOS FÍSICOS Y LÓGICOS A LOS QUE DEBE AJUSTARSE EL SOPORTE DIRECTAMENTE LEGIBLE\nPOR ORDENADOR Y LA TRANSMISIÓN TELEMÁTICA POR TELEPROCESO DEL MODELO 156\nEjercicio 2021",

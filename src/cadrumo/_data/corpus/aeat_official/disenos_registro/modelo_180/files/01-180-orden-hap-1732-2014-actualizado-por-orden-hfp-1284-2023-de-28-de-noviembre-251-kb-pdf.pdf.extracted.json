@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-251-kb-pdf.pdf",
   "source_sha256": "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf",
   "units": [
     {
       "text": "Modelo 180.\nDeclaración Informativa. Retenciones e ingresos a cuenta. Rendimientos\nprocedentes del arrendamiento de inmuebles urbanos. Resumen anual.\nModelo 180.\nDeclaración Informativa. Retenciones e ingresos a cuenta. Rendimientos\nprocedentes del arrendamiento de inmuebles urbanos. Resumen anual.\n1\nEjercicio 2023",

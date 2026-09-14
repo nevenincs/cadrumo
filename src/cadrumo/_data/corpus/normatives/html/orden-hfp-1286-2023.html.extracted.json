@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1286-2023.html",
   "source_sha256": "0fe72445f386fe2a78c587ea054b83f46140cb9e39b7e8caaed635560720ab55",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.3",
+  "preprocessor_version": "1.4",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24414",
   "units": [
     {

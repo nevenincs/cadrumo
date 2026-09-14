@@ -1,5 +1,5 @@
-200
-ok
+# ARTÍCULO 11
+
 Artículo 11. Intereses
 1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.
 2. El termino «intereses» en el sentido de este artículo significa los rendimientos de créditos de cualquier naturaleza, con o sin garantía hipotecaria o cláusula de participación en los beneficios del deudor, y en particular, los rendimientos de valores públicos y los rendimientos de bonos u obligaciones, incluidas las primas y lotes unidos a esos títulos. A efectos del presente artículo, las penalizaciones por mora en el pago no se consideran intereses.

@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 3
+
 Artículo 3. Plazos de presentación del modelo 490.
 1. El período de liquidación coincidirá con el trimestre natural.
 2. El modelo 490 deberá presentarse e ingresarse durante el mes siguiente al correspondiente periodo trimestral natural.

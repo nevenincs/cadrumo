@@ -5,8 +5,8 @@
   "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_182/files/01-182-ejercicio-2025.pdf",
   "source_sha256": "90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831",
   "preprocessor_id": "corpus-pdf",
-  "preprocessor_version": "1.0",
-  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Reused with attribution. Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Agencia Estatal de Administracion Tributaria (AEAT). Official source: https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf",
   "units": [
     {
       "text": "Modelo 182.\nDeclaración Informativa. Donativos, donaciones y aportaciones\nrecibidas.\nModelo 182.\nDeclaración Informativa. Donativos, donaciones y aportaciones\nrecibidas.\n1\nEjercicio 2025",

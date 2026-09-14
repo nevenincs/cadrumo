@@ -1,8 +1,8 @@
-"""Versioned strict schema for interim preprocess extraction sidecars.
+"""Versioned strict schema for corpus extraction sidecars.
 
-The :class:`PreprocessOutput` record is the contract the five project-side
-preprocessors (normatives HTML, Disenos de Registro workbooks, corpus PDFs,
-the unsupported-text tail, and Terminology Handbook concepts) emit against. It
+The :class:`PreprocessOutput` record is the contract the project-side
+preprocessors (normatives HTML/XML, Disenos de Registro workbooks, corpus PDFs,
+and Terminology Handbook concepts) emit against. It
 is a forward-compatible
 precursor of the generic upstream ``vaultspec-rag`` preprocess-output
 schema: a versioned envelope of extracted text or pre-chunked units, each
@@ -44,9 +44,9 @@ class SourceDocumentKind(StrEnum):
     """
 
     NORMATIVES_HTML = "normatives_html"
+    NORMATIVES_XML = "normatives_xml"
     DISENO_REGISTRO_WORKBOOK = "diseno_registro_workbook"
     CORPUS_PDF = "corpus_pdf"
-    UNSUPPORTED_TEXT = "unsupported_text"
     TERMINOLOGY_CONCEPT = "terminology_concept"
 
 

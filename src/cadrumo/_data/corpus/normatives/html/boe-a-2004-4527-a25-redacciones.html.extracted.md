@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 25 | BOE-A-2004-4527 | fecha_vigencia=2004-03-13
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible, determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general, el 25 por ciento.
@@ -52,6 +52,9 @@ Lo establecido en el párrafo anterior no será de aplicación cuando el titular
 No procederá el ingreso a cuenta a que se refiere este apartado en los casos de aportación de bienes inmuebles, en la constitución o aumento de capitales de sociedades residentes en territorio español.
 Sin perjuicio de las sanciones que pudieran corresponder por la infracción en que se hubiera incurrido, si la retención o el ingreso a cuenta no se hubiesen ingresado, los bienes transmitidos quedarán afectos al pago del importe que resulte menor entre dicha retención o ingreso a cuenta y el impuesto correspondiente.
 El apartado 1.i) entra en vigor el 1 de enero de 2005, según establece la disposición final única.3.
+
+# Artículo 25 | BOE-A-2006-20764 | fecha_vigencia=2007-01-01
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general, el 24 por ciento.
@@ -102,6 +105,9 @@ Lo establecido en este párrafo h) no será de aplicación cuando la mayoría de
 No procederá el ingreso a cuenta a que se refiere este apartado en los casos de aportación de bienes inmuebles, en la constitución o aumento de capitales de sociedades residentes en territorio español.
 Sin perjuicio de las sanciones que pudieran corresponder por la infracción en que se hubiera incurrido, si la retención o el ingreso a cuenta no se hubiesen ingresado, los bienes transmitidos quedarán afectos al pago del importe que resulte menor entre dicha retención o ingreso a cuenta y el impuesto correspondiente.
 Se modifica por la disposición final 3.4 de la Ley 35/2006, de 28 de noviembre. Ref. BOE-A-2006-20764.
+
+# Artículo 25 | BOE-A-2006-20843 | fecha_vigencia=2006-12-01
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general, el 24 por ciento.
@@ -156,6 +162,9 @@ No obstante, si el titular de dichos bienes inmuebles fuese una entidad con resi
 Se añade el apartado 3 por el art. 2.8 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
 Téngase en cuenta que los apartados 1 y 2 entran en vigor el 1 de enero de 2007, según la redacción dada por la Ley 35/2006.
 Se modifica por la disposición final 3.4 de la Ley 35/2006, de 28 de noviembre. Ref. BOE-A-2006-20764.
+
+# Artículo 25 | BOE-A-2009-20765 | fecha_vigencia=2010-01-13
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general, el 24 por ciento.
@@ -211,6 +220,9 @@ Se modifica el apartado 1.f), con efectos desde el 1 de enero de 2010, por el ar
 Se añade el apartado 3 por el art. 2.8 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
 Téngase en cuenta que los apartados 1 y 2 entran en vigor el 1 de enero de 2007, según la redacción dada por la Ley 35/2006.
 Se modifica por la disposición final 3.4 de la Ley 35/2006, de 28 de noviembre. Ref. BOE-A-2006-20764.
+
+# Artículo 25 | BOE-A-2010-19703 | fecha_vigencia=2011-01-12
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general, el 24 por ciento.
@@ -258,6 +270,9 @@ Se modifica el apartado 1.f), con efectos desde el 1 de enero de 2010, por el ar
 Se añade el apartado 3 por el art. 2.8 de la Ley 36/2006, de 29 de noviembre. Ref. BOE-A-2006-20843.
 Téngase en cuenta que los apartados 1 y 2 entran en vigor el 1 de enero de 2007, según la redacción dada por la Ley 35/2006.
 Se modifica por la disposición final 3.4 de la Ley 35/2006, de 28 de noviembre. Ref. BOE-A-2006-20764.
+
+# Artículo 25 | BOE-A-2014-12327 | fecha_vigencia=2015-01-01
+
 Artículo 25. Cuota tributaria.
 1. La cuota tributaria se obtendrá aplicando a la base imponible determinada conforme al artículo anterior, los siguientes tipos de gravamen:
 a) Con carácter general el 24 por 100. No obstante, el tipo de gravamen será el 19 por ciento cuando se trate de contribuyentes residentes en otro Estado miembro de la Unión Europea o del Espacio Económico Europeo con el que exista un efectivo intercambio de información tributaria, en los términos previstos en el apartado 4 de la disposición adicional primera de la Ley 36/2006, de 29 de noviembre, de medidas para la prevención del fraude fiscal.

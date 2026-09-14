@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 10 | BOE-A-1990-30940 | fecha_vigencia=1990-11-21
+
 Artículo 10. Dividendos.
 1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.
 2. Sin embargo, dichos dividendos podrán también someterse a imposición en el Estado contratante en que resida la sociedad que paga los dividendos, y conforme a la legislación de ese Estado, pero si el beneficiario efectivo de los dividendos es un residente del otro Estado contratante, el impuesto así exigido no podrá exceder del:
@@ -10,6 +10,9 @@ Este apartado no afecta a la imposición de la Sociedad respecto de los benefici
 4. Las disposiciones de los apartados 1 y 2 no serán aplicables si el beneficiario efectivo de los dividendos, residente de un Estado contratante, ejerce o ha ejercido en el otro Estado contratante del que es residente la sociedad que paga los dividendos una actividad industrial o comercial mediante un establecimiento permanente situado en ese otro Estado, o presta o ha prestado en ese otro Estado servicios personales independientes mediante una base fija situada en el mismo, y los dividendos son imputables a dicho establecimiento permanente o base fija. En tal caso se aplicarán las disposiciones del artículo 7 (beneficios empresariales) o del artículo 15 (servicios personales independientes), según proceda.
 5. Un Estado contratante no podrá exigir ningún impuesto sobre los dividendos pagados por una sociedad que no sea residente de ese Estado, salvo en la medida en que los dividendos se paguen a un residente de ese Estado o sean imputables a un establecimiento permanente o a una base fija situada en ese Estado.
 Redactado el apartado 2 conforme a la corrección de errores publicada en BOE núm. 47, de 24 de febrero de 1993. Ref. BOE-A-1993-5135.
+
+# Artículo 10 | BOE-A-2019-15166 | fecha_vigencia=2019-11-27
+
 Artículo 10. Dividendos.
 1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.
 2. Sin embargo, dichos dividendos pueden someterse también a imposición en el Estado contratante en que resida la sociedad que paga los dividendos, y conforme a la legislación de ese Estado, pero si el beneficiario efectivo de los dividendos es un residente del otro Estado contratante, salvo que se disponga de otro modo, el impuesto así exigido no podrá exceder del:

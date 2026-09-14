@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 30 | BOE-A-1991-14392 | fecha_vigencia=1992-01-01
+
 Artículo 30. Cuota íntegra.
 La base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
 Base liquidable
@@ -41,6 +41,9 @@ en adelante
 1,70
 2,10
 2,50
+
+# Artículo 30 | BOE-A-1994-28967 | fecha_vigencia=1995-01-20
+
 Artículo 30. Cuota íntegra.
 La base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
 Base liquidable
@@ -87,6 +90,9 @@ en adelante
 2,10
 2,50
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-1995-27964 | fecha_vigencia=1996-01-01
+
 Artículo 30. Cuota íntegra.
 La base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
 Base liquidable
@@ -138,6 +144,9 @@ en adelante
 2,50
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-1996-29118 | fecha_vigencia=1997-01-01
+
 Artículo 30. Cuota íntegra.
 Uno. La base liquidable del impuesto será gravada a los tipos de la escala que, conforme a lo previsto en el artículo 13.dos de la Ley de Cesión de Tributos del Estado a las Comunidades Autónomas y de Medidas Fiscales Complementarias, haya sido aprobada por la Comunidad Autónoma.
 Dos. Si la Comunidad Autónoma no hubiese aprobado la escala a que se refiere el apartado anterior o si aquélla no hubiese asumido competencias normativas en materia de Impuesto sobre el Patrimonio, la base liquidable será gravada a los tipos que se indican en la siguiente escala:
@@ -187,6 +196,9 @@ Tres. En el caso de obligación real de contribuir, la tarifa aplicable será la
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-1997-28052 | fecha_vigencia=1998-01-20
+
 Artículo 30. Cuota íntegra.
 Uno. La base liquidable del impuesto será gravada a los tipos de la escala que, conforme a lo previsto en el artículo 13.dos de la Ley de Cesión de Tributos del Estado a las Comunidades Autónomas y de Medidas Fiscales Complementarias, haya sido aprobada por la Comunidad Autónoma.
 Dos. Si la Comunidad Autónoma no hubiese aprobado la escala a que se refiere el apartado anterior o si aquélla no hubiese asumido competencias normativas en materia de Impuesto sobre el Patrimonio, la base liquidable será gravada a los tipos que se indican en la siguiente escala:
@@ -238,6 +250,9 @@ Se modifica el segundo tramo de la escala del Impuesto sobre el Patrimonio por l
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-1998-30154 | fecha_vigencia=1999-01-20
+
 Artículo 30. Cuota íntegra.
 Uno. La base liquidable del impuesto será gravada a los tipos de la escala que, conforme a lo previsto en el artículo 13.dos de la Ley de Cesión de Tributos del Estado a las Comunidades Autónomas y de Medidas Fiscales Complementarias, haya sido aprobada por la Comunidad Autónoma.
 Dos. Si la Comunidad Autónoma no hubiese aprobado la escala a que se refiere el apartado anterior o si aquélla no hubiese asumido competencias normativas en materia del Impuesto sobre el Patrimonio, la base liquidable del impuesto será gravada a los tipos de la siguiente escala:
@@ -291,6 +306,9 @@ Se modifica el segundo tramo de la escala del Impuesto sobre el Patrimonio por l
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-1999-24785 | fecha_vigencia=2000-01-19
+
 Artículo 30. Cuota íntegra.
 Uno. La base liquidable del impuesto será gravada a los tipos de la escala que, conforme a lo previsto en el artículo 13.dos de la Ley de Cesión de Tributos del Estado a las Comunidades Autónomas y de Medidas Fiscales Complementarias, haya sido aprobada por la Comunidad Autónoma.
 Dos. Si la Comunidad Autónoma no hubiese aprobado la escala a que se refiere el apartado anterior o si aquélla no hubiese asumido competencias normativas en materia de Impuesto sobre el Patrimonio, la base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
@@ -345,6 +363,9 @@ Se modifica el segundo tramo de la escala del Impuesto sobre el Patrimonio por l
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-2001-8543 | fecha_vigencia=2001-05-23
+
 Artículo 30. Cuota íntegra.
 Uno. La base liquidable del impuesto será gravada a los tipos de la escala que, conforme a lo previsto en el artículo 13.dos de la Ley de Cesión de Tributos del Estado a las Comunidades Autónomas y de Medidas Fiscales Complementarias, haya sido aprobada por la Comunidad Autónoma.
 Dos. Si la Comunidad Autónoma no hubiese aprobado la escala a que se refiere el apartado anterior o si aquélla no hubiese asumido competencias normativas en materia de Impuesto sobre el Patrimonio, la base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
@@ -401,6 +422,9 @@ Se modifica el segundo tramo de la escala del Impuesto sobre el Patrimonio por l
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-2001-24962 | fecha_vigencia=2002-01-01
+
 Artículo 30. Cuota íntegra.
 La base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
 1. La base liquidable del impuesto será gravada a los tipos de la escala que haya sido aprobada por la Comunidad Autónoma.
@@ -459,6 +483,9 @@ Se modifica el segundo tramo de la escala del Impuesto sobre el Patrimonio por l
 Se modifica por el art. 28.3 de la Ley 14/1996, de 30 de diciembre. Ref. BOE-A-1996-29118
 Se modifica por el art. 21 del Real Decreto-Ley 12/1995, de 28 de diciembre. Ref. BOE-A-1995-27964
 Se modifica, con efectos desde el 1 de enero de 1995, por el art. 67 de la Ley 41/1994, de 30 de diciembre. Ref. BOE-A-1994-28967
+
+# Artículo 30 | BOE-A-2020-17339 | fecha_vigencia=2021-01-01
+
 Artículo 30. Cuota íntegra.
 La base liquidable del Impuesto será gravada a los tipos de la siguiente escala:
 1. La base liquidable del impuesto será gravada a los tipos de la escala que haya sido aprobada por la Comunidad Autónoma.

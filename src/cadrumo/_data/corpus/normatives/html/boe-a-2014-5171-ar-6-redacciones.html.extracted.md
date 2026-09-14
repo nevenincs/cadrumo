@@ -1,5 +1,5 @@
-200
-ok
+# Artículo 6
+
 Artículo 6. Rentas inmobiliarias.
 1. Las rentas que un residente de un Estado contratante obtenga de bienes inmuebles (incluidas las rentas de explotaciones agrícolas o forestales) situados en el otro Estado contratante pueden someterse a imposición en ese otro Estado.
 2. La expresión «bienes inmuebles» tendrá el significado que le atribuya el Derecho del Estado contratante en que los bienes estén situados. Dicha expresión comprende en todo caso los bienes accesorios a los bienes inmuebles, el ganado y el equipo utilizado en las explotaciones agrícolas y forestales, los derechos a los que sean aplicables las disposiciones de Derecho privado relativas a los bienes raíces, el usufructo de bienes inmuebles y el derecho a percibir pagos fijos o variables en contraprestación por la explotación, o la concesión de la explotación, de yacimientos minerales, fuentes y otros recursos naturales; los buques, embarcaciones y aeronaves no tendrán la consideración de bienes inmuebles.
