@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shutil
 import tempfile
 from collections.abc import Mapping
@@ -82,6 +83,20 @@ def toml_comments(text: str) -> list[str]:
             index = end
         index += 1
     return comments
+
+
+def retire_source_default_tables(text: str) -> str:
+    """Remove only the retired manifest tables, retaining other text in place."""
+    kept: list[str] = []
+    dropping = False
+    for line in text.splitlines(keepends=True):
+        if line.lstrip().startswith("["):
+            dropping = bool(
+                re.match(r'^\s*\[\[?revisions\.(?:"[^"]+"|[\w-]+)\.source_default_dispositions(?:[.\]])', line)
+            )
+        if not dropping:
+            kept.append(line)
+    return "".join(kept)
 
 
 def field_count(value: object) -> int:
@@ -174,10 +189,10 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
             manifest = rtoml.load(manifest_path)
             del manifest["revisions"][revision_id]["source_default_dispositions"]
             del expected_revisions[revision_id]["source_default_dispositions"]
-            comments = toml_comments(manifest_path.read_text(encoding="utf-8-sig"))
-            manifest_path.write_text(
-                "\n".join(comments) + "\n" + rtoml.dumps(plain(manifest)), encoding="utf-8", newline="\n"
-            )
+            text = retire_source_default_tables(manifest_path.read_text(encoding="utf-8-sig"))
+            if canonical(rtoml.loads(text)) != canonical(manifest):
+                raise ValueError("source-default table retirement changed another declaration")
+            manifest_path.write_text(text, encoding="utf-8", newline="\n")
             removed_fields.append(f"{revision_id}.source_default_dispositions")
         for section in sorted(edition.iterdir()):
             if not section.is_dir() or section.name in {"locales", "export"}:
@@ -195,7 +210,7 @@ def pack_modelo(directory: Path, work: Path, *, apply: bool = False) -> dict[str
             except rtoml.TomlParsingError:
                 # Singleton-table fragments repeat headers. Keep comment context
                 # alongside the canonical merged declaration instead of losing it.
-                context = []
+                context: list[str] = []
                 for path in paths:
                     original = path.read_text(encoding="utf-8-sig")
                     if toml_comments(original):
