@@ -26,6 +26,7 @@ from pathlib import Path
 
 from ...core.config import Settings, load_settings
 from ...core.directory_scan import scan_directory
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.locks import exclusive_file_lock
 from ...core.storage_taxonomy import StorageCategory
 from ...core.storage_taxonomy_locations import storage_location
@@ -91,7 +92,7 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
         try:
             build_lexical_index(staging_path, iter_corpus_chunks(corpus_root))
             if _corpus_identity(corpus_root) != source_identity:
-                raise RuntimeError("corpus sources changed while the lexical index was being built")
+                raise InternalInvariantError("corpus sources changed while the lexical index was being built")
             _store_identity(staging_path, source_identity)
             os.replace(staging_path, database_path)
         finally:

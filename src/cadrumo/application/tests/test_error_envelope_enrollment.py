@@ -47,7 +47,7 @@ def test_snapshot_not_found_subclasses_still_work() -> None:
 
     assert issubclass(BorradorSnapshotNotFoundError, SnapshotNotFoundError)
     assert issubclass(BorradorSnapshotNotFoundError, CadrumoError)
-    assert issubclass(BorradorSnapshotNotFoundError, KeyError)
+    assert not issubclass(BorradorSnapshotNotFoundError, KeyError)
 
 
 # ---------------------------------------------------------------------------

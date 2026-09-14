@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.modelos.participation_index import TransactionRevisionParticipationIndex
 from ...domain.modelos.protocols import TransactionParticipationIndexRepositoryProtocol
 
@@ -56,7 +57,7 @@ def transaction_participation_index_repository(
     try:
         factory = _BOUND_TRANSACTION_PARTICIPATION_INDEX_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("transaction participation-index persistence has not been composed") from error
+        raise InternalInvariantError("transaction participation-index persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

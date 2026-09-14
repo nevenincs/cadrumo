@@ -32,6 +32,7 @@ from typing import Annotated, ClassVar, Self
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
@@ -122,6 +123,7 @@ class OssIossLedgerCandidate(BaseModel):
     iva_amount: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_registry_regime(self) -> Self:
         """Refuse a candidate whose regime is absent from facts authority."""
         regime = require_oss_ioss_regime(self.regime, effective_date=self.transaction_date)

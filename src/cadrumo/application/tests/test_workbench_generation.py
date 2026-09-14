@@ -10,6 +10,7 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -412,7 +413,7 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
         ),
     )
 
-    with pytest.raises(RuntimeError, match="changed during capture"):
+    with pytest.raises(InternalInvariantError, match="changed during capture"):
         door.read_workbench_generation_inputs()
 
 
@@ -525,7 +526,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
         invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
     )
 
-    with pytest.raises(RuntimeError, match="changed during capture"):
+    with pytest.raises(InternalInvariantError, match="changed during capture"):
         door.read_workbench_generation_inputs()
 
 

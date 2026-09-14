@@ -10,6 +10,7 @@ from typing import ClassVar, Protocol, get_args
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.binding_temporal import SameTargetContext
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -40,7 +41,7 @@ _VALUE_ATTRIBUTE_BY_OPERATION: Mapping[str, str] = {
 _OPERATION_ANNOTATION = InventoryProvider.model_fields["row_field"].annotation
 _CANONICAL_OPERATIONS = get_args(getattr(_OPERATION_ANNOTATION, "__value__", _OPERATION_ANNOTATION))
 if set(_VALUE_ATTRIBUTE_BY_OPERATION) != set(_CANONICAL_OPERATIONS):
-    raise RuntimeError("inventory projection operation adapter is not exhaustive")
+    raise InternalInvariantError("inventory projection operation adapter is not exhaustive")
 
 
 class InventoryLedgerRepositoryProtocol(Protocol):

@@ -19,6 +19,7 @@ import pytest
 from .... import application, domain
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
+from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.calculations.registry import iva_compensation_annual_partition_bindings as _casilla_authority
 from .. import iva_compensation_casillas as _iva_compensation_queries
 
@@ -321,7 +322,7 @@ def test_malformed_tokens_are_refused_at_declaration(malformed: str) -> None:
     The declaration helper runs at import time, so a malformed constant can
     never reach a compensation calculation.
     """
-    with pytest.raises(RuntimeError):
+    with pytest.raises(InternalInvariantError):
         _iva_compensation_queries.iva_compensation_casilla_id(malformed)
 
 

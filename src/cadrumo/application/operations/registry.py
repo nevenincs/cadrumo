@@ -15,6 +15,7 @@ from pydantic import (
     model_validator,
 )
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hashing import content_hash_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -611,7 +612,7 @@ class OperationRegistry(BaseModel):
     def public_contract_set(self) -> OperationPublicContractSetV1:
         """Return the validated public set; refuse an uncomposed internal registry."""
         if not self.public_registrations:
-            raise RuntimeError("operation registry has no public contract composition")
+            raise InternalInvariantError("operation registry has no public contract composition")
         return OperationPublicContractSetV1.build(
             tuple(registration.contract for registration in self.public_registrations),
         )

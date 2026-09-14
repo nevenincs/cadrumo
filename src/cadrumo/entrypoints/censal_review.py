@@ -30,6 +30,7 @@ from ..application.user_profile.censal_operation import (
 )
 from ..application.user_profile.profile_record_repository import ProfileRecordRepository
 from ..core.bucket_pointer import require_active_bucket_id
+from ..core.errors.hierarchy import InternalInvariantError
 from ..core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -56,7 +57,7 @@ async def _observe(services: OperationComposedServices, operation_id: str) -> Op
         OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=_OBSERVATION_LIMIT)
     )
     if not isinstance(observed, OperationObservationSuccessV1):
-        raise RuntimeError("censal operation observation was refused")
+        raise InternalInvariantError("censal operation observation was refused")
     return observed
 
 
@@ -76,7 +77,7 @@ def _require_review_interaction(observed: OperationObservationSuccessV1) -> Oper
     """Require the operation to expose the reviewed interaction it promised."""
     pending = observed.projection.pending_interaction
     if not isinstance(pending, OperationReviewAvailableInteractionV1):
-        raise RuntimeError("censal operation did not publish its reviewed proposal")
+        raise InternalInvariantError("censal operation did not publish its reviewed proposal")
     return pending
 
 
@@ -91,7 +92,7 @@ async def _resolve_censal_projection(
     if not isinstance(projected, OperationReviewProjectionSuccessV1) or not isinstance(
         projected.projection, CensalReviewProjectionV1
     ):
-        raise RuntimeError("censal reviewed projection was unavailable")
+        raise InternalInvariantError("censal reviewed projection was unavailable")
     return projected.projection
 
 
@@ -136,7 +137,7 @@ async def _answer_censal_review(
             )
         )
     if not isinstance(accepted, OperationResponseMutationSuccessV1):
-        raise RuntimeError("censal reviewed response was refused")
+        raise InternalInvariantError("censal reviewed response was refused")
 
 
 def _parse_censal_result_reference(
@@ -148,13 +149,13 @@ def _parse_censal_result_reference(
     prefix, separator, outcome = result_ref.rpartition(":")
     family, digest_separator, reviewed_digest = prefix.partition(":")
     if not separator or not digest_separator or family != "censo-review":
-        raise RuntimeError("censal reviewed operation returned an invalid result reference")
+        raise InternalInvariantError("censal reviewed operation returned an invalid result reference")
     typed_result = CensalOperationResult(
         outcome=CensalOperationOutcome(outcome),
         reviewed_proposal_digest=reviewed_digest,
     )
     if typed_result.outcome is not expected_outcome:
-        raise RuntimeError("censal reviewed operation returned a mismatched outcome")
+        raise InternalInvariantError("censal reviewed operation returned a mismatched outcome")
     return typed_result
 
 
@@ -173,7 +174,7 @@ def _assert_censal_terminal_success(
         or projection.effect is not expected_effect
         or result_ref is None
     ):
-        raise RuntimeError("censal reviewed operation did not succeed with its declared effect")
+        raise InternalInvariantError("censal reviewed operation did not succeed with its declared effect")
     _parse_censal_result_reference(result_ref, expected_outcome=expected_outcome)
 
 
@@ -190,7 +191,7 @@ async def _await_censal_settlement(
             _assert_censal_terminal_success(observed, apply=apply)
             return
         await asyncio.sleep(0)
-    raise RuntimeError("censal reviewed operation did not settle")
+    raise InternalInvariantError("censal reviewed operation did not settle")
 
 
 async def _run(

@@ -90,11 +90,12 @@ class JustificanteFetchError(SedeError):
     """Raised when the CSV-keyed PDF download fails or is malformed."""
 
 
-class SedeValidationError(SedeError, ValueError):
+class SedeValidationError(SedeError):
     """Raised when data captured from Sede violates expected shape or invariants.
 
-    Inherits from ValueError to maintain compatibility with Pydantic
-    validators.
+    Pydantic callbacks translate this registered error to a plain
+    ``ValueError`` at their narrow boundary; direct sede adapter helpers keep
+    the registered type.
     """
 
 

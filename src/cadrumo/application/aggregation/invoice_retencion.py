@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, model_validator
 
 from ...core.aggregation import BindingSourceKind, RetencionScheme
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.translatable import Translatable as t
 from ...core.identity.hex_ids import InvoiceId
@@ -174,6 +175,7 @@ class InvoiceRetencionProjection(BaseModel):
     defects: tuple[InvoiceRetencionProjectionDefect, ...]
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_outcome_is_unambiguous(self) -> Self:
         """Refuse a verdict that is neither clearly routed nor clearly excluded."""
         if (self.observation is None) != bool(self.defects):

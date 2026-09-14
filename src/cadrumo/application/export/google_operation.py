@@ -19,7 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.capabilities import ServiceCapability
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -258,7 +258,7 @@ def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
 
 def _unconfigured_google_sheets_export_prepare_port(_profile_id: str) -> GoogleSheetsExportPreparedPort:
     """Refuse accidental execution before the production composition binds a port."""
-    raise RuntimeError("Google Sheets export transport has not been composed")
+    raise InternalInvariantError("Google Sheets export transport has not been composed")
 
 
 class GoogleSheetsExportService:

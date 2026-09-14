@@ -33,13 +33,14 @@ import os
 from dataclasses import dataclass
 from secrets import token_bytes
 from threading import RLock
+from typing import TYPE_CHECKING
 
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
-from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_authority
+from ...domain.calculations.registry.authority import RegistryAuthorityCapture, bundled_indexed_authority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.contribuyente.ccaa import CCAA
@@ -81,6 +82,9 @@ from .work_selection import (
     select_modelo_work_resolution,
 )
 
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
 
 class ModeloWorkSelectorError(ModeloError):
     """Base error for Modelo work-selection refusals."""
@@ -90,11 +94,11 @@ class ModeloWorkNoActiveBucketError(ModeloWorkSelectorError):
     """Raised when an implicit selector cannot capture an active bucket."""
 
 
-class ModeloWorkUnitNotFoundError(ModeloWorkSelectorError, KeyError):
+class ModeloWorkUnitNotFoundError(ModeloWorkSelectorError):
     """Raised when an exact work identifier resolves no all-state unit."""
 
 
-class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError, ValueError):
+class ModeloWorkSelectorContradictionError(ModeloWorkSelectorError):
     """Raised when an exact selector contradicts supplied coordinates."""
 
 
@@ -123,7 +127,7 @@ class ModeloWorkRevisionConflictError(ModeloWorkSelectorError):
         super().__init__("modelo work target already has a work unit for a different registry revision")
 
 
-class ModeloRevisionPickError(ModeloError, ValueError):
+class ModeloRevisionPickError(ModeloError):
     """Raised when a calculation-revision selector is internally inconsistent."""
 
 
@@ -327,15 +331,15 @@ type ModeloWorkTarget = ModeloVisibleFilingTarget | ModeloExactWorkUnitTarget | 
 """Supported work-target shapes for centralized modelo addressing."""
 
 
-class ModeloWorkAddressNotFoundError(ModeloPreconditionErrorMixin, ModeloError, LookupError):
+class ModeloWorkAddressNotFoundError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a natural modelo work address resolves no work unit."""
 
 
-class ModeloWorkRegistryYearMismatchError(ModeloError, ValueError):
+class ModeloWorkRegistryYearMismatchError(ModeloError):
     """Raised when an explicit revision diverges from the law-determined one."""
 
 
-class ModeloWorkPeriodTokenError(ModeloError, ValueError):
+class ModeloWorkPeriodTokenError(ModeloError):
     """Raised when an operator-facing period token cannot be normalized."""
 
     def __init__(
@@ -917,6 +921,7 @@ def law_selected_revision_for_work_target(
     period: Period,
     requested_revision_id: RevisionId | None = None,
     stored_revision_id: RevisionId | None = None,
+    operation: PinnedAuthorityOperation | None = None,
 ) -> RevisionId:
     """Capture the law-selected revision once and assert every supplied axis.
 
@@ -924,10 +929,24 @@ def law_selected_revision_for_work_target(
     ``(modelo, filing_year, period)``, so the work path performs one registry
     read and both axes are judged against the same atomic projection.
     """
-    capture = bundled_authority().capture_law_selected_projection(
-        modelo.strip(),
-        filing_year=filing_year,
-        period=period.registry_token,
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return law_selected_revision_for_work_target(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                requested_revision_id=requested_revision_id,
+                stored_revision_id=stored_revision_id,
+                operation=indexed_operation,
+            )
+    capture = RegistryAuthorityCapture(
+        projection=operation.snapshot(
+            modelo.strip(),
+            filing_year=filing_year,
+            period=period.registry_token,
+        ),
+        comparison_domain=operation.generation.logical_generation,
+        generation=0,
     )
     return assert_work_target_revision(
         capture,
@@ -945,7 +964,7 @@ _work_capture_generations: dict[str, tuple[tuple[str, ...], int]] = {}
 _work_capture_generation = 0
 
 
-class ModeloWorkCaptureError(ModeloWorkSelectorError, RuntimeError):
+class ModeloWorkCaptureError(ModeloWorkSelectorError):
     """Raised when a work capture cannot reach one uncontended observation."""
 
 

@@ -7,6 +7,7 @@ from dataclasses import replace
 import pytest
 
 from ....core.aggregation import BindingSourceKind
+from ....core.errors.hierarchy import InternalInvariantError
 from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
@@ -69,15 +70,15 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
     first, second, *remaining = CALCULATION_ROUTE_RESOLVER_OWNERSHIP
     assert isinstance(first, CalculationRouteResolverOwnership)
     assert isinstance(second, CalculationRouteResolverOwnership)
-    with pytest.raises(RuntimeError, match="resolver ids must be unique"):
+    with pytest.raises(InternalInvariantError, match="resolver ids must be unique"):
         validate_calculation_route_resolver_ownership(
             (first, replace(second, resolver_id=first.resolver_id), *remaining),
         )
-    with pytest.raises(RuntimeError, match="resolver sources drifted"):
+    with pytest.raises(InternalInvariantError, match="resolver sources drifted"):
         validate_calculation_route_resolver_ownership(
             (first, replace(second, owned_sources=first.owned_sources), *remaining),
         )
-    with pytest.raises(RuntimeError, match="exactly one design-constant"):
+    with pytest.raises(InternalInvariantError, match="exactly one design-constant"):
         validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1])
     invented = CalculationRouteManualOwnership(
         stage="manual",
@@ -87,24 +88,24 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
     )
     object.__setattr__(invented, "resolver_id", "invented-deferred-owner")
     object.__setattr__(invented, "owned_sources", (BindingSourceKind.RELATED_PARTY_OPERATION,))
-    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
+    with pytest.raises(InternalInvariantError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented))
 
 
 def test_route_refuses_resolver_class_identity_mutations() -> None:
     profile, *remaining = CALCULATION_ROUTE_RESOLVER_OWNERSHIP
     assert isinstance(profile, CalculationRouteResolverOwnership)
-    with pytest.raises(RuntimeError, match="resolver id drifted"):
+    with pytest.raises(InternalInvariantError, match="resolver id drifted"):
         validate_calculation_route_resolver_ownership(
             (replace(profile, resolver_id="renamed-profile"), *remaining),
         )
-    with pytest.raises(RuntimeError, match="resolver sources drifted"):
+    with pytest.raises(InternalInvariantError, match="resolver sources drifted"):
         validate_calculation_route_resolver_ownership(
             (replace(profile, owned_sources=(BindingSourceKind.RELATED_PARTY_OPERATION,)), *remaining),
         )
     invented = replace(profile)
     object.__setattr__(invented, "resolver_type", None)
-    with pytest.raises(RuntimeError, match="every canonical executable resolver"):
+    with pytest.raises(InternalInvariantError, match="every canonical executable resolver"):
         validate_calculation_route_resolver_ownership(
             (invented, *remaining),
         )
@@ -118,11 +119,11 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     )
     invented_pseudo_owner = replace(manual)
     object.__setattr__(invented_pseudo_owner, "resolver_id", "second-manual-owner")
-    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
+    with pytest.raises(InternalInvariantError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             (*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented_pseudo_owner),
         )
-    with pytest.raises(RuntimeError, match="resolver ids must be unique"):
+    with pytest.raises(InternalInvariantError, match="resolver ids must be unique"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, manual))
 
     profile = CALCULATION_ROUTE_RESOLVER_OWNERSHIP[0]
@@ -132,7 +133,7 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     # Swap the canonical manual owner for the typed one by IDENTITY. Slicing
     # the last row off would drop the design-constant sibling instead and
     # leave a duplicate id, so the refusal under test would never be reached.
-    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
+    with pytest.raises(InternalInvariantError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             tuple(typed_manual_owner if row is manual else row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP),
         )
@@ -149,5 +150,5 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
 def test_route_refuses_each_resolver_moved_from_its_canonical_stage(index: int, wrong_stage: str) -> None:
     mutated = list(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
     mutated[index] = replace(mutated[index], stage=wrong_stage)  # type: ignore[arg-type]
-    with pytest.raises(RuntimeError, match="must use stage"):
+    with pytest.raises(InternalInvariantError, match="must use stage"):
         validate_calculation_route_resolver_ownership(tuple(mutated))

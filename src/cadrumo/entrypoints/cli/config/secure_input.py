@@ -52,6 +52,7 @@ from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.tty import stdin_is_tty
@@ -144,7 +145,7 @@ def stage_machine_secret_payload(payload: MachineSecretPayload) -> None:
     staged = dict(_STAGED_MACHINE_SECRET_PAYLOADS.get() or {})
     model = type(payload)
     if model in staged:
-        raise RuntimeError("machine-secret payload model is already staged")
+        raise InternalInvariantError("machine-secret payload model is already staged")
     staged[model] = payload
     _STAGED_MACHINE_SECRET_PAYLOADS.set(staged)
 

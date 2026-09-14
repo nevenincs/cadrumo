@@ -38,6 +38,7 @@ from ...application.overview.calendar_models import (
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, strict_round_trip
@@ -249,7 +250,7 @@ def _refuse_calendar_warnings(cal: OverviewCalendar, *, schema: ProfileSchemaDef
 def _require_profile_schema(schema: ProfileSchemaDefinition | None) -> ProfileSchemaDefinition:
     """Refuse a schema-less profile operation before rendering grounded output."""
     if schema is None:
-        raise RuntimeError("profile overview requires a schema pinned to the authenticated operation")
+        raise InternalInvariantError("profile overview requires a schema pinned to the authenticated operation")
     return schema
 
 

@@ -19,6 +19,7 @@ import typer
 from click import Choice, Context, Parameter, ParamType
 from pydantic import TypeAdapter, ValidationError
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ._command_target import resolve_deferred_target
 from .command_spec import (
@@ -69,7 +70,7 @@ def _parameter_default(default: ParameterDefault) -> tuple[object, Callable[[], 
     if default.kind is DefaultKind.LITERAL:
         return default.literal, None
     if default.factory is None:  # guarded by ParameterDefault itself
-        raise RuntimeError("factory parameter default has no target")
+        raise InternalInvariantError("factory parameter default has no target")
 
     factory_target = default.factory
 
@@ -278,7 +279,7 @@ def _require_behavior_target(spec: CommandSpec) -> DeferredTarget:
     """Return the executable target declared by one command spec."""
     binding = spec.handler
     if binding is None or binding.state is not BindingState.TARGET or binding.target is None:
-        raise RuntimeError(f"command {spec.key!r} has no executable target")
+        raise InternalInvariantError(f"command {spec.key!r} has no executable target")
     return binding.target
 
 
@@ -418,7 +419,7 @@ def _node_app(graph: CommandSpecGraph, key: str) -> typer.Typer:
     spec = graph.by_key()[key]
     if spec.handler is not None and spec.handler.state is BindingState.UNAVAILABLE:
         reason = spec.handler.reason_key
-        raise RuntimeError(tr(reason.value) if reason is not None else f"command {key!r} is unavailable")
+        raise InternalInvariantError(tr(reason.value) if reason is not None else f"command {key!r} is unavailable")
     if spec.kind == "leaf":
         app = typer.Typer()
         command_factory = cast(Any, app.command)

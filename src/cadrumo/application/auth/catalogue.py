@@ -9,6 +9,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from ...core.auth_provider import AuthProviderKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -55,7 +56,7 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
 """Catalogue of auth provider entries in display order."""
 
 if tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE) != tuple(kind.value for kind in AuthProviderKind):
-    raise RuntimeError("auth provider catalogue must match AuthProviderKind in declaration order")
+    raise InternalInvariantError("auth provider catalogue must match AuthProviderKind in declaration order")
 
 
 def list_auth_providers() -> tuple[AuthProviderListing, ...]:

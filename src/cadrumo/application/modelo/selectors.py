@@ -40,7 +40,7 @@ class ModeloCalculationRevisionSelectorError(ModeloError):
     """Base error for calculation-revision selector refusals."""
 
 
-class ModeloCalculationRevisionSelectorNotFoundError(ModeloCalculationRevisionSelectorError, KeyError):
+class ModeloCalculationRevisionSelectorNotFoundError(ModeloCalculationRevisionSelectorError):
     """Raised when a requested calculation revision cannot be selected."""
 
 

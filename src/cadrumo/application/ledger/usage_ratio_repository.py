@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from decimal import Decimal
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.usage_ratios.model import UsageRatioProfile
 
 
@@ -85,7 +86,7 @@ def usage_ratio_profile_with_censo_guard(
     try:
         loader = _BOUND_USAGE_RATIO_CENSO_GUARD_LOADER.get()
     except LookupError as error:
-        raise RuntimeError("usage-ratio persistence has not been composed") from error
+        raise InternalInvariantError("usage-ratio persistence has not been composed") from error
     return loader(
         bucket_id=bucket_id,
         raw_afectacion_ratio=raw_afectacion_ratio,
@@ -98,7 +99,7 @@ def load_usage_ratio_profile(*, bucket_id: str) -> UsageRatioProfile:
     try:
         loader, _saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
     except LookupError as error:
-        raise RuntimeError("usage-ratio persistence has not been composed") from error
+        raise InternalInvariantError("usage-ratio persistence has not been composed") from error
     return loader(bucket_id=bucket_id)
 
 
@@ -107,7 +108,7 @@ def save_usage_ratio_profile(profile: UsageRatioProfile, *, bucket_id: str) -> N
     try:
         _loader, saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
     except LookupError as error:
-        raise RuntimeError("usage-ratio persistence has not been composed") from error
+        raise InternalInvariantError("usage-ratio persistence has not been composed") from error
     saver(profile, bucket_id=bucket_id)
 
 

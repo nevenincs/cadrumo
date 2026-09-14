@@ -8,6 +8,7 @@ from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.models import ManualLedgerTransactionPatch
+from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.transactions.enums import BusinessClassification
 from ..components.widgets import ContentDataTable
 from .controller import LedgerWorkspaceController, ledger_copy
@@ -111,7 +112,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         status = self.query_one("#ledger-flow-status", Static)
         selected = self.selected_classification
         if selected is None:  # pragma: no cover - guarded before worker creation
-            raise RuntimeError("classification selection disappeared before submission")
+            raise InternalInvariantError("classification selection disappeared before submission")
         try:
             await self.controller.submit_classification(ManualLedgerTransactionPatch(business_classification=selected))
         except Exception:

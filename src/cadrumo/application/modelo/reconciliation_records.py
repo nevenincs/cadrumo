@@ -28,6 +28,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import WorkUnitId
@@ -302,7 +303,7 @@ def modelo_reconciliation_persistence() -> ModeloReconciliationPersistencePort:
     try:
         factory = _BOUND_MODELO_RECONCILIATION_PERSISTENCE_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("modelo reconciliation persistence has not been composed") from error
+        raise InternalInvariantError("modelo reconciliation persistence has not been composed") from error
     return factory()
 
 

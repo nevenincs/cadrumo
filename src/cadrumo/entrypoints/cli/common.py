@@ -37,6 +37,7 @@ import typer._click.types as typer_click_types
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.cli_metadata import is_metadata_invocation
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
@@ -52,10 +53,12 @@ from .operator_surface_reconciliation import current_operator_surface_reconcilia
 # publication therefore refuses the surface instead of falling back to a second
 # identifier universe maintained in Python.
 #
-# It is a module-level constant because ``from __future__ import annotations``
-# stringifies the ``Annotated`` metadata carrying ``click_type=...`` and Typer
-# re-evaluates that string in the defining module's global namespace, where a
-# closure-local binding would be invisible.
+# The parameter type is a module-level object because ``from __future__ import
+# annotations`` stringifies the ``Annotated`` metadata carrying
+# ``click_type=...`` and Typer re-evaluates that string in this module.  The
+# governed values themselves must not be resolved until Click converts a real
+# command argument: importing the CLI, rendering help, and printing the version
+# are metadata-only operations and do not own an authority operation.
 #
 # CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
 # click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
@@ -69,9 +72,24 @@ def _published_modelo_codes() -> list[str]:
         return sorted(operation.modelo_ids())
 
 
+class _PublishedModeloCode(click.ParamType[str]):
+    """Validate a modelo identifier against the authority at argument use."""
+
+    name = "modelo"
+
+    def convert(
+        self,
+        value: object,
+        param: click.Parameter | None,
+        ctx: click.Context | None,
+    ) -> str:
+        """Resolve the published directory only for a governed invocation."""
+        return click.Choice(_published_modelo_codes()).convert(value, param, ctx)
+
+
 MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
     typer_click_types.ParamType,
-    click.Choice(_published_modelo_codes()),
+    _PublishedModeloCode(),
 )
 
 # The application- and domain-layer symbols below are imported lazily,
@@ -911,7 +929,7 @@ def _no_active_profile_refusal() -> Exception:
         registered_profile_count=registered_profile_count,
     )
     if verdict is None:
-        raise RuntimeError("no-active-profile refusal did not produce a failed verdict")
+        raise InternalInvariantError("no-active-profile refusal did not produce a failed verdict")
     # Each branch calls tr() with a literal key so the locale scaffold's
     # static discovery can find both keys; a single tr(variable) call would
     # be invisible to that AST-literal scan and the second key would never
@@ -1037,7 +1055,7 @@ def filing_taxpayer_or_refuse(state: WorkflowState) -> TaxpayerProfile:
             else None
         )
         if profile_schema is None:
-            raise RuntimeError("filing refusal requires a schema pinned to the authenticated operation")
+            raise InternalInvariantError("filing refusal requires a schema pinned to the authenticated operation")
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as operation:

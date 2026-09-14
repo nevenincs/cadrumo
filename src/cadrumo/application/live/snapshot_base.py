@@ -49,7 +49,7 @@ from ...core.errors.hierarchy import CadrumoError
 from .errors import LiveApplicationInputError
 
 
-class SnapshotNotFoundError(CadrumoError, KeyError):
+class SnapshotNotFoundError(CadrumoError):
     """Shared base for per-service snapshot-lookup-miss errors.
 
     Inherits from both :class:`cadrumo.core.errors.CadrumoError` and

@@ -95,7 +95,12 @@ class SiteHealthEvidence(_SiteHealthRecord):
         """Enforce per-item length bounds on every detected marker."""
         for marker in value:
             if len(marker) < 1 or len(marker) > 128:
-                raise BrowserValidationError(f"detected_markers entry must be 1..128 chars, got length {len(marker)}")
+                error = BrowserValidationError(
+                    f"detected_markers entry must be 1..128 chars, got length {len(marker)}",
+                )
+                # Pydantic consumes builtin validation errors; retain the
+                # registered browser refusal as the causal adapter error.
+                raise ValueError(str(error)) from error
         return value
 
 

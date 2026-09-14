@@ -8,6 +8,7 @@ from contextvars import ContextVar
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.auth_provider import AuthProviderDescription, AuthProviderKind
+from ...core.errors.hierarchy import InternalInvariantError
 from ..auth_credentials import ActiveCertificateCredentials
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import resolve_active_certificate_credentials
@@ -76,7 +77,7 @@ def _auth_provider_selector() -> AuthProviderSelector:
     try:
         return _BOUND_AUTH_PROVIDER_SELECTOR.get()
     except LookupError as exc:
-        raise RuntimeError("AEAT authentication provider composition is not bound") from exc
+        raise InternalInvariantError("AEAT authentication provider composition is not bound") from exc
 
 
 def select_provider(

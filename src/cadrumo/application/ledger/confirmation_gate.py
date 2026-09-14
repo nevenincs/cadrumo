@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.confirmation_gate import ConfirmationBlockReason, FindingResolutionAction
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.hashing import content_hash_hex
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -96,7 +96,7 @@ axis from an advisory one by looking at the axis.
 
 if set(BLOCKING_REASON_BY_DISCREPANCY_KIND) != set(DraftDiscrepancyKind):
     _unmapped = ", ".join(sorted(set(DraftDiscrepancyKind) - set(BLOCKING_REASON_BY_DISCREPANCY_KIND)))
-    raise RuntimeError(
+    raise InternalInvariantError(
         f"every DraftDiscrepancyKind must declare a ConfirmationBlockReason; unmapped: {_unmapped}",
     )
 

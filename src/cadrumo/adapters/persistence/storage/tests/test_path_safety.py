@@ -18,10 +18,11 @@ def _raise_unsafe_repository_id(_root: Path) -> None:
     safe_repository_id("foo/bar", context="x")
 
 
-def test_path_containment_errors_inherit_value_error(tmp_path: Path) -> None:
-    """Legacy ``except ValueError`` callers must still catch typed errors."""
-    with pytest.raises(ValueError):
+def test_path_containment_errors_are_registered_not_builtin(tmp_path: Path) -> None:
+    """Path helpers expose the registered refusal directly at the adapter edge."""
+    with pytest.raises(PathContainmentError):
         _raise_unsafe_repository_id(tmp_path)
+    assert not issubclass(PathContainmentError, ValueError)
 
 
 class TestSafeRepositoryId:

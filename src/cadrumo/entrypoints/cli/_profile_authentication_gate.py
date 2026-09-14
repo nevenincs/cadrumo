@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 import typer
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ._profile_authentication_contract import (
     ProfileAuthenticationSecrets,
     ProfileSecretSourceOptions,
@@ -75,7 +76,7 @@ def _preflight_sources(*, root: ProfileSecretSelection | None, leaf: MachineSecr
 def _selected_variant(spec: CommandSpec, arguments: Mapping[str, object]) -> MachineSecretVariantSpec:
     machine = spec.machine_secret
     if machine is None:
-        raise RuntimeError("leaf machine-secret model requested for a non-adopter")
+        raise InternalInvariantError("leaf machine-secret model requested for a non-adopter")
     matches: list[MachineSecretVariantSpec] = []
     for variant in machine.variants:
         condition = variant.condition
@@ -86,7 +87,7 @@ def _selected_variant(spec: CommandSpec, arguments: Mapping[str, object]) -> Mac
         if present is (condition.presence == "present"):
             matches.append(variant)
     if len(matches) != 1:
-        raise RuntimeError("parsed command does not select exactly one machine-secret variant")
+        raise InternalInvariantError("parsed command does not select exactly one machine-secret variant")
     return matches[0]
 
 
@@ -407,7 +408,7 @@ def consume_root_fallback(
                 profile_decode_context=operation.profile_decode_context(),
             )
         if outcome.bucket_id != bucket_id or not active_bucket_session_serves(bucket_id):
-            raise RuntimeError("profile authentication did not establish the exact requested session")
+            raise InternalInvariantError("profile authentication did not establish the exact requested session")
         from ._profile_session_gate import bind_profile_target
 
         bind_profile_target(ctx, bucket_id=bucket_id)

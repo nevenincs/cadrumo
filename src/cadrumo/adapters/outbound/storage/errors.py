@@ -36,11 +36,12 @@ class OutboundStorageError(TerminalPreconditionErrorMixin[PreconditionVerdict], 
     """Base class for every outbound storage-provider failure."""
 
 
-class OutboundStorageValidationError(OutboundStorageError, ValueError):
+class OutboundStorageValidationError(OutboundStorageError):
     """Raised when storage operation parameters fail validation.
 
-    Inherits from :class:`ValueError` to remain compatible with pydantic
-    validators while staying catchable as :class:`OutboundStorageError`.
+    Pydantic-facing callers translate this registered error at their narrow
+    validator boundary when required; provider code keeps the registered
+    outbound-storage type.
     """
 
     def __init__(

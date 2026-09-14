@@ -62,13 +62,13 @@ class PersistenceError(StorageError):
     """
 
 
-class StorageValidationError(PersistenceError, ValueError):
+class StorageValidationError(PersistenceError):
     """Raised when a storage parameter fails validation (e.g. key length).
 
-    Inherits from both :class:`PersistenceError` and :class:`ValueError`
-    to remain compatible with Pydantic's validator-failure contract while
-    allowing catch-all :class:`StorageError` handlers to detect integrity
-    failures.
+    Pydantic-facing validators translate this registered error to a plain
+    ``ValueError`` at their callback boundary. The storage layer itself keeps
+    the registered type, so callers can dispatch on :class:`StorageError`
+    without leaking a framework builtin into the hierarchy.
     """
 
 
@@ -195,7 +195,7 @@ class EnvelopeVersionError(PersistenceError):
     """Raised when an on-disk envelope version differs from the consumer contract."""
 
 
-class PathContainmentError(PersistenceError, ValueError):
+class PathContainmentError(PersistenceError):
     """Raised when a computed path escapes its configured root directory."""
 
     def __init__(
@@ -276,7 +276,7 @@ class RetentionPolicyError(PersistenceError):
     """Raised when a record's retention metadata violates its classification policy."""
 
 
-class NamespaceRegistryError(StorageError, ValueError):
+class NamespaceRegistryError(StorageError):
     """Raised when a namespace-registry key or definition violates a boot-time invariant.
 
     Fires from Pydantic field and model validators on
@@ -288,11 +288,10 @@ class NamespaceRegistryError(StorageError, ValueError):
     ultimately from :class:`~core.errors.CadrumoError` so callers can catch
     it without importing Pydantic internals.
 
-    Because these validators are called by Pydantic during model construction
-    the exception propagates wrapped inside a :class:`pydantic.ValidationError`
-    when raised from a field validator; direct callers of
-    :class:`~adapters.persistence.storage.StorageHierarchyRegistry`
-    model validators receive the raw :class:`NamespaceRegistryError`.
+    Pydantic callback boundaries translate this registered error to a plain
+    ``ValueError`` while preserving it as ``__cause__``. Direct callers of
+    :class:`~adapters.persistence.storage.StorageHierarchyRegistry` helper
+    methods receive the raw :class:`NamespaceRegistryError`.
     """
 
 

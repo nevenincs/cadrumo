@@ -9,6 +9,7 @@ query seam for consumers that resolve those declarations.
 from __future__ import annotations
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.query_reports import ModeloBindingsReport, ModeloFormulasReport
 
@@ -18,7 +19,7 @@ def iva_compensation_casilla_id(value: object) -> CasillaId:
     try:
         return validated_casilla_id(value, surface="IVA compensation registry token")
     except ValueError as exc:
-        raise RuntimeError(f"IVA compensation registry token {value!r} is not a CasillaId") from exc
+        raise InternalInvariantError(f"IVA compensation registry token {value!r} is not a CasillaId") from exc
 
 
 def iva_compensation_registry_declarations(

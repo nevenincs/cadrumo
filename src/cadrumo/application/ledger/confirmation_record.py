@@ -40,6 +40,7 @@ from typing import Protocol, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.config import Settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.field_grounding import FieldGroundingOutcome
 from ...core.field_origin import FieldOrigin
 from ...core.hashing import content_hash_hex
@@ -290,7 +291,7 @@ def _repository(bucket_id: str, settings: Settings | None) -> ConfirmationRecord
     try:
         factory = _BOUND_CONFIRMATION_RECORD_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("confirmation-record persistence has not been composed") from error
+        raise InternalInvariantError("confirmation-record persistence has not been composed") from error
     return factory(bucket_id=bucket_id, settings=settings)
 
 

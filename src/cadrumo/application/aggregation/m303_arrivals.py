@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from pydantic import BaseModel, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.render import tr as t
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -81,6 +82,7 @@ class M303SupplierRegimeArrival(BaseModel):
 
     @field_validator("source_ledger_ids")
     @classmethod
+    @pydantic_validation_boundary
     def _source_ledger_ids_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not ledger_id.strip() for ledger_id in value):
             raise AggregationValidationError(
@@ -93,6 +95,7 @@ class M303SupplierRegimeArrival(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _recipient_fact_matches_its_evidence(self) -> M303SupplierRegimeArrival:
         if self.recipient_of_cash_accounting_operations != bool(self.source_ledger_ids):
             raise AggregationValidationError(
@@ -120,6 +123,7 @@ class M303ProrrataTransitionArrival(BaseModel):
         return _transition_period_applicability_from_registry(self.period)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _transition_matches_register_evidence(self) -> M303ProrrataTransitionArrival:
         if not self.is_applicable:
             _require_non_applicable_transition(self)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from importlib import import_module
 
+from ...core.errors.hierarchy import InternalInvariantError
 from .command_spec import DeferredTarget
 
 
@@ -12,11 +13,11 @@ def resolve_deferred_target(target: DeferredTarget) -> object:
     value: object = import_module(target.module)
     for part in target.qualname.split("."):
         if part.startswith("_"):
-            raise RuntimeError(f"command target is not public: {target.identity!r}")
+            raise InternalInvariantError(f"command target is not public: {target.identity!r}")
         try:
             value = getattr(value, part)
         except AttributeError as error:
-            raise RuntimeError(f"command target does not exist: {target.identity!r}") from error
+            raise InternalInvariantError(f"command target does not exist: {target.identity!r}") from error
     return value
 
 

@@ -17,11 +17,13 @@ from collections.abc import Sequence
 from contextlib import suppress
 from typing import NamedTuple
 
+from ...core.errors.hierarchy import InternalInvariantError
+
 
 def descriptor_from_inherited_handle(handle: int, *, writable: bool = False) -> int:
     """Take ownership of one allowlisted inherited Windows HANDLE."""
     if sys.platform != "win32":
-        raise RuntimeError("Windows profile-secret HANDLE bootstrap is only available on Windows")
+        raise InternalInvariantError("Windows profile-secret HANDLE bootstrap is only available on Windows")
     if handle <= 0:
         raise ValueError("an inherited Windows HANDLE must be a positive integer")
     import msvcrt

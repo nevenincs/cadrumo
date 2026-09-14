@@ -16,6 +16,7 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
+from ...core.errors.hierarchy import InternalInvariantError
 from .account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
@@ -122,7 +123,9 @@ def compose_secure_profile_workbench_generation_provider(
             or current_session.sealed
             or not profile_session_serves_bucket(current_session, profile_id)
         ):
-            raise RuntimeError("installed workbench requires the live secure session for its selected profile")
+            raise InternalInvariantError(
+                "installed workbench requires the live secure session for its selected profile"
+            )
         if current_session.is_expired(now()):
             raise AccountSessionExpiredError()
         return HomeAccountSession(
@@ -496,7 +499,7 @@ def _required_projection[ProjectionT](
 ) -> ProjectionT:
     projection = result.projection
     if projection is None:
-        raise RuntimeError(f"{label} projection is unavailable in this workbench generation")
+        raise InternalInvariantError(f"{label} projection is unavailable in this workbench generation")
     return projection
 
 
@@ -720,7 +723,7 @@ def profile_storage_scope(root: Path) -> Generator[Path]:
     secret_field = STORAGE_TAXONOMY[StorageCategory.SECRETS].settings_field
     if secret_field is None:
         message = "the declared secret storage category has no settings field"
-        raise RuntimeError(message)
+        raise InternalInvariantError(message)
     secret_path = root / storage_location(StorageCategory.SECRETS).relative_path()
     with ExitStack() as composition:
         composition.enter_context(
@@ -887,7 +890,7 @@ async def _run_root_session(
         def refresh_search() -> WorkbenchSearchDoorV1:
             refreshed_inputs = root.refresh_search_inputs()
             if refreshed_inputs is None:
-                raise RuntimeError("installed workbench search is unavailable in the refreshed generation")
+                raise InternalInvariantError("installed workbench search is unavailable in the refreshed generation")
             # Parity is checked against the admissions of the SAME capture the
             # inputs came from, not against the session's first ones: a refresh
             # that legitimately changes availability is coherent, and comparing

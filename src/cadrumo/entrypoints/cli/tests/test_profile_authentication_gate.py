@@ -9,6 +9,7 @@ import sys
 import pytest
 
 from ....core.config import override_settings
+from ....core.errors.hierarchy import InternalInvariantError
 from ....core.external_constants import OutputLanguage
 from ....core.profile_session import ProfileSessionRefusalReason
 from .._profile_authentication_gate import _preflight_sources
@@ -195,5 +196,5 @@ def test_windows_handle_bootstrap_does_not_claim_numeric_fd_inheritance_on_posix
         assert descriptor >= 0
         os.close(descriptor)
     else:
-        with pytest.raises(RuntimeError, match="only available on Windows"):
+        with pytest.raises(InternalInvariantError, match="only available on Windows"):
             descriptor_from_inherited_handle(7)

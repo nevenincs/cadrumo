@@ -45,6 +45,7 @@ from typing import Annotated, Final
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
 from ...core.decimal.constants import HUNDRED
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
 from ...core.i18n.translatable import Translatable as t
@@ -404,6 +405,7 @@ class IvaLedgerCandidate(BaseModel):
 
     @field_validator("input_classification", mode="before")
     @classmethod
+    @pydantic_validation_boundary
     def _require_registry_input_classification(cls, value: object) -> object:
         """Accept only art. 106 tokens declared by the selected 0116 fact."""
         if value is None or isinstance(value, InputClassification):
@@ -411,6 +413,7 @@ class IvaLedgerCandidate(BaseModel):
         return require_input_classification(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
         require_iva_cash_accounting_treatment(self.cash_accounting_treatment)
         if self.exemption_article is not None:
@@ -505,6 +508,7 @@ class IvaLedgerAggregation(BaseModel):
         return tuple(value)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _rectifications_are_consumed_once(self) -> IvaLedgerAggregation:
         rectified_ids = [
             observation.rectifies_ledger_id

@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 
 
@@ -46,7 +47,7 @@ def work_unit_catalogue_repository(*, bucket_id: str) -> WorkUnitCatalogueReposi
     try:
         factory = _BOUND_WORK_UNIT_CATALOGUE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("work-unit catalogue persistence has not been composed") from error
+        raise InternalInvariantError("work-unit catalogue persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

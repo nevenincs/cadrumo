@@ -991,7 +991,7 @@ def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
 
     from .....application.errors import DiagnosticModelError
 
-    assert issubclass(DiagnosticModelError, ValueError)
+    assert not issubclass(DiagnosticModelError, ValueError)
 
 
 def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_the_text() -> None:

@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, TypedDict
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.time.clock import now
 from ..auth_credentials import ActiveCertificateCredentials
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
@@ -896,7 +897,7 @@ def logout_operator_auth(
                 if current_intent is None:
                     return state, ()
                 if current_intent.operation_id != operation_id:
-                    raise RuntimeError("auth cleanup intent changed during a serialized logout")
+                    raise InternalInvariantError("auth cleanup intent changed during a serialized logout")
                 clears_current = (
                     state.auth.provider in intent.provider_ids
                     and state.auth.provider == intent.provider_at_start
@@ -1085,7 +1086,7 @@ def reset_operator_auth(
                 if current_intent is None:
                     return state, ()
                 if current_intent.operation_id != intent.operation_id:
-                    raise RuntimeError("auth reset intent changed during a serialized reset")
+                    raise InternalInvariantError("auth reset intent changed during a serialized reset")
                 reset_auth, provider_ids, certificate_names = apply_auth_cleanup_intent(
                     state.auth,
                     intent,

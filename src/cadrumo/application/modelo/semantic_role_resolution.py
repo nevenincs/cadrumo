@@ -65,7 +65,7 @@ class SemanticRoleCasillaAmbiguity:
         }
 
 
-class AmbiguousSemanticRoleCasillaError(ModeloError, ValueError):
+class AmbiguousSemanticRoleCasillaError(ModeloError):
     """Raised when a semantic-role resolver would emit an arbitrary casilla id.
 
     The exception carries a :class:`SemanticRoleCasillaAmbiguity` payload instead

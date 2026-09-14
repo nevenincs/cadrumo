@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 
 
@@ -40,7 +41,7 @@ def justificante_repository(*, bucket_id: str) -> JustificanteRepositoryProtocol
     try:
         factory = _BOUND_JUSTIFICANTE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("justificante persistence has not been composed") from error
+        raise InternalInvariantError("justificante persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

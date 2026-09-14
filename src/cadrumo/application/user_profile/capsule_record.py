@@ -58,7 +58,7 @@ _REQUIRED_EVENT_FIELDS = frozenset(
 _RECORD_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
-class ProfileRecordConflictError(UserProfileError, ValueError):
+class ProfileRecordConflictError(UserProfileError):
     """The authenticated record changed before its CAS command committed.
 
     Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the
@@ -69,7 +69,7 @@ class ProfileRecordConflictError(UserProfileError, ValueError):
     """
 
 
-class ProfileRecordIntegrityError(UserProfileError, ValueError):
+class ProfileRecordIntegrityError(UserProfileError):
     """A current-record row or its event witness is malformed or mis-bound.
 
     Joins the :class:`~domain.user_profile.errors.UserProfileError` family so the

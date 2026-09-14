@@ -18,13 +18,16 @@ point of this module:
 
 from __future__ import annotations
 
+from typing import Never
+
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.filing.errors import ModeloBuilderError
 from ..draft_construction import _load_registry_snapshot
-from ..runtime import build_runtime_schema_provider
+from ..runtime import schema_provider_from_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,8 +47,17 @@ def _assert_names_modelo_revision_and_both_grades(message: str) -> None:
 
 def test_non_filing_grade_snapshot_is_typed_at_build_draft_boundary() -> None:
     """The filing resolver refuses M038 without exposing RegistryValidationError."""
+
+    class _RefusingProvider:
+        def get_collection(self, modelo: str) -> Never:
+            del modelo
+            raise AssertionError("snapshot boundary must not request a collection")
+
+        def get_snapshot(self, _modelo: str) -> None:
+            raise RegistryValidationError("representative non-filing authority refusal")
+
     with pytest.raises(ModeloBuilderError) as exc_info:
-        _load_registry_snapshot(modelo=_MODELO, period=_PERIOD)
+        _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_RefusingProvider())
 
     assert exc_info.value.translated_message == "application.filing.build_draft.errors.registry_snapshot_unavailable"
     assert exc_info.value.context == {
@@ -65,7 +77,8 @@ def test_named_non_filing_modelo_keeps_the_registry_grade_refusal() -> None:
     refusal names the modelo, the revision and both grades.
     """
     with pytest.raises(RegistryValidationError) as exc_info:
-        build_runtime_schema_provider(
+        schema_provider_from_authority(
+            bundled_authority(),
             modelos=(_MODELO,),
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,
@@ -82,7 +95,8 @@ def test_named_non_filing_modelo_keeps_the_grade_refusal_when_period_scoped() ->
     for a mismatch the period had nothing to do with.
     """
     with pytest.raises(RegistryValidationError) as exc_info:
-        build_runtime_schema_provider(
+        schema_provider_from_authority(
+            bundled_authority(),
             modelos=(_MODELO,),
             filing_year=_PERIOD.filing_year,
             period=_PERIOD,

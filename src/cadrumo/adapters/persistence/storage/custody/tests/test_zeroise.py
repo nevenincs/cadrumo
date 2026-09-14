@@ -61,14 +61,9 @@ def test_zeroise_rejects_non_bytes_like() -> None:
     assert "password" not in str(excinfo.value)
 
 
-def test_wipe_type_error_is_storage_error_and_type_error() -> None:
-    """The refusal stays catchable as both, which is what callers rely on.
-
-    Re-sited with the error rather than dropped: a caller that guards a wipe
-    with a bare ``except TypeError`` keeps working, and the typed storage
-    surface still propagates across domain boundaries.
-    """
+def test_wipe_type_error_is_registered_storage_error() -> None:
+    """The wipe primitive exposes its registered storage refusal directly."""
     from ...errors import StorageError
 
     assert issubclass(WipeTypeError, StorageError)
-    assert issubclass(WipeTypeError, TypeError)
+    assert not issubclass(WipeTypeError, TypeError)

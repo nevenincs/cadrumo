@@ -786,7 +786,7 @@ def _manifest_digest(
     )
 
 
-class ModeloWorkspaceManifestCaptureError(CadrumoError, RuntimeError):
+class ModeloWorkspaceManifestCaptureError(CadrumoError):
     """Raised when a field manifest cannot be captured over one stable window."""
 
 

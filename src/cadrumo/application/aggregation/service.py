@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.i18n.translatable import Translatable as t
 from ...core.logging import LogExtra, get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -90,6 +91,7 @@ class PerModeloAggregationContributorContract(BaseModel):
 
     @field_validator("modelos")
     @classmethod
+    @pydantic_validation_boundary
     def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
             raise AggregationConfigError(
@@ -139,6 +141,7 @@ class PerModeloAggregationContract(BaseModel):
 
     @field_validator("providers")
     @classmethod
+    @pydantic_validation_boundary
     def _providers_are_unique(
         cls,
         value: tuple[PerModeloAggregationContributorContract, ...],
@@ -157,6 +160,7 @@ class PerModeloAggregationContract(BaseModel):
 
     @field_validator("accepted_source_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kinds_are_exact(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if value != COUNTERPART_SOURCE_KIND_ORDER:
             raise AggregationConfigError(
@@ -186,6 +190,7 @@ class PerModeloAggregationCommand(BaseModel):
     withholding_observations: tuple[WithholdingObservation, ...] = Field(default_factory=tuple)
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:
         provider = provider_for_modelo(self.modelo)
         populated = {
@@ -231,6 +236,7 @@ class PerModeloAggregationResult(BaseModel):
 
     @field_validator("source_kinds")
     @classmethod
+    @pydantic_validation_boundary
     def _source_kinds_are_unique(cls, value: tuple[BindingSourceKind, ...]) -> tuple[BindingSourceKind, ...]:
         if len(value) != len(set(value)):
             raise AggregationConfigError(
@@ -239,6 +245,7 @@ class PerModeloAggregationResult(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _envelope_matches_payload(self) -> PerModeloAggregationResult:
         if self.aggregation.modelo != self.modelo:
             raise AggregationConfigError(

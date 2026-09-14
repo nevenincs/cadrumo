@@ -38,7 +38,7 @@ class AuthConfigureNoActiveBucketError(CadrumoError):
     """Raised when auth configuration runs before an active profile bucket exists."""
 
 
-class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
+class AuthConfigureDanglingActiveProfileError(CadrumoError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
 
     def __init__(
@@ -243,7 +243,7 @@ class AuthLoginResult(BaseModel):
     verification_status: str = ""
 
 
-class AuthOperationScopeConflictError(CadrumoError, ValueError):
+class AuthOperationScopeConflictError(CadrumoError):
     """Raised when ``--provider`` and ``--all`` are requested together."""
 
 
@@ -267,7 +267,7 @@ class CertificateSecretMutationInProgressError(CadrumoError):
     """Raised when another auth mutation meets durable certificate-secret intent."""
 
 
-class AuthProviderNotConfiguredError(CadrumoError, ValueError):
+class AuthProviderNotConfiguredError(CadrumoError):
     """Raised when an auth operation has neither an explicit nor configured provider."""
 
 
@@ -296,7 +296,7 @@ class AuthResetResult(BaseModel):
     removed_certificate_secrets: int
 
 
-class CertificateSourceNotFoundError(CadrumoError, KeyError):
+class CertificateSourceNotFoundError(CadrumoError):
     """Raised when an operator names a certificate source that is not registered."""
 
 

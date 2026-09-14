@@ -22,6 +22,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Final
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ..operations.models import OperationDefinitionId
 from ..operations.registry import OperationFrontendProjection
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
@@ -325,7 +326,7 @@ silently disappears from the operator's census.
 """
 
 if set(_CENSUS_FIELD_CATEGORIES) != set(CENSAL_ADOPTABLE_PATHS):  # pragma: no cover - guarded at import
-    raise RuntimeError("census categories and the censal adoptable paths disagree")
+    raise InternalInvariantError("census categories and the censal adoptable paths disagree")
 
 
 def _census_rows(

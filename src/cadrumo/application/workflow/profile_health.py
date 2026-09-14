@@ -33,7 +33,7 @@ from pydantic import BaseModel, PrivateAttr, ValidationError
 
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.config import load_settings, override_settings
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import (
@@ -274,7 +274,7 @@ def _inactive_profile_precondition_verdict() -> PreconditionVerdict:
         registered_profile_count=len(list_profile_buckets()),
     )
     if verdict is None:
-        raise RuntimeError("inactive-profile health did not produce a precondition verdict")
+        raise InternalInvariantError("inactive-profile health did not produce a precondition verdict")
     return verdict
 
 
@@ -282,7 +282,7 @@ def _locked_profile_precondition_verdict(health: ActiveProfileHealth) -> Precond
     """Route a benign locked capsule to login using its committed label."""
     label = health.active_profile_label
     if label is None:
-        raise RuntimeError("a locked active profile has no committed-capsule label to route its login")
+        raise InternalInvariantError("a locked active profile has no committed-capsule label to route its login")
     return profile_session_failure_verdict(ProfileSessionRefusalReason.ABSENT, profile_name=label)
 
 
@@ -321,7 +321,7 @@ def _degraded_profile_precondition_verdict(health: ActiveProfileHealth) -> Preco
         return _pointer_health_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
     if health.status == "incomplete":
         return _incomplete_profile_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
-    raise RuntimeError(f"unsupported profile health status: {health.status}")
+    raise InternalInvariantError(f"unsupported profile health status: {health.status}")
 
 
 def _pointer_health_precondition_verdict(
@@ -560,7 +560,7 @@ def _health_from_record_resolution(
         # is not a broken pointer, so it offers no pointer repair.
         unavailability = resolution.unavailability
         if unavailability is None:
-            raise RuntimeError("an absent profile record must carry the reason it is unavailable")
+            raise InternalInvariantError("an absent profile record must carry the reason it is unavailable")
         locked = unavailability is ProfileRecordUnavailability.SESSION_REQUIRED
         return _finalise_health(
             ActiveProfileHealth(

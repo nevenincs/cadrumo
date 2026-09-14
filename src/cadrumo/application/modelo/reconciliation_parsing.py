@@ -12,6 +12,7 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.justificante.schema import Justificante
@@ -137,7 +138,7 @@ def reconciliation_evidence_parser() -> ReconciliationEvidenceParserPort:
     try:
         return _BOUND_RECONCILIATION_EVIDENCE_PARSER.get()
     except LookupError as error:
-        raise RuntimeError("reconciliation evidence parsing has not been composed") from error
+        raise InternalInvariantError("reconciliation evidence parsing has not been composed") from error
 
 
 __all__ = [

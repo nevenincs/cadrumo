@@ -35,6 +35,7 @@ from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
+from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
@@ -47,7 +48,9 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.hardware import AcceleratorKind
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.classification import InvoiceKind
+from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 
 from ._invoice_confirmation_test_support import _invoice_draft_extraction_ports, serving_a_loopback_reader
@@ -117,16 +120,21 @@ def _run_batch(
 ) -> BatchRunResult:
     """Run the application batch through ports composed by this outer test."""
     evidence_ports, extraction_ports = _batch_ports(runtime)
-    return run_evidence_batch(
-        bucket_id=_BUCKET_ID,
-        sources=sources,
-        direction=direction,
-        settings=runtime.settings if settings is None else settings,
-        evidence_ports=evidence_ports,
-        extraction_ports=extraction_ports,
-        on_item=on_item,
-        profile=hardware_profile,
-    )
+    period = default_invoice_extraction_period()
+    with bundled_indexed_authority().operation() as operation:
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+        return run_evidence_batch(
+            bucket_id=_BUCKET_ID,
+            sources=sources,
+            direction=direction,
+            settings=runtime.settings if settings is None else settings,
+            evidence_ports=evidence_ports,
+            extraction_ports=extraction_ports,
+            operation=operation,
+            legends=legends,
+            on_item=on_item,
+            profile=hardware_profile,
+        )
 
 
 def _measurable_headroom() -> HardwareProfile:

@@ -52,7 +52,7 @@ branching rules or calculation inputs.
 """
 
 
-class WorkUnitNotFoundError(ModeloError, KeyError):
+class WorkUnitNotFoundError(ModeloError):
     """Raised when a work-unit lookup or mutation targets a missing id."""
 
 
@@ -103,11 +103,11 @@ class CalculationRevisionStateError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when a state transition is requested from an incompatible source state."""
 
 
-class ModeloRecordNotFoundError(ModeloError, KeyError):
+class ModeloRecordNotFoundError(ModeloError):
     """Raised when a filing record lookup fails."""
 
 
-class VerificationReportNotFoundError(ModeloError, KeyError):
+class VerificationReportNotFoundError(ModeloError):
     """Raised when a verification report lookup fails."""
 
 

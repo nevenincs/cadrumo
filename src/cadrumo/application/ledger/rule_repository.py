@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from typing import Protocol
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...domain.transactions.classification_rule import LedgerClassificationRule
 
 
@@ -64,7 +65,7 @@ def ledger_classification_rule_repository(*, bucket_id: str) -> LedgerClassifica
     try:
         factory = _BOUND_LEDGER_CLASSIFICATION_RULE_REPOSITORY_FACTORY.get()
     except LookupError as error:
-        raise RuntimeError("ledger classification-rule persistence has not been composed") from error
+        raise InternalInvariantError("ledger classification-rule persistence has not been composed") from error
     return factory(bucket_id=bucket_id)
 
 

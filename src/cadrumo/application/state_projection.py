@@ -77,7 +77,7 @@ from ..core.aggregation import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_
 from ..core.aggregation import BindingSourceKind
 from ..core.auth_provider import AuthProviderKind
 from ..core.bucket_pointer import resolve_active_bucket_id
-from ..core.errors.hierarchy import CadrumoError
+from ..core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ..core.filing_year import FilingYear
 from ..core.identity.profile import ProfileId
 from ..core.logging import get_logger
@@ -539,7 +539,7 @@ def _assert_total_action_projection[ActionSourceT: StrEnum](
     if member_set != projection_set:
         missing = sorted(member.value for member in member_set - projection_set)
         unexpected = sorted(str(member) for member in projection_set - member_set)
-        raise RuntimeError(
+        raise InternalInvariantError(
             f"every {source_name} must declare exactly one OperatorActionAxis; "
             f"missing={missing}; unexpected={unexpected}",
         )
@@ -558,7 +558,7 @@ def _assert_total_binding_source_readiness_projection() -> None:
     if member_set != projection_set:
         missing = sorted(member.value for member in member_set - projection_set)
         unexpected = sorted(str(member) for member in projection_set - member_set)
-        raise RuntimeError(
+        raise InternalInvariantError(
             "every BindingSourceKind must declare exactly one binding-readiness locale key; "
             f"missing={missing}; unexpected={unexpected}",
         )

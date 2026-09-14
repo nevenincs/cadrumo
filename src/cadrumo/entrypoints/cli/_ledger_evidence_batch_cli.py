@@ -36,12 +36,15 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...core.type_guards import is_object_dict
+from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.regime_legend import resolve_regime_legends
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 from ._ledger_evidence_extraction_wiring import invoice_draft_extraction_ports
 from .common import (
@@ -93,14 +96,19 @@ def evidence_batch(
     bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
     text_mode = format_of(ctx) is not OutputFormat.JSON
     evidence_ports = ledger_evidence_ports_factory(ctx)(bucket_id=bucket_id)
-    run = run_evidence_batch(
-        bucket_id=bucket_id,
-        sources=sources,
-        direction=kind,
-        evidence_ports=evidence_ports,
-        extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
-        on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
-    )
+    with bundled_indexed_authority().operation() as operation:
+        period = default_invoice_extraction_period()
+        legends = resolve_regime_legends(operation=operation, effective_date=period.end_date)
+        run = run_evidence_batch(
+            bucket_id=bucket_id,
+            sources=sources,
+            direction=kind,
+            evidence_ports=evidence_ports,
+            extraction_ports=invoice_draft_extraction_ports(evidence_ports=evidence_ports),
+            operation=operation,
+            legends=legends,
+            on_item=(lambda item: emit_progress_line(_progress_line(item))) if text_mode else None,
+        )
     emit_envelope(
         ctx,
         command="ledger.evidence.batch",

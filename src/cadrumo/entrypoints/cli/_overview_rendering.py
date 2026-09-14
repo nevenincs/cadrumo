@@ -52,6 +52,7 @@ from ...application.overview.next_actions import (
     build_overview_status_next_steps,
 )
 from ...application.overview.pipeline_health import ModeloReadinessState, PipelineHealthReport
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.i18n.render import tr
 from ...core.json_contract import (
     Notice,
@@ -318,7 +319,7 @@ def _deemed_served_legal_ref(*, effective_date: date) -> str:
             )
         )
     if not isinstance(resolved, ResolvedScalarFact) or not resolved.legal_refs:
-        raise RuntimeError("dehu tacit-rejection fact has no legal-reference provenance")
+        raise InternalInvariantError("dehu tacit-rejection fact has no legal-reference provenance")
     return str(resolved.legal_refs[0])
 
 

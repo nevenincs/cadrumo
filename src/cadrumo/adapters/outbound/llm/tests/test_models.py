@@ -44,9 +44,11 @@ def test_blank_request_prompt_preserves_its_terminal_condition_through_pydantic(
     with pytest.raises(ValidationError) as raised:
         LLMRequest(prompt=" \t")
 
-    nested = raised.value.errors(include_url=False)[0]["ctx"]["error"]
-    assert isinstance(nested, LLMValidationError)
-    verdict = nested.terminal_precondition_verdict
+    boundary_error = raised.value.errors(include_url=False)[0]["ctx"]["error"]
+    assert isinstance(boundary_error, ValueError)
+    registered_error = boundary_error.__cause__
+    assert isinstance(registered_error, LLMValidationError)
+    verdict = registered_error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "llm.request.prompt_nonempty"
     assert verdict.action is None
@@ -64,9 +66,11 @@ def test_invalid_prompt_definition_id_preserves_its_terminal_condition_through_p
             description="test prompt",
         )
 
-    nested = raised.value.errors(include_url=False)[0]["ctx"]["error"]
-    assert isinstance(nested, LLMValidationError)
-    verdict = nested.terminal_precondition_verdict
+    boundary_error = raised.value.errors(include_url=False)[0]["ctx"]["error"]
+    assert isinstance(boundary_error, ValueError)
+    registered_error = boundary_error.__cause__
+    assert isinstance(registered_error, LLMValidationError)
+    verdict = registered_error.terminal_precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "llm.prompt_definition.id_valid"
     assert verdict.action is None

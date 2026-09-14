@@ -51,6 +51,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, field_serializer
 
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE, XML_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.hex import Hex64Str
@@ -259,7 +260,7 @@ def _derive_additive_evidence_id(
     # Unreachable unless the derivation stops incorporating the disambiguator:
     # then every attempt collides and the loop would spin forever. Fail loudly
     # on the bounded cap instead of hanging.
-    raise RuntimeError(
+    raise InternalInvariantError(
         f"could not derive a unique purchase-invoice evidence id after "
         f"{_ID_DISAMBIGUATION_CAP} attempts; the content digest is not "
         "incorporating the disambiguator (a derivation regression)",

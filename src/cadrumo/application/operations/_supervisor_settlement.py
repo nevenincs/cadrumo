@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Protocol
 
 from ...core.async_cleanup import close_async_resources
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import (
     LIFECYCLES_BEFORE_EXECUTOR_ENTRY,
     OperationCancellation,
@@ -248,7 +249,7 @@ class SupervisorSettlementMixin(SupervisorHost):
             await self._escalate_cleanup_deadline(operation_id)
             raise TimeoutError("operation cleanup deadline elapsed before terminal settlement")
         if successor is None:
-            raise RuntimeError("operation terminal settlement did not produce a successor snapshot")
+            raise InternalInvariantError("operation terminal settlement did not produce a successor snapshot")
         self._contexts.pop(operation_id, None)
         self._executor_tasks.pop(operation_id, None)
         self._cleanup_tasks.pop(operation_id, None)

@@ -850,12 +850,12 @@ class TestWorkflowInputMismatchError:
         assert exc.context["expected_period"] == "2026 1T"
         assert exc.context["requested_period"] == "2026 2T"
 
-    def test_error_is_core_validation_error_and_value_error(self) -> None:
-        """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""
+    def test_error_is_registered_without_builtin_ancestry(self) -> None:
+        """WorkflowInputMismatchError stays registered without builtin ancestry."""
         from ....core.errors.hierarchy import CoreValidationError
 
         assert issubclass(WorkflowInputMismatchError, CoreValidationError)
-        assert issubclass(WorkflowInputMismatchError, ValueError)
+        assert not issubclass(WorkflowInputMismatchError, ValueError)
 
     def test_error_code_is_registered(self) -> None:
         """WorkflowInputMismatchError maps to a stable error code in the registry."""

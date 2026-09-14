@@ -12,6 +12,7 @@ model boundary, away from the builder code that owns the data.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from typing import cast
@@ -22,11 +23,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.casilla_membership import format_noncanonical_casilla_reference
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.filing.errors import ModeloBuilderError
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ..draft_construction import build_draft, filing_period_date
-from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
+from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, schema_provider_from_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -47,25 +49,45 @@ _M303_REGIMEN_GENERAL_RESULT_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_REGIMEN_GENERAL_RESULT_CASILLA",
 )
 # The reused-printed-number invariant is about a printed number that two
-# casillas share, not about any one modelo. It is exercised against Modelo 714
-# (Impuesto sobre el Patrimonio), whose 2025 revision still declares filing
-# authority and genuinely reuses printed numbers between its identificacion and
-# declaracion sections. The pair itself is re-sourced from that revision below
-# rather than transcribed, so the test cannot outlive the reuse it describes.
-_M714_FILING_YEAR = 2025
-_M714_PERIOD_CODE = "0A"
+# casillas share, not about any one modelo. Modelo 200's 2025 filing-grade
+# revision has several genuine cross-page reuses. The pair itself is re-sourced
+# from that revision below rather than transcribed, so the test cannot outlive
+# the reuse it describes.
+_REUSED_NUMBER_MODELO = "200"
+_REUSED_NUMBER_FILING_YEAR = 2025
+_REUSED_NUMBER_PERIOD_CODE = "0A"
+
+
+@pytest.fixture(autouse=True)
+def _pinned_fact_scope() -> Iterator[None]:
+    """Keep every boundary construction in this module on one explicit authority."""
+    with validating_governed_facts(bundled_authority()):
+        yield
 
 
 def _profile() -> ModeloOperatorProfile:
-    return ModeloOperatorProfile(
-        tax_id="12345678Z",
-        display_name="build_draft identity contract",
+    with validating_governed_facts(bundled_authority()):
+        return ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="build_draft identity contract",
+        )
+
+
+def _schema_provider(
+    *, filing_year: int, period: Period, modelos: tuple[str, ...] | None = None
+) -> RegistrySchemaAccessor:
+    """Project the development authority through the production filing seam."""
+    return schema_provider_from_authority(
+        bundled_authority(),
+        modelos=modelos,
+        filing_year=filing_year,
+        period=period,
     )
 
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        scope=M303RegimenSimplificadoScope._from_registry("not_claimed"),
     )
 
 
@@ -102,7 +124,7 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(
+        schema_provider=_schema_provider(
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
         ),
@@ -133,7 +155,7 @@ def test_build_draft_rejects_whitespace_padded_casilla_input_key() -> None:
             inputs={
                 cast(CasillaId, " 01"): Decimal("10000"),
             },
-            schema_provider=build_runtime_schema_provider(modelos=("130",), filing_year=2026, period=period),
+            schema_provider=_schema_provider(modelos=("130",), filing_year=2026, period=period),
         )
 
 
@@ -178,7 +200,7 @@ def test_build_draft_rejects_noncanonical_casilla_reference_token(
             inputs={
                 input_key: Decimal("100.00"),
             },
-            schema_provider=build_runtime_schema_provider(modelos=("303",), filing_year=2026, period=period),
+            schema_provider=_schema_provider(modelos=("303",), filing_year=2026, period=period),
         )
 
     # The refusal renders through the locale catalogue, so the offending token
@@ -225,8 +247,12 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
     single-candidate refusal next door is that the typed context names MORE
     THAN ONE canonical candidate -- that is the ambiguity, asserted here.
     """
-    period = Period.from_year_and_code(_M714_FILING_YEAR, _M714_PERIOD_CODE)
-    snapshot = bundled_authority().snapshot("714", filing_year=_M714_FILING_YEAR, period=_M714_PERIOD_CODE)
+    period = Period.from_year_and_code(_REUSED_NUMBER_FILING_YEAR, _REUSED_NUMBER_PERIOD_CODE)
+    snapshot = bundled_authority().snapshot(
+        _REUSED_NUMBER_MODELO,
+        filing_year=_REUSED_NUMBER_FILING_YEAR,
+        period=_REUSED_NUMBER_PERIOD_CODE,
+    )
     printed_number, candidates = _reused_printed_number(snapshot.revision)
     assert len(candidates) > 1
 
@@ -234,15 +260,15 @@ def test_build_draft_rejects_ambiguous_reused_printed_number() -> None:
         ModeloBuilderError, match=re.escape("application.filing.build_draft.errors.input_key_noncanonical_casilla")
     ) as exc_info:
         build_draft(
-            modelo="714",
+            modelo=_REUSED_NUMBER_MODELO,
             period=period,
             profile=_profile(),
             inputs={
                 printed_number: Decimal("100.00"),
             },
-            schema_provider=build_runtime_schema_provider(
-                modelos=("714",),
-                filing_year=_M714_FILING_YEAR,
+            schema_provider=_schema_provider(
+                modelos=(_REUSED_NUMBER_MODELO,),
+                filing_year=_REUSED_NUMBER_FILING_YEAR,
                 period=period,
             ),
         )
