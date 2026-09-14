@@ -37,7 +37,7 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.calculations.registry.temporal import select_revision_for_year
+from ...domain.calculations.registry.temporal import select_revision_for_year, select_revision_metadata_for_year
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 
@@ -155,16 +155,8 @@ def annual_period_for_year(
             definition = authority.validate_modelo(modelo.strip())
         else:
             directory = authority.modelo_directory(modelo.strip())
-            candidates = tuple(
-                metadata
-                for metadata in directory.revisions
-                if metadata.period_selector.periods_for_year(filing_year)
-                and (as_of is None or metadata.contains_date(as_of))
-            )
-            if not candidates:
-                return None
-            selected = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
-            periods = selected.period_selector.periods_for_year(filing_year)
+            selected = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of)
+            periods = selected.period_selector.declared_periods
             return periods[0] if periods else None
     except (RegistrySnapshotError, RegistryValidationError) as exc:
         _log.debug(
@@ -177,7 +169,12 @@ def annual_period_for_year(
         )
         return None
     try:
-        revision = select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+        revision = select_revision_for_year(
+            definition,
+            filing_year=filing_year,
+            on=as_of,
+            support=authority.catalogues.supported_filing_years,
+        )
     except NoRevisionForPeriodError as exc:
         # Logged for the same reason the two sibling branches are: this helper
         # answers None for three distinct causes, and a developer asking why

@@ -129,7 +129,7 @@ from cadrumo.domain.filing.software_identity import AeatProductSoftwareIdentity
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from .compiler.authority import compile_validated_authority
-from .compiler.loader import load_modelo_directory, load_registry_tree, modelo_fact_scope
+from .compiler.loader import load_modelo_directory, modelo_fact_scope
 
 __all__ = [
     "COMMIT_ID",

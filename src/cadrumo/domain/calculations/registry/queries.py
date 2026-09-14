@@ -270,16 +270,13 @@ class RegistryQueryService:
                 as_of=as_of,
                 grade=grade,
             ).revision
-        # A model/revision consumer needs the same temporal resolver as the
-        # existing selected-revision API, but does not claim snapshot-grade
-        # legal or filing authority. In particular, do not apply the
-        # supported-year envelope here: it can merge two historical designs
-        # for metadata-only coordinates and change the selected revision.
+        # Metadata and snapshot consumers share the same temporal source.
         return select_revision(
             definition,
             filing_year=filing_year,
             period=period,
             on=as_of,
+            support=self._authority.catalogues.supported_filing_years,
         )
 
     def revision_for_period(
@@ -301,7 +298,12 @@ class RegistryQueryService:
     ) -> ModeloRevision:
         """Return the canonical year-scoped revision for metadata consumers."""
         definition = self._authority.validate_modelo(modelo.strip())
-        return select_revision_for_year(definition, filing_year=filing_year, on=as_of)
+        return select_revision_for_year(
+            definition,
+            filing_year=filing_year,
+            on=as_of,
+            support=self._authority.catalogues.supported_filing_years,
+        )
 
     def revision_by_id(self, modelo: str, revision_id: str) -> ModeloRevision:
         """Return one exact revision component by canonical identity."""

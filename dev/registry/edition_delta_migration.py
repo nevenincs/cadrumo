@@ -2114,9 +2114,7 @@ def _write_drop(modelo_dir: Path, edition: EditionDrop, families: Mapping[str, _
     if attestations:
         manifest_path = edition_dir / _MANIFEST
         text = manifest_path.read_text(encoding="utf-8")
-        manifest_path.write_text(
-            _append_lineage_attestations(text, attestations), encoding="utf-8", newline="\n"
-        )
+        manifest_path.write_text(_append_lineage_attestations(text, attestations), encoding="utf-8", newline="\n")
     for drop in edition.families:
         if not drop.dropped:
             continue
@@ -2488,6 +2486,24 @@ def migrate_modelo_100_field_deltas(
     modelo_dir = registry_root / _MODELOS / modelo_id
     before_files = fingerprint(modelo_dir)
     before = _load(registry_root, modelo_id)
+    already_delta = [
+        str(revision.id)
+        for revision in ordered_revisions(before)[1:]
+        if before.revisions[str(revision.id)].casilla_storage_baseline is not None
+    ]
+    if already_delta:
+        expected = [str(revision.id) for revision in ordered_revisions(before)[1:]]
+        if already_delta != expected:
+            raise MigrationRefusedError(
+                f"Modelo 100 has a partial casilla field-delta chain: {already_delta!r}; expected {expected!r}"
+            )
+        return {
+            "modelo": modelo_id,
+            "already_delta_authored": True,
+            "file_content_changes": 0,
+            "hydration_differences": [],
+            "applied": False,
+        }
     original = work_dir / "original" / modelo_id
     staged_modelo = work_dir / "staged" / modelo_id
     original.parent.mkdir(parents=True)
@@ -2587,8 +2603,7 @@ def migrate_modelo_100_field_deltas(
             )
         for row_id, position in positions:
             blocks.append(
-                f'[[revisions."{revision_id}".casilla_positions]]\n'
-                f'id = {_toml_string(row_id)}\nposition = {position}'
+                f'[[revisions."{revision_id}".casilla_positions]]\nid = {_toml_string(row_id)}\nposition = {position}'
             )
         text = text.rstrip() + ("\n\n" + "\n\n".join(blocks) if blocks else "") + "\n"
         manifest_path.write_text(text, encoding="utf-8", newline="\n")
